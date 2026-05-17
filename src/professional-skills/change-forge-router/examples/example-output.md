@@ -62,12 +62,32 @@
 | --- | --- | --- | --- |
 | None | No domain extension signal is present | None | None |
 
-## 8. Task DAG
+## 8. Required References
+| Skill | Reference | Why | Required/Optional |
+| --- | --- | --- | --- |
+| change-forge-router | references/routing-rules.md | Apply current routing rules | Required |
+| change-forge-router | references/skill-registry.md | Confirm available professional skills | Required |
+| change-forge-router | references/capability-index.md | Resolve capability IDs and names | Required |
+| change-forge-router | references/domain-extension-index.md | Confirm no domain extension signal applies | Required |
+| change-intake-compiler | references/capabilities/index.md | Locate selected intake capability references | Required |
+| change-intake-compiler | references/capabilities/01-requirement-clarification.md | Resolve exact forbidden behavior | Required |
+| backend-change-builder | references/capabilities/index.md | Locate selected backend capability references | Required |
+| backend-change-builder | references/capabilities/16-permission-boundary-modeling.md | Keep object-level authorization explicit | Required |
+| backend-change-builder | references/capabilities/41-authentication-authorization.md | Separate authentication from authorization | Required |
+| security-privacy-gate | references/capabilities/index.md | Locate selected security capability references | Required |
+| security-privacy-gate | references/capabilities/16-permission-boundary-modeling.md | Check ownership and tenant boundaries | Required |
+| security-privacy-gate | references/capabilities/54-web-security.md | Check broken access control risk | Required |
+| quality-test-gate | references/capabilities/index.md | Locate selected test capability references | Required |
+| quality-test-gate | references/capabilities/64-regression-testing.md | Prevent recurrence | Required |
+| change-documentation-gate | references/capabilities/index.md | Locate selected documentation capability references | Required |
+| change-documentation-gate | references/capabilities/80-documentation-generation.md | Decide whether API docs need alignment | Required |
+
+## 9. Task DAG
 Each task:
 - id: T1
 - name: Confirm forbidden response and ownership rule
 - skill: change-intake-compiler
-- capabilities: 01, 16
+- capabilities: 01
 - depends_on: []
 - files_or_artifacts: change brief
 - acceptance: rule and response are explicit
@@ -76,7 +96,7 @@ Each task:
 - id: T2
 - name: Patch backend permission check
 - skill: backend-change-builder
-- capabilities: 41
+- capabilities: 16, 41
 - depends_on: [T1]
 - files_or_artifacts: handler/service tests
 - acceptance: unauthorized access returns forbidden without details
@@ -91,7 +111,7 @@ Each task:
 - acceptance: permission review passes and tests cover the defect
 - rollback_note: revert documentation with behavior if rolled back
 
-## 9. Quality Gates
+## 10. Quality Gates
 - requirement gate: change-intake-compiler
 - impact gate: skipped, single-module scope is clear after intake
 - domain gate: permission-boundary-modeling via security and backend skills
@@ -105,7 +125,7 @@ Each task:
 - documentation gate: change-documentation-gate
 - AI review gate: skipped
 
-## 10. Next Actions
+## 11. Next Actions
 - next skill calls: change-intake-compiler, then backend-change-builder
 - blocked/unblocked status: blocked on expected forbidden response
 - recommended execution mode: clarify then implement

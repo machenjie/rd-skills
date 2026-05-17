@@ -153,6 +153,19 @@ Is state a complex business domain object with mutations?
 - **Accessibility blocker on primary flow**: The checkout form's "Place Order" button has no accessible name — screen reader users cannot complete a purchase.
 - **Bundle size regression**: A new dependency adds 400 KB to the initial bundle without code splitting — LCP increases by 1.5s on mobile.
 
+## Reference Loading Policy
+Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
+
+- L1 changes: do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
+- L2 changes: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
+- L3 changes: read all selected capability references and `references/checklist.md` when present.
+- L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+- Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
+
+Examples:
+- `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md`
+- `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-evaluation.md`
+
 ## Output Contract
 Return a frontend implementation plan or review with:
 - **Component specification**: Component hierarchy, state ownership, props interface, and design system integration.

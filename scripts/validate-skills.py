@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from validation_utils import (
@@ -11,6 +12,7 @@ from validation_utils import (
     EXPECTED_PROFESSIONAL_SKILL_COUNT,
     EXPECTED_PROFILE_TOP_LEVEL_COUNTS,
     ValidationProblem,
+    extract_section_body,
     fail_many,
     parse_frontmatter,
     relpath,
@@ -52,11 +54,48 @@ REQUIRED_SECTIONS = (
     "Risk Escalation Rules",
     "Critical Details",
     "Failure Modes",
+    "Reference Loading Policy",
     "Output Contract",
     "Quality Gate",
     "Handoff",
     "Completion Criteria",
 )
+
+
+def validate_reference_loading_policy(body: str, context: str, errors: list[str]) -> None:
+    policy = extract_section_body(body, "Reference Loading Policy")
+    if policy is None:
+        return
+
+    folded = policy.casefold()
+    required_phrases = (
+        "references/capabilities/index.md",
+        "selected capability",
+        "l1",
+        "l2",
+        "l3",
+        "l4",
+        "l5",
+    )
+    for phrase in required_phrases:
+        if phrase not in folded:
+            errors.append(
+                f"{context}: Reference Loading Policy must mention '{phrase}'"
+            )
+
+    for phrase in (
+        "read all references by default",
+        "load all references by default",
+        "read every reference by default",
+        "load every reference by default",
+    ):
+        for match in re.finditer(re.escape(phrase), folded):
+            prefix = folded[max(0, match.start() - 24) : match.start()]
+            if "do not " not in prefix and "never " not in prefix:
+                errors.append(
+                    f"{context}: Reference Loading Policy must not say to "
+                    f"{phrase}"
+                )
 
 
 def main() -> int:
@@ -158,6 +197,7 @@ def main() -> int:
             )
 
         validate_required_sections(body, REQUIRED_SECTIONS, file_context, errors)
+        validate_reference_loading_policy(body, file_context, errors)
         validate_no_beginner_sections(body, file_context, errors)
         validate_no_personal_references(raw_frontmatter + "\n" + body, file_context, errors)
         validate_allowed_tools_warning(metadata, raw_frontmatter, body, file_context, errors)

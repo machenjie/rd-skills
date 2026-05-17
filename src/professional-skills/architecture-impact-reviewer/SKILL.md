@@ -159,6 +159,19 @@ All checks pass → Review tradeoffs, document in ADR, approve
 - **Availability chain degradation**: A new synchronous dependency on a 99.5% available service reduces the calling service's effective availability to ≤99.5%.
 - **Decentralized auth logic**: Each service implements its own role check — the checks diverge over time, creating inconsistent authorization behavior.
 
+## Reference Loading Policy
+Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
+
+- L1 changes: do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
+- L2 changes: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
+- L3 changes: read all selected capability references and `references/checklist.md` when present.
+- L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+- Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
+
+Examples:
+- `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md`
+- `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-evaluation.md`
+
 ## Output Contract
 Return a structured architecture review with:
 - **Decision**: Approved / Approved with conditions / Returned for redesign.

@@ -150,6 +150,19 @@ All fields present and non-empty → Route to change-impact-analyzer
 - **Non-goals added post-implementation**: A team adds a feature the requester didn't want and didn't say they didn't want. Non-goals prevent this.
 - **Current behavior described as desired**: "Users cannot currently log in with Google" is stated as current behavior — but it was never in scope. The Change Request conflates current state with desired state.
 
+## Reference Loading Policy
+Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
+
+- L1 changes: do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
+- L2 changes: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
+- L3 changes: read all selected capability references and `references/checklist.md` when present.
+- L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+- Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
+
+Examples:
+- `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md`
+- `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-evaluation.md`
+
 ## Output Contract
 Return a structured Change Request containing:
 - **Summary**: Single-sentence behavioral statement (actor, action, motivation).

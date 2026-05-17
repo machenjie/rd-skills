@@ -155,6 +155,19 @@ Change is infrastructure-only with no behavior change?
 - **No recovery plan extends incidents**: a database runs out of connections; the on-call engineer has never seen this failure mode; they spend 45 minutes diagnosing what a 5-minute runbook would resolve.
 - **Connection pool exhaustion starves all requests**: a slow external call holds connections; the pool fills; all requests wait; the service appears to be down.
 
+## Reference Loading Policy
+Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
+
+- L1 changes: do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
+- L2 changes: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
+- L3 changes: read all selected capability references and `references/checklist.md` when present.
+- L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+- Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
+
+Examples:
+- `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md`
+- `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-evaluation.md`
+
 ## Output Contract
 Return a reliability and observability plan with:
 - **SLI/SLO impact assessment**: affected SLIs, SLO target confirmation, error budget headroom.

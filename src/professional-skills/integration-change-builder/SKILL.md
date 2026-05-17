@@ -155,6 +155,19 @@ Did the request succeed?
 - **Credential expires during peak traffic**: an API key with no rotation monitoring expires — the integration silently fails for all users until an operator manually rotates the key.
 - **Webhook body parsed before HMAC**: the web framework pretty-prints the JSON before HMAC computation — the signature never matches the provider's signature; all webhooks are rejected.
 
+## Reference Loading Policy
+Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
+
+- L1 changes: do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
+- L2 changes: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
+- L3 changes: read all selected capability references and `references/checklist.md` when present.
+- L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+- Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
+
+Examples:
+- `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md`
+- `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-evaluation.md`
+
 ## Output Contract
 Return an integration design with:
 - **Provider contract**: API version, deprecation status, rate limits, quota, and sandbox availability.

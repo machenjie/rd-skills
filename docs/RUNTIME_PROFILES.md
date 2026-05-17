@@ -13,6 +13,7 @@ Top-level runtime skills:
 References:
 
 - 82 foundation capabilities are compiled into relevant professional skill references under `references/capabilities/`.
+- Compiled references are selectively loaded according to each professional skill's `Reference Loading Policy`; they are not loaded wholesale by default.
 - The router includes the domain extension index.
 
 Recommended does not install the 82 foundation capabilities as top-level skills.
@@ -28,7 +29,7 @@ Top-level runtime skills:
 
 References:
 
-- 82 foundation capabilities are compiled into relevant professional skill references.
+- 82 foundation capabilities are compiled into relevant professional skill references and selectively loaded according to each professional skill's `Reference Loading Policy`.
 
 Full does not install the 82 foundation capabilities as top-level skills.
 
@@ -44,7 +45,7 @@ Top-level runtime skills:
 
 References:
 
-- Professional skills still receive compiled capability references.
+- Professional skills still receive compiled capability references and selectively load them according to each professional skill's `Reference Loading Policy`.
 - The router includes routing rules, the skill registry, the capability index, and the domain extension index.
 
 ## Generated Router References

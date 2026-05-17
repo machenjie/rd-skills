@@ -257,6 +257,62 @@ def has_section(markdown: str, section: str) -> bool:
     return any(title.casefold() == wanted for title in heading_titles(markdown))
 
 
+def extract_section_body(markdown: str, section: str) -> str | None:
+    """Return the body for a markdown heading with the exact title.
+
+    The section ends at the next heading of the same or higher level. Fenced
+    code blocks are ignored for heading detection so example output templates
+    do not masquerade as authored sections.
+    """
+
+    wanted = section.casefold()
+    lines = markdown.splitlines()
+    capture_level: int | None = None
+    captured: list[str] = []
+    in_fence = False
+    fence_marker: str | None = None
+
+    for line in lines:
+        stripped = line.strip()
+        fence_match = re.match(r"^(```+|~~~+)", stripped)
+        if fence_match:
+            marker = fence_match.group(1)
+            if not in_fence:
+                in_fence = True
+                fence_marker = marker[:3]
+            elif fence_marker and marker.startswith(fence_marker):
+                in_fence = False
+                fence_marker = None
+
+            if capture_level is not None:
+                captured.append(line)
+            continue
+
+        heading_match = (
+            None
+            if in_fence
+            else re.match(r"^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$", line)
+        )
+        if heading_match:
+            level = len(heading_match.group(1))
+            title = heading_match.group(2).strip()
+            if capture_level is not None and level <= capture_level:
+                break
+            if title.casefold() == wanted:
+                capture_level = level
+                captured = []
+            elif capture_level is not None:
+                captured.append(line)
+            continue
+
+        if capture_level is not None:
+            captured.append(line)
+
+    if capture_level is None:
+        return None
+    return "\n".join(captured).strip()
+
+
 def validate_required_sections(
     body: str,
     required_sections: Iterable[str],

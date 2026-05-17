@@ -120,6 +120,19 @@ None of the above → Document as no-change with rationale
 - **Security detail in public docs**: An internal service URL, secret key format, or error message that reveals infrastructure topology is published in documentation — an attacker uses it to plan targeted attacks.
 - **Ownership gap**: A service transitions teams and the documentation is never updated to reflect the new owner — incident escalation goes to the wrong team.
 
+## Reference Loading Policy
+Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
+
+- L1 changes: do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
+- L2 changes: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
+- L3 changes: read all selected capability references and `references/checklist.md` when present.
+- L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+- Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
+
+Examples:
+- `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md`
+- `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-evaluation.md`
+
 ## Output Contract
 Return a documentation impact assessment with:
 - **Documentation matrix**: Each documentation artifact (README, API spec, runbook, ADR, changelog, migration guide, config reference) marked as: Updated / Not required (with rationale) / Outstanding (blocking).

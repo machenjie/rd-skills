@@ -35,6 +35,21 @@ Foundation capabilities are compact engineering rules and decision aids. In `rec
 
 Domain extensions add domain-specific risk and routing rules. They are top-level in `full` and `dev`, and indexed by the router for profile-aware routing.
 
+## Reference Loading Model
+
+`SKILL.md` is loaded when a skill is selected. The `references/` directory is not assumed to be fully loaded automatically, even when the build profile compiles capability references into the runtime skill folder.
+
+The router selects foundation capabilities as part of the route. Professional skills then read only the selected capability references, using `references/capabilities/index.md` as a lookup aid when needed. Capability reference paths are deterministic: `references/capabilities/<capability-id>-<capability-name>.md`.
+
+Reference loading follows the L1 through L5 change level:
+
+- L1 changes do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
+- L2 changes read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
+- L3 changes read all selected capability references and `references/checklist.md` when present.
+- L4/L5 changes read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+
+References are a precision mechanism, not a dumping ground. They should make selected work more reliable without turning every small change into broad context loading.
+
 ## Minimal Sufficient Routing
 
 Routing should choose the smallest path that can safely complete the change. A small local bug fix should not trigger a full product program. A migration, authentication, payment, Web3, AI, or production rollout change should escalate until the affected contracts, rollback path, security review, and evidence gates are explicit.

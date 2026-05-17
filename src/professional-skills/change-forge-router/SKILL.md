@@ -145,6 +145,19 @@ Route by evidence in the request:
 ## Failure Modes
 Over-routing creates process drag and hides the next best action. Under-routing misses security, data, release, and user-impact risk. Treating every request as greenfield wastes time. Treating local fixes as risk-free can miss permissions, migrations, external integrations, and regression evidence. Listing every capability without selection rationale makes the route unusable.
 
+## Reference Loading Policy
+Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
+
+- L1 changes: do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
+- L2 changes: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
+- L3 changes: read all selected capability references and `references/checklist.md` when present.
+- L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+- Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
+
+Examples:
+- `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md`
+- `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-evaluation.md`
+
 ## Output Contract
 Return this exact structure:
 
@@ -199,7 +212,11 @@ Return this exact structure:
 | Extension | Why | Risks | Required Outputs |
 | --- | --- | --- | --- |
 
-## 8. Task DAG
+## 8. Required References
+| Skill | Reference | Why | Required/Optional |
+| --- | --- | --- | --- |
+
+## 9. Task DAG
 Each task:
 - id
 - name
@@ -210,7 +227,7 @@ Each task:
 - acceptance
 - rollback_note
 
-## 9. Quality Gates
+## 10. Quality Gates
 - requirement gate
 - impact gate
 - domain gate
@@ -224,7 +241,7 @@ Each task:
 - documentation gate
 - AI review gate
 
-## 10. Next Actions
+## 11. Next Actions
 - next skill calls
 - blocked/unblocked status
 - recommended execution mode
@@ -232,21 +249,29 @@ Each task:
 
 Use `None` when a domain extension is not selected. Use `Skipped: reason` for quality gates that are not needed. Use concrete assumptions rather than silent gaps.
 
+Populate Required References for router self-use and for every selected support reference:
+
+- Always include router self-use references: `references/routing-rules.md`, `references/skill-registry.md`, `references/capability-index.md`, and `references/domain-extension-index.md`.
+- Whenever foundation capabilities are selected, list selected capability files under `references/capabilities/` for each selected professional skill.
+- For L3 and higher changes, include `references/checklist.md` when present.
+- For L4/L5 changes with a selected domain extension, include the selected domain extension `SKILL.md` and any selected domain extension reference.
+
 ## Quality Gate
 The route passes only when:
 
 - Every selected professional skill has a clear reason, input, and expected output.
 - Every selected foundation capability is tied to a selected professional skill.
 - Every selected domain extension has a domain signal, risk, and required output.
+- Required References lists router self-use references and every selected capability, checklist, or domain extension reference required by the route.
 - Every impacted area has a selected skill, a quality gate, a non-blocking assumption, or an explicit skip reason.
 - Complexity and risk match the escalation triggers.
 - The task DAG is acyclic, reviewable, acceptance-linked, and rollback-aware.
 - The route does not rely on undeclared asset ingestion, external knowledge stores, or undeclared runtime content.
 
 ## Handoff
-Hand off to the first unblocked skill in the professional path. Preserve request classification, interpreted change, missing information, impact areas, selected capabilities, domain extension requirements, task DAG, quality gates, and recommended execution mode.
+Hand off to the first unblocked skill in the professional path. Preserve request classification, interpreted change, missing information, impact areas, selected capabilities, domain extension requirements, required references, task DAG, quality gates, and recommended execution mode.
 
 If blocked, hand off only to the skill that can remove the block. If unblocked, hand off to the next implementation, gate, or documentation skill according to the minimum sufficient path.
 
 ## Completion Criteria
-The routing result is complete when an implementing agent can start the next skill with clear scope, risk, dependencies, selected capabilities, quality gates, validation expectations, and rollback notes without guessing which ChangeForge path applies.
+The routing result is complete when an implementing agent can start the next skill with clear scope, risk, dependencies, selected capabilities, required references, quality gates, validation expectations, and rollback notes without guessing which ChangeForge path applies or which references to read.

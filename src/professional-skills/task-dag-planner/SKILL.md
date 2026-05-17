@@ -126,6 +126,19 @@ No complex sequencing?
 - **Parallel tasks create a write conflict**: two teams modify the same database migration file simultaneously — the merge conflict is resolved incorrectly; both migrations run, one corrupting the other's schema.
 - **Critical path not identified**: the team parallelizes low-risk frontend tasks while the high-risk migration task (the bottleneck) is assigned to a single engineer with no backup — delivery is delayed by the unidentified critical path.
 
+## Reference Loading Policy
+Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
+
+- L1 changes: do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
+- L2 changes: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
+- L3 changes: read all selected capability references and `references/checklist.md` when present.
+- L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+- Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
+
+Examples:
+- `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md`
+- `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-evaluation.md`
+
 ## Output Contract
 Return a task DAG with:
 - **Task nodes**: Each with ID, title, objective, owner surface, dependencies (IDs), parallelism flag, and completion condition.

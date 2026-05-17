@@ -121,6 +121,19 @@ Is behavior user-facing or contract-affecting?
 - **Untraceable criteria**: Review cannot determine which requirement each criterion satisfies; traceability gaps fail change management audits.
 - **Collapsed multi-step criteria**: One criterion tests multiple behaviors — partial failure has no isolated root cause and blocks diagnosis.
 
+## Reference Loading Policy
+Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
+
+- L1 changes: do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
+- L2 changes: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
+- L3 changes: read all selected capability references and `references/checklist.md` when present.
+- L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+- Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
+
+Examples:
+- `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md`
+- `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-evaluation.md`
+
 ## Output Contract
 Return a structured acceptance criteria document with:
 - **Criteria set**: Each criterion assigned an ID, actor, precondition, action, expected outcome, and verification method (unit / integration / E2E / manual / audit).
