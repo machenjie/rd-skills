@@ -1,6 +1,6 @@
 ---
 name: architecture-tradeoff-analysis
-description: Produces ADR-ready architecture decisions with alternatives, rejected options, risks, mitigations, and consequences.
+description: Produces ADR-ready architecture decisions by comparing alternatives, rejected options, decision forces, risks, mitigations, consequences, and reassessment triggers before durable architecture choices are accepted.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "23"

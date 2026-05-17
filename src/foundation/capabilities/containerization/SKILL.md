@@ -1,6 +1,6 @@
 ---
 name: containerization
-description: Designs reproducible, minimal, non-root, secret-free container images with separate build and runtime concerns.
+description: Designs reproducible, minimal, non-root, secret-free container images with separated build and runtime concerns, health behavior, shutdown handling, provenance, and reduced supply-chain risk.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "72"

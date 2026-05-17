@@ -25,8 +25,10 @@ def main() -> int:
     parser.add_argument(
         "--target",
         type=Path,
-        required=True,
-        help="Project root when --agent/--scope are supplied; otherwise an exact skills dir.",
+        help=(
+            "Project root when --agent/--scope project are supplied, explicit user/admin "
+            "skills dir override, or exact skills dir when no agent/scope is supplied."
+        ),
     )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -40,6 +42,8 @@ def main() -> int:
                 return 0
             target_dir = resolve_target_dir(args.agent, args.scope, args.target)
         else:
+            if args.target is None:
+                raise InstallError("--target is required when --agent/--scope are not supplied")
             target_dir = args.target.expanduser().resolve()
 
         manifest = read_manifest(target_dir)

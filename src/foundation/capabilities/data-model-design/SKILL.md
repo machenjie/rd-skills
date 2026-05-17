@@ -1,6 +1,6 @@
 ---
 name: data-model-design
-description: Designs data models from invariants, query patterns, ownership, lifecycle, migration risk, and contract separation.
+description: Designs data models from invariants, query patterns, ownership, lifecycle, migration risk, concurrency behavior, regulatory requirements, and separation between persistence internals and external contracts.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "25"

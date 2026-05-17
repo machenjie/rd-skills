@@ -66,11 +66,13 @@ OpenAI API is zip-only; it does not install runtime skill folders into a project
 
 ## Uninstall, Upgrade, And Doctor
 
-Install writes `.changeforge-install-manifest.json` into the target skills directory. The manifest records `installed_professional_skills`, `installed_foundation_capabilities`, `installed_domain_extensions`, and `installed_skills` as the complete managed union. Uninstall removes only names listed in this manifest and then removes the manifest:
+Install writes `.changeforge-install-manifest.json` into the target skills directory. The manifest records `installed_professional_skills`, `installed_foundation_capabilities`, `installed_domain_extensions`, and `installed_skills` as the complete managed union. Uninstall removes only names listed in this manifest and then removes the manifest. For user and admin scopes, omit `--target` to use the same default skills directory as install; pass `--target` only to override the exact skills directory:
 
 ```bash
 python3 installers/uninstall.py --agent codex --scope project --target /path/to/project --dry-run
 python3 installers/uninstall.py --agent codex --scope project --target /path/to/project
+python3 installers/uninstall.py --agent codex --scope user --dry-run
+python3 installers/uninstall.py --agent codex --scope user
 ```
 
 Upgrade backs up the existing ChangeForge-managed directories, replaces managed names from the selected built profile, preserves unrelated skills, and reports source/profile/skill version changes:
@@ -99,8 +101,14 @@ python3 installers/install.py --agent codex --scope project --target /tmp/change
 python3 installers/uninstall.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --dry-run
 python3 installers/doctor.py --agent codex --scope user --target /tmp/changeforge-recommended-user-smoke --profile recommended
 python3 installers/doctor.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --profile full
+python3 installers/install.py --agent claude --scope project --target /tmp/changeforge-claude-full-smoke --profile full
+python3 installers/doctor.py --agent claude --scope project --target /tmp/changeforge-claude-full-smoke --profile full
+python3 installers/uninstall.py --agent claude --scope project --target /tmp/changeforge-claude-full-smoke --dry-run
+python3 installers/install.py --agent copilot --scope project --target /tmp/changeforge-copilot-full-smoke --profile full
+python3 installers/doctor.py --agent copilot --scope project --target /tmp/changeforge-copilot-full-smoke --profile full
+python3 installers/uninstall.py --agent copilot --scope project --target /tmp/changeforge-copilot-full-smoke --dry-run
 python3 installers/install.py --agent openai-api --profile recommended --dry-run
 python3 scripts/validate-installation.py
 ```
 
-The recommended global install smoke should report 19 top-level skills, the full project install smoke should report 26, uninstall dry-run should operate only on manifest-managed names, doctor should report no issues for an installed smoke target, and OpenAI API zip validation should pass profile count and archive-shape checks.
+The Codex recommended user install smoke should report 19 top-level skills. The Codex, Claude Code, and GitHub Copilot full project install smokes should each report 26 top-level skills. Uninstall dry-runs should operate only on manifest-managed names, doctor should report no issues for every installed smoke target, and OpenAI API zip validation should pass profile count and archive-shape checks.

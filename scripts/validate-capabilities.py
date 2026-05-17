@@ -20,9 +20,11 @@ from validation_utils import (
     parse_frontmatter,
     registry_items,
     relpath,
+    validate_description_length,
     validate_no_beginner_sections,
     validate_no_personal_references,
     validate_expected_count,
+    validate_name,
     validate_required_frontmatter,
     validate_required_sections,
     visible_child_dirs,
@@ -195,6 +197,7 @@ def _validate_capability_template(errors: list[str]) -> None:
         return
 
     validate_required_frontmatter(metadata, REQUIRED_FRONTMATTER, file_context, errors)
+    validate_name(metadata.get("name"), file_context, errors)
     if metadata.get("changeforge_kind") != "foundation-capability":
         errors.append(
             f"{file_context}: frontmatter 'changeforge_kind' must be foundation-capability"
@@ -323,6 +326,7 @@ def main() -> int:
     }
 
     capability_ids: dict[str, Path] = {}
+    capability_names: dict[str, Path] = {}
     implemented_capabilities: list[tuple[str, str | None, str | None, str]] = []
 
     for capability_dir in capability_dirs:
@@ -362,6 +366,20 @@ def main() -> int:
             capability_ids[normalized_capability_id] = skill_file
 
         name = metadata.get("name")
+        validate_name(name, file_context, errors)
+        if isinstance(name, str):
+            if name != capability_dir.name:
+                errors.append(f"{file_context}: frontmatter 'name' must match directory name")
+            if name in capability_names:
+                errors.append(
+                    f"{file_context}: duplicate capability name also declared in "
+                    f"{relpath(ROOT, capability_names[name])}"
+                )
+            else:
+                capability_names[name] = skill_file
+
+        validate_description_length(metadata.get("description"), 120, 700, file_context, errors)
+
         implemented_capabilities.append(
             (
                 file_context,

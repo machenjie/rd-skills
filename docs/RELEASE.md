@@ -45,6 +45,7 @@ Run the core validation suite before handoff:
 ```bash
 python3 scripts/validate-skills.py
 python3 scripts/validate-capabilities.py
+python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/build.py --profile recommended
 python3 scripts/build.py --profile full
@@ -56,11 +57,11 @@ Run installer dry runs for supported targets:
 
 ```bash
 python3 installers/install.py --agent codex --scope user --profile recommended --dry-run
-python3 installers/install.py --agent codex --scope project --target /tmp/changeforge-test-repo --profile full --dry-run
+python3 installers/install.py --agent codex --scope project --target /tmp/changeforge-codex-full --profile full --dry-run
 python3 installers/install.py --agent claude --scope user --profile recommended --dry-run
-python3 installers/install.py --agent claude --scope project --target /tmp/changeforge-test-repo --profile full --dry-run
+python3 installers/install.py --agent claude --scope project --target /tmp/changeforge-claude-full --profile full --dry-run
 python3 installers/install.py --agent copilot --scope user --profile recommended --dry-run
-python3 installers/install.py --agent copilot --scope project --target /tmp/changeforge-test-repo --profile full --dry-run
+python3 installers/install.py --agent copilot --scope project --target /tmp/changeforge-copilot-full --profile full --dry-run
 python3 installers/install.py --agent openai-api --profile recommended --dry-run
 ```
 
@@ -72,11 +73,17 @@ python3 installers/install.py --agent codex --scope project --target /tmp/change
 python3 installers/uninstall.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --dry-run
 python3 installers/doctor.py --agent codex --scope user --target /tmp/changeforge-recommended-user-smoke --profile recommended
 python3 installers/doctor.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --profile full
+python3 installers/install.py --agent claude --scope project --target /tmp/changeforge-claude-full-smoke --profile full
+python3 installers/doctor.py --agent claude --scope project --target /tmp/changeforge-claude-full-smoke --profile full
+python3 installers/uninstall.py --agent claude --scope project --target /tmp/changeforge-claude-full-smoke --dry-run
+python3 installers/install.py --agent copilot --scope project --target /tmp/changeforge-copilot-full-smoke --profile full
+python3 installers/doctor.py --agent copilot --scope project --target /tmp/changeforge-copilot-full-smoke --profile full
+python3 installers/uninstall.py --agent copilot --scope project --target /tmp/changeforge-copilot-full-smoke --dry-run
 python3 installers/install.py --agent openai-api --profile recommended --dry-run
 python3 scripts/validate-installation.py
 ```
 
-The recommended global/user smoke must install 19 top-level skills. The full project smoke must install 26 top-level skills. The uninstall dry-run must list only manifest-managed names. Doctor must pass for installed smoke targets. OpenAI API zip validation must pass profile count and archive shape checks.
+The Codex recommended user smoke must install 19 top-level skills. The Codex, Claude Code, and GitHub Copilot full project smoke installs must each install 26 top-level skills. The Codex, Claude Code, and GitHub Copilot uninstall dry-runs must list only manifest-managed names. Doctor must pass for every installed smoke target. OpenAI API zip validation must pass profile count and archive shape checks.
 
 ## Release Checklist
 
@@ -86,7 +93,7 @@ The recommended global/user smoke must install 19 top-level skills. The full pro
 - All runtime skills contain root `SKILL.md`.
 - Foundation capabilities are compiled into professional skill references for `recommended` and `full`.
 - Installer dry runs show 19 skills for recommended and 26 for full project installs.
-- Smoke install, uninstall, reinstall, and doctor pass for Codex, Claude Code, and GitHub Copilot project targets.
+- Final smoke commands cover Codex user recommended install, Codex project full install, Codex project uninstall dry-run, Codex user/project doctor, Claude Code project full install/doctor/uninstall dry-run, GitHub Copilot project full install/doctor/uninstall dry-run, OpenAI API recommended zip dry-run, and installation artifact validation.
 - OpenAI API zips pass profile count and archive shape validation.
 - Docs reflect any CLI, packaging, profile, or installer behavior changes.
 - Unresolved assumptions and manual review points are listed in the release handoff.

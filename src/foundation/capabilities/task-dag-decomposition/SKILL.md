@@ -1,6 +1,6 @@
 ---
 name: task-dag-decomposition
-description: Decomposes work into small dependency-aware, reviewable, testable, rollback-aware AI-executable tasks.
+description: Decomposes software changes into dependency-aware, reviewable, testable, rollback-aware AI-executable task DAGs with visible sequencing, parallel-safe boundaries, file-scope ownership, and verification outputs.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "77"

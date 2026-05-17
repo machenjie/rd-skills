@@ -183,6 +183,18 @@ def _validate_capability_status(entry: object, index: int, errors: list[str]) ->
         )
 
 
+def _validate_optional_status(
+    entry: object,
+    registry_name: str,
+    index: int,
+    errors: list[str],
+) -> None:
+    if not isinstance(entry, dict) or "status" not in entry:
+        return
+    if entry.get("status") != "implemented":
+        errors.append(f"{registry_name}[{index}]: status must be implemented when present")
+
+
 def main() -> int:
     errors: list[str] = []
 
@@ -233,6 +245,7 @@ def main() -> int:
         "skills.yaml:skills",
     )
     for index, entry in enumerate(skill_entries):
+        _validate_optional_status(entry, "skills.yaml:skills", index, errors)
         _validate_registry_entry_reference(
             entry,
             ("name", "skill", "skill_name", "id"),
@@ -282,6 +295,12 @@ def main() -> int:
         "domain-extensions.yaml:domain_extensions",
     )
     for index, entry in enumerate(domain_extension_entries):
+        _validate_optional_status(
+            entry,
+            "domain-extensions.yaml:domain_extensions",
+            index,
+            errors,
+        )
         _validate_registry_entry_reference(
             entry,
             ("name", "domain_extension", "domain_extension_id", "id"),

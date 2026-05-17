@@ -1,6 +1,6 @@
 ---
 name: transaction-consistency
-description: Designs minimal transaction boundaries that preserve invariants while avoiding avoidable distributed transactions.
+description: Designs minimal transaction boundaries that preserve named business invariants while avoiding avoidable distributed transactions, remote calls inside locks, over-broad contention, and mismatched consistency patterns.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "48"

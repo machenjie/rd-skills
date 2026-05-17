@@ -2,7 +2,7 @@
 
 Foundation capabilities are mandatory source assets for ChangeForge professional skills. They capture reusable expert judgment for product-change engineering: selection rules, risk gates, benchmark expectations, output contracts, and handoff criteria.
 
-Capabilities are not beginner tutorials, language notes, framework notes, tool notes, or source-installable runtime skills. They are compiled into concise professional skill references for the `recommended` and `full` runtime profiles.
+Capabilities are not beginner tutorials, language notes, framework notes, tool notes, or source-installable runtime skills. They are compiled into professional skill references for the `recommended` and `full` runtime profiles.
 
 ## Runtime Profile Rules
 
@@ -20,4 +20,4 @@ Capabilities are not beginner tutorials, language notes, framework notes, tool n
 
 ## Registry
 
-The canonical capability list is `src/registry/capabilities.yaml`. Pending registry entries reserve mandatory capability units until each source capability folder is authored from `_template/`; implemented entries must point to authored capability folders.
+The canonical capability list is `src/registry/capabilities.yaml`. Implemented registry entries must point to authored capability folders.

@@ -1,6 +1,6 @@
 ---
 name: permission-boundary-modeling
-description: Models authorization as subject, resource, action, and condition with object-level checks and backend enforcement.
+description: Models authorization as subject, resource, action, and condition rules with object-level scope, backend enforcement, auditable denial behavior, tenant isolation, and privilege-escalation resistance.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "16"

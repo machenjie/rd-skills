@@ -11,7 +11,7 @@ ChangeForge is self-contained. It does not ingest, scan, index, summarize, map, 
 ChangeForge has three authoring layers:
 
 1. Professional Skills: top-level professional product-change skills with `SKILL.md` at runtime.
-2. Foundation Capabilities: reusable engineering rules, benchmark names, selection criteria, and risk gates compiled into concise skill references.
+2. Foundation Capabilities: reusable engineering rules, benchmark names, selection criteria, and risk gates compiled into professional skill references.
 3. Domain Extensions: optional domain-specific skills or references for full and development profiles.
 
 ## Runtime Outputs
@@ -30,8 +30,8 @@ Build outputs are written to `dist/`:
 
 ## Runtime Profiles
 
-- `recommended`: installs 19 professional skills as top-level runtime skills, with 82 foundation capabilities compiled into concise `references/`.
-- `full`: installs 19 professional skills plus 7 eligible domain extensions as top-level runtime skills, with 82 foundation capabilities compiled into concise `references/`.
+- `recommended`: installs 19 professional skills as top-level runtime skills, with 82 foundation capabilities compiled into professional skill `references/`.
+- `full`: installs 19 professional skills plus 7 eligible domain extensions as top-level runtime skills, with 82 foundation capabilities compiled into professional skill `references/`.
 - `dev`: installs 19 professional skills plus 82 foundation capabilities plus 7 domain extensions as top-level runtime skills for authoring and validation work.
 
 Recommended and full profiles must not install all foundation capabilities as top-level global skills. Foundation capabilities are compiled into professional skill references unless the `dev` profile is explicitly selected.
@@ -55,6 +55,7 @@ Run the authoring contract validators:
 ```bash
 python3 scripts/validate-skills.py
 python3 scripts/validate-capabilities.py
+python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/build.py --profile recommended
 python3 scripts/build.py --profile full
@@ -62,4 +63,8 @@ python3 scripts/build.py --profile dev
 python3 scripts/validate-installation.py
 ```
 
-These scripts enforce the professional skill, foundation capability, registry, and runtime artifact contracts while remaining safe before any skills exist.
+These scripts enforce the professional skill, foundation capability, domain extension, registry, and runtime artifact contracts while remaining safe before any skills exist.
+
+## License Semantics
+
+The repository tooling license is defined in `pyproject.toml` for the authoring, validation, build, packaging, and installer code. Runtime Skill frontmatter declares the license for each generated Skill independently. This split is intentional: repository/tooling policy and per-Skill runtime content policy are separate contracts, and build/install tooling preserves the per-Skill frontmatter instead of inheriting repository metadata.

@@ -1,6 +1,6 @@
 ---
 name: idempotency-retry-design
-description: Designs idempotency and bounded retry for payments, order creation, webhooks, async consumers, and external calls.
+description: Designs idempotency keys, bounded retries, duplicate detection, timeout outcomes, and terminal failure states for payments, order creation, webhooks, async consumers, and side-effecting external calls.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "42"

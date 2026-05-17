@@ -1,6 +1,6 @@
 ---
 name: data-migration-design
-description: Designs guarded, observable, rollback-aware, deployment-order-aware data migrations and backfills.
+description: Designs guarded, observable, rollback-aware, deployment-order-aware data migrations and backfills that can run safely on live systems without silent partial application, data loss, or avoidable downtime.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "30"

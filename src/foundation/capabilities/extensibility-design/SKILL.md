@@ -1,6 +1,6 @@
 ---
 name: extensibility-design
-description: Designs extension points from known variation while rejecting speculative abstraction and unmanaged customization.
+description: Designs extension points only from proven variation, ownership, compatibility contracts, validation boundaries, deprecation paths, and security scope while rejecting speculative abstraction and unmanaged customization.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "24"

@@ -1,6 +1,6 @@
 ---
 name: domain-event-modeling
-description: Models domain events with producer, consumer, payload, idempotency, ordering, retry behavior, and audit impact.
+description: Models domain events as durable past-tense facts with explicit producer, transaction boundary, payload contract, schema version, idempotency key, ordering expectation, retry behavior, and audit impact.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "17"
