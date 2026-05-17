@@ -1,0 +1,734 @@
+---
+schema_version: 1
+kind: changeforge.capabilities
+description: Foundation capabilities compiled into professional skill references.
+capabilities:
+  - id: "01"
+    name: requirement-clarification
+    group: intake-requirements
+    path: src/foundation/capabilities/requirement-clarification
+    status: implemented
+    used_by: [change-intake-compiler]
+    triggers: [clarify ambiguous goals constraints assumptions missing information]
+    risk_notes: [Unclear intent can invalidate all downstream design and implementation]
+    expected_outputs: [clarified requirement questions assumptions and decision log]
+  - id: "02"
+    name: requirement-structuring
+    group: intake-requirements
+    path: src/foundation/capabilities/requirement-structuring
+    status: implemented
+    used_by: [change-intake-compiler]
+    triggers: [structure raw request into scope constraints dependencies and deliverables]
+    risk_notes: [Unstructured requests hide conflicts and unstated acceptance gaps]
+    expected_outputs: [structured change brief with scope constraints dependencies and unknowns]
+  - id: "03"
+    name: user-role-identification
+    group: intake-requirements
+    path: src/foundation/capabilities/user-role-identification
+    status: implemented
+    used_by: [change-intake-compiler, experience-impact-modeler, security-privacy-gate]
+    triggers: [identify actors personas operators administrators customers and service accounts]
+    risk_notes: [Wrong role boundaries cause permission defects and broken workflows]
+    expected_outputs: [role inventory with responsibilities permissions and affected journeys]
+  - id: "04"
+    name: scenario-decomposition
+    group: intake-requirements
+    path: src/foundation/capabilities/scenario-decomposition
+    status: implemented
+    used_by: [change-intake-compiler, acceptance-criteria-builder]
+    triggers: [break request into happy path edge case negative path and operational scenario]
+    risk_notes: [Missing scenarios create false completion and weak regression coverage]
+    expected_outputs: [scenario set with primary alternate exceptional and recovery paths]
+  - id: "05"
+    name: acceptance-standard-definition
+    group: intake-requirements
+    path: src/foundation/capabilities/acceptance-standard-definition
+    status: implemented
+    used_by: [acceptance-criteria-builder, quality-test-gate]
+    triggers: [define measurable acceptance criteria evidence and verification standard]
+    risk_notes: [Vague acceptance standards make done subjective and difficult to test]
+    expected_outputs: [acceptance criteria with measurable outcomes evidence and owners]
+  - id: "06"
+    name: non-goal-boundary-definition
+    group: intake-requirements
+    path: src/foundation/capabilities/non-goal-boundary-definition
+    status: implemented
+    used_by: [change-intake-compiler, task-dag-planner]
+    triggers: [separate in-scope work from non-goals exclusions and deferred decisions]
+    risk_notes: [Unbounded scope expands implementation and review beyond safe control]
+    expected_outputs: [scope boundary with explicit non-goals exclusions and deferrals]
+  - id: "07"
+    name: information-architecture
+    group: experience-design
+    path: src/foundation/capabilities/information-architecture
+    status: implemented
+    used_by: [experience-impact-modeler, frontend-change-builder]
+    triggers: [organize content hierarchy navigation labels and object relationships]
+    risk_notes: [Poor structure makes workflows harder to scan learn and operate]
+    expected_outputs: [information model with hierarchy labels grouping and navigation impact]
+  - id: "08"
+    name: user-flow-modeling
+    group: experience-design
+    path: src/foundation/capabilities/user-flow-modeling
+    status: implemented
+    used_by: [experience-impact-modeler, frontend-change-builder]
+    triggers: [model user journey page flow decision points and interruptions]
+    risk_notes: [Unmodeled flows miss dead ends recovery states and cross-page regressions]
+    expected_outputs: [flow map with entry points actions decisions exits and recovery paths]
+  - id: "09"
+    name: prototype-description
+    group: experience-design
+    path: src/foundation/capabilities/prototype-description
+    status: implemented
+    used_by: [experience-impact-modeler, frontend-change-builder]
+    triggers: [describe prototype layout behavior content hierarchy and interaction intent]
+    risk_notes: [Ambiguous prototype language leads to mismatched implementation choices]
+    expected_outputs: [prototype brief with layout behavior states and content obligations]
+  - id: "10"
+    name: interaction-state-modeling
+    group: experience-design
+    path: src/foundation/capabilities/interaction-state-modeling
+    status: implemented
+    used_by: [experience-impact-modeler, frontend-change-builder, quality-test-gate]
+    triggers: [model empty loading error success disabled focused and permission states]
+    risk_notes: [Missing states create inaccessible confusing or brittle user experiences]
+    expected_outputs: [state matrix with triggers visuals behavior and test expectations]
+  - id: "11"
+    name: design-system-rules
+    group: experience-design
+    path: src/foundation/capabilities/design-system-rules
+    status: implemented
+    used_by: [experience-impact-modeler, frontend-change-builder]
+    triggers: [apply design tokens component conventions spacing typography and interaction rules]
+    risk_notes: [Design drift increases inconsistency maintenance cost and user confusion]
+    expected_outputs: [design rule checklist with token component and exception decisions]
+  - id: "12"
+    name: domain-object-identification
+    group: domain-modeling
+    path: src/foundation/capabilities/domain-object-identification
+    status: implemented
+    used_by: [domain-impact-modeler, data-api-contract-changer, backend-change-builder]
+    triggers: [identify entities value objects aggregates resources and lifecycle owners]
+    risk_notes: [Incorrect objects distort persistence contracts permissions and events]
+    expected_outputs: [domain object inventory with ownership identity lifecycle and relationships]
+  - id: "13"
+    name: business-rule-extraction
+    group: domain-modeling
+    path: src/foundation/capabilities/business-rule-extraction
+    status: implemented
+    used_by: [domain-impact-modeler, backend-change-builder]
+    triggers: [extract invariants policies calculations constraints and decision authority]
+    risk_notes: [Hidden rules leak into UI or tests and become inconsistent]
+    expected_outputs: [business rule catalog with authority invariants exceptions and examples]
+  - id: "14"
+    name: state-machine-modeling
+    group: domain-modeling
+    path: src/foundation/capabilities/state-machine-modeling
+    status: implemented
+    used_by: [domain-impact-modeler, backend-change-builder, quality-test-gate]
+    triggers: [model lifecycle states transitions guards side effects and terminal states]
+    risk_notes: [Invalid transitions cause data corruption and unrecoverable workflow states]
+    expected_outputs: [state machine table with guards events side effects and invalid paths]
+  - id: "15"
+    name: use-case-modeling
+    group: domain-modeling
+    path: src/foundation/capabilities/use-case-modeling
+    status: implemented
+    used_by: [domain-impact-modeler, change-impact-analyzer]
+    triggers: [model use cases actors preconditions postconditions and success guarantees]
+    risk_notes: [Weak use cases blur product behavior with implementation mechanics]
+    expected_outputs: [use case set with actors preconditions flow variants and guarantees]
+  - id: "16"
+    name: permission-boundary-modeling
+    group: domain-modeling
+    path: src/foundation/capabilities/permission-boundary-modeling
+    status: implemented
+    used_by: [domain-impact-modeler, security-privacy-gate, backend-change-builder]
+    triggers: [model authorization boundaries ownership tenant scope and privilege transitions]
+    risk_notes: [Permission mistakes expose data or block legitimate workflows]
+    expected_outputs: [permission matrix with actors resources actions scopes and denials]
+  - id: "17"
+    name: domain-event-modeling
+    group: domain-modeling
+    path: src/foundation/capabilities/domain-event-modeling
+    status: implemented
+    used_by: [domain-impact-modeler, integration-change-builder, data-middleware-change-builder]
+    triggers: [model domain events producers consumers payloads timing and consistency expectations]
+    risk_notes: [Incorrect events create duplicate effects missed notifications and stale projections]
+    expected_outputs: [event catalog with schema producer consumer ordering and idempotency notes]
+  - id: "18"
+    name: architecture-style-selection
+    group: architecture-design
+    path: src/foundation/capabilities/architecture-style-selection
+    status: implemented
+    used_by: [architecture-impact-reviewer]
+    triggers: [select monolith modular layered service event driven or hybrid architecture style]
+    risk_notes: [Premature complexity or undersized structure increases delivery and operations risk]
+    expected_outputs: [architecture style decision with forces tradeoffs and constraints]
+  - id: "19"
+    name: module-boundary-design
+    group: architecture-design
+    path: src/foundation/capabilities/module-boundary-design
+    status: implemented
+    used_by: [architecture-impact-reviewer, backend-change-builder, ai-code-review-refactor]
+    triggers: [define module ownership interfaces dependencies and allowed coupling]
+    risk_notes: [Weak boundaries spread changes across unrelated code and amplify regressions]
+    expected_outputs: [module boundary map with ownership contracts dependencies and forbidden crossings]
+  - id: "20"
+    name: layered-architecture-design
+    group: architecture-design
+    path: src/foundation/capabilities/layered-architecture-design
+    status: implemented
+    used_by: [architecture-impact-reviewer, backend-change-builder]
+    triggers: [design presentation application domain infrastructure and persistence layering]
+    risk_notes: [Layer violations hide business rules and make testing expensive]
+    expected_outputs: [layering decision with responsibilities dependency direction and exceptions]
+  - id: "21"
+    name: microservice-splitting
+    group: architecture-design
+    path: src/foundation/capabilities/microservice-splitting
+    status: implemented
+    used_by: [architecture-impact-reviewer, delivery-release-gate]
+    triggers: [evaluate service split boundaries ownership deployment data and operational cost]
+    risk_notes: [Poor splits create distributed transactions and coordination overhead]
+    expected_outputs: [service split assessment with boundaries data ownership and rejection reasons]
+  - id: "22"
+    name: event-driven-architecture
+    group: architecture-design
+    path: src/foundation/capabilities/event-driven-architecture
+    status: implemented
+    used_by: [architecture-impact-reviewer, integration-change-builder, data-middleware-change-builder]
+    triggers: [design asynchronous event flow ordering idempotency replay and eventual consistency]
+    risk_notes: [Event systems fail through duplicate messages ordering gaps and invisible lag]
+    expected_outputs: [event architecture plan with topics payloads consumers retries and observability]
+  - id: "23"
+    name: architecture-tradeoff-analysis
+    group: architecture-design
+    path: src/foundation/capabilities/architecture-tradeoff-analysis
+    status: implemented
+    used_by: [architecture-impact-reviewer, change-impact-analyzer]
+    triggers: [compare architecture options constraints forces risks and long term cost]
+    risk_notes: [Unstated tradeoffs make decisions hard to revisit or defend]
+    expected_outputs: [tradeoff matrix with decision forces alternatives and consequences]
+  - id: "24"
+    name: extensibility-design
+    group: architecture-design
+    path: src/foundation/capabilities/extensibility-design
+    status: implemented
+    used_by: [architecture-impact-reviewer, ai-code-review-refactor]
+    triggers: [design extension points configuration variation plugins and policy hooks]
+    risk_notes: [Overgeneralization bloats code while underdesign blocks expected variation]
+    expected_outputs: [extensibility plan with extension points constraints and anti-overengineering check]
+  - id: "25"
+    name: data-model-design
+    group: data-api-contracts
+    path: src/foundation/capabilities/data-model-design
+    status: implemented
+    used_by: [data-api-contract-changer, domain-impact-modeler]
+    triggers: [design records entities attributes relationships cardinality and lifecycle]
+    risk_notes: [Bad data models create migration pain and inconsistent domain behavior]
+    expected_outputs: [data model proposal with entities relationships constraints and migration impact]
+  - id: "26"
+    name: api-contract-design
+    group: data-api-contracts
+    path: src/foundation/capabilities/api-contract-design
+    status: implemented
+    used_by: [data-api-contract-changer, integration-change-builder]
+    triggers: [design API endpoints resources methods payloads pagination and compatibility]
+    risk_notes: [Contract ambiguity breaks clients and makes backward compatibility difficult]
+    expected_outputs: [API contract specification with request response errors and compatibility notes]
+  - id: "27"
+    name: dto-schema-design
+    group: data-api-contracts
+    path: src/foundation/capabilities/dto-schema-design
+    status: implemented
+    used_by: [data-api-contract-changer, backend-change-builder, frontend-change-builder]
+    triggers: [design DTO schemas fields validation defaults nullability and serialization]
+    risk_notes: [Schema drift causes client defects and inconsistent validation behavior]
+    expected_outputs: [DTO schema contract with fields types defaults validation and examples]
+  - id: "28"
+    name: error-code-design
+    group: data-api-contracts
+    path: src/foundation/capabilities/error-code-design
+    status: implemented
+    used_by: [data-api-contract-changer, backend-change-builder, frontend-change-builder]
+    triggers: [design error model codes messages remediation and client behavior]
+    risk_notes: [Poor errors hide recoverability and create inconsistent frontend handling]
+    expected_outputs: [error catalog with codes meanings retryability and user safe messages]
+  - id: "29"
+    name: version-compatibility
+    group: data-api-contracts
+    path: src/foundation/capabilities/version-compatibility
+    status: implemented
+    used_by: [data-api-contract-changer, delivery-release-gate]
+    triggers: [assess backward compatibility deprecation version negotiation and client migration]
+    risk_notes: [Breaking compatibility can strand clients and block safe rollout]
+    expected_outputs: [compatibility assessment with breaking changes migration path and deprecation plan]
+  - id: "30"
+    name: data-migration-design
+    group: data-api-contracts
+    path: src/foundation/capabilities/data-migration-design
+    status: implemented
+    used_by: [data-api-contract-changer, delivery-release-gate, data-middleware-change-builder]
+    triggers: [design schema migration data backfill rollback validation and deployment ordering]
+    risk_notes: [Unsafe migrations can lock tables lose data or block rollback]
+    expected_outputs: [migration plan with phases validation rollback and operational safeguards]
+  - id: "31"
+    name: page-component-decomposition
+    group: frontend-engineering
+    path: src/foundation/capabilities/page-component-decomposition
+    status: implemented
+    used_by: [frontend-change-builder, experience-impact-modeler]
+    triggers: [decompose page into components responsibilities props and reusable boundaries]
+    risk_notes: [Poor decomposition creates brittle components and unclear state ownership]
+    expected_outputs: [component map with responsibilities data needs props and reuse decisions]
+  - id: "32"
+    name: routing-navigation-design
+    group: frontend-engineering
+    path: src/foundation/capabilities/routing-navigation-design
+    status: implemented
+    used_by: [frontend-change-builder, experience-impact-modeler]
+    triggers: [design routes navigation guards deep links breadcrumbs and back behavior]
+    risk_notes: [Routing mistakes break discoverability permissions and browser expectations]
+    expected_outputs: [route plan with paths guards navigation states and fallback behavior]
+  - id: "33"
+    name: state-management-design
+    group: frontend-engineering
+    path: src/foundation/capabilities/state-management-design
+    status: implemented
+    used_by: [frontend-change-builder]
+    triggers: [choose local server global derived optimistic and persisted state boundaries]
+    risk_notes: [Wrong state ownership causes stale data duplicated logic and race defects]
+    expected_outputs: [state ownership map with sources updates invalidation and synchronization rules]
+  - id: "34"
+    name: form-validation-design
+    group: frontend-engineering
+    path: src/foundation/capabilities/form-validation-design
+    status: implemented
+    used_by: [frontend-change-builder, quality-test-gate]
+    triggers: [design form fields validation messages submission states and error recovery]
+    risk_notes: [Weak validation loses user input and creates inconsistent server rejection paths]
+    expected_outputs: [form contract with fields validation timing errors and submission states]
+  - id: "35"
+    name: frontend-api-integration
+    group: frontend-engineering
+    path: src/foundation/capabilities/frontend-api-integration
+    status: implemented
+    used_by: [frontend-change-builder, data-api-contract-changer]
+    triggers: [integrate frontend with API loading caching errors retries and optimistic updates]
+    risk_notes: [Integration gaps create stale views duplicate requests and misleading UI states]
+    expected_outputs: [frontend API plan with fetch lifecycle cache invalidation and error behavior]
+  - id: "36"
+    name: frontend-testing
+    group: frontend-engineering
+    path: src/foundation/capabilities/frontend-testing
+    status: implemented
+    used_by: [frontend-change-builder, quality-test-gate]
+    triggers: [test components routes interactions accessibility and API state handling]
+    risk_notes: [Missing frontend tests leave regressions in user visible workflows]
+    expected_outputs: [frontend test plan with component integration and E2E coverage targets]
+  - id: "37"
+    name: controller-api-implementation
+    group: backend-engineering
+    path: src/foundation/capabilities/controller-api-implementation
+    status: implemented
+    used_by: [backend-change-builder, data-api-contract-changer]
+    triggers: [implement controller routing request parsing validation response and status codes]
+    risk_notes: [Controller mistakes leak transport details and inconsistent error semantics]
+    expected_outputs: [controller implementation plan with route handling validation and response contract]
+  - id: "38"
+    name: service-business-logic
+    group: backend-engineering
+    path: src/foundation/capabilities/service-business-logic
+    status: implemented
+    used_by: [backend-change-builder, domain-impact-modeler]
+    triggers: [place application service orchestration policies invariants and transaction scope]
+    risk_notes: [Business logic in the wrong layer becomes duplicated and hard to audit]
+    expected_outputs: [service logic plan with responsibilities invariants dependencies and tests]
+  - id: "39"
+    name: domain-logic-implementation
+    group: backend-engineering
+    path: src/foundation/capabilities/domain-logic-implementation
+    status: implemented
+    used_by: [backend-change-builder, domain-impact-modeler]
+    triggers: [implement domain invariants calculations transitions policies and aggregate behavior]
+    risk_notes: [Weak domain logic allows invalid states and inconsistent rule enforcement]
+    expected_outputs: [domain implementation contract with invariants operations and failure cases]
+  - id: "40"
+    name: repository-persistence
+    group: backend-engineering
+    path: src/foundation/capabilities/repository-persistence
+    status: implemented
+    used_by: [backend-change-builder, data-middleware-change-builder]
+    triggers: [implement repository queries persistence mapping transactions and data access boundaries]
+    risk_notes: [Leaky persistence couples domain behavior to storage details]
+    expected_outputs: [repository contract with methods queries transaction expectations and tests]
+  - id: "41"
+    name: authentication-authorization
+    group: backend-engineering
+    path: src/foundation/capabilities/authentication-authorization
+    status: implemented
+    used_by: [backend-change-builder, security-privacy-gate]
+    triggers: [implement authentication authorization sessions tokens roles policies and denials]
+    risk_notes: [Auth defects can expose protected actions or break legitimate access]
+    expected_outputs: [auth implementation plan with identity source policies denials and audits]
+  - id: "42"
+    name: idempotency-retry-design
+    group: backend-engineering
+    path: src/foundation/capabilities/idempotency-retry-design
+    status: implemented
+    used_by: [backend-change-builder, integration-change-builder, reliability-observability-gate]
+    triggers: [design idempotency keys retries backoff deduplication and replay safety]
+    risk_notes: [Unsafe retries cause duplicate writes or permanent partial failure]
+    expected_outputs: [idempotency and retry contract with keys windows backoff and duplicate handling]
+  - id: "43"
+    name: async-job-design
+    group: backend-engineering
+    path: src/foundation/capabilities/async-job-design
+    status: implemented
+    used_by: [backend-change-builder, data-middleware-change-builder, reliability-observability-gate]
+    triggers: [design background jobs queues schedules workers retries and status visibility]
+    risk_notes: [Async work can hide failures duplicate effects and block observability]
+    expected_outputs: [job design with lifecycle retries idempotency observability and operator actions]
+  - id: "44"
+    name: logging-error-handling
+    group: backend-engineering
+    path: src/foundation/capabilities/logging-error-handling
+    status: implemented
+    used_by: [backend-change-builder, reliability-observability-gate]
+    triggers: [design structured errors logging context propagation and safe diagnostics]
+    risk_notes: [Poor errors and logs slow diagnosis or leak sensitive data]
+    expected_outputs: [error handling and logging plan with taxonomy context and redaction rules]
+  - id: "45"
+    name: relational-database
+    group: data-middleware
+    path: src/foundation/capabilities/relational-database
+    status: implemented
+    used_by: [data-middleware-change-builder, data-api-contract-changer]
+    triggers: [design relational tables constraints joins normalization and transactional access]
+    risk_notes: [Relational misuse creates integrity gaps query pain and migration risk]
+    expected_outputs: [relational design with schema constraints indexes and transaction notes]
+  - id: "46"
+    name: nosql-database
+    group: data-middleware
+    path: src/foundation/capabilities/nosql-database
+    status: implemented
+    used_by: [data-middleware-change-builder]
+    triggers: [design document key value wide column or graph storage access patterns]
+    risk_notes: [NoSQL choices fail when access patterns consistency and indexes are vague]
+    expected_outputs: [NoSQL design with access patterns partitioning consistency and limits]
+  - id: "47"
+    name: indexing-query-optimization
+    group: data-middleware
+    path: src/foundation/capabilities/indexing-query-optimization
+    status: implemented
+    used_by: [data-middleware-change-builder, reliability-observability-gate]
+    triggers: [optimize indexes query plans pagination filters sorting and read paths]
+    risk_notes: [Slow queries degrade reliability and can trigger costly production incidents]
+    expected_outputs: [query optimization plan with indexes plans cardinality and verification]
+  - id: "48"
+    name: transaction-consistency
+    group: data-middleware
+    path: src/foundation/capabilities/transaction-consistency
+    status: implemented
+    used_by: [data-middleware-change-builder, backend-change-builder]
+    triggers: [design transaction boundaries isolation consistency locking and conflict handling]
+    risk_notes: [Weak consistency causes lost updates stale reads and broken invariants]
+    expected_outputs: [consistency plan with transaction scope isolation conflicts and tests]
+  - id: "49"
+    name: cache-design
+    group: data-middleware
+    path: src/foundation/capabilities/cache-design
+    status: implemented
+    used_by: [data-middleware-change-builder, reliability-observability-gate]
+    triggers: [design cache keys TTL invalidation stampede protection and freshness policy]
+    risk_notes: [Cache mistakes serve stale data or overload the source of truth]
+    expected_outputs: [cache strategy with keys freshness invalidation and fallback behavior]
+  - id: "50"
+    name: message-queue-design
+    group: data-middleware
+    path: src/foundation/capabilities/message-queue-design
+    status: implemented
+    used_by: [data-middleware-change-builder, integration-change-builder]
+    triggers: [design queues topics consumers ordering retries dead letters and backpressure]
+    risk_notes: [Queue misuse creates duplicate work invisible failure and processing lag]
+    expected_outputs: [message queue plan with topology ordering retries DLQ and metrics]
+  - id: "51"
+    name: search-analytics-design
+    group: data-middleware
+    path: src/foundation/capabilities/search-analytics-design
+    status: implemented
+    used_by: [data-middleware-change-builder, experience-impact-modeler]
+    triggers: [design search indexing analytics events aggregation and query experience]
+    risk_notes: [Search and analytics drift can mislead users and product decisions]
+    expected_outputs: [search analytics design with events indexes queries and quality checks]
+  - id: "52"
+    name: threat-modeling
+    group: security-privacy
+    path: src/foundation/capabilities/threat-modeling
+    status: implemented
+    used_by: [security-privacy-gate, architecture-impact-reviewer]
+    triggers: [identify assets trust boundaries adversaries threats mitigations and residual risk]
+    risk_notes: [Unmodeled threats leave exploitable gaps in design and implementation]
+    expected_outputs: [threat model with assets boundaries threats mitigations and residual risk]
+  - id: "53"
+    name: input-validation
+    group: security-privacy
+    path: src/foundation/capabilities/input-validation
+    status: implemented
+    used_by: [security-privacy-gate, backend-change-builder, frontend-change-builder]
+    triggers: [validate input types ranges encodings formats schemas and hostile payloads]
+    risk_notes: [Weak validation enables injection corruption and business rule bypass]
+    expected_outputs: [input validation contract with allowed values rejection behavior and tests]
+  - id: "54"
+    name: web-security
+    group: security-privacy
+    path: src/foundation/capabilities/web-security
+    status: implemented
+    used_by: [security-privacy-gate, frontend-change-builder, backend-change-builder]
+    triggers: [assess XSS CSRF SSRF CORS clickjacking headers cookies and browser controls]
+    risk_notes: [Web security gaps can expose sessions data and privileged actions]
+    expected_outputs: [web security checklist with threats controls tests and residual risks]
+  - id: "55"
+    name: authentication-security
+    group: security-privacy
+    path: src/foundation/capabilities/authentication-security
+    status: implemented
+    used_by: [security-privacy-gate, backend-change-builder]
+    triggers: [secure authentication sessions tokens passwords MFA and account recovery]
+    risk_notes: [Authentication weakness compromises identity and downstream authorization]
+    expected_outputs: [authentication security review with controls failure cases and audits]
+  - id: "56"
+    name: secret-configuration-security
+    group: security-privacy
+    path: src/foundation/capabilities/secret-configuration-security
+    status: implemented
+    used_by: [security-privacy-gate, delivery-release-gate]
+    triggers: [secure secrets environment variables configuration defaults and runtime exposure]
+    risk_notes: [Secret leaks and unsafe defaults create immediate operational exposure]
+    expected_outputs: [secret and config review with storage access rotation and redaction rules]
+  - id: "57"
+    name: dependency-vulnerability-scanning
+    group: security-privacy
+    path: src/foundation/capabilities/dependency-vulnerability-scanning
+    status: implemented
+    used_by: [security-privacy-gate, delivery-release-gate]
+    triggers: [assess dependency vulnerabilities supply chain risk licenses and update policy]
+    risk_notes: [Unreviewed dependencies can introduce exploitable or unsupported code paths]
+    expected_outputs: [dependency risk report with findings severity remediation and exceptions]
+  - id: "58"
+    name: test-strategy
+    group: quality-testing
+    path: src/foundation/capabilities/test-strategy
+    status: implemented
+    used_by: [quality-test-gate, task-dag-planner]
+    triggers: [choose risk based test levels coverage depth and verification evidence]
+    risk_notes: [Wrong test strategy wastes effort while missing critical regressions]
+    expected_outputs: [test strategy with scope levels risk mapping and evidence requirements]
+  - id: "59"
+    name: unit-testing
+    group: quality-testing
+    path: src/foundation/capabilities/unit-testing
+    status: implemented
+    used_by: [quality-test-gate, backend-change-builder, frontend-change-builder]
+    triggers: [test pure logic edge cases invariants branches and failure paths]
+    risk_notes: [Weak unit tests miss localized defects and make refactoring unsafe]
+    expected_outputs: [unit test plan with cases inputs expected results and coverage rationale]
+  - id: "60"
+    name: integration-testing
+    group: quality-testing
+    path: src/foundation/capabilities/integration-testing
+    status: implemented
+    used_by: [quality-test-gate, integration-change-builder]
+    triggers: [test module database service or external integration boundaries]
+    risk_notes: [Integration gaps hide contract mismatches and environment failures]
+    expected_outputs: [integration test plan with boundaries fixtures dependencies and assertions]
+  - id: "61"
+    name: contract-testing
+    group: quality-testing
+    path: src/foundation/capabilities/contract-testing
+    status: implemented
+    used_by: [quality-test-gate, data-api-contract-changer, integration-change-builder]
+    triggers: [test API schemas provider consumer compatibility and breaking changes]
+    risk_notes: [Untested contracts break clients even when services pass local tests]
+    expected_outputs: [contract test plan with schemas examples providers consumers and compatibility checks]
+  - id: "62"
+    name: e2e-testing
+    group: quality-testing
+    path: src/foundation/capabilities/e2e-testing
+    status: implemented
+    used_by: [quality-test-gate, frontend-change-builder]
+    triggers: [test complete user workflows browser flows permissions and critical paths]
+    risk_notes: [Missing E2E coverage leaves user visible regressions undiscovered]
+    expected_outputs: [E2E test plan with journeys data states assertions and flake controls]
+  - id: "63"
+    name: test-data-management
+    group: quality-testing
+    path: src/foundation/capabilities/test-data-management
+    status: implemented
+    used_by: [quality-test-gate, data-middleware-change-builder]
+    triggers: [manage fixtures factories seeded data isolation cleanup and sensitive data rules]
+    risk_notes: [Poor test data creates flaky tests misleading coverage and data exposure]
+    expected_outputs: [test data plan with fixtures isolation cleanup and safety constraints]
+  - id: "64"
+    name: regression-testing
+    group: quality-testing
+    path: src/foundation/capabilities/regression-testing
+    status: implemented
+    used_by: [quality-test-gate, ai-code-review-refactor]
+    triggers: [identify regression surfaces historical bugs impacted flows and guard tests]
+    risk_notes: [Regression gaps allow fixed behavior to fail again after adjacent changes]
+    expected_outputs: [regression matrix with affected surfaces prior defects and guard coverage]
+  - id: "65"
+    name: performance-budgeting
+    group: reliability-operations
+    path: src/foundation/capabilities/performance-budgeting
+    status: implemented
+    used_by: [reliability-observability-gate, frontend-change-builder]
+    triggers: [set latency throughput memory payload and rendering performance budgets]
+    risk_notes: [No budget makes performance regressions subjective and late to detect]
+    expected_outputs: [performance budget with metrics thresholds scenarios and measurement plan]
+  - id: "66"
+    name: profiling
+    group: reliability-operations
+    path: src/foundation/capabilities/profiling
+    status: implemented
+    used_by: [reliability-observability-gate, data-middleware-change-builder]
+    triggers: [profile CPU memory IO database network rendering and bottlenecks]
+    risk_notes: [Guessing at bottlenecks wastes effort and can worsen real constraints]
+    expected_outputs: [profiling plan with measurements bottlenecks evidence and next actions]
+  - id: "67"
+    name: concurrency-control
+    group: reliability-operations
+    path: src/foundation/capabilities/concurrency-control
+    status: implemented
+    used_by: [reliability-observability-gate, backend-change-builder, data-middleware-change-builder]
+    triggers: [control concurrent writes races locks leases optimistic conflicts and queues]
+    risk_notes: [Concurrency defects cause duplicate effects lost updates and intermittent failures]
+    expected_outputs: [concurrency plan with critical sections locks conflicts and tests]
+  - id: "68"
+    name: degradation-circuit-breaking
+    group: reliability-operations
+    path: src/foundation/capabilities/degradation-circuit-breaking
+    status: implemented
+    used_by: [reliability-observability-gate, integration-change-builder]
+    triggers: [design fallback degradation timeout bulkhead circuit breaker and recovery behavior]
+    risk_notes: [No degradation path turns dependency failures into full outages]
+    expected_outputs: [resilience plan with timeouts fallbacks circuit thresholds and recovery checks]
+  - id: "69"
+    name: observability
+    group: reliability-operations
+    path: src/foundation/capabilities/observability
+    status: implemented
+    used_by: [reliability-observability-gate, backend-change-builder]
+    triggers: [design logs metrics traces dashboards alerts SLI and diagnostic context]
+    risk_notes: [Insufficient observability makes incidents longer and verification weaker]
+    expected_outputs: [observability plan with signals dashboards alerts and investigation paths]
+  - id: "70"
+    name: backup-recovery
+    group: reliability-operations
+    path: src/foundation/capabilities/backup-recovery
+    status: implemented
+    used_by: [reliability-observability-gate, delivery-release-gate]
+    triggers: [plan backups restore recovery point recovery time and disaster scenarios]
+    risk_notes: [Untested recovery makes data loss or long outage likely during failure]
+    expected_outputs: [backup recovery plan with RPO RTO restore tests and ownership]
+  - id: "71"
+    name: project-initialization
+    group: delivery-platform
+    path: src/foundation/capabilities/project-initialization
+    status: implemented
+    used_by: [delivery-release-gate]
+    triggers: [initialize project structure dependencies configuration scripts and quality gates]
+    risk_notes: [Weak initialization creates inconsistent environments and hidden setup debt]
+    expected_outputs: [project setup plan with structure commands configs and verification]
+  - id: "72"
+    name: containerization
+    group: delivery-platform
+    path: src/foundation/capabilities/containerization
+    status: implemented
+    used_by: [delivery-release-gate]
+    triggers: [design Docker images build context layers runtime user and health checks]
+    risk_notes: [Unsafe containers increase attack surface and deployment inconsistency]
+    expected_outputs: [container plan with image strategy build rules runtime config and checks]
+  - id: "73"
+    name: ci-cd
+    group: delivery-platform
+    path: src/foundation/capabilities/ci-cd
+    status: implemented
+    used_by: [delivery-release-gate, quality-test-gate]
+    triggers: [design CI CD pipelines checks artifacts environments approvals and deployment gates]
+    risk_notes: [Weak pipelines allow unverified or unreproducible changes into production]
+    expected_outputs: [pipeline plan with stages gates artifacts secrets and rollback hooks]
+  - id: "74"
+    name: kubernetes-gateway
+    group: delivery-platform
+    path: src/foundation/capabilities/kubernetes-gateway
+    status: implemented
+    used_by: [delivery-release-gate, reliability-observability-gate]
+    triggers: [design Kubernetes workload service ingress gateway probes and rollout controls]
+    risk_notes: [Kubernetes misconfiguration causes exposure outages or failed rollouts]
+    expected_outputs: [Kubernetes gateway plan with resources routes probes scaling and safety checks]
+  - id: "75"
+    name: release-rollback
+    group: delivery-platform
+    path: src/foundation/capabilities/release-rollback
+    status: implemented
+    used_by: [delivery-release-gate]
+    triggers: [plan release sequencing rollout flags canary validation rollback and communication]
+    risk_notes: [No rollback path turns defects into extended customer impact]
+    expected_outputs: [release plan with rollout steps checks rollback triggers and owners]
+  - id: "76"
+    name: context-packaging
+    group: engineering-workflow
+    path: src/foundation/capabilities/context-packaging
+    status: implemented
+    used_by: [task-dag-planner, ai-code-review-refactor]
+    triggers: [package task context constraints decisions files evidence and open questions]
+    risk_notes: [Poor context transfer causes duplicated analysis and incorrect assumptions]
+    expected_outputs: [context package with scope files decisions evidence and unresolved questions]
+  - id: "77"
+    name: task-dag-decomposition
+    group: engineering-workflow
+    path: src/foundation/capabilities/task-dag-decomposition
+    status: implemented
+    used_by: [task-dag-planner]
+    triggers: [decompose work into dependency aware parallel reviewable and testable tasks]
+    risk_notes: [Bad task order creates blockers merge conflicts and missed verification]
+    expected_outputs: [task DAG with dependencies ownership verification and handoff points]
+  - id: "78"
+    name: code-review
+    group: engineering-workflow
+    path: src/foundation/capabilities/code-review
+    status: implemented
+    used_by: [ai-code-review-refactor, quality-test-gate]
+    triggers: [review code for defects regressions contracts security performance and maintainability]
+    risk_notes: [Superficial review misses behavioral bugs and hidden risk]
+    expected_outputs: [review findings with severity evidence impact and remediation]
+  - id: "79"
+    name: refactoring
+    group: engineering-workflow
+    path: src/foundation/capabilities/refactoring
+    status: implemented
+    used_by: [ai-code-review-refactor, architecture-impact-reviewer]
+    triggers: [reshape code while preserving behavior tests contracts and ownership boundaries]
+    risk_notes: [Refactors without safety checks cause unintended behavior changes]
+    expected_outputs: [refactor plan with preserved behavior tests boundaries and rollback notes]
+  - id: "80"
+    name: documentation-generation
+    group: engineering-workflow
+    path: src/foundation/capabilities/documentation-generation
+    status: implemented
+    used_by: [change-documentation-gate]
+    triggers: [generate or update README API docs ADR changelog runbook and migration notes]
+    risk_notes: [Outdated docs mislead operators users and future implementers]
+    expected_outputs: [documentation update plan with affected docs audience and verification]
+  - id: "81"
+    name: failure-diagnosis
+    group: engineering-workflow
+    path: src/foundation/capabilities/failure-diagnosis
+    status: implemented
+    used_by: [reliability-observability-gate, ai-code-review-refactor]
+    triggers: [diagnose failures symptoms logs metrics regressions hypotheses and root cause]
+    risk_notes: [Jumping to fixes without evidence can mask root cause and add defects]
+    expected_outputs: [diagnosis report with symptoms evidence hypotheses root cause and fix direction]

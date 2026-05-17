@@ -1,0 +1,19 @@
+---
+schema_version: 1
+kind: changeforge.domain_extensions
+description: Optional domain extensions eligible for full and development runtime profiles.
+domain_extensions:
+  - name: web3-product-extension
+    path: src/domain-extensions/web3-product-extension
+  - name: ai-product-extension
+    path: src/domain-extensions/ai-product-extension
+  - name: mobile-product-extension
+    path: src/domain-extensions/mobile-product-extension
+  - name: bigdata-product-extension
+    path: src/domain-extensions/bigdata-product-extension
+  - name: iot-embedded-extension
+    path: src/domain-extensions/iot-embedded-extension
+  - name: payment-trading-extension
+    path: src/domain-extensions/payment-trading-extension
+  - name: low-level-systems-extension
+    path: src/domain-extensions/low-level-systems-extension

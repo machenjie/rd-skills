@@ -1,0 +1,683 @@
+---
+schema_version: 1
+kind: changeforge.routing_rules
+description: Runtime routing rules for professional ChangeForge skills and foundation capabilities.
+supported_change_types:
+  - new feature
+  - feature modification
+  - bug fix
+  - refactor
+  - API change
+  - data model change
+  - database migration
+  - frontend change
+  - backend change
+  - integration change
+  - dependency upgrade
+  - security fix
+  - performance optimization
+  - reliability improvement
+  - observability change
+  - deployment change
+  - configuration change
+  - documentation change
+  - code review
+  - test generation
+runtime_profiles:
+  - name: recommended
+    top_level: professional skills
+    foundation_mode: compiled professional references
+    domain_extension_mode: router index only
+  - name: full
+    top_level: professional skills and domain extensions
+    foundation_mode: compiled professional references
+    domain_extension_mode: top-level runtime skills
+  - name: dev
+    top_level: professional skills, foundation capabilities, and domain extensions
+    foundation_mode: top-level and compiled professional references
+    domain_extension_mode: top-level runtime skills
+complexity_rules:
+  - level: L1
+    name: isolated local change
+    rule: Use only relevant builder, review, or test skills; add intake or acceptance only when unclear or untestable.
+    minimum_path: targeted builder or gate
+  - level: L2
+    name: single-module change
+    rule: Include intake, impact when blast radius is uncertain, acceptance, implementation, and test.
+    minimum_path: intake, acceptance, implementation, test
+  - level: L3
+    name: multi-module product change
+    rule: Include intake, impact, domain or architecture if affected, data/API if affected, implementation, security if needed, tests, and docs.
+    minimum_path: intake, impact, acceptance, affected design skills, implementation, tests, docs
+  - level: L4
+    name: product-grade high-risk change
+    rule: Include the full relevant path and all quality gates touched by risk and impact.
+    minimum_path: intake, impact, acceptance, design, implementation, security, reliability, delivery, tests, docs, review when needed
+  - level: L5
+    name: regulated financial Web3 AI migration or production-critical change
+    rule: Include matching domain extension, security, reliability, delivery, rollback, documentation, and evidence requirements.
+    minimum_path: full relevant path with domain extension and explicit rollback
+risk_escalation_triggers:
+  - auth
+  - authorization
+  - object-level permission
+  - payment
+  - subscription
+  - billing
+  - wallet
+  - private key
+  - Web3 asset
+  - user data
+  - PII
+  - file upload
+  - AI prompt
+  - RAG
+  - external integration
+  - webhook
+  - database migration
+  - production deployment
+  - secret/config change
+  - dependency upgrade with security impact
+  - irreversible data operation
+failure_routing:
+  - condition: unclear requirement
+    route_to: change-intake-compiler
+  - condition: unknown blast radius
+    route_to: change-impact-analyzer
+  - condition: untestable done state
+    route_to: acceptance-criteria-builder
+  - condition: task too large
+    route_to: task-dag-planner
+  - condition: broken user flow
+    route_to: experience-impact-modeler
+  - condition: wrong business behavior
+    route_to: domain-impact-modeler
+  - condition: architecture drift
+    route_to: architecture-impact-reviewer
+  - condition: contract or schema mismatch
+    route_to: data-api-contract-changer
+  - condition: frontend issue
+    route_to: frontend-change-builder
+  - condition: backend issue
+    route_to: backend-change-builder
+  - condition: data cache queue search or storage issue
+    route_to: data-middleware-change-builder
+  - condition: external integration issue
+    route_to: integration-change-builder
+  - condition: failed tests
+    route_to: quality-test-gate
+  - condition: security issue
+    route_to: security-privacy-gate
+  - condition: reliability or performance issue
+    route_to: reliability-observability-gate
+  - condition: deployment issue
+    route_to: delivery-release-gate
+  - condition: AI code quality issue
+    route_to: ai-code-review-refactor
+  - condition: stale docs
+    route_to: change-documentation-gate
+domain_extension_signals:
+  - extension: web3-product-extension
+    signals: wallet signature smart contract blockchain token custody private key nonce replay reorg chain
+  - extension: ai-product-extension
+    signals: LLM RAG agent embedding vector database prompt model output tool use hallucination evaluation
+  - extension: mobile-product-extension
+    signals: Android iOS mobile app offline push notification app lifecycle app store deep link
+  - extension: bigdata-product-extension
+    signals: stream batch warehouse analytics reporting ETL ELT lineage freshness backfill schema drift
+  - extension: iot-embedded-extension
+    signals: device firmware embedded sensor actuator edge protocol OTA hardware physical safety
+  - extension: payment-trading-extension
+    signals: payment subscription billing invoice refund chargeback trading ledger balance checkout reconciliation settlement entitlement
+  - extension: low-level-systems-extension
+    signals: OS kernel driver native performance C C++ Rust systems FFI ABI syscall memory safety
+quality_gates:
+  - requirement gate
+  - impact gate
+  - domain gate
+  - architecture gate
+  - API/data gate
+  - implementation gate
+  - security gate
+  - test gate
+  - reliability gate
+  - delivery gate
+  - documentation gate
+  - AI review gate
+routing_rules:
+  - route_to: change-forge-router
+    triggers:
+      - classify route orchestrate product code change complexity risk affected areas skill path foundation capabilities domain extensions runtime profiles quality gates
+      - decide minimum sufficient ChangeForge path without calling every skill blindly
+      - produce ChangeForge Routing Result with classification interpreted change missing information impact areas skill path capability path domain extensions task DAG quality gates next actions
+    priority: 100
+  - route_to: change-intake-compiler
+    triggers:
+      - compile raw request into structured change request
+      - clarify current behavior desired behavior non-goals constraints assumptions missing information
+    priority: 90
+  - route_to: change-impact-analyzer
+    triggers:
+      - analyze blast radius impact product UX API data frontend backend security deployment observability documentation
+      - identify affected surfaces before implementation
+    priority: 90
+  - route_to: acceptance-criteria-builder
+    triggers:
+      - build acceptance criteria happy path negative path edge cases permission regression product verification
+      - define verifiable completion criteria
+    priority: 85
+  - route_to: task-dag-planner
+    triggers:
+      - break change into dependency aware tasks reviewable testable rollback aware DAG
+      - plan task graph dependencies sequencing parallelization rollback
+    priority: 85
+  - route_to: experience-impact-modeler
+    triggers:
+      - model user flow page flow interaction states accessibility validation empty loading error success disabled
+      - analyze UX experience impact
+    priority: 80
+  - route_to: domain-impact-modeler
+    triggers:
+      - model domain entities value objects aggregates business rules invariants permissions state machines events
+      - analyze domain impact and rule authority
+    priority: 80
+  - route_to: architecture-impact-reviewer
+    triggers:
+      - review architecture boundaries layering dependency direction service boundaries scalability extensibility tradeoffs
+      - decide simpler architecture versus justified complexity
+    priority: 80
+  - route_to: data-api-contract-changer
+    triggers:
+      - change data model schema migration API contract DTO error codes pagination compatibility idempotency versioning rollback
+      - design database and API contract change
+    priority: 80
+  - route_to: frontend-change-builder
+    triggers:
+      - implement frontend component route state form accessibility API error performance frontend security
+      - build product grade frontend change
+    priority: 75
+  - route_to: backend-change-builder
+    triggers:
+      - implement backend validation auth authorization transaction idempotency retry logging concurrency async job error model
+      - build backend correctness change
+    priority: 75
+  - route_to: data-middleware-change-builder
+    triggers:
+      - change SQL NoSQL cache queue search storage source of truth consistency indexes query cache invalidation failure modes
+      - build data middleware change
+    priority: 75
+  - route_to: integration-change-builder
+    triggers:
+      - external integration timeout retry backoff circuit breaker idempotency webhook signature replay sandbox credentials reconciliation
+      - build third party API or webhook change
+    priority: 75
+  - route_to: web3-product-extension
+    triggers:
+      - Web3 wallet signature smart contract blockchain transaction token asset chain data custody private key seed phrase
+      - on chain off chain consistency pending confirmed failed reverted reorg nonce replay protection network mismatch
+    priority: 74
+  - route_to: ai-product-extension
+    triggers:
+      - LLM RAG agent embedding vector database prompt model output tool use hallucination AI safety evaluation
+      - permission aware retrieval prompt injection data exfiltration generated content model failure handling
+    priority: 74
+  - route_to: mobile-product-extension
+    triggers:
+      - Android iOS mobile app offline push notification app lifecycle permissions privacy prompt background execution
+      - app store release store constraints platform differences deep links mobile version compatibility
+    priority: 74
+  - route_to: bigdata-product-extension
+    triggers:
+      - data warehouse stream batch job analytics reporting ETL ELT data quality lineage freshness backfill replay
+      - pipeline cost controls metric definition dashboard warehouse partition late arriving data schema drift
+    priority: 74
+  - route_to: iot-embedded-extension
+    triggers:
+      - IoT device firmware edge protocol hardware embedded sensor actuator OTA connectivity loss time sync
+      - firmware rollback protocol compatibility resource limits physical safety device lifecycle field operations
+    priority: 74
+  - route_to: payment-trading-extension
+    triggers:
+      - payment subscription billing invoice refund trading ledger balance checkout financial workflow reconciliation
+      - idempotency auditability state machine server side source of truth provider webhook settlement chargeback
+    priority: 74
+  - route_to: low-level-systems-extension
+    triggers:
+      - OS kernel driver native performance networking C C++ Rust systems FFI ABI syscall memory safety
+      - concurrency resource cleanup platform differences low level runtime atomics lock descriptor leak
+    priority: 74
+  - route_to: quality-test-gate
+    triggers:
+      - define test strategy unit integration contract E2E migration rollback regression fixtures mocks coverage
+      - choose risk based verification evidence
+    priority: 70
+  - route_to: security-privacy-gate
+    triggers:
+      - review security privacy auth authorization XSS CSRF SSRF SQLi RCE secrets dependencies AI prompt Web3
+      - assess secure development and privacy risk
+    priority: 70
+  - route_to: reliability-observability-gate
+    triggers:
+      - define SLI SLO performance profiling concurrency rate limits circuit breakers fallback logs metrics traces alerts recovery
+      - assess reliability observability production readiness
+    priority: 70
+  - route_to: delivery-release-gate
+    triggers:
+      - release engineering Docker CI CD Kubernetes gateway env config migration rollout feature flags staging canary blue green rollback
+      - plan delivery release and post release checks
+    priority: 70
+  - route_to: ai-code-review-refactor
+    triggers:
+      - review AI generated code hallucinated APIs hidden assumptions over abstraction duplicate code missing tests architecture drift
+      - refactor AI assisted code safely
+    priority: 70
+  - route_to: change-documentation-gate
+    triggers:
+      - update README API docs migration notes ADR changelog runbook troubleshooting user docs operational notes
+      - verify documentation impact for change
+    priority: 70
+  - route_to: requirement-clarification
+    triggers:
+      - clarify blocking unknowns non blocking unknowns explicit assumptions safe assumptions coding block decision
+      - decide whether requirements are safe to implement or must pause for owner input
+    priority: 60
+  - route_to: requirement-structuring
+    triggers:
+      - structure current behavior desired behavior trigger actor scope non goals constraints acceptance signal test traceability
+      - convert confirmed requirement facts into a bounded change brief
+    priority: 60
+  - route_to: user-role-identification
+    triggers:
+      - identify actors roles personas support admin system users service accounts external systems role risks
+      - map affected users and operational actors before flow or permission design
+    priority: 60
+  - route_to: scenario-decomposition
+    triggers:
+      - decompose normal failure edge abuse recovery operational scenarios
+      - build scenario coverage for acceptance and regression planning
+    priority: 60
+  - route_to: acceptance-standard-definition
+    triggers:
+      - define verifiable done standards reject vague acceptance criteria works well better UX
+      - turn completion criteria into testable evidence and owner approval
+    priority: 60
+  - route_to: non-goal-boundary-definition
+    triggers:
+      - define in scope out of scope version boundary anti scope creep deferred assumptions
+      - prevent non goals and future assumptions from leaking into implementation
+    priority: 60
+  - route_to: information-architecture
+    triggers:
+      - organize page module navigation structure around user tasks not database structure
+      - define content hierarchy labels grouping and navigation impact
+    priority: 60
+  - route_to: user-flow-modeling
+    triggers:
+      - model entry points success exits failure exits cancellation retry back navigation permission branches
+      - define workflow paths and branch behavior for user journeys
+    priority: 60
+  - route_to: prototype-description
+    triggers:
+      - describe UI intent layout hierarchy interaction contract validation state behavior
+      - brief prototype behavior without over specifying visual design
+    priority: 60
+  - route_to: interaction-state-modeling
+    triggers:
+      - model loading empty error success disabled partial timeout permission denied states
+      - define recoverable accessible state behavior for interactions
+    priority: 60
+  - route_to: design-system-rules
+    triggers:
+      - apply component consistency reuse accessibility responsive behavior variant control new component justification
+      - govern design system use for frontend changes
+    priority: 60
+  - route_to: domain-object-identification
+    triggers:
+      - identify entities value objects aggregates resources ownership lifecycle invariants relationships
+      - build domain object inventory before persistence permissions or event design
+    priority: 60
+  - route_to: business-rule-extraction
+    triggers:
+      - extract business rules invariants policies calculations prevent scattering across UI controllers SQL scripts
+      - assign business rule authority and enforcement layer
+    priority: 60
+  - route_to: state-machine-modeling
+    triggers:
+      - model lifecycle states allowed transitions illegal transitions side effects orders payments subscriptions approvals assets jobs workflows
+      - define transition guards events audit and recovery behavior
+    priority: 60
+  - route_to: use-case-modeling
+    triggers:
+      - model actor precondition trigger main path alternate path postcondition
+      - define actor centered use cases and behavioral guarantees
+    priority: 60
+  - route_to: permission-boundary-modeling
+    triggers:
+      - model subject resource action condition object level authorization backend enforcement
+      - define permission boundaries tenant ownership denial and audit behavior
+    priority: 60
+  - route_to: domain-event-modeling
+    triggers:
+      - model domain events producer consumer payload idempotency ordering retry audit impact
+      - define event catalog with safe delivery and consumption behavior
+    priority: 60
+  - route_to: architecture-style-selection
+    triggers:
+      - select architecture style monolith modular monolith microservices event driven hybrid simplest sufficient design
+      - decide simple architecture versus justified service or distributed complexity
+    priority: 60
+  - route_to: module-boundary-design
+    triggers:
+      - design module boundaries business capability ownership dependency direction interfaces coupling circular dependencies
+      - prevent arbitrary folder driven architecture and cross module internal access
+    priority: 60
+  - route_to: layered-architecture-design
+    triggers:
+      - design presentation application domain infrastructure layers controller service repository dependency direction
+      - keep controllers thin and prevent domain depending on infrastructure
+    priority: 60
+  - route_to: microservice-splitting
+    triggers:
+      - evaluate microservice split service boundary ownership deployment scaling fault isolation data consistency
+      - require API contract observability failure handling and operational cost before service separation
+    priority: 60
+  - route_to: event-driven-architecture
+    triggers:
+      - design event driven architecture async flows idempotency ordering retry dead letter replay backpressure observability
+      - define event flow correctness under duplicate delayed reordered replayed and failed messages
+    priority: 60
+  - route_to: architecture-tradeoff-analysis
+    triggers:
+      - compare architecture alternatives tradeoffs risks mitigations consequences ADR decision record
+      - document rejected alternatives and decision forces for important architecture choices
+    priority: 60
+  - route_to: extensibility-design
+    triggers:
+      - design extension points plugins hooks provider abstraction configuration variation premature abstraction
+      - justify extensibility from known variation and define compatibility support boundaries
+    priority: 60
+  - route_to: data-model-design
+    triggers:
+      - design data model entities relationships invariants ownership lifecycle query patterns migration risk
+      - separate internal tables from API contract and model source of truth data
+    priority: 60
+  - route_to: api-contract-design
+    triggers:
+      - design API contract request response error auth pagination filtering idempotency OpenAPI compatibility
+      - define client visible endpoint behavior and machine readable HTTP contract
+    priority: 60
+  - route_to: dto-schema-design
+    triggers:
+      - design DTO schema fields validation nullability defaults serialization compatibility mapping
+      - decouple external transfer contract from internal data model
+    priority: 60
+  - route_to: error-code-design
+    triggers:
+      - design stable error codes product grade error responses retryability user action correlation id
+      - prevent raw internal exceptions from becoming client contract
+    priority: 60
+  - route_to: version-compatibility
+    triggers:
+      - assess API schema event config behavior compatibility versioning deprecation staged rollout bridge
+      - identify breaking changes and mixed version producer consumer rollout risk
+    priority: 60
+  - route_to: data-migration-design
+    triggers:
+      - design data migration schema backfill guarded repeatable observable interruptible rollback deployment order
+      - plan expand migrate contract cleanup phases and migration validation
+    priority: 60
+  - route_to: page-component-decomposition
+    triggers:
+      - decompose page components responsibility state ownership props side effects reusable boundaries giant component micro component
+      - define maintainable frontend component boundaries without premature abstraction
+    priority: 60
+  - route_to: routing-navigation-design
+    triggers:
+      - design route table route guards redirects deep links unauthorized stale link 404 navigation recovery back behavior
+      - define frontend navigation contract with permissions and fallback states
+    priority: 60
+  - route_to: state-management-design
+    triggers:
+      - design server state UI state form state auth state cache state derived state global store ownership
+      - decide frontend state source of truth lifecycle invalidation and synchronization
+    priority: 60
+  - route_to: form-validation-design
+    triggers:
+      - design form validation backend mandatory frontend UX async validation duplicate submit partial failure error mapping
+      - define form submission validation recovery and server enforcement behavior
+    priority: 60
+  - route_to: frontend-api-integration
+    triggers:
+      - integrate frontend API timeout cancellation retry auth expiry pagination stale data error mapping response validation
+      - define client request lifecycle cache invalidation stale responses and recoverable API errors
+    priority: 60
+  - route_to: frontend-testing
+    triggers:
+      - test frontend user visible behavior role permission states error states core flows accessibility API states
+      - define frontend tests beyond implementation details
+    priority: 60
+  - route_to: controller-api-implementation
+    triggers:
+      - implement controller API transport parsing validation handoff auth context response mapping error boundary thin controller
+      - prevent business logic inside controllers handlers and transport adapters
+    priority: 60
+  - route_to: service-business-logic
+    triggers:
+      - implement service business logic use case orchestration transactions repositories policies domain operations pass through god service
+      - define application service responsibility and transaction coordination
+    priority: 60
+  - route_to: domain-logic-implementation
+    triggers:
+      - implement domain logic invariants model service value object transition calculation policy rule authority
+      - enforce domain rules near domain model and prevent duplicated inconsistent rules
+    priority: 60
+  - route_to: repository-persistence
+    triggers:
+      - implement repository persistence boundary ORM leakage mapping queries transaction expectations storage errors
+      - define data access contract without leaking persistence objects across domain boundaries
+    priority: 60
+  - route_to: authentication-authorization
+    triggers:
+      - implement authentication authorization identity permission object level authorization resource action tenant ownership denial
+      - separate authn identity proof from authz allowed action decisions
+    priority: 60
+  - route_to: idempotency-retry-design
+    triggers:
+      - design idempotency retry payments order creation webhooks async consumers external calls bounded retry duplicate delivery
+      - define idempotency keys retry backoff deduplication replay and terminal failure
+    priority: 60
+  - route_to: async-job-design
+    triggers:
+      - design async job background worker queue schedule idempotency retry timeout failure observability cancellation compensation
+      - define background job lifecycle status duplicate delivery and recovery behavior
+    priority: 60
+  - route_to: logging-error-handling
+    triggers:
+      - design logging error handling correlation ids redaction user system third party security errors structured logs
+      - define safe diagnostics client error mapping and sensitive data protection
+    priority: 60
+  - route_to: relational-database
+    triggers:
+      - design relational database SQL transactions constraints foreign keys joins isolation locks migration risk
+      - choose SQL when relational integrity strong consistency complex queries and constraints matter
+    priority: 60
+  - route_to: nosql-database
+    triggers:
+      - design NoSQL document key value wide column graph access patterns partitioning schema flexibility consistency boundaries
+      - justify non relational storage with access patterns scale model denormalization and consistency limits
+    priority: 60
+  - route_to: indexing-query-optimization
+    triggers:
+      - optimize indexes query predicates sorting cardinality selectivity pagination query plans write cost
+      - prevent blind index additions and require execution plan evidence
+    priority: 60
+  - route_to: transaction-consistency
+    triggers:
+      - design transaction boundaries isolation locks lost updates invariants local transaction outbox compensation
+      - keep transactions minimal while preserving invariants and avoiding unjustified distributed transactions
+    priority: 60
+  - route_to: cache-design
+    triggers:
+      - design cache keys TTL invalidation stampede protection penetration protection stale tolerance fallback
+      - define cache source of truth consistency tolerance and overload behavior
+    priority: 60
+  - route_to: message-queue-design
+    triggers:
+      - design message queue consumers duplicate delayed failed out of order messages idempotency retry dead letter backpressure
+      - define queue topology ordering acknowledgement replay poison message and observability behavior
+    priority: 60
+  - route_to: search-analytics-design
+    triggers:
+      - design search analytics full text relevance filtering faceting OLAP freshness reindex fallback
+      - justify search or analytics engine with derived data freshness drift and reconciliation controls
+    priority: 60
+  - route_to: threat-modeling
+    triggers:
+      - model security threats assets actors trust boundaries entry points abuse cases mitigations residual risk
+      - require explicit threat model for high risk security privacy architecture changes
+    priority: 60
+  - route_to: input-validation
+    triggers:
+      - validate input type length format range allowlist ownership semantic constraints server side validation
+      - reject malformed hostile unauthorized oversized and semantically invalid inputs at trust boundaries
+    priority: 60
+  - route_to: web-security
+    triggers:
+      - review XSS CSRF SSRF SQL injection RCE open redirect insecure deserialization upload abuse broken access control
+      - secure web routes browser controls cookies CORS redirects uploads and object level authorization
+    priority: 60
+  - route_to: authentication-security
+    triggers:
+      - review authentication token lifecycle refresh rotation revocation session fixation MFA cookie flags credential storage
+      - secure login logout sessions refresh tokens account recovery and identity provider integration
+    priority: 60
+  - route_to: secret-configuration-security
+    triggers:
+      - secure secrets environment variables configuration defaults redaction rotation frontend exposure image embedding docs
+      - prevent committed logged exposed or embedded secrets and review production risk configuration changes
+    priority: 60
+  - route_to: dependency-vulnerability-scanning
+    triggers:
+      - scan dependency vulnerabilities license compatibility supply chain risk package justification lockfile changes
+      - review new dependencies for security license compatibility maintenance provenance and install script risk
+    priority: 60
+  - route_to: test-strategy
+    triggers:
+      - choose test strategy by change type risk impact area verification evidence unit integration contract e2e
+      - require layered tests for high risk changes and map evidence to acceptance criteria
+    priority: 60
+  - route_to: unit-testing
+    triggers:
+      - test business rules boundaries edge cases error paths invariants calculations pure logic
+      - avoid implementation detail only tests and verify observable local behavior
+    priority: 60
+  - route_to: integration-testing
+    triggers:
+      - test real boundaries modules APIs databases services queues failure rollback paths
+      - verify integration behavior with realistic dependencies and controlled external seams
+    priority: 60
+  - route_to: contract-testing
+    triggers:
+      - test API schema event external provider consumer compatibility breaking changes
+      - protect consumer expectations with contract examples versioning and compatibility checks
+    priority: 60
+  - route_to: e2e-testing
+    triggers:
+      - test critical user journeys auth permission failure recovery browser workflow
+      - define narrow stable end to end coverage and avoid broad fragile e2e suites
+    priority: 60
+  - route_to: test-data-management
+    triggers:
+      - manage deterministic isolated privacy safe fixtures factories seeded data cleanup
+      - define test data ownership isolation reset cleanup and synthetic data constraints
+    priority: 60
+  - route_to: regression-testing
+    triggers:
+      - add regression test for bug fix historical defect affected surface reproduction
+      - document impossible regression test with explicit technical reason and compensating evidence
+    priority: 60
+  - route_to: performance-budgeting
+    triggers:
+      - define latency throughput payload bundle memory CPU query resource budget threshold
+      - set measurable performance budgets and release gates for performance sensitive changes
+    priority: 60
+  - route_to: profiling
+    triggers:
+      - profile CPU memory IO locks database queries network allocation rendering bottlenecks before optimizing
+      - measure baseline evidence compare optimization impact and identify real bottleneck
+    priority: 60
+  - route_to: concurrency-control
+    triggers:
+      - handle races duplicate submits locks optimistic concurrency deadlocks worker parallelism lost updates
+      - define concurrency invariant conflict behavior retry locking lease and parallel test coverage
+    priority: 60
+  - route_to: degradation-circuit-breaking
+    triggers:
+      - design fallback timeout bulkhead circuit breaker graceful degradation external dependency failure
+      - prevent dependency outage from collapsing core flows where fallback is possible
+    priority: 60
+  - route_to: observability
+    triggers:
+      - design logs metrics traces alerts dashboards correlation ids privacy safe production diagnostics
+      - require production facing change observability signals investigation path and alert ownership
+    priority: 60
+  - route_to: backup-recovery
+    triggers:
+      - plan backup restore RTO RPO recovery validation core data change disaster recovery
+      - require tested restore and recovery ownership for destructive or core data changes
+    priority: 60
+  - route_to: project-initialization
+    triggers:
+      - initialize project structure tests configuration docs deployment scripts and quality gates
+      - prevent arbitrary folders disconnected from architecture separation of concerns and ownership
+    priority: 60
+  - route_to: containerization
+    triggers:
+      - design reproducible minimal non root secret free container image build runtime separation
+      - review Docker build context image layers runtime user health checks and secret exclusions
+    priority: 60
+  - route_to: ci-cd
+    triggers:
+      - design CI CD pipeline build test lint security checks artifacts deployment gates failure policy
+      - require traceable artifacts environment promotion approvals rollback hooks and blocked failed checks
+    priority: 60
+  - route_to: kubernetes-gateway
+    triggers:
+      - design Kubernetes workload service ingress gateway probes resources rollout rollback and safety checks
+      - assess Kubernetes operational maturity health checks resources traffic exposure scaling and rollback
+    priority: 60
+  - route_to: release-rollback
+    triggers:
+      - plan release rollback across code config database feature flags external integrations and communication
+      - define rollout sequence validation stop conditions rollback triggers migration rollback or forward fix
+    priority: 60
+  - route_to: context-packaging
+    triggers:
+      - package AI coding context relevant requirements architecture contracts files constraints tests quality gates
+      - prevent context drift stale summaries secret exposure irrelevant context and unverified generated claims
+    priority: 60
+  - route_to: task-dag-decomposition
+    triggers:
+      - decompose work into dependency aware reviewable testable rollback aware AI executable tasks
+      - build task DAG dependencies parallel groups ownership verification handoff and merge conflict risk
+    priority: 60
+  - route_to: code-review
+    triggers:
+      - review generated modified code correctness maintainability boundaries security tests dependencies naming errors
+      - detect hallucinated APIs contract breaks missing tests unsafe dependency use and error handling regressions
+    priority: 60
+  - route_to: refactoring
+    triggers:
+      - refactor while preserving behavior characterization tests boundaries contracts compatibility and rollback notes
+      - separate structural cleanup from behavior change and protect risky refactors with tests
+    priority: 60
+  - route_to: documentation-generation
+    triggers:
+      - update docs for actual behavior API contracts migrations configuration operations and release impact
+      - verify generated documentation against source schemas commands tests runbooks and accepted decisions
+    priority: 60
+  - route_to: failure-diagnosis
+    triggers:
+      - diagnose failure from evidence symptoms triggers root cause contributing factors fix regression prevention
+      - investigate incidents CI failures regressions logs metrics traces diffs hypotheses and reproducible behavior
+    priority: 60

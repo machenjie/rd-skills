@@ -1,0 +1,343 @@
+#!/usr/bin/env python3
+"""Validate authored foundation capabilities."""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+from validation_utils import (
+    NAME_RE,
+    ValidationProblem,
+    entry_path,
+    entry_ref,
+    fail_many,
+    load_yaml_file,
+    parse_frontmatter,
+    registry_items,
+    relpath,
+    validate_no_beginner_sections,
+    validate_no_personal_references,
+    validate_required_frontmatter,
+    validate_required_sections,
+)
+
+
+ROOT = Path(__file__).resolve().parents[1]
+CAPABILITIES_DIR = ROOT / "src" / "foundation" / "capabilities"
+CAPABILITIES_REGISTRY = ROOT / "src" / "registry" / "capabilities.yaml"
+CAPABILITY_TEMPLATE_DIR = CAPABILITIES_DIR / "_template"
+ALLOWED_CAPABILITIES_ROOT_FILES = {".gitkeep", "README.md"}
+BANNED_MAPPING_PATHS = (
+    ROOT / "registry" / "toolbox.yaml",
+    ROOT / "src" / "registry" / "toolbox.yaml",
+    ROOT / "src" / "toolbox",
+)
+REGISTRY_REQUIRED_FIELDS = (
+    "id",
+    "name",
+    "group",
+    "path",
+    "status",
+    "used_by",
+    "triggers",
+    "risk_notes",
+    "expected_outputs",
+)
+REGISTRY_LIST_FIELDS = ("used_by", "triggers", "risk_notes", "expected_outputs")
+REGISTRY_STATUSES = {"implemented"}
+CAPABILITY_ID_RE = re.compile(r"^\d{2}$")
+REQUIRED_FRONTMATTER = (
+    "name",
+    "description",
+    "license",
+    "changeforge_kind",
+    "changeforge_capability_id",
+    "changeforge_version",
+)
+REQUIRED_SECTIONS = (
+    "Mission",
+    "When To Use",
+    "Do Not Use When",
+    "Non-Negotiable Rules",
+    "Industry Benchmarks",
+    "Selection Rules",
+    "Risk Escalation Rules",
+    "Critical Details",
+    "Failure Modes",
+    "Output Contract",
+    "Quality Gate",
+    "Used By",
+    "Handoff",
+    "Completion Criteria",
+)
+
+
+def _is_nonempty_string_list(value: object) -> bool:
+    return isinstance(value, list) and all(
+        isinstance(item, str) and item.strip() for item in value
+    )
+
+
+def _normalize_capability_id(value: object) -> str | None:
+    if isinstance(value, str) and CAPABILITY_ID_RE.fullmatch(value):
+        return value
+    if isinstance(value, int) and 0 <= value <= 99:
+        return f"{value:02d}"
+    return None
+
+
+def _validate_registry_format(registry_data: object, errors: list[str]) -> list[object]:
+    entries = registry_items(
+        registry_data,
+        "capabilities",
+        CAPABILITIES_REGISTRY,
+        errors,
+    )
+    seen_ids: dict[str, int] = {}
+    seen_names: dict[str, int] = {}
+    seen_paths: dict[str, int] = {}
+
+    for index, entry in enumerate(entries):
+        context = f"capabilities.yaml:capabilities[{index}]"
+        if not isinstance(entry, dict):
+            errors.append(f"{context}: entry must be a mapping")
+            continue
+
+        for field in REGISTRY_REQUIRED_FIELDS:
+            if field not in entry:
+                errors.append(f"{context}: missing required field '{field}'")
+
+        capability_id = entry.get("id")
+        if _normalize_capability_id(capability_id) != capability_id:
+            errors.append(f"{context}: field 'id' must be a two digit string")
+        elif capability_id in seen_ids:
+            errors.append(
+                f"{context}: duplicate id '{capability_id}' first used at "
+                f"capabilities.yaml:capabilities[{seen_ids[capability_id]}]"
+            )
+        else:
+            seen_ids[capability_id] = index
+
+        name = entry.get("name")
+        if not isinstance(name, str) or not NAME_RE.fullmatch(name):
+            errors.append(f"{context}: field 'name' must be lowercase hyphen-separated text")
+            name = None
+        elif name in seen_names:
+            errors.append(
+                f"{context}: duplicate name '{name}' first used at "
+                f"capabilities.yaml:capabilities[{seen_names[name]}]"
+            )
+        else:
+            seen_names[name] = index
+
+        group = entry.get("group")
+        if not isinstance(group, str) or not NAME_RE.fullmatch(group):
+            errors.append(f"{context}: field 'group' must be lowercase hyphen-separated text")
+
+        path = entry.get("path")
+        expected_path = f"src/foundation/capabilities/{name}" if name else None
+        if not isinstance(path, str) or not path:
+            errors.append(f"{context}: field 'path' must be a non-empty string")
+        elif path.startswith("src/toolbox") or "toolbox.yaml" in path:
+            errors.append(f"{context}: path must not reference banned mapping content")
+        elif expected_path and path != expected_path:
+            errors.append(f"{context}: field 'path' must be {expected_path}")
+        elif path in seen_paths:
+            errors.append(
+                f"{context}: duplicate path '{path}' first used at "
+                f"capabilities.yaml:capabilities[{seen_paths[path]}]"
+            )
+        else:
+            seen_paths[path] = index
+
+        status = entry.get("status")
+        if not isinstance(status, str) or status.casefold() not in REGISTRY_STATUSES:
+            errors.append(
+                f"{context}: field 'status' must be one of "
+                f"{', '.join(sorted(REGISTRY_STATUSES))}"
+            )
+
+        for field in REGISTRY_LIST_FIELDS:
+            if not _is_nonempty_string_list(entry.get(field)):
+                errors.append(f"{context}: field '{field}' must be a non-empty list of strings")
+
+    return entries
+
+
+def _validate_capability_template(errors: list[str]) -> None:
+    required_files = (
+        CAPABILITY_TEMPLATE_DIR / "SKILL.md",
+        CAPABILITY_TEMPLATE_DIR / "references" / "checklist.md",
+        CAPABILITY_TEMPLATE_DIR / "examples" / "example-output.md",
+    )
+    for path in required_files:
+        if not path.is_file():
+            errors.append(f"missing capability template file: {relpath(ROOT, path)}")
+
+    skill_file = CAPABILITY_TEMPLATE_DIR / "SKILL.md"
+    if not skill_file.is_file():
+        return
+
+    file_context = relpath(ROOT, skill_file)
+    try:
+        metadata, raw_frontmatter, body = parse_frontmatter(skill_file)
+    except ValidationProblem as exc:
+        errors.append(str(exc).replace(str(ROOT) + "/", ""))
+        return
+
+    validate_required_frontmatter(metadata, REQUIRED_FRONTMATTER, file_context, errors)
+    if metadata.get("changeforge_kind") != "foundation-capability":
+        errors.append(
+            f"{file_context}: frontmatter 'changeforge_kind' must be foundation-capability"
+        )
+    validate_required_sections(body, REQUIRED_SECTIONS, file_context, errors)
+    validate_no_beginner_sections(body, file_context, errors)
+    validate_no_personal_references(raw_frontmatter + "\n" + body, file_context, errors)
+
+
+def main() -> int:
+    errors: list[str] = []
+
+    if not CAPABILITIES_DIR.exists():
+        errors.append("missing src/foundation/capabilities")
+        return fail_many("validate-capabilities", errors)
+
+    if not CAPABILITIES_REGISTRY.is_file():
+        errors.append("missing src/registry/capabilities.yaml")
+        return fail_many("validate-capabilities", errors)
+
+    for path in BANNED_MAPPING_PATHS:
+        if path.exists():
+            errors.append(f"banned mapping path exists: {relpath(ROOT, path)}")
+
+    registry_text = CAPABILITIES_REGISTRY.read_text(encoding="utf-8")
+    validate_no_personal_references(
+        registry_text,
+        relpath(ROOT, CAPABILITIES_REGISTRY),
+        errors,
+    )
+    try:
+        registry_data = load_yaml_file(CAPABILITIES_REGISTRY)
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+        registry_data = {}
+
+    registered_entries = _validate_registry_format(registry_data, errors)
+
+    _validate_capability_template(errors)
+
+    capability_dirs = sorted(
+        path
+        for path in CAPABILITIES_DIR.iterdir()
+        if path.is_dir() and not path.name.startswith((".", "_"))
+    )
+
+    for child in sorted(CAPABILITIES_DIR.iterdir()):
+        if child.name.startswith(".") and child.name != ".gitkeep":
+            errors.append(f"invalid hidden capability path: {relpath(ROOT, child)}")
+        if child.is_dir() and child.name.startswith("_") and child.name != "_template":
+            errors.append(f"invalid template capability path: {relpath(ROOT, child)}")
+        if child.is_file() and child.name not in ALLOWED_CAPABILITIES_ROOT_FILES:
+            errors.append(f"unexpected file in capabilities root: {relpath(ROOT, child)}")
+
+    if not capability_dirs:
+        if errors:
+            return fail_many("validate-capabilities", errors)
+        print(
+            "validate-capabilities: validated "
+            f"{len(registered_entries)} capability registry entries and template."
+        )
+        return 0
+
+    registered_refs = {
+        ref
+        for entry in registered_entries
+        for ref in (
+            entry_ref(
+                entry,
+                (
+                    "changeforge_capability_id",
+                    "capability_id",
+                    "id",
+                    "name",
+                    "capability",
+                ),
+            ),
+        )
+        if ref
+    }
+    registered_paths = {
+        str((ROOT / path).resolve())
+        for entry in registered_entries
+        for path in (entry_path(entry),)
+        if path
+    }
+
+    capability_ids: dict[str, Path] = {}
+    implemented_capabilities: list[tuple[str, str | None, str | None, str]] = []
+
+    for capability_dir in capability_dirs:
+        context = relpath(ROOT, capability_dir)
+        skill_file = capability_dir / "SKILL.md"
+        if not skill_file.is_file():
+            errors.append(f"{context}: missing SKILL.md")
+            continue
+
+        file_context = relpath(ROOT, skill_file)
+        try:
+            metadata, raw_frontmatter, body = parse_frontmatter(skill_file)
+        except ValidationProblem as exc:
+            errors.append(str(exc).replace(str(ROOT) + "/", ""))
+            continue
+
+        validate_required_frontmatter(metadata, REQUIRED_FRONTMATTER, file_context, errors)
+
+        if metadata.get("changeforge_kind") != "foundation-capability":
+            errors.append(
+                f"{file_context}: frontmatter 'changeforge_kind' must be foundation-capability"
+            )
+
+        capability_id = metadata.get("changeforge_capability_id")
+        normalized_capability_id = _normalize_capability_id(capability_id)
+        if normalized_capability_id is None:
+            errors.append(
+                f"{file_context}: frontmatter 'changeforge_capability_id' must be a "
+                "two digit capability id"
+            )
+        elif normalized_capability_id in capability_ids:
+            errors.append(
+                f"{file_context}: duplicate capability id also declared in "
+                f"{relpath(ROOT, capability_ids[normalized_capability_id])}"
+            )
+        else:
+            capability_ids[normalized_capability_id] = skill_file
+
+        name = metadata.get("name")
+        implemented_capabilities.append(
+            (
+                file_context,
+                normalized_capability_id,
+                name if isinstance(name, str) else None,
+                str(capability_dir.resolve()),
+            )
+        )
+
+        validate_required_sections(body, REQUIRED_SECTIONS, file_context, errors)
+        validate_no_beginner_sections(body, file_context, errors)
+        validate_no_personal_references(raw_frontmatter + "\n" + body, file_context, errors)
+
+    for context, capability_id, name, capability_path in implemented_capabilities:
+        refs = {ref for ref in (capability_id, name) if ref}
+        if not refs.intersection(registered_refs) and capability_path not in registered_paths:
+            errors.append(f"{context}: implemented capability is missing from capabilities.yaml")
+
+    if errors:
+        return fail_many("validate-capabilities", errors)
+
+    print(f"validate-capabilities: validated {len(capability_dirs)} foundation capability(s).")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

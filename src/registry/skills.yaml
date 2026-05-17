@@ -1,0 +1,43 @@
+---
+schema_version: 1
+kind: changeforge.skills
+description: Professional ChangeForge skills authored by this repository.
+skills:
+  - name: change-forge-router
+    path: src/professional-skills/change-forge-router
+  - name: change-intake-compiler
+    path: src/professional-skills/change-intake-compiler
+  - name: change-impact-analyzer
+    path: src/professional-skills/change-impact-analyzer
+  - name: acceptance-criteria-builder
+    path: src/professional-skills/acceptance-criteria-builder
+  - name: task-dag-planner
+    path: src/professional-skills/task-dag-planner
+  - name: experience-impact-modeler
+    path: src/professional-skills/experience-impact-modeler
+  - name: domain-impact-modeler
+    path: src/professional-skills/domain-impact-modeler
+  - name: architecture-impact-reviewer
+    path: src/professional-skills/architecture-impact-reviewer
+  - name: data-api-contract-changer
+    path: src/professional-skills/data-api-contract-changer
+  - name: frontend-change-builder
+    path: src/professional-skills/frontend-change-builder
+  - name: backend-change-builder
+    path: src/professional-skills/backend-change-builder
+  - name: data-middleware-change-builder
+    path: src/professional-skills/data-middleware-change-builder
+  - name: integration-change-builder
+    path: src/professional-skills/integration-change-builder
+  - name: quality-test-gate
+    path: src/professional-skills/quality-test-gate
+  - name: security-privacy-gate
+    path: src/professional-skills/security-privacy-gate
+  - name: reliability-observability-gate
+    path: src/professional-skills/reliability-observability-gate
+  - name: delivery-release-gate
+    path: src/professional-skills/delivery-release-gate
+  - name: ai-code-review-refactor
+    path: src/professional-skills/ai-code-review-refactor
+  - name: change-documentation-gate
+    path: src/professional-skills/change-documentation-gate

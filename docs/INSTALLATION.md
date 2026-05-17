@@ -1,0 +1,90 @@
+# Installation
+
+ChangeForge installs only built runtime artifacts from `dist/`. Source folders under `src/`, raw registries, and source foundation capability trees are authoring inputs and are never installed directly.
+
+## Profiles
+
+- `recommended`: 19 professional skills. Foundation capabilities are compiled into professional skill references.
+- `full`: 19 professional skills plus 7 domain extensions as top-level skills. Foundation capabilities remain compiled references.
+- `dev`: 19 professional skills plus 81 foundation capabilities plus 7 domain extensions as top-level skills. Use only for ChangeForge authoring/debugging.
+
+Build the profile before installing it:
+
+```bash
+python3 scripts/build.py --profile recommended
+python3 scripts/build.py --profile full
+python3 scripts/build.py --profile dev
+```
+
+## Supported Targets
+
+- Codex project: `<target>/.agents/skills`
+- Codex user: `~/.agents/skills`
+- Codex admin: `/etc/codex/skills`
+- Claude Code project: `<target>/.claude/skills`
+- Claude Code user: `~/.claude/skills`
+- GitHub Copilot project: `<target>/.github/skills`
+- GitHub Copilot user: `~/.copilot/skills`
+- OpenAI API: profile-scoped zip bundles under `dist/openai-api/zips/<profile>`
+
+For project installs, `--target` is the project root. For user and admin installs, omitting `--target` uses the default skills directory; supplying `--target` treats it as an explicit skills directory override.
+
+## Codex
+
+```bash
+python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full --dry-run
+python3 installers/install.py --agent codex --scope user --profile recommended --dry-run
+python3 installers/install.py --agent codex --scope admin --target /etc/codex/skills --profile recommended --dry-run
+```
+
+Remove `--dry-run` after reviewing the target path and skill count. Use `--backup` when replacing an existing managed install.
+
+## Claude Code
+
+```bash
+python3 installers/install.py --agent claude --scope project --target /path/to/project --profile full --dry-run
+python3 installers/install.py --agent claude --scope user --profile recommended --dry-run
+```
+
+## GitHub Copilot
+
+```bash
+python3 installers/install.py --agent copilot --scope project --target /path/to/project --profile full --dry-run
+python3 installers/install.py --agent copilot --scope user --profile recommended --dry-run
+```
+
+## OpenAI API Zip Packaging
+
+`scripts/build.py` refreshes OpenAI API zips for the profile being built. `scripts/package.py` can package a previously built profile again:
+
+```bash
+python3 scripts/package.py --profile recommended
+python3 installers/install.py --agent openai-api --profile recommended --dry-run
+```
+
+OpenAI API is zip-only; it does not install runtime skill folders into a project, user, or admin directory. Each zip contains exactly one top-level skill folder and exactly one root `SKILL.md`.
+
+## Uninstall, Upgrade, And Doctor
+
+Install writes `.changeforge-install-manifest.json` into the target skills directory. Uninstall removes only names listed in this manifest and then removes the manifest:
+
+```bash
+python3 installers/uninstall.py --agent codex --scope project --target /path/to/project --dry-run
+python3 installers/uninstall.py --agent codex --scope project --target /path/to/project
+```
+
+Upgrade backs up the existing ChangeForge-managed directories, replaces managed names from the selected built profile, preserves unrelated skills, and reports source/profile/skill version changes:
+
+```bash
+python3 installers/upgrade.py --agent codex --scope project --target /path/to/project --profile full --dry-run
+```
+
+Doctor checks supported directories, missing `SKILL.md`, duplicate skill names across scopes, old source versions, manifest drift, and profile mismatches:
+
+```bash
+python3 installers/doctor.py --agent codex --scope project --target /path/to/project --profile full
+```
+
+## Duplicate Skill Conflicts
+
+Install refuses to overwrite an unmanaged skill directory whose name matches a ChangeForge skill. Review the conflict first, then either move the unmanaged directory, uninstall the managed copy, or rerun install with `--force` when replacing that directory is intentional.

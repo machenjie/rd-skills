@@ -1,0 +1,21 @@
+[project]
+name = "change-forge-skill-mesh"
+version = "0.1.0"
+description = "Authoring, validation, build, packaging, and installation tools for ChangeForge professional skills."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [
+  { name = "ChangeForge" }
+]
+
+[tool.changeforge]
+repository_kind = "skill-authoring"
+runtime_source = "dist"
+install_src_directly = false
+personal_asset_mapping = false
+
+[tool.changeforge.profiles]
+recommended = "Professional skills with compiled foundation references."
+full = "Professional skills plus eligible domain extensions."
+dev = "Authoring profile with development visibility into foundation capabilities."

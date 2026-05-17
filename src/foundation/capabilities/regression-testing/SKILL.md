@@ -1,0 +1,183 @@
+---
+name: regression-testing
+description: Requires bug fixes and risky changes to add regression coverage that reproduces the failure and prevents recurrence unless impossible and documented.
+license: MIT
+changeforge_kind: foundation-capability
+changeforge_capability_id: "64"
+changeforge_version: 0.1.0
+---
+
+# Mission
+
+**Add automated test coverage that reproduces a specific past failure, prevents that failure from recurring, and anchors it to the defect or incident that caused it** — so that future code changes are proven safe against the known failure surface, and reviewers can verify regression coverage is present before a fix is merged.
+
+# When To Use
+
+Use this capability when: a bug is confirmed and a fix is being prepared — the regression test must reproduce the failure before the fix and pass after the fix; a production incident is resolved and residual risk of recurrence is unacceptable; a code review or QA review flags a defect and regression prevention is a gate criterion; a refactoring touches a code path that has had prior defects (historical failure zones); or a security finding is remediated and a non-regression test is required as evidence (e.g., OWASP Testing Guide requirement for fixed vulnerabilities).
+
+# Do Not Use When
+
+Do not use this capability to: write general happy-path tests unrelated to a specific defect (those belong in `test-strategy`); write load or performance tests (use `performance-budgeting`); write contract tests (use `api-contract-design`); or duplicate tests that already reproduce the defect and are present in the test suite (verify coverage first before adding).
+
+# Non-Negotiable Rules
+
+- **Every confirmed defect must have a regression test unless technically impossible, and impossibility must be documented.** "Technically impossible" means: the defect is in a non-deterministic timing or concurrency condition that cannot be reliably reproduced in a test; the defect requires hardware state that cannot be emulated; or the test infrastructure cannot simulate the required condition. Impossibility must be documented with: defect ID/reference, specific reason reproduction is infeasible, residual risk rating, and compensating control (monitoring, alerting, manual test script, chaos experiment). "We didn't have time" is not a valid impossibility reason.
+- **The regression test must reproduce the original failure, not just test adjacent behavior.** A test that passes before the fix is a regression test. A test that was already passing before the fix is not a regression test — it is a confirmation test. The review discipline: run the test against the code before the fix was applied; it must fail for the right reason. The canonical formulation: "Red without fix, Green with fix" — also called a "failing test first" or red-green cycle for defects.
+- **Use the narrowest test level that would have caught the defect.** If a unit test would have caught the defect, write a unit test — not an E2E test. Pyramid: Unit > Integration > E2E. Reasons: E2E tests are slower, flakier, and harder to maintain; a unit-level regression test provides faster feedback and clearer failure attribution. Decision: Could the defect be reproduced by calling a single function with the right input? → Unit test. Does the defect require real database state or external service interaction? → Integration test. Does the defect require a specific browser or UI rendering? → E2E test (as a last resort).
+- **The regression test must capture the exact triggering conditions: input, state, role, timing, and dependency.** A regression test that uses a different input than the one that triggered the bug may pass even when the bug is reintroduced with the original input. Triggering conditions to capture: (1) the exact input value or payload; (2) the precondition state (user role, database state, feature flag, session state); (3) any timing or sequence dependency (e.g., the bug only occurs on the second API call, not the first); (4) the external dependency state (e.g., third-party API returns a specific error code). Use fixtures that mirror production data patterns.
+- **Link every regression test to its defect, incident, or review finding.** This is not bureaucracy — it is the only way to answer "why does this test exist?" when someone encounters it in 18 months. The standard is: a comment or docstring on the test with the defect ID, incident reference, or PR/review link. Format: `// Regression: [BUG-1234] - Payment total rounds incorrectly for USD amounts with 3 decimal places`. Without this link, the test is an orphaned assertion that will be deleted in the next cleanup.
+- **Untestable defects must be documented with residual risk and compensating evidence.** If a defect cannot be regression-tested, the engineering record must include: the defect reference, the fix description, why automated regression testing is not feasible, the residual risk level (how likely is recurrence and what is the impact if it recurs?), and the compensating control (production monitoring alert, chaos experiment, manual regression checklist item). This documentation satisfies audit and quality review requirements even without a test.
+
+# Industry Benchmarks
+
+Anchor against: **Kent Beck "Test-Driven Development By Example" (2002)** — write a failing test that reproduces the defect first; fix until green; no regression-first discipline means no confidence the test actually protects against recurrence. **Michael Feathers "Working Effectively with Legacy Code" (2004)** — characterization tests as a regression safety net for risky changes in untested code. **Google Testing Blog — "Testing on the Toilet"** — test pyramid; flaky tests are technical debt; test at the lowest effective level. **OWASP Testing Guide** — security fixes require non-regression evidence; regression tests for injection, authentication bypass, IDOR, and broken access control must cover the specific attack vector. **DORA State of DevOps Report** — change failure rate (CFR) and mean time to restore (MTTR) improve when regression coverage is linked to defect tracking; high-performing teams have significantly lower defect recurrence. **IEEE Std 829 (Software and System Test Documentation)** — test case traceability to defect/requirement; required for regulated industries (medical device, avionics, financial). **SonarQube / CodeClimate** — coverage drift detection; new bugs reported in uncovered code; regression coverage enforcement at PR gate. **Mutation testing (Stryker / PITest)** — validates that regression tests actually fail when the bug is reintroduced; a regression test that passes even with the mutation is too weak.
+
+### Regression Test Level Selection Matrix
+
+| Defect Characteristics | Required Test Level | Justification |
+| --- | --- | --- |
+| Defect in a single function with deterministic input → output | Unit test | Fastest; most isolated; clearest failure attribution |
+| Defect requires correct data state (DB query, cache, ORM) | Integration test (real or in-memory DB) | Unit mocks would hide the actual data layer behavior that caused the defect |
+| Defect requires correct interaction of 2+ services | Integration / component test | Reproduce the service interaction that failed |
+| Defect is an authorization bypass (wrong role gets access) | Integration test (security layer + handler) | Must cover the full auth decision path, not just mock it |
+| Defect requires browser rendering or JS event | E2E test | No other level can reproduce DOM event or rendering condition |
+| Defect is a timing/concurrency race condition | Deterministic replay test or chaos experiment | If non-deterministic, document as untestable; add monitoring |
+| Defect is in external third-party integration | Integration test with recorded response fixture | Reproduce the exact error response the third-party returned |
+
+### Regression Test Anatomy Template
+
+```
+describe("OrderService.calculateTotal", () => {
+  /**
+   * Regression: BUG-1234 — Payment total rounds incorrectly for USD amounts
+   * with 3 decimal places (e.g., 10.005 rounds to 10.00 instead of 10.01)
+   * Fixed in PR #567 by replacing Math.round with Decimal.ROUND_HALF_UP
+   * Reported: 2024-03-15 | Fixed: 2024-03-18
+   */
+  it("rounds USD amounts with 3 decimal places using ROUND_HALF_UP", () => {
+    // Arrange: exact input that triggered the defect (from production data)
+    const order = {
+      items: [{ price: 3.335, quantity: 3 }] // 3 × 3.335 = 10.005
+    };
+    // Act
+    const total = calculateTotal(order, "USD");
+    // Assert: expected behavior after fix; this test was RED before the fix
+    expect(total).toBe(10.01);  // not 10.00 (pre-fix result)
+  });
+});
+
+// Integration-level regression (auth bypass example):
+describe("GET /api/orders/:id — authorization", () => {
+  /**
+   * Regression: SEC-089 — IDOR vulnerability: unauthenticated user could access
+   * any order by guessing order ID.
+   * Fixed: ownership check added before data fetch.
+   * OWASP A01:2021 Broken Access Control
+   */
+  it("returns 403 when authenticated user requests another user's order", async () => {
+    const order = await createOrderForUser(userA);
+    const response = await request(app)
+      .get(`/api/orders/${order.id}`)
+      .set("Authorization", bearerToken(userB)); // different user
+    expect(response.status).toBe(403);
+    expect(response.body.data).toBeUndefined(); // no data leak
+  });
+});
+```
+
+### Untestable Defect Documentation Template
+
+```yaml
+defect_id: "BUG-5678"
+description: "WebSocket message ordering race condition under high load"
+fix_description: "Added sequence numbers; client re-orders by sequence"
+regression_test_feasibility: INFEASIBLE
+reason: "Race condition is non-deterministic; cannot reliably reproduce in test
+  environment without hardware-level timing control. Test would be flaky > 20%."
+residual_risk:
+  likelihood: LOW
+  impact: MEDIUM
+compensating_controls:
+  - Production monitoring alert: out-of-sequence message events > 0.1% rate
+  - Chaos experiment: quarterly test under synthetic high load
+  - Manual regression checklist item in release runbook
+reviewed_by: "Engineering Lead + QA Lead"
+date: "2024-03-20"
+```
+
+# Selection Rules
+
+Select this capability when a **specific past failure must be prevented from recurring** and the primary output is a test that was red before the fix and green after. Route elsewhere when: the test need is general coverage of new functionality (use `test-strategy`); the test targets a performance threshold (use `performance-budgeting`); the test validates a contract between services (use `api-contract-design`); or the test is for exploratory or manual verification (use `quality-test-gate` for test planning).
+
+# Risk Escalation Rules
+
+Escalate when: a defect cannot be regression-tested and the residual risk is HIGH or CRITICAL (requires risk acceptance sign-off from engineering lead or product owner); a security vulnerability is fixed and a regression test would require simulating an attack vector that might trigger security tooling or production systems (requires security team review before test implementation); a production incident is resolved but the triggering condition cannot be reliably reproduced in lower environments (requires incident post-mortem to define compensating monitoring before closure); or regression test coverage for a defect requires E2E tests that create real financial transactions or legal records in test environments (requires compliance review).
+
+# Critical Details
+
+- **"Red before fix, Green after fix" is the only verification that a regression test is a regression test.** The most common mistake: writing a test that describes correct behavior, running it against the fixed code, seeing it pass, and declaring "regression test added." This test may also pass against the unfixed code — meaning it provides no regression protection. The discipline: apply the test to the pre-fix code (via `git stash`, branch checkout, or revert), confirm it fails for the right reason, then verify it passes after the fix.
+- **Flaky regression tests are worse than no regression tests.** A regression test that fails intermittently creates false alarms, erodes trust in the test suite, and is eventually disabled or deleted. Rule: if the test cannot pass consistently 100% of the time in CI, document it as a chaos experiment or monitoring alert instead.
+- **Regression test fixtures must mirror production data patterns, not synthetic minimums.** A defect triggered by a 3-decimal-place USD amount should be tested with a 3-decimal-place amount. Over-simplified fixtures reduce test accuracy and create false confidence.
+- **Security regression tests are the most critical category and most frequently skipped.** An authorization bypass, injection vulnerability, or authentication flaw that is fixed but not regression-tested will likely recur within 12 months as the surrounding code is modified. OWASP A01:2021, A03:2021, A07:2021 all require regression evidence in security reviews.
+
+### Anti-examples
+
+| Anti-pattern | Problem | Fix |
+| --- | --- | --- |
+| Test passes before fix AND after fix | Not a regression test; was already passing; provides no protection | Verify test is RED on pre-fix code; if not, it does not test the failure |
+| Regression test uses `{ amount: 10 }` instead of production `{ amount: 10.005 }` | Simplified fixture does not reproduce the defect; false confidence | Use exact triggering input from defect report or production log |
+| "No time for regression test" merged with fix | Defect recurs 6 months later with no automated detection | Block merge via PR gate: regression test required or documented-impossible |
+| Regression test comment: `// test for payment bug` | No link to defect; orphaned in 12 months; deleted as "unclear purpose" | `// Regression: BUG-1234 — description — fixed in PR #567` |
+| Flaky concurrency regression test added to CI | Intermittent failures; team learns to re-run until green; test disabled | Document as untestable; add monitoring alert + chaos experiment instead |
+| E2E test for a bug catchable at unit level | Slow; fragile; expensive; hides simpler unit-level regression protection | Write unit test at narrowest level; add E2E only if UI interaction is essential |
+
+# Failure Modes
+
+- Regression test written after fix without red-before-fix verification — passes on both versions; defect recurs; test is useless.
+- Fixture oversimplified — does not reproduce exact triggering condition — original defect not protected.
+- Security regression test skipped — authorization bypass reintroduced in refactoring 8 months later — discovered in penetration test.
+- Regression test has no defect link — deleted during cleanup — defect recurs.
+- Timing-sensitive test added to CI — intermittent failures — disabled — defect recurs.
+- Integration test connects to shared development database — mutates data — breaks other tests — removed rather than fixed.
+
+# Output Contract
+
+Return regression test coverage with:
+
+- `defect_reference` (defect ID, incident reference, or PR/review link)
+- `failure_reproduction` (exact triggering conditions: input, state, role, timing, dependencies)
+- `test_level` (Unit / Integration / E2E — justified per level selection matrix)
+- `red_before_fix_verification` (confirmation that test fails on pre-fix code; failure mode matches original defect)
+- `test_code` (test file, test name, arrange/act/assert; defect link in comment)
+- `fixture_design` (mirrors production data patterns; covers exact triggering conditions)
+- `test_link` (CI integration; PR gate requirement)
+- `untestable_documentation` (if applicable: defect reference, impossibility reason, residual risk, compensating controls, reviewer sign-off)
+- `mutation_test_validation` (optional: mutation testing result confirming test fails when defect mutation applied)
+
+# Quality Gate
+
+The regression test coverage is complete only when:
+
+1. Test is RED on pre-fix code for the same failure mode as the original defect.
+2. Test is GREEN on post-fix code.
+3. Test captures exact triggering conditions from the defect report (not simplified).
+4. Test is at the narrowest level that would have caught the defect.
+5. Test has a defect reference comment linking to the source defect or incident.
+6. If untestable: defect reference, impossibility reason, residual risk, and compensating control are documented.
+7. Test does not depend on timing, network, or external state without a deterministic substitute.
+8. Security defects: test reproduces the specific attack vector (not just the absence of authorization).
+9. Test is integrated into CI and required as a merge gate.
+10. Mutation testing (if run) confirms the test fails when the defect mutation is applied.
+
+# Used By
+
+- quality-test-gate
+- ai-code-review-refactor
+
+# Handoff
+
+Hand off to the relevant test-level capability (unit-testing, integration-testing, or e2e-testing) for test infrastructure and framework guidance; `failure-diagnosis` when root cause analysis is needed before the regression test can be written; `test-data-management` when the triggering condition requires complex fixture data or database state setup.
+
+# Completion Criteria
+
+The capability is complete when **every confirmed defect has automated reproduction evidence that was red before the fix and green after, or has a documented impossibility statement with residual risk and compensating control, and every regression test is linked to its source defect and integrated into the merge gate**.

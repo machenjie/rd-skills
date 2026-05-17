@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local development evidence
+.dev/*.tmp
+
+# Runtime scratch state
+runtime/**
+!runtime/
+!runtime/README.md
+!runtime/**/.gitkeep
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+dist/

@@ -1,0 +1,159 @@
+---
+name: quality-test-gate
+description: Defines risk-based test strategy for product and code changes, including unit, integration, contract, E2E, migration, rollback, regression, fixture, mock, coverage, and manual verification expectations.
+license: MIT
+changeforge_kind: professional-skill
+changeforge_version: 0.1.0
+---
+
+# Quality Test Gate
+
+## Mission
+Define the minimum evidence needed to prove a change works correctly, does not regress critical behavior, handles failure paths, and can be safely released — by mapping test types, depth, fixtures, and mocks to explicit risks, not to arbitrary coverage targets, and by treating missing test evidence for high-risk changes as a blocking gate condition.
+
+## When To Use
+- Before code review, merge, or handoff when the test strategy for a change is undefined.
+- When the right test level (unit, integration, E2E, contract, migration) is unclear.
+- When fixture strategy, mock boundaries, or data setup for a change need to be designed.
+- When migration scripts, rollback procedures, or database changes need test coverage.
+- When a code change involves financial calculations, authorization, state machines, or safety-critical behavior.
+- When regression risk from a cross-cutting refactoring is unclear.
+- When a release gate requires test evidence that has not yet been produced.
+
+## Do Not Use When
+- The change is trivial (renaming a variable, updating a comment) with zero behavior risk — demand evidence proportional to risk, not uniformly exhaustive.
+- Test strategy is already defined in an accepted acceptance criteria document with complete coverage for all risks.
+
+## Non-Negotiable Rules
+- **Map every material test to an acceptance criterion or a named risk** — tests without a justifying requirement or risk are noise; risks without a test are gaps.
+- **Include negative path and failure mode coverage** when behavior changes — a test suite that only covers the happy path does not test the behavior, it tests the best case.
+- **Mock boundaries must reflect real contracts**: mocks that return data the real dependency would never return create false confidence; consumer-driven contract tests or integration tests must validate mock assumptions.
+- **Migration and rollback evidence is required for any data layer change**: a migration that has never been executed in a test environment is an untested production change.
+- **Coverage percentages are not quality evidence**: 90% coverage with trivial assertions is worse than 60% coverage with contract and failure tests — coverage is a floor indicator, not a ceiling metric.
+- **Test data must not include production PII or sensitive records**: use generated, anonymized, or synthetic data that represents realistic edge cases.
+- **Flaky tests must be fixed or quarantined before merge**: a flaky test provides no signal and destroys trust in the test suite — merging known-flaky tests is not acceptable.
+- **Concurrency and idempotency tests are required when code uses shared state, queues, or distributed writes**: race conditions that cannot be detected in sequential unit tests require explicit concurrency verification.
+
+## Industry Benchmarks
+- **Test Pyramid (Mike Cohn)**: Many unit tests, fewer integration tests, few E2E tests. Unit tests are fast and cheap; E2E tests are slow and expensive — invert the pyramid at your peril.
+- **Testing Trophy (Kent C. Dodds)**: Emphasizes integration tests over unit tests for most product code — integration tests give the most confidence relative to cost when testing behavior rather than implementation.
+- **Consumer-Driven Contract Testing (Pact)**: Consumers define the contract they depend on; providers verify against it. Catches integration breakage before deployment without end-to-end test fragility.
+- **Google Testing Blog — Test Sizes (Small / Medium / Large)**: Small = no I/O, runs in milliseconds. Medium = some I/O (database, cache). Large = full system. Design the test suite to minimize the proportion of Large tests.
+- **Mutation Testing (PITest / Stryker)**: Systematically introduces code mutations to verify that tests catch the mutation. A test suite that does not catch mutations is not actually testing the behavior.
+- **NIST SP 800-115 (Technical Guide to Information Security Testing)**: Security test types — vulnerability scanning, penetration testing, code review. Applicable to security-critical test obligations.
+- **Behavior-Driven Development (BDD / Gherkin — Cucumber)**: Given/When/Then acceptance scenarios written in business language — executable documentation that bridges specification and test.
+
+### Test Level Selection Matrix
+
+| Change Type | Minimum Test Coverage | When to Go Higher |
+|---|---|---|
+| Pure function, no I/O | Unit tests: normal, edge cases, error paths | Add property-based or mutation tests for critical calculations |
+| Service layer with mocked dependencies | Unit tests + contract tests for mock assumptions | When mocks reflect real external contracts that change |
+| Repository / database query | Integration test against real DB | Required for query plan and constraint verification |
+| REST API endpoint | Integration test: auth, validation, success, 4xx, 5xx | Contract test if external consumers exist |
+| User-facing flow (E2E path) | E2E smoke test for critical happy path | Add failure cases for payment, auth, destructive actions |
+| Database migration | Migration test: forward + rollback + data integrity | Required for all production schema changes |
+| Cross-service integration | Contract test (Pact) + sandbox integration test | When provider behavior cannot be reproduced locally |
+| Security-critical path (auth, payment, data access) | Unit + integration + manual penetration test | Threat model determines additional coverage |
+
+## Technical Selection Criteria
+Select the appropriate evidence level for each risk category in the change:
+- **Behavioral risk**: Does the change alter observable business logic (calculation, state transition, authorization decision)? Requires unit tests covering all logical branches, including error paths.
+- **Integration risk**: Does the change call a real database, cache, queue, or external service? Requires integration tests (not just mocked) against real dependencies.
+- **Contract risk**: Does the change modify an API or event schema that consumers depend on? Requires consumer-driven contract tests (Pact) or API contract tests (OpenAPI).
+- **Migration risk**: Does the change include a database migration or data transformation? Requires migration forward test, rollback test, and data integrity assertion.
+- **Regression risk**: Does the change touch cross-cutting code paths (middleware, auth, routing, shared utilities)? Requires regression test suite verification with no new failures.
+- **Performance risk**: Does the change affect high-frequency queries, high-traffic endpoints, or large dataset operations? Requires query plan validation and optional load test.
+- **Accessibility risk**: Does the change affect UI interactions for keyboard users or screen reader users? Requires axe-core accessibility scan and keyboard walkthrough.
+- **Security risk**: Does the change affect authorization, authentication, input handling, or output encoding? Requires security-specific test cases and code review.
+
+### Decision Tree: Test Depth Required
+
+```
+Does the change modify a financial calculation, authorization decision, or safety-critical rule?
+├── Yes → Unit tests for ALL branches + failure cases + property-based or mutation test required
+Does the change modify a database schema or data migration?
+├── Yes → Migration test (forward + rollback) + data integrity check required
+Does the change modify a public API or event schema with known consumers?
+├── Yes → Consumer-driven contract tests (Pact) required
+Does the change involve an external integration (payment, identity, third-party API)?
+├── Yes → Sandbox integration tests + failure simulation required
+Does the change touch auth, session, or permission boundaries?
+├── Yes → Security-specific test cases: boundary values, privilege escalation, session fixation
+Is the change a low-risk refactoring with no behavior change?
+└── Run existing test suite; no new tests required if coverage is not reduced
+```
+
+## Risk Escalation Rules
+- Escalate when financial or entitlement calculations have no property-based or exhaustive branch tests — edge case math errors are invisible until they cause financial loss.
+- Escalate when a database migration lacks a rollback test — an untested rollback is not a rollback plan.
+- Escalate when authorization rules have no test for the denied path — authorization tests that only cover the allowed path prove nothing about security.
+- Escalate when concurrency scenarios (double-submit, race condition, duplicate event processing) have no test coverage and the code uses shared mutable state.
+- Escalate when test mocks return data that the real dependency would never return — the test suite creates false confidence.
+- Escalate when E2E tests are the only coverage for business-critical logic — E2E tests are too slow and fragile to be the primary regression safety net.
+- Escalate when test data includes real production data — GDPR/privacy violation risk.
+- Escalate when a known-flaky test is in the proposed merge — flaky tests mask real failures.
+
+## Critical Details
+- **Test Doubles hierarchy**: Dummy (placeholder, never used) < Stub (returns canned response) < Fake (working implementation, e.g. in-memory DB) < Mock (verifies interactions) < Spy (records calls). Choose the simplest double that provides enough information.
+- **Fixture isolation**: Each test must be able to set up and tear down its data independently. Tests that share mutable state are order-dependent and will fail in CI parallelism.
+- **Snapshot tests as documentation, not assertions**: UI snapshot tests break on any cosmetic change — they should document intent, not gate behavior. Prefer behavioral assertions (accessible name, state presence) over full component snapshots.
+- **`describe` / `it` naming discipline**: Test names should read as executable specifications: `it("rejects a payment when the account has insufficient funds")` is a specification. `it("test payment failure")` is noise.
+- **The Test Pyramid inversion cost**: When E2E tests are primary, a single feature test takes 30+ seconds — a 500-test suite takes 4 hours. Teams stop running the suite. The feedback loop collapses.
+- **Property-based testing for financial and calculation logic**: Use `Hypothesis` (Python), `fast-check` (TypeScript), or `QuickCheck` (Haskell/Elm) to generate random inputs that explore the full input space of a calculation — finds edge cases that example-based tests miss.
+- **axe-core accessibility scan**: `jest-axe` and Playwright's built-in accessibility snapshot can be run as part of integration and E2E tests — catches WCAG violations automatically in CI.
+
+### Anti-Examples
+
+| Test Approach | Problem | Corrected Approach |
+|---|---|---|
+| 95% line coverage, all tests mock database | Passes CI; production DB queries never tested | Integration tests against real DB for repository layer |
+| E2E test for every business rule variant | 500 E2E tests, 4-hour CI pipeline | Unit tests for business logic; E2E for critical flows only |
+| Migration runs in production, never tested | Rollback fails under pressure | Migration test environment; forward + rollback test before production |
+| `expect(wrapper.find('.error-text').exists()).toBe(true)` | Tests CSS class, not behavior | `expect(screen.getByRole('alert')).toHaveTextContent('Invalid email')` |
+| Mock returns `user.role = 'admin'` but real code never returns that value | Test validates a scenario that cannot happen | Contract test or integration test against real auth provider |
+
+## Failure Modes
+- **Happy-path-only tests miss regressions**: a change that inadvertently breaks the error path ships to production undetected.
+- **Excessive mocks validate fantasies**: the mock returns data the real service never returns — the test passes, production fails.
+- **No rollback test hides migration failure**: the forward migration runs in staging; rollback is attempted in production after an incident; it fails because it was never tested.
+- **Coverage percentage misleads**: 90% coverage with trivial assertions on getters and setters — 0 tests on the critical payment calculation; an off-by-one error ships.
+- **Flaky test masks real failure**: a known-flaky test is retried 3 times in CI; on the day it matters, the real failure is hidden by the retry behavior.
+- **Test data with production PII leaks**: a developer copies a production database export to use as a test fixture — the export includes customer email addresses and phone numbers in the repository.
+- **E2E test for every rule variant**: 600 E2E tests run in sequence — CI takes 5 hours; engineers stop waiting for CI and merge without passing tests.
+- **Concurrency untested**: a payment endpoint is called twice simultaneously from a client retry — both requests succeed due to a race condition; the customer is charged twice.
+
+## Output Contract
+Return a test strategy with:
+- **Risk-to-test mapping**: Each identified risk paired with its required test type, depth, and pass criteria.
+- **Test level breakdown**: Unit / integration / contract / E2E / migration count and rationale.
+- **Fixture strategy**: Data setup, isolation approach, and test data generation method.
+- **Mock boundaries**: Which dependencies are mocked vs. real, and how mock assumptions are validated.
+- **Migration test plan**: Forward execution, rollback execution, and data integrity assertion approach.
+- **Coverage obligations**: Specific logical branches or code paths that must be covered (not aggregate percentage).
+- **Performance test obligations**: Query plan validation, load test threshold, or latency budget if applicable.
+- **Accessibility test obligations**: axe-core coverage level, keyboard walkthrough, and screen reader test requirement.
+- **Residual risks**: Accepted gaps with explicit business justification and mitigating controls.
+
+## Quality Gate
+1. Every material risk has an identified test with pass/fail criteria.
+2. Negative paths (error, denial, failure) are covered for all behavioral changes.
+3. Migration tests cover forward execution, rollback execution, and data integrity.
+4. Contract tests exist for all API or event schema changes with known consumers.
+5. Authorization tests verify both the allowed and denied cases.
+6. Mock assumptions are validated by contract or integration tests.
+7. No production PII or sensitive records are used in test data.
+8. No known-flaky tests are introduced without quarantine and a remediation ticket.
+9. Financial and safety-critical calculations have exhaustive branch or property-based test coverage.
+10. Concurrency and idempotency scenarios are covered for shared-state or distributed-write operations.
+
+## Handoff
+- **backend-change-builder** — with test obligations for service, repository, and API layers.
+- **data-middleware-change-builder** — with migration test and query plan validation obligations.
+- **frontend-change-builder** — with accessibility test, component behavioral test, and E2E flow obligations.
+- **integration-change-builder** — with sandbox integration, idempotency, and failure simulation obligations.
+- **delivery-release-gate** — when release evidence requires specific test results before deployment.
+- **security-privacy-gate** — with security-specific test obligations for auth, input handling, and data access.
+
+## Completion Criteria
+The change has a proportional, executable verification plan where every material risk maps to test evidence or an explicitly accepted residual risk with justification — and the complete test strategy can be handed to a builder without ambiguity about what must pass before release.
