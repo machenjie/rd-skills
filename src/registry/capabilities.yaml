@@ -732,3 +732,12 @@ capabilities:
     triggers: [diagnose failures symptoms logs metrics regressions hypotheses and root cause]
     risk_notes: [Jumping to fixes without evidence can mask root cause and add defects]
     expected_outputs: [diagnosis report with symptoms evidence hypotheses root cause and fix direction]
+  - id: "82"
+    name: solution-optimality-evaluation
+    group: engineering-workflow
+    path: src/foundation/capabilities/solution-optimality-evaluation
+    status: implemented
+    used_by: [backend-change-builder, frontend-change-builder, data-api-contract-changer, data-middleware-change-builder, integration-change-builder, ai-code-review-refactor, architecture-impact-reviewer, reliability-observability-gate, change-impact-analyzer]
+    triggers: [evaluate algorithm complexity performance dimensions cpu memory network disk locks tps concurrency latency rendering self-question optimality alternatives simplest design cognitive complexity reversibility]
+    risk_notes: [Accepting the first working approach without challenge is the most common source of preventable production performance incidents]
+    expected_outputs: [three-challenge answers ten-dimension assessment cognitive complexity rating reversibility classification optimization deferral log with threshold and owner]
