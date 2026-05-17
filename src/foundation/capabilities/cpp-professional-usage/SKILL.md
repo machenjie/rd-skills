@@ -13,6 +13,8 @@ Enforce professional C / C++ usage for systems, native libraries, embedded, perf
 
 # Pinned Tooling Baseline (C / C++)
 
+Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+
 - **Language standard**: **C++20** as the floor for new code; **C++23** where the toolchain supports it (`std::expected`, `std::print`, `std::flat_map`, deducing-this). C++17 acceptable only with documented reason. C++14 and below for legacy maintenance only. For C: **C17 / C23** where supported.
 - **Compilers**: GCC ≥ 13, Clang ≥ 17, MSVC ≥ 17.10 (VS 2022 17.10). All build with `-Wall -Wextra -Wpedantic -Werror` (GCC/Clang) or `/W4 /WX` (MSVC) plus project-specific additions (`-Wconversion`, `-Wshadow`, `-Wnon-virtual-dtor`).
 - **Build system**: CMake ≥ 3.27 (with presets) preferred; Bazel for monorepos; package manager: `vcpkg` or `Conan 2`.

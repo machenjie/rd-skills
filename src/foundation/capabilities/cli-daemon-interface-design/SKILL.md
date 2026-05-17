@@ -13,6 +13,8 @@ Design command-line, TUI, and daemon interfaces that are predictable for humans,
 
 # Pinned Tooling Baseline
 
+Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+
 - Argument parsing libraries: Go `spf13/cobra` v1.8 + `spf13/viper` v1.18; Python `click` ≥ 8.1 or `typer` ≥ 0.12; Rust `clap` v4 (derive); Node `commander` v12 or `yargs` v17; Java `picocli` ≥ 4.7; .NET `System.CommandLine` ≥ 2.0.
 - Output conventions: human format on stdout by default; `--output json|jsonl|yaml|tsv` for machine output; NDJSON / JSON Lines (RFC 7464 / jsonlines.org) for streaming events.
 - Daemon supervision: systemd unit with `Type=notify` and `sd_notify(READY=1)`; macOS `launchd` plist; Windows Service Control Manager via `sc.exe` or `WindowsService` host; container PID 1 must reap zombies or run under `tini`/`dumb-init`.

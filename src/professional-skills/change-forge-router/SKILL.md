@@ -110,9 +110,9 @@ Domain extension routing:
 
 Runtime profile awareness:
 
-- Recommended: 19 professional skills are top-level runtime skills; 100 foundation capabilities are compiled into relevant professional references; the router includes generated routing indexes.
-- Full: 19 professional skills plus 7 domain extensions are top-level runtime skills; 100 foundation capabilities remain compiled professional references.
-- Dev: 19 professional skills, 100 foundation capabilities, and 7 domain extensions are top-level runtime skills for ChangeForge development and debugging.
+- Recommended: 19 professional skills top-level, 100 foundation capabilities compiled into references.
+- Full: 19 professional skills + 7 domain extensions top-level, 100 foundation capabilities compiled into references.
+- Dev: 19 professional skills + 100 foundation capabilities + 7 domain extensions top-level.
 
 ## Risk Escalation Rules
 Escalate one level for any risk trigger that affects user data, money, permissions, external systems, production state, or irreversible operations. Escalate to high or critical when more than one high-impact trigger is present or when rollback is unclear.

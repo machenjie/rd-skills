@@ -13,6 +13,8 @@ Design safe file and object-storage flows that handle uploads, downloads, stream
 
 # Pinned Tooling Baseline
 
+Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+
 - Object storage SDKs: AWS SDK v3 (`@aws-sdk/client-s3` ≥ 3.600, `boto3` ≥ 1.34, `aws-sdk-go-v2` ≥ 1.30); Google Cloud Storage client ≥ 2.x; Azure SDK `@azure/storage-blob` ≥ 12.x.
 - Multipart thresholds (S3): part size minimum 5 MiB, maximum 5 GiB, max 10 000 parts, max object 5 TiB; abort incomplete uploads with `AbortIncompleteMultipartUpload` lifecycle rule (recommended 7 days).
 - Presigned URL TTL: ≤ 15 min for write, ≤ 60 min for read by default; never > 7 days (SigV4 hard limit).

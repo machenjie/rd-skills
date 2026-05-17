@@ -13,6 +13,8 @@ Design public or internal SDK and library contracts that consumers can adopt saf
 
 # Pinned Tooling Baseline
 
+Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+
 - Versioning: Semantic Versioning 2.0.0 for libraries; Cargo SemVer compatibility rules for Rust; PVP for Haskell; pre-1.0 packages must still document breaking change policy.
 - Public-surface diffing: TypeScript `@microsoft/api-extractor` ≥ 7 + `api-documenter`; Rust `cargo semver-checks` ≥ 0.32 and `cargo public-api`; Java `revapi` or `japicmp` (Maven plugin); Go `golang.org/x/exp/cmd/apidiff`; .NET `Microsoft.DotNet.ApiCompat`; Python `griffe check` or `pyright --outputjson` baseline diff.
 - Generated clients: OpenAPI Generator ≥ 7.x pinned, or Microsoft Kiota ≥ 1.x, or `protoc` ≥ 25 + language plugins, or `oapi-codegen` (Go) ≥ 2.x. Pin generator container digest, source spec hash, and generator config; commit generated output and review diff.

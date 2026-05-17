@@ -11,6 +11,12 @@ changeforge_version: 0.1.0
 
 Select or review programming language and runtime choices against workload shape, type-safety needs, concurrency and memory model, deployment topology, ecosystem and supply-chain posture, observability tooling, runtime lifecycle, hiring market, and long-term maintainability. Reject language choice based on familiarity, novelty, or trend; require evidence that the chosen runtime matches the workload's actual failure modes.
 
+# Pinned Tooling Baseline
+
+Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+
+Use active vendor or community support policies as the runtime-selection baseline; reject EOL runtimes unless an explicit exception, migration owner, and retirement date are approved.
+
 # When To Use
 
 Use when language is not yet chosen, a new language is proposed in an existing system, runtime behavior materially affects correctness or latency, or a workload must be classified against CPU-bound, IO-bound, latency-sensitive, memory-sensitive, batch, interactive, embedded, edge, or contract-heavy constraints. Use whenever the choice will commit ≥ 1 team to operate the runtime for ≥ 1 year.

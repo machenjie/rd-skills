@@ -13,6 +13,8 @@ Design internationalization, localization, date/time, timezone, currency, number
 
 # Pinned Tooling Baseline
 
+Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+
 - Locale tags: IETF BCP 47 (RFC 5646); validate with `Intl.Locale` (ECMA-402) or `Locale.forLanguageTag` (Java); reject non-canonical tags.
 - Locale data: Unicode CLDR ≥ 44; pin the CLDR version used by the build; ICU ≥ 73 for server-side formatting.
 - Time zones: IANA Time Zone Database (tzdata) ≥ 2024a; pin the tzdata version in the container image; subscribe to tzdata announcement list.

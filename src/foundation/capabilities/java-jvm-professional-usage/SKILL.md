@@ -13,6 +13,8 @@ Enforce professional Java / Kotlin / JVM usage for backend services and enterpri
 
 # Pinned Tooling Baseline (Java / JVM)
 
+Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+
 - **JDK**: OpenJDK 21 LTS (current LTS, supported through ~2031). 17 LTS acceptable through its support window. Java 25 LTS targeted Sep 2025 — plan upgrade path. **Java 8 and 11 are end-of-life for free updates and rejected for new work.**
 - **Build**: Maven ≥ 3.9 with `maven-enforcer-plugin` (`requireMavenVersion`, `dependencyConvergence`), or Gradle ≥ 8.7 with version catalogs (`libs.versions.toml`) and dependency lockfile (`--write-locks` → `gradle.lockfile`).
 - **Spring (when used)**: Spring Boot ≥ 3.3 (3.4 preferred). Boot 2.x / Spring Framework 5.x are EOL for OSS — require commercial support to remain.

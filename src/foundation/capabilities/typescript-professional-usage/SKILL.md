@@ -13,8 +13,10 @@ Enforce professional TypeScript usage for frontend (React / Vue / Svelte / Solid
 
 # Pinned Tooling Baseline (TypeScript)
 
+Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+
 - **TypeScript**: ≥ 5.4 (5.5+ preferred). `tsconfig.json` `"strict": true` + `"noUncheckedIndexedAccess": true` + `"noImplicitOverride": true` + `"exactOptionalPropertyTypes": true` + `"verbatimModuleSyntax": true`.
-- **Node.js**: LTS only — ≥ 20.x (22.x preferred). Node 18 acceptable through its EOL (April 2025). 16 and below rejected.
+- **Node.js**: Node.js must be an active or maintenance LTS version. EOL Node versions are rejected. The target project must pin the exact supported major and update this capability when the organization’s Node.js LTS policy changes.
 - **Package manager**: `pnpm` ≥ 9 (preferred for monorepos), `npm` ≥ 10, or `yarn` Berry. Lockfile mandatory; CI uses `--frozen-lockfile` / `npm ci`.
 - **Linter**: `eslint` ≥ 9 (flat config) + `@typescript-eslint` v8 with `strict-type-checked` + `stylistic-type-checked` configs.
 - **Formatter**: `prettier` ≥ 3.

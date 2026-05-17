@@ -13,6 +13,8 @@ Enforce professional Go usage for services, CLIs, libraries, workers, and infras
 
 # Pinned Tooling Baseline (Go)
 
+Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+
 - **Toolchain**: Go ≥ 1.22 (1.23 preferred). Go 1.21 acceptable only with documented reason. **Go 1.20 and below are unsupported by the Go team — rejected.**
 - **Module mode**: required; `GOPATH` mode is forbidden for new work.
 - **Formatter**: `gofmt` + `goimports` (or `golangci-lint run` invoking the format check). Non-gofmt code is rejected by CI.

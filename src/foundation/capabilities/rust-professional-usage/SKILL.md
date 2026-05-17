@@ -13,6 +13,8 @@ Enforce professional Rust usage for systems, services, CLIs, WASM, and performan
 
 # Pinned Tooling Baseline (Rust)
 
+Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+
 - **Toolchain**: stable Rust on a 6-week cadence. Pin via `rust-toolchain.toml` (`channel = "1.81"` or similar). Edition **2021** (2024 edition stabilizing in 1.85 — plan migration). Declare an **MSRV (Minimum Supported Rust Version)** in `Cargo.toml` (`rust-version = "..."`) for libraries.
 - **Format**: `rustfmt` with project `rustfmt.toml` (or defaults); CI runs `cargo fmt -- --check`.
 - **Lint**: `cargo clippy --all-targets --all-features -- -D warnings` in CI, with `clippy::pedantic` enabled for new code (`#![warn(clippy::pedantic)]`) and selective allows justified inline.

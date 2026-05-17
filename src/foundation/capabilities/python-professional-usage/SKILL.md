@@ -13,6 +13,8 @@ Enforce professional Python usage — typing discipline, runtime validation, asy
 
 # Pinned Tooling Baseline (Python)
 
+Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+
 - **Runtime**: Python ≥ 3.11 (3.12 preferred). 3.10 acceptable only if a hard dependency requires it; document the exception. **3.8 / 3.9 are EOL/EOL-imminent and rejected for new work.**
 - **Formatter / linter**: `ruff` ≥ 0.5 (replaces black + isort + flake8 + pyupgrade + pydocstyle); configured via `[tool.ruff]` in `pyproject.toml`.
 - **Type checker**: `mypy` ≥ 1.10 with `--strict` (or pyright `strict`). `Any` requires inline justification.

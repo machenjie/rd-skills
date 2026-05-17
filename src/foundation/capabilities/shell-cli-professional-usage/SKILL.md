@@ -13,6 +13,8 @@ Enforce professional Shell / CLI / operational-tool usage: strict shell options,
 
 # Pinned Tooling Baseline (Shell / CLI)
 
+Pinned versions are review baselines, not permanent recommendations. If a pinned baseline is EOL, superseded, unsupported, or conflicts with the target project's approved platform policy, update this capability before relying on it for new product work.
+
 - **Shell**: Bash ≥ 4.4 (5.x preferred for `mapfile`, `${var,,}` lowercasing, robust `[[ -v ]]`); explicit `#!/usr/bin/env bash` shebang and `set -euo pipefail`. **POSIX `sh`** only when explicitly required (Alpine / busybox / Dockerfile RUN with `sh`); document the constraint.
 - **Linter**: **ShellCheck** ≥ 0.10 (`shellcheck -S warning script.sh`), run in CI on every shell file. Findings either fixed or annotated inline (`# shellcheck disable=SCxxxx # reason: ...`).
 - **Formatter**: `shfmt` ≥ 3.8 with project config (e.g., `shfmt -i 2 -bn -ci -sr`); CI runs `shfmt -d`.
