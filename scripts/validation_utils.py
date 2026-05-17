@@ -16,6 +16,18 @@ except Exception:  # pragma: no cover - depends on local environment
 
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 FRONTMATTER_DELIMITER = "---"
+EXPECTED_PROFESSIONAL_SKILL_COUNT = 19
+EXPECTED_FOUNDATION_CAPABILITY_COUNT = 82
+EXPECTED_DOMAIN_EXTENSION_COUNT = 7
+EXPECTED_PROFILE_TOP_LEVEL_COUNTS = {
+    "recommended": EXPECTED_PROFESSIONAL_SKILL_COUNT,
+    "full": EXPECTED_PROFESSIONAL_SKILL_COUNT + EXPECTED_DOMAIN_EXTENSION_COUNT,
+    "dev": (
+        EXPECTED_PROFESSIONAL_SKILL_COUNT
+        + EXPECTED_FOUNDATION_CAPABILITY_COUNT
+        + EXPECTED_DOMAIN_EXTENSION_COUNT
+    ),
+}
 
 BANNED_BEGINNER_SECTIONS = (
     "Basic Usage",
@@ -40,9 +52,6 @@ PERSONAL_ASSET_REFERENCES = (
     "private documents",
 )
 
-PENDING_STATUSES = {"pending", "planned", "reserved", "stub"}
-
-
 class ValidationProblem(Exception):
     """Raised for malformed inputs that cannot be validated further."""
 
@@ -58,6 +67,34 @@ def fail_many(label: str, errors: Iterable[str]) -> int:
     for message in items:
         print(f"{label}: ERROR: {message}", file=sys.stderr)
     return 1
+
+
+def visible_child_dirs(
+    root: Path,
+    *,
+    excluded_prefixes: tuple[str, ...] = (".",),
+    excluded_names: tuple[str, ...] = (),
+) -> list[Path]:
+    if not root.is_dir():
+        return []
+    return [
+        path
+        for path in sorted(root.iterdir())
+        if path.is_dir()
+        and not path.name.startswith(excluded_prefixes)
+        and path.name not in excluded_names
+    ]
+
+
+def validate_expected_count(
+    errors: list[str],
+    label: str,
+    actual: int,
+    expected: int,
+    context: str,
+) -> None:
+    if actual != expected:
+        errors.append(f"{context}: expected {expected} {label}, found {actual}")
 
 
 def _parse_scalar(raw: str) -> Any:
@@ -368,16 +405,6 @@ def entry_path(entry: Any) -> str | None:
         return None
     value = entry.get("path")
     return value if isinstance(value, str) and value else None
-
-
-def is_pending_entry(entry: Any) -> bool:
-    if not isinstance(entry, dict):
-        return False
-    status = entry.get("status")
-    if isinstance(status, str) and status.casefold() in PENDING_STATUSES:
-        return True
-    implemented = entry.get("implemented")
-    return implemented is False
 
 
 def collect_reference_values(obj: Any, reference_keys: set[str]) -> list[str]:

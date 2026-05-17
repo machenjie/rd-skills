@@ -25,15 +25,15 @@ supported_change_types:
   - test generation
 runtime_profiles:
   - name: recommended
-    top_level: professional skills
-    foundation_mode: compiled professional references
+    top_level: 19 professional skills
+    foundation_mode: 82 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
-    top_level: professional skills and domain extensions
-    foundation_mode: compiled professional references
+    top_level: 19 professional skills and 7 domain extensions
+    foundation_mode: 82 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: professional skills, foundation capabilities, and domain extensions
+    top_level: 19 professional skills, 82 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:

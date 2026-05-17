@@ -185,8 +185,8 @@ def skill_metadata(skill_dir: Path) -> dict[str, Any]:
 
 def classify_source_skills(skill_dirs: list[Path]) -> dict[str, list[str]]:
     names = {
-        "professional": [],
-        "foundation": [],
+        "professional_skills": [],
+        "foundation_capabilities": [],
         "domain_extensions": [],
         "all": [],
     }
@@ -198,10 +198,9 @@ def classify_source_skills(skill_dirs: list[Path]) -> dict[str, list[str]]:
         if kind == "domain-extension":
             names["domain_extensions"].append(name)
         elif kind == "foundation-capability":
-            names["foundation"].append(name)
-            names["professional"].append(name)
+            names["foundation_capabilities"].append(name)
         else:
-            names["professional"].append(name)
+            names["professional_skills"].append(name)
 
     for key, values in names.items():
         names[key] = sorted(values)
@@ -214,6 +213,7 @@ def managed_names(manifest: dict[str, Any] | None) -> set[str]:
     names: set[str] = set()
     for key in (
         "installed_skills",
+        "installed_professional_skills",
         "installed_domain_extensions",
         "installed_foundation_capabilities",
     ):
@@ -249,9 +249,10 @@ def make_manifest(
         "scope": scope,
         "profile": profile,
         "target_path": str(target_dir),
-        "installed_skills": classified["professional"],
+        "installed_professional_skills": classified["professional_skills"],
+        "installed_foundation_capabilities": classified["foundation_capabilities"],
         "installed_domain_extensions": classified["domain_extensions"],
-        "installed_foundation_capabilities": classified["foundation"],
+        "installed_skills": classified["all"],
         "foundation_mode": FOUNDATION_MODES[profile],
         "backup_path": str(backup_path) if backup_path is not None else None,
         "skill_versions": versions,

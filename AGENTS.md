@@ -24,10 +24,11 @@ Every change to the skill system must be validated before handoff. At minimum, r
 python3 scripts/validate-skills.py
 python3 scripts/validate-capabilities.py
 python3 scripts/validate-registry.py
+python3 scripts/build.py --profile recommended
+python3 scripts/build.py --profile full
+python3 scripts/build.py --profile dev
 python3 scripts/validate-installation.py
 ```
-
-When build or packaging behavior changes, also run the relevant build, package, installer, or doctor script.
 
 ## Runtime Content Rules
 

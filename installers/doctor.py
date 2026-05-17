@@ -162,6 +162,7 @@ def _manifest_names(manifest: dict[str, Any]) -> list[str]:
     names: list[str] = []
     for key in (
         "installed_skills",
+        "installed_professional_skills",
         "installed_domain_extensions",
         "installed_foundation_capabilities",
     ):

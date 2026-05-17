@@ -6,6 +6,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from validation_utils import (
+    EXPECTED_DOMAIN_EXTENSION_COUNT,
+    EXPECTED_FOUNDATION_CAPABILITY_COUNT,
+    EXPECTED_PROFESSIONAL_SKILL_COUNT,
+    EXPECTED_PROFILE_TOP_LEVEL_COUNTS,
     ValidationProblem,
     fail_many,
     parse_frontmatter,
@@ -15,13 +19,17 @@ from validation_utils import (
     validate_name,
     validate_no_beginner_sections,
     validate_no_personal_references,
+    validate_expected_count,
     validate_required_frontmatter,
     validate_required_sections,
+    visible_child_dirs,
 )
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS_DIR = ROOT / "src" / "professional-skills"
+CAPABILITIES_DIR = ROOT / "src" / "foundation" / "capabilities"
+DOMAIN_EXTENSIONS_DIR = ROOT / "src" / "domain-extensions"
 BANNED_PATHS = (
     ROOT / "src" / "toolbox",
     ROOT / "registry" / "toolbox.yaml",
@@ -62,9 +70,44 @@ def main() -> int:
         errors.append("missing src/professional-skills")
         return fail_many("validate-skills", errors)
 
-    skill_dirs = sorted(
-        path for path in SKILLS_DIR.iterdir() if path.is_dir() and path.name != ".gitkeep"
+    skill_dirs = visible_child_dirs(SKILLS_DIR)
+    capability_dirs = visible_child_dirs(CAPABILITIES_DIR, excluded_prefixes=(".", "_"))
+    domain_extension_dirs = visible_child_dirs(DOMAIN_EXTENSIONS_DIR)
+    profile_counts = {
+        "recommended": len(skill_dirs),
+        "full": len(skill_dirs) + len(domain_extension_dirs),
+        "dev": len(skill_dirs) + len(capability_dirs) + len(domain_extension_dirs),
+    }
+
+    validate_expected_count(
+        errors,
+        "professional skill(s)",
+        len(skill_dirs),
+        EXPECTED_PROFESSIONAL_SKILL_COUNT,
+        relpath(ROOT, SKILLS_DIR),
     )
+    validate_expected_count(
+        errors,
+        "foundation capability(s)",
+        len(capability_dirs),
+        EXPECTED_FOUNDATION_CAPABILITY_COUNT,
+        relpath(ROOT, CAPABILITIES_DIR),
+    )
+    validate_expected_count(
+        errors,
+        "domain extension(s)",
+        len(domain_extension_dirs),
+        EXPECTED_DOMAIN_EXTENSION_COUNT,
+        relpath(ROOT, DOMAIN_EXTENSIONS_DIR),
+    )
+    for profile, expected_count in EXPECTED_PROFILE_TOP_LEVEL_COUNTS.items():
+        validate_expected_count(
+            errors,
+            f"{profile} profile top-level skill(s)",
+            profile_counts[profile],
+            expected_count,
+            "source profile counts",
+        )
 
     for child in sorted(SKILLS_DIR.iterdir()):
         if child.name.startswith(".") and child.name != ".gitkeep":

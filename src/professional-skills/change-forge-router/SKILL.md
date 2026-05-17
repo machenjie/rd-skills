@@ -93,7 +93,7 @@ Foundation capability groups:
 - Quality testing: 58 `test-strategy`, 59 `unit-testing`, 60 `integration-testing`, 61 `contract-testing`, 62 `e2e-testing`, 63 `test-data-management`, 64 `regression-testing`.
 - Reliability operations: 65 `performance-budgeting`, 66 `profiling`, 67 `concurrency-control`, 68 `degradation-circuit-breaking`, 69 `observability`, 70 `backup-recovery`.
 - Delivery platform: 71 `project-initialization`, 72 `containerization`, 73 `ci-cd`, 74 `kubernetes-gateway`, 75 `release-rollback`.
-- Engineering workflow: 76 `context-packaging`, 77 `task-dag-decomposition`, 78 `code-review`, 79 `refactoring`, 80 `documentation-generation`, 81 `failure-diagnosis`.
+- Engineering workflow: 76 `context-packaging`, 77 `task-dag-decomposition`, 78 `code-review`, 79 `refactoring`, 80 `documentation-generation`, 81 `failure-diagnosis`, 82 `solution-optimality-evaluation`.
 
 Domain extension routing:
 
@@ -107,9 +107,9 @@ Domain extension routing:
 
 Runtime profile awareness:
 
-- Recommended: 19 professional skills are top-level runtime skills; foundation capabilities are compiled into relevant professional references; the router includes generated routing indexes.
-- Full: 19 professional skills plus 7 domain extensions are top-level runtime skills; foundation capabilities remain compiled professional references.
-- Dev: 19 professional skills, 81 foundation capabilities, and 7 domain extensions are top-level runtime skills for ChangeForge development and debugging.
+- Recommended: 19 professional skills are top-level runtime skills; 82 foundation capabilities are compiled into relevant professional references; the router includes generated routing indexes.
+- Full: 19 professional skills plus 7 domain extensions are top-level runtime skills; 82 foundation capabilities remain compiled professional references.
+- Dev: 19 professional skills, 82 foundation capabilities, and 7 domain extensions are top-level runtime skills for ChangeForge development and debugging.
 
 ## Risk Escalation Rules
 Escalate one level for any risk trigger that affects user data, money, permissions, external systems, production state, or irreversible operations. Escalate to high or critical when more than one high-impact trigger is present or when rollback is unclear.

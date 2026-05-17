@@ -6,17 +6,21 @@ from __future__ import annotations
 from pathlib import Path
 
 from validation_utils import (
+    EXPECTED_DOMAIN_EXTENSION_COUNT,
+    EXPECTED_FOUNDATION_CAPABILITY_COUNT,
+    EXPECTED_PROFESSIONAL_SKILL_COUNT,
+    EXPECTED_PROFILE_TOP_LEVEL_COUNTS,
     ValidationProblem,
     collect_reference_values,
     entry_path,
     entry_ref,
     fail_many,
-    is_pending_entry,
     load_yaml_file,
     parse_frontmatter,
     path_is_within,
     registry_items,
     relpath,
+    validate_expected_count,
     validate_no_personal_references,
 )
 
@@ -102,7 +106,7 @@ def _load_capability_refs() -> set[str]:
         return refs
 
     for capability_dir in CAPABILITIES_DIR.iterdir():
-        if not capability_dir.is_dir() or capability_dir.name.startswith("."):
+        if not capability_dir.is_dir() or capability_dir.name.startswith((".", "_")):
             continue
         refs.add(capability_dir.name)
         skill_file = capability_dir / "SKILL.md"
@@ -152,16 +156,13 @@ def _validate_registry_entry_reference(
     registry_name: str,
     index: int,
     errors: list[str],
-    allow_pending: bool = False,
 ) -> None:
-    if allow_pending and is_pending_entry(entry):
-        return
-
     path_value = entry_path(entry)
-    if path_value:
-        if not _entry_path_exists(path_value, expected_root):
-            errors.append(f"{registry_name}[{index}]: path does not exist: {path_value}")
-            return
+    if not path_value:
+        errors.append(f"{registry_name}[{index}]: missing source path")
+        return
+    if not _entry_path_exists(path_value, expected_root):
+        errors.append(f"{registry_name}[{index}]: path does not exist: {path_value}")
         return
 
     ref = entry_ref(entry, keys)
@@ -170,6 +171,16 @@ def _validate_registry_entry_reference(
         return
     if ref not in existing_refs:
         errors.append(f"{registry_name}[{index}]: references missing item '{ref}'")
+
+
+def _validate_capability_status(entry: object, index: int, errors: list[str]) -> None:
+    if not isinstance(entry, dict):
+        return
+    if entry.get("status") != "implemented":
+        errors.append(
+            "capabilities.yaml:capabilities"
+            f"[{index}]: status must be implemented"
+        )
 
 
 def main() -> int:
@@ -214,6 +225,13 @@ def main() -> int:
         REGISTRY_DIR / "skills.yaml",
         errors,
     )
+    validate_expected_count(
+        errors,
+        "professional skill registry entrie(s)",
+        len(skill_entries),
+        EXPECTED_PROFESSIONAL_SKILL_COUNT,
+        "skills.yaml:skills",
+    )
     for index, entry in enumerate(skill_entries):
         _validate_registry_entry_reference(
             entry,
@@ -231,7 +249,15 @@ def main() -> int:
         REGISTRY_DIR / "capabilities.yaml",
         errors,
     )
+    validate_expected_count(
+        errors,
+        "capability registry entrie(s)",
+        len(capability_entries),
+        EXPECTED_FOUNDATION_CAPABILITY_COUNT,
+        "capabilities.yaml:capabilities",
+    )
     for index, entry in enumerate(capability_entries):
+        _validate_capability_status(entry, index, errors)
         _validate_registry_entry_reference(
             entry,
             ("changeforge_capability_id", "capability_id", "id", "name", "capability"),
@@ -240,7 +266,6 @@ def main() -> int:
             "capabilities.yaml:capabilities",
             index,
             errors,
-            allow_pending=True,
         )
 
     domain_extension_entries = registry_items(
@@ -248,6 +273,13 @@ def main() -> int:
         "domain_extensions",
         REGISTRY_DIR / "domain-extensions.yaml",
         errors,
+    )
+    validate_expected_count(
+        errors,
+        "domain extension registry entrie(s)",
+        len(domain_extension_entries),
+        EXPECTED_DOMAIN_EXTENSION_COUNT,
+        "domain-extensions.yaml:domain_extensions",
     )
     for index, entry in enumerate(domain_extension_entries):
         _validate_registry_entry_reference(
@@ -258,6 +290,20 @@ def main() -> int:
             "domain-extensions.yaml:domain_extensions",
             index,
             errors,
+        )
+
+    profile_counts = {
+        "recommended": len(skill_entries),
+        "full": len(skill_entries) + len(domain_extension_entries),
+        "dev": len(skill_entries) + len(capability_entries) + len(domain_extension_entries),
+    }
+    for profile, expected_count in EXPECTED_PROFILE_TOP_LEVEL_COUNTS.items():
+        validate_expected_count(
+            errors,
+            f"{profile} profile top-level skill(s)",
+            profile_counts[profile],
+            expected_count,
+            "registry profile counts",
         )
 
     routing_entries = registry_items(

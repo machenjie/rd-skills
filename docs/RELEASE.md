@@ -22,7 +22,9 @@ Expected top-level runtime counts:
 
 - `recommended`: 19 professional skills.
 - `full`: 19 professional skills plus 7 domain extensions.
-- `dev`: 19 professional skills plus 81 foundation capabilities plus 7 domain extensions.
+- `dev`: 19 professional skills plus 82 foundation capabilities plus 7 domain extensions.
+
+Foundation capability count is 82 in every profile: compiled into professional references for `recommended` and `full`, and also top-level in `dev`.
 
 ## Package
 
@@ -44,6 +46,9 @@ Run the core validation suite before handoff:
 python3 scripts/validate-skills.py
 python3 scripts/validate-capabilities.py
 python3 scripts/validate-registry.py
+python3 scripts/build.py --profile recommended
+python3 scripts/build.py --profile full
+python3 scripts/build.py --profile dev
 python3 scripts/validate-installation.py
 ```
 
@@ -58,6 +63,20 @@ python3 installers/install.py --agent copilot --scope user --profile recommended
 python3 installers/install.py --agent copilot --scope project --target /tmp/changeforge-test-repo --profile full --dry-run
 python3 installers/install.py --agent openai-api --profile recommended --dry-run
 ```
+
+Run final smoke checks against disposable targets:
+
+```bash
+python3 installers/install.py --agent codex --scope user --target /tmp/changeforge-recommended-user-smoke --profile recommended
+python3 installers/install.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --profile full
+python3 installers/uninstall.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --dry-run
+python3 installers/doctor.py --agent codex --scope user --target /tmp/changeforge-recommended-user-smoke --profile recommended
+python3 installers/doctor.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --profile full
+python3 installers/install.py --agent openai-api --profile recommended --dry-run
+python3 scripts/validate-installation.py
+```
+
+The recommended global/user smoke must install 19 top-level skills. The full project smoke must install 26 top-level skills. The uninstall dry-run must list only manifest-managed names. Doctor must pass for installed smoke targets. OpenAI API zip validation must pass profile count and archive shape checks.
 
 ## Release Checklist
 

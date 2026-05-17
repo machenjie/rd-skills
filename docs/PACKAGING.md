@@ -39,6 +39,6 @@ Zip file timestamps are normalized for reproducible output.
 
 - `recommended` packages the 19 professional skills.
 - `full` packages the 19 professional skills plus 7 domain extensions.
-- `dev` packages 19 professional skills, 81 foundation capabilities, and 7 domain extensions.
+- `dev` packages 19 professional skills, 82 foundation capabilities, and 7 domain extensions.
 
 Each profile zip directory is refreshed independently on build or packaging. Legacy unprofiled zips directly under `dist/openai-api/zips` are not valid release artifacts.

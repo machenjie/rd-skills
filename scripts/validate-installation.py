@@ -9,11 +9,16 @@ from pathlib import Path
 from typing import Any
 
 from validation_utils import (
+    EXPECTED_DOMAIN_EXTENSION_COUNT,
+    EXPECTED_FOUNDATION_CAPABILITY_COUNT,
+    EXPECTED_PROFESSIONAL_SKILL_COUNT,
+    EXPECTED_PROFILE_TOP_LEVEL_COUNTS,
     ValidationProblem,
     fail_many,
     load_yaml_file,
     parse_frontmatter,
     relpath,
+    validate_expected_count,
     validate_no_personal_references,
 )
 
@@ -125,6 +130,41 @@ def _load_registry_sets(errors: list[str]) -> dict[str, Any]:
     domain_extension_names = _entry_names(domain_extensions)
     capability_files_by_skill: dict[str, set[str]] = {}
 
+    validate_expected_count(
+        errors,
+        "professional skill registry entrie(s)",
+        len(skills),
+        EXPECTED_PROFESSIONAL_SKILL_COUNT,
+        "src/registry/skills.yaml",
+    )
+    validate_expected_count(
+        errors,
+        "foundation capability registry entrie(s)",
+        len(capabilities),
+        EXPECTED_FOUNDATION_CAPABILITY_COUNT,
+        "src/registry/capabilities.yaml",
+    )
+    validate_expected_count(
+        errors,
+        "domain extension registry entrie(s)",
+        len(domain_extensions),
+        EXPECTED_DOMAIN_EXTENSION_COUNT,
+        "src/registry/domain-extensions.yaml",
+    )
+    profile_counts = {
+        "recommended": len(skills),
+        "full": len(skills) + len(domain_extensions),
+        "dev": len(skills) + len(capabilities) + len(domain_extensions),
+    }
+    for profile, expected_count in EXPECTED_PROFILE_TOP_LEVEL_COUNTS.items():
+        validate_expected_count(
+            errors,
+            f"{profile} profile top-level skill(s)",
+            profile_counts[profile],
+            expected_count,
+            "registry profile counts",
+        )
+
     for entry in capabilities:
         if not isinstance(entry, dict):
             continue
@@ -227,6 +267,13 @@ def _validate_profile_roots(
                 for child in profile_root.iterdir()
                 if child.is_dir() and not child.name.startswith(".")
             }
+            validate_expected_count(
+                errors,
+                f"{profile} profile top-level skill directorie(s)",
+                len(actual),
+                EXPECTED_PROFILE_TOP_LEVEL_COUNTS[profile],
+                relpath(ROOT, profile_root),
+            )
             missing = sorted(expected - actual)
             extra = sorted(actual - expected)
             if missing:
@@ -282,6 +329,61 @@ def _validate_build_manifest(path: Path, profile: str, errors: list[str]) -> Non
         errors.append(
             f"{relpath(ROOT, path)}: dev foundation_mode must be top-level-and-compiled-references"
         )
+    _validate_manifest_list_count(
+        data,
+        path,
+        "top_level_skills",
+        EXPECTED_PROFILE_TOP_LEVEL_COUNTS[profile],
+        errors,
+    )
+    _validate_manifest_list_count(
+        data,
+        path,
+        "professional_skills",
+        EXPECTED_PROFESSIONAL_SKILL_COUNT,
+        errors,
+    )
+    _validate_manifest_list_count(
+        data,
+        path,
+        "foundation_capabilities",
+        EXPECTED_FOUNDATION_CAPABILITY_COUNT,
+        errors,
+    )
+    _validate_manifest_list_count(
+        data,
+        path,
+        "compiled_foundation_capabilities",
+        EXPECTED_FOUNDATION_CAPABILITY_COUNT,
+        errors,
+    )
+    _validate_manifest_list_count(
+        data,
+        path,
+        "domain_extensions",
+        EXPECTED_DOMAIN_EXTENSION_COUNT,
+        errors,
+    )
+
+
+def _validate_manifest_list_count(
+    data: dict[str, Any],
+    path: Path,
+    key: str,
+    expected: int,
+    errors: list[str],
+) -> None:
+    value = data.get(key)
+    if not isinstance(value, list):
+        errors.append(f"{relpath(ROOT, path)}: field '{key}' must be a list")
+        return
+    validate_expected_count(
+        errors,
+        f"manifest {key} item(s)",
+        len(value),
+        expected,
+        relpath(ROOT, path),
+    )
 
 
 def _validate_runtime_skill_dir(
@@ -381,6 +483,13 @@ def _validate_zips(
         )
         zip_files = sorted(profile_zip_root.glob("*.zip"))
         actual = {path.stem for path in zip_files}
+        validate_expected_count(
+            errors,
+            f"{profile} OpenAI API zip(s)",
+            len(actual),
+            EXPECTED_PROFILE_TOP_LEVEL_COUNTS[profile],
+            relpath(ROOT, profile_zip_root),
+        )
         missing = sorted(expected - actual)
         extra = sorted(actual - expected)
         if missing:

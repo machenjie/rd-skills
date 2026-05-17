@@ -16,5 +16,8 @@ Validate every change to the skill system before handoff:
 python3 scripts/validate-skills.py
 python3 scripts/validate-capabilities.py
 python3 scripts/validate-registry.py
+python3 scripts/build.py --profile recommended
+python3 scripts/build.py --profile full
+python3 scripts/build.py --profile dev
 python3 scripts/validate-installation.py
 ```

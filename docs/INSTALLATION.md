@@ -4,9 +4,9 @@ ChangeForge installs only built runtime artifacts from `dist/`. Source folders u
 
 ## Profiles
 
-- `recommended`: 19 professional skills. Foundation capabilities are compiled into professional skill references.
-- `full`: 19 professional skills plus 7 domain extensions as top-level skills. Foundation capabilities remain compiled references.
-- `dev`: 19 professional skills plus 81 foundation capabilities plus 7 domain extensions as top-level skills. Use only for ChangeForge authoring/debugging.
+- `recommended`: 19 professional skills as top-level runtime skills. 82 foundation capabilities are compiled into professional skill references.
+- `full`: 19 professional skills plus 7 domain extensions as top-level runtime skills. 82 foundation capabilities remain compiled references.
+- `dev`: 19 professional skills plus 82 foundation capabilities plus 7 domain extensions as top-level skills. Use only for ChangeForge authoring/debugging.
 
 Build the profile before installing it:
 
@@ -66,7 +66,7 @@ OpenAI API is zip-only; it does not install runtime skill folders into a project
 
 ## Uninstall, Upgrade, And Doctor
 
-Install writes `.changeforge-install-manifest.json` into the target skills directory. Uninstall removes only names listed in this manifest and then removes the manifest:
+Install writes `.changeforge-install-manifest.json` into the target skills directory. The manifest records `installed_professional_skills`, `installed_foundation_capabilities`, `installed_domain_extensions`, and `installed_skills` as the complete managed union. Uninstall removes only names listed in this manifest and then removes the manifest:
 
 ```bash
 python3 installers/uninstall.py --agent codex --scope project --target /path/to/project --dry-run
@@ -88,3 +88,19 @@ python3 installers/doctor.py --agent codex --scope project --target /path/to/pro
 ## Duplicate Skill Conflicts
 
 Install refuses to overwrite an unmanaged skill directory whose name matches a ChangeForge skill. Review the conflict first, then either move the unmanaged directory, uninstall the managed copy, or rerun install with `--force` when replacing that directory is intentional.
+
+## Final Smoke Checks
+
+Before release handoff, run these smoke checks against disposable targets:
+
+```bash
+python3 installers/install.py --agent codex --scope user --target /tmp/changeforge-recommended-user-smoke --profile recommended
+python3 installers/install.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --profile full
+python3 installers/uninstall.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --dry-run
+python3 installers/doctor.py --agent codex --scope user --target /tmp/changeforge-recommended-user-smoke --profile recommended
+python3 installers/doctor.py --agent codex --scope project --target /tmp/changeforge-full-project-smoke --profile full
+python3 installers/install.py --agent openai-api --profile recommended --dry-run
+python3 scripts/validate-installation.py
+```
+
+The recommended global install smoke should report 19 top-level skills, the full project install smoke should report 26, uninstall dry-run should operate only on manifest-managed names, doctor should report no issues for an installed smoke target, and OpenAI API zip validation should pass profile count and archive-shape checks.

@@ -30,9 +30,9 @@ Build outputs are written to `dist/`:
 
 ## Runtime Profiles
 
-- `recommended`: installs professional skills with foundation capabilities compiled into concise `references/`.
-- `full`: installs professional skills plus eligible domain extensions as top-level skills.
-- `dev`: may expose foundation capabilities and domain extensions for authoring and validation work.
+- `recommended`: installs 19 professional skills as top-level runtime skills, with 82 foundation capabilities compiled into concise `references/`.
+- `full`: installs 19 professional skills plus 7 eligible domain extensions as top-level runtime skills, with 82 foundation capabilities compiled into concise `references/`.
+- `dev`: installs 19 professional skills plus 82 foundation capabilities plus 7 domain extensions as top-level runtime skills for authoring and validation work.
 
 Recommended and full profiles must not install all foundation capabilities as top-level global skills. Foundation capabilities are compiled into professional skill references unless the `dev` profile is explicitly selected.
 
@@ -56,6 +56,9 @@ Run the authoring contract validators:
 python3 scripts/validate-skills.py
 python3 scripts/validate-capabilities.py
 python3 scripts/validate-registry.py
+python3 scripts/build.py --profile recommended
+python3 scripts/build.py --profile full
+python3 scripts/build.py --profile dev
 python3 scripts/validate-installation.py
 ```
 
