@@ -94,6 +94,8 @@ Foundation capability groups:
 - Reliability operations: 65 `performance-budgeting`, 66 `profiling`, 67 `concurrency-control`, 68 `degradation-circuit-breaking`, 69 `observability`, 70 `backup-recovery`.
 - Delivery platform: 71 `project-initialization`, 72 `containerization`, 73 `ci-cd`, 74 `kubernetes-gateway`, 75 `release-rollback`.
 - Engineering workflow: 76 `context-packaging`, 77 `task-dag-decomposition`, 78 `code-review`, 79 `refactoring`, 80 `documentation-generation`, 81 `failure-diagnosis`, 82 `solution-optimality-evaluation`.
+- Technology selection: 83 `technology-stack-selection`, 84 `language-runtime-selection`, 85 `language-idiom-enforcement`, 86 `language-testing-strategy`, 87 `language-performance-safety`, 88 `package-dependency-management`.
+- Language professional usage: 89 `go-professional-usage`, 90 `java-jvm-professional-usage`, 91 `typescript-professional-usage`, 92 `python-professional-usage`, 93 `rust-professional-usage`, 94 `cpp-professional-usage`, 95 `shell-cli-professional-usage`, 96 `sql-professional-usage`.
 
 Domain extension routing:
 
@@ -107,9 +109,9 @@ Domain extension routing:
 
 Runtime profile awareness:
 
-- Recommended: 19 professional skills are top-level runtime skills; 82 foundation capabilities are compiled into relevant professional references; the router includes generated routing indexes.
-- Full: 19 professional skills plus 7 domain extensions are top-level runtime skills; 82 foundation capabilities remain compiled professional references.
-- Dev: 19 professional skills, 82 foundation capabilities, and 7 domain extensions are top-level runtime skills for ChangeForge development and debugging.
+- Recommended: 19 professional skills are top-level runtime skills; 96 foundation capabilities are compiled into relevant professional references; the router includes generated routing indexes.
+- Full: 19 professional skills plus 7 domain extensions are top-level runtime skills; 96 foundation capabilities remain compiled professional references.
+- Dev: 19 professional skills, 96 foundation capabilities, and 7 domain extensions are top-level runtime skills for ChangeForge development and debugging.
 
 ## Risk Escalation Rules
 Escalate one level for any risk trigger that affects user data, money, permissions, external systems, production state, or irreversible operations. Escalate to high or critical when more than one high-impact trigger is present or when rollback is unclear.
@@ -141,6 +143,11 @@ Route by evidence in the request:
 - If deployment or release risk is present, route to `delivery-release-gate`.
 - If AI code quality risk is present, route to `ai-code-review-refactor`.
 - If docs are stale or behavior changed, route to `change-documentation-gate`.
+- If the user asks which language or stack to use, select `technology-stack-selection` and `language-runtime-selection`.
+- If a language is already chosen, select `language-idiom-enforcement`, `language-testing-strategy`, and `language-performance-safety` when implementation, review, testing, or runtime behavior is in scope.
+- If the request touches Go, Java/JVM, TypeScript, Python, Rust, C/C++, Shell/CLI, or SQL specifically, select the matching language professional usage capability.
+- If package manager, dependency, lockfile, upgrade, license, provenance, or supply-chain behavior is involved, select `package-dependency-management`.
+- If high-risk code generation occurs in any language, select `solution-optimality-evaluation` and the matching language professional usage capability.
 
 ## Failure Modes
 Over-routing creates process drag and hides the next best action. Under-routing misses security, data, release, and user-impact risk. Treating every request as greenfield wastes time. Treating local fixes as risk-free can miss permissions, migrations, external integrations, and regression evidence. Listing every capability without selection rationale makes the route unusable.

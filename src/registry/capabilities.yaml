@@ -741,3 +741,129 @@ capabilities:
     triggers: [evaluate algorithm complexity performance dimensions cpu memory network disk locks tps concurrency latency rendering self-question optimality alternatives simplest design cognitive complexity reversibility]
     risk_notes: [Accepting the first working approach without challenge is the most common source of preventable production performance incidents]
     expected_outputs: [three-challenge answers ten-dimension assessment cognitive complexity rating reversibility classification optimization deferral log with threshold and owner]
+  - id: "83"
+    name: technology-stack-selection
+    group: technology-selection
+    path: src/foundation/capabilities/technology-stack-selection
+    status: implemented
+    used_by: [architecture-impact-reviewer, delivery-release-gate, ai-code-review-refactor, change-impact-analyzer, change-forge-router]
+    triggers: [select review technology stack framework runtime platform infrastructure component product technical baseline boring proven novelty reversibility migration path operational model]
+    risk_notes: [Fashion driven stack choices create long lived maintenance operational security and hiring cost]
+    expected_outputs: [stack decision record with constraints options tradeoffs reversibility ownership migration path and risk acceptance]
+  - id: "84"
+    name: language-runtime-selection
+    group: technology-selection
+    path: src/foundation/capabilities/language-runtime-selection
+    status: implemented
+    used_by: [architecture-impact-reviewer, backend-change-builder, frontend-change-builder, low-level-systems-extension, ai-code-review-refactor, delivery-release-gate]
+    triggers: [choose programming language runtime Go vs Python Java vs Go introducing Rust workload type safety concurrency GC memory deployment lifecycle observability]
+    risk_notes: [Language choices without workload fit and operational ownership become hard to debug and expensive to reverse]
+    expected_outputs: [language runtime decision with workload fit runtime behavior ownership deployment package manager risks and selected language capability]
+  - id: "85"
+    name: language-idiom-enforcement
+    group: technology-selection
+    path: src/foundation/capabilities/language-idiom-enforcement
+    status: implemented
+    used_by: [backend-change-builder, frontend-change-builder, ai-code-review-refactor, quality-test-gate]
+    triggers: [language idioms error handling type modeling resource management module boundaries naming concurrency formatting standard library hallucinated APIs non idiomatic code]
+    risk_notes: [Non idiomatic code hides correctness defects and increases maintenance cost even when tests pass]
+    expected_outputs: [idiom review with local conventions risks required rewrites justified exceptions tooling checks and residual concerns]
+  - id: "86"
+    name: language-testing-strategy
+    group: technology-selection
+    path: src/foundation/capabilities/language-testing-strategy
+    status: implemented
+    used_by: [quality-test-gate, backend-change-builder, frontend-change-builder, ai-code-review-refactor]
+    triggers: [language specific testing unit integration contract concurrency property snapshot visual fixtures mocks race detector sanitizer CI execution]
+    risk_notes: [Generic tests miss runtime specific failures such as races event loop blocking sanitizer defects and unvalidated dynamic inputs]
+    expected_outputs: [language test plan mapping failure modes to tests runtime tools CI commands evidence gaps and acceptance criteria]
+  - id: "87"
+    name: language-performance-safety
+    group: technology-selection
+    path: src/foundation/capabilities/language-performance-safety
+    status: implemented
+    used_by: [reliability-observability-gate, backend-change-builder, frontend-change-builder, low-level-systems-extension, solution-optimality-evaluation]
+    triggers: [language performance safety allocation GC async blocking FFI unsafe native hot path memory concurrency event loop runtime constraints]
+    risk_notes: [Runtime specific performance and safety issues often appear only under representative load or native boundary stress]
+    expected_outputs: [runtime performance safety assessment with hot path classification allocation concurrency unsafe boundary evidence mitigation and residual risk]
+  - id: "88"
+    name: package-dependency-management
+    group: technology-selection
+    path: src/foundation/capabilities/package-dependency-management
+    status: implemented
+    used_by: [security-privacy-gate, delivery-release-gate, project-initialization, ai-code-review-refactor, technology-stack-selection]
+    triggers: [package manager lockfile dependency upgrade dependency removal new package license provenance transitive dependency supply chain native extension SDK library public API]
+    risk_notes: [Dependency graph changes can introduce vulnerabilities license obligations install side effects runtime incompatibility and unreproducible builds]
+    expected_outputs: [dependency decision with justification lockfile transitive impact vulnerability license provenance compatibility tests and accepted exceptions]
+  - id: "89"
+    name: go-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/go-professional-usage
+    status: implemented
+    used_by: [backend-change-builder, integration-change-builder, data-middleware-change-builder, quality-test-gate, ai-code-review-refactor, language-runtime-selection]
+    triggers: [Go professional usage context propagation goroutine lifecycle error wrapping interfaces table driven tests race detector package boundaries CLI service worker]
+    risk_notes: [Go defects often come from leaked goroutines missing cancellation lost root cause errors and premature interfaces]
+    expected_outputs: [Go usage review with context flow goroutine lifecycle errors interfaces packages tests race checks and deployment impact]
+  - id: "90"
+    name: java-jvm-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/java-jvm-professional-usage
+    status: implemented
+    used_by: [backend-change-builder, data-middleware-change-builder, reliability-observability-gate, quality-test-gate, ai-code-review-refactor, language-runtime-selection]
+    triggers: [Java JVM Kotlin Spring transaction proxy self invocation thread pools GC memory exception taxonomy dependency injection lifecycle enterprise systems]
+    risk_notes: [JVM issues commonly hide in transaction proxy boundaries unbounded executors blocking IO and GC allocation pressure]
+    expected_outputs: [JVM usage review with transaction boundaries executors blocking behavior exception taxonomy type model DI lifecycle GC risk and tests]
+  - id: "91"
+    name: typescript-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/typescript-professional-usage
+    status: implemented
+    used_by: [frontend-change-builder, backend-change-builder, data-api-contract-changer, sdk-library-contract-design, quality-test-gate, ai-code-review-refactor, language-runtime-selection]
+    triggers: [TypeScript strict any unknown runtime validation schema API contracts async errors state modeling frontend Node SDK public types bundle impact]
+    risk_notes: [TypeScript compile time safety does not validate runtime data and unsafe public type changes break consumers]
+    expected_outputs: [TypeScript review with strictness unsafe escapes runtime validation API alignment async handling state model bundle impact and public type compatibility]
+  - id: "92"
+    name: python-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/python-professional-usage
+    status: implemented
+    used_by: [backend-change-builder, ai-product-extension, bigdata-product-extension, quality-test-gate, delivery-release-gate, ai-code-review-refactor, language-runtime-selection]
+    triggers: [Python professional usage type hints runtime validation packaging virtual environment pytest fixtures async blocking asyncio GIL scripts reproducible execution]
+    risk_notes: [Python failures often come from unvalidated dynamic boundaries fixture leakage blocking async code and unreproducible environments]
+    expected_outputs: [Python usage review with type boundaries validation async sync risks packaging fixtures GIL script idempotency and tests]
+  - id: "93"
+    name: rust-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/rust-professional-usage
+    status: implemented
+    used_by: [low-level-systems-extension, backend-change-builder, reliability-observability-gate, quality-test-gate, ai-code-review-refactor, language-runtime-selection]
+    triggers: [Rust professional usage ownership lifetimes Result typed errors traits async runtime unsafe FFI concurrency WASM systems performance Cargo]
+    risk_notes: [Rust safety can be undermined by undocumented unsafe panic across boundaries unjustified traits and hidden clone based ownership workarounds]
+    expected_outputs: [Rust review with ownership errors panic boundaries trait justification async runtime unsafe invariants Cargo impact and checks]
+  - id: "94"
+    name: cpp-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/cpp-professional-usage
+    status: implemented
+    used_by: [low-level-systems-extension, reliability-observability-gate, quality-test-gate, ai-code-review-refactor, language-runtime-selection]
+    triggers: [C C++ professional usage RAII undefined behavior ownership ABI FFI sanitizers thread safety memory ordering native embedded performance]
+    risk_notes: [Native defects from undefined behavior unsafe ownership ABI drift and missing sanitizer coverage can escape ordinary tests]
+    expected_outputs: [C C++ review with ownership RAII UB ABI error model thread safety sanitizer static analysis build portability and tests]
+  - id: "95"
+    name: shell-cli-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/shell-cli-professional-usage
+    status: implemented
+    used_by: [delivery-release-gate, ci-cd, project-initialization, quality-test-gate, ai-code-review-refactor, cli-daemon-interface-design]
+    triggers: [Shell CLI script safety set euo pipefail quoting exit codes temp files destructive command dry run stdout stderr idempotency rerun safety]
+    risk_notes: [Operational scripts fail dangerously through unquoted variables ambiguous output unsafe temp files and non idempotent destructive reruns]
+    expected_outputs: [Shell CLI review with safety options quoting temp files target validation dry run output contract exit codes idempotency and tests]
+  - id: "96"
+    name: sql-professional-usage
+    group: language-professional-usage
+    path: src/foundation/capabilities/sql-professional-usage
+    status: implemented
+    used_by: [data-middleware-change-builder, data-api-contract-changer, backend-change-builder, quality-test-gate, reliability-observability-gate]
+    triggers: [SQL professional usage query migration report analytics transaction safety indexing query plan lock behavior pagination NULL timezone injection money precision]
+    risk_notes: [SQL defects can corrupt data expose injection lock production tables or degrade user facing paths through unbounded scans]
+    expected_outputs: [SQL review with parameters plan evidence indexes locks transactions pagination NULL timezone precision migration compatibility injection safety and tests]

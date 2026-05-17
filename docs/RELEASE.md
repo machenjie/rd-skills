@@ -22,9 +22,11 @@ Expected top-level runtime counts:
 
 - `recommended`: 19 professional skills.
 - `full`: 19 professional skills plus 7 domain extensions.
-- `dev`: 19 professional skills plus 82 foundation capabilities plus 7 domain extensions.
+- `dev`: 19 professional skills plus 96 foundation capabilities plus 7 domain extensions.
 
-Foundation capability count is 82 in every profile: compiled into professional references for `recommended` and `full`, and also top-level in `dev`.
+Foundation capability count is 96 in every profile: compiled into professional references for `recommended` and `full`, and also top-level in `dev`.
+
+The profile top-level counts are 19 for `recommended`, 26 for `full`, and 122 for `dev`.
 
 ## Package
 
@@ -92,6 +94,7 @@ The Codex recommended user smoke must install 19 top-level skills. The Codex, Cl
 - No personal asset mapping, raw `src/`, or raw registry content is installed.
 - All runtime skills contain root `SKILL.md`.
 - Foundation capabilities are compiled into professional skill references for `recommended` and `full`.
+- Professional skills load only selected references according to the L1/L2/L3/L4/L5 `Reference Loading Policy`; `references/` is not treated as automatic context.
 - Installer dry runs show 19 skills for recommended and 26 for full project installs.
 - Final smoke commands cover Codex user recommended install, Codex project full install, Codex project uninstall dry-run, Codex user/project doctor, Claude Code project full install/doctor/uninstall dry-run, GitHub Copilot project full install/doctor/uninstall dry-run, OpenAI API recommended zip dry-run, and installation artifact validation.
 - OpenAI API zips pass profile count and archive shape validation.

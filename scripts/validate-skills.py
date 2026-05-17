@@ -76,6 +76,7 @@ def validate_reference_loading_policy(body: str, context: str, errors: list[str]
         "l3",
         "l4",
         "l5",
+        "references/capabilities/<capability-id>-<capability-name>.md",
     )
     for phrase in required_phrases:
         if phrase not in folded:

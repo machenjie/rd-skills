@@ -6,6 +6,8 @@ ChangeForge skills must encode expert-grade engineering judgment. Each change re
 
 Scope: one isolated edit with no shared contract change, no persistence change, no external side effect, and no rollout dependency.
 
+Reference loading: `SKILL.md` is loaded for the selected skill, but references are not read unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
+
 Required gates:
 
 - Validate the touched skill, doc, script, or generated artifact locally.
@@ -21,6 +23,8 @@ Required evidence:
 ## L2 Single-Module Change
 
 Scope: one skill, validator, installer flow, registry file, or build path with limited callers and no cross-runtime contract change.
+
+Reference loading: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
 
 Required gates:
 
@@ -38,6 +42,8 @@ Required evidence:
 ## L3 Multi-Module Product Change
 
 Scope: coordinated changes across validators, registries, build/package/install scripts, docs, or generated runtime artifacts.
+
+Reference loading: read all selected capability references and `references/checklist.md` when present.
 
 Required gates:
 
@@ -66,6 +72,8 @@ Required evidence:
 
 Scope: changes that alter public contracts, installation behavior, packaging semantics, runtime profile behavior, routing decisions, cross-agent compatibility, or release procedure.
 
+Reference loading: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+
 Required gates:
 
 - Pass L3.
@@ -83,6 +91,8 @@ Required evidence:
 ## L5 Regulated, Financial, Web3, AI, Migration, Or Production-Critical Change
 
 Scope: regulated domains, financial or Web3 workflows, AI-agent side effects, data migration, security-sensitive tooling, production-critical install paths, or irreversible external effects.
+
+Reference loading: use the L4 policy and require the route's `Required References` to preserve every selected capability, checklist, and domain extension reference.
 
 Required gates:
 
@@ -102,3 +112,5 @@ Required evidence:
 ## Production Readiness
 
 A ChangeForge release is production-ready only when source validators pass, all intended profiles build, runtime installation validation passes, OpenAI API zips are profile-scoped and structurally valid, install dry runs pass for supported agents, smoke install/uninstall/reinstall succeeds without removing unrelated files, doctor reports no critical issue for smoke targets, and unresolved assumptions are documented.
+
+Programming language knowledge is represented as professional engineering rules and language-runtime capabilities, not as personal technical asset mapping or beginner guides.

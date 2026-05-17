@@ -4,7 +4,7 @@ ChangeForge Skill Mesh is a professional product-change engineering Skill system
 
 This repository is an authoring/build/install repository. Runtime skills are generated into `dist/` and installed from build outputs only. Source folders under `src/` are never installed directly.
 
-ChangeForge is self-contained. It does not ingest, scan, index, summarize, map, package, or install any personal technical asset library. It does not create toolbox mappings for personal notes, language notes, framework notes, database notes, system notes, security notes, or historical documents. It assumes no personal knowledge base is available at runtime.
+ChangeForge is self-contained. It does not ingest, scan, index, summarize, map, package, or install any personal technical asset library. It does not create external asset mappings or assume user-specific knowledge sources are available at runtime.
 
 ## Layers
 
@@ -30,11 +30,19 @@ Build outputs are written to `dist/`:
 
 ## Runtime Profiles
 
-- `recommended`: installs 19 professional skills as top-level runtime skills, with 82 foundation capabilities compiled into professional skill `references/`.
-- `full`: installs 19 professional skills plus 7 eligible domain extensions as top-level runtime skills, with 82 foundation capabilities compiled into professional skill `references/`.
-- `dev`: installs 19 professional skills plus 82 foundation capabilities plus 7 domain extensions as top-level runtime skills for authoring and validation work.
+- `recommended`: installs 19 professional skills as top-level runtime skills, with 96 foundation capabilities compiled into professional skill `references/`.
+- `full`: installs 19 professional skills plus 7 eligible domain extensions as top-level runtime skills, with 96 foundation capabilities compiled into professional skill `references/`.
+- `dev`: installs 19 professional skills plus 96 foundation capabilities plus 7 domain extensions as top-level runtime skills for authoring and validation work.
 
 Recommended and full profiles must not install all foundation capabilities as top-level global skills. Foundation capabilities are compiled into professional skill references unless the `dev` profile is explicitly selected.
+
+Runtime top-level counts are 19 for `recommended`, 26 for `full`, and 122 for `dev`.
+
+## Reference Loading
+
+`SKILL.md` is loaded when a skill is selected. The `references/` directory is not assumed to be fully loaded automatically. The router selects foundation capabilities, and professional skills read only selected capability references according to the L1/L2/L3/L4/L5 `Reference Loading Policy`.
+
+References are a precision mechanism, not a dumping ground. Programming language knowledge is represented as professional engineering rules and language-runtime capabilities, not as personal technical asset mapping or beginner guides.
 
 ## Guardrails
 
@@ -43,7 +51,7 @@ Recommended and full profiles must not install all foundation capabilities as to
 - Do not create `src/toolbox`.
 - Do not create `registry/toolbox.yaml`.
 - Do not create or install personal asset mappings.
-- Do not create beginner tutorials in `SKILL.md`.
+- Do not create language primers or beginner guides in `SKILL.md`.
 - Runtime skills must be built into `dist/`.
 - Installed skill folders must contain `SKILL.md` at their root.
 - Generated files must be deterministic and reproducible.

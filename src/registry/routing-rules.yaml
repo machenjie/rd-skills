@@ -26,14 +26,14 @@ supported_change_types:
 runtime_profiles:
   - name: recommended
     top_level: 19 professional skills
-    foundation_mode: 82 foundation capabilities compiled into professional references
+    foundation_mode: 96 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 19 professional skills and 7 domain extensions
-    foundation_mode: 82 foundation capabilities compiled into professional references
+    foundation_mode: 96 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 19 professional skills, 82 foundation capabilities, and 7 domain extensions
+    top_level: 19 professional skills, 96 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -680,4 +680,79 @@ routing_rules:
     triggers:
       - diagnose failure from evidence symptoms triggers root cause contributing factors fix regression prevention
       - investigate incidents CI failures regressions logs metrics traces diffs hypotheses and reproducible behavior
+    priority: 60
+  - route_to: solution-optimality-evaluation
+    triggers:
+      - evaluate algorithm complexity performance dimensions CPU memory network disk locks throughput concurrency latency rendering alternatives optimality
+      - challenge high risk code generation implementation choices SDK library public API CLI daemon interface and simplest sufficient solution
+    priority: 60
+  - route_to: technology-stack-selection
+    triggers:
+      - choose technology stack framework family runtime platform infrastructure component product technical baseline
+      - compare boring proven technology versus novelty migration path reversibility operational model ecosystem maturity security performance cost
+    priority: 60
+  - route_to: language-runtime-selection
+    triggers:
+      - choosing programming language runtime Go vs Python Java vs Go introducing Rust workload fit type safety concurrency GC memory deployment lifecycle
+      - select language for CPU bound IO bound latency sensitive memory sensitive data AI frontend scripting systems or contract heavy workload
+    priority: 60
+  - route_to: language-idiom-enforcement
+    triggers:
+      - enforce language idioms error handling type modeling resource management module boundaries naming concurrency style formatting standard library
+      - review non idiomatic AI generated code hallucinated APIs and code written in another language style
+    priority: 60
+  - route_to: language-testing-strategy
+    triggers:
+      - choose language specific testing unit integration contract concurrency property snapshot visual fixtures mocks race detector sanitizer CI
+      - test strategy for dynamic languages concurrent languages systems languages frontend TypeScript SDK library public API and runtime boundaries
+    priority: 60
+  - route_to: language-performance-safety
+    triggers:
+      - evaluate language specific performance safety allocation GC async blocking event loop FFI unsafe native hot path memory concurrency
+      - review language runtime constraints performance and safety for high risk generated code services workers CLIs SDKs and data paths
+    priority: 60
+  - route_to: package-dependency-management
+    triggers:
+      - package manager lockfile dependency upgrade dependency removal new package license provenance transitive supply chain native extension
+      - manage SDK library public API package compatibility reproducible install lockfile integrity and dependency graph risk
+    priority: 60
+  - route_to: go-professional-usage
+    triggers:
+      - Go professional usage context propagation goroutine lifecycle cancellation error wrapping interfaces table driven tests race detector package boundaries
+      - Go service worker CLI library infrastructure tool concurrency idempotency retry and deployment simplicity
+    priority: 60
+  - route_to: java-jvm-professional-usage
+    triggers:
+      - Java JVM Kotlin Spring transaction proxy self invocation bounded thread pools GC memory allocation exception taxonomy dependency injection lifecycle
+      - Java vs Go enterprise backend service transaction boundary blocking IO request threads and JVM runtime concerns
+    priority: 60
+  - route_to: typescript-professional-usage
+    triggers:
+      - TypeScript strictness strict any unknown runtime validation async errors state modeling API contracts frontend Node SDK public types
+      - TypeScript bundle impact generated types schema alignment SDK library public API and safe escape hatches
+    priority: 60
+  - route_to: python-professional-usage
+    triggers:
+      - Python professional usage type hints runtime validation packaging virtual environment pytest fixtures asyncio async blocking GIL scripts reproducible execution
+      - Go vs Python data AI tooling package management Python async sync boundaries and safe rerunnable automation
+    priority: 60
+  - route_to: rust-professional-usage
+    triggers:
+      - Rust professional usage ownership lifetimes Result typed errors traits async runtime unsafe FFI WASM systems performance Cargo
+      - introducing Rust low level systems memory safety concurrency zero cost abstraction and unsafe invariant review
+    priority: 60
+  - route_to: cpp-professional-usage
+    triggers:
+      - C C++ professional usage RAII undefined behavior ownership ABI FFI sanitizer memory thread safety embedded native performance
+      - C or C++ ABI memory sanitizer native extension build portability exception error model and interoperability risk
+    priority: 60
+  - route_to: shell-cli-professional-usage
+    triggers:
+      - Shell script safety CLI daemon interface set euo pipefail quoting exit codes temp files destructive command dry run stdout stderr
+      - operational script CI command release helper idempotency rerun safety logging machine readable output and command injection risk
+    priority: 60
+  - route_to: sql-professional-usage
+    triggers:
+      - SQL query migration correctness transaction safety indexing query plan lock behavior pagination NULL semantics timezone monetary precision injection
+      - application queries reports analytics migrations stable pagination unbounded scans parameterization and data correctness
     priority: 60

@@ -7,7 +7,7 @@ ChangeForge Skill Mesh is a skill-authoring repository. Its source content, regi
 The source repo contains authored material:
 
 - `src/professional-skills`: 19 top-level professional skills.
-- `src/foundation/capabilities`: 82 implemented foundation capabilities plus `_template`.
+- `src/foundation/capabilities`: 96 implemented foundation capabilities plus `_template`.
 - `src/domain-extensions`: 7 optional domain extension skills.
 - `src/registry`: `skills.yaml`, `capabilities.yaml`, `domain-extensions.yaml`, and `routing-rules.yaml`.
 
@@ -15,7 +15,7 @@ Runtime installs consume only generated outputs under `dist/`. Installed skill d
 
 ## No Personal Asset Mapping
 
-ChangeForge is self-contained. It does not ingest, scan, index, summarize, map, package, or install any personal technical asset library. It does not create toolbox mappings or assume any external personal knowledge base at runtime.
+ChangeForge is self-contained. It does not ingest, scan, index, summarize, map, package, or install any personal technical asset library. It does not create toolbox mappings or assume any external user-specific content corpus at runtime.
 
 ## Change Routing Flow
 
@@ -32,6 +32,8 @@ ChangeForge is self-contained. It does not ingest, scan, index, summarize, map, 
 Professional skills are the runtime entry points Codex, Claude Code, GitHub Copilot, and hosted OpenAI API consumers should invoke for product-change work. They own orchestration, impact analysis, implementation guidance, test gates, release gates, documentation gates, and specialist review.
 
 Foundation capabilities are compact engineering rules and decision aids. In `recommended` and `full`, they are compiled into professional skill references under `references/capabilities/`. In `dev`, they are also exposed as top-level skills for ChangeForge authoring and debugging.
+
+Programming language knowledge is represented as professional engineering rules and language-runtime capabilities. It is not a personal technical asset mapping, language primer, or framework walkthrough.
 
 Domain extensions add domain-specific risk and routing rules. They are top-level in `full` and `dev`, and indexed by the router for profile-aware routing.
 
