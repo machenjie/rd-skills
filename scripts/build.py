@@ -341,9 +341,20 @@ def _capabilities_by_professional_skill(
     for skill_name, skill_capabilities in mapped.items():
         mapped[skill_name] = sorted(
             skill_capabilities,
-            key=lambda capability: (capability.group, capability.capability_id, capability.name),
+            key=lambda capability: (
+                capability.group,
+                _capability_sort_id(capability),
+                capability.name,
+            ),
         )
     return mapped
+
+
+def _capability_sort_id(capability: Capability) -> int:
+    try:
+        return int(capability.capability_id)
+    except ValueError:
+        return 0
 
 
 def _reset_dir(path: Path) -> None:
@@ -532,7 +543,7 @@ def _render_capability_index(capabilities: list[Capability]) -> str:
 
     for group in sorted(grouped):
         lines.extend([f"## {group}", ""])
-        for capability in sorted(grouped[group], key=lambda item: item.capability_id):
+        for capability in sorted(grouped[group], key=_capability_sort_id):
             lines.extend(
                 [
                     f"### {capability.capability_id} {capability.name}",

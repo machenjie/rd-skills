@@ -113,4 +113,4 @@ Required evidence:
 
 A ChangeForge release is production-ready only when source validators pass, all intended profiles build, runtime installation validation passes, OpenAI API zips are profile-scoped and structurally valid, install dry runs pass for supported agents, smoke install/uninstall/reinstall succeeds without removing unrelated files, doctor reports no critical issue for smoke targets, and unresolved assumptions are documented.
 
-Programming language knowledge is represented as professional engineering rules and language-runtime capabilities, not as personal technical asset mapping or beginner guides.
+Language capabilities are professional engineering rules, not language tutorials or personal technical asset mappings.

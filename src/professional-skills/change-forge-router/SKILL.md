@@ -96,6 +96,7 @@ Foundation capability groups:
 - Engineering workflow: 76 `context-packaging`, 77 `task-dag-decomposition`, 78 `code-review`, 79 `refactoring`, 80 `documentation-generation`, 81 `failure-diagnosis`, 82 `solution-optimality-evaluation`.
 - Technology selection: 83 `technology-stack-selection`, 84 `language-runtime-selection`, 85 `language-idiom-enforcement`, 86 `language-testing-strategy`, 87 `language-performance-safety`, 88 `package-dependency-management`.
 - Language professional usage: 89 `go-professional-usage`, 90 `java-jvm-professional-usage`, 91 `typescript-professional-usage`, 92 `python-professional-usage`, 93 `rust-professional-usage`, 94 `cpp-professional-usage`, 95 `shell-cli-professional-usage`, 96 `sql-professional-usage`.
+- Interface, storage, and global correctness: 97 `sdk-library-contract-design`, 98 `cli-daemon-interface-design`, 99 `file-storage-processing`, 100 `i18n-timezone-money-safety`.
 
 Domain extension routing:
 
@@ -109,9 +110,9 @@ Domain extension routing:
 
 Runtime profile awareness:
 
-- Recommended: 19 professional skills are top-level runtime skills; 96 foundation capabilities are compiled into relevant professional references; the router includes generated routing indexes.
-- Full: 19 professional skills plus 7 domain extensions are top-level runtime skills; 96 foundation capabilities remain compiled professional references.
-- Dev: 19 professional skills, 96 foundation capabilities, and 7 domain extensions are top-level runtime skills for ChangeForge development and debugging.
+- Recommended: 19 professional skills are top-level runtime skills; 100 foundation capabilities are compiled into relevant professional references; the router includes generated routing indexes.
+- Full: 19 professional skills plus 7 domain extensions are top-level runtime skills; 100 foundation capabilities remain compiled professional references.
+- Dev: 19 professional skills, 100 foundation capabilities, and 7 domain extensions are top-level runtime skills for ChangeForge development and debugging.
 
 ## Risk Escalation Rules
 Escalate one level for any risk trigger that affects user data, money, permissions, external systems, production state, or irreversible operations. Escalate to high or critical when more than one high-impact trigger is present or when rollback is unclear.
@@ -147,6 +148,10 @@ Route by evidence in the request:
 - If a language is already chosen, select `language-idiom-enforcement`, `language-testing-strategy`, and `language-performance-safety` when implementation, review, testing, or runtime behavior is in scope.
 - If the request touches Go, Java/JVM, TypeScript, Python, Rust, C/C++, Shell/CLI, or SQL specifically, select the matching language professional usage capability.
 - If package manager, dependency, lockfile, upgrade, license, provenance, or supply-chain behavior is involved, select `package-dependency-management`.
+- If the request touches an SDK, generated client, reusable library, public API client, or published package contract, select `sdk-library-contract-design`.
+- If the request touches a CLI, TUI, daemon, scriptable command, config precedence, stdout/stderr contract, exit code, signal behavior, dry run, or background process interface, select `cli-daemon-interface-design`.
+- If the request touches upload, download, object storage, large file handling, media/image processing, MIME detection, virus scanning, signed URLs, retention, or cleanup, select `file-storage-processing`.
+- If the request touches internationalization, localization, timezone, date/time, currency, money precision, number formatting, collation, pluralization, or locale fallback, select `i18n-timezone-money-safety`.
 - If high-risk code generation occurs in any language, select `solution-optimality-evaluation` and the matching language professional usage capability.
 
 ## Failure Modes

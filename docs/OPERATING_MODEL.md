@@ -7,7 +7,7 @@ ChangeForge Skill Mesh is a skill-authoring repository. Its source content, regi
 The source repo contains authored material:
 
 - `src/professional-skills`: 19 top-level professional skills.
-- `src/foundation/capabilities`: 96 implemented foundation capabilities plus `_template`.
+- `src/foundation/capabilities`: 100 implemented foundation capabilities plus `_template`.
 - `src/domain-extensions`: 7 optional domain extension skills.
 - `src/registry`: `skills.yaml`, `capabilities.yaml`, `domain-extensions.yaml`, and `routing-rules.yaml`.
 
@@ -33,7 +33,7 @@ Professional skills are the runtime entry points Codex, Claude Code, GitHub Copi
 
 Foundation capabilities are compact engineering rules and decision aids. In `recommended` and `full`, they are compiled into professional skill references under `references/capabilities/`. In `dev`, they are also exposed as top-level skills for ChangeForge authoring and debugging.
 
-Programming language knowledge is represented as professional engineering rules and language-runtime capabilities. It is not a personal technical asset mapping, language primer, or framework walkthrough.
+Language capabilities are professional engineering rules, not language tutorials or personal technical asset mappings.
 
 Domain extensions add domain-specific risk and routing rules. They are top-level in `full` and `dev`, and indexed by the router for profile-aware routing.
 

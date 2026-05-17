@@ -56,7 +56,7 @@ REGISTRY_REQUIRED_FIELDS = (
 )
 REGISTRY_LIST_FIELDS = ("used_by", "triggers", "risk_notes", "expected_outputs")
 REGISTRY_STATUSES = {"implemented"}
-CAPABILITY_ID_RE = re.compile(r"^\d{2}$")
+CAPABILITY_ID_RE = re.compile(r"^(?:0[1-9]|[1-9]\d|100)$")
 REQUIRED_FRONTMATTER = (
     "name",
     "description",
@@ -92,7 +92,7 @@ def _is_nonempty_string_list(value: object) -> bool:
 def _normalize_capability_id(value: object) -> str | None:
     if isinstance(value, str) and CAPABILITY_ID_RE.fullmatch(value):
         return value
-    if isinstance(value, int) and 0 <= value <= 99:
+    if isinstance(value, int) and 1 <= value <= 100:
         return f"{value:02d}"
     return None
 
@@ -120,7 +120,7 @@ def _validate_registry_format(registry_data: object, errors: list[str]) -> list[
 
         capability_id = entry.get("id")
         if _normalize_capability_id(capability_id) != capability_id:
-            errors.append(f"{context}: field 'id' must be a two digit string")
+            errors.append(f"{context}: field 'id' must be a valid capability id string")
         elif capability_id in seen_ids:
             errors.append(
                 f"{context}: duplicate id '{capability_id}' first used at "
@@ -355,7 +355,7 @@ def main() -> int:
         if normalized_capability_id is None:
             errors.append(
                 f"{file_context}: frontmatter 'changeforge_capability_id' must be a "
-                "two digit capability id"
+                "valid capability id"
             )
         elif normalized_capability_id in capability_ids:
             errors.append(

@@ -30,19 +30,19 @@ Build outputs are written to `dist/`:
 
 ## Runtime Profiles
 
-- `recommended`: installs 19 professional skills as top-level runtime skills, with 96 foundation capabilities compiled into professional skill `references/`.
-- `full`: installs 19 professional skills plus 7 eligible domain extensions as top-level runtime skills, with 96 foundation capabilities compiled into professional skill `references/`.
-- `dev`: installs 19 professional skills plus 96 foundation capabilities plus 7 domain extensions as top-level runtime skills for authoring and validation work.
+- `recommended`: installs 19 professional skills as top-level runtime skills, with 100 foundation capabilities compiled into professional skill `references/`.
+- `full`: installs 19 professional skills plus 7 eligible domain extensions as top-level runtime skills, with 100 foundation capabilities compiled into professional skill `references/`.
+- `dev`: installs 19 professional skills plus 100 foundation capabilities plus 7 domain extensions as top-level runtime skills for authoring and validation work.
 
 Recommended and full profiles must not install all foundation capabilities as top-level global skills. Foundation capabilities are compiled into professional skill references unless the `dev` profile is explicitly selected.
 
-Runtime top-level counts are 19 for `recommended`, 26 for `full`, and 122 for `dev`.
+Runtime top-level counts are 19 for `recommended`, 26 for `full`, and 126 for `dev`.
 
 ## Reference Loading
 
 `SKILL.md` is loaded when a skill is selected. The `references/` directory is not assumed to be fully loaded automatically. The router selects foundation capabilities, and professional skills read only selected capability references according to the L1/L2/L3/L4/L5 `Reference Loading Policy`.
 
-References are a precision mechanism, not a dumping ground. Programming language knowledge is represented as professional engineering rules and language-runtime capabilities, not as personal technical asset mapping or beginner guides.
+References are a precision mechanism, not a dumping ground. Language capabilities are professional engineering rules, not language tutorials or personal technical asset mappings.
 
 ## Guardrails
 

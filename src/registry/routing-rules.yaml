@@ -26,14 +26,14 @@ supported_change_types:
 runtime_profiles:
   - name: recommended
     top_level: 19 professional skills
-    foundation_mode: 96 foundation capabilities compiled into professional references
+    foundation_mode: 100 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 19 professional skills and 7 domain extensions
-    foundation_mode: 96 foundation capabilities compiled into professional references
+    foundation_mode: 100 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 19 professional skills, 96 foundation capabilities, and 7 domain extensions
+    top_level: 19 professional skills, 100 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -715,6 +715,26 @@ routing_rules:
     triggers:
       - package manager lockfile dependency upgrade dependency removal new package license provenance transitive supply chain native extension
       - manage SDK library public API package compatibility reproducible install lockfile integrity and dependency graph risk
+    priority: 60
+  - route_to: sdk-library-contract-design
+    triggers:
+      - design SDK library generated client package public API semver compatibility deprecation examples consumer contract tests
+      - route SDK library API client public package internal shared library generated client and migration guarantee changes
+    priority: 60
+  - route_to: cli-daemon-interface-design
+    triggers:
+      - design CLI TUI daemon command flags config precedence stdout stderr exit codes signals dry run background process logging
+      - route scriptable command daemon interface operational CLI automation and machine readable output contract changes
+    priority: 60
+  - route_to: file-storage-processing
+    triggers:
+      - design file upload object storage media image large file streaming MIME detection virus scanning signed URL lifecycle retention cleanup
+      - route upload download object storage signed URL CDN quarantine media processing and file access control changes
+    priority: 60
+  - route_to: i18n-timezone-money-safety
+    triggers:
+      - design internationalization localization timezone date time currency number formatting collation pluralization locale fallback monetary precision
+      - route i18n localized display scheduling DST billing amount rounding currency decimal and locale sensitive contract changes
     priority: 60
   - route_to: go-professional-usage
     triggers:

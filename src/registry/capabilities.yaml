@@ -867,3 +867,39 @@ capabilities:
     triggers: [SQL professional usage query migration report analytics transaction safety indexing query plan lock behavior pagination NULL timezone injection money precision]
     risk_notes: [SQL defects can corrupt data expose injection lock production tables or degrade user facing paths through unbounded scans]
     expected_outputs: [SQL review with parameters plan evidence indexes locks transactions pagination NULL timezone precision migration compatibility injection safety and tests]
+  - id: "97"
+    name: sdk-library-contract-design
+    group: interface-contracts
+    path: src/foundation/capabilities/sdk-library-contract-design
+    status: implemented
+    used_by: [data-api-contract-changer, integration-change-builder, change-documentation-gate, quality-test-gate, typescript-professional-usage, package-dependency-management]
+    triggers: [SDK library generated client package public API internal library semver deprecation examples migration consumer contract tests publication]
+    risk_notes: [SDK and library contract changes can silently break downstream consumers even when service behavior remains compatible]
+    expected_outputs: [SDK library contract plan with public surface semver compatibility generated client reproducibility examples consumer tests docs and migration guarantees]
+  - id: "98"
+    name: cli-daemon-interface-design
+    group: interface-contracts
+    path: src/foundation/capabilities/cli-daemon-interface-design
+    status: implemented
+    used_by: [backend-change-builder, integration-change-builder, delivery-release-gate, quality-test-gate, shell-cli-professional-usage]
+    triggers: [CLI TUI daemon command flags config precedence stdout stderr exit codes signals dry run background process scriptability]
+    risk_notes: [Ambiguous command and daemon contracts break automation hide failures and make destructive operations hard to recover]
+    expected_outputs: [CLI daemon interface design with command model config precedence output contract exit codes dry run signal lifecycle daemon behavior and tests]
+  - id: "99"
+    name: file-storage-processing
+    group: data-middleware
+    path: src/foundation/capabilities/file-storage-processing
+    status: implemented
+    used_by: [backend-change-builder, security-privacy-gate, data-middleware-change-builder, reliability-observability-gate, frontend-change-builder]
+    triggers: [file upload object storage large file streaming MIME detection virus scanning signed URL media processing lifecycle retention cleanup]
+    risk_notes: [File handling defects expose private content malware oversized payload outages orphaned objects and cross tenant access]
+    expected_outputs: [file storage design with file classes state machine storage layout access control scanning transfer processing lifecycle cleanup observability and tests]
+  - id: "100"
+    name: i18n-timezone-money-safety
+    group: cross-cutting-safety
+    path: src/foundation/capabilities/i18n-timezone-money-safety
+    status: implemented
+    used_by: [frontend-change-builder, backend-change-builder, data-api-contract-changer, payment-trading-extension, quality-test-gate, typescript-professional-usage, python-professional-usage, java-jvm-professional-usage, sql-professional-usage]
+    triggers: [internationalization localization timezone date time currency number formatting collation pluralization locale fallback monetary precision rounding]
+    risk_notes: [Locale timezone and money mistakes create region specific correctness defects billing errors deadline drift and irreversible data ambiguity]
+    expected_outputs: [i18n timezone money safety design with locale model time model money model formatting collation contract impact migration and boundary tests]

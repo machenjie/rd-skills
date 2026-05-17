@@ -183,6 +183,27 @@ def _validate_capability_status(entry: object, index: int, errors: list[str]) ->
         )
 
 
+def _validate_capability_used_by_references(
+    entry: object,
+    index: int,
+    all_refs: set[str],
+    errors: list[str],
+) -> None:
+    context = f"capabilities.yaml:capabilities[{index}]"
+    if not isinstance(entry, dict):
+        return
+    used_by = entry.get("used_by")
+    if not isinstance(used_by, list):
+        errors.append(f"{context}: field 'used_by' must be a list")
+        return
+    for target in used_by:
+        if not isinstance(target, str) or not target.strip():
+            errors.append(f"{context}: used_by entries must be non-empty strings")
+            continue
+        if target not in all_refs:
+            errors.append(f"{context}: used_by references missing item '{target}'")
+
+
 def _validate_optional_status(
     entry: object,
     registry_name: str,
@@ -280,6 +301,7 @@ def main() -> int:
             index,
             errors,
         )
+        _validate_capability_used_by_references(entry, index, all_refs, errors)
 
     domain_extension_entries = registry_items(
         registry_data["domain-extensions.yaml"],
