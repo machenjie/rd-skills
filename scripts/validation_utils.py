@@ -126,9 +126,9 @@ def _parse_scalar(raw: str) -> Any:
 def _simple_yaml_load(text: str) -> dict[str, Any]:
     """Parse the small YAML subset used by ChangeForge registries.
 
-    This intentionally supports only top-level mappings and one-level lists of
-    scalars or mappings. If richer YAML is introduced, PyYAML should be
-    available in the validation environment.
+    This intentionally supports only top-level mappings, lists of scalars or
+    mappings, and scalar child lists inside list mappings. If richer YAML is
+    introduced, PyYAML should be available in the validation environment.
     """
 
     lines = text.splitlines()
@@ -174,14 +174,23 @@ def _simple_yaml_load(text: str) -> dict[str, Any]:
 def _parse_yaml_list_block(block: list[str]) -> Any:
     items: list[Any] = []
     current: dict[str, Any] | Any | None = None
+    list_indent: int | None = None
+    child_list_key: str | None = None
     saw_list = False
 
     for raw_line in block:
         stripped = raw_line.strip()
         if not stripped or stripped.startswith("#"):
             continue
-        if stripped.startswith("- "):
+        indent = len(raw_line) - len(raw_line.lstrip(" "))
+        is_list_item = stripped.startswith("- ")
+        if not saw_list and isinstance(current, dict) and is_list_item and child_list_key:
+            current[child_list_key].append(_parse_scalar(stripped[2:].strip()))
+            continue
+
+        if is_list_item and (list_indent is None or indent <= list_indent):
             saw_list = True
+            list_indent = indent if list_indent is None else list_indent
             if current is not None:
                 items.append(current)
             content = stripped[2:].strip()
@@ -189,19 +198,50 @@ def _parse_yaml_list_block(block: list[str]) -> Any:
                 current = {}
             elif ":" in content and not content.startswith(("'", '"')):
                 key, raw_value = content.split(":", 1)
-                current = {key.strip(): _parse_scalar(raw_value)}
+                value = raw_value.strip()
+                if value:
+                    current = {key.strip(): _parse_scalar(value)}
+                    child_list_key = None
+                else:
+                    child_list_key = key.strip()
+                    current = {child_list_key: []}
             else:
                 current = _parse_scalar(content)
+                child_list_key = None
+            continue
+
+        if isinstance(current, dict) and is_list_item and child_list_key:
+            current[child_list_key].append(_parse_scalar(stripped[2:].strip()))
             continue
 
         if isinstance(current, dict) and ":" in stripped:
             key, raw_value = stripped.split(":", 1)
-            current[key.strip()] = _parse_scalar(raw_value)
+            value = raw_value.strip()
+            if value:
+                current[key.strip()] = _parse_scalar(value)
+                child_list_key = None
+            else:
+                child_list_key = key.strip()
+                current[child_list_key] = []
+            continue
+
+        if not saw_list and ":" in stripped:
+            key, raw_value = stripped.split(":", 1)
+            value = raw_value.strip()
+            current = current if isinstance(current, dict) else {}
+            if value:
+                current[key.strip()] = _parse_scalar(value)
+                child_list_key = None
+            else:
+                child_list_key = key.strip()
+                current[child_list_key] = []
+            continue
 
     if current is not None:
-        items.append(current)
+        if saw_list:
+            items.append(current)
 
-    return items if saw_list else {}
+    return items if saw_list else (current if isinstance(current, dict) else {})
 
 
 def load_yaml_text(text: str, path: Path) -> Any:
