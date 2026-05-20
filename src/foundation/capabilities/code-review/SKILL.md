@@ -60,7 +60,8 @@ Anchor against: **OWASP Code Review Guide v2** and **OWASP ASVS v4** for securit
 | **Boundaries** | No layer violation (controller→repository, UI→database, domain→framework); coupling delta is intentional; imports respect module boundaries |
 | **Concurrency** | Race conditions; shared mutable state; lock ordering; missing idempotency key; duplicate-submit risk |
 | **Dependencies** | No new CVE-impacted package; license compatible with project; version pinned; tree-shaking / bundle impact assessed (frontend) |
-| **Performance** | N+1 queries; unbounded collection operations; missing pagination; synchronous blocking in async path; missing caching where contractually warranted |
+| **Performance** | N+1 queries; unbounded collection operations; missing pagination; synchronous blocking in async path; unbounded fan-out; missing caching where contractually warranted |
+| **Resource lifecycle** | Per-operation HTTP/DB/SDK client construction; missing connection reuse; response body/stream not closed; timers/listeners/subscriptions/cursors/file handles leaked; pools lacking max size/idle timeout |
 | **Config / Infra** | No hard-coded endpoints, resource names, account ids; env-specific config injected not baked; IaC change blast radius assessed |
 
 ### Decision Tree: Escalate vs Accept vs Approve
@@ -106,6 +107,9 @@ Review focuses on **behavior and risk before style**. Key refinements:
 - **Mass assignment.** Any model binding that accepts all request fields without an allowlist can be exploited to set privileged fields (e.g., `is_admin`, `balance`). Check frameworks' mass-assignment protection (Rails `strong_parameters`, Spring `@JsonIgnoreProperties`, Mongoose `strict`).
 - **SQL / NoSQL injection.** Even ORMs can be parameterization-bypassed via raw-query escapes, concatenated filters, or JSON operators (`$where` in Mongo). Verify every dynamic query fragment.
 - **Race conditions in review.** Optimistic locking missing on a financial balance update, counter increment using `read + write` instead of atomic increment, cache-aside pattern with no stampede protection — these are concurrency findings visible in code without load test.
+- **Professional coding details are reviewable defects.** A list that grows from untrusted input, an unbounded `Promise.all`, a missing API page size, a cache with no eviction, or a retry accumulator with no ceiling is not a style nit. It is a production failure mode.
+- **Connection lifecycle is code, not infrastructure trivia.** Per-request HTTP clients, per-message SDK clients, DB pools built inside handlers, missing keep-alive, missing idle/lifetime limits, and response bodies not closed all cause latency cliffs, socket exhaustion, and pool starvation.
+- **Cleanup paths include error and cancellation paths.** It is not enough to close a file, cursor, stream, timer, subscription, or lock on the happy path. Review the `catch`, `finally`, timeout, early-return, and cancellation branches.
 - **Dependency impact.** A new dependency adds transitive dependencies, bundle size (frontend), and attack surface. A `package-lock.json` or `go.sum` change in the PR must be inspected — it is code.
 - **IaC diffs need blast-radius assessment.** Changing a security group `0.0.0.0/0`, removing a bucket policy, or enabling public access is a Critical finding in an IaC review even if infrastructure tests pass.
 - **Reviewer decisiveness.** A review that leaves every comment as "maybe consider..." is a failed review. Each finding must be: severity, required action, and resolution expectation. Ambiguity delays.
@@ -140,6 +144,9 @@ Review focuses on **behavior and risk before style**. Key refinements:
 - Mass assignment accepted; attacker sets `is_admin: true` via unguarded field.
 - IaC diff approved without blast-radius review; security group opens 0.0.0.0/0 to production DB.
 - Generated code (OpenAPI stubs) hand-edited rather than regenerated; contract drift accumulates silently.
+- Unbounded array/list/map/buffer accepted from request body, query `limit`, provider response, or database result; memory grows with attacker-controlled input.
+- HTTP/DB/SDK client constructed inside a request loop; connection reuse is lost; sockets and TLS handshakes spike under load.
+- Response body, cursor, stream, or subscription not closed on non-2xx/error/cancellation path; pool slots leak until requests fail.
 - Review performed on a 1000-line PR in 5 minutes; defect detection rate near zero.
 - Self-review on security-sensitive path; conflict of interest unaddressed.
 - No stated non-findings on checked surfaces; review provides no evidence it was substantive.
@@ -177,6 +184,7 @@ The review is complete only when:
 6. No PII/secret exposure in logs, URLs, response bodies, or error messages.
 7. All blocking findings have explicit resolution status before approval.
 8. Review summary states non-findings on high-risk surfaces.
+9. Growth surfaces, client/pool lifecycle, and cleanup paths are reviewed whenever code touches bulk data, external calls, async work, caches, files, cursors, streams, or long-lived handles.
 
 # Used By
 

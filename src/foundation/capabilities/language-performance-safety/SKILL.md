@@ -30,6 +30,8 @@ Do not use to apply micro-optimizations without a profile pointing at the line. 
 - **Concurrency changes require race-detector / sanitizer / stress evidence** in CI before merge.
 - **Safety / readability are not traded for perf without documented justification + measurement**: "this is 3× faster" without numbers is rejected; "this is 3× faster (p99 1.2 ms → 0.4 ms at 10k RPS, profile attached)" is the minimum.
 - **Backpressure and cancellation are first-class.** Any unbounded queue, fan-out, or retry loop is a defect until proven bounded.
+- **Every growth surface is bounded.** Arrays, slices, lists, maps, sets, buffers, batches, caches, pagination windows, retry accumulators, and log/event aggregation must have an explicit item count and/or byte budget. Untrusted input counts must never drive allocation without a maximum.
+- **Reusable clients and pools are lifecycle-managed.** HTTP clients, DB pools, Redis clients, Kafka producers/consumers, SDK clients, thread pools, and worker pools are created at process/module/request-scope boundaries appropriate to the runtime, not per operation. Keep-alive, max connections, idle timeout, max lifetime, cleanup, and observability must be configured.
 
 # Industry Benchmarks
 
@@ -89,6 +91,12 @@ Worker pool (IO)     = bounded; never unbounded; backpressure required
 - **FFI invariants**: document who owns memory, lifetime, alignment, thread-safety, panic/exception boundary, error-code convention. UB on the FFI boundary corrupts the host runtime silently.
 - **Microbenchmarks vs system benchmarks**: a microbench shows function cost; a system bench shows tail-latency under load. Optimize against the system bench; use microbench only to validate a specific hypothesis.
 - **GC-friendly patterns**: prefer flat structs over linked structures (cache locality), pre-sized slices/lists, pooled buffers for IO, escape-analysis hints (Go: avoid pointer escape; Java: avoid boxing).
+- **Collection growth budgets**: every collection that can grow from input, database result size, message backlog, retry state, recursion, or fan-out must state its maximum cardinality and memory budget. Prefer streaming, pagination, chunking, bounded LRU/TTL caches, and early rejection over "load all then process". Validate `count * element_size` overflow and reject payloads that exceed the budget before allocation.
+- **Preallocation is not permission to trust input.** Pre-size collections only from trusted or capped counts. A hostile `Content-Length`, declared array length, CSV row count, GraphQL page size, or API `limit` must be clamped before allocation. Huge preallocation is a denial-of-service vector even when the subsequent loop is correct.
+- **Connection/client reuse**: construct reusable clients once per intended lifecycle and inject them. Per-request `new HttpClient`, per-call DB engine creation, per-message SDK construction, or per-query connection open/close is a defect unless the runtime explicitly requires it and cost is measured. Reused clients still require bounded pools, keep-alive, idle/lifetime eviction, DNS/credential refresh behavior, and graceful shutdown.
+- **Response/body cleanup**: every successful or failed outbound call must release network resources in the runtime's idiom: close response bodies, consume/drain only when required for connection reuse, cancel inflight requests on timeout, and close streams/readers/writers on all paths.
+- **Fan-out and batch ceilings**: `Promise.all`, goroutine/task spawning, thread creation, queue publishing, SQL `IN` clauses, and bulk writes must have a concurrency or batch-size ceiling. Large work is chunked with checkpoints, partial-failure handling, and cancellation.
+- **Long-lived handles are leak surfaces.** Timers, intervals, subscriptions, watchers, file descriptors, cursors, prepared statements, transactions, locks, and temporary files require explicit ownership and cleanup on success, failure, cancellation, and shutdown.
 
 # Failure Modes
 
@@ -96,6 +104,9 @@ Worker pool (IO)     = bounded; never unbounded; backpressure required
 - **GC pause SLO breach** — Symptom: p99.9 latency spikes correlated with GC. Cause: high allocation rate + GC algorithm mismatch. Detection: GC log + allocation-rate metric. Impact: SLO breach.
 - **Goroutine / task / thread / fd leak** — Symptom: memory / fd count grows monotonically. Cause: missing cancellation / context propagation. Detection: pprof goroutine profile, fd-count metric. Impact: OOM, restart loop.
 - **Unbounded queue OOM** — Symptom: OOM under load spike. Cause: unbounded channel / executor / retry queue. Detection: queue-depth metric, load test. Impact: cascading failure.
+- **Unbounded collection OOM** — Symptom: memory grows with request size, result-set size, or message backlog. Cause: list/map/buffer accumulates all inputs before processing. Detection: allocation profile, heap growth by payload size, fuzz/load test with large `limit` or payload. Impact: denial of service, GC collapse, pod eviction.
+- **Per-operation client construction** — Symptom: high latency, socket exhaustion, DNS churn, TLS handshakes per call. Cause: HTTP/DB/SDK client created inside request loop. Detection: connection churn metrics, fd count, upstream SYN/TLS volume. Impact: pool starvation, provider throttling, cascading latency.
+- **Response body leak** — Symptom: idle connections never return to pool; fd count climbs under error rate. Cause: response body/stream not closed on non-2xx, exception, or cancellation path. Detection: pool wait metric, fd-count metric, leak test. Impact: connection exhaustion and request failures.
 - **Lock held across IO** — Symptom: throughput cliff under modest concurrency; CPU low, latency high. Cause: lock scope includes IO call. Detection: lock contention profile (`pprof mutex`, JFR LockContention). Impact: artificial bottleneck.
 - **FFI UB / unsafe invariant violation** — Symptom: heisenbug, sporadic corruption, ASan/MSan report. Cause: undocumented invariant violated. Detection: sanitizer in CI, peer review. Impact: silent data corruption, security exposure.
 - **Cold-path "optimization"** — Symptom: complex code in rare path; profile shows < 0.1% impact. Cause: optimization without profile. Detection: profile review pre-merge. Impact: complexity tax, no perf gain.
@@ -111,6 +122,8 @@ Return a **Performance & Safety Assessment** containing:
 - **GC pause analysis** (algorithm, observed pause distribution vs SLO)
 - **Concurrency / async risks**: blocking points, lock scope, cancellation propagation, backpressure design
 - **Pool sizing** with Little's-Law calculation (DB conn, HTTP client, worker pool)
+- **Growth-surface audit**: collections, buffers, batches, caches, pagination windows, retry queues, and fan-out points with explicit item/byte limits
+- **Client/pool lifecycle**: where reusable clients/pools are constructed, how they are reused, closed, refreshed, and observed
 - **Unsafe / FFI boundaries**: invariants documented, reviewer names, sanitizer coverage
 - **Required measurements**: profile commands, benchmark commands, sanitizer/race-detector commands
 - **Mitigation plan** per identified risk with owner and target metric
@@ -127,6 +140,8 @@ Return a **Performance & Safety Assessment** containing:
 7. Unsafe / FFI changes have written invariant doc + ≥ 2 reviewers + sanitizer CI coverage.
 8. Concurrency change has race-detector / sanitizer / stress-test evidence in CI.
 9. Every optimization claim has before/after numbers from a system-level benchmark, not microbench-only.
+10. Collections, buffers, caches, pages, batches, and fan-out lists have explicit count/byte ceilings and reject or stream oversized inputs.
+11. Reusable clients/pools are not constructed per operation; response bodies, streams, timers, subscriptions, cursors, and file handles are cleaned up on all paths.
 
 # Used By
 
