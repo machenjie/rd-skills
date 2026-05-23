@@ -19,10 +19,16 @@ python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
 python3 scripts/eval-routing.py
-python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
 python3 scripts/validate-codegen-benchmarks.py
+python3 scripts/run-codegen-benchmarks.py --limit 3
 python3 scripts/build.py --profile recommended
 python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
 python3 scripts/validate-installation.py
+```
+
+Run extended routing fixture comparison when updating or verifying captured actual router outputs:
+
+```bash
+python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
 ```

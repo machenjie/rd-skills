@@ -55,11 +55,13 @@ python3 scripts/validate-skills.py
 python3 scripts/validate-capabilities.py
 python3 scripts/validate-registry.py
 python3 scripts/eval-routing.py
-python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
 python3 scripts/validate-codegen-benchmarks.py
+python3 scripts/run-codegen-benchmarks.py --limit 3
 python3 scripts/validate-installation.py
 ```
 
+- Run extended routing fixture comparison when updating or verifying captured actual router outputs:
+  `python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs`
 - Rebuild affected profiles and run relevant package, install, upgrade, uninstall, or doctor flows.
 - Verify registry references resolve across professional skills, capabilities, domain extensions, and routing rules.
 - Verify every runtime skill has a root `SKILL.md`.
