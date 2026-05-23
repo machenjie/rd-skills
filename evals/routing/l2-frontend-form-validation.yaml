@@ -1,0 +1,51 @@
+---
+id: l2-frontend-form-validation
+description: |
+  Add validation and error states to a non-payment shipping address form.
+  Single-module frontend change; no auth, payment, or release impact.
+prompt: |
+  Add client-side validation and accessible error states to the
+  shipping-address form in the account settings page. Backend validation
+  already exists.
+expected:
+  complexity: L2
+  risk_triggers: []
+  skills:
+    - experience-impact-modeler
+    - frontend-change-builder
+    - quality-test-gate
+  capabilities:
+    - form-validation-design
+    - interaction-state-modeling
+    - design-system-rules
+    - frontend-api-integration
+    - frontend-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - threat-modeling
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - architecture gate
+    - delivery gate
+    - security gate
+notes: |
+  Frontend-only form change with backend validation already in place
+  should not route to backend/data/release/security gates.

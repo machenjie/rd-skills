@@ -1,0 +1,81 @@
+---
+id: l5-web3-payment-ai-subscription
+description: |
+  Use an AI agent to approve recurring wallet-based subscription payments
+  with on-chain settlement. Combines Web3, payment, and AI risk surfaces
+  and demands all three domain extensions plus full quality gates.
+prompt: |
+  Build a subscription product where users authorize recurring payments
+  from a self-custodied wallet. An LLM-driven agent evaluates each
+  upcoming charge against user-defined rules and either approves the
+  on-chain transfer or pauses the subscription. Include idempotent
+  payment state machine, signature verification, key-boundary review,
+  AI side-effect controls, audit trail, and rollback.
+expected:
+  complexity: L5
+  risk_triggers:
+    - payment
+    - subscription
+    - billing
+    - wallet
+    - private key
+    - Web3 asset
+    - AI prompt
+    - external integration
+    - production deployment
+  skills:
+    - change-intake-compiler
+    - domain-impact-modeler
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+    - integration-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - quality-test-gate
+    - delivery-release-gate
+    - change-documentation-gate
+    - ai-code-review-refactor
+  capabilities:
+    - threat-modeling
+    - permission-boundary-modeling
+    - secret-configuration-security
+    - idempotency-retry-design
+    - transaction-consistency
+    - observability
+    - contract-testing
+    - release-rollback
+    - state-machine-modeling
+  domain_extensions:
+    - web3-product-extension
+    - payment-trading-extension
+    - ai-product-extension
+  quality_gates:
+    - requirement gate
+    - impact gate
+    - domain gate
+    - architecture gate
+    - API/data gate
+    - implementation gate
+    - security gate
+    - reliability gate
+    - test gate
+    - delivery gate
+    - documentation gate
+    - AI review gate
+forbidden:
+  skills:
+    - frontend-change-builder
+  capabilities:
+    - form-validation-design
+    - design-system-rules
+  domain_extensions:
+    - mobile-product-extension
+    - iot-embedded-extension
+    - bigdata-product-extension
+    - low-level-systems-extension
+  quality_gates: []
+notes: |
+  Highest-risk composite change. All three of payment/web3/AI domain
+  extensions, the full gate stack including AI review, and explicit
+  rollback. Frontend and unrelated domain extensions stay out.

@@ -1,0 +1,69 @@
+---
+id: l4-sso-saml-auth
+description: |
+  Add SAML 2.0 SSO via an external identity provider, including
+  certificate handling, group-to-role mapping, session lifecycle, and
+  audit logging. High-risk auth and config change.
+prompt: |
+  Add SAML 2.0 SSO using Okta as the identity provider. Map IdP groups
+  to internal roles, handle certificate rotation, enforce session and
+  refresh token lifecycle, redact PII from logs, and audit every login
+  decision.
+expected:
+  complexity: L4
+  risk_triggers:
+    - auth
+    - authorization
+    - object-level permission
+    - secret/config change
+    - external integration
+    - user data
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - data-api-contract-changer
+    - backend-change-builder
+    - integration-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - delivery-release-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - authentication-authorization
+    - authentication-security
+    - threat-modeling
+    - permission-boundary-modeling
+    - secret-configuration-security
+    - contract-testing
+    - observability
+    - logging-error-handling
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - impact gate
+    - API/data gate
+    - implementation gate
+    - security gate
+    - reliability gate
+    - test gate
+    - delivery gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-middleware-change-builder
+    - ai-code-review-refactor
+  capabilities:
+    - cache-design
+    - data-migration-design
+    - form-validation-design
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - AI review gate
+notes: |
+  SSO/SAML change. Auth, secret, external integration, and PII triggers
+  all demand the security gate. No money, no AI, no Web3.

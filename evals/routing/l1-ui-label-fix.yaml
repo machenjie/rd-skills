@@ -1,0 +1,49 @@
+---
+id: l1-ui-label-fix
+description: |
+  A copy-only fix to one button label inside a single settings component.
+  This must not pull in heavyweight gates, domain modeling, or release
+  planning.
+prompt: |
+  Change the label of the "Submit" button to "Save" in the
+  user settings form. No behavior changes.
+expected:
+  complexity: L1
+  risk_triggers: []
+  skills:
+    - frontend-change-builder
+  capabilities:
+    - regression-testing
+    - frontend-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+forbidden:
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - task-dag-planner
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - delivery-release-gate
+    - domain-impact-modeler
+  capabilities:
+    - data-migration-design
+    - threat-modeling
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - architecture gate
+    - delivery gate
+    - security gate
+notes: |
+  Minimum-sufficient path for an L1 copy change. The router must not
+  attach intake, impact, architecture, security, reliability, or
+  release gates to a one-line label change.

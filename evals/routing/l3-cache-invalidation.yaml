@@ -1,0 +1,57 @@
+---
+id: l3-cache-invalidation
+description: |
+  Introduce a Redis read-through cache for product catalog reads, with
+  explicit invalidation on writes. No auth, no PII, no money.
+prompt: |
+  Add a Redis read-through cache in front of ProductCatalogRepository.
+  Invalidate on product create/update/delete and define TTL, stampede
+  protection, and fallback when Redis is unavailable.
+expected:
+  complexity: L3
+  risk_triggers: []
+  skills:
+    - change-impact-analyzer
+    - data-middleware-change-builder
+    - backend-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - cache-design
+    - transaction-consistency
+    - observability
+    - integration-testing
+    - degradation-circuit-breaking
+  domain_extensions: []
+  quality_gates:
+    - impact gate
+    - implementation gate
+    - reliability gate
+    - test gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - integration-change-builder
+    - security-privacy-gate
+    - delivery-release-gate
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+  capabilities:
+    - threat-modeling
+    - authentication-authorization
+    - release-rollback
+    - data-migration-design
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - security gate
+    - delivery gate
+    - architecture gate
+notes: |
+  Catalog cache change with no security or release impact. Must include
+  reliability gate and observability capability; must not pull in
+  security or release engineering.

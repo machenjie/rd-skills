@@ -1,0 +1,58 @@
+---
+id: l3-api-field-add
+description: |
+  Add a new auth-related field to a public login response. Additive change
+  with backward-compatibility and external client consumers.
+prompt: |
+  Add a new "mfa_enrollment_status" field to the POST /login response so
+  clients can prompt users to enroll in MFA. Existing clients must keep
+  working unchanged.
+expected:
+  complexity: L3
+  risk_triggers:
+    - auth
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - data-api-contract-changer
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - api-contract-design
+    - dto-schema-design
+    - authentication-authorization
+    - authentication-security
+    - contract-testing
+    - version-compatibility
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - impact gate
+    - API/data gate
+    - implementation gate
+    - security gate
+    - test gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-middleware-change-builder
+    - integration-change-builder
+    - reliability-observability-gate
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - cache-design
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Auth-related API response field add. Must route to contract design and
+  the security gate, but does not need data middleware, release, or any
+  domain extension.

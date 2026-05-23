@@ -1,0 +1,49 @@
+---
+id: l1-docs-typo
+description: |
+  A spelling fix in a public README section. Documentation-only path.
+prompt: |
+  Fix the typo "recieve" -> "receive" in README.md under the "Validation"
+  section.
+expected:
+  complexity: L1
+  risk_triggers: []
+  skills:
+    - change-documentation-gate
+  capabilities:
+    - documentation-generation
+  domain_extensions: []
+  quality_gates:
+    - documentation gate
+forbidden:
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - task-dag-planner
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - backend-change-builder
+    - frontend-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - delivery-release-gate
+  capabilities:
+    - threat-modeling
+    - data-migration-design
+    - release-rollback
+    - api-contract-design
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - implementation gate
+    - test gate
+    - architecture gate
+    - delivery gate
+    - security gate
+notes: |
+  Docs-only L1 change must not trigger implementation, test, or any
+  product-risk gates.
