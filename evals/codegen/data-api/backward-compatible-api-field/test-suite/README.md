@@ -17,8 +17,7 @@
 
 ## Expected Commands
 
-- `npm test -- customerProfile`
-- `npm run test:contract -- customer-profile`
+- `bash ../test-suite/run.sh`
 
 ## Regression Cases
 

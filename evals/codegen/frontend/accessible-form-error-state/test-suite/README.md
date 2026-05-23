@@ -17,8 +17,7 @@
 
 ## Expected Commands
 
-- `npm test -- EmailChangeForm`
-- `npm run test:a11y -- EmailChangeForm`
+- `bash ../test-suite/run.sh`
 
 ## Regression Cases
 

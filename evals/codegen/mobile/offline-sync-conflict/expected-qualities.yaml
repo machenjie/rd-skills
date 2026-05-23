@@ -1,0 +1,48 @@
+id: offline-sync-conflict
+category: mobile
+complexity: L4
+focus:
+  - offline state
+  - conflict resolution
+  - versioned sync
+  - user recovery
+route_hints:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - state-management-design
+    - api-contract-design
+    - version-compatibility
+    - integration-testing
+    - regression-testing
+    - observability
+  domain_extensions:
+    - mobile-product-extension
+  quality_gates:
+    - API/data gate
+    - implementation gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - Offline edits sync only when based on the expected server version.
+  - Conflicts preserve local draft data and expose a recovery path.
+  - Retry behavior handles network loss without duplicate mutation effects.
+  - Telemetry distinguishes success, retry, and conflict outcomes.
+required_qualities:
+  - Sync payloads include version or ETag preconditions.
+  - State management keeps pending, synced, failed, and conflict states distinct.
+  - Tests simulate offline, reconnect, conflict, and retry flows.
+  - User visible errors do not discard unsynced edits.
+forbidden_shortcuts:
+  - Last write wins overwrite of server changes without conflict detection.
+  - Clearing offline drafts after a failed sync attempt.
+  - Retrying mutations without idempotency or version preconditions.
+  - Showing synced success before the server confirms the write.
+evidence:
+  - State transition tests for offline and conflict paths.
+  - Contract tests for version precondition failures.
+  - Retry tests for network interruption.
+  - Telemetry assertions for conflict and success events.

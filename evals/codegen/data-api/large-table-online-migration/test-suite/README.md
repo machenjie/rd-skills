@@ -17,9 +17,7 @@
 
 ## Expected Commands
 
-- `python3 -m pytest tests/test_customer_name_contract.py`
-- `python3 -m pytest tests/test_customer_name_migration.py`
-- `python3 -m pytest tests/test_backfill_customer_names.py`
+- `bash ../test-suite/run.sh`
 
 ## Regression Cases
 

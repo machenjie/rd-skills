@@ -1,0 +1,47 @@
+id: eip712-chainid-nonce
+category: web3
+complexity: L5
+focus:
+  - EIP-712 domain validation
+  - chain id binding
+  - nonce replay protection
+  - wallet session security
+route_hints:
+  skills:
+    - integration-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - threat-modeling
+    - input-validation
+    - authentication-security
+    - integration-testing
+    - regression-testing
+    - language-testing-strategy
+  domain_extensions:
+    - web3-product-extension
+  quality_gates:
+    - implementation gate
+    - security gate
+    - test gate
+expected_outcomes:
+  - Signatures are bound to the expected chain id and domain separator.
+  - Nonces are single use and expire according to policy.
+  - Replay across chain, domain, account, or timestamp is rejected.
+  - Errors are deterministic and do not reveal sensitive session material.
+required_qualities:
+  - Typed data validation matches the declared domain and message schema.
+  - Nonce persistence is durable enough for concurrent login attempts.
+  - Tests include wrong chain, wrong domain, reused nonce, and expired nonce.
+  - Session creation occurs only after all signature checks pass.
+forbidden_shortcuts:
+  - Recovering an address without validating chain id and domain.
+  - Storing nonces only in process memory.
+  - Accepting reused or expired nonces for successful authentication.
+  - Creating sessions before replay checks complete.
+evidence:
+  - Signature fixtures for valid and wrong chain typed data.
+  - Replay tests for nonce reuse and expiry.
+  - Security note for domain separation and session creation order.
+  - Concurrency test for duplicate login attempts.

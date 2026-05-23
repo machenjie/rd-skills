@@ -16,8 +16,7 @@
 
 ## Expected Commands
 
-- `python3 -m pytest tests/test_order_read.py`
-- `python3 -m pytest tests/test_order_authorization.py`
+- `bash ../test-suite/run.sh`
 
 ## Regression Cases
 

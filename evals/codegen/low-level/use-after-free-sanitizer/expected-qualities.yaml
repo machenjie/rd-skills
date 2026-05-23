@@ -1,0 +1,47 @@
+id: use-after-free-sanitizer
+category: low-level
+complexity: L5
+focus:
+  - memory ownership
+  - use after free prevention
+  - sanitizer testing
+  - FFI boundary safety
+route_hints:
+  skills:
+    - backend-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - cpp-professional-usage
+    - language-performance-safety
+    - language-testing-strategy
+    - dependency-vulnerability-scanning
+    - regression-testing
+  domain_extensions:
+    - low-level-systems-extension
+  quality_gates:
+    - implementation gate
+    - security gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - Buffer ownership is explicit across allocation, transfer, and release.
+  - Use after free is eliminated under address sanitizer.
+  - FFI callers receive a stable release contract.
+  - Regression tests cover normal parse, error parse, and double release denial.
+required_qualities:
+  - The API documents who owns every pointer and when it is valid.
+  - Tests run with sanitizer flags or an equivalent memory safety tool.
+  - Error paths release resources exactly once.
+  - No global mutable ownership workaround hides the bug.
+forbidden_shortcuts:
+  - Returning pointers to freed or stack allocated memory.
+  - Disabling sanitizer checks to pass the benchmark.
+  - Leaking buffers to avoid defining ownership.
+  - Changing the ABI without compatibility notes.
+evidence:
+  - Sanitizer test output for the regression case.
+  - Ownership documentation for FFI callers.
+  - Error path tests for cleanup behavior.
+  - Compatibility note for exported API shape.

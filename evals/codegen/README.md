@@ -6,10 +6,9 @@ The routing golden cases prove that ChangeForge selects the right skills;
 these code generation benchmarks define the implementation quality evidence
 expected after a real change is attempted.
 
-The benchmarks are static specifications. They do not invoke an agent or
-model. A benchmark runner can materialize each `starter-repo/`, apply the
-`prompt.md`, execute the `test-suite/`, run the `security-checks/`, and score
-the result with `review-rubric.md`.
+The static validator checks benchmark definitions. The execution runner checks
+that benchmark setup, test, and security scripts can run from the starter repo
+and that expected command documentation matches those scripts.
 
 ## Layout
 
@@ -20,6 +19,20 @@ evals/codegen/
   backend/
   frontend/
   data-api/
+  security/
+  integration/
+  data-middleware/
+  reliability/
+  delivery/
+  ai/
+  web3/
+  payment/
+  mobile/
+  bigdata/
+  iot/
+  low-level/
+  devex/
+  finops/
 ```
 
 Each benchmark directory must contain:
@@ -33,20 +46,27 @@ security-checks/
 review-rubric.md
 ```
 
-The validator also requires `README.md` inside each child directory so the
-starter state, tests, and security checks remain reviewable even before a
-runner exists.
+The definition validator requires `README.md` inside each child directory so
+the starter state, tests, and security checks remain reviewable. The execution
+runner additionally requires `starter-repo/setup.sh`, `test-suite/run.sh`, and
+`security-checks/run.sh`.
 
 ## Running
 
 ```bash
 python3 scripts/validate-codegen-benchmarks.py
+python3 scripts/run-codegen-benchmarks.py --limit 3
 ```
 
-The validator checks that the benchmark set is complete, every required file
-exists, markdown files contain the required sections, and
+The definition validator checks that the benchmark set is complete, every
+required file exists, markdown files contain the required sections, and
 `expected-qualities.yaml` references real ChangeForge skills, capabilities,
 domain extensions, and quality gates.
+
+The execution runner validates that setup, test, and security scripts run from
+`starter-repo/`, that `test-suite/README.md` expected commands match `run.sh`,
+and that each benchmark has at least one executable test or automatic review
+failure condition covering its `forbidden_shortcuts`.
 
 ## Authoring Rules
 

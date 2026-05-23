@@ -16,8 +16,7 @@
 
 ## Expected Commands
 
-- `python3 -m pytest tests/test_shipping_webhook.py`
-- `python3 -m pytest tests/test_webhook_security.py`
+- `bash ../test-suite/run.sh`
 
 ## Regression Cases
 

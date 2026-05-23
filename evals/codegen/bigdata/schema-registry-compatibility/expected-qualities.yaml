@@ -1,0 +1,50 @@
+id: schema-registry-compatibility
+category: bigdata
+complexity: L5
+focus:
+  - schema evolution
+  - registry compatibility
+  - consumer safety
+  - replay readiness
+route_hints:
+  skills:
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - api-contract-design
+    - version-compatibility
+    - contract-testing
+    - message-queue-design
+    - observability
+    - regression-testing
+  domain_extensions:
+    - bigdata-product-extension
+  quality_gates:
+    - API/data gate
+    - implementation gate
+    - reliability gate
+    - test gate
+    - documentation gate
+expected_outcomes:
+  - Producer schema changes are checked for declared compatibility mode.
+  - Consumer fixtures prove old and new event versions can be read.
+  - Incompatible changes fail before publication.
+  - Replay documentation covers versioned deserialization and dead letter handling.
+required_qualities:
+  - Schema checks run in CI and local benchmark scripts.
+  - Tests include removed field, renamed field, and additive nullable field cases.
+  - Compatibility policy is explicit per topic.
+  - Metrics expose schema validation failures.
+forbidden_shortcuts:
+  - Publishing renamed or removed fields without compatibility checks.
+  - Testing only the latest consumer against the latest producer.
+  - Bypassing the registry in local tests.
+  - Treating dead letter volume as the compatibility validation strategy.
+evidence:
+  - Contract tests for old and new event schemas.
+  - Registry compatibility check output.
+  - Consumer fixture evidence for replay.
+  - Documentation of compatibility mode and failure handling.

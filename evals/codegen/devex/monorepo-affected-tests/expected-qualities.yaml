@@ -1,0 +1,47 @@
+id: monorepo-affected-tests
+category: devex
+complexity: L4
+focus:
+  - affected test selection
+  - module graph accuracy
+  - build cache safety
+  - CI fallback
+route_hints:
+  skills:
+    - architecture-impact-reviewer
+    - delivery-release-gate
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - ci-cd
+    - package-dependency-management
+    - language-testing-strategy
+    - performance-budgeting
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - reliability gate
+    - delivery gate
+    - test gate
+expected_outcomes:
+  - Changed shared packages select downstream test suites.
+  - Lockfile and generated contract changes invalidate affected test caches.
+  - Unknown paths fall back to a broader safe test set.
+  - CI output explains selected and skipped tests.
+required_qualities:
+  - Module graph edges include generated and runtime dependencies.
+  - Tests cover direct, transitive, lockfile, generated, and unknown path cases.
+  - Cache keys include dependency graph and tool version inputs.
+  - Periodic full suite fallback is documented.
+forbidden_shortcuts:
+  - Selecting tests only from direct file path prefixes.
+  - Ignoring lockfile or generated contract changes in cache keys.
+  - Skipping all tests for unknown paths.
+  - Providing no explanation for why a test was skipped.
+evidence:
+  - Graph selection tests for direct and transitive changes.
+  - Cache key assertions for lockfile and generated inputs.
+  - CI dry run output fixture.
+  - Documentation of full suite fallback cadence.

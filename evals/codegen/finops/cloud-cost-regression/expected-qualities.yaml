@@ -1,0 +1,47 @@
+id: cloud-cost-regression
+category: finops
+complexity: L4
+focus:
+  - cost regression guardrail
+  - resource diff analysis
+  - budget thresholds
+  - release evidence
+route_hints:
+  skills:
+    - reliability-observability-gate
+    - delivery-release-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - performance-budgeting
+    - observability
+    - ci-cd
+    - regression-testing
+    - logging-error-handling
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - delivery gate
+    - test gate
+    - documentation gate
+expected_outcomes:
+  - Planned resource changes are compared against declared monthly cost thresholds.
+  - Unexpected storage, egress, or compute increases fail the check.
+  - Approved exceptions require owner, expiry, and budget note.
+  - Release evidence includes cost diff output and rollback signal.
+required_qualities:
+  - Cost checks run from deterministic infrastructure plan input.
+  - Thresholds are scoped by service and environment.
+  - Tests include below threshold, above threshold, and approved exception cases.
+  - Output is readable by reviewers and CI systems.
+forbidden_shortcuts:
+  - Using production bill totals as the only pre deploy guard.
+  - Letting all cost increases pass when an owner field exists.
+  - Ignoring egress and storage lifecycle cost changes.
+  - Failing without showing the resource that caused the regression.
+evidence:
+  - Cost diff fixture tests for pass and fail cases.
+  - Threshold configuration examples.
+  - CI output fixture for reviewer evidence.
+  - Documentation of exception expiry and rollback signal.

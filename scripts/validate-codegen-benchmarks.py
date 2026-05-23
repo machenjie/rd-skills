@@ -19,26 +19,12 @@ from validation_utils import (
     visible_child_dirs,
 )
 
+from codegen_benchmark_manifest import EXPECTED_BENCHMARKS
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CODEGEN_DIR = ROOT / "evals" / "codegen"
 REGISTRY_DIR = ROOT / "src" / "registry"
-
-EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
-    "backend": (
-        "idempotent-payment-create",
-        "object-auth-order-read",
-        "webhook-signature-replay",
-    ),
-    "frontend": (
-        "accessible-form-error-state",
-        "optimistic-ui-rollback",
-    ),
-    "data-api": (
-        "backward-compatible-api-field",
-        "large-table-online-migration",
-    ),
-}
 
 VALID_COMPLEXITIES = {"L2", "L3", "L4", "L5"}
 REQUIRED_ROOT_FILES = (

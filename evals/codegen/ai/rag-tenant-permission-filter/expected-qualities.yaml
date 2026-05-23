@@ -1,0 +1,50 @@
+id: rag-tenant-permission-filter
+category: ai
+complexity: L5
+focus:
+  - RAG permission filtering
+  - tenant isolation
+  - retrieval provenance
+  - LLM context safety
+route_hints:
+  skills:
+    - backend-change-builder
+    - data-middleware-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - permission-boundary-modeling
+    - authentication-authorization
+    - indexing-query-optimization
+    - repository-persistence
+    - integration-testing
+    - regression-testing
+  domain_extensions:
+    - ai-product-extension
+  quality_gates:
+    - implementation gate
+    - security gate
+    - test gate
+    - AI review gate
+    - documentation gate
+expected_outcomes:
+  - Retrieval only returns chunks the actor can read at query time.
+  - Tenant and object filters are applied before prompt context assembly.
+  - Denied chunks are excluded from citations and model input.
+  - Tests prove cross tenant and revoked access snippets cannot leak.
+required_qualities:
+  - Permission filters are part of the retriever contract, not post answer cleanup.
+  - Provenance records include document id, tenant id, and permission decision.
+  - Vector search and metadata filtering semantics are covered by integration tests.
+  - Prompt construction treats retrieved text as untrusted context.
+forbidden_shortcuts:
+  - Filtering unauthorized chunks only after the LLM answer is generated.
+  - Relying on prompt instructions to hide restricted documents.
+  - Using tenant filters without object level permission checks.
+  - Returning citations for snippets removed from the final answer.
+evidence:
+  - Integration tests for cross tenant and revoked access retrieval.
+  - Retriever contract tests for metadata filters.
+  - Security note covering prompt and citation leak paths.
+  - Trace evidence showing authorized provenance only.

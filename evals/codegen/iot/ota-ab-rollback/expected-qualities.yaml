@@ -1,0 +1,51 @@
+id: ota-ab-rollback
+category: iot
+complexity: L5
+focus:
+  - OTA update lifecycle
+  - A/B rollback
+  - device health confirmation
+  - staged rollout
+route_hints:
+  skills:
+    - delivery-release-gate
+    - reliability-observability-gate
+    - security-privacy-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - release-rollback
+    - observability
+    - backup-recovery
+    - secret-configuration-security
+    - integration-testing
+    - regression-testing
+  domain_extensions:
+    - iot-embedded-extension
+  quality_gates:
+    - implementation gate
+    - security gate
+    - reliability gate
+    - delivery gate
+    - test gate
+    - documentation gate
+expected_outcomes:
+  - Update success is recorded only after boot health confirmation.
+  - Failed boot or missing heartbeat rolls back to the previous slot.
+  - Staged rollout pauses when health thresholds fail.
+  - Package identity and signature checks run before activation.
+required_qualities:
+  - State machine separates downloaded, activated, confirmed, failed, and rolled back states.
+  - Tests simulate reboot loss, failed health, and successful confirmation.
+  - Rollout metrics expose device cohort health and rollback counts.
+  - Runbook explains manual pause and recovery.
+forbidden_shortcuts:
+  - Marking OTA success before post boot health confirmation.
+  - Activating unsigned or identity mismatched packages.
+  - Continuing rollout after cohort health falls below threshold.
+  - Rollback that depends on manual device shell access.
+evidence:
+  - State machine tests for A/B activation and rollback.
+  - Security checks for package signature and identity.
+  - Rollout pause threshold tests.
+  - Runbook evidence for staged recovery.

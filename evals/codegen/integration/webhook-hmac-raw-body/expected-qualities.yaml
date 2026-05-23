@@ -1,0 +1,48 @@
+id: webhook-hmac-raw-body
+category: integration
+complexity: L4
+focus:
+  - raw body signature verification
+  - partner webhook contract
+  - secret rotation
+  - safe failure handling
+route_hints:
+  skills:
+    - change-intake-compiler
+    - integration-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - input-validation
+    - secret-configuration-security
+    - integration-testing
+    - contract-testing
+    - logging-error-handling
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - implementation gate
+    - security gate
+    - test gate
+    - documentation gate
+expected_outcomes:
+  - Valid signatures generated from raw bytes are accepted.
+  - Equivalent JSON with altered whitespace fails when the signature no longer matches raw bytes.
+  - Missing secrets or headers fail closed before business state changes.
+  - Rotation supports the active and previous secret without accepting unsigned events.
+required_qualities:
+  - Signature comparison uses constant time comparison.
+  - Verification happens before parsing and before idempotency side effects.
+  - Tests use raw byte fixtures from the partner contract.
+  - Logs include event id and rejection reason without secrets.
+forbidden_shortcuts:
+  - Verifying HMAC over JSON reserialization instead of raw body bytes.
+  - Accepting unsigned callbacks when configuration is missing.
+  - Running business handlers before signature verification succeeds.
+  - Logging webhook secrets or full signatures.
+evidence:
+  - Contract fixtures for signed raw body examples.
+  - Integration tests for tampered whitespace and missing secret cases.
+  - Security note for raw body handling and rotation.
+  - Operational note for partner secret rollout.

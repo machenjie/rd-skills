@@ -16,8 +16,7 @@
 
 ## Expected Commands
 
-- `python3 -m pytest tests/test_payments.py`
-- `python3 -m pytest tests/test_payment_idempotency.py`
+- `bash ../test-suite/run.sh`
 
 ## Regression Cases
 

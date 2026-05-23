@@ -1,0 +1,46 @@
+id: cache-invalidation-consistency
+category: data-middleware
+complexity: L3
+focus:
+  - cache invalidation
+  - transaction consistency
+  - read freshness
+  - observability
+route_hints:
+  skills:
+    - data-middleware-change-builder
+    - backend-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - cache-design
+    - transaction-consistency
+    - repository-persistence
+    - integration-testing
+    - regression-testing
+    - observability
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - Settings reads reflect successful writes within the declared freshness boundary.
+  - Failed writes do not evict or repopulate cache with uncommitted data.
+  - Concurrent updates cannot restore stale values after a newer write.
+  - Invalidation failures are observable and retryable.
+required_qualities:
+  - Cache keys include tenant and account identity.
+  - Invalidation is ordered with transaction commit or uses a durable outbox.
+  - Tests cover stale read, failed write, and concurrent update cases.
+  - Metrics expose invalidation errors and stale read fallbacks.
+forbidden_shortcuts:
+  - Relying only on TTL expiry for correctness after writes.
+  - Evicting cache before a transaction can still roll back.
+  - Using cache keys without tenant or account scoping.
+  - Swallowing invalidation failures without logs or metrics.
+evidence:
+  - Integration tests with a real or faithful cache fake.
+  - Transaction ordering tests for commit and rollback paths.
+  - Metrics or log assertions for invalidation failures.
+  - Cache key examples showing tenant and account scope.

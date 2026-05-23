@@ -17,8 +17,7 @@
 
 ## Expected Commands
 
-- `npm test -- TaskList.archive`
-- `npm run test:frontend -- tasks`
+- `bash ../test-suite/run.sh`
 
 ## Regression Cases
 
