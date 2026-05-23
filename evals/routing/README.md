@@ -4,10 +4,14 @@ This directory contains golden-prompt cases used by
 `scripts/eval-routing.py` to validate ChangeForge's routing rules
 (`src/registry/routing-rules.yaml`) and `docs/ROUTING_EXAMPLES.md`.
 
-The evaluation is offline and rule-based. It does not invoke any agent
-or model. It validates that each case is internally consistent,
+The default evaluation is offline and rule-based. It does not invoke any
+agent or model. It validates that each case is internally consistent,
 references real registry items, and matches the risk-driven required-gate
 rules and L1 anti-over-routing rules declared by the routing rules.
+
+The same script can also compare captured router output YAML from
+`evals/routing-outputs/` against these golden cases. That mode still does
+not call a model; it checks an already-produced router result.
 
 ## Running
 
@@ -16,6 +20,19 @@ python3 scripts/eval-routing.py
 ```
 
 Exits non-zero on any failure with a per-case explanation.
+
+Compare one captured output:
+
+```bash
+python3 scripts/eval-routing.py \
+  --candidate-output evals/routing-outputs/backend-auth-idor.actual.yaml
+```
+
+Compare the fixture directory and require at least 10 actual outputs:
+
+```bash
+python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
+```
 
 ## Case schema
 
@@ -27,6 +44,7 @@ prompt: |
   The raw change request as a user would phrase it.
 expected:
   complexity: L1 | L2 | L3 | L4 | L5
+  risk_level: low | medium | high | critical
   risk_triggers:
     - <one or more values from routing-rules.yaml:risk_escalation_triggers>
   skills:
@@ -53,6 +71,8 @@ does not warrant them.
 ## What the script enforces
 
 - Schema and types; `id` unique and kebab-case; complexity in L1..L5.
+- `expected.risk_level`, when present, is one of `low`, `medium`,
+  `high`, or `critical`; it is required for router-output comparison.
 - All `expected.*` and `forbidden.*` names exist in their respective
   registries.
 - `risk_triggers` are drawn from `routing-rules.yaml:risk_escalation_triggers`.
@@ -94,6 +114,46 @@ does not warrant them.
 - For L2..L5 cases, `expected.quality_gates` must contain at least one
   of `implementation gate`, `test gate`, or `documentation gate` so the
   case carries verifiable evidence.
+- The corpus contains at least 30 golden cases.
+- The corpus contains at least 8 L1 anti-over-routing cases.
+- Every domain extension appears in at least 2 golden cases.
+
+## Router Output Comparison
+
+Captured actual outputs live under `evals/routing-outputs/` and use this
+normalized schema:
+
+```yaml
+case_id: backend-auth-idor
+actual:
+  complexity: L3
+  risk_level: high
+  skills:
+    - backend-change-builder
+  capabilities:
+    - permission-boundary-modeling
+  domain_extensions: []
+  quality_gates:
+    - security gate
+  required_references:
+    - "change-forge-router:references/routing-rules.md"
+    - "change-forge-router:references/skill-registry.md"
+    - "change-forge-router:references/capability-index.md"
+    - "change-forge-router:references/domain-extension-index.md"
+```
+
+The comparison mode enforces:
+
+- `expected.skills` and `expected.capabilities` all appear in actual output.
+- `forbidden.skills` and `forbidden.capabilities` do not appear.
+- `expected.domain_extensions` and `expected.quality_gates` all appear.
+- `forbidden.domain_extensions` and `forbidden.quality_gates` do not appear.
+- Complexity and risk level match the golden case.
+- Router self-use references are present in `actual.required_references`.
+- L1 actual output does not over-route to heavyweight skills or domain
+  extensions unless the golden case declares a matching risk trigger.
+- L4/L5 actual output does not omit any expected security, reliability,
+  delivery, or documentation gate/skill pair.
 
 ## Adding a case
 

@@ -1,0 +1,59 @@
+---
+id: low-level-abi-break
+description: |
+  Native library ABI break requiring compatibility review across C, Rust,
+  and downstream SDK consumers.
+prompt: |
+  Change the exported C ABI for libledger from `int process(const char*)`
+  to a struct-based result used by Rust and Python bindings. Plan ABI
+  compatibility, versioning, tests, and release notes.
+expected:
+  complexity: L4
+  risk_level: high
+  risk_triggers:
+    - production deployment
+  skills:
+    - change-impact-analyzer
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+    - backend-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+    - delivery-release-gate
+    - change-documentation-gate
+  capabilities:
+    - cpp-professional-usage
+    - rust-professional-usage
+    - sdk-library-contract-design
+    - version-compatibility
+    - contract-testing
+    - regression-testing
+    - language-performance-safety
+  domain_extensions:
+    - low-level-systems-extension
+  quality_gates:
+    - impact gate
+    - architecture gate
+    - API/data gate
+    - implementation gate
+    - reliability gate
+    - test gate
+    - delivery gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - integration-change-builder
+    - security-privacy-gate
+  capabilities:
+    - form-validation-design
+    - data-migration-design
+  domain_extensions:
+    - mobile-product-extension
+    - bigdata-product-extension
+    - ai-product-extension
+  quality_gates:
+    - security gate
+notes: |
+  ABI changes select low-level systems and compatibility capabilities.
+

@@ -1,0 +1,54 @@
+---
+id: low-level-rust-ffi-memory-safety
+description: |
+  Rust FFI boundary change with memory-safety and native runtime concerns.
+prompt: |
+  Replace the Rust-to-C image codec FFI buffer ownership contract. Prevent
+  use-after-free, define allocation ownership, add concurrency tests, and
+  document ABI expectations for plugin authors.
+expected:
+  complexity: L4
+  risk_level: high
+  risk_triggers:
+    - production deployment
+  skills:
+    - architecture-impact-reviewer
+    - backend-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+    - delivery-release-gate
+    - change-documentation-gate
+  capabilities:
+    - rust-professional-usage
+    - cpp-professional-usage
+    - language-performance-safety
+    - concurrency-control
+    - sdk-library-contract-design
+    - regression-testing
+    - release-rollback
+  domain_extensions:
+    - low-level-systems-extension
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - reliability gate
+    - test gate
+    - delivery gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-middleware-change-builder
+    - security-privacy-gate
+  capabilities:
+    - form-validation-design
+    - data-migration-design
+  domain_extensions:
+    - mobile-product-extension
+    - bigdata-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - security gate
+notes: |
+  Native FFI memory ownership is low-level systems work with reliability,
+  testing, release, and documentation gates.

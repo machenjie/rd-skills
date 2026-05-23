@@ -1,0 +1,49 @@
+---
+id: mlops-training-serving-skew
+description: |
+  MLOps rollout where production features diverge from training features.
+prompt: |
+  The fraud model has training-serving skew: the feature store computes
+  merchant_risk_score differently in batch training and online inference.
+  Add skew checks, drift monitoring, model registry evidence, canary, and
+  rollback to the previous model version.
+expected:
+  complexity: L4
+  risk_level: high
+  risk_triggers:
+    - production deployment
+  skills:
+    - reliability-observability-gate
+    - quality-test-gate
+    - delivery-release-gate
+    - change-documentation-gate
+  capabilities:
+    - performance-budgeting
+    - observability
+    - test-strategy
+    - regression-testing
+    - version-compatibility
+    - release-rollback
+  domain_extensions:
+    - ai-product-extension
+    - bigdata-product-extension
+  quality_gates:
+    - reliability gate
+    - test gate
+    - delivery gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - security-privacy-gate
+  capabilities:
+    - form-validation-design
+    - sdk-library-contract-design
+  domain_extensions:
+    - web3-product-extension
+    - mobile-product-extension
+  quality_gates:
+    - security gate
+notes: |
+  MLOps skew combines AI and big-data routing with reliability and release.
+

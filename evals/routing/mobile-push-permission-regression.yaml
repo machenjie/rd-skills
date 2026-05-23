@@ -1,0 +1,51 @@
+---
+id: mobile-push-permission-regression
+description: |
+  Mobile push permission regression after app lifecycle and privacy prompt
+  behavior changed.
+prompt: |
+  Android users who deny push permission once never see the in-app reminder
+  again after app restart. Fix lifecycle handling, permission state display,
+  and regression tests without changing backend notification delivery.
+expected:
+  complexity: L3
+  risk_level: high
+  risk_triggers:
+    - user data
+  skills:
+    - experience-impact-modeler
+    - frontend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - interaction-state-modeling
+    - permission-boundary-modeling
+    - frontend-testing
+    - e2e-testing
+    - documentation-generation
+  domain_extensions:
+    - mobile-product-extension
+  quality_gates:
+    - implementation gate
+    - security gate
+    - test gate
+    - documentation gate
+forbidden:
+  skills:
+    - backend-change-builder
+    - data-api-contract-changer
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+    - payment-trading-extension
+    - bigdata-product-extension
+  quality_gates:
+    - API/data gate
+    - delivery gate
+notes: |
+  Mobile permission UI is a mobile, UX, security/privacy, and test route.
+

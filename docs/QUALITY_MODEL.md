@@ -55,6 +55,7 @@ python3 scripts/validate-skills.py
 python3 scripts/validate-capabilities.py
 python3 scripts/validate-registry.py
 python3 scripts/eval-routing.py
+python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
 python3 scripts/validate-codegen-benchmarks.py
 python3 scripts/validate-installation.py
 ```

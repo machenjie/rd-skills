@@ -1,0 +1,45 @@
+---
+id: finops-cloud-cost-spike
+description: |
+  Cloud cost spike investigation and guardrail design for a production API.
+prompt: |
+  The search API cost doubled after traffic stayed flat. Add cost anomaly
+  detection, per-tenant unit-cost dashboards, egress and storage lifecycle
+  review, and capacity guardrails.
+expected:
+  complexity: L3
+  risk_level: high
+  risk_triggers:
+    - cost anomaly
+  skills:
+    - reliability-observability-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - performance-budgeting
+    - profiling
+    - observability
+    - documentation-generation
+  domain_extensions: []
+  quality_gates:
+    - reliability gate
+    - test gate
+    - documentation gate
+forbidden:
+  skills:
+    - security-privacy-gate
+    - data-api-contract-changer
+    - delivery-release-gate
+  capabilities:
+    - authentication-authorization
+    - data-migration-design
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - security gate
+    - API/data gate
+notes: |
+  Cost anomaly routes to reliability and observability, not security.
+

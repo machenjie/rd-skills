@@ -1,0 +1,65 @@
+---
+id: rag-permission-leak
+description: |
+  RAG retrieval leaks documents across tenants and needs permission-aware
+  retrieval, prompt-injection controls, and regression evidence.
+prompt: |
+  Our support assistant retrieves knowledge base chunks from other tenants
+  when the query is similar. Fix RAG retrieval so tenant permissions are
+  enforced before context reaches the prompt, add prompt injection tests,
+  and document the residual risk.
+expected:
+  complexity: L4
+  risk_level: critical
+  risk_triggers:
+    - RAG
+    - AI prompt
+    - object-level permission
+    - user data
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - domain-impact-modeler
+    - data-middleware-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - quality-test-gate
+    - change-documentation-gate
+    - ai-code-review-refactor
+  capabilities:
+    - permission-boundary-modeling
+    - threat-modeling
+    - web-security
+    - search-analytics-design
+    - input-validation
+    - regression-testing
+    - observability
+  domain_extensions:
+    - ai-product-extension
+  quality_gates:
+    - requirement gate
+    - impact gate
+    - domain gate
+    - implementation gate
+    - security gate
+    - reliability gate
+    - test gate
+    - documentation gate
+    - AI review gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+    - payment-trading-extension
+    - iot-embedded-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  RAG and prompt triggers require both AI and security routing.
+

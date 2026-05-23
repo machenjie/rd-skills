@@ -1,0 +1,59 @@
+---
+id: backend-auth-idor
+description: |
+  Backend object-level authorization bug that could expose another user's
+  order details.
+prompt: |
+  Fix GET /orders/{id}: authenticated users can fetch an order by id even
+  when it belongs to a different account. Return 403 without leaking whether
+  the order exists and add regression coverage.
+expected:
+  complexity: L3
+  risk_level: high
+  risk_triggers:
+    - auth
+    - authorization
+    - object-level permission
+    - user data
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - permission-boundary-modeling
+    - authentication-authorization
+    - web-security
+    - input-validation
+    - regression-testing
+    - logging-error-handling
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - impact gate
+    - implementation gate
+    - security gate
+    - test gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-middleware-change-builder
+    - integration-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - cache-design
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - delivery gate
+    - AI review gate
+notes: |
+  IDOR risk must route through security and permission boundary modeling.
+

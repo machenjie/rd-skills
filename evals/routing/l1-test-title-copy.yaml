@@ -1,0 +1,50 @@
+---
+id: l1-test-title-copy
+description: |
+  Rename one test title without changing implementation behavior.
+prompt: |
+  Rename the Jest test title "returns null on empty cart" to
+  "returns zero total for an empty cart". Do not change test assertions or
+  production code.
+expected:
+  complexity: L1
+  risk_level: low
+  risk_triggers: []
+  skills:
+    - quality-test-gate
+  capabilities:
+    - unit-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - test gate
+forbidden:
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - task-dag-planner
+    - domain-impact-modeler
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - delivery-release-gate
+  capabilities:
+    - api-contract-design
+    - data-model-design
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - architecture gate
+    - API/data gate
+    - security gate
+    - reliability gate
+    - delivery gate
+notes: |
+  A test-name-only edit must not be treated as a product behavior change.
+

@@ -1,0 +1,56 @@
+---
+id: soc2-audit-evidence
+description: |
+  SOC 2 evidence package for a production release with retained artifacts,
+  approvals, vulnerability scan, SBOM, and control ownership.
+prompt: |
+  Produce SOC 2 audit evidence for the next production release: control
+  objective, control owner, evidence owner, approval trail, SBOM,
+  vulnerability scan, artifact digest, deployment event, and retention.
+expected:
+  complexity: L4
+  risk_level: high
+  risk_triggers:
+    - regulated workload
+    - compliance evidence
+    - production deployment
+    - secret/config change
+  skills:
+    - security-privacy-gate
+    - reliability-observability-gate
+    - quality-test-gate
+    - delivery-release-gate
+    - change-documentation-gate
+  capabilities:
+    - ci-cd
+    - secret-configuration-security
+    - dependency-vulnerability-scanning
+    - observability
+    - release-rollback
+    - documentation-generation
+  domain_extensions: []
+  quality_gates:
+    - security gate
+    - reliability gate
+    - test gate
+    - delivery gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+    - ai-code-review-refactor
+  capabilities:
+    - form-validation-design
+    - cache-design
+  domain_extensions:
+    - ai-product-extension
+    - web3-product-extension
+    - mobile-product-extension
+  quality_gates:
+    - API/data gate
+    - AI review gate
+notes: |
+  Compliance evidence selects security, release, documentation, reliability,
+  and retained validation evidence.
+

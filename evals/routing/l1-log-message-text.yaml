@@ -1,0 +1,50 @@
+---
+id: l1-log-message-text
+description: |
+  Text-only change to one non-security diagnostic log message.
+prompt: |
+  Change the debug log "cache miss product" to "product cache miss" in
+  ProductCatalogRepository. Do not change log level, fields, or behavior.
+expected:
+  complexity: L1
+  risk_level: low
+  risk_triggers: []
+  skills:
+    - backend-change-builder
+  capabilities:
+    - logging-error-handling
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+forbidden:
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - task-dag-planner
+    - domain-impact-modeler
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - delivery-release-gate
+  capabilities:
+    - cache-design
+    - data-migration-design
+    - observability
+    - release-rollback
+  domain_extensions:
+    - bigdata-product-extension
+    - payment-trading-extension
+    - ai-product-extension
+  quality_gates:
+    - architecture gate
+    - API/data gate
+    - security gate
+    - reliability gate
+    - delivery gate
+notes: |
+  The router should not infer cache architecture work from copy-only log text.
+

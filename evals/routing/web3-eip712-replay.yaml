@@ -1,0 +1,63 @@
+---
+id: web3-eip712-replay
+description: |
+  EIP-712 signature flow vulnerable to cross-chain or repeated signature
+  replay.
+prompt: |
+  Fix wallet authorization so EIP-712 signatures include chain id,
+  verifying contract, nonce, deadline, and user intent. Prevent replay
+  across chains and after a transaction is confirmed or expired.
+expected:
+  complexity: L4
+  risk_level: critical
+  risk_triggers:
+    - wallet
+    - private key
+    - Web3 asset
+    - external integration
+  skills:
+    - change-intake-compiler
+    - domain-impact-modeler
+    - data-api-contract-changer
+    - integration-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - threat-modeling
+    - permission-boundary-modeling
+    - secret-configuration-security
+    - idempotency-retry-design
+    - state-machine-modeling
+    - contract-testing
+    - observability
+  domain_extensions:
+    - web3-product-extension
+  quality_gates:
+    - requirement gate
+    - domain gate
+    - API/data gate
+    - implementation gate
+    - security gate
+    - reliability gate
+    - test gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-middleware-change-builder
+    - delivery-release-gate
+  capabilities:
+    - form-validation-design
+    - data-migration-design
+  domain_extensions:
+    - payment-trading-extension
+    - mobile-product-extension
+    - bigdata-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Wallet, private key, and Web3 asset triggers select Web3 plus security.
+

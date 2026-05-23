@@ -1,0 +1,49 @@
+---
+id: ab-test-guardrail-regression
+description: |
+  A/B test guardrail metric regression requiring experiment decision and
+  analytics verification.
+prompt: |
+  The onboarding A/B test improved activation by 2% but increased support
+  tickets by 18%. Decide whether to stop, ramp, or revise the experiment;
+  verify exposure logs, guardrail metrics, and dashboard definitions.
+expected:
+  complexity: L3
+  risk_level: medium
+  risk_triggers: []
+  skills:
+    - experience-impact-modeler
+    - acceptance-criteria-builder
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - acceptance-standard-definition
+    - test-strategy
+    - search-analytics-design
+    - regression-testing
+    - documentation-generation
+  domain_extensions:
+    - bigdata-product-extension
+  quality_gates:
+    - requirement gate
+    - test gate
+    - documentation gate
+forbidden:
+  skills:
+    - security-privacy-gate
+    - delivery-release-gate
+    - data-api-contract-changer
+  capabilities:
+    - secret-configuration-security
+    - data-migration-design
+  domain_extensions:
+    - web3-product-extension
+    - payment-trading-extension
+    - iot-embedded-extension
+  quality_gates:
+    - security gate
+    - delivery gate
+notes: |
+  Product experiment routing should include big-data analytics without
+  treating a guardrail decision as security or release work.
+

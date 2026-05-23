@@ -1,0 +1,49 @@
+---
+id: l1-copy-change
+description: |
+  Copy-only text change in a single empty-state message.
+prompt: |
+  Change the empty-state copy in BillingSettings.tsx from "No invoices yet"
+  to "No invoices available yet". Do not change behavior.
+expected:
+  complexity: L1
+  risk_level: low
+  risk_triggers: []
+  skills:
+    - frontend-change-builder
+  capabilities:
+    - regression-testing
+    - frontend-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+forbidden:
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - task-dag-planner
+    - domain-impact-modeler
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - threat-modeling
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - architecture gate
+    - API/data gate
+    - security gate
+    - reliability gate
+    - delivery gate
+notes: |
+  The word "Billing" in the file name is not a payment workflow signal.
+

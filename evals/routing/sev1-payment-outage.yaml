@@ -1,0 +1,55 @@
+---
+id: sev1-payment-outage
+description: |
+  SEV1 payment outage with provider dependency, duplicate charge risk,
+  rollback, communication, and postmortem evidence.
+prompt: |
+  SEV1: payment authorization failures are above 35% and retries may have
+  double-charged some customers. Coordinate mitigation, provider status,
+  reconciliation, rollback, customer updates, and postmortem follow-up.
+expected:
+  complexity: L5
+  risk_level: critical
+  risk_triggers:
+    - production incident
+    - payment
+    - external integration
+  skills:
+    - integration-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - quality-test-gate
+    - delivery-release-gate
+    - change-documentation-gate
+  capabilities:
+    - failure-diagnosis
+    - idempotency-retry-design
+    - transaction-consistency
+    - observability
+    - release-rollback
+    - logging-error-handling
+  domain_extensions:
+    - payment-trading-extension
+  quality_gates:
+    - security gate
+    - reliability gate
+    - test gate
+    - delivery gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - ai-code-review-refactor
+  capabilities:
+    - form-validation-design
+    - design-system-rules
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+    - mobile-product-extension
+  quality_gates:
+    - AI review gate
+notes: |
+  Incident plus payment risk demands payment domain, reliability, delivery,
+  documentation, and security handling.
+

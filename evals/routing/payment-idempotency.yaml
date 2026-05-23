@@ -1,0 +1,63 @@
+---
+id: payment-idempotency
+description: |
+  Payment creation endpoint must become idempotent and auditable across
+  provider retries and client retries.
+prompt: |
+  Make POST /payments idempotent. Clients send an Idempotency-Key, provider
+  retries may arrive out of order, duplicate charges must never be created,
+  and the ledger/audit trail must show the final payment state.
+expected:
+  complexity: L4
+  risk_level: critical
+  risk_triggers:
+    - payment
+    - external integration
+    - production deployment
+  skills:
+    - change-intake-compiler
+    - domain-impact-modeler
+    - data-api-contract-changer
+    - integration-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - quality-test-gate
+    - delivery-release-gate
+    - change-documentation-gate
+  capabilities:
+    - state-machine-modeling
+    - idempotency-retry-design
+    - transaction-consistency
+    - api-contract-design
+    - integration-testing
+    - observability
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+  quality_gates:
+    - requirement gate
+    - domain gate
+    - API/data gate
+    - implementation gate
+    - security gate
+    - reliability gate
+    - test gate
+    - delivery gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - ai-code-review-refactor
+  capabilities:
+    - form-validation-design
+    - design-system-rules
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+    - mobile-product-extension
+  quality_gates:
+    - AI review gate
+notes: |
+  Payment idempotency is a financial workflow with server-side truth.
+

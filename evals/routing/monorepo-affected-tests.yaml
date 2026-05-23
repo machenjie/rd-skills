@@ -1,0 +1,45 @@
+---
+id: monorepo-affected-tests
+description: |
+  Monorepo affected-test selection and cache-key correctness.
+prompt: |
+  Fix affected-test selection in our monorepo so changes to shared types
+  rerun dependent package tests, cache keys include generated files, and
+  CI reports skipped packages with reasons.
+expected:
+  complexity: L3
+  risk_level: medium
+  risk_triggers: []
+  skills:
+    - architecture-impact-reviewer
+    - quality-test-gate
+    - delivery-release-gate
+  capabilities:
+    - module-boundary-design
+    - ci-cd
+    - package-dependency-management
+    - unit-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - test gate
+    - delivery gate
+forbidden:
+  skills:
+    - security-privacy-gate
+    - data-api-contract-changer
+    - integration-change-builder
+  capabilities:
+    - web-security
+    - data-migration-design
+  domain_extensions:
+    - ai-product-extension
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - security gate
+    - API/data gate
+notes: |
+  Affected-test routing is architecture, CI/CD, and test evidence.
+

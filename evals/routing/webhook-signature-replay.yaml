@@ -1,0 +1,56 @@
+---
+id: webhook-signature-replay
+description: |
+  Inbound webhook hardening with HMAC verification, timestamp window, and
+  idempotent replay protection.
+prompt: |
+  Add HMAC verification to the payment provider webhook, reject events
+  outside a 5 minute timestamp window, prevent replay by provider event id,
+  and log verification failures without leaking the signing secret.
+expected:
+  complexity: L3
+  risk_level: high
+  risk_triggers:
+    - webhook
+    - external integration
+    - secret/config change
+  skills:
+    - change-intake-compiler
+    - integration-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - idempotency-retry-design
+    - input-validation
+    - secret-configuration-security
+    - integration-testing
+    - logging-error-handling
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - implementation gate
+    - security gate
+    - test gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-middleware-change-builder
+    - architecture-impact-reviewer
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - cache-design
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+    - mobile-product-extension
+  quality_gates:
+    - architecture gate
+    - delivery gate
+notes: |
+  Webhook and secret triggers require integration and security gates.
+

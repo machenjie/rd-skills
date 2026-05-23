@@ -1,0 +1,65 @@
+---
+id: large-table-migration
+description: |
+  Online migration for a very large table with backfill, dual-write,
+  observability, rollback, and irreversible-operation controls.
+prompt: |
+  Add tenant_id to the 250M row invoice_events table, backfill it from
+  invoice_id, enforce NOT NULL later, dual-write during rollout, avoid long
+  locks, and define rollback if the backfill corrupts rows.
+expected:
+  complexity: L4
+  risk_level: high
+  risk_triggers:
+    - database migration
+    - production deployment
+    - irreversible data operation
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - task-dag-planner
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - backend-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+    - delivery-release-gate
+    - change-documentation-gate
+  capabilities:
+    - data-migration-design
+    - relational-database
+    - indexing-query-optimization
+    - transaction-consistency
+    - backup-recovery
+    - observability
+    - integration-testing
+    - release-rollback
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - impact gate
+    - API/data gate
+    - implementation gate
+    - reliability gate
+    - test gate
+    - delivery gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - integration-change-builder
+    - ai-code-review-refactor
+  capabilities:
+    - form-validation-design
+    - web-security
+    - sdk-library-contract-design
+  domain_extensions:
+    - web3-product-extension
+    - mobile-product-extension
+    - ai-product-extension
+  quality_gates:
+    - AI review gate
+notes: |
+  This is a data/release/reliability route, not a frontend or external
+  integration route.
+

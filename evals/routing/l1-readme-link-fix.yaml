@@ -1,0 +1,47 @@
+---
+id: l1-readme-link-fix
+description: |
+  Fix a broken documentation link in README.
+prompt: |
+  Update the README validation link from docs/QUALITY.md to
+  docs/QUALITY_MODEL.md.
+expected:
+  complexity: L1
+  risk_level: low
+  risk_triggers: []
+  skills:
+    - change-documentation-gate
+  capabilities:
+    - documentation-generation
+  domain_extensions: []
+  quality_gates:
+    - documentation gate
+forbidden:
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - task-dag-planner
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - delivery-release-gate
+  capabilities:
+    - api-contract-design
+    - data-migration-design
+    - threat-modeling
+  domain_extensions:
+    - mobile-product-extension
+    - iot-embedded-extension
+    - low-level-systems-extension
+  quality_gates:
+    - implementation gate
+    - architecture gate
+    - security gate
+    - reliability gate
+    - delivery gate
+notes: |
+  Documentation link repair is still an L1 docs-only path.
+

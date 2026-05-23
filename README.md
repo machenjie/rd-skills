@@ -67,6 +67,7 @@ python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
 python3 scripts/eval-routing.py
+python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
 python3 scripts/validate-codegen-benchmarks.py
 python3 scripts/build.py --profile recommended
 python3 scripts/build.py --profile full

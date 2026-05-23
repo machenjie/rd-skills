@@ -1,0 +1,52 @@
+---
+id: iot-device-telemetry-buffer
+description: |
+  Device telemetry buffering during connectivity loss with replay and
+  observability requirements.
+prompt: |
+  Edge devices lose telemetry when LTE drops for more than 30 seconds.
+  Buffer readings locally, replay in order after reconnect, avoid duplicate
+  ingestion, and expose lag and drop metrics.
+expected:
+  complexity: L3
+  risk_level: high
+  risk_triggers:
+    - external integration
+  skills:
+    - data-middleware-change-builder
+    - integration-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - message-queue-design
+    - idempotency-retry-design
+    - degradation-circuit-breaking
+    - observability
+    - integration-testing
+    - documentation-generation
+  domain_extensions:
+    - iot-embedded-extension
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - security-privacy-gate
+    - data-api-contract-changer
+  capabilities:
+    - form-validation-design
+    - authentication-security
+  domain_extensions:
+    - mobile-product-extension
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - security gate
+    - API/data gate
+notes: |
+  IoT telemetry reliability selects IoT plus integration/middleware routing.
+

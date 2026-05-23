@@ -1,0 +1,63 @@
+---
+id: mobile-offline-sync-conflict
+description: |
+  Mobile offline sync conflict resolution for user-owned records across
+  reconnects and app lifecycle transitions.
+prompt: |
+  The iOS app lets users edit task notes offline. When two devices edit the
+  same note and reconnect, the last writer silently overwrites the other
+  edit. Add conflict detection, user-visible resolution, and sync tests.
+expected:
+  complexity: L4
+  risk_level: high
+  risk_triggers:
+    - user data
+    - production deployment
+  skills:
+    - change-intake-compiler
+    - experience-impact-modeler
+    - domain-impact-modeler
+    - data-api-contract-changer
+    - frontend-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - quality-test-gate
+    - delivery-release-gate
+    - change-documentation-gate
+  capabilities:
+    - state-management-design
+    - interaction-state-modeling
+    - concurrency-control
+    - dto-schema-design
+    - e2e-testing
+    - observability
+    - release-rollback
+  domain_extensions:
+    - mobile-product-extension
+  quality_gates:
+    - requirement gate
+    - domain gate
+    - API/data gate
+    - implementation gate
+    - security gate
+    - reliability gate
+    - test gate
+    - delivery gate
+    - documentation gate
+forbidden:
+  skills:
+    - integration-change-builder
+    - ai-code-review-refactor
+  capabilities:
+    - data-migration-design
+    - threat-modeling
+  domain_extensions:
+    - web3-product-extension
+    - payment-trading-extension
+    - low-level-systems-extension
+  quality_gates:
+    - AI review gate
+notes: |
+  Offline mobile sync needs mobile routing and conflict-state modeling.
+
