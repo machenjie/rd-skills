@@ -139,7 +139,7 @@ domain_extension_signals:
   - extension: mobile-product-extension
     signals: Android iOS mobile app offline push notification app lifecycle app store deep link
   - extension: bigdata-product-extension
-    signals: stream batch warehouse analytics reporting ETL ELT lineage freshness backfill schema drift experiment funnel cohort exposure event feature store
+    signals: stream batch warehouse analytics reporting ETL ELT lineage freshness backfill schema drift experiment funnel cohort exposure event feature store Spark PySpark Spark SQL Structured Streaming Flink Beam Databricks EMR Glue Delta Lake Iceberg Hudi dbt Great Expectations Kafka Streams
   - extension: iot-embedded-extension
     signals: device firmware embedded sensor actuator edge protocol OTA hardware physical safety
   - extension: payment-trading-extension
@@ -255,6 +255,7 @@ routing_rules:
       - data warehouse stream batch job analytics reporting ETL ELT data quality lineage freshness backfill replay
       - pipeline cost controls metric definition dashboard warehouse partition late arriving data schema drift
       - product analytics event taxonomy funnel cohort north star metric guardrail metrics A/B test exposure logging sample ratio mismatch feature store point in time ML pipeline
+      - Spark PySpark Spark SQL Structured Streaming Flink Beam Databricks EMR Glue Delta Lake Iceberg Hudi dbt Great Expectations Kafka Streams streaming job shuffle skew partition compaction
     priority: 74
   - route_to: iot-embedded-extension
     triggers:
@@ -556,11 +557,13 @@ routing_rules:
     triggers:
       - design cache keys TTL invalidation stampede protection penetration protection stale tolerance fallback
       - define cache source of truth consistency tolerance and overload behavior
+      - Redis ElastiCache Cloud Memorystore Memcached Redis Cluster Redis Sentinel Redis ACL RDB AOF maxmemory eviction hot key pipeline connection pool cache stampede cache penetration cache avalanche
     priority: 60
   - route_to: message-queue-design
     triggers:
       - design message queue consumers duplicate delayed failed out of order messages idempotency retry dead letter backpressure
       - define queue topology ordering acknowledgement replay poison message and observability behavior
+      - Kafka Kafka topic partition consumer group offset commit enable.auto.commit schema registry topic compaction retention DLQ poison message replay consumer lag transactional producer Kafka Connect
     priority: 60
   - route_to: search-analytics-design
     triggers:
@@ -690,6 +693,8 @@ routing_rules:
       - design Kubernetes workload service ingress gateway probes resources rollout rollback and safety checks
       - assess Kubernetes operational maturity health checks resources traffic exposure scaling and rollback
       - review DNS CDN WAF gateway load balancer public exposure namespace blast radius service account cloud identity
+      - k8s Kubernetes Deployment StatefulSet DaemonSet Job CronJob Pod Service Ingress Gateway API HPA KEDA VPA PDB NetworkPolicy ServiceAccount RBAC ConfigMap Secret namespace probes topology spread node affinity pod disruption budget
+      - Helm helm chart Chart.yaml values.yaml values.schema.json helm lint helm template helm upgrade helm rollback helm diff Chart.lock CRD hook OCI chart
     priority: 60
   - route_to: release-rollback
     triggers:

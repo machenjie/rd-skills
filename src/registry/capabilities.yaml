@@ -441,7 +441,9 @@ capabilities:
     path: src/foundation/capabilities/cache-design
     status: implemented
     used_by: [data-middleware-change-builder, reliability-observability-gate]
-    triggers: [design cache keys TTL invalidation stampede protection and freshness policy]
+    triggers:
+      - design cache keys TTL invalidation stampede protection and freshness policy
+      - Redis ElastiCache Cloud Memorystore Memcached Redis Cluster Redis Sentinel Redis ACL RDB AOF maxmemory eviction hot key pipeline cache stampede cache penetration cache avalanche
     risk_notes: [Cache mistakes serve stale data or overload the source of truth]
     expected_outputs: [cache strategy with keys freshness invalidation and fallback behavior]
   - id: "50"
@@ -450,7 +452,9 @@ capabilities:
     path: src/foundation/capabilities/message-queue-design
     status: implemented
     used_by: [data-middleware-change-builder, integration-change-builder]
-    triggers: [design queues topics consumers ordering retries dead letters and backpressure]
+    triggers:
+      - design queues topics consumers ordering retries dead letters and backpressure
+      - Kafka topic partition consumer group offset commit schema registry retention compaction DLQ consumer lag replay transactional outbox Kafka Connect
     risk_notes: [Queue misuse creates duplicate work invisible failure and processing lag]
     expected_outputs: [message queue plan with topology ordering retries DLQ and metrics]
   - id: "51"
@@ -666,7 +670,9 @@ capabilities:
     path: src/foundation/capabilities/kubernetes-gateway
     status: implemented
     used_by: [delivery-release-gate, reliability-observability-gate]
-    triggers: [design Kubernetes workload service ingress gateway DNS CDN WAF probes scaling cloud exposure and rollout controls]
+    triggers:
+      - design Kubernetes workload service ingress gateway DNS CDN WAF probes scaling cloud exposure and rollout controls
+      - k8s Deployment StatefulSet DaemonSet Job CronJob Pod Service Ingress Gateway API HPA KEDA VPA PDB NetworkPolicy ServiceAccount RBAC ConfigMap Secret Helm chart values.yaml
     risk_notes: [Kubernetes and gateway misconfiguration causes exposure outages or failed rollouts]
     expected_outputs: [Kubernetes gateway plan with resources routes probes scaling cloud exposure and safety checks]
   - id: "75"

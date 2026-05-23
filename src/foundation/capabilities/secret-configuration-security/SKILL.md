@@ -29,6 +29,9 @@ Do not use this capability to design the authentication and authorization model 
 - **Secret rotation must include all consumers before revocation of the old secret.** Rotating a secret and immediately revoking the old version while some consumers still hold the old version in memory or in their local config cache causes a production incident. Rotation procedure: (1) Create new secret version in secrets manager. (2) Update all consumers to read the new version (rolling deploy or dynamic config reload). (3) Verify all consumers are using the new version (audit log check). (4) Revoke old version.
 - **Documentation and code examples must use placeholders, not real values.** `API_KEY=your-api-key-here`, `DATABASE_PASSWORD=<replace-with-real-value>`, `SIGNING_SECRET=EXAMPLE_DO_NOT_USE_IN_PRODUCTION` are safe placeholders. Any value that looks like a real API key, UUID, or base64 string in documentation or a `.env.example` file must be verified to be a non-functional placeholder (by attempting to use it against the real service and confirming it fails).
 - **KMS and secret-manager policy changes require least-privilege review.** Key policy, cross-account grants, decrypt permissions, rotation schedule, deletion windows, and service identity bindings must be reviewed as security controls, not only configuration.
+- **Helm `values.yaml` and environment values files must not contain plaintext secrets.**
+- **Secret-like keys in values files (`password`, `token`, `secret`, `privateKey`, `clientSecret`, `apiKey`) require review and approved external secret sourcing.**
+- **Rendered Kubernetes manifests must be checked for accidental Secret literals or ConfigMap credential leakage.**
 
 # Industry Benchmarks
 

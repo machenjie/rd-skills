@@ -420,6 +420,8 @@ def _render_capability_reference(capability: Capability) -> str:
             "When To Use",
             "Non-Negotiable Rules",
             "Industry Benchmarks",
+            "Helm Chart Release Controls",
+            "Helm Pipeline Gate",
             "Selection Rules",
             "Risk Escalation Rules",
             "Critical Details",

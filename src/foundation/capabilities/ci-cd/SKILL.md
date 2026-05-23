@@ -15,6 +15,8 @@ Design CI/CD pipelines that **prove change quality through automated evidence**,
 
 Use this capability when creating or modifying: CI workflows (GitHub Actions, GitLab CI, Jenkins, CircleCI, Buildkite, Azure Pipelines, Tekton, Drone), release pipelines, artifact build and publishing, image build and promotion, environment promotion logic, approval gates, deployment strategies (rolling, blue/green, canary), feature-flag cut-overs, infrastructure-as-code (Terraform, Pulumi, Crossplane) plan/apply pipelines, database-migration pipelines, monorepo affected-test and incremental-build workflows, supply-chain security controls (SBOM, signing, provenance), compliance evidence capture, or failure handling and rollback hooks.
 
+Use this capability for Helm chart pipelines, Helm release promotion, `helm lint`, `helm template`, `helm diff`, chart dependency locking, OCI chart packaging, and rendered manifest validation.
+
 # Do Not Use When
 
 Do not use this capability to bypass local verification (`pre-commit`, unit tests), treat green pipeline as proof of correctness without acceptance evidence, hide flaky checks by retrying silently, or design general deployment architecture — that belongs to `release-rollback` and `containerization`.
@@ -159,6 +161,21 @@ Monorepo pipelines must prove that incremental speed does not hide correctness g
 - Devcontainer or equivalent reproducible local environment keeps onboarding setup time measurable.
 - Pre-commit policy runs only fast deterministic checks; CI owns expensive checks.
 
+### Helm Pipeline Gate
+
+Helm release pipelines must include:
+
+- `helm dependency build` with `Chart.lock` committed for dependency reproducibility.
+- `helm lint` for chart syntax and common chart errors.
+- `helm template` for every environment values file.
+- `values.schema.json` validation for required and typed values.
+- `kubeconform` or `kubeval` on rendered manifests.
+- Policy-as-code checks with OPA/Gatekeeper/Kyverno/Conftest.
+- `helm diff upgrade` for human review before production promotion.
+- `helm upgrade --install --atomic --wait --timeout` or equivalent GitOps rollback policy.
+- OCI chart provenance/signing when charts are published as artifacts.
+- Release evidence: chart version, appVersion, values file checksum, rendered manifest digest, reviewer, deployment outcome.
+
 ### Anti-examples
 
 | Anti-pattern | Failure |
@@ -203,6 +220,7 @@ Return a CI/CD pipeline specification with:
 - `deployment_credentials` (OIDC federation, scope per environment, no shared admin role)
 - `environment_promotion` (gates per tier: dev → staging → production; auto vs manual; window)
 - `deployment_strategy` (per environment: recreate/rolling/blue-green/canary/GitOps; rollout %)
+- `helm_pipeline` (lint/template/schema/rendered-manifest/policy/diff/upgrade/rollback/provenance evidence)
 - `post_deploy_health_gate` (check type, timeout, auto-rollback trigger, on-call notification)
 - `rollback_hook` (automated path, trigger condition, test evidence)
 - `supply_chain_controls` (action pinning, SBOM, signing, scan thresholds)

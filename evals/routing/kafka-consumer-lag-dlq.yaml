@@ -1,0 +1,36 @@
+---
+id: kafka-consumer-lag-dlq
+description: |
+  Kafka consumer lag and DLQ handling for at-least-once delivery.
+prompt: |
+  A Kafka consumer group is accumulating lag and poison messages block a partition. Add bounded retries, DLQ topic, manual offset commit after durable write, and lag alerting.
+expected:
+  complexity: L3
+  risk_level: high
+  risk_triggers:
+    - external integration
+  skills:
+    - data-middleware-change-builder
+    - integration-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - message-queue-design
+    - idempotency-retry-design
+    - observability
+    - integration-testing
+    - regression-testing
+  domain_extensions:
+    - bigdata-product-extension
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+  domain_extensions:
+    - web3-product-extension
+    - mobile-product-extension
+notes: |
+  Kafka route must include message queue design and big data extension when stream processing semantics are involved.

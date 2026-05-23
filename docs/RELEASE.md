@@ -110,5 +110,7 @@ The Codex recommended user smoke must install 19 top-level skills. The Codex, Cl
 - Installer dry runs show 19 skills for recommended and 26 for full project installs.
 - Final smoke commands cover Codex user recommended install, Codex project full install, Codex project uninstall dry-run, Codex user/project doctor, Claude Code project full install/doctor/uninstall dry-run, GitHub Copilot project full install/doctor/uninstall dry-run, OpenAI API recommended zip dry-run, and installation artifact validation.
 - OpenAI API zips pass profile count and archive shape validation.
+- Cloud component routing for Redis/Kafka/K8s/Helm/Spark remains covered by routing evals.
+- Helm chart changes include lint/template/schema/rendered-manifest validation and secret values review.
 - Docs reflect any CLI, packaging, profile, or installer behavior changes.
 - Unresolved assumptions and manual review points are listed in the release handoff.

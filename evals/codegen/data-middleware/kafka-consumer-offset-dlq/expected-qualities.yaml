@@ -1,0 +1,45 @@
+id: kafka-consumer-offset-dlq
+category: data-middleware
+complexity: L4
+focus:
+  - Kafka manual offset commit
+  - idempotent consumer
+  - DLQ topic
+  - consumer lag alert
+route_hints:
+  skills:
+    - data-middleware-change-builder
+    - integration-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - message-queue-design
+    - idempotency-retry-design
+    - observability
+    - integration-testing
+  domain_extensions:
+    - bigdata-product-extension
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - Offset is committed only after durable side effects.
+  - Duplicate delivery is idempotent.
+  - Poison messages go to DLQ after bounded attempts.
+  - Consumer lag and DLQ depth are observable.
+required_qualities:
+  - Manual commit behavior is explicit and tested.
+  - DLQ records preserve topic, partition, offset, key, error, and replay metadata.
+  - Retry policy is bounded and avoids blocking an entire partition indefinitely.
+  - Replay procedure protects idempotency and ordering assumptions.
+forbidden_shortcuts:
+  - enable.auto.commit=true for business-critical processing.
+  - Ack/commit before durable write.
+  - Infinite immediate retry.
+  - No DLQ replay procedure.
+evidence:
+  - Message queue plan with topology and offset strategy.
+  - Idempotency test or duplicate-delivery check.
+  - DLQ and replay operating note.
+  - Consumer lag and DLQ depth alert plan.

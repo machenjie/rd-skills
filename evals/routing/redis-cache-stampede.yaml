@@ -1,0 +1,36 @@
+---
+id: redis-cache-stampede
+description: |
+  Redis hot key and cache stampede protection for a production read path.
+prompt: |
+  We added Redis for product detail caching. During flash sale traffic the hot key expires and all requests hit the database. Add stampede protection, TTL jitter, hot-key metrics, and safe fallback.
+expected:
+  complexity: L3
+  risk_level: high
+  risk_triggers: []
+  skills:
+    - data-middleware-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - cache-design
+    - degradation-circuit-breaking
+    - observability
+    - integration-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+  domain_extensions:
+    - web3-product-extension
+    - payment-trading-extension
+notes: |
+  Redis cache behavior should route to cache design and reliability, not to unrelated frontend or release gates.

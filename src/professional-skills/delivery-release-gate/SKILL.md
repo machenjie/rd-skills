@@ -40,6 +40,8 @@ Make every release execution safe, observable, and reversible — by defining en
 - **Container images must be immutable artifacts** — never pull `latest` in production; pin to a specific SHA256 digest or semantic tag.
 - **Cloud governance changes require blast-radius boundaries before release** — account/project, namespace, VPC/subnet, gateway, DNS/CDN/WAF, KMS, IAM, and tagging changes must have rollback and audit evidence.
 - **Emergency deployment does not remove evidence obligations** — hotfixes and incident mitigations still require approver, artifact, rollback, customer communication owner, and post-release validation.
+- **Helm releases must document chart version, appVersion, values overlays, rendered manifest diff, CRD/hook behavior, upgrade flags, rollback scope, and post-upgrade verification.**
+- **Helm rollback must not be treated as full system rollback.** Database schema, external config, CRDs, secrets, cloud resources, and migrated data may need separate rollback or forward-fix.
 
 ## Industry Benchmarks
 - **DORA Metrics (Accelerate — Forsgren, Humble, Kim)**: Deployment frequency, Lead time for changes, Mean time to restore (MTTR), Change failure rate — the four metrics that measure delivery health. Elite teams: deployment frequency daily+, MTTR < 1 hour, change failure rate < 5%.
@@ -161,6 +163,7 @@ Return a structured release plan with:
 - **Deployment strategy**: Rolling / canary / blue-green with configuration (percentages, replica counts, traffic routing).
 - **Pre-deployment checklist**: Environment config validation, secrets audit, staging parity confirmation, migration compatibility check.
 - **Cloud governance checklist**: IaC plan review, account/project boundary, namespace boundary, IAM diff, DNS/CDN/WAF/gateway rollback, KMS/key rotation impact, resource tagging, and audit trail.
+- **Helm release plan**: chart version, values diff, rendered manifest diff, CRD/hook handling, atomic upgrade, rollback scope, and verification.
 - **Migration sequence**: Forward migration execution order (before or after code deploy), rollback migration, tested execution evidence.
 - **Feature flag plan**: Flag state at deployment, % rollout schedule, disableability confirmation, cleanup task reference.
 - **Rollback procedure**: Step-by-step rollback instructions with expected execution time; tested in staging.

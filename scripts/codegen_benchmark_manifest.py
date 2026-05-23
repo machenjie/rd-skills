@@ -27,12 +27,15 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
     ),
     "data-middleware": (
         "cache-invalidation-consistency",
+        "kafka-consumer-offset-dlq",
     ),
     "reliability": (
         "burn-rate-alert-cardinality",
+        "redis-cache-stampede-protection",
     ),
     "delivery": (
         "rollback-migration-compatibility",
+        "helm-chart-values-schema",
     ),
     "ai": (
         "rag-tenant-permission-filter",
@@ -48,6 +51,7 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
     ),
     "bigdata": (
         "schema-registry-compatibility",
+        "spark-skew-partitioning",
     ),
     "iot": (
         "ota-ab-rollback",

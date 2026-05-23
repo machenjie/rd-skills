@@ -67,6 +67,7 @@ python3 scripts/validate-installation.py
 - Rebuild affected profiles and run relevant package, install, upgrade, uninstall, or doctor flows.
 - Verify registry references resolve across professional skills, capabilities, domain extensions, and routing rules.
 - Verify every runtime skill has a root `SKILL.md`.
+- Cloud component changes involving Redis, Kafka, Kubernetes, Helm, Spark, Flink, or cloud-managed equivalents must include explicit component capability routing and representative routing eval or benchmark evidence when behavior/routing semantics change.
 
 Required evidence:
 
@@ -87,6 +88,7 @@ Required gates:
 - Add or update regression checks for representative valid and invalid inputs.
 - Verify deterministic output paths, archive structure, manifest contents, profile-specific runtime content, and duplicate conflict handling.
 - Review failure modes for partial builds, missing registries, stale artifacts, broken handoffs, and uninstall safety.
+- Cloud component changes involving Redis, Kafka, Kubernetes, Helm, Spark, Flink, or cloud-managed equivalents must include explicit component capability routing and representative routing eval or benchmark evidence when behavior/routing semantics change.
 
 Required evidence:
 

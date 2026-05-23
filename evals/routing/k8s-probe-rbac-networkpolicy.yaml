@@ -1,0 +1,37 @@
+---
+id: k8s-probe-rbac-networkpolicy
+description: |
+  Kubernetes workload hardening for probes, RBAC, NetworkPolicy, and public ingress.
+prompt: |
+  Deploy a new public API to k8s. Define Deployment, Service, Ingress, readiness/liveness/startup probes, ServiceAccount RBAC, NetworkPolicy, HPA, PDB, and rollback.
+expected:
+  complexity: L4
+  risk_level: high
+  risk_triggers:
+    - production deployment
+    - public exposure
+  skills:
+    - delivery-release-gate
+    - reliability-observability-gate
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - kubernetes-gateway
+    - containerization
+    - ci-cd
+    - observability
+    - release-rollback
+  domain_extensions: []
+  quality_gates:
+    - security gate
+    - reliability gate
+    - delivery gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+  domain_extensions:
+    - bigdata-product-extension
+    - payment-trading-extension
+notes: |
+  Public k8s exposure must include security, reliability and delivery gates.

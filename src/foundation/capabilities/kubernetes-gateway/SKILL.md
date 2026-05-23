@@ -15,6 +15,8 @@ Deploy and operate Kubernetes workloads **deliberately** — defining workload t
 
 Use this capability when a change: deploys a new workload to Kubernetes (Deployment, StatefulSet, Job, CronJob, DaemonSet); modifies Ingress or Gateway API routing rules; changes liveness, readiness, or startup probe configuration; adjusts resource requests, limits, or HPA/KEDA scaling policy; modifies ServiceAccount, RBAC, NetworkPolicy, WAF, DNS, CDN, load balancer, or cloud identity binding; changes rollout strategy or PodDisruptionBudget; or introduces a new service that must be reachable inside or outside the cluster.
 
+- Creating or modifying Helm charts, Chart.yaml, values.yaml, values.schema.json, templates, chart dependencies, hooks, CRD installation, release values, or Helm rollback behavior.
+
 # Do Not Use When
 
 Do not use this capability to introduce Kubernetes for a runtime that lacks: a team member who owns platform operations; automated deployment pipeline with rollback capability; centralized logging and metrics; secret management (not in manifests); and network policy enforcement. Kubernetes is not a deployment simplification tool — it is operational complexity traded for scalability and reliability. Introducing it without operational ownership creates a higher-risk environment than the alternative.
@@ -29,6 +31,12 @@ Do not use this capability to introduce Kubernetes for a runtime that lacks: a t
 - **ServiceAccount: create a dedicated ServiceAccount per workload with minimal RBAC.** The default ServiceAccount in most clusters has excessive permissions. Create a named ServiceAccount; bind only the Role with the minimum permissions required; annotate for Workload Identity (IRSA on EKS, Workload Identity on GKE) when cloud API access is needed — never mount cloud credentials as secrets.
 - **Rollback scope is broader than deployment revision.** A Kubernetes rollout rollback (`kubectl rollout undo`) reverts the image. It does not revert: ConfigMaps; Secret values; database schema migrations; Ingress/Gateway rules; external service configuration. Define what must be reverted for each rollback scenario; document the procedure.
 - **Gateway exposure is a cloud governance boundary.** Any change to Ingress, Gateway API, LoadBalancer, DNS, CDN, WAF, ServiceAccount cloud identity, or namespace routing must state internet exposure, tenant/namespace blast radius, TLS policy, auth enforcement, rollback path, and audit owner.
+- **Helm charts must render deterministically before deployment.** `helm lint`, `helm template`, schema validation, and rendered manifest validation must pass before release.
+- **Secrets must not live in values.yaml.** Sensitive values must come from ExternalSecrets, SealedSecrets, CSI Secret Store, Vault, or platform secret managers.
+- **values.schema.json is required for non-trivial charts.** Missing required values must fail before deployment, not silently fall back to unsafe defaults.
+- **Production Helm upgrades must be atomic and waited.** Use `helm upgrade --install --atomic --wait --timeout ...` or an equivalent GitOps controller policy.
+- **CRDs are not normal resources.** CRD install/upgrade/rollback ordering must be documented; Helm rollback does not safely roll back CRD schema semantics.
+- **Helm hooks must be idempotent and bounded.** Hook jobs need timeout, delete policy, rerun safety, and failure behavior.
 
 # Industry Benchmarks
 
@@ -84,6 +92,24 @@ Anti-patterns:
 | Recreate | Kill all, then create new | No (downtime) | Redeploy old version | Dev/test; single-instance batch; stateful with schema lock |
 | Canary (Argo Rollouts) | Route % traffic to new version | Yes | Automated on metric threshold | Production; high-traffic; risk-averse releases |
 | Blue-Green | Full parallel environment | Yes (instant cutover) | Switch traffic back instantly | Regulated; financial; zero-tolerance error rate |
+
+### Helm Chart Release Controls
+
+For Helm chart changes, require:
+
+- `Chart.yaml`: chart version and `appVersion` are explicit and semantically correct.
+- `values.yaml`: contains only safe defaults; no secrets, tokens, passwords, private keys, or environment-specific credentials.
+- `values.schema.json`: validates required values, type constraints, enums, resource shapes, and unsafe default prevention.
+- `templates/`: render cleanly with `helm template` for every supported environment values file.
+- `helm lint`: passes for the chart and dependency graph.
+- `helm dependency build`: produces locked dependencies from `Chart.lock`.
+- Rendered manifests: pass `kubeconform` / `kubeval` and policy-as-code checks.
+- `helm diff`: included in review for upgrades.
+- Production upgrade: uses `helm upgrade --install --atomic --wait --timeout`.
+- CRDs: ownership, upgrade ordering, compatibility, and rollback limitations documented.
+- Hooks: idempotency, timeout, delete policy, service account, RBAC, and rerun safety documented.
+- Environment overlays: minimal values overlays; no divergent charts per environment.
+- Rollback scope: explicitly state what Helm can roll back and what it cannot roll back.
 
 # Selection Rules
 
@@ -150,6 +176,7 @@ Return a Kubernetes workload design with:
 - `rollout_strategy` (RollingUpdate / Canary / Blue-Green; rollback trigger; rollback procedure for config + schema)
 - `observability` (metrics endpoints; log format: structured JSON; distributed trace context propagation)
 - `verification` (post-deploy health check command; smoke test; rollback decision criteria)
+- `helm_chart` (Chart.yaml version, appVersion, dependencies, values files, values.schema.json, rendered manifest validation, CRDs, hooks, upgrade flags, rollback scope)
 
 # Quality Gate
 
@@ -166,6 +193,10 @@ The Kubernetes workload design is complete only when:
 9. Gateway/Ingress: TLS configured; auth enforced; timeout set; rate limit configured.
 10. Operational ownership confirmed: team owns on-call, deployment pipeline, and incident runbook.
 11. DNS/CDN/WAF/load balancer exposure, ServiceAccount cloud identity, and namespace blast radius are reviewed when changed.
+12. Helm chart changes pass `helm lint`, `helm template`, schema validation, rendered manifest validation, and policy checks.
+13. `values.yaml` contains no secrets; secret values are sourced through approved secret mechanisms.
+14. Production Helm release path uses atomic, waited upgrades or equivalent GitOps safeguards.
+15. CRDs and hooks have explicit ordering, idempotency, timeout, and rollback limitations documented.
 
 # Used By
 

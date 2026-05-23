@@ -1,0 +1,34 @@
+---
+id: spark-skew-shuffle
+description: |
+  Spark job has skewed shuffle and cost/freshness risk.
+prompt: |
+  A PySpark aggregation job on Databricks is failing due to skewed shuffle and large partitions. Review partitioning, AQE, broadcast join, Delta table compaction, data quality checks, and cost guardrails.
+expected:
+  complexity: L3
+  risk_level: medium
+  risk_triggers: []
+  skills:
+    - data-middleware-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - performance-budgeting
+    - profiling
+    - observability
+    - regression-testing
+  domain_extensions:
+    - bigdata-product-extension
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - security-privacy-gate
+  domain_extensions:
+    - web3-product-extension
+    - mobile-product-extension
+notes: |
+  Spark distributed processing route should include bigdata extension and performance/reliability gates.
