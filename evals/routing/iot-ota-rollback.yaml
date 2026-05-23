@@ -25,6 +25,7 @@ expected:
     - delivery-release-gate
     - change-documentation-gate
   capabilities:
+    - implementation-structure-design
     - version-compatibility
     - degradation-circuit-breaking
     - observability

@@ -22,6 +22,7 @@ expected:
     - quality-test-gate
     - change-documentation-gate
   capabilities:
+    - implementation-structure-design
     - idempotency-retry-design
     - input-validation
     - secret-configuration-security

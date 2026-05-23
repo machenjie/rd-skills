@@ -15,6 +15,9 @@ Loads cases from ``evals/routing/*.yaml`` and validates that each case:
   etc.);
 * respects L1 anti-over-routing - heavy gates and design-time skills must
   not appear unless the case opts in through ``risk_triggers``.
+* requires L2+ implementation cases that route to backend, frontend, or
+  AI review implementation skills to include ``implementation-structure-design``
+  unless the case explicitly sets ``expected.structure_required: false``.
 
 By default this remains an offline golden spec check. It does not invoke
 any agent or model. When ``--candidate-output`` or ``--candidate-output-dir``
@@ -65,6 +68,14 @@ L4_L5_GATE_SKILLS: dict[str, str] = {
     "delivery gate": "delivery-release-gate",
     "documentation gate": "change-documentation-gate",
 }
+
+IMPLEMENTATION_GATE = "implementation gate"
+STRUCTURE_CAPABILITY = "implementation-structure-design"
+IMPLEMENTATION_SKILLS_REQUIRE_STRUCTURE: tuple[str, ...] = (
+    "backend-change-builder",
+    "frontend-change-builder",
+    "ai-code-review-refactor",
+)
 
 # Risk-trigger → required professional skill / domain extension rules.
 # Each entry maps a risk trigger (matched case-insensitively against the
@@ -293,6 +304,10 @@ def _validate_case(  # noqa: C901 - branchy validator by design
                 f"{sorted(VALID_RISK_LEVELS)} when present"
             )
 
+    structure_required = expected.get("structure_required")
+    if structure_required is not None and not isinstance(structure_required, bool):
+        errors.append(f"{rel}: expected.structure_required must be a boolean")
+
     risk_triggers = _as_string_list(expected.get("risk_triggers"))
     if risk_triggers is None:
         errors.append(f"{rel}: expected.risk_triggers must be a list of strings")
@@ -402,6 +417,15 @@ def _validate_case(  # noqa: C901 - branchy validator by design
     )
 
     _enforce_evidence_gates(rel, complexity, expected_sets, errors)
+
+    _enforce_implementation_structure_required(
+        rel,
+        complexity,
+        structure_required,
+        expected_sets,
+        forbidden_sets,
+        errors,
+    )
 
 
 def _validate_membership(
@@ -516,6 +540,44 @@ def _enforce_evidence_gates(
         errors.append(
             f"{rel}: {complexity} case must list at least one of "
             f"{sorted(evidence_options)} in expected.quality_gates"
+        )
+
+
+def _enforce_implementation_structure_required(
+    rel: str,
+    complexity: str | None,
+    structure_required: bool | None,
+    expected_sets: dict[str, list[str]],
+    forbidden_sets: dict[str, list[str]],
+    errors: list[str],
+) -> None:
+    if structure_required is False:
+        return
+
+    expected_skills = set(expected_sets["skills"])
+    gates_lower = {gate.casefold() for gate in expected_sets["quality_gates"]}
+    matching_skills = sorted(
+        expected_skills.intersection(IMPLEMENTATION_SKILLS_REQUIRE_STRUCTURE)
+    )
+    default_required = (
+        complexity != "L1"
+        and bool(matching_skills)
+        and IMPLEMENTATION_GATE in gates_lower
+    )
+    if not (structure_required is True or default_required):
+        return
+
+    if STRUCTURE_CAPABILITY not in expected_sets["capabilities"]:
+        errors.append(
+            f"{rel}: expected.capabilities must include "
+            f"'{STRUCTURE_CAPABILITY}' when expected.skills includes "
+            f"{matching_skills or sorted(IMPLEMENTATION_SKILLS_REQUIRE_STRUCTURE)} "
+            f"with '{IMPLEMENTATION_GATE}'"
+        )
+    if STRUCTURE_CAPABILITY in forbidden_sets["capabilities"]:
+        errors.append(
+            f"{rel}: forbidden.capabilities must not include "
+            f"'{STRUCTURE_CAPABILITY}' when structure is required"
         )
 
 

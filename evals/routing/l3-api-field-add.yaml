@@ -20,6 +20,7 @@ expected:
     - quality-test-gate
     - change-documentation-gate
   capabilities:
+    - implementation-structure-design
     - api-contract-design
     - dto-schema-design
     - authentication-authorization

@@ -18,6 +18,7 @@ expected:
     - quality-test-gate
     - change-documentation-gate
   capabilities:
+    - implementation-structure-design
     - cache-design
     - transaction-consistency
     - observability

@@ -26,6 +26,7 @@ expected:
     - delivery-release-gate
     - change-documentation-gate
   capabilities:
+    - implementation-structure-design
     - state-management-design
     - interaction-state-modeling
     - concurrency-control

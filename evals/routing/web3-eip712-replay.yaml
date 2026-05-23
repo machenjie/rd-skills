@@ -26,6 +26,7 @@ expected:
     - quality-test-gate
     - change-documentation-gate
   capabilities:
+    - implementation-structure-design
     - threat-modeling
     - permission-boundary-modeling
     - secret-configuration-security

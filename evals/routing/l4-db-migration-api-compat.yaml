@@ -26,6 +26,7 @@ expected:
     - delivery-release-gate
     - change-documentation-gate
   capabilities:
+    - implementation-structure-design
     - data-migration-design
     - relational-database
     - transaction-consistency

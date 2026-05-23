@@ -17,7 +17,7 @@ Use this capability when reviewing: a pull-request diff, AI-generated implementa
 
 # Do Not Use When
 
-Do not use this capability as a **style-only pass**, a broad approval ritual, or a substitute for running the tests and static analysis that prove behavior. Do not use it when the question is *how to restructure code* — use `refactoring` instead. Do not use it as a substitute for `threat-modeling` when the change introduces an entirely new attack surface.
+Do not use this capability as a **style-only pass**, a broad approval ritual, or a substitute for running the tests and static analysis that prove behavior. Do not use `code-review` as the primary pre-implementation structure designer; use `implementation-structure-design` before coding, `refactoring` for behavior-preserving movement, and `code-review` to assess completed diffs. Do not use it as a substitute for `threat-modeling` when the change introduces an entirely new attack surface.
 
 # Non-Negotiable Rules
 

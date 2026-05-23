@@ -45,6 +45,7 @@ prompt: |
 expected:
   complexity: L1 | L2 | L3 | L4 | L5
   risk_level: low | medium | high | critical
+  structure_required: false  # optional override for pure config/test/text/L1 exceptions
   risk_triggers:
     - <one or more values from routing-rules.yaml:risk_escalation_triggers>
   skills:
@@ -73,6 +74,10 @@ does not warrant them.
 - Schema and types; `id` unique and kebab-case; complexity in L1..L5.
 - `expected.risk_level`, when present, is one of `low`, `medium`,
   `high`, or `critical`; it is required for router-output comparison.
+- `expected.structure_required`, when present, is a boolean. It can be
+  set to `false` only when an implementation-gate case is a pure
+  configuration, pure test, pure text, or L1-small change that does not
+  need a structure plan.
 - All `expected.*` and `forbidden.*` names exist in their respective
   registries.
 - `risk_triggers` are drawn from `routing-rules.yaml:risk_escalation_triggers`.
@@ -114,6 +119,10 @@ does not warrant them.
 - For L2..L5 cases, `expected.quality_gates` must contain at least one
   of `implementation gate`, `test gate`, or `documentation gate` so the
   case carries verifiable evidence.
+- For L2..L5 cases, `backend-change-builder`, `frontend-change-builder`,
+  or `ai-code-review-refactor` combined with `implementation gate`
+  requires `implementation-structure-design` in `expected.capabilities`,
+  unless `expected.structure_required: false` is explicitly set.
 - The corpus contains at least 30 golden cases.
 - The corpus contains at least 8 L1 anti-over-routing cases.
 - Every domain extension appears in at least 2 golden cases.

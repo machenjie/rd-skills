@@ -204,4 +204,4 @@ Return a frontend implementation plan or review with:
 - **reliability-observability-gate** — when frontend changes affect client-side error tracking, performance monitoring, or SLO measurement.
 
 ## Completion Criteria
-Frontend work is ready for merge when all required states are implemented, WCAG 2.1 AA requirements are met, user-generated content is sanitized, API errors produce actionable feedback, focus management is correct, authorization is enforced server-side, tests cover user behavior and accessibility, and no bundle size regression is introduced without explicit justification.
+Frontend work is ready for merge when all required states are implemented, WCAG 2.1 AA requirements are met, user-generated content is sanitized, API errors produce actionable feedback, focus management is correct, authorization is enforced server-side, tests cover user behavior and accessibility, no bundle size regression is introduced without explicit justification, and the frontend structure plan confirms component/hook/state/API/helper placement, feature-local vs. shared decisions, reuse candidates, public/private boundary, and test placement.

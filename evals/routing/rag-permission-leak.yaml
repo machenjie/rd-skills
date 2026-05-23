@@ -28,6 +28,7 @@ expected:
     - change-documentation-gate
     - ai-code-review-refactor
   capabilities:
+    - implementation-structure-design
     - permission-boundary-modeling
     - threat-modeling
     - web-security

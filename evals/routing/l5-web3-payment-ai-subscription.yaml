@@ -37,6 +37,7 @@ expected:
     - change-documentation-gate
     - ai-code-review-refactor
   capabilities:
+    - implementation-structure-design
     - threat-modeling
     - permission-boundary-modeling
     - secret-configuration-security

@@ -23,6 +23,7 @@ expected:
     - quality-test-gate
     - change-documentation-gate
   capabilities:
+    - implementation-structure-design
     - permission-boundary-modeling
     - authentication-authorization
     - web-security

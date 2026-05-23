@@ -15,6 +15,7 @@ expected:
     - frontend-change-builder
     - quality-test-gate
   capabilities:
+    - implementation-structure-design
     - form-validation-design
     - interaction-state-modeling
     - design-system-rules

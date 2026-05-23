@@ -15,6 +15,7 @@ expected:
     - backend-change-builder
     - quality-test-gate
   capabilities:
+    - implementation-structure-design
     - refactoring
     - regression-testing
     - unit-testing
