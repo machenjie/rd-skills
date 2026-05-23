@@ -34,6 +34,7 @@ Implement or review product-grade frontend changes that are state-complete, acce
 - **API errors must produce user-visible, actionable feedback**: swallowed errors or generic "Something went wrong" without recovery path are product defects.
 - **Do not store sensitive information in `localStorage` or `sessionStorage`**: authentication tokens in browser storage are accessible to any JavaScript on the page — use `httpOnly` cookies for session tokens.
 - **Code splitting is required for large route-level modules**: a single bundle that blocks initial page rendering is a Core Web Vitals failure.
+- **Plan frontend implementation structure before adding code**: inspect existing components, hooks, routes, state stores, API clients, validators, and helpers before creating new ones; feature-local code stays local unless shared ownership is real.
 
 ## Industry Benchmarks
 - **WCAG 2.1 / 2.2 (W3C)**: Web Content Accessibility Guidelines — AA compliance is the production baseline. Every interactive element has an accessible name, is keyboard-operable, and meets contrast requirements.
@@ -66,6 +67,7 @@ Evaluate every frontend change against:
 - **Accessibility**: Does every interactive element have an accessible name? Is focus managed after route changes, modal open/close, and async operations?
 - **Output encoding**: Is all user-generated content rendered through safe text rendering (`.textContent`, JSX text nodes) — never via `innerHTML` with unsanitized content?
 - **Performance**: Is this component on the critical render path? Does it require code splitting, lazy loading, or server-side rendering?
+- **Frontend structure**: Existing components, hooks, state stores, API clients, validators, and helpers inspected; feature-local vs. shared decision; component/hook/state/API/helper placement; new imports and dependency direction; test placement.
 - **Test strategy**: Are tests written against behavior (user interactions, accessibility queries) rather than implementation details?
 
 ### Decision Tree: State Management Choice
@@ -174,6 +176,7 @@ Return a frontend implementation plan or review with:
 - **Accessibility obligations**: Accessible names, ARIA roles, focus management, keyboard interaction, and contrast requirements.
 - **Security review**: XSS prevention, token storage, CSP implications, third-party script review.
 - **Performance considerations**: Code splitting, lazy loading, rendering strategy, and Core Web Vitals impact.
+- **Frontend structure**: Component, hook, state, API client, route, form validator, and helper placement; feature-local vs. shared decision; reuse candidates; public/private boundary; test placement.
 - **Test strategy**: Unit tests (component behavior), integration tests (user flow), accessibility tests (axe-core), and visual regression tests.
 - **Residual risks**: Known risks accepted with justification.
 
@@ -188,6 +191,10 @@ Return a frontend implementation plan or review with:
 8. No new dependencies exceed bundle size budget without code splitting.
 9. Destructive actions have confirmation dialogs with consequence-specific copy.
 10. Authorization is enforced server-side; client-side guards are UX-only and documented as such.
+11. Existing frontend components, hooks, state stores, API clients, validators, and helpers were checked before new code was added.
+12. New components and hooks have feature-local vs. shared placement rationale.
+13. Feature-local state is not moved to global state without cross-feature ownership.
+14. No business logic is added to shared UI, common hooks, or generic utils.
 
 ## Handoff
 - **experience-impact-modeler** — if UX states or user flows are underspecified before implementation begins.

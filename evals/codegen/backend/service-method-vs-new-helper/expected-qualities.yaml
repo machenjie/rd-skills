@@ -1,0 +1,43 @@
+id: service-method-vs-new-helper
+category: backend
+complexity: L3
+focus:
+  - service method placement
+  - business rule ownership
+  - shared utils rejection
+  - deadline boundary tests
+route_hints:
+  skills:
+    - domain-impact-modeler
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - service-business-logic
+    - business-rule-extraction
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - domain gate
+    - implementation gate
+    - test gate
+expected_outcomes:
+  - Order cancellation rule is implemented through existing order service and policy ownership.
+  - Shared utils do not receive order deadline business logic.
+  - Boundary tests cover before, at, and after deadline behavior.
+  - Existing transaction and authorization flow remains intact.
+required_qualities:
+  - Existing service and policy reuse candidates are explicitly inspected.
+  - Any new function is private or module-internal unless already part of public API.
+  - Public cancellation behavior is tested without asserting private helper calls.
+  - The structure plan rejects the shared utility alternative with a clear reason.
+forbidden_shortcuts:
+  - Adding validateCancellationDeadline to shared utils.
+  - Bypassing OrderService transaction or authorization flow.
+  - Creating a stateless class only to group helper functions.
+  - Testing only a private helper instead of cancellation behavior.
+evidence:
+  - Deadline boundary tests.
+  - Existing cancellation success regression test.
+  - Implementation Structure Plan.
+  - Review note confirming no shared utils business logic.

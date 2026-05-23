@@ -35,6 +35,7 @@ Implement or review backend changes that preserve correctness, authorization int
 - **Partial-success is a first-class failure mode** — if a multi-step write can partially succeed, define and test the compensation or rollback behavior explicitly.
 - **Structured logging with correlation** — every request must carry a correlation/trace ID through all log entries; logs must not contain plaintext secrets, passwords, or full PII.
 - **All non-trivial backend logic requires unit tests** — including auth logic, validation logic, error paths, retry behavior, and concurrency edge cases.
+- **Plan implementation structure before adding backend code** — inspect existing controllers, services, repositories, validators, mappers, jobs, helpers, and adapters before creating new functions, classes, files, or directories.
 
 ## Industry Benchmarks
 - **OWASP API Security Top 10**: API1 (Broken Object Level Authorization), API2 (Broken Authentication), API3 (Broken Object Property Level Authorization), API8 (Security Misconfiguration) — all address backend authorization failures.
@@ -69,6 +70,7 @@ Evaluate backend changes across these dimensions:
 - **Error model**: Error codes, HTTP status mapping, client-visible message (generic), server-log message (detailed), correlation ID.
 - **Observability**: Logs (structured + correlated), metrics (latency, error rate, saturation), traces (distributed trace propagation).
 - **Concurrency**: Race condition analysis, lock scope, optimistic concurrency control, queue ordering guarantees.
+- **Implementation structure**: Existing services, repositories, validators, mappers, helpers, and adapters inspected; reuse vs. extension vs. composition vs. new code decision; function/class/file placement; public/private boundary; new imports and dependency direction.
 - **Test coverage**: Unit tests for auth logic, validation logic, error paths; integration tests for transaction and idempotency behavior.
 
 ### Decision Tree: Authorization Check Required?
@@ -180,6 +182,7 @@ Return a backend implementation plan or review with:
 - **Error model**: Error code taxonomy, HTTP status mapping, client-visible vs. server-log distinction.
 - **Observability plan**: Log fields with correlation ID, metrics emitted, alert thresholds.
 - **Concurrency analysis**: Race condition risk, locking strategy, ordering assumptions.
+- **Implementation structure**: Existing services/repositories/helpers inspected; reuse vs. new decision; function/class/file placement; public/private boundary; ownership; new imports and dependency direction.
 - **Test obligations**: Unit tests for auth, validation, error paths; integration tests for transactions.
 
 ## Quality Gate
@@ -193,6 +196,10 @@ Return a backend implementation plan or review with:
 8. Unit tests cover authorization logic, validation logic, and error paths.
 9. Concurrency race conditions are analyzed and mitigated for shared-state operations.
 10. No hardcoded secrets, API keys, or connection strings in source code.
+11. Existing backend functions, classes, services, repositories, validators, mappers, helpers, and adapters were checked before new code was added.
+12. Every new backend function, class, or file has placement rationale and ownership.
+13. No backend business logic is added to shared, common, or utils.
+14. New imports respect module and layer dependency direction.
 
 ## Handoff
 - **security-privacy-gate** — when authorization logic, PII handling, or sensitive data access requires adversarial review.

@@ -51,7 +51,11 @@ Before starting any refactoring:
    What outputs (return values, DB mutations, events, side effects) must remain identical?
    Document: "This refactoring preserves X; does NOT preserve Y (intentional change)"
 
-2. Check Test Coverage
+2. Define Target Structure Decision
+   Which functions should stay private? Which classes should be split, collapsed, or composed? Which files should own the extracted behavior? Which module boundaries or public APIs must stay unchanged?
+   Reject new shared/common/utils placement unless the extracted code is a pure technical utility with no business terminology.
+
+3. Check Test Coverage
    Run coverage report on the target code.
    If coverage < acceptable threshold → write characterization tests first.
    Characterization test pattern:
@@ -60,23 +64,23 @@ Before starting any refactoring:
        expect(result).toBe(127.50); // captures current behavior; fix intentionally later
      });
 
-3. Plan Step Sequence (each step independently passing)
+4. Plan Step Sequence (each step independently passing)
    Step 1: Rename internal variables (no logic change)
    Step 2: Extract private helper method (no logic change)
    Step 3: Move method to correct class (no logic change)
    Step 4: [Optional] Replace conditional with polymorphism
    Each step: commit → run full test suite → verify green
 
-4. Separate Formatting
+5. Separate Formatting
    Run formatter BEFORE starting refactoring on files you will touch.
    Formatting commit is separate from any logic movement.
 
-5. After Each Step
+6. After Each Step
    git diff --stat → confirm line count is reasonable
    Run all tests (unit + integration for touched boundaries)
    If any test fails → revert the step; do not proceed with failing tests
 
-6. After All Steps
+7. After All Steps
    Run mutation testing on characterized code → verify tests actually protect behavior
    Measure before/after complexity score (cognitive complexity) → confirm improvement
 ```
@@ -122,6 +126,7 @@ Return a refactoring plan with:
 
 - `target_smell` (what structural problem the refactoring addresses; named refactoring from Fowler catalog if applicable)
 - `observable_behavior_boundary` (explicit list of outputs / side effects that must remain identical; any intentional non-behavioral changes listed separately with approval reference)
+- `target_structure_decision` (where refactored functions belong; whether classes should split, collapse, or compose; whether files should split; whether module boundaries change; which helpers stay private; which public APIs remain stable)
 - `risk_classification` (Low / Medium / High / Critical per classification matrix)
 - `characterization_test_plan` (per untested branch: test name, input fixture, expected output to capture; must be added before structural changes)
 - `step_sequence` (ordered steps; each step is independently green; formatted as separate commits)
@@ -138,15 +143,16 @@ Return a refactoring plan with:
 The refactoring plan is complete only when:
 
 1. Observable behavior boundary is explicitly defined — including any approved behavior changes.
-2. Risk classification is assigned; characterization tests planned or confirmed existing for High/Critical risk.
-3. Step sequence is granular enough that each step passes the test suite independently.
-4. No public contracts changed without a compatibility plan.
-5. Formatting commits are separated from logic-movement commits.
-6. Each review slice is ≤ 300 lines of semantic diff.
-7. Rollback is possible for each step independently.
-8. Verification commands are defined to confirm behavior preservation after all steps.
-9. All behavior changes discovered during refactoring planning are extracted to separate work items.
-10. Authorization, financial, and data-integrity code is covered by characterization tests before any structural change.
+2. Target structure decision states function placement, class split/collapse decisions, file split decisions, module boundary impact, private helpers, and preserved public APIs.
+3. Risk classification is assigned; characterization tests planned or confirmed existing for High/Critical risk.
+4. Step sequence is granular enough that each step passes the test suite independently.
+5. No public contracts changed without a compatibility plan.
+6. Formatting commits are separated from logic-movement commits.
+7. Each review slice is ≤ 300 lines of semantic diff.
+8. Rollback is possible for each step independently.
+9. Verification commands are defined to confirm behavior preservation after all steps.
+10. All behavior changes discovered during refactoring planning are extracted to separate work items.
+11. Authorization, financial, and data-integrity code is covered by characterization tests before any structural change.
 
 # Used By
 

@@ -1,0 +1,46 @@
+---
+id: implementation-structure-class-vs-function
+description: |
+  AI-generated code proposes a stateless class where a function or existing
+  module-local helper is sufficient.
+prompt: |
+  AI generated a new OrderDeadlineValidator class with only static methods
+  and no state. Review whether this should be a class, a private function, or
+  an extension of the existing order policy module.
+expected:
+  complexity: L2
+  risk_level: medium
+  risk_triggers: []
+  skills:
+    - ai-code-review-refactor
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - code-review
+    - refactoring
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - AI review gate
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-middleware-change-builder
+    - integration-change-builder
+    - delivery-release-gate
+  capabilities:
+    - package-dependency-management
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Stateless classes from AI output require explicit justification against the
+  simpler function alternative and local patterns.

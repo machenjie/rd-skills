@@ -1,0 +1,41 @@
+id: feature-local-component-vs-shared-component
+category: frontend
+complexity: L3
+focus:
+  - feature-local component placement
+  - hook and state scope
+  - shared UI pollution prevention
+  - user-visible tests
+route_hints:
+  skills:
+    - frontend-change-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - page-component-decomposition
+    - state-management-design
+    - frontend-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+expected_outcomes:
+  - Billing-specific component and state stay inside the billing feature.
+  - Existing design primitives are reused.
+  - Global hooks or common components are not polluted with billing rules.
+  - Tests prove render and dismissal behavior from the user perspective.
+required_qualities:
+  - Feature-local versus shared decision is explicit.
+  - State remains local or feature-scoped unless cross-feature reuse exists.
+  - Component tests use accessible queries and user interactions.
+  - API or persistence calls stay in the feature data layer or existing client.
+forbidden_shortcuts:
+  - Adding billing-specific copy to components/common.
+  - Creating a global useProductTour hook for one feature.
+  - Moving feature-local state into the global store.
+  - Testing only snapshots without dismissal behavior.
+evidence:
+  - User interaction test for dismiss.
+  - Structure plan for component and hook placement.
+  - Review note confirming shared UI remains generic.
+  - Regression evidence that billing settings still renders.

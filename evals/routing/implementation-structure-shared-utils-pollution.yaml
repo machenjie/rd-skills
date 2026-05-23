@@ -1,0 +1,45 @@
+---
+id: implementation-structure-shared-utils-pollution
+description: |
+  AI wants to add order business validation into shared utils.
+prompt: |
+  Add validation so orders cannot be submitted after the cancellation
+  deadline. The AI proposes adding validateOrderDeadline() to shared/utils/date.ts.
+expected:
+  complexity: L2
+  risk_level: medium
+  risk_triggers: []
+  skills:
+    - backend-change-builder
+    - architecture-impact-reviewer
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - module-boundary-design
+    - business-rule-extraction
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - delivery-release-gate
+  capabilities:
+    - package-dependency-management
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - API/data gate
+    - delivery gate
+notes: |
+  Business validation belongs in the owning order module, not shared utils.

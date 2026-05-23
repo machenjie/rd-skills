@@ -56,7 +56,6 @@ REGISTRY_REQUIRED_FIELDS = (
 )
 REGISTRY_LIST_FIELDS = ("used_by", "triggers", "risk_notes", "expected_outputs")
 REGISTRY_STATUSES = {"implemented"}
-CAPABILITY_ID_RE = re.compile(r"^(?:0[1-9]|[1-9]\d|100)$")
 REQUIRED_FRONTMATTER = (
     "name",
     "description",
@@ -90,10 +89,12 @@ def _is_nonempty_string_list(value: object) -> bool:
 
 
 def _normalize_capability_id(value: object) -> str | None:
-    if isinstance(value, str) and CAPABILITY_ID_RE.fullmatch(value):
-        return value
-    if isinstance(value, int) and 1 <= value <= 100:
-        return f"{value:02d}"
+    if isinstance(value, str) and re.fullmatch(r"\d+", value):
+        number = int(value)
+        if 1 <= number <= EXPECTED_FOUNDATION_CAPABILITY_COUNT:
+            return f"{number:02d}" if number < 100 else str(number)
+    if isinstance(value, int) and 1 <= value <= EXPECTED_FOUNDATION_CAPABILITY_COUNT:
+        return f"{value:02d}" if value < 100 else str(value)
     return None
 
 

@@ -903,3 +903,12 @@ capabilities:
     triggers: [internationalization localization timezone date time currency number formatting collation pluralization locale fallback monetary precision rounding]
     risk_notes: [Locale timezone and money mistakes create region specific correctness defects billing errors deadline drift and irreversible data ambiguity]
     expected_outputs: [i18n timezone money safety design with locale model time model money model formatting collation contract impact migration and boundary tests]
+  - id: "101"
+    name: implementation-structure-design
+    group: engineering-workflow
+    path: src/foundation/capabilities/implementation-structure-design
+    status: implemented
+    used_by: [backend-change-builder, frontend-change-builder, ai-code-review-refactor, architecture-impact-reviewer, code-review, refactoring, quality-test-gate]
+    triggers: [implementation structure code structure function placement class placement reuse existing function reuse existing class new helper new utility new file new directory component placement hook placement service method repository method shared utils common utils dependency direction cohesion coupling]
+    risk_notes: [Poor placement creates duplicated logic shared utility pollution accidental public APIs circular dependencies architecture drift and unmaintainable AI generated patches]
+    expected_outputs: [implementation structure plan with reuse candidates placement rationale private public decisions file directory ownership dependency direction shared utility audit and test placement]

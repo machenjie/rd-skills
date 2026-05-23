@@ -31,6 +31,7 @@ Critically review, validate, and safely refactor AI-generated or AI-assisted cod
 - Require tests for every behavior-changing refactor and every new code path, not just the happy path.
 - Reject dependency additions that come without explicit justification, audit, and security review.
 - Every refactor must have a clearly bounded scope — changes that silently alter observable behavior must be surfaced and reviewed separately.
+- AI-generated code that adds any function, class, file, directory, component, hook, service, repository, adapter, utility, abstraction, or dependency must include an Implementation Structure Plan before acceptance.
 - Flag AI-generated error handling that swallows exceptions, returns `null`/`nil`/`undefined` silently, or ignores response status codes.
 - Security-sensitive paths (auth, permissions, payment, data access) cannot be accepted from AI output without adversarial review.
 - Type annotations from AI must be verified against the actual runtime types — AI generates plausible signatures, not necessarily correct ones.
@@ -63,6 +64,7 @@ Evaluate AI-generated code across these dimensions:
 - **API existence**: Every method, property, and module exists in the declared version.
 - **Assumption inventory**: Every implicit assumption (non-null, ordered, single-instance, idempotent) is documented or enforced.
 - **Pattern consistency**: Abstractions match local naming, structure, error handling, and DI conventions.
+- **Implementation structure**: Existing reusable functions/classes/modules inspected; placement rationale for every new function/class/file/directory; shared/common/utils audit; dependency direction check.
 - **Duplication**: AI tends to generate complete self-contained functions that duplicate existing utility functions — cross-reference before accepting.
 - **Abstraction pressure**: Is a new interface, factory, or strategy justified by current use cases or is it speculative extensibility?
 - **Dependency vetting**: Each added package has a clear purpose, acceptable CVE posture, compatible license, and minimal transitive footprint.
@@ -181,6 +183,7 @@ Return a structured review with:
 - **Hidden assumption list**: Every implicit assumption with proposed enforcement or documentation.
 - **Dependency audit**: Each new dependency with CVE status, license, transitive size, and standard-library alternative.
 - **Refactor boundary analysis**: Scope of behavioral change, equivalence evidence, and test coverage delta.
+- **Implementation Structure Plan**: Reuse candidates inspected, reuse vs. extension vs. composition vs. new code decision, function/class/file/directory placement, public/private boundary, shared utils audit, dependency direction, test placement, and rejected alternatives.
 - **Test quality assessment**: Mock-only tests flagged; missing error path tests listed.
 - **Security review note**: Auth, permission, and data access paths reviewed adversarially or escalated.
 - **Architecture drift flag**: Any new abstractions, boundaries, or coupling evaluated against existing patterns.
@@ -197,6 +200,9 @@ Return a structured review with:
 8. Type annotations are runtime-accurate, not syntactically plausible.
 9. Error paths have explicit handling — no silent swallows.
 10. The review result is either: Approved with evidence, or Returned with a numbered remediation list.
+11. AI-added functions, classes, files, directories, components, hooks, services, repositories, adapters, utilities, and abstractions have reuse and placement rationale.
+12. AI-added abstractions are justified against existing local patterns and the simplest sufficient alternative.
+13. AI-generated code did not introduce business logic into shared, common, or utils.
 
 ## Handoff
 - **security-privacy-gate** — for auth, permission, payment, or sensitive data code that requires adversarial review.

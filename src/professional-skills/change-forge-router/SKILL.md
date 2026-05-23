@@ -67,15 +67,15 @@ Professional skill routing:
 - `domain-impact-modeler`: business behavior, domain rules, permissions, state machines, or event semantics are affected.
 - `architecture-impact-reviewer`: architecture drift, module boundaries, layering, service boundaries, scalability tradeoffs, monorepo graph, affected tests, build cache, or generated-file policy are affected.
 - `data-api-contract-changer`: API contract, DTO, schema, compatibility, migration, or error model changes.
-- `frontend-change-builder`: frontend implementation, routes, components, state, forms, API integration, or accessibility.
-- `backend-change-builder`: backend implementation, validation, auth, transactions, services, jobs, repositories, or errors.
+- `frontend-change-builder`: frontend implementation, routes, components, state, forms, API integration, accessibility, component placement, hook placement, or feature-local versus shared UI decisions.
+- `backend-change-builder`: backend implementation, validation, auth, transactions, services, jobs, repositories, errors, service method placement, repository method placement, or helper placement.
 - `data-middleware-change-builder`: SQL, NoSQL, cache, queues, search, storage, consistency, indexing, or middleware.
 - `integration-change-builder`: third-party APIs, webhooks, credentials, retries, reconciliation, or external failure modes.
 - `quality-test-gate`: tests failed, test plan missing, evidence missing, regression risk exists, or release confidence is weak.
 - `security-privacy-gate`: security, privacy, auth, secrets, upload, dependency, AI prompt, Web3, SOC 2, ISO 27001, audit evidence, compliance control, IAM, public bucket, or privilege escalation risk exists.
 - `reliability-observability-gate`: performance, reliability, FinOps/cost, cloud bill, capacity, budget, incident response, outage, concurrency, rate limits, fallback, observability, or operations risk exists.
 - `delivery-release-gate`: deployment, config, migration rollout, CI/CD, Terraform/Pulumi/IaC, cloud governance, feature flags, production release, incident mitigation hotfix, compliance evidence, or rollback risk exists.
-- `ai-code-review-refactor`: AI-generated code, refactor quality, hallucinated APIs, hidden assumptions, duplication, or boundary drift risk exists.
+- `ai-code-review-refactor`: AI-generated code, refactor quality, hallucinated APIs, hidden assumptions, duplication, invented abstractions, weak implementation structure, or boundary drift risk exists.
 - `change-documentation-gate`: user docs, API docs, migration notes, runbooks, ADRs, changelog, or operational notes need updates.
 - `change-forge-router`: initial classification, rerouting, or route repair.
 
@@ -93,7 +93,7 @@ Foundation capability groups:
 - Quality testing: 58 `test-strategy`, 59 `unit-testing`, 60 `integration-testing`, 61 `contract-testing`, 62 `e2e-testing`, 63 `test-data-management`, 64 `regression-testing`.
 - Reliability operations: 65 `performance-budgeting`, 66 `profiling`, 67 `concurrency-control`, 68 `degradation-circuit-breaking`, 69 `observability`, 70 `backup-recovery`.
 - Delivery platform: 71 `project-initialization`, 72 `containerization`, 73 `ci-cd`, 74 `kubernetes-gateway`, 75 `release-rollback`.
-- Engineering workflow: 76 `context-packaging`, 77 `task-dag-decomposition`, 78 `code-review`, 79 `refactoring`, 80 `documentation-generation`, 81 `failure-diagnosis`, 82 `solution-optimality-evaluation`.
+- Engineering workflow: 76 `context-packaging`, 77 `task-dag-decomposition`, 78 `code-review`, 79 `refactoring`, 80 `documentation-generation`, 81 `failure-diagnosis`, 82 `solution-optimality-evaluation`, 101 `implementation-structure-design`.
 - Technology selection: 83 `technology-stack-selection`, 84 `language-runtime-selection`, 85 `language-idiom-enforcement`, 86 `language-testing-strategy`, 87 `language-performance-safety`, 88 `package-dependency-management`.
 - Language professional usage: 89 `go-professional-usage`, 90 `java-jvm-professional-usage`, 91 `typescript-professional-usage`, 92 `python-professional-usage`, 93 `rust-professional-usage`, 94 `cpp-professional-usage`, 95 `shell-cli-professional-usage`, 96 `sql-professional-usage`.
 - Interface, storage, and global correctness: 97 `sdk-library-contract-design`, 98 `cli-daemon-interface-design`, 99 `file-storage-processing`, 100 `i18n-timezone-money-safety`.
@@ -110,9 +110,9 @@ Domain extension routing:
 
 Runtime profile awareness:
 
-- Recommended: 19 professional skills top-level, 100 foundation capabilities compiled into references.
-- Full: 19 professional skills + 7 domain extensions top-level, 100 foundation capabilities compiled into references.
-- Dev: 19 professional skills + 100 foundation capabilities + 7 domain extensions top-level.
+- Recommended: 19 professional skills top-level, 101 foundation capabilities compiled into references.
+- Full: 19 professional skills + 7 domain extensions top-level, 101 foundation capabilities compiled into references.
+- Dev: 19 professional skills + 101 foundation capabilities + 7 domain extensions top-level.
 
 ## Risk Escalation Rules
 Escalate one level for any risk trigger that affects user data, money, permissions, external systems, production state, or irreversible operations. Escalate to high or critical when more than one high-impact trigger is present or when rollback is unclear.
@@ -136,6 +136,10 @@ Route by evidence in the request:
 - If contract or schema mismatch is present, route to `data-api-contract-changer`.
 - If frontend behavior is the change surface, route to `frontend-change-builder`.
 - If backend behavior is the change surface, route to `backend-change-builder`.
+- If code is added, moved, extracted, or reorganized, select `implementation-structure-design` with the relevant builder so the plan names reuse candidates, placement rationale, private/public decisions, file ownership, dependency direction, and test placement before implementation.
+- If the request asks where to put a function, class, component, hook, service, repository method, helper, utility, file, or directory, select `implementation-structure-design`; add `module-boundary-design` and `architecture-impact-reviewer` when the decision could alter module boundaries or dependency direction.
+- If AI-generated implementation adds any function, class, file, directory, component, hook, service, repository, adapter, utility, abstraction, or dependency, select `ai-code-review-refactor`, `implementation-structure-design`, and `code-review`.
+- If refactoring extracts, moves, splits, or collapses code, select `refactoring`, `implementation-structure-design`, and `code-review`.
 - If data, cache, queue, search, or storage behavior is the change surface, route to `data-middleware-change-builder`.
 - If external integration behavior is the change surface, route to `integration-change-builder`.
 - If tests failed or verification is unclear, route to `quality-test-gate`.

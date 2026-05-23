@@ -1,0 +1,46 @@
+---
+id: implementation-structure-frontend-hook-placement
+description: |
+  A feature-local hook is proposed as a global shared hook without evidence of
+  cross-feature ownership.
+prompt: |
+  Add a product-tour dismissal state for the billing settings page. The AI
+  proposes creating hooks/useTour.ts at the app root. Decide whether the hook,
+  state, and tests should stay inside the billing feature.
+expected:
+  complexity: L2
+  risk_level: medium
+  risk_triggers: []
+  skills:
+    - frontend-change-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - page-component-decomposition
+    - state-management-design
+    - frontend-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - backend-change-builder
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+    - package-dependency-management
+  domain_extensions:
+    - mobile-product-extension
+    - web3-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - API/data gate
+    - delivery gate
+notes: |
+  Feature-local frontend behavior should not become a global hook without a
+  real reuse boundary.

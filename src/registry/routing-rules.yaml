@@ -33,14 +33,14 @@ supported_change_types:
 runtime_profiles:
   - name: recommended
     top_level: 19 professional skills
-    foundation_mode: 100 foundation capabilities compiled into professional references
+    foundation_mode: 101 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 19 professional skills and 7 domain extensions
-    foundation_mode: 100 foundation capabilities compiled into professional references
+    foundation_mode: 101 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 19 professional skills, 100 foundation capabilities, and 7 domain extensions
+    top_level: 19 professional skills, 101 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -107,6 +107,8 @@ failure_routing:
     route_to: domain-impact-modeler
   - condition: architecture drift
     route_to: architecture-impact-reviewer
+  - condition: implementation structure or placement unclear
+    route_to: implementation-structure-design
   - condition: contract or schema mismatch
     route_to: data-api-contract-changer
   - condition: frontend issue
@@ -202,6 +204,7 @@ routing_rules:
       - review architecture boundaries layering dependency direction service boundaries scalability extensibility tradeoffs
       - decide simpler architecture versus justified complexity
       - review monorepo module graph module boundary affected tests incremental build generated file policy DevEx
+      - resolve implementation structure uncertainty that could change module boundaries dependency direction or public APIs
     priority: 80
   - route_to: data-api-contract-changer
     triggers:
@@ -212,11 +215,13 @@ routing_rules:
     triggers:
       - implement frontend component route state form accessibility API error performance frontend security
       - build product grade frontend change
+      - decide component placement hook placement state placement route placement API client placement form validator placement shared UI versus feature local component
     priority: 75
   - route_to: backend-change-builder
     triggers:
       - implement backend validation auth authorization transaction idempotency retry logging concurrency async job error model
       - build backend correctness change
+      - decide service method repository method validator parser mapper DTO adapter helper placement and backend reuse versus new code
     priority: 75
   - route_to: data-middleware-change-builder
     triggers:
@@ -299,6 +304,7 @@ routing_rules:
     triggers:
       - review AI generated code hallucinated APIs hidden assumptions over abstraction duplicate code missing tests architecture drift
       - refactor AI assisted code safely
+      - review AI generated implementation structure plan reuse rationale placement rationale shared utils pollution and invented abstractions
     priority: 70
   - route_to: change-documentation-gate
     triggers:
@@ -709,6 +715,13 @@ routing_rules:
     triggers:
       - refactor while preserving behavior characterization tests boundaries contracts compatibility and rollback notes
       - separate structural cleanup from behavior change and protect risky refactors with tests
+    priority: 60
+  - route_to: implementation-structure-design
+    triggers:
+      - function placement class placement where to put this function where to put this class reuse existing function reuse existing class
+      - new helper new utility new file new directory code structure implementation structure project structure folder structure responsibility placement
+      - cohesion coupling shared utils common utils helper function service method domain service component placement hook placement repository method
+      - decide reuse extend compose adapter private internal public export file ownership directory boundary dependency direction circular dependency test placement
     priority: 60
   - route_to: documentation-generation
     triggers:

@@ -1,0 +1,49 @@
+---
+id: implementation-structure-backend-service-placement
+description: |
+  Backend business behavior must be placed in the owning service or policy
+  rather than as a detached helper.
+prompt: |
+  Add a cancellation deadline check when users submit order cancellation.
+  Existing OrderService owns cancellation workflow and OrderPolicy owns
+  deadline rules. Decide whether to extend an existing method, compose the
+  policy, or add a new helper.
+expected:
+  complexity: L2
+  risk_level: medium
+  risk_triggers: []
+  skills:
+    - domain-impact-modeler
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - service-business-logic
+    - business-rule-extraction
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - domain gate
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - delivery-release-gate
+  capabilities:
+    - package-dependency-management
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - API/data gate
+    - delivery gate
+notes: |
+  Existing service and policy ownership must be considered before adding a new
+  helper function.

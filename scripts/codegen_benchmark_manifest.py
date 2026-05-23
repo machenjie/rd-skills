@@ -7,10 +7,12 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
     "backend": (
         "idempotent-payment-create",
         "object-auth-order-read",
+        "service-method-vs-new-helper",
         "webhook-signature-replay",
     ),
     "frontend": (
         "accessible-form-error-state",
+        "feature-local-component-vs-shared-component",
         "optimistic-ui-rollback",
     ),
     "data-api": (
@@ -55,9 +57,9 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
     ),
     "devex": (
         "monorepo-affected-tests",
+        "structure-placement-reuse-existing-function",
     ),
     "finops": (
         "cloud-cost-regression",
     ),
 }
-
