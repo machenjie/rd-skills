@@ -1,0 +1,48 @@
+id: optimistic-ui-rollback
+category: frontend
+complexity: L3
+focus:
+  - optimistic state
+  - rollback recovery
+  - API error handling
+  - concurrent interaction control
+route_hints:
+  skills:
+    - change-impact-analyzer
+    - frontend-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - state-management-design
+    - frontend-api-integration
+    - interaction-state-modeling
+    - frontend-testing
+    - regression-testing
+    - observability
+  domain_extensions: []
+  quality_gates:
+    - impact gate
+    - implementation gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - Successful archive remains responsive and reconciles server returned state.
+  - Failed archive restores the task content order and selection state.
+  - Conflict responses surface a clear recovery path.
+  - Duplicate clicks do not create duplicate requests or inconsistent local state.
+required_qualities:
+  - Optimistic state captures enough snapshot data for precise rollback.
+  - Pending action state is keyed per task.
+  - Error handling is visible and recoverable.
+  - Shared cache updates are reconciled with server truth.
+  - Tests cover race and retry behavior.
+forbidden_shortcuts:
+  - Full page reload used as rollback.
+  - Console only error handling.
+  - Permanent removal of the task before server confirmation without rollback data.
+  - Global loading state that blocks unrelated task actions unnecessarily.
+evidence:
+  - Component tests for success failure conflict timeout and rapid click cases.
+  - State transition note for optimistic confirmed failed retried and undone paths.
+  - Regression test for existing archive success.
+  - Observability note for client side failure diagnostics.

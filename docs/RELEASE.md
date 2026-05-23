@@ -49,6 +49,8 @@ python3 scripts/validate-skills.py
 python3 scripts/validate-capabilities.py
 python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
+python3 scripts/eval-routing.py
+python3 scripts/validate-codegen-benchmarks.py
 python3 scripts/build.py --profile recommended
 python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
@@ -90,6 +92,7 @@ The Codex recommended user smoke must install 19 top-level skills. The Codex, Cl
 ## Release Checklist
 
 - Source structure matches the registry counts.
+- Routing and code generation benchmark validators pass.
 - No banned `src/toolbox` or `registry/toolbox.yaml` path exists.
 - No personal asset mapping, raw `src/`, or raw registry content is installed.
 - All runtime skills contain root `SKILL.md`.

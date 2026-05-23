@@ -1,0 +1,59 @@
+id: idempotent-payment-create
+category: backend
+complexity: L5
+focus:
+  - payment idempotency
+  - transaction consistency
+  - money precision
+  - auditability
+route_hints:
+  skills:
+    - change-intake-compiler
+    - domain-impact-modeler
+    - data-api-contract-changer
+    - backend-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - state-machine-modeling
+    - idempotency-retry-design
+    - transaction-consistency
+    - repository-persistence
+    - input-validation
+    - observability
+    - integration-testing
+    - i18n-timezone-money-safety
+  domain_extensions:
+    - payment-trading-extension
+  quality_gates:
+    - requirement gate
+    - domain gate
+    - API/data gate
+    - implementation gate
+    - security gate
+    - reliability gate
+    - test gate
+    - documentation gate
+expected_outcomes:
+  - A repeated idempotency key with an identical payload returns the stored payment result.
+  - A repeated idempotency key with a different payload returns a conflict without side effects.
+  - Concurrent requests cannot create duplicate provider charges.
+  - Provider timeout behavior is recoverable and observable.
+required_qualities:
+  - Idempotency state is stored in durable persistence with a unique constraint.
+  - Payment amount handling uses integer minor units or decimal money types.
+  - Transaction boundaries are explicit and tested under contention.
+  - Audit fields capture provider identifiers without leaking secrets.
+  - Error responses are deterministic and client safe.
+forbidden_shortcuts:
+  - Process memory caches used as the source of truth for idempotency.
+  - Float based money calculations.
+  - Blind retry loops that can create additional provider charges.
+  - Logging full payment instrument data or provider secrets.
+evidence:
+  - Unit tests for payload fingerprinting and state transitions.
+  - Integration tests for duplicate and concurrent create requests.
+  - Security notes covering key validation and audit redaction.
+  - Documentation of retry and reconciliation behavior.

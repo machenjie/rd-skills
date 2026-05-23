@@ -54,6 +54,8 @@ Required gates:
 python3 scripts/validate-skills.py
 python3 scripts/validate-capabilities.py
 python3 scripts/validate-registry.py
+python3 scripts/eval-routing.py
+python3 scripts/validate-codegen-benchmarks.py
 python3 scripts/validate-installation.py
 ```
 
@@ -111,6 +113,6 @@ Required evidence:
 
 ## Production Readiness
 
-A ChangeForge release is production-ready only when source validators pass, all intended profiles build, runtime installation validation passes, OpenAI API zips are profile-scoped and structurally valid, install dry runs pass for supported agents, smoke install/uninstall/reinstall succeeds without removing unrelated files, doctor reports no critical issue for smoke targets, and unresolved assumptions are documented.
+A ChangeForge release is production-ready only when source validators pass, routing and code generation benchmark validators pass, all intended profiles build, runtime installation validation passes, OpenAI API zips are profile-scoped and structurally valid, install dry runs pass for supported agents, smoke install/uninstall/reinstall succeeds without removing unrelated files, doctor reports no critical issue for smoke targets, and unresolved assumptions are documented.
 
 Language capabilities are professional engineering rules, not language tutorials or personal technical asset mappings.

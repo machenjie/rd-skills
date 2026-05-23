@@ -1,0 +1,53 @@
+id: backward-compatible-api-field
+category: data-api
+complexity: L3
+focus:
+  - additive API contract
+  - DTO schema validation
+  - backward compatibility
+  - contract testing
+route_hints:
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - data-api-contract-changer
+    - backend-change-builder
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - api-contract-design
+    - dto-schema-design
+    - version-compatibility
+    - contract-testing
+    - controller-api-implementation
+    - repository-persistence
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - impact gate
+    - API/data gate
+    - implementation gate
+    - test gate
+    - documentation gate
+expected_outcomes:
+  - GET response includes preferred contact method as an additive nullable field.
+  - PATCH accepts valid new values and rejects invalid values with stable error shape.
+  - Existing clients can omit the field without behavior change.
+  - Documentation and examples reflect old and new client compatibility.
+required_qualities:
+  - DTO and OpenAPI schema stay backward compatible.
+  - Persistence mapping handles existing records without destructive backfill.
+  - Contract tests include old client fixtures.
+  - Validation errors use existing error code conventions.
+  - Documentation states nullability and allowed values clearly.
+forbidden_shortcuts:
+  - Making the new field required for existing requests.
+  - Renaming or removing existing response fields.
+  - Reusing an unrelated boolean as contact preference.
+  - Updating docs without executable contract coverage.
+evidence:
+  - API schema diff showing additive field.
+  - Contract tests for old and new clients.
+  - Persistence or migration note for existing customer profiles.
+  - Updated API documentation examples.

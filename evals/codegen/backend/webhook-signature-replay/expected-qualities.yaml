@@ -1,0 +1,53 @@
+id: webhook-signature-replay
+category: backend
+complexity: L4
+focus:
+  - webhook signature verification
+  - replay protection
+  - idempotent processing
+  - secret handling
+route_hints:
+  skills:
+    - change-intake-compiler
+    - integration-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - idempotency-retry-design
+    - input-validation
+    - secret-configuration-security
+    - integration-testing
+    - logging-error-handling
+    - observability
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - implementation gate
+    - security gate
+    - reliability gate
+    - test gate
+    - documentation gate
+expected_outcomes:
+  - Valid signed events are accepted and processed once.
+  - Tampered bodies and invalid signatures are rejected before side effects.
+  - Stale timestamps and duplicate event ids are rejected or acknowledged safely.
+  - Missing or misconfigured secrets fail closed with safe diagnostics.
+required_qualities:
+  - Signature verification uses constant time comparison.
+  - Verification uses the raw request body bytes.
+  - Replay state is durable enough for retry and restart scenarios.
+  - Event processing is idempotent and transactionally ordered.
+  - Logs include event id and reason code without leaking secrets.
+forbidden_shortcuts:
+  - Verifying signatures after JSON parsing and reserialization.
+  - Accepting unsigned events when configuration is missing.
+  - Process memory replay caches as the only protection.
+  - Logging signing secrets or full signatures.
+evidence:
+  - Integration tests for valid, tampered, stale, and replayed events.
+  - Unit tests for verifier edge cases and timestamp tolerance.
+  - Security note for secret handling and failure responses.
+  - Documentation for configuration and rotation.

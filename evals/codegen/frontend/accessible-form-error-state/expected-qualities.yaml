@@ -1,0 +1,44 @@
+id: accessible-form-error-state
+category: frontend
+complexity: L2
+focus:
+  - accessible form validation
+  - interaction states
+  - server error mapping
+  - regression coverage
+route_hints:
+  skills:
+    - experience-impact-modeler
+    - frontend-change-builder
+    - quality-test-gate
+  capabilities:
+    - form-validation-design
+    - interaction-state-modeling
+    - design-system-rules
+    - frontend-api-integration
+    - frontend-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+expected_outcomes:
+  - Field level validation errors are programmatically associated with inputs.
+  - Form level server errors are announced and do not erase user input.
+  - Loading, success, disabled, and retry states are visually and semantically distinct.
+  - Existing successful submit behavior remains intact.
+required_qualities:
+  - Inputs have stable labels and accessible descriptions.
+  - Errors are not communicated by color alone.
+  - Server errors map to fields when possible and summary when not.
+  - Tests cover keyboard and assistive technology relevant state.
+  - The design follows existing component and spacing conventions.
+forbidden_shortcuts:
+  - Client only validation that bypasses backend error handling.
+  - Toast only errors with no field association.
+  - Clearing form values after a server validation failure.
+  - Hidden text that is not connected to the control it describes.
+evidence:
+  - Component tests for labels descriptions focus and error rendering.
+  - API error mapping tests for field and form level failures.
+  - Accessibility check output or documented manual verification.
+  - State matrix for empty invalid loading success disabled and retry states.
