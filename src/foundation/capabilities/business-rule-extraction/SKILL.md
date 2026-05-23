@@ -87,7 +87,7 @@ Select this capability when the primary risk is **rule authority, consistency ac
 - Prefer `service-business-logic` (or `domain-logic-implementation`) when implementation placement and code structure is the question.
 - Prefer `authentication-authorization` for who-may-do-what (authorization rules).
 - Prefer `input-validation` for transport and shape validation.
-- Prefer `data-modeling` / DB constraints for structural invariants — but **always pair with** domain enforcement for non-trivial rules.
+- Prefer `data-model-design` / DB constraints for structural invariants — but **always pair with** domain enforcement for non-trivial rules.
 - Use **with** `acceptance-standard-definition` so each rule has verifiable acceptance evidence.
 
 # Risk Escalation Rules
@@ -189,7 +189,7 @@ The catalog passes only when:
 
 # Handoff
 
-Hand off to `domain-logic-implementation` for code placement and structure; `authentication-authorization` for authorization rules and PEP/PDP separation; `acceptance-standard-definition` for rule acceptance evidence; `quality-test-gate` for invariant and tabular coverage; `data-modeling` for structural-invariant defense in depth; `idempotency-retry-design` for safe retry of rule application; `logging-error-handling` for rule audit logging; `compliance-regulatory-mapping` (where present) for regulatory traceability.
+Hand off to `domain-logic-implementation` for code placement and structure; `authentication-authorization` for authorization rules and PEP/PDP separation; `acceptance-standard-definition` for rule acceptance evidence; `quality-test-gate` for invariant and tabular coverage; `data-model-design` for structural-invariant defense in depth; `idempotency-retry-design` for safe retry of rule application; `logging-error-handling` for rule audit logging; `security-privacy-gate` for regulatory traceability.
 
 # Completion Criteria
 

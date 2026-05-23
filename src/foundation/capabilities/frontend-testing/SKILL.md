@@ -111,7 +111,7 @@ Select this capability when **frontend component and integration testing strateg
 - Prefer `e2e-testing` when complete browser journeys spanning multiple pages and services need to be validated.
 - Prefer `unit-testing` when the test subject is a pure logic function with no DOM or component behavior.
 - Prefer `contract-testing` when the primary risk is API response shape divergence between frontend mock and backend implementation.
-- Prefer `accessibility-testing` when a comprehensive WCAG audit across the full application is required.
+- Prefer `quality-test-gate` when a comprehensive WCAG audit across the full application is required.
 
 # Risk Escalation Rules
 
@@ -189,7 +189,7 @@ The test plan is complete only when:
 
 # Handoff
 
-Hand off to `e2e-testing` for complete browser journey validation; `contract-testing` for API mock contract alignment; `accessibility-testing` for comprehensive WCAG audit; `quality-test-gate` for coverage and pass/fail gate review.
+Hand off to `e2e-testing` for complete browser journey validation; `contract-testing` for API mock contract alignment; `quality-test-gate` for comprehensive WCAG audit, coverage, and pass/fail gate review.
 
 # Completion Criteria
 

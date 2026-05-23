@@ -17,7 +17,7 @@ Use this capability when a change adds or modifies: in-process memoization (LRU 
 
 # Do Not Use When
 
-Do not use this capability to **make cache the source of truth**, to mask a slow query that should be fixed (`indexing-query-optimization`), to mask a wrong data model (`data-modeling`), to mask permissions enforcement defects (`authentication-authorization`), or to substitute for a specialized read engine (`search-analytics-design`). Cache is acceleration; it cannot rescue incorrect logic, missing indexes, or weak isolation.
+Do not use this capability to **make cache the source of truth**, to mask a slow query that should be fixed (`indexing-query-optimization`), to mask a wrong data model (`data-model-design`), to mask permissions enforcement defects (`authentication-authorization`), or to substitute for a specialized read engine (`search-analytics-design`). Cache is acceleration; it cannot rescue incorrect logic, missing indexes, or weak isolation.
 
 # Non-Negotiable Rules
 
@@ -100,7 +100,7 @@ Select this capability when **cache behavior is primary**. Adjacent routing:
 
 - Prefer `indexing-query-optimization` when the source query itself is the actual bottleneck — fix the query before adding cache.
 - Prefer `search-analytics-design` when the workload requires a specialized read engine.
-- Prefer `data-modeling` when read shape mismatches storage shape — denormalize or project rather than over-cache.
+- Prefer `data-model-design` when read shape mismatches storage shape — denormalize or project rather than over-cache.
 - Prefer `reliability-observability-gate` for broader degradation, fallback, and overload planning.
 - Prefer `authentication-authorization` for permission-decision caching policy (PDP cache TTL, invalidation on grant change).
 - Prefer `web-security` for CSRF / cookie / cache-deception interactions on shared HTTP caches.
@@ -205,7 +205,7 @@ The strategy passes only when:
 
 # Handoff
 
-Hand off to `indexing-query-optimization` when the underlying source query needs to be fixed; `data-modeling` when the read shape requires denormalization; `search-analytics-design` when a specialized read engine is the right answer; `authentication-authorization` for permission-decision cache invalidation; `web-security` for HTTP cache deception / poisoning review; `reliability-observability-gate` for degradation policies and overload protection; `observability` for cache-specific signal design; `backend-change-builder` for implementation.
+Hand off to `indexing-query-optimization` when the underlying source query needs to be fixed; `data-model-design` when the read shape requires denormalization; `search-analytics-design` when a specialized read engine is the right answer; `authentication-authorization` for permission-decision cache invalidation; `web-security` for HTTP cache deception / poisoning review; `reliability-observability-gate` for degradation policies and overload protection; `observability` for cache-specific signal design; `backend-change-builder` for implementation.
 
 # Completion Criteria
 

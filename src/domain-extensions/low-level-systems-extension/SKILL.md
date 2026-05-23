@@ -75,8 +75,9 @@ Extend ChangeForge product and code change analysis with low-level systems engin
 - regression-testing
 - observability
 - logging-error-handling
-- scalability-concurrency
-- performance-baseline
+- concurrency-control
+- performance-budgeting
+- profiling
 - error-code-design
 
 ## Linked Professional Skills

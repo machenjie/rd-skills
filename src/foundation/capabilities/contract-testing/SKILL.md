@@ -88,7 +88,7 @@ Select this capability when **consumer-visible compatibility** is the primary co
 - Prefer `dto-schema-design` when the question is the serialized transfer object structure.
 - Prefer `integration-testing` for testing provider-internal behavior (not the external contract).
 - Prefer `version-compatibility` for release rollout strategy across mixed-version deployments.
-- Prefer `schema-validation` when validating payload conformance at runtime rather than design-time.
+- Prefer `input-validation` when validating payload conformance at runtime rather than design-time.
 
 # Risk Escalation Rules
 

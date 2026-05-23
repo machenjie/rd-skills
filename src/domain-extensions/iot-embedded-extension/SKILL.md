@@ -75,7 +75,8 @@ Extend ChangeForge product and code change analysis with embedded systems and Io
 - logging-error-handling
 - backup-recovery
 - error-code-design
-- scalability-concurrency
+- concurrency-control
+- performance-budgeting
 
 ## Linked Professional Skills
 - security-privacy-gate

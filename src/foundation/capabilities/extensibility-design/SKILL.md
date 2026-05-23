@@ -99,7 +99,7 @@ Select this capability when a **variation mechanism is being introduced or modif
 - Prefer `api-contract-design` when the extension point is an external API contract consumed by third parties.
 - Prefer `version-compatibility` when managing breaking changes to existing extension contracts.
 - Prefer `security-privacy-gate` when the extension could execute privileged code, handle PII, or affect tenant isolation.
-- Prefer `configuration-management` when runtime configuration governance (not code extension) is the primary concern.
+- Prefer `delivery-release-gate` when runtime configuration governance (not code extension) is the primary concern.
 
 # Risk Escalation Rules
 

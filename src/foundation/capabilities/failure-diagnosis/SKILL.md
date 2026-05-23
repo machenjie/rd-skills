@@ -17,7 +17,7 @@ Use this capability when diagnosing: production incidents (P0–P3), failing aut
 
 # Do Not Use When
 
-Do not use this capability for preventive architecture reviews (use `architecture-impact-reviewer`), performance capacity planning (use `capacity-planning`), or dependency risk assessment before upgrade (use `dependency-vulnerability-scanning`). Do not diagnose the same failure twice without first confirming the first diagnosis was correct — re-diagnosis without new evidence compounds confusion.
+Do not use this capability for preventive architecture reviews (use `architecture-impact-reviewer`), performance capacity planning (use `performance-budgeting` and `reliability-observability-gate`), or dependency risk assessment before upgrade (use `dependency-vulnerability-scanning`). Do not diagnose the same failure twice without first confirming the first diagnosis was correct — re-diagnosis without new evidence compounds confusion.
 
 # Non-Negotiable Rules
 

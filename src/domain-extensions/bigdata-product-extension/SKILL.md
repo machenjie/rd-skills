@@ -73,8 +73,9 @@ Extend ChangeForge product and code change analysis with big data engineering di
 - observability
 - logging-error-handling
 - backup-recovery
-- performance-baseline
-- scalability-concurrency
+- performance-budgeting
+- profiling
+- concurrency-control
 
 ## Linked Professional Skills
 - data-api-contract-changer
