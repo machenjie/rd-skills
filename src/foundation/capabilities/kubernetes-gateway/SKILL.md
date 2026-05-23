@@ -209,4 +209,4 @@ Hand off to `containerization` for image hardening and registry; `ci-cd` for dep
 
 # Completion Criteria
 
-The capability is complete when **the workload can be scheduled with correct resources, routed safely, observed, scaled automatically, and rolled back with an explicit procedure covering image, configuration, and schema scope** — secured by non-root execution, minimal RBAC, secret injection, and network policy.
+The capability is complete when **the workload can be scheduled with correct resources, routed safely, observed, scaled automatically, and rolled back with an explicit procedure covering image, configuration, schema scope, and Helm chart release scope when Helm is used** — including lint/template/schema/rendered-manifest validation, secret-safe values, CRD/hook handling, and atomic waited upgrade behavior — secured by non-root execution, minimal RBAC, secret injection, and network policy.

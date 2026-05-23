@@ -508,7 +508,9 @@ capabilities:
     path: src/foundation/capabilities/secret-configuration-security
     status: implemented
     used_by: [security-privacy-gate, delivery-release-gate]
-    triggers: [secure secrets environment variables configuration defaults KMS key policy secret manager scope and runtime exposure]
+    triggers:
+      - secure secrets environment variables configuration defaults KMS key policy secret manager scope and runtime exposure
+      - Helm values.yaml values-prod.yaml secret-like keys password token apiKey clientSecret privateKey rendered manifest Secret ConfigMap credential leakage
     risk_notes: [Secret leaks unsafe defaults and broad key policies create immediate operational exposure]
     expected_outputs: [secret and config review with storage access rotation KMS policy and redaction rules]
   - id: "57"
@@ -661,7 +663,9 @@ capabilities:
     path: src/foundation/capabilities/ci-cd
     status: implemented
     used_by: [delivery-release-gate, quality-test-gate, security-privacy-gate, architecture-impact-reviewer]
-    triggers: [design CI CD pipelines IaC Terraform plan cost impact monorepo affected tests artifacts environments approvals and deployment gates]
+    triggers:
+      - design CI CD pipelines IaC Terraform plan cost impact monorepo affected tests artifacts environments approvals and deployment gates
+      - Helm chart pipeline helm lint helm template helm diff values.schema.json Chart.lock OCI chart helm upgrade atomic wait rendered manifest validation
     risk_notes: [Weak pipelines allow unverified unreproducible unaudited or high cost changes into production]
     expected_outputs: [pipeline plan with stages gates artifacts secrets IaC cost evidence monorepo policy and rollback hooks]
   - id: "74"

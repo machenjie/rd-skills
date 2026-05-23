@@ -252,6 +252,8 @@ The pipeline design passes only when:
 12. IaC changes include plan review, state lock, destructive action detection, IAM diff, cost delta, and budget approval when thresholds are exceeded.
 13. Compliance evidence captures deploy audit event, approval, artifact digest, SBOM, vulnerability scan, and retention target.
 14. Monorepo affected-test selection and build cache keys are deterministic and validated against a full-test fallback.
+15. Helm chart pipelines run dependency build, lint, template, values schema validation, rendered manifest validation, policy checks, helm diff, and atomic waited upgrade or equivalent GitOps safeguards.
+16. Helm release evidence includes chart version, appVersion, values checksum, rendered manifest digest, reviewer, and deployment outcome.
 
 # Used By
 
