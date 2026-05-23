@@ -63,18 +63,18 @@ Professional skill routing:
 - `change-impact-analyzer`: unknown blast radius, cross-surface changes, uncertain product/code impact.
 - `acceptance-criteria-builder`: untestable done state, weak success criteria, missing negative or regression cases.
 - `task-dag-planner`: task too large, dependency ordering needed, rollback or parallelization needed.
-- `experience-impact-modeler`: broken user flow, navigation, accessibility, interaction states, or UX regression risk.
+- `experience-impact-modeler`: broken user flow, navigation, accessibility, interaction states, UX regression risk, A/B test, experiment, guardrail metric, SRM, or funnel analytics risk.
 - `domain-impact-modeler`: business behavior, domain rules, permissions, state machines, or event semantics are affected.
-- `architecture-impact-reviewer`: architecture drift, module boundaries, layering, service boundaries, or scalability tradeoffs are affected.
+- `architecture-impact-reviewer`: architecture drift, module boundaries, layering, service boundaries, scalability tradeoffs, monorepo graph, affected tests, build cache, or generated-file policy are affected.
 - `data-api-contract-changer`: API contract, DTO, schema, compatibility, migration, or error model changes.
 - `frontend-change-builder`: frontend implementation, routes, components, state, forms, API integration, or accessibility.
 - `backend-change-builder`: backend implementation, validation, auth, transactions, services, jobs, repositories, or errors.
 - `data-middleware-change-builder`: SQL, NoSQL, cache, queues, search, storage, consistency, indexing, or middleware.
 - `integration-change-builder`: third-party APIs, webhooks, credentials, retries, reconciliation, or external failure modes.
 - `quality-test-gate`: tests failed, test plan missing, evidence missing, regression risk exists, or release confidence is weak.
-- `security-privacy-gate`: security, privacy, auth, secrets, upload, dependency, AI prompt, or Web3 risk exists.
-- `reliability-observability-gate`: performance, reliability, FinOps/cost, capacity, incident response, concurrency, rate limits, fallback, observability, or operations risk exists.
-- `delivery-release-gate`: deployment, config, migration rollout, CI/CD, IaC/cloud governance, feature flags, production release, incident hotfix, compliance evidence, or rollback risk exists.
+- `security-privacy-gate`: security, privacy, auth, secrets, upload, dependency, AI prompt, Web3, SOC 2, ISO 27001, audit evidence, compliance control, IAM, public bucket, or privilege escalation risk exists.
+- `reliability-observability-gate`: performance, reliability, FinOps/cost, cloud bill, capacity, budget, incident response, outage, concurrency, rate limits, fallback, observability, or operations risk exists.
+- `delivery-release-gate`: deployment, config, migration rollout, CI/CD, Terraform/Pulumi/IaC, cloud governance, feature flags, production release, incident mitigation hotfix, compliance evidence, or rollback risk exists.
 - `ai-code-review-refactor`: AI-generated code, refactor quality, hallucinated APIs, hidden assumptions, duplication, or boundary drift risk exists.
 - `change-documentation-gate`: user docs, API docs, migration notes, runbooks, ADRs, changelog, or operational notes need updates.
 - `change-forge-router`: initial classification, rerouting, or route repair.
@@ -101,9 +101,9 @@ Foundation capability groups:
 Domain extension routing:
 
 - `web3-product-extension`: wallet, signature, smart contract, blockchain transaction, token, on-chain/off-chain state, custody, private key, chain data, nonce, replay, reorg, or network mismatch.
-- `ai-product-extension`: LLM, RAG, agent, embedding, vector database, prompt, model output, tool use, hallucination, evaluation, AI safety, generated content, or permission-aware retrieval.
+- `ai-product-extension`: LLM, RAG, agent, embedding, vector database, prompt, model output, tool use, hallucination, evaluation, AI safety, generated content, permission-aware retrieval, MLOps, model registry, model drift, training-serving skew, feature store, or label leakage.
 - `mobile-product-extension`: Android, iOS, mobile app, offline mode, push notification, app lifecycle, platform permission, deep link, app store release, background execution, or mobile compatibility.
-- `bigdata-product-extension`: stream, batch job, warehouse, analytics, reporting, ETL/ELT, lineage, freshness, backfill, replay, schema drift, dashboard metric, product experiment, feature store, or partitioning.
+- `bigdata-product-extension`: stream, batch job, warehouse, analytics, reporting, ETL/ELT, lineage, freshness, backfill, replay, schema drift, dashboard metric, product experiment, A/B test, guardrail metric, SRM, feature store, or partitioning.
 - `iot-embedded-extension`: device, firmware, embedded, sensor, actuator, edge protocol, OTA, hardware resource limit, connectivity loss, physical safety, or field operations.
 - `payment-trading-extension`: payment, subscription, billing, invoice, refund, chargeback, trading, ledger, balance, checkout, reconciliation, settlement, entitlement, or tax.
 - `low-level-systems-extension`: OS, kernel, driver, native performance, C, C++, Rust systems, FFI, ABI, syscall, memory safety, atomics, descriptor, or platform runtime.
@@ -142,11 +142,12 @@ Route by evidence in the request:
 - If security or privacy risk is present, route to `security-privacy-gate`.
 - If reliability or performance risk is present, route to `reliability-observability-gate`.
 - If deployment or release risk is present, route to `delivery-release-gate`.
-- If cost, capacity, FinOps, autoscaling spend, egress, storage lifecycle, or cost anomaly risk is present, select `reliability-observability-gate` and `performance-budgeting`.
-- If SEV0, SEV1, SEV2, production incident, incident command, status page, customer communication, or postmortem work is present, select `reliability-observability-gate`, `failure-diagnosis`, and `change-documentation-gate`.
-- If Terraform, IaC, cloud IAM, public bucket, DNS, CDN, WAF, KMS, or cloud account/project governance is present, select `ci-cd`, `delivery-release-gate`, and `security-privacy-gate`.
-- If an A/B test, exposure event, funnel, cohort, primary metric, guardrail metric, or experiment decision is present, select `experience-impact-modeler`, `acceptance-criteria-builder`, `quality-test-gate`, and `bigdata-product-extension`.
-- If ML model rollout, model registry, feature store, training-serving skew, drift, shadow/canary, fairness, or rollback model is present, select `ai-product-extension`, `bigdata-product-extension`, `reliability-observability-gate`, and `quality-test-gate`.
+- If cost, capacity, FinOps, cloud bill, budget guardrail, autoscaling spend, egress, storage lifecycle, capacity forecast, or cost anomaly risk is present, select `reliability-observability-gate` and `performance-budgeting`.
+- If SEV0, SEV1, SEV2, production incident, outage, incident command, mitigation, customer impact, status page, customer communication, or postmortem work is present, select `reliability-observability-gate`, `failure-diagnosis`, and `change-documentation-gate`.
+- If Terraform, Pulumi, IaC, cloud IAM, public bucket, DNS, CDN, WAF, KMS, policy as code, or cloud account/project governance is present, select `ci-cd`, `delivery-release-gate`, and `security-privacy-gate`.
+- If SOC 2, ISO 27001, audit evidence, compliance control, IAM privilege escalation, or public bucket exposure is present, select `security-privacy-gate`, `delivery-release-gate`, and `change-documentation-gate` when evidence artifacts are required.
+- If an A/B test, exposure event, funnel, cohort, primary metric, guardrail metric, SRM/sample ratio mismatch, or experiment decision is present, select `experience-impact-modeler`, `acceptance-criteria-builder`, `quality-test-gate`, and `bigdata-product-extension`.
+- If MLOps, ML model rollout, model registry, feature store, training-serving skew, model drift, label leakage, shadow/canary, fairness, or rollback model is present, select `ai-product-extension`, `bigdata-product-extension`, `reliability-observability-gate`, and `quality-test-gate`.
 - If monorepo, affected tests, incremental build, Bazel, Pants, Nx, Turborepo, generated files, devcontainer, or build cache correctness is present, select `architecture-impact-reviewer`, `ci-cd`, `package-dependency-management`, and `quality-test-gate`.
 - If AI code quality risk is present, route to `ai-code-review-refactor`.
 - If docs are stale or behavior changed, route to `change-documentation-gate`.

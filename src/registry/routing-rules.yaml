@@ -190,6 +190,7 @@ routing_rules:
       - model user flow page flow interaction states accessibility validation empty loading error success disabled
       - analyze UX experience impact
       - model A/B test experimentation analytics exposure event assignment unit primary metric guardrail metrics dashboard migration
+      - experiment A/B test exposure event guardrail metric SRM funnel analytics
     priority: 80
   - route_to: domain-impact-modeler
     triggers:
@@ -237,6 +238,7 @@ routing_rules:
       - LLM RAG agent embedding vector database prompt model output tool use hallucination AI safety evaluation
       - permission aware retrieval prompt injection data exfiltration generated content model failure handling
       - ML model rollout classical ML MLOps model registry feature store training serving skew drift monitoring shadow deployment model canary rollback model fairness bias
+      - MLOps model registry model drift training serving skew feature store label leakage
     priority: 74
   - route_to: mobile-product-extension
     triggers:
@@ -275,12 +277,14 @@ routing_rules:
       - review security privacy auth authorization XSS CSRF SSRF SQLi RCE secrets dependencies AI prompt Web3
       - assess secure development and privacy risk
       - review cloud IAM public bucket public exposure SG NACL WAF DNS CDN KMS key policy regulated compliance SOC 2 ISO 27001 PCI evidence
+      - SOC 2 ISO 27001 audit evidence compliance control public bucket IAM privilege escalation
     priority: 70
   - route_to: reliability-observability-gate
     triggers:
       - define SLI SLO performance profiling concurrency rate limits circuit breakers fallback logs metrics traces alerts recovery
       - assess reliability observability production readiness
       - assess cost capacity FinOps cost per request cost per tenant cost per batch job autoscaling cost egress storage lifecycle capacity forecast cost anomaly
+      - FinOps cloud cost capacity forecast cost anomaly budget guardrail cost per request cost per tenant cloud bill
       - route SEV0 SEV1 SEV2 production incident incident command customer communication status page postmortem reliability handoff
       - monitor ML model rollout drift metric model latency model canary shadow deployment rollback model
     priority: 70
@@ -671,6 +675,7 @@ routing_rules:
       - design CI CD pipeline build test lint security checks artifacts deployment gates failure policy
       - require traceable artifacts environment promotion approvals rollback hooks and blocked failed checks
       - design Terraform IaC plan cost impact review cost delta summary budget approval gate state lock drift detection IAM diff plan file review
+      - Terraform IaC Pulumi plan apply drift state lock policy as code
       - design monorepo affected test selection incremental build Bazel Pants Nx Turborepo build cache correctness generated file policy
       - capture compliance evidence approval evidence artifact digest SBOM vulnerability scan deploy audit event
     priority: 60
@@ -715,6 +720,7 @@ routing_rules:
       - diagnose failure from evidence symptoms triggers root cause contributing factors fix regression prevention
       - investigate incidents CI failures regressions logs metrics traces diffs hypotheses and reproducible behavior
       - run incident response protocol SEV0 SEV1 SEV2 incident commander technical lead communications lead mitigation resolution customer comms status page postmortem CAPA
+      - incident outage SEV postmortem root cause mitigation customer impact status page
     priority: 60
   - route_to: solution-optimality-evaluation
     triggers:

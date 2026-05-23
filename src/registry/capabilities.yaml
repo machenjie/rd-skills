@@ -458,7 +458,7 @@ capabilities:
     group: data-middleware
     path: src/foundation/capabilities/search-analytics-design
     status: implemented
-    used_by: [data-middleware-change-builder, experience-impact-modeler]
+    used_by: [data-middleware-change-builder, experience-impact-modeler, acceptance-criteria-builder, quality-test-gate]
     triggers: [design search indexing analytics events aggregation and query experience]
     risk_notes: [Search and analytics drift can mislead users and product decisions]
     expected_outputs: [search analytics design with events indexes queries and quality checks]
@@ -584,7 +584,7 @@ capabilities:
     group: reliability-operations
     path: src/foundation/capabilities/performance-budgeting
     status: implemented
-    used_by: [reliability-observability-gate, frontend-change-builder]
+    used_by: [reliability-observability-gate, frontend-change-builder, delivery-release-gate, quality-test-gate]
     triggers: [set latency throughput memory cloud cost query scan per feature cost and rendering performance budgets]
     risk_notes: [No budget makes performance or cost regressions subjective and late to detect]
     expected_outputs: [performance and cost budget with metrics thresholds scenarios measurement plan and approval gates]
@@ -638,7 +638,7 @@ capabilities:
     group: delivery-platform
     path: src/foundation/capabilities/project-initialization
     status: implemented
-    used_by: [delivery-release-gate]
+    used_by: [delivery-release-gate, architecture-impact-reviewer]
     triggers: [initialize project structure monorepo workspace dependencies configuration scripts and quality gates]
     risk_notes: [Weak initialization creates inconsistent environments hidden setup debt and broken module graphs]
     expected_outputs: [project setup plan with structure monorepo policy commands configs and verification]
@@ -656,7 +656,7 @@ capabilities:
     group: delivery-platform
     path: src/foundation/capabilities/ci-cd
     status: implemented
-    used_by: [delivery-release-gate, quality-test-gate]
+    used_by: [delivery-release-gate, quality-test-gate, security-privacy-gate, architecture-impact-reviewer]
     triggers: [design CI CD pipelines IaC Terraform plan cost impact monorepo affected tests artifacts environments approvals and deployment gates]
     risk_notes: [Weak pipelines allow unverified unreproducible unaudited or high cost changes into production]
     expected_outputs: [pipeline plan with stages gates artifacts secrets IaC cost evidence monorepo policy and rollback hooks]
@@ -728,7 +728,7 @@ capabilities:
     group: engineering-workflow
     path: src/foundation/capabilities/failure-diagnosis
     status: implemented
-    used_by: [reliability-observability-gate, ai-code-review-refactor]
+    used_by: [reliability-observability-gate, delivery-release-gate, quality-test-gate, change-documentation-gate, ai-code-review-refactor]
     triggers: [diagnose failures SEV incident response symptoms logs metrics regressions hypotheses root cause and postmortem actions]
     risk_notes: [Jumping to fixes without evidence or incident command can mask root cause and extend customer impact]
     expected_outputs: [diagnosis report with severity roles symptoms evidence hypotheses root cause customer comms and postmortem actions]
