@@ -16,6 +16,8 @@ Ensure every change leaves accurate, audience-appropriate documentation exactly 
 - When a new component, service, feature flag, or integration is added that operators, developers, or users must understand.
 - When a breaking change is introduced that requires migration guidance for consumers.
 - Before release when release notes, communication plans, or changelog entries are required.
+- During or after customer-impacting incidents when an incident report, customer advisory, status page entry, postmortem summary, or corrective action tracker is required.
+- When regulated or audited systems need control mapping, evidence packets, exception approvals, or evidence retention documentation.
 
 ## Do Not Use When
 - The change is purely an internal refactor with zero behavioral change — no user, operator, integrator, or developer context shifts.
@@ -31,6 +33,7 @@ Ensure every change leaves accurate, audience-appropriate documentation exactly 
 - ADRs (Architecture Decision Records) must be written before irreversible architecture decisions are implemented — retroactive ADRs lose their decision-support value.
 - Changelogs must be human-readable summaries for the affected audience, not commit log dumps.
 - Documentation ownership must be assigned — unowned documentation accumulates as unmaintainable drift.
+- Incident and compliance documentation must preserve evidence integrity: every customer advisory, status page entry, postmortem action, control mapping, and exception approval needs owner, timestamp, and retention target.
 
 ## Industry Benchmarks
 - **Docs-as-Code (Write the Docs standard)**: Documentation is versioned alongside code, reviewed in pull requests, and owned by engineers — not a separate post-release activity.
@@ -54,6 +57,8 @@ Ensure every change leaves accurate, audience-appropriate documentation exactly 
 | New alert / SLO / runbook | Runbook with triage steps, escalation path, alert description | SRE, on-call engineers |
 | Security posture change | Security impact statement, user-visible behavior change notice | Security team, users |
 | Dependency upgrade (major) | Changelog summary, migration notes if API-breaking | Developers |
+| Customer-impacting incident | Incident report, customer advisory, status page entry, postmortem summary, corrective action tracker | Customers, support, SRE, leadership |
+| Regulated or audited change | Control mapping, approval evidence, audit packet, exception record, retention note | Auditors, compliance, security, release owners |
 
 ## Technical Selection Criteria
 Evaluate documentation requirements across these dimensions:
@@ -65,6 +70,8 @@ Evaluate documentation requirements across these dimensions:
 - **Security and privacy disclosure**: Does the change require a security advisory, privacy notice update, or compliance evidence update?
 - **Deprecation lifecycle**: Is this change part of a deprecation — with a declared timeline, migration path, and notification to affected consumers?
 - **ADR necessity**: Is this an irreversible or difficult-to-reverse architecture decision that needs documented reasoning?
+- **Incident documentation**: Is there an incident report, customer advisory, status page entry, postmortem summary, and corrective action tracker with owners?
+- **Compliance evidence chain**: Which control objective, evidence artifact, evidence owner, approval record, exception owner, and retention period must be documented?
 
 ### Decision Tree: Documentation Required?
 
@@ -79,6 +86,10 @@ Does the change make an irreversible architecture decision?
 ├── Yes → ADR required before implementation
 Does the change modify configuration keys, env vars, or defaults?
 ├── Yes → Config reference update required
+Was there a customer-impacting incident or SEV?
+├── Yes → Incident report + customer advisory/status page + postmortem summary required
+Is the change regulated or audit-relevant?
+├── Yes → Control mapping + evidence packet + owner/retention metadata required
 None of the above → Document as no-change with rationale
 ```
 
@@ -89,6 +100,8 @@ None of the above → Document as no-change with rationale
 - Escalate when a data migration script is undocumented and the rollback path requires manual database intervention.
 - Escalate when documentation ownership is contested or unassigned and the release cannot proceed without resolution.
 - Escalate when changelog or release notes omit a change that materially affects user behavior, billing, or data.
+- Escalate when a customer-impacting incident lacks an approved communication cadence, status page decision, or postmortem publication owner.
+- Escalate when compliance evidence lacks a control owner, evidence owner, exception owner, or retention period.
 
 ## Critical Details
 - **Changelog entry categories** (follow Keep a Changelog standard): `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security` — every category that applies must be present.
@@ -99,6 +112,8 @@ None of the above → Document as no-change with rationale
 - **Config documentation**: Every environment variable must document: purpose, type, required/optional, default value, example value, and what happens if missing.
 - **Deprecation notice requirements**: Declared sunset date, migration alternative, link to migration guide, affected version range.
 - **Documentation review timing**: Documentation must be reviewed alongside code in the same pull request — post-release documentation is debt, not documentation.
+- **Incident documentation set**: incident report, customer advisory, status page entry, postmortem summary, and corrective action tracking must use the same timeline and impact language. Conflicting timestamps or impact scopes create support and audit risk.
+- **Compliance evidence metadata**: every evidence artifact needs control objective, evidence owner, control owner, approval source, freshness date, retention period, and exception owner when the control is not fully met.
 
 ### Anti-Examples
 
@@ -139,6 +154,8 @@ Return a documentation impact assessment with:
 - **Audience map**: Each updated artifact with its target audience and review owner.
 - **Breaking change checklist**: Migration guide, deprecation notice, and consumer notification status.
 - **Operational readiness check**: Runbook and alert documentation completeness for new operational paths.
+- **Incident documentation package**: Incident report, customer advisory, status page entry, postmortem summary, corrective action tracking, and publication/review owners.
+- **Compliance evidence package**: Control objective, evidence artifact, control owner, evidence owner, exception owner, evidence freshness, and retention period.
 - **Release notes draft**: Changelog entries for this change, categorized by Keep a Changelog standard.
 - **Open items**: Documentation debt that is accepted but deferred, with owner and due date.
 
@@ -153,13 +170,16 @@ Return a documentation impact assessment with:
 8. Documentation ownership is assigned for all changed artifacts.
 9. Changelog entries are human-readable and audience-appropriate — not commit log dumps.
 10. Documentation has been reviewed in the same pull request or release gate as the code change.
+11. Customer-impacting incidents have incident report, customer advisory/status page decision, postmortem summary, and corrective action tracking.
+12. Compliance evidence includes control, evidence artifact, owner, exception, freshness, and retention metadata.
 
 ## Handoff
 - **delivery-release-gate** — when release notes, communication plans, or staged rollout documentation are required.
 - **security-privacy-gate** — when documentation changes may inadvertently disclose security posture or require a security advisory.
 - **reliability-observability-gate** — when runbook or alert documentation is incomplete for a new operational path.
+- **failure-diagnosis** — when an incident report or postmortem summary needs verified timeline, root cause, or CAPA action evidence.
 - **architecture-impact-reviewer** — when an ADR is required but the architecture decision has not yet been reviewed.
 - **data-api-contract-changer** — when API documentation reveals a contract gap that must be resolved before the spec can be published.
 
 ## Completion Criteria
-Documentation impact is fully closed when every affected audience has accurate, reviewed documentation or an explicit no-change rationale; all breaking changes have migration guides; all new operational paths have runbooks; no undocumented deprecations exist; and documentation ownership is assigned for every changed artifact.
+Documentation impact is fully closed when every affected audience has accurate, reviewed documentation or an explicit no-change rationale; all breaking changes have migration guides; all new operational paths have runbooks; incident and compliance evidence artifacts have owner and retention metadata when applicable; no undocumented deprecations exist; and documentation ownership is assigned for every changed artifact.

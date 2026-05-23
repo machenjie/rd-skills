@@ -13,7 +13,7 @@ changeforge_version: 0.1.0
 
 # When To Use
 
-Use this capability when: a change introduces new environment variables, API keys, database credentials, service account keys, signing keys, encryption keys, certificates, HMAC secrets, OAuth client secrets, or any value that grants privileged access to a system; an existing secret needs rotation, scope reduction, or revocation; configuration values control security behavior (feature flags for authentication bypass, rate limiting, TLS enforcement, content security policy, CORS origin allowlist); CI/CD pipeline variables or secrets are being modified; a container image or build artifact needs to be verified for embedded secrets; or documentation, code examples, or README files include operational configuration values that could be real.
+Use this capability when: a change introduces new environment variables, API keys, database credentials, service account keys, signing keys, encryption keys, KMS keys, certificates, HMAC secrets, OAuth client secrets, or any value that grants privileged access to a system; an existing secret or key needs rotation, scope reduction, or revocation; configuration values control security behavior (feature flags for authentication bypass, rate limiting, TLS enforcement, content security policy, CORS origin allowlist, WAF, DNS/CDN/gateway exposure); CI/CD pipeline variables or secrets are being modified; a container image or build artifact needs to be verified for embedded secrets; or documentation, code examples, or README files include operational configuration values that could be real.
 
 # Do Not Use When
 
@@ -28,6 +28,7 @@ Do not use this capability to design the authentication and authorization model 
 - **Secret access must follow least privilege: named service, named environment, named purpose.** "Engineering team has access to the production database password" is not an access policy. An access policy is: "Service `order-processor` in environment `production` has read access to secret `db/production/order-processor/password`; access expires in 90 days; emergency break-glass access requires two-person approval." Access must be revocable per service, per environment, without revoking all consumers.
 - **Secret rotation must include all consumers before revocation of the old secret.** Rotating a secret and immediately revoking the old version while some consumers still hold the old version in memory or in their local config cache causes a production incident. Rotation procedure: (1) Create new secret version in secrets manager. (2) Update all consumers to read the new version (rolling deploy or dynamic config reload). (3) Verify all consumers are using the new version (audit log check). (4) Revoke old version.
 - **Documentation and code examples must use placeholders, not real values.** `API_KEY=your-api-key-here`, `DATABASE_PASSWORD=<replace-with-real-value>`, `SIGNING_SECRET=EXAMPLE_DO_NOT_USE_IN_PRODUCTION` are safe placeholders. Any value that looks like a real API key, UUID, or base64 string in documentation or a `.env.example` file must be verified to be a non-functional placeholder (by attempting to use it against the real service and confirming it fails).
+- **KMS and secret-manager policy changes require least-privilege review.** Key policy, cross-account grants, decrypt permissions, rotation schedule, deletion windows, and service identity bindings must be reviewed as security controls, not only configuration.
 
 # Industry Benchmarks
 
@@ -69,11 +70,11 @@ Does the config value control a security behavior?
 
 # Selection Rules
 
-Select this capability when **secrets, credentials, or security-sensitive configuration are the primary concern in a change**. Route elsewhere when: the authentication model itself needs design (use `authentication-authorization`); web-facing vulnerabilities like XSS, CSRF, or injection are the concern (use `web-security`); the deployment coordination for the secret rotation needs planning (use `delivery-release-gate`); package dependency vulnerabilities are the concern (use `dependency-vulnerability-scanning`).
+Select this capability when **secrets, credentials, KMS policy, key rotation, or security-sensitive configuration are the primary concern in a change**. Route elsewhere when: the authentication model itself needs design (use `authentication-authorization`); web-facing vulnerabilities like XSS, CSRF, or injection are the concern (use `web-security`); the deployment coordination for the secret rotation needs planning (use `delivery-release-gate`); package dependency vulnerabilities are the concern (use `dependency-vulnerability-scanning`).
 
 # Risk Escalation Rules
 
-Escalate immediately to the security owner when: a real secret has been or may have been committed to source control (assume compromised; rotate before any other action); a container image may have a secret embedded in a layer (pull request blocked until image rebuild is verified); a frontend bundle may contain a server-side secret injected via build-time environment variables (assume public; rotate immediately); a secret has been emitted to an external log aggregator, error tracker, or monitoring service that has broader access than the secret's intended audience; rotation of a shared secret would require a coordinated multi-service deploy and no coordination plan exists; or a CI/CD pipeline secret has been exposed in a build log that is accessible to contributors without production access.
+Escalate immediately to the security owner when: a real secret has been or may have been committed to source control (assume compromised; rotate before any other action); a container image may have a secret embedded in a layer (pull request blocked until image rebuild is verified); a frontend bundle may contain a server-side secret injected via build-time environment variables (assume public; rotate immediately); a secret has been emitted to an external log aggregator, error tracker, or monitoring service that has broader access than the secret's intended audience; KMS key policy grants broad decrypt, cross-account access, or key deletion without recovery plan; rotation of a shared secret would require a coordinated multi-service deploy and no coordination plan exists; or a CI/CD pipeline secret has been exposed in a build log that is accessible to contributors without production access.
 
 # Critical Details
 
@@ -81,6 +82,7 @@ Escalate immediately to the security owner when: a real secret has been or may h
 - **Docker `ARG` does not prevent secrets from appearing in image history.** `docker build --build-arg API_KEY=secret` stores the value in the image layer metadata (`docker history --no-trunc`). Use BuildKit `--secret` mount (`RUN --mount=type=secret,id=api_key cat /run/secrets/api_key`) so the secret is never baked into any layer.
 - **Structured logging can silently include secrets via object serialization.** A log statement like `logger.info("Request received", { body: req.body })` will log the entire request body — including any password, token, or secret field the client submits. Use a per-field allowlist for structured log objects, not a blocklist.
 - **Configuration default values control security posture.** A default of `ENFORCE_TLS=false`, `RATE_LIMIT_ENABLED=false`, or `REQUIRE_MFA=false` means that if the environment variable is not set in production (due to a deploy oversight), the secure behavior is disabled. Security-sensitive flags must default to the **more restrictive** value: `ENFORCE_TLS=true`, `RATE_LIMIT_ENABLED=true`, `REQUIRE_MFA=true`. The default must be fail-closed, not fail-open.
+- **Key deletion is harder to roll back than key rotation.** Disabling or scheduling deletion of a KMS key can make encrypted data permanently unreadable. Key lifecycle changes require backup, restore, decrypt-impact inventory, and explicit recovery window.
 
 ### Anti-examples
 
@@ -111,6 +113,8 @@ Return a secret and configuration review with:
 - `redaction_controls` (log fields redacted, trace attribute filters, error report scrubbing rules)
 - `config_security_flags` (per security-sensitive config: current default, correct fail-closed default, risk if missing)
 - `rotation_plan` (per secret: create new → update consumers → verify → revoke old; deployment coordination notes)
+- `kms_key_policy` (key owner, allowed principals, decrypt/encrypt grants, cross-account access, rotation schedule, deletion window, recovery plan)
+- `secret_manager_scope` (secret path/project/account boundary, service identity binding, access review evidence, audit log source)
 - `frontend_exposure_boundary` (which variables are public-prefixed; which must be server-side only)
 - `ci_secret_controls` (CI secret store location, masking verification, log visibility)
 - `break_glass_procedure` (emergency access escalation for production secrets)
@@ -130,6 +134,7 @@ The review is complete only when:
 8. CI/CD secrets are masked and not visible in build logs.
 9. Break-glass access procedure is documented with two-person approval.
 10. Residual risks are documented with compensating controls.
+11. KMS key policies and secret-manager access scopes are least-privilege, rotation-aware, audited, and recoverable.
 
 # Used By
 

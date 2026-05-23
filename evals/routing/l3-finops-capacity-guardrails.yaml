@@ -1,0 +1,40 @@
+---
+id: l3-finops-capacity-guardrails
+description: |
+  Add cloud cost and capacity guardrails for a production API, including
+  unit cost, autoscaling spend, egress, storage growth, and anomaly alerting.
+prompt: |
+  Add FinOps guardrails for the orders API. Define cost per request and
+  per tenant, capacity forecast with 2x peak headroom, autoscaling cost
+  impact, egress and storage lifecycle cost, and a cost anomaly alert.
+expected:
+  complexity: L3
+  risk_triggers:
+    - cost anomaly
+  skills:
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - performance-budgeting
+    - profiling
+    - observability
+  domain_extensions: []
+  quality_gates:
+    - reliability gate
+    - test gate
+forbidden:
+  skills:
+    - security-privacy-gate
+    - delivery-release-gate
+    - change-documentation-gate
+  capabilities:
+    - authentication-authorization
+    - data-migration-design
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - security gate
+notes: |
+  Cost and capacity are reliability concerns here. The route should select
+  reliability plus performance-budgeting without pulling in unrelated gates.

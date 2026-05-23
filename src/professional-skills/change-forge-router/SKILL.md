@@ -28,7 +28,7 @@ Do not use the router to invoke every skill, invent a product program around a l
 - Choose the minimum sufficient professional path; add skills only when the classification, impact, risk, or missing information requires them.
 - Treat bug fixes, refactors, API changes, data changes, migrations, review, tests, docs, reliability, security, and deployment as first-class changes.
 - Preserve missing information as blocking questions, non-blocking questions, or explicit assumptions.
-- Escalate risk when auth, authorization, object-level permission, payment, subscription, billing, wallet, private key, Web3 asset, user data, PII, file upload, AI prompt, RAG, external integration, webhook, database migration, production deployment, secret/config change, security-sensitive dependency upgrade, or irreversible data operation is plausible.
+- Escalate risk when auth, authorization, object-level permission, payment, subscription, billing, wallet, private key, Web3 asset, user data, PII, file upload, AI prompt, RAG, external integration, webhook, database migration, production deployment, production incident, cloud IAM, public exposure, regulated workload, compliance evidence, cost anomaly, secret/config change, security-sensitive dependency upgrade, or irreversible data operation is plausible.
 - Route domain extensions only when domain signals are present; do not attach them because they are available.
 - Route foundation capabilities as targeted support for selected professional skills; do not list all capabilities unless the user asks for a catalog.
 - Include skipped or deferred areas implicitly through the impact matrix and quality gates instead of padding the professional path.
@@ -73,8 +73,8 @@ Professional skill routing:
 - `integration-change-builder`: third-party APIs, webhooks, credentials, retries, reconciliation, or external failure modes.
 - `quality-test-gate`: tests failed, test plan missing, evidence missing, regression risk exists, or release confidence is weak.
 - `security-privacy-gate`: security, privacy, auth, secrets, upload, dependency, AI prompt, or Web3 risk exists.
-- `reliability-observability-gate`: performance, reliability, concurrency, rate limits, fallback, observability, or operations risk exists.
-- `delivery-release-gate`: deployment, config, migration rollout, CI/CD, feature flags, production release, or rollback risk exists.
+- `reliability-observability-gate`: performance, reliability, FinOps/cost, capacity, incident response, concurrency, rate limits, fallback, observability, or operations risk exists.
+- `delivery-release-gate`: deployment, config, migration rollout, CI/CD, IaC/cloud governance, feature flags, production release, incident hotfix, compliance evidence, or rollback risk exists.
 - `ai-code-review-refactor`: AI-generated code, refactor quality, hallucinated APIs, hidden assumptions, duplication, or boundary drift risk exists.
 - `change-documentation-gate`: user docs, API docs, migration notes, runbooks, ADRs, changelog, or operational notes need updates.
 - `change-forge-router`: initial classification, rerouting, or route repair.
@@ -103,7 +103,7 @@ Domain extension routing:
 - `web3-product-extension`: wallet, signature, smart contract, blockchain transaction, token, on-chain/off-chain state, custody, private key, chain data, nonce, replay, reorg, or network mismatch.
 - `ai-product-extension`: LLM, RAG, agent, embedding, vector database, prompt, model output, tool use, hallucination, evaluation, AI safety, generated content, or permission-aware retrieval.
 - `mobile-product-extension`: Android, iOS, mobile app, offline mode, push notification, app lifecycle, platform permission, deep link, app store release, background execution, or mobile compatibility.
-- `bigdata-product-extension`: stream, batch job, warehouse, analytics, reporting, ETL/ELT, lineage, freshness, backfill, replay, schema drift, dashboard metric, or partitioning.
+- `bigdata-product-extension`: stream, batch job, warehouse, analytics, reporting, ETL/ELT, lineage, freshness, backfill, replay, schema drift, dashboard metric, product experiment, feature store, or partitioning.
 - `iot-embedded-extension`: device, firmware, embedded, sensor, actuator, edge protocol, OTA, hardware resource limit, connectivity loss, physical safety, or field operations.
 - `payment-trading-extension`: payment, subscription, billing, invoice, refund, chargeback, trading, ledger, balance, checkout, reconciliation, settlement, entitlement, or tax.
 - `low-level-systems-extension`: OS, kernel, driver, native performance, C, C++, Rust systems, FFI, ABI, syscall, memory safety, atomics, descriptor, or platform runtime.
@@ -117,7 +117,7 @@ Runtime profile awareness:
 ## Risk Escalation Rules
 Escalate one level for any risk trigger that affects user data, money, permissions, external systems, production state, or irreversible operations. Escalate to high or critical when more than one high-impact trigger is present or when rollback is unclear.
 
-Risk triggers include auth, authorization, object-level permission, payment, subscription, billing, wallet, private key, Web3 asset, user data, PII, file upload, AI prompt, RAG, external integration, webhook, database migration, production deployment, secret/config change, dependency upgrade with security impact, and irreversible data operation.
+Risk triggers include auth, authorization, object-level permission, payment, subscription, billing, wallet, private key, Web3 asset, user data, PII, file upload, AI prompt, RAG, external integration, webhook, database migration, production deployment, production incident, secret/config change, cloud IAM, public exposure, regulated workload, compliance evidence, cost anomaly, dependency upgrade with security impact, and irreversible data operation.
 
 Escalate to L5 when regulated, financial, Web3, AI, migration, or production-critical behavior combines with security, data integrity, external dependency, or rollback risk.
 
@@ -142,6 +142,12 @@ Route by evidence in the request:
 - If security or privacy risk is present, route to `security-privacy-gate`.
 - If reliability or performance risk is present, route to `reliability-observability-gate`.
 - If deployment or release risk is present, route to `delivery-release-gate`.
+- If cost, capacity, FinOps, autoscaling spend, egress, storage lifecycle, or cost anomaly risk is present, select `reliability-observability-gate` and `performance-budgeting`.
+- If SEV0, SEV1, SEV2, production incident, incident command, status page, customer communication, or postmortem work is present, select `reliability-observability-gate`, `failure-diagnosis`, and `change-documentation-gate`.
+- If Terraform, IaC, cloud IAM, public bucket, DNS, CDN, WAF, KMS, or cloud account/project governance is present, select `ci-cd`, `delivery-release-gate`, and `security-privacy-gate`.
+- If an A/B test, exposure event, funnel, cohort, primary metric, guardrail metric, or experiment decision is present, select `experience-impact-modeler`, `acceptance-criteria-builder`, `quality-test-gate`, and `bigdata-product-extension`.
+- If ML model rollout, model registry, feature store, training-serving skew, drift, shadow/canary, fairness, or rollback model is present, select `ai-product-extension`, `bigdata-product-extension`, `reliability-observability-gate`, and `quality-test-gate`.
+- If monorepo, affected tests, incremental build, Bazel, Pants, Nx, Turborepo, generated files, devcontainer, or build cache correctness is present, select `architecture-impact-reviewer`, `ci-cd`, `package-dependency-management`, and `quality-test-gate`.
 - If AI code quality risk is present, route to `ai-code-review-refactor`.
 - If docs are stale or behavior changed, route to `change-documentation-gate`.
 - If the user asks which language or stack to use, select `technology-stack-selection` and `language-runtime-selection`.

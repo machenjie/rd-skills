@@ -16,10 +16,13 @@ Make every release execution safe, observable, and reversible — by defining en
 - Feature flag additions, removals, or gradual rollouts.
 - Environment configuration, secrets reference, or infrastructure topology changes.
 - CI/CD pipeline changes that affect build, test, or deployment behavior.
+- Infrastructure-as-code changes that affect cloud accounts, projects, IAM, DNS, CDN, WAF, gateway routing, KMS, network exposure, or resource cost.
 - Canary, blue/green, or progressive delivery rollouts.
 - Multi-service coordinated deployments with sequencing dependencies.
 - Release coordination involving external consumers, partner integrations, or public announcements.
 - Post-release monitoring and rollback readiness validation.
+- Incident mitigation releases, emergency rollbacks, or hotfixes where mitigation must be separated from final resolution.
+- Regulated or audited releases requiring change approval evidence, deployment audit events, and retention-ready release artifacts.
 
 ## Do Not Use When
 - The change is source-code-only with no deployment, runtime configuration, release coordination, or consumer notification involved.
@@ -35,6 +38,8 @@ Make every release execution safe, observable, and reversible — by defining en
 - **Rollback must be tested in staging before production** — rollback procedures that have never been executed fail under pressure.
 - **Secrets must never be in source code, container images, or plaintext environment variables in logs** — use a secrets manager with audit trail.
 - **Container images must be immutable artifacts** — never pull `latest` in production; pin to a specific SHA256 digest or semantic tag.
+- **Cloud governance changes require blast-radius boundaries before release** — account/project, namespace, VPC/subnet, gateway, DNS/CDN/WAF, KMS, IAM, and tagging changes must have rollback and audit evidence.
+- **Emergency deployment does not remove evidence obligations** — hotfixes and incident mitigations still require approver, artifact, rollback, customer communication owner, and post-release validation.
 
 ## Industry Benchmarks
 - **DORA Metrics (Accelerate — Forsgren, Humble, Kim)**: Deployment frequency, Lead time for changes, Mean time to restore (MTTR), Change failure rate — the four metrics that measure delivery health. Elite teams: deployment frequency daily+, MTTR < 1 hour, change failure rate < 5%.
@@ -71,6 +76,9 @@ Evaluate the release plan against these dimensions:
 - **Rollback procedure**: Is it documented? Has it been executed in staging? How long does it take?
 - **Post-release monitoring**: Which dashboards, metrics, error rates, and SLO burn rates are being watched? Who owns the watch? For how long?
 - **Communication plan**: Are API consumers, partner integrators, or on-call engineers notified of the change before deployment?
+- **Cloud governance**: Which cloud account/project, namespace, VPC/subnet, security group/NACL/WAF, DNS/CDN/gateway, KMS key, and IAM role boundaries are affected?
+- **Compliance evidence**: Which approval, artifact digest, SBOM, vulnerability scan, change ticket, and deploy audit event must be retained?
+- **Incident mitigation**: If this release is part of a SEV response, which action is mitigation, which action is resolution, and who owns customer-facing updates?
 
 ### Decision Tree: What Deployment Strategy Is Needed?
 
@@ -98,6 +106,9 @@ All checks pass → Rolling update with monitored rollout window
 - Escalate when container images reference `latest` tags or are not pinned to an immutable digest.
 - Escalate when there is no named owner for post-release monitoring and the change affects a production SLO path.
 - Escalate when the deployment affects global gateway routing, CDN configuration, or DNS that has no automated rollback.
+- Escalate when Terraform, Pulumi, Crossplane, or other IaC changes affect production IAM, public exposure, DNS, CDN, WAF, KMS, VPC/subnet, or cloud account/project boundaries without reviewed plan evidence.
+- Escalate when a regulated release lacks change approval evidence, artifact digest, scan evidence, or audit retention target.
+- Escalate when an emergency release lacks an incident commander, technical lead, communications owner, or rollback decision signal.
 
 ## Critical Details
 - **Kubernetes rolling update guarantee**: `maxUnavailable: 0` ensures no capacity reduction during rollout; `maxSurge: 1` controls the speed. Misconfigured rolling updates can take down entire services.
@@ -108,6 +119,9 @@ All checks pass → Rolling update with monitored rollout window
 - **Config drift between environments**: The most common staging-to-production discrepancy is environment variable naming. Use a config audit before every deploy.
 - **Canary traffic management**: A 1% canary at 100 RPS = 1 request/second to canary. At less than 1 RPS, a canary test has no statistical significance — monitor for at least 100 requests to canary before proceeding.
 - **Secret rotation during deployment**: If a secret is rotated as part of the deployment, both old and new application versions must accept both old and new secret values during the rollout window.
+- **IaC release order**: Plan review, approval, state lock, apply, post-apply verification, drift check, and rollback notes are distinct release steps. Skipping directly from plan generation to apply removes the evidence needed to diagnose failed infrastructure changes.
+- **Cloud account/project blast radius**: A change in a shared production account has a larger rollback and audit burden than the same change in a per-service project. Release plans must state the boundary explicitly.
+- **Incident hotfix cadence**: During SEV response, the release owner should publish concise internal updates on every mitigation attempt, validation result, rollback decision, and final resolution handoff.
 
 ### Anti-Examples
 
@@ -146,10 +160,13 @@ Examples:
 Return a structured release plan with:
 - **Deployment strategy**: Rolling / canary / blue-green with configuration (percentages, replica counts, traffic routing).
 - **Pre-deployment checklist**: Environment config validation, secrets audit, staging parity confirmation, migration compatibility check.
+- **Cloud governance checklist**: IaC plan review, account/project boundary, namespace boundary, IAM diff, DNS/CDN/WAF/gateway rollback, KMS/key rotation impact, resource tagging, and audit trail.
 - **Migration sequence**: Forward migration execution order (before or after code deploy), rollback migration, tested execution evidence.
 - **Feature flag plan**: Flag state at deployment, % rollout schedule, disableability confirmation, cleanup task reference.
 - **Rollback procedure**: Step-by-step rollback instructions with expected execution time; tested in staging.
 - **Communication plan**: Consumer notification, partner coordination, on-call notification if needed.
+- **Incident release plan**: SEV severity, mitigation vs. resolution, incident roles, customer/status page communication owner, and validation signal when applicable.
+- **Compliance evidence**: Change approval, deploy audit event, artifact digest, SBOM/vulnerability scan evidence, evidence owner, and retention period.
 - **Post-release monitoring plan**: Named owner, dashboards, metrics, SLO burn rate, duration of watch window.
 - **Release notes**: Human-readable changelog entries (Keep a Changelog format) for affected audiences.
 - **Residual risks**: Known risks with mitigation or acceptance rationale.
@@ -165,6 +182,9 @@ Return a structured release plan with:
 8. A named owner with a defined watch window and monitoring dashboard is assigned for post-release observation.
 9. External consumers, partners, and on-call engineers are notified per the communication plan.
 10. Release notes are accurate, human-readable, and audience-appropriate.
+11. IaC/cloud governance changes have reviewed plan evidence, blast-radius boundary, IAM/network/KMS/DNS impact review, and rollback procedure.
+12. Regulated releases retain approval, audit event, artifact digest, SBOM/vulnerability scan evidence, owner, and retention period.
+13. Incident hotfixes distinguish mitigation from resolution and identify incident commander, technical lead, communications owner, and validation signal.
 
 ## Handoff
 - **reliability-observability-gate** — for SLO burn rate targets, canary metric baselines, and post-release alert thresholds.
@@ -172,6 +192,7 @@ Return a structured release plan with:
 - **data-api-contract-changer** — when migration rollback safety or API contract versioning must be confirmed before release.
 - **change-documentation-gate** — for release notes, runbook updates, and consumer migration guide publishing.
 - **quality-test-gate** — when release gate criteria require test evidence that has not yet been produced.
+- **failure-diagnosis** — when a release is part of incident mitigation or root-cause confirmation.
 
 ## Completion Criteria
-The change has an approved release plan with an immutably tagged artifact, verified environment configuration, a backward-compatible migration sequence with tested rollback, a disableable feature flag if applicable, a tested rollback procedure, a named post-release monitoring owner, a communication plan executed, and release notes published before the deployment window opens.
+The change has an approved release plan with an immutably tagged artifact, verified environment configuration, cloud/IaC governance evidence when applicable, a backward-compatible migration sequence with tested rollback, a disableable feature flag if applicable, a tested rollback procedure, a named post-release monitoring owner, incident or compliance evidence when applicable, a communication plan executed, and release notes published before the deployment window opens.

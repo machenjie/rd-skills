@@ -13,7 +13,7 @@ Govern package-manager choice, lockfile discipline, dependency addition / upgrad
 
 # When To Use
 
-Use when adding, removing, upgrading, downgrading, vendoring, pinning, auditing, or changing dependency resolution; when modifying package-manager behavior, lockfiles, build plugins, SDK packages, runtime libraries, or container base images. Use whenever a CVE advisory lands against a current dependency.
+Use when adding, removing, upgrading, downgrading, vendoring, pinning, auditing, or changing dependency resolution; when modifying package-manager behavior, lockfiles, workspaces, monorepo package graphs, build plugins, SDK packages, runtime libraries, or container base images. Use whenever a CVE advisory lands against a current dependency.
 
 # Do Not Use When
 
@@ -31,6 +31,8 @@ Do not use to approve packages "for convenience" when the standard library, an e
 - **SBOM is generated and stored** per release (CycloneDX or SPDX).
 - **Vulnerability scan runs in CI and on schedule**: `npm audit --omit=dev`, `pnpm audit`, `pip-audit`, `cargo audit`, `govulncheck ./...`, `mvn org.owasp:dependency-check`, `osv-scanner`, GitHub Dependabot / Renovate. High/Critical advisories block merge unless triaged with documented compensating control.
 - **Vendoring is a deliberate choice with rationale** (regulatory air-gap, reproducibility, supply-chain isolation), not the default.
+- **Monorepo dependency graphs must preserve module boundaries.** Workspace ranges, hoisting, peer dependencies, generated packages, and shared tooling must not allow packages to import across forbidden boundaries or bypass affected-test selection.
+- **Generated package outputs need a version and drift policy.** Generated clients, protobufs, OpenAPI SDKs, ORM clients, or codegen artifacts must declare whether source or output is authoritative and how CI detects stale generation.
 
 # Industry Benchmarks
 
@@ -45,6 +47,8 @@ Do not use to approve packages "for convenience" when the standard library, an e
 # Selection Rules
 
 Select for any package-manager / lockfile / dependency-add / dependency-upgrade / dependency-removal / license / provenance / install-script / native-extension / transitive-dependency / supply-chain concern. Pair with `dependency-vulnerability-scanning` for CVE depth; with the matching `<lang>-professional-usage` for language-specific tool pins; with `security-privacy-gate` for incident-level supply-chain risk.
+
+Select for monorepos when workspace manager behavior, hoisting, lockfile partitioning, package graph boundaries, generated package outputs, or build cache dependency inputs are part of the change.
 
 ### Lockfile / Reproducible-Install Reference
 
@@ -107,6 +111,8 @@ Containers     | image digest (sha256:...)      | docker pull <image>@sha256:...
 - **License classification at minimum**: Permissive (MIT, BSD, Apache-2.0), Weak copyleft (LGPL, MPL, EPL), Strong copyleft (GPL, AGPL), Source-available (BUSL, SSPL, Elastic v2), Proprietary. Project's outbound license dictates which inbound categories are compatible.
 - **EOL runtimes are dependency risk.** Running on Node.js 16 (EOL) or Python 3.8 (EOL) is a supply-chain risk regardless of package CVEs because security patches stop arriving.
 - **Renovate / Dependabot** are operational hygiene tools. Configure grouping (one PR per ecosystem per week), auto-merge for patch versions of trusted deps with green CI, and SLA for high-severity advisories (e.g., merge or mitigate within 7 days).
+- **Workspace hoisting changes runtime reality.** A package may pass locally because a dependency is hoisted to the root, then fail in an isolated publish or deployment. CI must verify package-level install/build where packages are published or deployed independently.
+- **Affected-test selection depends on dependency graph accuracy.** If package A consumes generated output from package B, changes to B's schema/source must invalidate A's tests even when A's source files did not change.
 
 # Failure Modes
 
@@ -119,6 +125,8 @@ Containers     | image digest (sha256:...)      | docker pull <image>@sha256:...
 - **Major-version upgrade ships unannounced** — Symptom: production breaks on deploy of seemingly minor PR. Cause: Renovate auto-merged major bump. Detection: separate Renovate groups: patch (auto), minor (review), major (manual). Impact: outage.
 - **Vendored fork drifts** — Symptom: vendored package missing 18 months of security fixes. Cause: vendoring without an upgrade SLA. Detection: vendored-dep upgrade audit quarterly. Impact: known-CVE exposure.
 - **Container image by tag, not digest** — Symptom: build reproducibility lost; supply-chain attack via tag re-tag. Cause: `FROM image:latest` or `FROM image:1.2`. Detection: enforce `@sha256:` in CI. Impact: silent base-image swap.
+- **Hoisted dependency masks missing package declaration** — Symptom: package builds in monorepo root but fails when published or deployed alone. Cause: undeclared dependency resolved through root hoist. Detection: isolated package install/build in CI. Impact: broken release artifact.
+- **Generated client drift** — Symptom: API schema changed but generated SDK package was not regenerated. Cause: generated-file policy absent. Detection: CI codegen drift check. Impact: consumers compile against stale contract.
 
 # Output Contract
 
@@ -129,12 +137,14 @@ Return a **Dependency Decision Record** containing:
 - **Justification** against the rubric (rubric steps 1-5 explicitly answered)
 - **Lockfile impact** (added / removed / version delta) — link to lockfile diff
 - **Transitive impact** — count, new packages introduced, new native deps, build-time delta
+- **Module graph impact** — affected packages, workspace edges, peer dependency changes, hoisting risk, generated package dependencies, and affected tests
 - **License status** — every new transitive license listed; compatibility verdict
 - **Vulnerability status** — scanner output (`npm audit` / `pip-audit` / `cargo audit` / `govulncheck` / `osv-scanner`) — green or triaged with compensating control
 - **OpenSSF Scorecard** (for new direct adds) with score
 - **Install scripts** — any present? reviewed? allowlisted?
 - **Provenance / SLSA level** if applicable; **SBOM regenerated**
 - **Compatibility tests** — affected behavior tested (CI links)
+- **Generated file policy** — source vs generated authority, drift check command, committed/ignored outputs, cache invalidation inputs
 - **Rollout risk** — coordinated upgrade required? release gate involved?
 - **Accepted exceptions** with owner, scope, expiration
 
@@ -150,6 +160,8 @@ Return a **Dependency Decision Record** containing:
 8. SBOM regenerated; container images pinned by digest.
 9. Compatibility tests cover affected behavior; for major upgrades, integration suite re-run.
 10. Renovate / Dependabot grouping & auto-merge policy in place; high-severity advisory SLA defined.
+11. Monorepo workspace changes update module graph, affected tests, cache inputs, and isolated package install/build checks.
+12. Generated package outputs have drift checks and an explicit committed/ignored policy.
 
 # Used By
 
@@ -160,6 +172,8 @@ security-privacy-gate, delivery-release-gate, project-initialization, ai-code-re
 - **`dependency-vulnerability-scanning`** for CVE-depth analysis, exploit-path, patch prioritization.
 - **`security-privacy-gate`** for supply-chain incidents, license incidents, malicious-package detection.
 - **`delivery-release-gate`** for upgrade rollout sequencing and rollback triggers.
+- **`architecture-impact-reviewer`** for monorepo module boundaries and dependency direction.
+- **`quality-test-gate`** for affected-test selection and cache correctness evidence.
 - **`language-runtime-selection`** when dependency forces a runtime shift.
 - **Matching `<lang>-professional-usage` capability** for ecosystem-specific tool pins and commands.
 

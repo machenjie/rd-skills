@@ -1,0 +1,44 @@
+---
+id: l4-sev1-incident-response
+description: |
+  Coordinate a SEV1 customer-impacting production incident with roles,
+  mitigation, customer communication, status page, and postmortem follow-up.
+prompt: |
+  We have a SEV1 production incident: checkout errors are above 20%.
+  Set incident commander, technical lead, and communications lead, decide
+  mitigation versus final resolution, publish customer/status page updates
+  every 15 minutes, and prepare postmortem CAPA tracking.
+expected:
+  complexity: L4
+  risk_triggers:
+    - production incident
+  skills:
+    - reliability-observability-gate
+    - delivery-release-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - failure-diagnosis
+    - observability
+    - release-rollback
+  domain_extensions: []
+  quality_gates:
+    - reliability gate
+    - delivery gate
+    - documentation gate
+    - test gate
+forbidden:
+  skills:
+    - data-api-contract-changer
+    - ai-code-review-refactor
+  capabilities:
+    - authentication-authorization
+    - web-security
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - AI review gate
+notes: |
+  SEV handling should route to reliability and documentation, with
+  failure-diagnosis as the incident protocol capability.

@@ -1,0 +1,42 @@
+---
+id: l3-monorepo-build-devex
+description: |
+  Improve monorepo build and developer experience with module graph,
+  affected tests, incremental build, cache correctness, and generated files.
+prompt: |
+  Restructure our monorepo build. Define module graph boundaries, affected
+  test selection, incremental builds with Nx or Bazel, generated file policy,
+  devcontainer setup, onboarding time target, pre-commit scope, and build
+  cache key correctness.
+expected:
+  complexity: L3
+  risk_triggers: []
+  skills:
+    - architecture-impact-reviewer
+    - delivery-release-gate
+    - quality-test-gate
+  capabilities:
+    - module-boundary-design
+    - ci-cd
+    - package-dependency-management
+    - project-initialization
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - delivery gate
+    - test gate
+forbidden:
+  skills:
+    - security-privacy-gate
+    - data-api-contract-changer
+  capabilities:
+    - web-security
+    - data-migration-design
+  domain_extensions:
+    - ai-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - security gate
+notes: |
+  Monorepo DevEx routes to architecture, CI/CD capability, dependency
+  management, and quality evidence for affected-test/cache correctness.

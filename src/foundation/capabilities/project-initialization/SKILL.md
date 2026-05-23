@@ -13,7 +13,7 @@ changeforge_version: 0.1.0
 
 # When To Use
 
-Use this capability when: starting a new repository, service, package, library, or major subsystem from scratch; extracting a new service from a monolith (the new repo needs its own conventions); initializing a new shared library or SDK that will be published internally or publicly; establishing engineering conventions before feature work begins; or when an existing project is being reset (after structural drift, security findings about checked-in credentials, or CI/CD pipeline rebuild).
+Use this capability when: starting a new repository, service, package, library, or major subsystem from scratch; extracting a new service from a monolith (the new repo needs its own conventions); initializing or restructuring a monorepo/workspace; initializing a new shared library or SDK that will be published internally or publicly; establishing engineering conventions before feature work begins; or when an existing project is being reset (after structural drift, security findings about checked-in credentials, or CI/CD pipeline rebuild).
 
 # Do Not Use When
 
@@ -28,6 +28,7 @@ Do not use this capability to: create folders or scaffolding without a clear arc
 - **Test layout must mirror source layout.** `src/orders/service.py` → `tests/orders/test_service.py`. `src/api/handlers/users.ts` → `tests/api/handlers/users.test.ts`. This convention makes it immediately clear which tests cover which source module and prevents orphaned tests or untested source modules from hiding in unrelated directories.
 - **Configuration must use environment variables for all environment-specific values.** Following the Twelve-Factor App (https://12factor.net/config), no environment-specific values (database URLs, API keys, feature flag overrides, logging levels) should be hardcoded in source code or configuration files committed to the repository. Use a `.env.example` file to document required environment variables with descriptions and placeholder values. Provide a validation script that fails fast at startup if required environment variables are missing.
 - **Dependency policy must be established before feature work begins.** Define: approved dependency licenses (MIT, Apache-2.0, BSD — copyleft GPL requires legal review); dependency pinning strategy (exact pins in lockfile for applications, range constraints for libraries); automated vulnerability scanning (Dependabot, `npm audit`, `pip-audit`, Snyk) enabled from day one; process for reviewing new dependencies.
+- **Monorepos require module graph and build policy on day one.** Before adding packages, define workspace manager, module boundary rules, affected-test selection, incremental build strategy, build cache correctness, generated-file policy, and reproducible local environment.
 
 # Industry Benchmarks
 
@@ -76,11 +77,12 @@ Documentation:
   ✓ README: purpose, prerequisites, setup, environment variables, key commands
   ✓ docs/adr/ initialized (first ADR: project initialization decisions)
   ✓ CODEOWNERS or OWNERS file defining review responsibilities
+  ✓ Monorepo only: module graph, affected-test policy, cache key inputs, generated file policy, and workspace tooling documented
 ```
 
 # Selection Rules
 
-Select this capability when **repository structure and foundational engineering conventions** are the primary decision. Route elsewhere when: **module-boundary-design** is primary (internal package boundary decisions within an already-initialized repository); **secret-configuration-security** is primary (auditing or securing an existing project's configuration management); **ci-cd** is primary (pipeline automation behavior and deployment workflow design for an existing repository); **containerization** is primary (Dockerfile, container image structure, and OCI artifact design for an existing project).
+Select this capability when **repository structure and foundational engineering conventions** are the primary decision. Route here for monorepo initialization, workspace layout, devcontainer/reproducible local environment, onboarding-time targets, generated-file policy, and day-one build/test conventions. Route elsewhere when: **module-boundary-design** is primary (internal package boundary decisions within an already-initialized repository); **secret-configuration-security** is primary (auditing or securing an existing project's configuration management); **ci-cd** is primary (pipeline automation behavior and deployment workflow design for an existing repository); **containerization** is primary (Dockerfile, container image structure, and OCI artifact design for an existing project).
 
 # Risk Escalation Rules
 
@@ -91,6 +93,9 @@ Escalate when: initialization affects multiple services being initialized simult
 - **README as the engineering contract.** The README is not marketing — it is the engineering contract between the project and every engineer who will work on it. A README that does not explain how to run the project locally, what environment variables are required, and what the key verification commands are forces oral knowledge transfer. Oral knowledge is not scalable. README must be updated with every non-trivial structural change.
 - **`.gitignore` is a security control, not just housekeeping.** A committed `node_modules/` directory can contain vulnerable versions of dependencies that bypass `npm audit` (which audits `package.json`, not `node_modules/`). A committed `.env` file with real credentials is a credential leak. Treat `.gitignore` entries for secrets and build artifacts as security requirements.
 - **Monorepo requires workspace-level tooling decisions before initialization.** A monorepo with 10 packages using different linting configurations, different test runners, and different build tools is not a monorepo — it is 10 loosely related projects in one folder. Before initializing a monorepo: agree on a workspace manager (npm workspaces, Turborepo, Nx, Pants, Bazel); agree on shared lint/format/test tooling; agree on build caching strategy. The complexity of a monorepo is only justified when the coordination benefits (atomic cross-package changes, shared tooling, single CI pipeline) outweigh the tooling overhead.
+- **Build cache correctness is more important than cache hit rate.** Cache keys must include lockfiles, toolchain versions, compiler config, generated source inputs, environment-affecting config, and test fixtures. A fast stale build is a correctness defect.
+- **Generated files need an ownership rule.** Decide which generated files are committed, ignored, regenerated in CI, or checked for drift. Mixed policy creates review noise and unreproducible builds.
+- **Onboarding time is a DevEx metric.** A reproducible local environment (devcontainer, Nix, asdf, mise, toolchain files, or equivalent) should target a clean checkout to passing verification in a measured time window.
 - **Documentation targets must be defined at initialization, not added retrospectively.** `docs/runbooks/`, `docs/adr/`, `docs/api/` — each documentation type serves a different audience (operations, architects, consumers). Retroactively adding documentation to an undocumented project requires reconstructing decisions that were obvious at initialization time. Start the first ADR on day one (even if it is minimal), and define the `docs/` structure in the repository charter.
 
 ### Anti-examples
@@ -128,6 +133,8 @@ Return a project initialization plan with:
 - `gitignore_entries` (generated artifacts; local secrets; platform files)
 - `documentation_targets` (README sections; `docs/adr/` first entry; CODEOWNERS)
 - `ci_pipeline_sketch` (jobs: lint, test, build, security scan; trigger conditions)
+- `monorepo_build_policy` (module graph, workspace manager, affected tests, incremental build tool, cache key inputs, generated file policy, full-test fallback)
+- `local_dev_environment` (devcontainer/Nix/asdf/mise/toolchain pins, bootstrap command, onboarding time target)
 - `unresolved_decisions` (module boundaries, deployment topology, or tooling choices deferred to named capabilities)
 
 # Quality Gate
@@ -144,6 +151,8 @@ The initialization is complete only when:
 8. Startup fails fast with a clear error if required environment variables are missing.
 9. Lockfile committed; license policy and dependency vulnerability scanning enabled.
 10. README contains purpose, prerequisites, setup steps, environment variables, and key commands — no reference to external oral knowledge.
+11. Monorepos define module graph, workspace tooling, affected-test policy, cache key inputs, generated-file policy, and full-test fallback.
+12. Reproducible local environment and onboarding time target are documented and testable.
 
 # Used By
 
@@ -151,7 +160,7 @@ The initialization is complete only when:
 
 # Handoff
 
-Hand off to `module-boundary-design` for internal package boundary decisions within the initialized repository; `secret-configuration-security` for security review of configuration management; `ci-cd` for detailed pipeline automation design; `containerization` for Docker and container image structure.
+Hand off to `module-boundary-design` for internal package boundary decisions within the initialized repository; `secret-configuration-security` for security review of configuration management; `ci-cd` for detailed pipeline automation design; `package-dependency-management` for workspace dependency and lockfile policy; `containerization` for Docker and container image structure.
 
 # Completion Criteria
 

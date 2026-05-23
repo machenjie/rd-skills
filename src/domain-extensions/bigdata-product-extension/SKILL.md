@@ -19,6 +19,8 @@ Extend ChangeForge product and code change analysis with big data engineering di
 - Changes to data catalog entries (Apache Atlas, OpenMetadata, DataHub) or data lineage registrations.
 - GDPR right-to-be-forgotten implementation in distributed storage systems.
 - Cost-sensitive pipeline changes: increased scan volume, new external tables, materialized view additions.
+- Product analytics and experimentation changes: event taxonomy, funnel/cohort definitions, exposure logging, dashboards, north-star metrics, guardrail metrics, or A/B test data.
+- Classical ML and MLOps changes involving feature stores, training pipelines, model registry inputs, drift metrics, shadow/canary data, or online/offline metric alignment.
 - Changes to streaming-to-batch or batch-to-streaming architecture (Lambda/Kappa architecture selection).
 
 ## Do Not Use When
@@ -34,6 +36,8 @@ Extend ChangeForge product and code change analysis with big data engineering di
 - **Shuffle operations must be bounded**: Spark jobs that trigger an unbounded shuffle (repartition without target partition count, large join without broadcast hint for small tables) will cause memory pressure and task failure on large datasets.
 - **Data lineage must be registered for any new data asset used by downstream consumers**: an undocumented data asset has no impact analysis path — downstream consumers are invisible.
 - **Cost of new queries and scans must be estimated before deployment**: a full table scan on a petabyte-scale data lake costs real money and may violate budget constraints — use EXPLAIN or dry-run query cost estimation before enabling.
+- **Experiment exposure and assignment events must be data-quality gated**: A/B results are invalid if exposure logging is missing, assignment units are unstable, sample ratio mismatch is unchecked, or event taxonomy changes are not backward-compatible.
+- **Feature store data must be point-in-time correct**: training data must not include future information, labels must not leak into features, and online serving features must match offline training semantics.
 
 ## Industry Benchmarks
 - **Lambda Architecture (Nathan Marz)**: Batch layer + speed layer + serving layer. Provides both accurate (batch) and low-latency (speed) views. Operational complexity is high; Kappa is preferred when a unified stream can serve both needs.
@@ -64,6 +68,35 @@ Extend ChangeForge product and code change analysis with big data engineering di
 - **GDPR erasure request fails on distributed storage**: a user requests deletion; the application deletes the OLTP record; the data warehouse ETL has already loaded the data into a Parquet partition that is append-only — the data survives for months.
 - **Full table scan cost explosion**: a new analytical query is deployed without a partition filter — it scans 50TB on every execution; the query costs $2000/run in BigQuery/Snowflake scan fees.
 - **Consumer group lag accumulates silently**: a Kafka consumer falls behind during a traffic spike; no lag alert is configured; 6 hours of events are buffered in Kafka; when the consumer catches up, it floods downstream systems.
+- **Experiment conclusion is invalid**: exposure events are logged only on click instead of view; control and treatment allocation diverges; dashboard shows a lift that is actually sample ratio mismatch.
+- **Training-serving skew degrades model**: offline features use corrected late-arriving data while online serving uses defaults; offline metrics look strong but online conversion drops.
+- **Label leakage inflates offline metrics**: training data includes a post-outcome feature; validation AUC is high, but production model fails.
+
+## Analytics And Experimentation Data Controls
+
+Apply these controls when product analytics or experiments are part of the change:
+
+- Event taxonomy: event names, schema versions, required fields, compatibility, and deprecation plan.
+- Funnel and cohort definitions: inclusion/exclusion rules, time windows, identity stitching, and backfill approach.
+- North-star metric: metric owner, definition, source table, freshness, and dashboard.
+- Guardrail metrics: reliability, revenue, retention, support, safety, accessibility, and data quality thresholds.
+- Exposure logging: event timing, de-duplication, assignment unit, experiment id, variant id, and eligibility.
+- Sample ratio mismatch: threshold, query, alert owner, and decision rule.
+- Experiment conflict: mutually exclusive experiments, overlapping cohorts, priority, and analysis exclusion.
+- Decision memo: launch/rollback decision, metric readout, guardrail status, caveats, and owner.
+
+## MLOps Data Governance
+
+Apply these controls when data pipelines feed model training or serving:
+
+- Feature store point-in-time correctness with event-time joins and late-data handling.
+- Label leakage checks that prove labels or post-outcome fields cannot enter features.
+- Training-serving skew comparison for feature defaults, transformations, null handling, and freshness.
+- Model registry metadata: model version, training dataset version, feature set version, owner, and approval.
+- Drift signals: data drift, model drift, concept drift, and online/offline metric mismatch thresholds.
+- Shadow/canary data capture with no user-impacting side effects.
+- Rollback model data path: previous model version, compatible feature set, and data validation before rollback.
+- Fairness/bias audit dataset slices and acceptance thresholds.
 
 ## Linked Foundation Capabilities
 - data-model-design
@@ -92,6 +125,8 @@ Extend ChangeForge product and code change analysis with big data engineering di
 - **Delta Lake / Iceberg VACUUM caution**: running VACUUM with a retention period shorter than the longest active read transaction will delete files that open readers still reference — readers fail with FileNotFoundException after VACUUM.
 - **Data lineage gaps break GDPR erasure**: if a pipeline stage is not registered in the data catalog, it is invisible to the erasure process — GDPR right-to-be-forgotten compliance cannot be verified.
 - **Re-indexing Elasticsearch from a data lake**: re-indexing is a full-table read; it competes with production analytical workloads for I/O; schedule during off-peak with explicit resource isolation.
+- **Storage lifecycle is a cost control**: raw, staging, feature, mart, and dashboard tables need retention and tiering rules. Unbounded warehouse tables, orphaned materializations, and abandoned experiment tables become recurring cost.
+- **Egress is often hidden in data products**: cross-region feature serving, BI extracts, reverse ETL, and model training exports can dominate cost even when compute looks healthy.
 
 ### Anti-Examples
 
@@ -119,6 +154,9 @@ Return big data change assessment with:
 - **Data quality gate requirements**: required data quality checks, thresholds, and promotion gating.
 - **PII inventory and erasure strategy**: PII fields identified, classification applied, erasure mechanism defined.
 - **Cost estimate**: query scan volume, compute estimate, cost per run and per day.
+- **Cost guardrails**: query scan budget, cost per pipeline/job, storage lifecycle cost, egress cost, budget owner, and cost anomaly alert.
+- **Experiment data contract**: event taxonomy, exposure event, assignment unit, primary/north-star metric, guardrail metrics, SRM check, dashboard migration, and decision memo owner.
+- **MLOps governance**: `model_version`, `feature_store`, point-in-time correctness, label leakage controls, training-serving skew check, `drift_metric`, offline/online metric alignment, fairness/bias audit, and `rollback_model`.
 - **Observability plan**: consumer lag metric, data freshness metric, data quality pass rate, pipeline duration, cost metric.
 - **Lineage registration requirements**: data assets to register before deployment.
 - **Block/pass decision** with required conditions for approval.
@@ -134,6 +172,9 @@ Return big data change assessment with:
 8. Kafka topics have replication factor ≥ 3, consumer group lag alerting, and DLQ routing for processing failures.
 9. Data lineage is registered for all new data assets consumed by downstream consumers.
 10. Consumer group lag alerting is configured with a defined SLA for data freshness.
+11. Experiment analytics define taxonomy, exposure event, assignment unit, primary/guardrail metrics, SRM check, dashboard migration, and decision memo owner.
+12. ML data paths prove feature store point-in-time correctness, no label leakage, training-serving skew checks, drift metrics, and rollback model compatibility.
+13. Storage lifecycle, egress, and cost anomaly detection are defined for cost-sensitive data assets.
 
 ## Handoff
 - **data-middleware-change-builder** — for Kafka topic configuration, Spark job optimization, and database query performance.
@@ -141,6 +182,8 @@ Return big data change assessment with:
 - **security-privacy-gate** — for PII classification, erasure strategy, and data residency compliance.
 - **reliability-observability-gate** — for pipeline SLI, data freshness SLO, consumer lag alerting, and cost monitoring.
 - **quality-test-gate** — for data quality test requirements, pipeline integration tests, and idempotency tests.
+- **experience-impact-modeler** — for user-facing experiment flows, exposure semantics, and analytics event compatibility.
+- **acceptance-criteria-builder** — for primary metric, guardrail, exposure event, and experiment rejection criteria.
 
 ## Completion Criteria
-The big data change is approved when schema evolution is backward-compatible with all consumers, pipeline stages are idempotent, data quality gates are configured and threshold-tested, PII is classified and has an erasure strategy, partition strategy aligns with query access patterns, full table scans are eliminated or cost-approved, Kafka topics have lag alerting and DLQ routing, and data lineage is registered for all new assets.
+The big data change is approved when schema evolution is backward-compatible with all consumers, pipeline stages are idempotent, data quality gates are configured and threshold-tested, PII is classified and has an erasure strategy, partition strategy aligns with query access patterns, full table scans are eliminated or cost-approved, analytics and experiment metrics are contract-safe, ML feature/model data paths are governed when present, Kafka topics have lag alerting and DLQ routing, and data lineage is registered for all new assets.

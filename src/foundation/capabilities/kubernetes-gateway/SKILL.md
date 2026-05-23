@@ -13,7 +13,7 @@ Deploy and operate Kubernetes workloads **deliberately** — defining workload t
 
 # When To Use
 
-Use this capability when a change: deploys a new workload to Kubernetes (Deployment, StatefulSet, Job, CronJob, DaemonSet); modifies Ingress or Gateway API routing rules; changes liveness, readiness, or startup probe configuration; adjusts resource requests, limits, or HPA/KEDA scaling policy; modifies ServiceAccount, RBAC, or NetworkPolicy; changes rollout strategy or PodDisruptionBudget; or introduces a new service that must be reachable inside or outside the cluster.
+Use this capability when a change: deploys a new workload to Kubernetes (Deployment, StatefulSet, Job, CronJob, DaemonSet); modifies Ingress or Gateway API routing rules; changes liveness, readiness, or startup probe configuration; adjusts resource requests, limits, or HPA/KEDA scaling policy; modifies ServiceAccount, RBAC, NetworkPolicy, WAF, DNS, CDN, load balancer, or cloud identity binding; changes rollout strategy or PodDisruptionBudget; or introduces a new service that must be reachable inside or outside the cluster.
 
 # Do Not Use When
 
@@ -28,6 +28,7 @@ Do not use this capability to introduce Kubernetes for a runtime that lacks: a t
 - **NetworkPolicy: deny-by-default; allow explicitly.** Without a NetworkPolicy, all pods can reach all other pods in the cluster. Implement a default-deny NetworkPolicy in every namespace; add allow rules only for required pod-to-pod communication. This is zero-trust network segmentation at the pod level.
 - **ServiceAccount: create a dedicated ServiceAccount per workload with minimal RBAC.** The default ServiceAccount in most clusters has excessive permissions. Create a named ServiceAccount; bind only the Role with the minimum permissions required; annotate for Workload Identity (IRSA on EKS, Workload Identity on GKE) when cloud API access is needed — never mount cloud credentials as secrets.
 - **Rollback scope is broader than deployment revision.** A Kubernetes rollout rollback (`kubectl rollout undo`) reverts the image. It does not revert: ConfigMaps; Secret values; database schema migrations; Ingress/Gateway rules; external service configuration. Define what must be reverted for each rollback scenario; document the procedure.
+- **Gateway exposure is a cloud governance boundary.** Any change to Ingress, Gateway API, LoadBalancer, DNS, CDN, WAF, ServiceAccount cloud identity, or namespace routing must state internet exposure, tenant/namespace blast radius, TLS policy, auth enforcement, rollback path, and audit owner.
 
 # Industry Benchmarks
 
@@ -86,7 +87,7 @@ Anti-patterns:
 
 # Selection Rules
 
-Select this capability when **Kubernetes workload design, routing, health, scaling, or security posture** is the primary concern. Adjacent routing:
+Select this capability when **Kubernetes workload design, routing, health, scaling, cloud gateway exposure, or security posture** is the primary concern. Adjacent routing:
 
 - Prefer `containerization` when the primary concern is container image hardening, build, and registry.
 - Prefer `ci-cd` when the primary concern is deployment pipeline automation, environment promotion, and release triggers.
@@ -95,7 +96,7 @@ Select this capability when **Kubernetes workload design, routing, health, scali
 
 # Risk Escalation Rules
 
-Escalate when: the workload is public-facing (Ingress/Gateway exposes it to the internet without an auth layer); the workload runs as root or with privileged SecurityContext; the workload accesses another tenant's namespace resources; the ServiceAccount has cluster-level RBAC bindings; a StatefulSet modification changes PersistentVolume claims; NetworkPolicy is absent and the namespace contains sensitive workloads; or a database migration is coupled to the rollout and cannot be rolled back independently.
+Escalate when: the workload is public-facing (Ingress/Gateway exposes it to the internet without an auth layer); DNS, CDN, WAF, or LoadBalancer rules expand exposure; the workload runs as root or with privileged SecurityContext; the workload accesses another tenant's namespace resources; the ServiceAccount has cluster-level RBAC bindings or broad cloud identity permissions; a StatefulSet modification changes PersistentVolume claims; NetworkPolicy is absent and the namespace contains sensitive workloads; or a database migration is coupled to the rollout and cannot be rolled back independently.
 
 # Critical Details
 
@@ -142,6 +143,7 @@ Return a Kubernetes workload design with:
 - `probes` (liveness: endpoint, what it checks, thresholds; readiness: endpoint, dependencies checked; startup if needed)
 - `service` (ClusterIP / LoadBalancer / NodePort; port mapping; session affinity)
 - `routing` (Ingress / Gateway API: host, path, TLS, timeout, auth annotation, rate limit)
+- `cloud_exposure` (DNS/CDN/WAF/load balancer exposure, cloud account/project boundary, namespace blast radius, TLS/auth policy, rollback owner)
 - `network_policy` (ingress allow rules; egress allow rules; default-deny namespace policy)
 - `scaling` (HPA: metric, target utilization; KEDA: trigger type; PodDisruptionBudget: minAvailable)
 - `topology` (topologySpreadConstraints: zone spread; node affinity/anti-affinity)
@@ -163,6 +165,7 @@ The Kubernetes workload design is complete only when:
 8. Rollout strategy selected; rollback procedure documented (image + config + schema scope).
 9. Gateway/Ingress: TLS configured; auth enforced; timeout set; rate limit configured.
 10. Operational ownership confirmed: team owns on-call, deployment pipeline, and incident runbook.
+11. DNS/CDN/WAF/load balancer exposure, ServiceAccount cloud identity, and namespace blast radius are reviewed when changed.
 
 # Used By
 

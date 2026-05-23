@@ -1,6 +1,6 @@
 ---
 name: reliability-observability-gate
-description: Defines reliability and observability expectations for changes, including SLI/SLO impact, performance budget, profiling, concurrency, rate limits, circuit breakers, fallback, logs, metrics, traces, alerts, backup, and recovery.
+description: Defines reliability and observability expectations for changes, including SLI/SLO impact, performance and cost budgets, capacity planning, profiling, concurrency, rate limits, circuit breakers, fallback, logs, metrics, traces, alerts, incident readiness, backup, and recovery.
 license: MIT
 changeforge_kind: professional-skill
 changeforge_version: 0.1.0
@@ -17,6 +17,7 @@ Ensure every production-bound change has explicit reliability expectations, obse
 - Changes that depend on external services, caches, queues, or databases on the critical user path.
 - New or modified SLI/SLO targets, error budgets, or availability commitments.
 - Infrastructure and configuration changes that affect service capacity or resource limits.
+- Cloud cost, FinOps, autoscaling, reservation, egress, storage growth, or capacity forecast changes.
 - Database migrations, reindexing, or data processing that affects production query performance.
 - Incident response tooling, runbook, alerting rule, or on-call routing changes.
 - Changes that introduce or modify circuit breakers, rate limiters, throttling, or fallback behavior.
@@ -35,6 +36,7 @@ Ensure every production-bound change has explicit reliability expectations, obse
 - **Trace context must propagate across service boundaries**: a trace that terminates at the first service boundary cannot diagnose cross-service latency issues.
 - **Recovery plans must be tested before they are needed**: a runbook that has never been executed will fail under incident pressure — conduct game days or chaos engineering exercises.
 - **Cardinality limits on metric labels**: high-cardinality labels (user_id, request_id, URL path with IDs) destroy time-series databases — use aggregated label values (endpoint name, status class) instead.
+- **Cost and capacity budgets are reliability budgets**: an autoscaling rule, storage growth pattern, query scan, or egress path that can exceed budget without alerting is an operational risk, not only a finance concern.
 
 ## Industry Benchmarks
 - **Google SRE Book (Beyer et al.) — Chapters 3, 4, 6**: SLIs, SLOs, error budgets, toil reduction. The canonical reference for production reliability engineering. SLO = reliability commitment; error budget = innovation vs. stability balance.
@@ -69,6 +71,22 @@ Evaluate every production change against:
 - **Metrics cardinality**: Are label values bounded (no user_id, no raw URL paths with IDs)? Is the cardinality increase estimated before deployment?
 - **Alert quality**: Are alerts firing on SLO burn rate, not on raw metric thresholds? Are alert thresholds calibrated to avoid false positives?
 - **Recovery readiness**: Is there a runbook for the most likely failure mode? Has it been tested? Who is on-call when this change is deployed?
+- **Cost and capacity guardrails**: What is the unit cost per request, tenant, and batch job? What is the storage growth rate, egress exposure, autoscaling cost impact, reservation risk, and cost anomaly alert?
+- **Incident response readiness**: If this change causes a SEV0/SEV1/SEV2 incident, are severity, roles, mitigation criteria, communication cadence, and postmortem ownership defined?
+
+## Cost And Capacity Guardrails
+
+Every production-facing change with material resource impact must define cost and capacity guardrails:
+
+- **Cost per request**: expected steady-state and peak unit cost for the changed request path.
+- **Cost per tenant**: tenant-level cost attribution for multi-tenant or high-variance workloads.
+- **Cost per batch job**: compute, warehouse, queue, and retry cost per run and per schedule window.
+- **Storage growth rate**: daily and monthly growth, retention policy, lifecycle tiering, and deletion pressure.
+- **Egress cost**: cross-region, internet, CDN, third-party, and data export cost exposure.
+- **Autoscaling trigger cost impact**: how HPA/KEDA/serverless scaling thresholds translate into spend at peak and during runaway input.
+- **Resource reservation / commitment risk**: reserved instances, savings plans, committed use discounts, or spot capacity exposure, including lock-in and underutilization risk.
+- **2x peak headroom vs cost cap**: whether the service can absorb 2x expected peak without violating the approved cost cap.
+- **Cost anomaly alert**: alert owner, threshold, burn-rate window, and response path for unexpected spend or usage growth.
 
 ### Decision Tree: Observability Coverage Level
 
@@ -126,6 +144,9 @@ Change is infrastructure-only with no behavior change?
 - Escalate when a queue consumer has no DLQ and no depth monitoring — poison messages cause consumer loops; depth spikes are invisible.
 - Escalate when a change introduces unbounded memory growth (unlimited cache, unbounded list accumulation, session state with no TTL) — will cause OOM in production.
 - Escalate when recovery procedures (runbook, rollback, manual remediation) have never been tested and the change affects a P1-eligible service.
+- Escalate when a cloud resource, autoscaling policy, query scan, storage lifecycle, or egress path can exceed budget without a cost anomaly alert and owner.
+- Escalate when capacity forecast shows less than 2x peak headroom or when the only path to headroom requires unapproved spend.
+- Escalate when incident severity, incident commander, technical lead, communications lead, or customer communication cadence is undefined for a production-critical path.
 
 ## Critical Details
 - **Multi-window multi-burn-rate alerting math**: a 1% error rate on an SLO of 99.9% burns the 28-day error budget in 28 hours. Fast-burn alert: if burn rate > 14x over 1 hour, page immediately. Slow-burn alert: if burn rate > 6x over 6 hours, page with lower urgency.
@@ -135,6 +156,8 @@ Change is infrastructure-only with no behavior change?
 - **Connection pool exhaustion is the most common production cause of latency spikes**: monitor `pool_size`, `pool_waiting`, `pool_checkout_timeout` as first-class metrics alongside request latency.
 - **Graceful degradation requires explicit fallback design**: a fallback of "return empty response" is often indistinguishable from "feature not working" to the user. Design fallback states with appropriate UX and observability.
 - **Capacity planning at 2× peak**: design for 2× the expected peak traffic. Anything less means a viral moment or a DDoS causes an availability incident.
+- **Unit economics as a production signal**: cost per request, tenant, and job should be tracked like latency and error rate. Sudden cost-per-unit growth often indicates a reliability issue such as retry storms, cache misses, full table scans, or runaway fan-out.
+- **Mitigation vs. resolution**: during an incident, mitigation reduces customer impact now; resolution removes the underlying defect. A rollback, traffic shift, feature flag disable, or capacity increase may be mitigation even when root cause remains open.
 
 ### Anti-Examples
 
@@ -176,6 +199,9 @@ Return a reliability and observability plan with:
 - **Telemetry plan**: structured log schema, metric names with label cardinality analysis, trace propagation strategy.
 - **Alerting design**: burn-rate alert thresholds, paging urgency levels, on-call routing.
 - **Capacity analysis**: current headroom, expected growth, scaling triggers.
+- **Cost and capacity guardrails**: `cost_per_request`, `cost_per_tenant`, `cost_per_batch_job`, `storage_growth_rate`, `egress_cost`, `autoscaling_cost_impact`, `reservation_commitment_risk`, `capacity_forecast`, and `cost_anomaly_alert`.
+- **Incident readiness**: severity classification, incident roles, mitigation criteria, customer communication cadence, status page criteria, and postmortem ownership.
+- **Model operations signals**: when ML is involved, model version, drift metric, training-serving skew signal, and rollback model version.
 - **Recovery plan**: runbook location, tested recovery steps, rollback decision criteria.
 - **Chaos/game day obligations**: failure mode scenarios to test in staging before production deployment.
 - **Residual risks**: accepted gaps with justification and mitigation.
@@ -191,6 +217,8 @@ Return a reliability and observability plan with:
 8. Connection pool and resource saturation metrics are instrumented.
 9. Recovery runbook exists, is current, and has been tested within the last 90 days (or since last significant architecture change).
 10. Rollback decision criteria are explicit: which signals, at which thresholds, trigger an immediate rollback.
+11. Cost and capacity guardrails are defined for material resource changes, including unit costs, egress/storage exposure, capacity forecast, and anomaly alert owner.
+12. Incident roles, severity, customer communication cadence, and postmortem ownership are defined for production-critical paths.
 
 ## Handoff
 - **delivery-release-gate** — for canary traffic thresholds, rollout monitoring windows, and rollback decision signals.
@@ -199,6 +227,8 @@ Return a reliability and observability plan with:
 - **integration-change-builder** — for integration error rate metrics, circuit breaker state, and reconciliation monitoring.
 - **quality-test-gate** — for chaos engineering test obligations, load test requirements, and SLO regression testing.
 - **security-privacy-gate** — for PII exclusion from logs and audit log requirements.
+- **failure-diagnosis** — for SEV incident evidence collection, timeline reconstruction, root cause analysis, and postmortem action items.
+- **change-documentation-gate** — for customer advisories, status page entries, runbook updates, incident reports, and postmortem summaries.
 
 ## Completion Criteria
-The change is production-ready from a reliability and observability perspective when every user-facing path has an SLI, error budget headroom is confirmed, multi-burn-rate alerts are configured, structured logging with trace propagation is implemented, cardinality of new metrics is bounded, circuit breakers have tested fallback behavior, queue consumers have DLQ and depth alerts, a tested recovery runbook exists, and rollback decision criteria are explicit.
+The change is production-ready from a reliability and observability perspective when every user-facing path has an SLI, error budget headroom is confirmed, multi-burn-rate alerts are configured, structured logging with trace propagation is implemented, cardinality of new metrics is bounded, circuit breakers have tested fallback behavior, queue consumers have DLQ and depth alerts, cost and capacity guardrails are owned and alertable, incident handoff is defined, a tested recovery runbook exists, and rollback decision criteria are explicit.

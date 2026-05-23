@@ -13,7 +13,7 @@ Design CI/CD pipelines that **prove change quality through automated evidence**,
 
 # When To Use
 
-Use this capability when creating or modifying: CI workflows (GitHub Actions, GitLab CI, Jenkins, CircleCI, Buildkite, Azure Pipelines, Tekton, Drone), release pipelines, artifact build and publishing, image build and promotion, environment promotion logic, approval gates, deployment strategies (rolling, blue/green, canary), feature-flag cut-overs, infrastructure-as-code (Terraform, Pulumi, Crossplane) apply pipelines, database-migration pipelines, supply-chain security controls (SBOM, signing, provenance), or failure handling and rollback hooks.
+Use this capability when creating or modifying: CI workflows (GitHub Actions, GitLab CI, Jenkins, CircleCI, Buildkite, Azure Pipelines, Tekton, Drone), release pipelines, artifact build and publishing, image build and promotion, environment promotion logic, approval gates, deployment strategies (rolling, blue/green, canary), feature-flag cut-overs, infrastructure-as-code (Terraform, Pulumi, Crossplane) plan/apply pipelines, database-migration pipelines, monorepo affected-test and incremental-build workflows, supply-chain security controls (SBOM, signing, provenance), compliance evidence capture, or failure handling and rollback hooks.
 
 # Do Not Use When
 
@@ -33,6 +33,8 @@ Do not use this capability to bypass local verification (`pre-commit`, unit test
 - **Supply-chain provenance.** SLSA level 2 minimum for new pipelines: signed build provenance (`cosign`, `sigstore`), SBOM generated at build time (`syft`, `cyclonedx-gomod`, `spdx-sbom-generator`), dependency hash pinning.
 - **Post-deploy verification gate.** Smoke test, synthetic transaction, or key metric health check within a timeout after deploy; auto-rollback if health check fails within the window.
 - **Audit trail.** Every deploy event records: trigger (commit SHA + author), artifact digest, environment, deploy job id, approver(s), start/end time, outcome. Retained per compliance policy.
+- **Infrastructure plan changes require impact evidence.** IaC plan/apply pipelines must capture plan diff, destructive resource detection, IAM diff, cost delta, state lock evidence, drift status, and approval before apply.
+- **High-cost infrastructure requires an approval gate.** New or modified resources that exceed budget thresholds, reserved commitments, large storage, high-egress paths, or autoscaling spend must block on named budget approval.
 
 # Industry Benchmarks
 
@@ -131,6 +133,32 @@ The CI/CD pipeline is both a **quality enforcement mechanism and a supply-chain 
 - **Notification and visibility.** Failed deploys notify the team in real time (Slack/PagerDuty); deploy-to-production events are visible to all engineers; anomalies (unexpected failure rate, unusual deploy time) alert.
 - **Ownership.** Each pipeline has a named owner; the pipeline config is code-reviewed with the same rigor as application code; `CODEOWNERS` or equivalent enforces review.
 
+### Infrastructure-As-Code Governance
+
+IaC pipelines must treat infrastructure diffs as production changes, not as generated text:
+
+- Terraform/Pulumi/Crossplane module interface: required inputs, outputs, version constraints, provider versions, and compatibility contract.
+- State backend and state locking required before any apply; lock contention must fail closed.
+- Drift detection schedule with owner, notification path, and reconciliation policy.
+- Plan file review with immutable plan artifact, reviewer, environment, and commit SHA.
+- Destructive resource detection for delete/recreate, replacement, data-loss, or downtime-inducing actions.
+- IAM diff review for privilege additions, trust policy changes, wildcard grants, and service account scope changes.
+- Cost delta review for compute, storage, egress, reserved commitments, and autoscaling-sensitive resources.
+- Budget approval gate for high-cost resources before apply.
+- Resource tagging and audit trail for owner, environment, data classification, cost center, and lifecycle.
+
+### Monorepo Build And DevEx
+
+Monorepo pipelines must prove that incremental speed does not hide correctness gaps:
+
+- Module graph is declared and checked for boundary violations.
+- Affected test selection maps changed files to modules, dependents, and contract tests.
+- Incremental build works with Bazel, Pants, Nx, Turborepo, or equivalent workspace tooling when justified.
+- Build cache keys include lockfiles, compiler/tool versions, environment inputs, generated source inputs, and test fixtures.
+- Generated file policy states which generated files are committed, ignored, or regenerated in CI.
+- Devcontainer or equivalent reproducible local environment keeps onboarding setup time measurable.
+- Pre-commit policy runs only fast deterministic checks; CI owns expensive checks.
+
 ### Anti-examples
 
 | Anti-pattern | Failure |
@@ -178,7 +206,10 @@ Return a CI/CD pipeline specification with:
 - `post_deploy_health_gate` (check type, timeout, auto-rollback trigger, on-call notification)
 - `rollback_hook` (automated path, trigger condition, test evidence)
 - `supply_chain_controls` (action pinning, SBOM, signing, scan thresholds)
-- `infrastructure_pipeline` (plan review, apply gate, drift detection — if IaC)
+- `infrastructure_pipeline` (module interface, state backend, state locking, plan file review, apply gate, drift detection, destructive resource detection, IAM diff review, cost delta review — if IaC)
+- `cost_controls` (IaC plan cost impact review, cost delta summary for infra changes, budget approval gate for high-cost resources)
+- `compliance_evidence` (deploy audit event, approval evidence, artifact digest evidence, SBOM evidence, vulnerability scan evidence, retention target)
+- `monorepo_build_policy` (module graph, affected tests, incremental build tool, cache key inputs, generated file policy, devcontainer or reproducible local environment)
 - `migration_gate` (expand/contract, backwards-compat validation — if DB migrations)
 - `audit_trail` (fields emitted per deploy event, retention, sink)
 - `flaky_check_policy` (quarantine criteria, owner SLA, promotion to required process)
@@ -200,6 +231,9 @@ The pipeline design passes only when:
 9. Rollback tested in staging; documented trigger and expected recovery time.
 10. Pipeline config itself is code-reviewed and has a named owner.
 11. DORA metrics are either tracked or a tracking plan is in the output.
+12. IaC changes include plan review, state lock, destructive action detection, IAM diff, cost delta, and budget approval when thresholds are exceeded.
+13. Compliance evidence captures deploy audit event, approval, artifact digest, SBOM, vulnerability scan, and retention target.
+14. Monorepo affected-test selection and build cache keys are deterministic and validated against a full-test fallback.
 
 # Used By
 
@@ -208,7 +242,7 @@ The pipeline design passes only when:
 
 # Handoff
 
-Hand off to `test-strategy` for coverage and layer selection; `dependency-vulnerability-scanning` for SCA and image risk; `release-rollback` for deployment reversal and feature-flag management; `containerization` for image construction; `secret-configuration-security` for credential and vault design; `delivery-release-gate` for release readiness review.
+Hand off to `test-strategy` for coverage and layer selection; `dependency-vulnerability-scanning` for SCA and image risk; `release-rollback` for deployment reversal and feature-flag management; `containerization` for image construction; `secret-configuration-security` for credential and vault design; `delivery-release-gate` for release readiness review; `security-privacy-gate` for cloud IAM, public exposure, KMS, or compliance evidence risks; `performance-budgeting` for cost thresholds and per-feature ceilings.
 
 # Completion Criteria
 

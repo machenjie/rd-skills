@@ -20,6 +20,7 @@ Map the full user experience impact of a proposed change — from entry point th
 - Content, labeling, or user-facing copy is being added or changed.
 - Destructive, payment, permission-restricted, or onboarding flows are involved.
 - A product analytics event needs to be added, renamed, or removed.
+- A/B tests, feature experiments, exposure logging, funnel/cohort tracking, dashboard migrations, or metric guardrails affect the user journey.
 
 ## Do Not Use When
 - The change is purely backend, data-model, or infrastructure with zero user-visible behavior change.
@@ -34,6 +35,7 @@ Map the full user experience impact of a proposed change — from entry point th
 - **Preserve user intent through failures**: if an error occurs mid-flow, the user must be able to recover without losing their entered state where feasible.
 - **Content is part of the product specification**: error messages, empty state copy, labels, and help text are not filler — they communicate the product's intent to users.
 - **High-volume operational interfaces have performance perception requirements**: skeleton loading, progressive rendering, and perceived performance must be designed for screens used repetitively.
+- **Experiment exposure is part of the experience contract**: users must be assigned consistently, exposure must be logged exactly once per qualifying view/action, and guardrail regressions must have rollback behavior.
 
 ## Industry Benchmarks
 - **WCAG 2.1 / WCAG 2.2 (W3C)**: Web Content Accessibility Guidelines — Perceivable, Operable, Understandable, Robust. AA compliance is the minimum for production products; AAA for high-accessibility contexts. Every interactive element has a specification obligation.
@@ -67,7 +69,20 @@ Evaluate the experience impact against:
 - **Color contrast**: Do text and interactive elements meet WCAG AA contrast ratios (4.5:1 for normal text, 3:1 for large text and UI components)?
 - **Touch target size**: Are interactive targets at least 44×44 dp for mobile?
 - **Analytics events**: What user interactions need to be tracked? Are event names consistent with existing taxonomy?
+- **Experimentation**: What is the assignment unit, exposure event, primary metric, guardrail metrics, conflict set, and rollback condition?
 - **Responsive behavior**: How does the layout adapt at breakpoints? Are touch and hover interactions differentiated?
+
+## Experimentation And Analytics Impact
+
+Model experiment and analytics impact whenever behavior, copy, targeting, or instrumentation changes:
+
+- **Exposure event**: the exact event that proves the user saw or entered the experiment, with de-duplication rules.
+- **Assignment unit**: user, account, tenant, device, session, request, or job; must remain stable for the experiment duration.
+- **Primary metric**: north-star or decision metric, owner, directionality, and minimum detectable effect.
+- **Guardrail metrics**: latency, errors, retention, revenue, support contacts, accessibility, safety, or data quality regressions that can reject rollout.
+- **Analytics event compatibility**: event taxonomy, schema compatibility, deprecated names, and historical dashboard migration.
+- **Dashboard migration**: old/new dashboard mapping, freshness, backfill, and owner acceptance.
+- **A/B test conflict**: mutually exclusive experiments, overlapping cohorts, interaction effects, and priority rules.
 
 ### Decision Tree: Accessibility Obligation Level
 
@@ -93,6 +108,7 @@ Does this change only affect layout or spacing with no interactive element chang
 - Escalate when WCAG AA requirements would be violated — accessibility blockers in primary user flows are product defects, not enhancements.
 - Escalate when high-volume operational screens (order management, content moderation) have loading states that block productive work — performance perception directly affects operator efficiency.
 - Escalate when analytics event changes would break existing dashboards, funnels, or A/B test tracking.
+- Escalate when exposure logging is missing, assignment unit is unstable, sample ratio mismatch is likely, experiment conflicts are unresolved, or guardrail regression has no rollback rule.
 
 ## Critical Details
 - **Error messages must be specific**: "Something went wrong" is not an error message. "Payment declined — your card was not charged. Try a different card or contact your bank." is an error message. Vague errors increase support volume and reduce user trust.
@@ -102,6 +118,7 @@ Does this change only affect layout or spacing with no interactive element chang
 - **Color cannot be the only differentiator**: Use shape, icon, or label in addition to color to communicate status — required for color-blind users and low-contrast environments.
 - **Empty state design is product design**: An empty state that says "No results" without a call-to-action is a dead end. Design empty states with context ("You haven't added any products yet") and a primary action.
 - **Notification fatigue**: Every notification, badge, and alert added to a UI has a user-attention cost. Design the notification behavior (frequency, persistence, dismissibility) with the same rigor as the feature itself.
+- **Sample ratio mismatch is a product signal**: if assignment counts diverge from planned allocation, the experiment result is invalid until routing, targeting, bot traffic, or logging defects are explained.
 
 ### Anti-Examples
 
@@ -143,6 +160,7 @@ Return an experience impact model with:
 - **Content delta**: New or changed copy, labels, error messages, empty state text, confirmation messages.
 - **Form design specification**: Field list, validation rules, error messages, submission behavior.
 - **Analytics impact**: Events added, modified, or deprecated — with naming taxonomy and migration plan if needed.
+- **Experimentation impact**: Exposure event, assignment unit, primary metric, guardrail metrics, sample ratio mismatch checks, A/B conflict rules, and rollback condition for guardrail regression.
 - **Responsive behavior**: Breakpoints and layout adaptation for affected screens.
 - **Risk classification**: Flows with payment, destruction, permission-denial, or onboarding that require escalation.
 
@@ -157,11 +175,13 @@ Return an experience impact model with:
 8. Analytics events are specified with naming taxonomy consistent with existing events.
 9. Form design follows label-above-field, blur-triggered inline validation, and specific error copy.
 10. Empty states have contextual messaging and a primary call-to-action.
+11. Experiments define exposure event, assignment unit, primary metric, guardrails, conflict rules, dashboard migration, and rollback condition.
 
 ## Handoff
 - **frontend-change-builder** — for component implementation from experience specification.
 - **acceptance-criteria-builder** — to formalize experience states and flows as testable acceptance criteria.
 - **quality-test-gate** — for E2E test coverage, accessibility test obligations, and visual regression strategy.
+- **bigdata-product-extension** — for funnel/cohort data, analytics warehouse, event taxonomy, dashboard migration, and metric data quality.
 - **security-privacy-gate** — when flows handle sensitive data, permissions, or destructive actions.
 - **change-documentation-gate** — when user-facing copy, help text, or onboarding content changes require documentation updates.
 

@@ -1,0 +1,46 @@
+---
+id: l4-iac-cloud-governance
+description: |
+  Production Terraform change that touches cloud IAM, public exposure,
+  DNS/WAF/KMS, state locking, plan review, and cost delta evidence.
+prompt: |
+  Update Terraform for production: add a new public S3 bucket behind CDN
+  and WAF, change DNS, add a KMS key policy, modify cloud IAM roles, and
+  require plan file review, state locking, drift detection, destructive
+  resource detection, IAM diff review, and cost delta approval.
+expected:
+  complexity: L4
+  risk_triggers:
+    - production deployment
+    - secret/config change
+    - cloud IAM
+    - public exposure
+  skills:
+    - security-privacy-gate
+    - delivery-release-gate
+    - quality-test-gate
+  capabilities:
+    - ci-cd
+    - secret-configuration-security
+    - kubernetes-gateway
+    - performance-budgeting
+  domain_extensions: []
+  quality_gates:
+    - security gate
+    - delivery gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - ai-code-review-refactor
+  capabilities:
+    - form-validation-design
+    - cache-design
+  domain_extensions:
+    - bigdata-product-extension
+    - ai-product-extension
+  quality_gates:
+    - AI review gate
+notes: |
+  IaC cloud governance should route through CI/CD capability plus delivery
+  and security gates for IAM, exposure, DNS/WAF/KMS, and cost evidence.

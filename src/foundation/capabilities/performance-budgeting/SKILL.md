@@ -9,11 +9,11 @@ changeforge_version: 0.1.0
 
 # Mission
 
-**Define explicit, measurable performance budgets** — latency, throughput, payload, bundle size, memory, CPU, query cost, and resource consumption — before a change ships, so that performance regressions are detected in CI/CD rather than discovered via user complaints or SLO burn, and so that architectural decisions (caching, indexing, pagination, code splitting) are driven by quantified requirements rather than intuition.
+**Define explicit, measurable performance and cost budgets** — latency, throughput, payload, bundle size, memory, CPU, query cost, cloud unit cost, and resource consumption — before a change ships, so that regressions are detected in CI/CD rather than discovered via user complaints, SLO burn, or cloud bill spikes, and so that architectural decisions (caching, indexing, pagination, code splitting, autoscaling) are driven by quantified requirements rather than intuition.
 
 # When To Use
 
-Use this capability when a change: introduces a new API endpoint, background job, or query that will run in production; adds or modifies a user-facing page where Core Web Vitals or interaction latency is measurable; increases payload sizes (response bodies, request bodies, bundle sizes, image assets) beyond a known threshold; changes a data access pattern (adds joins, removes index, changes query shape) in a system with > 1M records; adds a scheduled job or batch process without a documented execution time constraint; or follows a performance incident where the root cause was an undefined or unenforced budget.
+Use this capability when a change: introduces a new API endpoint, background job, or query that will run in production; adds or modifies a user-facing page where Core Web Vitals or interaction latency is measurable; increases payload sizes (response bodies, request bodies, bundle sizes, image assets) beyond a known threshold; changes a data access pattern (adds joins, removes index, changes query shape) in a system with > 1M records; adds a scheduled job or batch process without a documented execution time constraint; changes cloud resource usage, autoscaling behavior, query scan volume, storage growth, or egress; or follows a performance or cost incident where the root cause was an undefined or unenforced budget.
 
 # Do Not Use When
 
@@ -27,6 +27,7 @@ Do not use this capability to: define SLI/SLO alert thresholds and operational e
 - **Frontend performance budgets must cover all three Core Web Vitals and TTI.** LCP (Largest Contentful Paint) ≤ 2.5s; INP (Interaction to Next Paint) ≤ 200ms; CLS (Cumulative Layout Shift) ≤ 0.1; TTI (Time to Interactive) ≤ 3.8s on a simulated 4G connection (Lighthouse default: 10 Mbps down, 40ms RTT, 4× CPU slowdown). Budget must be measured on a representative slow-device profile — not just the engineer's development machine.
 - **Bundle size budgets must be enforced per route / per chunk, not only for total bundle.** A 500 KB JavaScript bundle that includes a charting library only used on the admin dashboard is unacceptable for users who never visit that dashboard. Budget: `main.js` ≤ 150 KB gzipped; per-route chunk ≤ 50 KB gzipped; third-party vendor chunk ≤ 200 KB gzipped (separate from application code). Webpack Bundle Analyzer / Rollup Visualizer / `bundlesize` tool must be used for enforcement.
 - **Database query budgets must include both execution time and resource cost.** A query that runs in 50ms on 10,000 rows runs in 18 seconds on 10,000,000 rows with the same execution plan. Budget must specify: maximum execution time at expected data volume (measured, not estimated); maximum rows examined (EXPLAIN ANALYZE output); index requirement (query must use defined index — `seq scan` on large tables is a budget violation).
+- **Cloud cost budgets must be specified as unit economics, not only monthly totals.** A monthly budget hides regressions until the invoice arrives. Define cost per request, tenant, batch job, query scan, storage GB-month, and egress GB for material changes; include an approved per-feature cost ceiling and a cost anomaly threshold.
 - **Memory budgets must be specified for long-running processes.** A Node.js API server that starts at 200 MB RSS but grows to 2 GB RSS over 48 hours before OOM kill has a memory leak. Budget: baseline RSS at startup; maximum RSS after 24 hours of production load; maximum heap growth between GC cycles; container memory limit must be ≥ 2× maximum expected RSS (not tight).
 - **Background job and batch process budgets must include wall-clock time, CPU, and memory peaks.** A nightly report job must complete within a defined window (e.g., must complete before business hours start at 06:00 local time); must not consume > X% CPU of shared processing capacity; must process N records within the window without degrading concurrent API latency.
 
@@ -49,6 +50,8 @@ Anchor against: **Google Web Vitals (web.dev/vitals)** — Core Web Vitals stand
 | DB Query Execution Time | Standard read | < 50ms | 50–200ms | > 200ms → index or cache |
 | Rows Examined / Row Returned | Query efficiency | ≤ 10× | 10–100× | > 100× → seq scan risk |
 | Container Memory RSS | API server | ≤ container limit / 2 | 50–80% of limit | > 80% (OOM risk) |
+| Cloud Unit Cost | Request / tenant / job | Within approved ceiling | 10-20% above baseline | > 20% above baseline or unbounded |
+| Query Scan Budget | Warehouse / lake query | Partition-pruned and approved | Scans more than expected partition | Full scan without approval |
 
 ### Budget Enforcement Configuration Template
 
@@ -120,15 +123,21 @@ Memory Leak Risk (long-running process)?
   → Set baseline RSS + maximum RSS after 24h load test
   → Add heap growth metric (heap used before/after GC cycle)
   → Set container memory limit ≥ 2× expected peak RSS
+
+Cloud Cost / FinOps Risk?
+  → Set cloud cost budget per request, tenant, job, feature, and query scan
+  → Set egress and storage lifecycle budgets
+  → Add budget approval gate when projected spend exceeds threshold
+  → Add cost anomaly alert tied to the rollout or feature flag
 ```
 
 # Selection Rules
 
-Select this capability when the primary concern is **defining and enforcing measurable performance thresholds** before a change ships. Route elsewhere when: **profiling** is primary (diagnosing an existing production regression); **observability** is primary (SLI/SLO alert definitions and error budgets for operational monitoring); **indexing-query-optimization** is primary (tuning a specific slow query's execution plan); **degradation-circuit-breaking** is primary (defining fallback behavior when performance degrades beyond threshold).
+Select this capability when the primary concern is **defining and enforcing measurable performance or cloud cost thresholds** before a change ships. Route here for latency budget, throughput budget, memory budget, cloud cost budget, query scan budget, and per-feature cost ceiling. Route elsewhere when: **profiling** is primary (diagnosing an existing production regression or cost anomaly); **observability** is primary (SLI/SLO alert definitions and error budgets for operational monitoring); **indexing-query-optimization** is primary (tuning a specific slow query's execution plan); **degradation-circuit-breaking** is primary (defining fallback behavior when performance degrades beyond threshold).
 
 # Risk Escalation Rules
 
-Escalate when: a change removes or changes an existing budget threshold without a documented justification and updated baseline measurement; a load test reveals that the P99 budget is exceeded at less than 50% of expected peak concurrent users; a database query change results in a seq scan on a table with > 100K rows in production; a frontend bundle size increase exceeds 20% of the current budget without lazy-loading justification; or memory RSS grows > 50% above baseline after 12 hours of steady-state load (potential leak).
+Escalate when: a change removes or changes an existing budget threshold without a documented justification and updated baseline measurement; a load test reveals that the P99 budget is exceeded at less than 50% of expected peak concurrent users; a database query change results in a seq scan on a table with > 100K rows in production; a frontend bundle size increase exceeds 20% of the current budget without lazy-loading justification; memory RSS grows > 50% above baseline after 12 hours of steady-state load (potential leak); or projected cloud unit cost, query scan cost, egress, or storage growth exceeds the approved per-feature cost ceiling.
 
 # Critical Details
 
@@ -136,6 +145,7 @@ Escalate when: a change removes or changes an existing budget threshold without 
 - **Load test at realistic concurrency, not just single-request latency.** A request that takes 50ms in isolation may take 800ms at 500 concurrent users due to connection pool exhaustion, lock contention, or cache miss amplification. Budget must be validated at expected peak concurrency (Black Friday level if applicable, not just average load).
 - **Cold start vs warm cache budgets.** An API endpoint backed by a Redis cache responds in 15ms on cache hit and 350ms on cache miss. Budget must define both: cold path (cache miss / cold JVM / container cold start) and warm path (steady state). Alerting should fire on cold-path P95 exceeding budget during normal operation — which indicates cache eviction or a cold deployment.
 - **Third-party dependency latency must be included in end-to-end budget.** If a payment confirmation API calls a fraud-check partner that P99s at 400ms, the end-to-end checkout confirmation budget must be ≥ 400ms + internal processing. Budgets that ignore third-party latency undercount the user-experienced time.
+- **Unit cost baselines must use production-like volume.** Serverless, warehouse, CDN, queue, and object-storage pricing often has nonlinear thresholds. A feature that is cheap in a small test can become expensive when fan-out, retries, scan volume, or egress scales with tenants.
 
 ### Anti-examples
 
@@ -166,6 +176,8 @@ Return a performance budget specification with:
 - `frontend_budgets` (LCP, INP, CLS, TTI; device profile; measurement tool; Lighthouse CI configuration)
 - `bundle_budgets` (per chunk: `main.js`, vendor chunks, per-route lazy-loaded chunks; gzipped KB limit; enforcement tool)
 - `query_budgets` (per query: max execution time at production data volume; rows examined/returned ratio; index requirement; EXPLAIN validation requirement)
+- `cloud_cost_budgets` (cost per request, cost per tenant, cost per job, query scan budget, storage lifecycle cost, egress budget, autoscaling cost impact)
+- `per_feature_cost_ceiling` (approved spend ceiling, owner, approval gate, and cost anomaly threshold)
 - `job_budgets` (per job/pipeline: wall-clock window; CPU and memory peak limits; concurrency impact on API latency)
 - `memory_budgets` (baseline RSS; maximum RSS after 24h load; heap growth between GC cycles; container limit recommendation)
 - `enforcement_gates` (CI/CD integration: Lighthouse CI config, k6/Gatling threshold assertions, bundlesize config, EXPLAIN validation script)
@@ -187,6 +199,8 @@ The budget specification is complete only when:
 8. Memory budgets defined for all long-running processes (API servers, workers, daemons).
 9. Cold-start and warm-path budgets specified separately for cached or JIT-compiled services.
 10. Budget violations: distinction between blocking (release cannot proceed) and warning (investigation required).
+11. Cloud cost budget exists for material resource changes, including query scan, egress, storage lifecycle, and per-feature cost ceiling.
+12. Budget approval gate and cost anomaly alert are defined when projected spend can exceed the approved ceiling.
 
 # Used By
 
@@ -199,4 +213,4 @@ Hand off to `profiling` for performance regression diagnosis in production; `obs
 
 # Completion Criteria
 
-The capability is complete when **every production-facing surface in the change has an explicit, measurable, percentile-specified performance budget that is enforced automatically in CI/CD, validated at production data volume and peak concurrency, and linked to an escalation path when the budget is exceeded**.
+The capability is complete when **every production-facing surface in the change has an explicit, measurable, percentile-specified performance budget and, where material, a cloud cost budget that is enforced automatically in CI/CD or release gates, validated at production data volume and peak concurrency, and linked to an escalation path when the budget is exceeded**.

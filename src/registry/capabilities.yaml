@@ -504,9 +504,9 @@ capabilities:
     path: src/foundation/capabilities/secret-configuration-security
     status: implemented
     used_by: [security-privacy-gate, delivery-release-gate]
-    triggers: [secure secrets environment variables configuration defaults and runtime exposure]
-    risk_notes: [Secret leaks and unsafe defaults create immediate operational exposure]
-    expected_outputs: [secret and config review with storage access rotation and redaction rules]
+    triggers: [secure secrets environment variables configuration defaults KMS key policy secret manager scope and runtime exposure]
+    risk_notes: [Secret leaks unsafe defaults and broad key policies create immediate operational exposure]
+    expected_outputs: [secret and config review with storage access rotation KMS policy and redaction rules]
   - id: "57"
     name: dependency-vulnerability-scanning
     group: security-privacy
@@ -585,18 +585,18 @@ capabilities:
     path: src/foundation/capabilities/performance-budgeting
     status: implemented
     used_by: [reliability-observability-gate, frontend-change-builder]
-    triggers: [set latency throughput memory payload and rendering performance budgets]
-    risk_notes: [No budget makes performance regressions subjective and late to detect]
-    expected_outputs: [performance budget with metrics thresholds scenarios and measurement plan]
+    triggers: [set latency throughput memory cloud cost query scan per feature cost and rendering performance budgets]
+    risk_notes: [No budget makes performance or cost regressions subjective and late to detect]
+    expected_outputs: [performance and cost budget with metrics thresholds scenarios measurement plan and approval gates]
   - id: "66"
     name: profiling
     group: reliability-operations
     path: src/foundation/capabilities/profiling
     status: implemented
     used_by: [reliability-observability-gate, data-middleware-change-builder]
-    triggers: [profile CPU memory IO database network rendering and bottlenecks]
-    risk_notes: [Guessing at bottlenecks wastes effort and can worsen real constraints]
-    expected_outputs: [profiling plan with measurements bottlenecks evidence and next actions]
+    triggers: [profile CPU memory IO database network rendering cloud cost unit economics and bottlenecks]
+    risk_notes: [Guessing at bottlenecks or cost drivers wastes effort and can worsen real constraints]
+    expected_outputs: [profiling plan with measurements bottlenecks cost drivers evidence and next actions]
   - id: "67"
     name: concurrency-control
     group: reliability-operations
@@ -639,9 +639,9 @@ capabilities:
     path: src/foundation/capabilities/project-initialization
     status: implemented
     used_by: [delivery-release-gate]
-    triggers: [initialize project structure dependencies configuration scripts and quality gates]
-    risk_notes: [Weak initialization creates inconsistent environments and hidden setup debt]
-    expected_outputs: [project setup plan with structure commands configs and verification]
+    triggers: [initialize project structure monorepo workspace dependencies configuration scripts and quality gates]
+    risk_notes: [Weak initialization creates inconsistent environments hidden setup debt and broken module graphs]
+    expected_outputs: [project setup plan with structure monorepo policy commands configs and verification]
   - id: "72"
     name: containerization
     group: delivery-platform
@@ -657,18 +657,18 @@ capabilities:
     path: src/foundation/capabilities/ci-cd
     status: implemented
     used_by: [delivery-release-gate, quality-test-gate]
-    triggers: [design CI CD pipelines checks artifacts environments approvals and deployment gates]
-    risk_notes: [Weak pipelines allow unverified or unreproducible changes into production]
-    expected_outputs: [pipeline plan with stages gates artifacts secrets and rollback hooks]
+    triggers: [design CI CD pipelines IaC Terraform plan cost impact monorepo affected tests artifacts environments approvals and deployment gates]
+    risk_notes: [Weak pipelines allow unverified unreproducible unaudited or high cost changes into production]
+    expected_outputs: [pipeline plan with stages gates artifacts secrets IaC cost evidence monorepo policy and rollback hooks]
   - id: "74"
     name: kubernetes-gateway
     group: delivery-platform
     path: src/foundation/capabilities/kubernetes-gateway
     status: implemented
     used_by: [delivery-release-gate, reliability-observability-gate]
-    triggers: [design Kubernetes workload service ingress gateway probes and rollout controls]
-    risk_notes: [Kubernetes misconfiguration causes exposure outages or failed rollouts]
-    expected_outputs: [Kubernetes gateway plan with resources routes probes scaling and safety checks]
+    triggers: [design Kubernetes workload service ingress gateway DNS CDN WAF probes scaling cloud exposure and rollout controls]
+    risk_notes: [Kubernetes and gateway misconfiguration causes exposure outages or failed rollouts]
+    expected_outputs: [Kubernetes gateway plan with resources routes probes scaling cloud exposure and safety checks]
   - id: "75"
     name: release-rollback
     group: delivery-platform
@@ -729,9 +729,9 @@ capabilities:
     path: src/foundation/capabilities/failure-diagnosis
     status: implemented
     used_by: [reliability-observability-gate, ai-code-review-refactor]
-    triggers: [diagnose failures symptoms logs metrics regressions hypotheses and root cause]
-    risk_notes: [Jumping to fixes without evidence can mask root cause and add defects]
-    expected_outputs: [diagnosis report with symptoms evidence hypotheses root cause and fix direction]
+    triggers: [diagnose failures SEV incident response symptoms logs metrics regressions hypotheses root cause and postmortem actions]
+    risk_notes: [Jumping to fixes without evidence or incident command can mask root cause and extend customer impact]
+    expected_outputs: [diagnosis report with severity roles symptoms evidence hypotheses root cause customer comms and postmortem actions]
   - id: "82"
     name: solution-optimality-evaluation
     group: engineering-workflow
@@ -791,10 +791,10 @@ capabilities:
     group: technology-selection
     path: src/foundation/capabilities/package-dependency-management
     status: implemented
-    used_by: [security-privacy-gate, delivery-release-gate, project-initialization, ai-code-review-refactor, technology-stack-selection]
-    triggers: [package manager lockfile dependency upgrade dependency removal new package license provenance transitive dependency supply chain native extension SDK library public API]
-    risk_notes: [Dependency graph changes can introduce vulnerabilities license obligations install side effects runtime incompatibility and unreproducible builds]
-    expected_outputs: [dependency decision with justification lockfile transitive impact vulnerability license provenance compatibility tests and accepted exceptions]
+    used_by: [security-privacy-gate, delivery-release-gate, project-initialization, ai-code-review-refactor, technology-stack-selection, architecture-impact-reviewer, quality-test-gate]
+    triggers: [package manager lockfile workspace monorepo dependency upgrade dependency removal new package license provenance transitive dependency supply chain generated files native extension SDK library public API]
+    risk_notes: [Dependency graph changes can introduce vulnerabilities license obligations install side effects runtime incompatibility hidden monorepo coupling and unreproducible builds]
+    expected_outputs: [dependency decision with justification lockfile module graph transitive impact vulnerability license provenance compatibility tests generated file policy and accepted exceptions]
   - id: "89"
     name: go-professional-usage
     group: language-professional-usage

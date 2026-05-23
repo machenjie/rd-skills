@@ -13,7 +13,7 @@ changeforge_version: 0.1.0
 
 # When To Use
 
-Use this capability when: a production service, API endpoint, or background job is slower than its performance budget; a latency regression was introduced and the root cause is unknown; memory is growing unboundedly (potential leak) or GC pressure is degrading throughput; CPU utilization is elevated without a proportional increase in request rate; a query is taking > 200ms in production; I/O waits, lock contention, or thread starvation is suspected; or a frontend page is failing Core Web Vitals (LCP, INP) and the JS execution budget is unknown.
+Use this capability when: a production service, API endpoint, or background job is slower than its performance budget; a latency regression was introduced and the root cause is unknown; memory is growing unboundedly (potential leak) or GC pressure is degrading throughput; CPU utilization is elevated without a proportional increase in request rate; a query is taking > 200ms in production; cloud cost, query scan, egress, storage, or autoscaling spend spikes without a known driver; I/O waits, lock contention, or thread starvation is suspected; or a frontend page is failing Core Web Vitals (LCP, INP) and the JS execution budget is unknown.
 
 # Do Not Use When
 
@@ -44,6 +44,7 @@ Anchor against: **Brendan Gregg "Systems Performance: Enterprise and the Cloud" 
 | Network fan-out | High external call count, long tail p99 | Distributed trace, span count | N+1 HTTP calls, chatty API, synchronous external waits | Batch calls, async fan-out, circuit breaker |
 | Frontend rendering | Long Tasks > 50ms, poor INP/LCP | Chrome DevTools, Lighthouse | Large JS bundle, layout thrashing, sync work on main thread | Code splitting, debounce, off-main-thread work |
 | Allocation / memory leak | Monotonic RSS growth, OOM after hours | Heap dump diff (before vs after) | Event listener accumulation, timer not cleared, global cache growth | Fix retention; clear listeners; bound cache size |
+| Cloud cost / unit economics | Cost per request, tenant, or job rises faster than traffic | Billing export, usage metrics, trace spans, warehouse dry-run | Retry storm, full table scan, cross-region egress, over-scaling | Bound retries, partition query, cache, right-size scaling |
 
 ### Profiling Workflow
 
@@ -84,11 +85,11 @@ Anchor against: **Brendan Gregg "Systems Performance: Enterprise and the Cloud" 
 
 # Selection Rules
 
-Select this capability when the primary need is to **identify where time or resources are consumed** before an optimization is chosen. Route elsewhere when: **performance-budgeting** is primary (defining target latency thresholds for a new feature); **indexing-query-optimization** is primary (tuning a specific query's execution plan after profiling confirms it is the bottleneck); **concurrency-control** is primary (designing locking strategy for a new data access pattern, not diagnosing contention in existing code); **observability** is primary (configuring ongoing production monitoring signals and SLO alerts, not diagnosing a specific regression).
+Select this capability when the primary need is to **identify where time, resources, or cloud spend are consumed** before an optimization is chosen. Route elsewhere when: **performance-budgeting** is primary (defining target latency or cost thresholds for a new feature); **indexing-query-optimization** is primary (tuning a specific query's execution plan after profiling confirms it is the bottleneck); **concurrency-control** is primary (designing locking strategy for a new data access pattern, not diagnosing contention in existing code); **observability** is primary (configuring ongoing production monitoring signals and SLO alerts, not diagnosing a specific regression).
 
 # Risk Escalation Rules
 
-Escalate when: profiling is performed on a production system during business hours (risk of profiling overhead degrading live traffic — use off-peak, shadow traffic, or a representative staging environment); a heap dump or memory snapshot must be captured from a live production process (memory dump may expose in-flight sensitive data); the profiling investigation reveals a correctness defect in addition to a performance issue (stop and split); a proposed fix changes a public API contract, database schema, or integration boundary (requires separate change management); or a memory leak is confirmed and the process must be restarted to recover — notify operations before restart.
+Escalate when: profiling is performed on a production system during business hours (risk of profiling overhead degrading live traffic — use off-peak, shadow traffic, or a representative staging environment); a heap dump or memory snapshot must be captured from a live production process (memory dump may expose in-flight sensitive data); the profiling investigation reveals a correctness defect in addition to a performance issue (stop and split); a cost anomaly points to unbounded retries, data exfiltration, cross-region egress, or a full table scan on regulated data; a proposed fix changes a public API contract, database schema, or integration boundary (requires separate change management); or a memory leak is confirmed and the process must be restarted to recover — notify operations before restart.
 
 # Critical Details
 
@@ -96,6 +97,7 @@ Escalate when: profiling is performed on a production system during business hou
 - **N+1 query detection requires tracing, not just slow query log.** A query that takes 3ms each but is called 500 times per request contributes 1.5 seconds of latency invisible to slow query log (threshold typically 100ms). Detection requires distributed trace span count analysis (e.g., ORM-level query count per request) or database query count metrics per request.
 - **GC tuning without reducing allocation rate is treating a symptom.** If heap profiling shows 500MB/sec allocation rate, increasing heap size or changing GC algorithm reduces GC pause frequency but does not reduce allocation pressure. Fix: identify the highest-volume allocation sites in the allocation flame graph and reduce object creation per request.
 - **Production profiling overhead must be acceptable.** `async-profiler` CPU profiling: ~1% overhead at 100 Hz sampling (safe for production). `jmap` heap dump: pauses the JVM for the duration of the dump (seconds to minutes on large heaps — not safe during business hours). `py-spy`: sampling, no code changes, no overhead perceptible in most cases. `pprof` Go heap profile: 5% overhead by default. Document the overhead of the chosen profiling method before attaching to production.
+- **Cost profiling joins billing and runtime evidence.** A billing export alone shows where money went; traces, query plans, autoscaling events, and retry metrics explain why. Attribute cost by request path, tenant, job, query, storage class, and egress path before proposing a cost fix.
 
 ### Anti-examples
 
@@ -126,6 +128,7 @@ Return a profiling report with:
 - `workload_definition` (data volume, concurrency, access pattern; how representative of production)
 - `baseline_metrics` (locked baseline: P50/P95/P99, CPU %, heap, GC rate; profiling tool and settings)
 - `profiling_evidence` (flame graph description, EXPLAIN ANALYZE output, allocation profile top sites, trace span breakdown, or lock wait report)
+- `cost_profile` (when relevant: cost per request, cost per tenant, cost per job, query scan bytes, storage growth, egress path, autoscaling event, and billing metric source)
 - `bottleneck_classification` (confirmed class from matrix: CPU-bound / memory / I/O / lock / query / network / rendering / leak)
 - `root_cause` (specific code location, query, or pattern causing the bottleneck)
 - `proposed_fix` (specific change; why it addresses the root cause)
@@ -149,6 +152,7 @@ The profiling report is complete only when:
 8. Correctness tests pass before and after the optimization.
 9. After-measurement plan uses identical workload and profiling settings as baseline.
 10. Profiling artifacts confirmed to contain no sensitive data.
+11. Cost anomalies are attributed to a runtime driver and unit-cost dimension before optimization is proposed.
 
 # Used By
 

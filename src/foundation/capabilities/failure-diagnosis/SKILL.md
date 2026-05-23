@@ -28,6 +28,7 @@ Do not use this capability for preventive architecture reviews (use `architectur
 - **Reproduction is required for diagnosis completion.** A failure is not considered diagnosed until it can be reproduced in a controlled environment OR a specific, documented evidence chain explains precisely why it occurred and why controlled reproduction is not feasible (e.g., race condition that requires specific production traffic pattern). "We think we know what it was" is not sufficient.
 - **Change-failure correlation is mandatory first step.** For every production failure, the first investigative step is: what changed in the last 24–48 hours? Deployments, configuration changes, infrastructure changes, dependency upgrades, database migrations, upstream service changes. DORA change failure rate: > 15% change failure rate is a signal the change process needs review.
 - **Post-mortem action items must be specific and verifiable.** Action items in post-mortems must have: owner, due date, specific outcome (not "improve monitoring" but "add alert for DB connection pool utilization > 80% with 2-minute sustained threshold"), and a verification test. Vague action items are not action items.
+- **Incident command roles must be explicit during customer-impacting incidents.** A SEV0/SEV1/SEV2 incident without an incident commander, technical lead, communications lead, mitigation owner, and customer communication cadence will drift into parallel, conflicting work.
 
 # Industry Benchmarks
 
@@ -90,6 +91,20 @@ Timeline format:
 | Memory leak causing OOM | Heap/RSS growing monotonically pre-failure | Memory graph trending up 2h before alert | Memory stable; sudden spike at event | (fill in) |
 | Upstream service degraded | Upstream latency increase precedes errors | `http.client.duration` upstream spike | Upstream health check green | (fill in) |
 
+## Incident Response Protocol
+
+Use this protocol for customer-impacting or production-critical incidents before deep root-cause work:
+
+- **Severity classification**: declare SEV0, SEV1, SEV2, or lower severity with customer impact, data impact, financial impact, and duration criteria.
+- **Incident commander**: owns coordination, decision log, role assignment, escalation, and cadence.
+- **Technical lead**: owns diagnosis, mitigation options, rollback recommendation, and resolution confirmation.
+- **Communications lead**: owns internal updates, customer-facing updates, support handoff, and executive summary.
+- **Mitigation decision**: distinguish immediate impact reduction from final resolution; record rollback, disable flag, capacity add, traffic shift, or manual workaround decisions.
+- **Customer communication cadence**: define update frequency, approved wording owner, affected audience, and support channel.
+- **Status page update**: declare when public or private status page entry is required and who updates it.
+- **Resolution confirmation**: name the metrics, customer signal, or validation that proves impact has ended.
+- **Postmortem publication**: define draft owner, review meeting, publication audience, CAPA tracking, and due dates.
+
 # Selection Rules
 
 Select this capability as a diagnostic framework that cuts across all technical domains. Pair with domain-specific capabilities when diagnosis reveals the root cause domain:
@@ -102,7 +117,7 @@ Select this capability as a diagnostic framework that cuts across all technical 
 
 # Risk Escalation Rules
 
-Escalate diagnosis to senior engineers or incident commander when: the failure has a financial, regulatory, or safety impact; root cause is not identified within the first hour of a P0/P1 incident; the timeline reconstruction reveals a data integrity anomaly (records missing or corrupted); multiple independent hypotheses are confirmed with conflicting evidence; the failure mode is novel and not covered by existing runbooks; a post-mortem action item owner is not available.
+Escalate diagnosis to senior engineers or incident commander when: the failure has a financial, regulatory, customer-facing, security, or safety impact; root cause is not identified within the first hour of a P0/P1 or SEV0/SEV1 incident; the timeline reconstruction reveals a data integrity anomaly (records missing or corrupted); multiple independent hypotheses are confirmed with conflicting evidence; the failure mode is novel and not covered by existing runbooks; legal, compliance, security, or privacy escalation may be required; a post-mortem action item owner is not available.
 
 # Critical Details
 
@@ -143,15 +158,20 @@ Most incorrect diagnoses come from stopping at the trigger rather than the root 
 Return a failure diagnosis report with:
 
 - `incident_id` (date + service + brief description)
+- `severity` (SEV0/SEV1/SEV2/lower; classification rationale and declared time)
+- `incident_roles` (incident commander, technical lead, communications lead, support/legal/security/compliance escalations if needed)
 - `symptom` (observable failure: user impact, monitor alert, error type, rate, duration)
 - `trigger` (immediate precipitating event with timestamp)
 - `timeline` (chronological list: timestamp, event type, description, source)
+- `customer_comms` (customer-facing update cadence, status page entry, support handoff, and last update)
 - `hypotheses` (list, each with: statement, prediction, confirming evidence, refuting evidence, status)
 - `root_cause` (specific, verifiable statement; the Why chain)
 - `contributing_factors` (conditions that amplified impact)
 - `fix` (minimal code/config/infra change; PR link or description)
+- `mitigation_vs_resolution` (impact-reducing actions taken now vs. final defect removal)
 - `reproduction` (test case or reproduction steps; or documented reason reproduction is infeasible)
 - `prevention` (action items each with: owner, due date, specific observable outcome, verification test)
+- `postmortem_actions` (review meeting, publication audience, CAPA tracking item, owner, due date, verification evidence)
 - `process_gaps` (what in the development, review, deployment, or monitoring process allowed this root cause to exist)
 - `open_questions` (unresolved aspects; owner; investigation timeline)
 - `false_hypotheses` (hypotheses considered and rejected; reason rejected)
@@ -170,6 +190,8 @@ The diagnosis is complete only when:
 8. All post-mortem action items have owner, due date, and verifiable outcome.
 9. Process gaps identified — why was root cause able to reach production?
 10. False hypotheses documented with rejection evidence.
+11. Customer-impacting incidents include severity, incident roles, mitigation decision, customer communication cadence, and status page decision.
+12. CAPA/postmortem actions are tracked with owner, due date, and verification evidence.
 
 # Used By
 
@@ -178,8 +200,8 @@ The diagnosis is complete only when:
 
 # Handoff
 
-Hand off the post-mortem action items to the owning teams; prevention measures to `ci-cd` (for pipeline guards), `reliability-observability-gate` (for alerting), and `code-review` (for code-level prevention). Hand open questions to `architecture-impact-reviewer` when the root cause reveals a systemic architectural weakness.
+Hand off the post-mortem action items to the owning teams; prevention measures to `ci-cd` (for pipeline guards), `reliability-observability-gate` (for alerting), and `code-review` (for code-level prevention). Hand incident report, customer advisory, status page entry, postmortem summary, and corrective action tracking to `change-documentation-gate`. Hand rollback, mitigation, and release sequencing gaps to `delivery-release-gate`. Hand legal, compliance, or security escalation to `security-privacy-gate`. Hand open questions to `architecture-impact-reviewer` when the root cause reveals a systemic architectural weakness.
 
 # Completion Criteria
 
-The capability is complete when **the root cause is specific and verifiable, the timeline is reconstructed from evidence, the fix directly targets root cause with minimal scope, reproduction is confirmed or formally justified, and every prevention action item is concrete, owned, time-bound, and verifiable** — with no "human error" as root cause, no post-mortem actions without owners, and no fix accepted as correct without reproduction or equivalent evidence chain.
+The capability is complete when **the root cause is specific and verifiable, the timeline is reconstructed from evidence, incident severity and roles are explicit when customer impact exists, the fix directly targets root cause with minimal scope, reproduction is confirmed or formally justified, customer communication is accounted for, and every prevention/postmortem action item is concrete, owned, time-bound, and verifiable** — with no "human error" as root cause, no post-mortem actions without owners, and no fix accepted as correct without reproduction or equivalent evidence chain.

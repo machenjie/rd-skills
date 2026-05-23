@@ -1,0 +1,41 @@
+---
+id: l3-product-experiment-analytics
+description: |
+  Add an A/B experiment with exposure logging, primary metric, guardrails,
+  funnel/cohort dashboards, and rollback criteria.
+prompt: |
+  Launch an A/B test for onboarding copy. Define assignment unit, exposure
+  event, primary activation metric, guardrail metrics, sample ratio mismatch
+  checks, funnel and cohort dashboard migration, experiment conflict rules,
+  and rollback if guardrails regress.
+expected:
+  complexity: L3
+  risk_triggers: []
+  skills:
+    - experience-impact-modeler
+    - acceptance-criteria-builder
+    - quality-test-gate
+  capabilities:
+    - acceptance-standard-definition
+    - test-strategy
+    - search-analytics-design
+  domain_extensions:
+    - bigdata-product-extension
+  quality_gates:
+    - requirement gate
+    - test gate
+forbidden:
+  skills:
+    - security-privacy-gate
+    - delivery-release-gate
+  capabilities:
+    - secret-configuration-security
+    - data-migration-design
+  domain_extensions:
+    - web3-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - security gate
+notes: |
+  Product experimentation should join UX, acceptance, quality, and big-data
+  analytics without treating the change as security or release by default.

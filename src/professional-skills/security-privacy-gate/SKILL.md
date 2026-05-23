@@ -21,6 +21,8 @@ Prevent security and privacy regressions by systematically reviewing trust bound
 - Changes involving AI/LLM features where user input influences model prompts or tool calls.
 - Changes involving Web3 wallet interaction, smart contract calls, or private key management.
 - Any change to secrets management, credential rotation, or environment variable handling.
+- Infrastructure-as-code or cloud governance changes involving IAM, public buckets, security groups, NACLs, WAF, DNS/CDN/gateway exposure, KMS key policies, cloud account/project boundaries, or resource tagging.
+- Regulated or audit-relevant changes requiring SOC 2, ISO 27001, PCI, HIPAA, SOX, or other control evidence.
 
 ## Do Not Use When
 - The change is a static content or documentation update with no code execution, data handling, or permission boundary involvement.
@@ -36,6 +38,8 @@ Prevent security and privacy regressions by systematically reviewing trust bound
 - **SSRF prevention**: never make outbound HTTP requests to user-provided or insufficiently validated URLs; validate against an allowlist of approved destinations; block metadata service IP ranges (169.254.169.254, [::1]).
 - **Dependency CVE checks in CI**: every build must run dependency vulnerability scanning (`npm audit`, `pip-audit`, `OWASP Dependency-Check`, or Snyk) — critical and high CVEs in direct dependencies block merge.
 - **Prompt injection is a trust boundary**: any LLM prompt that includes user-controlled content is a potential prompt injection vector — treat LLM output as untrusted and validate before executing actions.
+- **Cloud IAM and exposure changes are security changes**: a Terraform diff that adds wildcard IAM, public object storage, permissive security group rules, weak KMS key policy, or public gateway/DNS exposure must be reviewed as a security boundary change.
+- **Compliance evidence must be audit-ready at the time of change**: control objective, evidence artifact, owner, approval, exception, and retention metadata cannot be reconstructed reliably after the fact.
 
 ## Industry Benchmarks
 - **OWASP Top 10 (2021)**: A01 Broken Access Control (IDOR, privilege escalation), A02 Cryptographic Failures (weak ciphers, unencrypted PII), A03 Injection (SQLi, XSS, command injection), A07 Identification and Authentication Failures, A10 SSRF. The baseline checklist for web application security reviews.
@@ -79,6 +83,28 @@ Evaluate every change against:
 - **Dependency audit**: Do any new or changed dependencies have known CVEs? Are transitive dependencies checked?
 - **Data privacy obligations**: What personal data is collected, stored, or transmitted? Is there a lawful basis? Is it minimized?
 - **AI/LLM trust model**: Is user input included in an LLM prompt? Is the model output treated as untrusted? Are tool calls restricted to an allowlist?
+- **Cloud governance security**: Does the change introduce cloud IAM privilege escalation, public bucket exposure, network exposure via SG/NACL/WAF, DNS/CDN/gateway exposure, or KMS key policy risk?
+- **Compliance evidence**: Which control objective is affected? What evidence artifact proves the control? Who owns the control, evidence, exception, and retention period?
+
+## Compliance Evidence
+
+For regulated, audited, or customer-assurance-sensitive changes, produce an audit-ready evidence chain:
+
+- **Control objective**: SOC 2, ISO 27001 Annex A, PCI DSS, HIPAA, SOX ITGC, or internal control mapped to the change.
+- **Evidence artifact**: pull request, approval record, deploy audit event, artifact digest, SBOM, vulnerability scan, access review, log export, policy-as-code result, or test report.
+- **Evidence owner**: person or team responsible for maintaining the artifact and answering audit questions.
+- **Evidence retention**: retention period, storage location, immutability expectation, and freshness date.
+- **Exception owner**: named approver, expiration date, compensating control, and review cadence for unmet controls.
+- **Audit-ready packet**: concise bundle linking control, evidence, owner, approval, exception status, and retention metadata.
+
+### Cloud Governance Security Review
+
+Block or escalate when any of these are present without explicit review:
+
+- Cloud IAM privilege escalation, wildcard permissions, trust policy broadening, or service account scope expansion.
+- Public bucket exposure, object ACL drift, unauthenticated CDN origin access, or missing storage encryption.
+- Network exposure via security group, NACL, WAF, DNS, CDN, gateway, ingress, or load balancer change.
+- KMS key policy risk, missing rotation, cross-account decrypt grants, or key deletion/disablement without recovery plan.
 
 ### Decision Tree: Authorization Check Required
 
@@ -105,6 +131,8 @@ Is the operation destructive (delete, revoke, cancel)?
 - Escalate when an AI prompt injection can trigger tool calls, write operations, or data exfiltration.
 - Escalate when a dependency has a critical CVE (CVSS ≥ 9.0) and no patch is available — requires risk acceptance from the security owner.
 - Escalate when GDPR/HIPAA/PCI DSS obligations are unclear and the change processes regulated data.
+- Escalate when IaC changes add public exposure, cloud IAM privilege escalation, broad KMS access, or unreviewed DNS/CDN/WAF/gateway exposure.
+- Escalate when required compliance evidence lacks control owner, evidence owner, freshness date, exception approval, or retention period.
 
 ## Critical Details
 - **IDOR test is not optional**: object-level authorization is the #1 vulnerability class (OWASP API1). A test that calls an endpoint with User A's token requesting User B's resource ID must return 403, not the resource. This test must exist.
@@ -115,6 +143,7 @@ Is the operation destructive (delete, revoke, cancel)?
 - **Log sanitization for injection**: log messages that include user input must sanitize newline characters (`\n`, `\r`) to prevent log injection (CRLF injection) that can forge log entries or inject attacker-controlled content.
 - **AI output must be treated as untrusted**: LLM outputs that are parsed, executed, or used to make downstream decisions must be validated — an LLM can be instructed to return malicious function arguments, format strings, or shell commands.
 - **PCI DSS cardholder data minimization**: raw card numbers (PAN) must never be stored, logged, or processed in application code — use a payment provider's tokenization API (Stripe, Braintree) that returns a token that has no value outside the provider's system.
+- **Public cloud defaults are not safe assumptions**: a bucket, queue, key, or gateway may appear private in code but become public through inherited account policy, ACL drift, DNS routing, CDN origin config, or a permissive IAM trust relationship. Review the effective policy, not only the intended module input.
 
 ### Anti-Examples
 
@@ -158,6 +187,8 @@ Return a security and privacy review with:
 - **Secrets audit**: All credentials confirmed in secrets management with rotation schedules.
 - **Dependency CVE report**: New and updated dependencies with CVE status and remediation for critical/high findings.
 - **Privacy impact**: Personal data processed, legal basis, retention, and minimization assessment.
+- **Cloud governance review**: Cloud IAM escalation, public bucket exposure, SG/NACL/WAF/DNS/CDN/gateway exposure, KMS key policy, account/project boundary, and resource tagging risks.
+- **Compliance evidence**: Control objective, evidence artifact, control owner, evidence owner, exception owner, evidence freshness, retention period, and audit-ready packet status.
 - **Required fixes**: All Critical and High findings are blocking — fixes are required before merge.
 - **Compensating controls**: For accepted residual Medium/Low risks, documented mitigating controls.
 - **Gate decision**: Approved / Blocked / Conditionally approved with conditions specified.
@@ -173,6 +204,8 @@ Return a security and privacy review with:
 8. PII is handled with documented legal basis, minimized, and excluded from logs.
 9. AI/LLM prompt injection risk is assessed; model outputs are treated as untrusted.
 10. All Critical and High findings are resolved or have approved remediation plans before merge.
+11. Cloud IAM, public exposure, network exposure, and KMS policy changes are reviewed against effective policy and least privilege.
+12. Regulated changes include control, evidence, owner, exception, freshness, and retention metadata.
 
 ## Handoff
 - **backend-change-builder** — for implementation of authorization checks, input validation, parameterized queries, and CSRF protection.
@@ -181,6 +214,8 @@ Return a security and privacy review with:
 - **data-api-contract-changer** — when privacy-by-design obligations affect data model or API contract design.
 - **reliability-observability-gate** — for security log events, audit trail, and anomaly detection alert requirements.
 - **quality-test-gate** — for IDOR test obligations, security regression tests, and dependency scan CI integration.
+- **change-documentation-gate** — for control mapping, audit evidence packet, security advisory, customer notice, or exception documentation.
+- **delivery-release-gate** — for approval evidence, deploy audit event, artifact digest, and regulated release sequencing.
 
 ## Completion Criteria
-Security and privacy review is complete when all Critical and High findings are resolved, object-level authorization has cross-user IDOR tests, all SQL queries are parameterized, all output is encoded for context, CSRF protection is in place for state-changing endpoints, all secrets are in managed storage, dependencies pass CVE scan with no critical/high findings, PII handling has documented legal basis and exclusion from logs, and AI/LLM prompt injection risk is assessed with model output treated as untrusted.
+Security and privacy review is complete when all Critical and High findings are resolved, object-level authorization has cross-user IDOR tests, all SQL queries are parameterized, all output is encoded for context, CSRF protection is in place for state-changing endpoints, all secrets are in managed storage, dependencies pass CVE scan with no critical/high findings, cloud IAM/exposure/KMS risks are reviewed when present, compliance evidence is audit-ready when required, PII handling has documented legal basis and exclusion from logs, and AI/LLM prompt injection risk is assessed with model output treated as untrusted.

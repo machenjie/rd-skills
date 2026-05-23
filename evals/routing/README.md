@@ -70,6 +70,15 @@ does not warrant them.
     `expected.skills`.
   - `production deployment` → `delivery-release-gate` must be in
     `expected.skills`.
+  - `production incident` → `reliability-observability-gate` and
+    `change-documentation-gate` must be in `expected.skills`.
+  - `cloud IAM`, `public exposure` → `security-privacy-gate` must be in
+    `expected.skills`.
+  - `regulated workload`, `compliance evidence` →
+    `security-privacy-gate`, `delivery-release-gate`, and
+    `change-documentation-gate` must be in `expected.skills`.
+  - `cost anomaly` → `reliability-observability-gate` must be in
+    `expected.skills`.
   - `webhook`, `external integration` → `integration-change-builder`
     must be in `expected.skills`.
   - `payment`/`subscription`/`billing` → `payment-trading-extension` in

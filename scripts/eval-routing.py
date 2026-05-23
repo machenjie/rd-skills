@@ -71,6 +71,23 @@ RISK_REQUIRED_SKILLS: dict[str, tuple[str, ...]] = {
         "delivery-release-gate",
     ),
     "production deployment": ("delivery-release-gate",),
+    "production incident": (
+        "reliability-observability-gate",
+        "change-documentation-gate",
+    ),
+    "cloud iam": ("security-privacy-gate",),
+    "public exposure": ("security-privacy-gate",),
+    "regulated workload": (
+        "security-privacy-gate",
+        "delivery-release-gate",
+        "change-documentation-gate",
+    ),
+    "compliance evidence": (
+        "security-privacy-gate",
+        "delivery-release-gate",
+        "change-documentation-gate",
+    ),
+    "cost anomaly": ("reliability-observability-gate",),
     "payment": ("security-privacy-gate",),
     "subscription": ("security-privacy-gate",),
     "billing": ("security-privacy-gate",),

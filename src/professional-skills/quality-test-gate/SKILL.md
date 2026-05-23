@@ -19,6 +19,9 @@ Define the minimum evidence needed to prove a change works correctly, does not r
 - When a code change involves financial calculations, authorization, state machines, or safety-critical behavior.
 - When regression risk from a cross-cutting refactoring is unclear.
 - When a release gate requires test evidence that has not yet been produced.
+- When product experiments, analytics events, exposure logging, or metric guardrails need verification.
+- When ML model rollout, feature store changes, drift monitoring, fairness audits, or model rollback require validation.
+- When monorepo affected-test selection, incremental build, build cache, or generated-file policies can hide regressions.
 
 ## Do Not Use When
 - The change is trivial (renaming a variable, updating a comment) with zero behavior risk — demand evidence proportional to risk, not uniformly exhaustive.
@@ -33,6 +36,8 @@ Define the minimum evidence needed to prove a change works correctly, does not r
 - **Test data must not include production PII or sensitive records**: use generated, anonymized, or synthetic data that represents realistic edge cases.
 - **Flaky tests must be fixed or quarantined before merge**: a flaky test provides no signal and destroys trust in the test suite — merging known-flaky tests is not acceptable.
 - **Concurrency and idempotency tests are required when code uses shared state, queues, or distributed writes**: race conditions that cannot be detected in sequential unit tests require explicit concurrency verification.
+- **Experiment and model rollout tests require data validity checks**: exposure logging, sample ratio mismatch, feature point-in-time correctness, training-serving skew, drift metrics, and rollback version must be verified like code behavior.
+- **Affected-test selection must be proven against a full-suite baseline**: monorepo speedups are valid only when module graph, dependency edges, cache keys, and generated inputs cannot skip impacted tests.
 
 ## Industry Benchmarks
 - **Test Pyramid (Mike Cohn)**: Many unit tests, fewer integration tests, few E2E tests. Unit tests are fast and cheap; E2E tests are slow and expensive — invert the pyramid at your peril.
@@ -66,6 +71,9 @@ Select the appropriate evidence level for each risk category in the change:
 - **Performance risk**: Does the change affect high-frequency queries, high-traffic endpoints, or large dataset operations? Requires query plan validation and optional load test.
 - **Accessibility risk**: Does the change affect UI interactions for keyboard users or screen reader users? Requires axe-core accessibility scan and keyboard walkthrough.
 - **Security risk**: Does the change affect authorization, authentication, input handling, or output encoding? Requires security-specific test cases and code review.
+- **Experiment risk**: Does the change affect assignment, exposure logging, event taxonomy, funnel/cohort metrics, or guardrail rollback? Requires exposure tests, assignment stability checks, SRM checks, and dashboard/query validation.
+- **Model risk**: Does the change affect a trained model, feature store, model registry, drift monitor, or fairness metric? Requires offline evaluation, online shadow/canary evidence, drift threshold, bias/fairness audit, and rollback model test.
+- **Monorepo build risk**: Does affected-test selection or cache reuse decide what runs? Requires module graph validation, cache key review, generated-file policy checks, and periodic full-suite comparison.
 
 ### Decision Tree: Test Depth Required
 
@@ -80,6 +88,12 @@ Does the change involve an external integration (payment, identity, third-party 
 ├── Yes → Sandbox integration tests + failure simulation required
 Does the change touch auth, session, or permission boundaries?
 ├── Yes → Security-specific test cases: boundary values, privilege escalation, session fixation
+Does the change add or modify an A/B test or analytics metric?
+├── Yes → Exposure logging test + assignment stability + SRM check + guardrail rollback test
+Does the change roll out an ML model?
+├── Yes → Offline eval + shadow/canary + drift/fairness checks + rollback model version test
+Does the change use monorepo affected tests or build cache?
+├── Yes → Module graph validation + cache key verification + generated file policy + full-suite fallback
 Is the change a low-risk refactoring with no behavior change?
 └── Run existing test suite; no new tests required if coverage is not reduced
 ```
@@ -93,6 +107,9 @@ Is the change a low-risk refactoring with no behavior change?
 - Escalate when E2E tests are the only coverage for business-critical logic — E2E tests are too slow and fragile to be the primary regression safety net.
 - Escalate when test data includes real production data — GDPR/privacy violation risk.
 - Escalate when a known-flaky test is in the proposed merge — flaky tests mask real failures.
+- Escalate when experiment launch lacks exposure logging tests, sample ratio mismatch detection, or guardrail rollback verification.
+- Escalate when ML model rollout lacks model registry version pinning, training-serving skew checks, drift monitoring, fairness/bias audit, or rollback model verification.
+- Escalate when monorepo affected-test selection has no full-suite comparison or cache keys omit lockfiles, generated inputs, or tool versions.
 
 ## Critical Details
 - **Test Doubles hierarchy**: Dummy (placeholder, never used) < Stub (returns canned response) < Fake (working implementation, e.g. in-memory DB) < Mock (verifies interactions) < Spy (records calls). Choose the simplest double that provides enough information.
@@ -102,6 +119,9 @@ Is the change a low-risk refactoring with no behavior change?
 - **The Test Pyramid inversion cost**: When E2E tests are primary, a single feature test takes 30+ seconds — a 500-test suite takes 4 hours. Teams stop running the suite. The feedback loop collapses.
 - **Property-based testing for financial and calculation logic**: Use `Hypothesis` (Python), `fast-check` (TypeScript), or `QuickCheck` (Haskell/Elm) to generate random inputs that explore the full input space of a calculation — finds edge cases that example-based tests miss.
 - **axe-core accessibility scan**: `jest-axe` and Playwright's built-in accessibility snapshot can be run as part of integration and E2E tests — catches WCAG violations automatically in CI.
+- **Sample ratio mismatch test**: a statistically meaningful assignment count check should fail the experiment gate when observed allocation diverges from planned allocation beyond the declared threshold.
+- **Training-serving skew test**: feature values used in offline training must match online serving semantics, including point-in-time joins, default values, null handling, and late-arriving data.
+- **Build cache correctness test**: intentionally change a dependency, generated file input, lockfile, and test fixture in CI dry runs to prove the cache key invalidates the affected build/test shard.
 
 ### Anti-Examples
 
@@ -146,6 +166,9 @@ Return a test strategy with:
 - **Coverage obligations**: Specific logical branches or code paths that must be covered (not aggregate percentage).
 - **Performance test obligations**: Query plan validation, load test threshold, or latency budget if applicable.
 - **Accessibility test obligations**: axe-core coverage level, keyboard walkthrough, and screen reader test requirement.
+- **Experiment test obligations**: exposure event assertion, assignment stability, sample ratio mismatch detection, primary/guardrail metric query validation, and rollback-on-guardrail regression evidence.
+- **MLOps test obligations**: model version registry check, feature store point-in-time correctness, training-serving skew test, drift metric threshold, fairness/bias evaluation, shadow/canary plan, and rollback model verification.
+- **Monorepo test obligations**: module graph, affected tests, cache key inputs, generated file policy, and full-test fallback cadence.
 - **Residual risks**: Accepted gaps with explicit business justification and mitigating controls.
 
 ## Quality Gate
@@ -159,6 +182,9 @@ Return a test strategy with:
 8. No known-flaky tests are introduced without quarantine and a remediation ticket.
 9. Financial and safety-critical calculations have exhaustive branch or property-based test coverage.
 10. Concurrency and idempotency scenarios are covered for shared-state or distributed-write operations.
+11. Experiments verify exposure logging, assignment stability, SRM detection, metric queries, and guardrail rollback.
+12. ML model rollouts verify model version, feature store correctness, drift/fairness metrics, online/offline metric alignment, and rollback model.
+13. Monorepo affected-test and cache policies are validated against module graph changes and a full-suite fallback.
 
 ## Handoff
 - **backend-change-builder** — with test obligations for service, repository, and API layers.
@@ -167,6 +193,8 @@ Return a test strategy with:
 - **integration-change-builder** — with sandbox integration, idempotency, and failure simulation obligations.
 - **delivery-release-gate** — when release evidence requires specific test results before deployment.
 - **security-privacy-gate** — with security-specific test obligations for auth, input handling, and data access.
+- **ai-product-extension** — with ML evaluation, drift, fairness, model registry, and rollback obligations.
+- **bigdata-product-extension** — with analytics event, feature store, data quality, and warehouse validation obligations.
 
 ## Completion Criteria
 The change has a proportional, executable verification plan where every material risk maps to test evidence or an explicitly accepted residual risk with justification — and the complete test strategy can be handed to a builder without ambiguity about what must pass before release.

@@ -1,0 +1,48 @@
+---
+id: l4-compliance-evidence-release
+description: |
+  Regulated production release requiring audit-ready compliance evidence,
+  approvals, artifact digest, SBOM, vulnerability scan, and retention.
+prompt: |
+  Prepare a regulated production release for a SOC 2 audited service.
+  Map the control objective, evidence artifact, control owner, evidence
+  owner, exception owner, retention period, approval evidence, artifact
+  digest, SBOM evidence, vulnerability scan evidence, and deploy audit event.
+expected:
+  complexity: L4
+  risk_triggers:
+    - regulated workload
+    - compliance evidence
+    - production deployment
+    - secret/config change
+  skills:
+    - security-privacy-gate
+    - delivery-release-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - ci-cd
+    - secret-configuration-security
+    - dependency-vulnerability-scanning
+    - documentation-generation
+  domain_extensions: []
+  quality_gates:
+    - security gate
+    - delivery gate
+    - test gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - ai-code-review-refactor
+  capabilities:
+    - interaction-state-modeling
+    - cache-design
+  domain_extensions:
+    - ai-product-extension
+    - web3-product-extension
+  quality_gates:
+    - AI review gate
+notes: |
+  Compliance evidence must bring security, release, documentation, and
+  test evidence together around retained audit artifacts.

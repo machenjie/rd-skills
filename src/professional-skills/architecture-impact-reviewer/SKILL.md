@@ -13,6 +13,7 @@ Keep the architecture coherent, observable, and evolutionarily sound by rigorous
 
 ## When To Use
 - A change introduces a new module, service, shared library, or cross-team dependency.
+- A monorepo, workspace, package graph, affected-test strategy, generated-file policy, or incremental-build system changes module boundaries.
 - New abstractions, interfaces, generic handlers, or extension points are proposed.
 - Data ownership moves across service or team boundaries.
 - An async workflow, event-driven pattern, or message queue is added or modified.
@@ -37,6 +38,7 @@ Keep the architecture coherent, observable, and evolutionarily sound by rigorous
 - Every architectural decision that is reversible should be noted as such; irreversible decisions require explicit acknowledgment and approval.
 - Data ownership must be singular: each entity or aggregate has one authoritative owner; reads from non-owners go through contracts, not direct database access.
 - New external service dependencies require a circuit breaker, fallback, timeout, and operational runbook.
+- Monorepo module boundaries are architectural boundaries: workspace layout, dependency graph, generated-code ownership, and affected-test selection must reflect real ownership, not folder convenience.
 
 ## Industry Benchmarks
 - **Architecture Decision Records (ADRs)**: Every significant architectural choice should produce a written ADR with context, decision, rationale, alternatives rejected, and consequences.
@@ -71,6 +73,18 @@ Evaluate architecture proposals against:
 - **Observability gap**: What tracing, metrics, and alerts would operators need to diagnose failures in this design?
 - **Migration path**: If this design turns out to be wrong, what is the escape hatch? Can it be reversed?
 - **Team ownership**: Who owns each boundary, shared contract, and service for ongoing maintenance?
+- **Monorepo module graph**: Which packages/modules exist, who owns them, which dependencies are allowed, which generated files cross boundaries, and which affected tests prove the boundary?
+
+### Monorepo Architecture Review
+
+For monorepo or workspace changes, require:
+
+- Module graph with packages/modules, owners, public interfaces, and forbidden dependency directions.
+- Affected test selection that includes direct dependents, transitive dependents, contract tests, generated clients, and shared tooling.
+- Incremental build strategy with Bazel, Pants, Nx, Turborepo, or equivalent only when the module graph justifies it.
+- Build cache correctness: cache key inputs include lockfiles, toolchain versions, generated inputs, configuration, and test fixtures.
+- Generated file policy: committed vs ignored outputs, source of truth, drift check, and review owner.
+- DevEx boundary: onboarding time, devcontainer or reproducible local environment, pre-commit scope, and full-suite fallback cadence.
 
 ### Decision Tree: Approve or Request Design Revision
 
@@ -127,6 +141,8 @@ All checks pass → Review tradeoffs, document in ADR, approve
 - Escalate when a change cannot be rolled back without manual data migration or customer-visible downtime.
 - Escalate when the design adds a new external vendor dependency that creates a single point of failure.
 - Escalate when the change affects publicly documented API contracts with SLA obligations.
+- Escalate when monorepo affected-test selection can skip transitive dependents, generated-code consumers, or shared contract tests.
+- Escalate when build cache keys omit lockfiles, generated inputs, toolchain versions, or environment-affecting configuration.
 
 ## Critical Details
 - The hardest architectural problems are not technical — they are ownership and coordination problems. Name the owner before approving the design.
@@ -137,6 +153,8 @@ All checks pass → Review tradeoffs, document in ADR, approve
 - GraphQL federated schemas, service meshes, and API gateways each solve specific problems — they also introduce operational complexity that must be owned by an operator.
 - Security boundaries are architectural boundaries: if services share a database directly, they share a security perimeter — document this explicitly.
 - Circuit breakers and bulkheads must be configured with realistic thresholds — default "open" thresholds from libraries are rarely appropriate for production.
+- A module graph is a product of architecture, not tooling. Bazel, Pants, Nx, or Turborepo can enforce a graph, but they cannot decide ownership, API stability, or dependency direction. Those are architecture decisions.
+- Generated code creates hidden dependencies. OpenAPI clients, protobufs, ORM types, GraphQL artifacts, and SDKs must be represented in the module graph so affected tests run when source schemas change.
 
 ### Anti-Examples
 
@@ -177,11 +195,13 @@ Return a structured architecture review with:
 - **Decision**: Approved / Approved with conditions / Returned for redesign.
 - **Alternatives considered**: At least one simpler alternative with explicit reason for rejection.
 - **Boundary impact**: New or changed module and service boundaries with ownership declarations.
+- **Module graph**: Monorepo package/module graph, owners, public interfaces, allowed dependency directions, and generated-file ownership when applicable.
 - **Dependency impact**: New dependencies with direction, coupling level, and availability analysis.
 - **Data ownership impact**: Any changes to authoritative data ownership with contract requirements.
 - **Tradeoff analysis**: Explicit tradeoffs accepted (performance vs. consistency, simplicity vs. extensibility, etc.).
 - **Failure blast radius**: Operational impact if the new component fails.
 - **Observability requirements**: Metrics, traces, and alerts required for the new component.
+- **Build and test impact**: Affected tests, incremental build approach, build cache key inputs, generated file policy, and full-suite fallback when applicable.
 - **ADR requirement**: Yes/No — whether a written ADR is required before implementation.
 - **Open risks**: Unresolved design risks with proposed owners and review dates.
 
@@ -196,6 +216,7 @@ Return a structured architecture review with:
 8. Irreversible decisions are explicitly acknowledged and approved.
 9. Rollback path exists or the absence is explicitly documented and accepted.
 10. Observability requirements for the new component are stated.
+11. Monorepo changes include module graph, affected tests, cache key inputs, generated-file policy, and ownership boundaries.
 
 ## Handoff
 - **data-api-contract-changer** — when new or changed data models, schemas, or API contracts require design.
@@ -204,6 +225,8 @@ Return a structured architecture review with:
 - **reliability-observability-gate** — when new components require SLI/SLO definition and observability design.
 - **delivery-release-gate** — when architectural changes affect deployment topology, migration sequencing, or rollback safety.
 - **change-documentation-gate** — when an ADR, runbook, or developer guide update is required.
+- **ci-cd** — when module graph decisions must be enforced through affected tests, incremental builds, or cache policy.
+- **package-dependency-management** — when workspace dependencies, lockfiles, generated packages, or hoisting affect architecture boundaries.
 
 ## Completion Criteria
-The change has an architecture direction with justified complexity, documented tradeoffs, declared ownership for all boundaries, an explicit failure handling strategy, a quantified availability impact, and either an approved ADR or a documented rationale for why one is not required.
+The change has an architecture direction with justified complexity, documented tradeoffs, declared ownership for all boundaries, an explicit failure handling strategy, a quantified availability impact, monorepo/module graph governance when applicable, and either an approved ADR or a documented rationale for why one is not required.

@@ -17,6 +17,7 @@ Transform ambiguous change intent into a complete, testable, behaviorally precis
 - A release gate, quality gate, security review, or architecture review requires documented behavioral scope.
 - Disputed or ambiguous requirements need decomposition into independently verifiable criteria.
 - Cross-team handoffs require a behavioral contract rather than prose intent.
+- A product experiment, A/B test, analytics instrumentation, or metric-driven rollout needs decision criteria, guardrails, and rejection conditions.
 
 ## Do Not Use When
 - Acceptance conditions are already written, verifiable, and formally accepted by all responsible stakeholders.
@@ -31,6 +32,7 @@ Transform ambiguous change intent into a complete, testable, behaviorally precis
 - Actors must be explicit — every criterion names who initiates the action or who is affected.
 - Preconditions and postconditions are mandatory for stateful behaviors.
 - Non-functional criteria (latency, availability, throughput, accessibility, compliance) must have measurable thresholds, not vague adjectives like "fast" or "accessible."
+- Experiment criteria must define primary metric, guardrail metrics, exposure event, assignment unit, decision threshold, and rollback/rejection criteria before launch.
 - Each criterion must reference a verification method: automated test type, structured manual step, or audit log review.
 - Never invent requirements to fill gaps — open questions must be surfaced as explicit placeholders.
 - Criteria must remain stable during implementation; scope changes require explicit revision and re-acceptance.
@@ -56,6 +58,7 @@ Transform ambiguous change intent into a complete, testable, behaviorally precis
 | Accessibility | WCAG checkpoint reference | Assistive technology test steps |
 | Data migration | Before/After state | Rollback condition |
 | Background/async | Expected eventual state | Max latency before failure |
+| Experiment / A/B test | Metric contract + rejection rule | Primary metric, guardrails, exposure event, assignment unit |
 
 ## Technical Selection Criteria
 Assess every criterion candidate against:
@@ -67,6 +70,18 @@ Assess every criterion candidate against:
 - **Actor clarity**: Is the initiating role or system explicit and unambiguous?
 - **Traceability**: Does each criterion map to a requirement, issue ID, or stakeholder decision?
 - **Independence**: Can the criterion be verified in isolation?
+- **Experiment validity**: Does the criterion specify exposure logging, assignment stability, sample ratio mismatch rejection, primary metric threshold, and guardrail rollback?
+
+## Experiment Acceptance Criteria
+
+Experiment criteria must be written before implementation or launch:
+
+- **Experiment acceptance criteria**: Given assignment eligibility, when a user is exposed, then assignment, experience variant, and exposure event are recorded consistently.
+- **Metric threshold**: Primary metric, expected direction, minimum detectable effect or practical threshold, decision window, and owner.
+- **Guardrail failure rejection criteria**: latency, error rate, revenue, retention, accessibility, safety, support, or data-quality regression thresholds that reject rollout even if the primary metric improves.
+- **Exposure event**: event name, schema, de-duplication rule, compatibility with existing taxonomy, and verification query.
+- **Assignment unit**: user/account/tenant/device/session and stability requirement across devices and sessions.
+- **Sample ratio mismatch**: rejection threshold and investigation owner when observed allocation differs from planned allocation.
 
 ### Decision Tree: What Depth Is Required?
 
@@ -86,6 +101,7 @@ Is behavior user-facing or contract-affecting?
 - Escalate when criteria are disputed between stakeholders — do not resolve disputes silently.
 - Escalate when a non-functional threshold requires load testing, benchmarking, or external security assessment.
 - Escalate when proposed criteria conflict with another active change to the same contract or system boundary.
+- Escalate when an experiment has no primary metric, no guardrails, no exposure event, unstable assignment unit, or no rule for sample ratio mismatch.
 
 ## Critical Details
 - Gherkin structure requires **Given** (precondition), **When** (action/event), **Then** (observable outcome), **And/But** (extensions) — all four elements when the behavior is stateful.
@@ -139,6 +155,7 @@ Return a structured acceptance criteria document with:
 - **Criteria set**: Each criterion assigned an ID, actor, precondition, action, expected outcome, and verification method (unit / integration / E2E / manual / audit).
 - **Rejection criteria**: Observable failure condition for each behavioral criterion.
 - **Non-functional criteria table**: Latency, availability, accessibility, security — each with measurable threshold and test reference.
+- **Experiment criteria**: Primary metric, guardrail metrics, exposure event, assignment unit, sample ratio mismatch rule, decision memo owner, and rollback/rejection threshold.
 - **Open questions list**: Unanswered scope questions that block finalization, with proposed owner and deadline.
 - **Traceability map**: Each criterion ID → source requirement ID or change request section.
 - **Coverage summary**: Happy path, edge cases, error states, non-functional — confirmed covered or explicitly deferred with rationale.
@@ -154,12 +171,14 @@ Return a structured acceptance criteria document with:
 8. Rejection criteria exist for every behavioral criterion.
 9. Open questions are listed — none resolved silently by the criteria author.
 10. Criteria have been formally reviewed and accepted by the responsible stakeholder.
+11. Experiment criteria include primary metric, guardrails, exposure event, assignment unit, decision threshold, and rejection criteria.
 
 ## Handoff
 - **task-dag-planner** — to sequence implementation tasks against the accepted criteria set.
 - **quality-test-gate** — to map criteria to test obligations, coverage types, and evidence.
 - **security-privacy-gate** — when security or privacy acceptance criteria require threat model review.
 - **experience-impact-modeler** — when accessibility or UX state coverage needs validation.
+- **bigdata-product-extension** — when experiment criteria depend on analytics event taxonomy, funnel/cohort definitions, dashboard migration, or warehouse data quality.
 - **architecture-impact-reviewer** — when criteria reveal contract or boundary changes not yet architecturally reviewed.
 
 ## Completion Criteria

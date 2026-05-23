@@ -19,6 +19,13 @@ supported_change_types:
   - reliability improvement
   - observability change
   - deployment change
+  - cloud infrastructure change
+  - cost or capacity change
+  - incident response
+  - compliance evidence
+  - product experiment
+  - ML model rollout
+  - monorepo build change
   - configuration change
   - documentation change
   - code review
@@ -76,7 +83,13 @@ risk_escalation_triggers:
   - webhook
   - database migration
   - production deployment
+  - production incident
   - secret/config change
+  - cloud IAM
+  - public exposure
+  - regulated workload
+  - compliance evidence
+  - cost anomaly
   - dependency upgrade with security impact
   - irreversible data operation
 failure_routing:
@@ -120,11 +133,11 @@ domain_extension_signals:
   - extension: web3-product-extension
     signals: wallet signature smart contract blockchain token custody private key nonce replay reorg chain
   - extension: ai-product-extension
-    signals: LLM RAG agent embedding vector database prompt model output tool use hallucination evaluation
+    signals: LLM RAG agent embedding vector database prompt model output tool use hallucination evaluation ML model registry feature store drift shadow canary
   - extension: mobile-product-extension
     signals: Android iOS mobile app offline push notification app lifecycle app store deep link
   - extension: bigdata-product-extension
-    signals: stream batch warehouse analytics reporting ETL ELT lineage freshness backfill schema drift
+    signals: stream batch warehouse analytics reporting ETL ELT lineage freshness backfill schema drift experiment funnel cohort exposure event feature store
   - extension: iot-embedded-extension
     signals: device firmware embedded sensor actuator edge protocol OTA hardware physical safety
   - extension: payment-trading-extension
@@ -165,6 +178,7 @@ routing_rules:
     triggers:
       - build acceptance criteria happy path negative path edge cases permission regression product verification
       - define verifiable completion criteria
+      - define experiment acceptance criteria primary metric guardrail metrics exposure event assignment unit rejection threshold
     priority: 85
   - route_to: task-dag-planner
     triggers:
@@ -175,6 +189,7 @@ routing_rules:
     triggers:
       - model user flow page flow interaction states accessibility validation empty loading error success disabled
       - analyze UX experience impact
+      - model A/B test experimentation analytics exposure event assignment unit primary metric guardrail metrics dashboard migration
     priority: 80
   - route_to: domain-impact-modeler
     triggers:
@@ -185,6 +200,7 @@ routing_rules:
     triggers:
       - review architecture boundaries layering dependency direction service boundaries scalability extensibility tradeoffs
       - decide simpler architecture versus justified complexity
+      - review monorepo module graph module boundary affected tests incremental build generated file policy DevEx
     priority: 80
   - route_to: data-api-contract-changer
     triggers:
@@ -220,6 +236,7 @@ routing_rules:
     triggers:
       - LLM RAG agent embedding vector database prompt model output tool use hallucination AI safety evaluation
       - permission aware retrieval prompt injection data exfiltration generated content model failure handling
+      - ML model rollout classical ML MLOps model registry feature store training serving skew drift monitoring shadow deployment model canary rollback model fairness bias
     priority: 74
   - route_to: mobile-product-extension
     triggers:
@@ -230,6 +247,7 @@ routing_rules:
     triggers:
       - data warehouse stream batch job analytics reporting ETL ELT data quality lineage freshness backfill replay
       - pipeline cost controls metric definition dashboard warehouse partition late arriving data schema drift
+      - product analytics event taxonomy funnel cohort north star metric guardrail metrics A/B test exposure logging sample ratio mismatch feature store point in time ML pipeline
     priority: 74
   - route_to: iot-embedded-extension
     triggers:
@@ -250,21 +268,28 @@ routing_rules:
     triggers:
       - define test strategy unit integration contract E2E migration rollback regression fixtures mocks coverage
       - choose risk based verification evidence
+      - verify A/B experiment exposure logging sample ratio mismatch guardrail rollback ML drift fairness monorepo affected tests cache correctness
     priority: 70
   - route_to: security-privacy-gate
     triggers:
       - review security privacy auth authorization XSS CSRF SSRF SQLi RCE secrets dependencies AI prompt Web3
       - assess secure development and privacy risk
+      - review cloud IAM public bucket public exposure SG NACL WAF DNS CDN KMS key policy regulated compliance SOC 2 ISO 27001 PCI evidence
     priority: 70
   - route_to: reliability-observability-gate
     triggers:
       - define SLI SLO performance profiling concurrency rate limits circuit breakers fallback logs metrics traces alerts recovery
       - assess reliability observability production readiness
+      - assess cost capacity FinOps cost per request cost per tenant cost per batch job autoscaling cost egress storage lifecycle capacity forecast cost anomaly
+      - route SEV0 SEV1 SEV2 production incident incident command customer communication status page postmortem reliability handoff
+      - monitor ML model rollout drift metric model latency model canary shadow deployment rollback model
     priority: 70
   - route_to: delivery-release-gate
     triggers:
       - release engineering Docker CI CD Kubernetes gateway env config migration rollout feature flags staging canary blue green rollback
       - plan delivery release and post release checks
+      - route Terraform IaC cloud infrastructure DNS CDN WAF gateway KMS cloud account project boundary regulated compliance approval evidence deploy audit event
+      - handle incident hotfix SEV mitigation emergency rollback status page release communication
     priority: 70
   - route_to: ai-code-review-refactor
     triggers:
@@ -275,6 +300,7 @@ routing_rules:
     triggers:
       - update README API docs migration notes ADR changelog runbook troubleshooting user docs operational notes
       - verify documentation impact for change
+      - document incident report customer advisory status page entry postmortem summary corrective action tracking compliance evidence control owner retention
     priority: 70
   - route_to: requirement-clarification
     triggers:
@@ -555,6 +581,7 @@ routing_rules:
     triggers:
       - secure secrets environment variables configuration defaults redaction rotation frontend exposure image embedding docs
       - prevent committed logged exposed or embedded secrets and review production risk configuration changes
+      - review KMS key policy secret manager key rotation cross account decrypt grant cloud secret scope fail closed config
     priority: 60
   - route_to: dependency-vulnerability-scanning
     triggers:
@@ -600,11 +627,13 @@ routing_rules:
     triggers:
       - define latency throughput payload bundle memory CPU query resource budget threshold
       - set measurable performance budgets and release gates for performance sensitive changes
+      - define cloud cost budget query scan budget per feature cost ceiling FinOps unit cost cost per request cost per tenant cost per job egress storage lifecycle capacity budget
     priority: 60
   - route_to: profiling
     triggers:
       - profile CPU memory IO locks database queries network allocation rendering bottlenecks before optimizing
       - measure baseline evidence compare optimization impact and identify real bottleneck
+      - profile cloud cost anomaly unit economics query scan bytes egress storage autoscaling spend cost per request tenant job
     priority: 60
   - route_to: concurrency-control
     triggers:
@@ -630,6 +659,7 @@ routing_rules:
     triggers:
       - initialize project structure tests configuration docs deployment scripts and quality gates
       - prevent arbitrary folders disconnected from architecture separation of concerns and ownership
+      - initialize monorepo workspace devcontainer reproducible local env onboarding time pre commit generated file policy module graph
     priority: 60
   - route_to: containerization
     triggers:
@@ -640,11 +670,15 @@ routing_rules:
     triggers:
       - design CI CD pipeline build test lint security checks artifacts deployment gates failure policy
       - require traceable artifacts environment promotion approvals rollback hooks and blocked failed checks
+      - design Terraform IaC plan cost impact review cost delta summary budget approval gate state lock drift detection IAM diff plan file review
+      - design monorepo affected test selection incremental build Bazel Pants Nx Turborepo build cache correctness generated file policy
+      - capture compliance evidence approval evidence artifact digest SBOM vulnerability scan deploy audit event
     priority: 60
   - route_to: kubernetes-gateway
     triggers:
       - design Kubernetes workload service ingress gateway probes resources rollout rollback and safety checks
       - assess Kubernetes operational maturity health checks resources traffic exposure scaling and rollback
+      - review DNS CDN WAF gateway load balancer public exposure namespace blast radius service account cloud identity
     priority: 60
   - route_to: release-rollback
     triggers:
@@ -680,6 +714,7 @@ routing_rules:
     triggers:
       - diagnose failure from evidence symptoms triggers root cause contributing factors fix regression prevention
       - investigate incidents CI failures regressions logs metrics traces diffs hypotheses and reproducible behavior
+      - run incident response protocol SEV0 SEV1 SEV2 incident commander technical lead communications lead mitigation resolution customer comms status page postmortem CAPA
     priority: 60
   - route_to: solution-optimality-evaluation
     triggers:
@@ -715,6 +750,7 @@ routing_rules:
     triggers:
       - package manager lockfile dependency upgrade dependency removal new package license provenance transitive supply chain native extension
       - manage SDK library public API package compatibility reproducible install lockfile integrity and dependency graph risk
+      - manage monorepo workspace package graph hoisting peer dependencies generated files build cache inputs affected tests
     priority: 60
   - route_to: sdk-library-contract-design
     triggers:

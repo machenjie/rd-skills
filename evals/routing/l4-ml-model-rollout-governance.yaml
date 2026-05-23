@@ -1,0 +1,46 @@
+---
+id: l4-ml-model-rollout-governance
+description: |
+  Roll out a classical ML model with model registry, feature store,
+  drift monitoring, shadow/canary, fairness, and rollback model evidence.
+prompt: |
+  Roll out a new fraud model. Require model registry version, feature store
+  point-in-time correctness, training-serving skew check, label leakage
+  guard, drift metrics, offline/online metric alignment, shadow deployment,
+  canary model rollout, fairness audit, and rollback model version.
+expected:
+  complexity: L4
+  risk_triggers:
+    - production deployment
+  skills:
+    - reliability-observability-gate
+    - delivery-release-gate
+    - quality-test-gate
+  capabilities:
+    - performance-budgeting
+    - observability
+    - test-strategy
+    - regression-testing
+  domain_extensions:
+    - ai-product-extension
+    - bigdata-product-extension
+  quality_gates:
+    - reliability gate
+    - delivery gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - change-documentation-gate
+  capabilities:
+    - form-validation-design
+    - sdk-library-contract-design
+  domain_extensions:
+    - web3-product-extension
+    - mobile-product-extension
+  quality_gates:
+    - documentation gate
+notes: |
+  Classical ML rollout should select AI and big-data domain extensions plus
+  reliability and quality gates; delivery is required because this is a
+  production rollout.
