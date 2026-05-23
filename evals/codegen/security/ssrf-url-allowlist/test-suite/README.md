@@ -6,6 +6,8 @@
 - Loopback, link local, private ranges, and metadata service addresses are rejected.
 - Redirect chains are revalidated before any outbound request continues.
 - Denied requests return client safe errors without leaking internal network details.
+- `tests/test_behavior.py` executes real assertions against the candidate
+  implementation instead of relying only on structural benchmark smoke checks.
 
 ## Fixtures
 
@@ -13,6 +15,8 @@
 - Fixture data for url canonicalization.
 - Fixture data for network allowlist.
 - At least one denied or failure fixture that proves the implementation does not take a forbidden shortcut.
+- Local HTTP and resolver fakes are passed into `fetch_preview` so tests remain
+  deterministic and do not require external network access.
 
 ## Expected Commands
 

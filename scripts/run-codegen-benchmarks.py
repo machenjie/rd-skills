@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Run executable ChangeForge code generation benchmark smoke checks."""
+"""Run executable ChangeForge code generation benchmark checks."""
 
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -93,10 +94,30 @@ def _validate_scripts(case_dir: Path) -> list[str]:
     return errors
 
 
-def _run_script(label: str, script: Path, cwd: Path) -> tuple[bool, str]:
+def _real_assertion_files(case_dir: Path) -> list[Path]:
+    roots = (
+        case_dir / "test-suite" / "tests",
+        case_dir / "security-checks" / "security_tests",
+    )
+    files: list[Path] = []
+    for root in roots:
+        if root.is_dir():
+            files.extend(path for path in root.rglob("test_*.py") if path.is_file())
+    return sorted(files)
+
+
+def _run_script(
+    label: str,
+    script: Path,
+    cwd: Path,
+    env_overrides: dict[str, str],
+) -> tuple[bool, str]:
+    env = os.environ.copy()
+    env.update(env_overrides)
     completed = subprocess.run(
         ["bash", str(script)],
         cwd=cwd,
+        env=env,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -107,19 +128,51 @@ def _run_script(label: str, script: Path, cwd: Path) -> tuple[bool, str]:
     return False, f"{label} exited {completed.returncode}\n{completed.stdout}"
 
 
-def _run_case(category: str, case_id: str, case_dir: Path) -> list[str]:
+def _run_case(
+    category: str,
+    case_id: str,
+    case_dir: Path,
+    candidate_dir: Path | None,
+) -> list[str]:
     errors = _validate_scripts(case_dir)
     if errors:
         return errors
 
     starter_dir = case_dir / "starter-repo"
-    steps = (
-        ("setup", starter_dir / "setup.sh"),
-        ("test-suite", Path("../test-suite/run.sh")),
-        ("security-checks", Path("../security-checks/run.sh")),
+    implementation_dir = candidate_dir or starter_dir
+    if not implementation_dir.is_dir():
+        return [
+            f"{category}/{case_id}: implementation directory {implementation_dir} is missing"
+        ]
+
+    setup_script = (
+        implementation_dir / "setup.sh" if candidate_dir else starter_dir / "setup.sh"
     )
+    if not setup_script.is_file():
+        return [f"{category}/{case_id}: {setup_script} is missing"]
+    if candidate_dir and not _real_assertion_files(case_dir):
+        return [
+            f"{category}/{case_id}: candidate evaluation requires real assertion "
+            "files under test-suite/tests or security-checks/security_tests"
+        ]
+
+    steps = (
+        ("setup", setup_script),
+        ("test-suite", case_dir / "test-suite" / "run.sh"),
+        ("security-checks", case_dir / "security-checks" / "run.sh"),
+    )
+    env_overrides = {
+        "CHANGEFORGE_CODEGEN_CASE_DIR": str(case_dir),
+        "CHANGEFORGE_CODEGEN_ROOT": str(ROOT),
+        "PYTHONDONTWRITEBYTECODE": "1",
+    }
+    if candidate_dir:
+        env_overrides["CHANGEFORGE_CODEGEN_EVALUATE"] = "1"
+    else:
+        env_overrides["CHANGEFORGE_CODEGEN_SMOKE"] = "1"
+
     for label, script in steps:
-        ok, output = _run_script(label, script, starter_dir)
+        ok, output = _run_script(label, script, implementation_dir, env_overrides)
         if not ok:
             errors.append(f"{category}/{case_id}: {output.rstrip()}")
     return errors
@@ -141,6 +194,26 @@ def _select_cases(args: argparse.Namespace) -> list[tuple[str, str, Path]]:
     return cases
 
 
+def _candidate_dirs(
+    args: argparse.Namespace,
+    cases: list[tuple[str, str, Path]],
+) -> dict[tuple[str, str], Path]:
+    if args.candidate_dir and args.candidate_root:
+        raise ValueError("--candidate-dir and --candidate-root are mutually exclusive")
+    if args.candidate_dir:
+        if len(cases) != 1:
+            raise ValueError("--candidate-dir requires exactly one selected benchmark")
+        category, case_id, _case_dir = cases[0]
+        return {(category, case_id): args.candidate_dir.resolve()}
+    if args.candidate_root:
+        root = args.candidate_root.resolve()
+        return {
+            (category, case_id): root / category / case_id
+            for category, case_id, _case_dir in cases
+        }
+    return {}
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--category", choices=sorted(EXPECTED_BENCHMARKS))
@@ -150,10 +223,24 @@ def main(argv: list[str] | None = None) -> int:
         help="Benchmark id or category/id. May be provided more than once.",
     )
     parser.add_argument("--limit", type=int, help="Run only the first N selected benchmarks.")
+    parser.add_argument(
+        "--candidate-dir",
+        type=Path,
+        help="Evaluate one selected benchmark against this implementation directory.",
+    )
+    parser.add_argument(
+        "--candidate-root",
+        type=Path,
+        help="Evaluate selected benchmarks against <root>/<category>/<benchmark> directories.",
+    )
     parser.add_argument("--list", action="store_true", help="List selected benchmarks and exit.")
     args = parser.parse_args(argv)
 
     cases = _select_cases(args)
+    try:
+        candidates = _candidate_dirs(args, cases)
+    except ValueError as exc:
+        parser.error(str(exc))
     if args.list:
         for category, case_id, _case_dir in cases:
             print(f"{category}/{case_id}")
@@ -164,13 +251,16 @@ def main(argv: list[str] | None = None) -> int:
 
     errors: list[str] = []
     for category, case_id, case_dir in cases:
-        errors.extend(_run_case(category, case_id, case_dir))
+        errors.extend(
+            _run_case(category, case_id, case_dir, candidates.get((category, case_id)))
+        )
 
     if errors:
         for message in errors:
             print(f"run-codegen-benchmarks: ERROR: {message}", file=sys.stderr)
         return 1
-    print(f"run-codegen-benchmarks: executed {len(cases)} benchmark(s).")
+    verb = "evaluated" if candidates else "executed smoke checks for"
+    print(f"run-codegen-benchmarks: {verb} {len(cases)} benchmark(s).")
     return 0
 
 

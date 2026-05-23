@@ -11,6 +11,8 @@ The starter state models a backend endpoint fetches metadata from user supplied 
 ## Files
 
 - `README.md` documents the starting behavior and expected implementation boundaries.
+- `app.py` exposes `fetch_preview(url, http_get, resolver, logger=None)` with
+  injectable HTTP and resolver boundaries for deterministic benchmark tests.
 - `setup.sh` validates that the starter repo can be prepared from a clean checkout.
 - Implementation files may be added under the starter repo as needed by the benchmark.
 - Tests may be added under `tests/` or another locally documented test location.

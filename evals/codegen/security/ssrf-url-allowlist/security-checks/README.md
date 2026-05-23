@@ -10,6 +10,8 @@ This benchmark touches SSRF prevention, URL canonicalization, network allowlist,
 - Verify that network policy is centralized and covered by unit and integration tests.
 - Verify that error handling fails closed for parse, DNS, redirect, and timeout failures.
 - Verify that logs capture reason codes without storing sensitive URL query values.
+- `security_tests/test_security.py` executes denial-path assertions for private
+  address resolution, metadata redirects, and sensitive URL logging.
 
 ## Rejection Cases
 

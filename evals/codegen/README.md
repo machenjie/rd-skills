@@ -6,9 +6,15 @@ The routing golden cases prove that ChangeForge selects the right skills;
 these code generation benchmarks define the implementation quality evidence
 expected after a real change is attempted.
 
-The static validator checks benchmark definitions. The execution runner checks
-that benchmark setup, test, and security scripts can run from the starter repo
-and that expected command documentation matches those scripts.
+The static validator checks benchmark definitions. The execution runner has two
+modes:
+
+- Without a candidate implementation, it performs smoke checks that benchmark
+  setup, test, and security scripts can run from the starter repo and that
+  expected command documentation matches those scripts.
+- With a candidate implementation, it runs the benchmark scripts against that
+  implementation directory so real behavior and security assertions can fail or
+  pass the generated code.
 
 ## Layout
 
@@ -63,10 +69,27 @@ required file exists, markdown files contain the required sections, and
 `expected-qualities.yaml` references real ChangeForge skills, capabilities,
 domain extensions, and quality gates.
 
-The execution runner validates that setup, test, and security scripts run from
-`starter-repo/`, that `test-suite/README.md` expected commands match `run.sh`,
-and that each benchmark has at least one executable test or automatic review
-failure condition covering its `forbidden_shortcuts`.
+The default execution runner path validates that setup, test, and security
+scripts run from `starter-repo/`, that `test-suite/README.md` expected commands
+match `run.sh`, and that each benchmark has at least one executable test or
+automatic review failure condition covering its `forbidden_shortcuts`.
+
+To evaluate a generated implementation for one benchmark, apply the generated
+code to a copy of that benchmark's `starter-repo/` and pass that directory:
+
+```bash
+python3 scripts/run-codegen-benchmarks.py \
+  --benchmark security/ssrf-url-allowlist \
+  --candidate-dir /path/to/generated/ssrf-url-allowlist
+```
+
+To evaluate multiple generated implementations, arrange them under
+`<candidate-root>/<category>/<benchmark>/` and pass `--candidate-root`.
+Candidate mode still runs the benchmark harness first, then runs real assertion
+files such as `test-suite/tests/test_behavior.py` and
+`security-checks/security_tests/test_security.py` when the benchmark supplies
+them. A benchmark without real assertion files is rejected in candidate mode
+instead of being reported as evaluated from smoke checks alone.
 
 ## Authoring Rules
 
