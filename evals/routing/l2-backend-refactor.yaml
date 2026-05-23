@@ -1,0 +1,52 @@
+---
+id: l2-backend-refactor
+description: |
+  Refactor a service-layer method to extract a helper. Pure structural
+  refactor with full test coverage; no contract, schema, or behavior change.
+prompt: |
+  Extract the discount-calculation block in OrderService.applyPromotion
+  into a private helper. Preserve behavior; existing tests must keep
+  passing.
+expected:
+  complexity: L2
+  risk_triggers: []
+  skills:
+    - ai-code-review-refactor
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - refactoring
+    - regression-testing
+    - unit-testing
+    - code-review
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - delivery-release-gate
+    - architecture-impact-reviewer
+  capabilities:
+    - data-migration-design
+    - threat-modeling
+    - release-rollback
+    - api-contract-design
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - architecture gate
+    - delivery gate
+    - security gate
+    - API/data gate
+notes: |
+  Behavior-preserving refactor must not route to API/data, security,
+  release, or architecture gates.

@@ -1,0 +1,66 @@
+---
+id: l4-db-migration-api-compat
+description: |
+  Split a column in a high-volume table while keeping existing API
+  clients working. Requires expand-contract migration, read/write
+  compatibility, rollback plan, and staged deployment.
+prompt: |
+  Split customer_name into first_name and last_name in the customers
+  table (10M+ rows). Existing API clients must continue to send and
+  receive customer_name without breaking; new clients can use the split
+  fields. Plan migration, backfill, dual-write, cutover, and rollback.
+expected:
+  complexity: L4
+  risk_triggers:
+    - database migration
+    - production deployment
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - architecture-impact-reviewer
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - backend-change-builder
+    - quality-test-gate
+    - reliability-observability-gate
+    - delivery-release-gate
+    - change-documentation-gate
+  capabilities:
+    - data-migration-design
+    - relational-database
+    - transaction-consistency
+    - repository-persistence
+    - api-contract-design
+    - version-compatibility
+    - integration-testing
+    - release-rollback
+    - observability
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - impact gate
+    - architecture gate
+    - API/data gate
+    - implementation gate
+    - reliability gate
+    - test gate
+    - delivery gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - integration-change-builder
+    - ai-code-review-refactor
+  capabilities:
+    - threat-modeling
+    - form-validation-design
+    - cache-design
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - AI review gate
+notes: |
+  High-risk online schema change. Data + release gates required by the
+  database migration trigger; not a frontend, integration, or AI change.

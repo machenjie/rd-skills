@@ -1,0 +1,57 @@
+---
+id: l3-webhook-signature-verification
+description: |
+  Add HMAC signature verification and replay protection to an inbound
+  third-party webhook handler.
+prompt: |
+  Inbound webhooks from the shipping provider currently accept any POST.
+  Add HMAC-SHA256 signature verification using the provider's signing
+  secret, plus timestamp-based replay protection (5 minute window) and
+  idempotent processing keyed on the provider's event id.
+expected:
+  complexity: L3
+  risk_triggers:
+    - webhook
+    - external integration
+    - secret/config change
+  skills:
+    - change-intake-compiler
+    - integration-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - idempotency-retry-design
+    - input-validation
+    - secret-configuration-security
+    - integration-testing
+    - logging-error-handling
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - implementation gate
+    - security gate
+    - test gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - architecture-impact-reviewer
+  capabilities:
+    - data-migration-design
+    - cache-design
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - architecture gate
+    - delivery gate
+notes: |
+  Webhook + external integration + secret change. Required: integration
+  builder and security gate. Not required: frontend, data middleware,
+  architecture review, or release engineering.
