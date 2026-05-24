@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -106,6 +107,20 @@ def _real_assertion_files(case_dir: Path) -> list[Path]:
     return sorted(files)
 
 
+def _bash_script_path(path: Path) -> str:
+    resolved = path.resolve()
+    if os.name == "nt":
+        posix = resolved.as_posix()
+        match = re.match(r"^([A-Za-z]):/(.*)$", posix)
+        if match:
+            bash_path = (shutil.which("bash") or "").replace("\\", "/").casefold()
+            if "windowsapps/bash.exe" in bash_path or "system32/bash.exe" in bash_path:
+                return f"/mnt/{match.group(1).lower()}/{match.group(2)}"
+            return f"/{match.group(1).lower()}/{match.group(2)}"
+        return posix
+    return str(resolved)
+
+
 def _run_script(
     label: str,
     script: Path,
@@ -115,7 +130,7 @@ def _run_script(
     env = os.environ.copy()
     env.update(env_overrides)
     completed = subprocess.run(
-        ["bash", str(script)],
+        ["bash", _bash_script_path(script)],
         cwd=cwd,
         env=env,
         text=True,

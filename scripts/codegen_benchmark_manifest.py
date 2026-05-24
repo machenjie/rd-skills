@@ -60,8 +60,11 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "use-after-free-sanitizer",
     ),
     "devex": (
+        "bugfix-same-pattern-scan",
+        "helper-reuse-search",
         "monorepo-affected-tests",
         "structure-placement-reuse-existing-function",
+        "test-failure-no-env-blame",
     ),
     "finops": (
         "cloud-cost-regression",

@@ -15,6 +15,8 @@ Diagnose failures from **observable evidence** so that fixes target verified roo
 
 Use this capability when diagnosing: production incidents (P0–P3), failing automated tests (unit, integration, E2E), CI/CD pipeline failures, performance regressions (latency, throughput, error rate), integration failures with third-party services, data anomalies (unexpected records, missing data, calculation errors), memory leaks, deadlocks or contention, and security-related anomalies (unexpected traffic, auth failures, data access patterns).
 
+Use it for agent-assisted diagnosis whenever an agent blames environment, flakiness, user setup, or background processes without inspecting evidence.
+
 # Do Not Use When
 
 Do not use this capability for preventive architecture reviews (use `architecture-impact-reviewer`), performance capacity planning (use `performance-budgeting` and `reliability-observability-gate`), or dependency risk assessment before upgrade (use `dependency-vulnerability-scanning`). Do not diagnose the same failure twice without first confirming the first diagnosis was correct — re-diagnosis without new evidence compounds confusion.
@@ -29,6 +31,7 @@ Do not use this capability for preventive architecture reviews (use `architectur
 - **Change-failure correlation is mandatory first step.** For every production failure, the first investigative step is: what changed in the last 24–48 hours? Deployments, configuration changes, infrastructure changes, dependency upgrades, database migrations, upstream service changes. DORA change failure rate: > 15% change failure rate is a signal the change process needs review.
 - **Post-mortem action items must be specific and verifiable.** Action items in post-mortems must have: owner, due date, specific outcome (not "improve monitoring" but "add alert for DB connection pool utilization > 80% with 2-minute sustained threshold"), and a verification test. Vague action items are not action items.
 - **Incident command roles must be explicit during customer-impacting incidents.** A SEV0/SEV1/SEV2 incident without an incident commander, technical lead, communications lead, mitigation owner, and customer communication cadence will drift into parallel, conflicting work.
+- **Agent diagnosis must carry execution discipline.** A diagnosis produced by an agent must identify inspected evidence, tested hypotheses, verified cause, counter-evidence, and validation result before it can drive a fix.
 
 # Industry Benchmarks
 
@@ -119,6 +122,8 @@ Select this capability as a diagnostic framework that cuts across all technical 
 
 Escalate diagnosis to senior engineers or incident commander when: the failure has a financial, regulatory, customer-facing, security, or safety impact; root cause is not identified within the first hour of a P0/P1 or SEV0/SEV1 incident; the timeline reconstruction reveals a data integrity anomaly (records missing or corrupted); multiple independent hypotheses are confirmed with conflicting evidence; the failure mode is novel and not covered by existing runbooks; legal, compliance, security, or privacy escalation may be required; a post-mortem action item owner is not available.
 
+Escalate to `agent-execution-discipline` when an agent repeats the same diagnostic route twice, skips counter-evidence, or attempts to close a diagnosis without evidence inventory and closure package.
+
 # Critical Details
 
 Most incorrect diagnoses come from stopping at the trigger rather than the root cause, or from generating a hypothesis before gathering evidence. Precision failures:
@@ -175,6 +180,7 @@ Return a failure diagnosis report with:
 - `process_gaps` (what in the development, review, deployment, or monitoring process allowed this root cause to exist)
 - `open_questions` (unresolved aspects; owner; investigation timeline)
 - `false_hypotheses` (hypotheses considered and rejected; reason rejected)
+- `execution_discipline` (commands or artifacts inspected, route repair after repeated failure, validation result, residual risk, and handoff boundary)
 
 # Quality Gate
 
@@ -192,6 +198,7 @@ The diagnosis is complete only when:
 10. False hypotheses documented with rejection evidence.
 11. Customer-impacting incidents include severity, incident roles, mitigation decision, customer communication cadence, and status page decision.
 12. CAPA/postmortem actions are tracked with owner, due date, and verification evidence.
+13. Agent-assisted diagnosis includes evidence inventory, counter-evidence, no third same-path retry, and closure package.
 
 # Used By
 
@@ -201,6 +208,8 @@ The diagnosis is complete only when:
 # Handoff
 
 Hand off the post-mortem action items to the owning teams; prevention measures to `ci-cd` (for pipeline guards), `reliability-observability-gate` (for alerting), and `code-review` (for code-level prevention). Hand incident report, customer advisory, status page entry, postmortem summary, and corrective action tracking to `change-documentation-gate`. Hand rollback, mitigation, and release sequencing gaps to `delivery-release-gate`. Hand legal, compliance, or security escalation to `security-privacy-gate`. Hand open questions to `architecture-impact-reviewer` when the root cause reveals a systemic architectural weakness.
+
+Hand off to `agent-execution-discipline` when the diagnosis lacks evidence, route repair, validation result, residual risk, or handoff boundary.
 
 # Completion Criteria
 

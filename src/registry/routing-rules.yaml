@@ -33,14 +33,14 @@ supported_change_types:
 runtime_profiles:
   - name: recommended
     top_level: 19 professional skills
-    foundation_mode: 101 foundation capabilities compiled into professional references
+    foundation_mode: 102 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 19 professional skills and 7 domain extensions
-    foundation_mode: 101 foundation capabilities compiled into professional references
+    foundation_mode: 102 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 19 professional skills, 101 foundation capabilities, and 7 domain extensions
+    top_level: 19 professional skills, 102 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -92,6 +92,20 @@ risk_escalation_triggers:
   - cost anomaly
   - dependency upgrade with security impact
   - irreversible data operation
+  - agent claims completion without evidence
+  - agent diagnosis without verified cause
+  - same agent approach failed twice
+  - local fix without same pattern scan
+  - new structure without reuse and placement rationale
+  - handoff without risk boundary and validation results
+  - missing test evidence
+  - environment-blame without inspection
+  - route repair required
+  - bug may exist in multiple modules
+  - shared utility pollution risk
+  - business logic in shared utils
+  - hallucinated API risk
+  - dependency surface
 failure_routing:
   - condition: unclear requirement
     route_to: change-intake-compiler
@@ -109,6 +123,16 @@ failure_routing:
     route_to: architecture-impact-reviewer
   - condition: implementation structure or placement unclear
     route_to: implementation-structure-design
+  - condition: agent claims completion without evidence
+    route_to: agent-execution-discipline
+  - condition: agent diagnosis without verified cause
+    route_to: agent-execution-discipline
+  - condition: same agent approach failed twice
+    route_to: agent-execution-discipline
+  - condition: local fix without same pattern scan
+    route_to: agent-execution-discipline
+  - condition: handoff without risk boundary and validation results
+    route_to: agent-execution-discipline
   - condition: contract or schema mismatch
     route_to: data-api-contract-changer
   - condition: frontend issue
@@ -159,6 +183,7 @@ quality_gates:
   - delivery gate
   - documentation gate
   - AI review gate
+  - execution discipline gate
 routing_rules:
   - route_to: change-forge-router
     triggers:
@@ -728,6 +753,15 @@ routing_rules:
       - cohesion coupling shared utils common utils helper function service method domain service component placement hook placement repository method
       - decide reuse extend compose adapter private internal public export file ownership directory boundary dependency direction circular dependency test placement
     priority: 60
+  - route_to: agent-execution-discipline
+    triggers:
+      - agent execution discipline AI assisted change evidence based completion verified diagnosis verified cause
+      - repeated retry same approach failed twice route repair stop the line third attempt
+      - same pattern scan local fix scan codebase same defect other modules
+      - reuse and placement rationale new helper new utility new file new directory without justification
+      - proactive closure handoff package boundary validation result residual risk handoff target
+      - agent claims done without evidence agent fix without scan agent diagnosis probably environment
+    priority: 88
   - route_to: documentation-generation
     triggers:
       - update docs for actual behavior API contracts migrations configuration operations and release impact

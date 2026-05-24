@@ -19,6 +19,7 @@ Implement or review backend changes that preserve correctness, authorization int
 - Retry logic, idempotency keys, or duplicate request handling is required.
 - Logging, error codes, observability hooks, or alerting is added to a backend path.
 - Concurrency, rate limiting, or shared-state access patterns are affected.
+- Agent-assisted backend fixes need evidence, verified cause, same-pattern scan, or reuse-and-placement rationale before acceptance.
 
 ## Do Not Use When
 - The change is purely frontend presentation work with no server-side logic.
@@ -36,6 +37,7 @@ Implement or review backend changes that preserve correctness, authorization int
 - **Structured logging with correlation** — every request must carry a correlation/trace ID through all log entries; logs must not contain plaintext secrets, passwords, or full PII.
 - **All non-trivial backend logic requires unit tests** — including auth logic, validation logic, error paths, retry behavior, and concurrency edge cases.
 - **Plan implementation structure before adding backend code** — inspect existing controllers, services, repositories, validators, mappers, jobs, helpers, and adapters before creating new functions, classes, files, or directories.
+- **Agent backend fixes require execution discipline** — no local bug fix is accepted without same-pattern scan, test or validator evidence, and explicit boundary of changed backend behavior.
 
 ## Industry Benchmarks
 - **OWASP API Security Top 10**: API1 (Broken Object Level Authorization), API2 (Broken Authentication), API3 (Broken Object Property Level Authorization), API8 (Security Misconfiguration) — all address backend authorization failures.
@@ -127,6 +129,7 @@ All checks pass → Proceed with implementation
 - Escalate when a distributed transaction or SAGA compensation pattern is introduced — the failure recovery model must be reviewed.
 - Escalate when a change handles financial values, PII, health data, or legally sensitive records.
 - Escalate when a background job has no dead-letter queue and failures would be silently lost.
+- Escalate to `agent-execution-discipline` when the backend change is closed without evidence inventory, verified cause for a fix, or reuse-and-placement rationale for new service/helper structure.
 
 ## Critical Details
 - **IDOR is the most common high-severity API vulnerability**: Every `GET /api/resource/:id`, `PUT`, `DELETE` must check `resource.owner_id == authenticated_user.id` (or equivalent) after fetching the resource — not before.
@@ -183,6 +186,7 @@ Return a backend implementation plan or review with:
 - **Observability plan**: Log fields with correlation ID, metrics emitted, alert thresholds.
 - **Concurrency analysis**: Race condition risk, locking strategy, ordering assumptions.
 - **Implementation structure**: Existing services/repositories/helpers inspected; reuse vs. new decision; function/class/file placement; public/private boundary; ownership; new imports and dependency direction.
+- **Execution discipline evidence**: Commands run, outputs, same-pattern scan, reuse-and-placement rationale, residual risks, and validation results.
 - **Test obligations**: Unit tests for auth, validation, error paths; integration tests for transactions.
 
 ## Quality Gate
@@ -200,6 +204,7 @@ Return a backend implementation plan or review with:
 12. Every new backend function, class, or file has placement rationale and ownership.
 13. No backend business logic is added to shared, common, or utils.
 14. New imports respect module and layer dependency direction.
+15. Agent-assisted backend changes include evidence, same-pattern scan for local fixes, and closure package.
 
 ## Handoff
 - **security-privacy-gate** — when authorization logic, PII handling, or sensitive data access requires adversarial review.
@@ -208,6 +213,7 @@ Return a backend implementation plan or review with:
 - **reliability-observability-gate** — when SLO-affecting paths, async job reliability, or saturation risks are identified.
 - **quality-test-gate** — when test coverage gaps for authorization, transactions, or concurrency are found.
 - **domain-impact-modeler** — when business rule invariants, state machine transitions, or domain event emissions are affected.
+- **agent-execution-discipline** — when backend implementation evidence, verified cause, same-pattern scan, or handoff boundary is missing.
 
 ## Completion Criteria
 Backend changes are safe to review and deploy when: all trust boundaries have validated input; all resource operations have server-enforced object-level authorization; all multi-step mutations have explicit transaction and compensation design; all retry paths are idempotent; error responses are machine-readable and non-leaking; structured logs carry correlation IDs; tests cover authorization, validation, error, and concurrency paths; and the implementation structure plan confirms reuse candidates, placement rationale, ownership, private/public boundary, shared utility audit, dependency direction, and test placement.

@@ -1,0 +1,45 @@
+id: test-failure-no-env-blame
+category: devex
+complexity: L3
+focus:
+  - verified-cause diagnosis
+  - test failure triage
+  - environment-blame rejection
+  - execution evidence for test fixes
+route_hints:
+  skills:
+    - quality-test-gate
+    - reliability-observability-gate
+    - ai-code-review-refactor
+  capabilities:
+    - agent-execution-discipline
+    - failure-diagnosis
+    - integration-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - reliability gate
+    - AI review gate
+    - execution discipline gate
+expected_outcomes:
+  - The failure is diagnosed from repository evidence before any environment claim is made.
+  - The verified cause names a config key, fixture setup issue, dependency version, or input.
+  - The fix is minimal and preserves the integration nature of the test.
+  - The final report includes command output and residual risk.
+required_qualities:
+  - Symptom, hypothesis, method, verified cause, and counter-evidence are separated.
+  - Test evidence shows the relevant integration path still runs.
+  - The agent does not ask the user to restart local services as the primary fix.
+  - Route repair is recorded if the same diagnosis path fails twice.
+forbidden_shortcuts:
+  - Blaming local postgres or user setup without inspecting repo evidence.
+  - Replacing the integration test with a mocked unit test.
+  - Marking the failure flaky without reproduction evidence.
+  - Claiming completion without command output.
+evidence:
+  - Verified-cause statement tied to a specific file or configuration value.
+  - Integration test or harness output after the fix.
+  - Counter-evidence showing why unsupported environment blame was rejected.
+  - Execution Discipline Report with validation result and handoff boundary.

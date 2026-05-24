@@ -18,6 +18,7 @@ Critically review, validate, and safely refactor AI-generated or AI-assisted cod
 - A refactor was AI-suggested and its behavioral boundaries are unclear.
 - Dependency additions came from AI output without explicit justification.
 - Tests exist only for the AI-generated happy path and don't cover the original behavior.
+- An agent claims an AI-generated change is complete without evidence, verified API checks, reuse search, or validation output.
 
 ## Do Not Use When
 - Code was written entirely by a human with normal review discipline and no AI generation is involved.
@@ -32,6 +33,7 @@ Critically review, validate, and safely refactor AI-generated or AI-assisted cod
 - Reject dependency additions that come without explicit justification, audit, and security review.
 - Every refactor must have a clearly bounded scope — changes that silently alter observable behavior must be surfaced and reviewed separately.
 - AI-generated code that adds any function, class, file, directory, component, hook, service, repository, adapter, utility, abstraction, or dependency must include an Implementation Structure Plan before acceptance.
+- AI-generated completion claims must include an Execution Discipline Report: evidence inventory, same-pattern scan when a local fix is present, reuse-and-placement rationale for new structure, and closure boundary.
 - Flag AI-generated error handling that swallows exceptions, returns `null`/`nil`/`undefined` silently, or ignores response status codes.
 - Security-sensitive paths (auth, permissions, payment, data access) cannot be accepted from AI output without adversarial review.
 - Type annotations from AI must be verified against the actual runtime types — AI generates plausible signatures, not necessarily correct ones.
@@ -131,6 +133,7 @@ All checks pass → Approve with evidence
 - Escalate to `data-middleware-change-builder` when a generated migration script, ORM query, or schema change is involved.
 - Escalate when AI has added or upgraded a dependency with known CVEs, GPL/AGPL license conflict, or broad transitive attack surface.
 - Escalate when the refactor is large enough that behavioral equivalence cannot be established without running the full integration test suite.
+- Escalate to `agent-execution-discipline` when the agent cannot produce evidence for completion, repeats the same failed route twice, or proposes a local fix without a same-pattern scan.
 
 ## Critical Details
 - AI models generate syntactically correct code that calls non-existent methods at the declared version — always run `grep` or IDE symbol lookup to confirm existence.
@@ -184,6 +187,7 @@ Return a structured review with:
 - **Dependency audit**: Each new dependency with CVE status, license, transitive size, and standard-library alternative.
 - **Refactor boundary analysis**: Scope of behavioral change, equivalence evidence, and test coverage delta.
 - **Implementation Structure Plan**: Reuse candidates inspected, reuse vs. extension vs. composition vs. new code decision, function/class/file/directory placement, public/private boundary, shared utils audit, dependency direction, test placement, and rejected alternatives.
+- **Execution Discipline Report**: Evidence inventory, verified-cause statement when diagnosis is involved, route-repair ledger after repeated failure, same-pattern scan record for local fixes, and closure package.
 - **Test quality assessment**: Mock-only tests flagged; missing error path tests listed.
 - **Security review note**: Auth, permission, and data access paths reviewed adversarially or escalated.
 - **Architecture drift flag**: Any new abstractions, boundaries, or coupling evaluated against existing patterns.
@@ -203,6 +207,7 @@ Return a structured review with:
 11. AI-added functions, classes, files, directories, components, hooks, services, repositories, adapters, utilities, and abstractions have reuse and placement rationale.
 12. AI-added abstractions are justified against existing local patterns and the simplest sufficient alternative.
 13. AI-generated code did not introduce business logic into shared, common, or utils.
+14. AI-assisted completion is not accepted without execution evidence, validation results, residual risk, and handoff boundary.
 
 ## Handoff
 - **security-privacy-gate** — for auth, permission, payment, or sensitive data code that requires adversarial review.
@@ -210,6 +215,7 @@ Return a structured review with:
 - **data-api-contract-changer** — when a refactor silently alters contract semantics or response shapes.
 - **quality-test-gate** — when test coverage gaps are identified that require systematic test design.
 - **backend-change-builder** — when implementation work is needed to remediate findings.
+- **agent-execution-discipline** — when AI-assisted work lacks evidence, verified cause, route repair, same-pattern scan, or closure package.
 
 ## Completion Criteria
 AI-generated or AI-assisted code is either accepted with documented evidence of API correctness, behavioral equivalence, dependency safety, test coverage, and security review — or returned with a numbered, actionable remediation list that can be resolved without ambiguity.

@@ -1,0 +1,48 @@
+---
+id: deploy-repeated-retry-no-new-evidence
+description: |
+  Agent has triggered the same deploy pipeline twice and both runs failed
+  on the same migration step. The agent is about to trigger the pipeline a
+  third time without changing the migration or capturing new evidence.
+prompt: |
+  The deploy pipeline failed twice. Both runs failed on the same migration
+  step "20260520_add_orders_index" with the same error
+  "duplicate key value violates unique constraint". The agent suggests
+  retrying the deploy a third time without changing the migration script
+  or inspecting the database state.
+expected:
+  complexity: L4
+  risk_level: high
+  risk_triggers:
+    - same agent approach failed twice
+    - irreversible data operation
+    - route repair required
+  skills:
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - delivery-release-gate
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - agent-execution-discipline
+    - failure-diagnosis
+    - data-migration-design
+    - release-rollback
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - reliability gate
+    - delivery gate
+    - AI review gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - frontend-change-builder
+  capabilities: []
+  domain_extensions:
+    - web3-product-extension
+notes: |
+  Two failed deploys on the same step force a route change. A third
+  identical retry is a discipline violation; the migration and the data
+  state must be inspected before another attempt.

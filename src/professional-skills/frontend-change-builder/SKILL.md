@@ -20,6 +20,7 @@ Implement or review product-grade frontend changes that are state-complete, acce
 - Implementing accessible interactions, keyboard behavior, or focus management.
 - Changing frontend security boundaries: output encoding, content security policy, third-party script integration.
 - Adding or modifying web performance-critical paths: rendering strategy, code splitting, asset loading.
+- Agent-assisted frontend fixes need validation evidence, same-pattern scan, or placement rationale for components, hooks, state, routes, or utilities.
 
 ## Do Not Use When
 - The change is purely backend, data-layer, or documentation with no user-facing or client-side behavior.
@@ -35,6 +36,7 @@ Implement or review product-grade frontend changes that are state-complete, acce
 - **Do not store sensitive information in `localStorage` or `sessionStorage`**: authentication tokens in browser storage are accessible to any JavaScript on the page — use `httpOnly` cookies for session tokens.
 - **Code splitting is required for large route-level modules**: a single bundle that blocks initial page rendering is a Core Web Vitals failure.
 - **Plan frontend implementation structure before adding code**: inspect existing components, hooks, routes, state stores, API clients, validators, and helpers before creating new ones; feature-local code stays local unless shared ownership is real.
+- **Agent frontend fixes require execution discipline**: no local UI or state fix is accepted without scan evidence for the same component/hook pattern and validation through appropriate tests or manual artifacts.
 
 ## Industry Benchmarks
 - **WCAG 2.1 / 2.2 (W3C)**: Web Content Accessibility Guidelines — AA compliance is the production baseline. Every interactive element has an accessible name, is keyboard-operable, and meets contrast requirements.
@@ -125,6 +127,7 @@ Is state a complex business domain object with mutations?
 - Escalate when a change affects high-traffic pages that would significantly impact Core Web Vitals scores.
 - Escalate when `innerHTML`, `dangerouslySetInnerHTML`, or `eval()` are being used with any user-controlled or API-sourced content.
 - Escalate when a frontend change would expose internal API structure, error details, or stack traces to the browser console or network response.
+- Escalate to `agent-execution-discipline` when an agent closes frontend work without validation evidence, same-pattern scan, or reuse-and-placement rationale for new shared UI structure.
 
 ## Critical Details
 - **XSS prevention is non-negotiable**: React JSX text nodes are auto-escaped. `dangerouslySetInnerHTML` bypasses this — use it only with content sanitized through DOMPurify. Vue's `v-html` has the same risk profile.
@@ -177,6 +180,7 @@ Return a frontend implementation plan or review with:
 - **Security review**: XSS prevention, token storage, CSP implications, third-party script review.
 - **Performance considerations**: Code splitting, lazy loading, rendering strategy, and Core Web Vitals impact.
 - **Frontend structure**: Component, hook, state, API client, route, form validator, and helper placement; feature-local vs. shared decision; reuse candidates; public/private boundary; test placement.
+- **Execution discipline evidence**: Test or screenshot artifacts, command outputs, same-pattern scan, placement rationale, residual risks, and closure boundary.
 - **Test strategy**: Unit tests (component behavior), integration tests (user flow), accessibility tests (axe-core), and visual regression tests.
 - **Residual risks**: Known risks accepted with justification.
 
@@ -195,6 +199,7 @@ Return a frontend implementation plan or review with:
 12. New components and hooks have feature-local vs. shared placement rationale.
 13. Feature-local state is not moved to global state without cross-feature ownership.
 14. No business logic is added to shared UI, common hooks, or generic utils.
+15. Agent-assisted frontend changes include evidence, same-pattern scan for local fixes, and closure package.
 
 ## Handoff
 - **experience-impact-modeler** — if UX states or user flows are underspecified before implementation begins.
@@ -202,6 +207,7 @@ Return a frontend implementation plan or review with:
 - **security-privacy-gate** — for auth flow changes, sensitive data rendering, or third-party script additions.
 - **quality-test-gate** — for E2E test design, accessibility audit requirements, and visual regression strategy.
 - **reliability-observability-gate** — when frontend changes affect client-side error tracking, performance monitoring, or SLO measurement.
+- **agent-execution-discipline** — when frontend validation evidence, same-pattern scan, placement rationale, or handoff boundary is missing.
 
 ## Completion Criteria
 Frontend work is ready for merge when all required states are implemented, WCAG 2.1 AA requirements are met, user-generated content is sanitized, API errors produce actionable feedback, focus management is correct, authorization is enforced server-side, tests cover user behavior and accessibility, no bundle size regression is introduced without explicit justification, and the frontend structure plan confirms component/hook/state/API/helper placement, feature-local vs. shared decisions, reuse candidates, public/private boundary, and test placement.

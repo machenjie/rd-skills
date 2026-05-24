@@ -1,0 +1,44 @@
+---
+id: ai-generated-api-unverified
+description: |
+  AI-generated code calls library methods that may not exist in the
+  declared dependency version. Acceptance requires evidence of API
+  existence and the rest of the execution-discipline gates.
+prompt: |
+  An AI-generated patch adds calls to "lodash.deepClone" and
+  "axios.client.create()" inside src/services/order-import.ts. The
+  declared dependency versions are lodash 4.17.21 and axios 1.6.0. The
+  patch has no test output, no API-existence proof, and no run log.
+expected:
+  complexity: L3
+  risk_level: medium
+  risk_triggers:
+    - agent claims completion without evidence
+    - hallucinated API risk
+    - dependency surface
+  skills:
+    - ai-code-review-refactor
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - agent-execution-discipline
+    - implementation-structure-design
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+notes: |
+  AI-generated API calls must be verified against the declared dependency
+  version, with the verification recorded in the evidence inventory.

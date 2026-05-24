@@ -1,0 +1,45 @@
+---
+id: helper-added-to-utils-without-rationale
+description: |
+  Agent adds a new helper to src/utils/common.ts without inspecting
+  existing utilities or providing reuse-and-placement rationale.
+prompt: |
+  The agent's diff adds a new function "formatOrderDisplayName" to
+  src/utils/common.ts. The function contains business logic about orders.
+  The agent did not search for existing order-formatting helpers, did not
+  justify placement in shared utils, and did not consider an order-domain
+  module location.
+expected:
+  complexity: L2
+  risk_level: medium
+  risk_triggers:
+    - new structure without reuse and placement rationale
+    - shared utility pollution risk
+    - business logic in shared utils
+  skills:
+    - ai-code-review-refactor
+    - architecture-impact-reviewer
+    - backend-change-builder
+  capabilities:
+    - agent-execution-discipline
+    - implementation-structure-design
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - AI review gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+    - security-privacy-gate
+  capabilities:
+    - release-rollback
+    - data-migration-design
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+notes: |
+  No new helper, utility, file, or directory without reuse search and
+  placement rationale. Business logic does not belong in shared utils.

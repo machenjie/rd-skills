@@ -1,0 +1,47 @@
+---
+id: agent-unverified-completion
+description: |
+  Agent claims a multi-file change is "done" without attaching any test
+  output, validator result, command output, or artifact. Completion claim
+  must be rejected and routed through execution discipline.
+prompt: |
+  An agent reports: "Implemented the requested change. Ready for review."
+  No test output is attached, no validator was run, no diff summary, no
+  command output. The change touches backend service code and a unit-test
+  file. Decide what to do.
+expected:
+  complexity: L3
+  risk_level: medium
+  risk_triggers:
+    - agent claims completion without evidence
+    - missing test evidence
+  skills:
+    - change-impact-analyzer
+    - backend-change-builder
+    - quality-test-gate
+    - ai-code-review-refactor
+  capabilities:
+    - agent-execution-discipline
+    - implementation-structure-design
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - impact gate
+    - implementation gate
+    - test gate
+    - AI review gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-middleware-change-builder
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+notes: |
+  No evidence, no completion — agent-execution-discipline must be selected
+  and an evidence inventory required before acceptance.

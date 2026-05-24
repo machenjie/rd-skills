@@ -93,7 +93,7 @@ Foundation capability groups:
 - Quality testing: 58 `test-strategy`, 59 `unit-testing`, 60 `integration-testing`, 61 `contract-testing`, 62 `e2e-testing`, 63 `test-data-management`, 64 `regression-testing`.
 - Reliability operations: 65 `performance-budgeting`, 66 `profiling`, 67 `concurrency-control`, 68 `degradation-circuit-breaking`, 69 `observability`, 70 `backup-recovery`.
 - Delivery platform: 71 `project-initialization`, 72 `containerization`, 73 `ci-cd`, 74 `kubernetes-gateway`, 75 `release-rollback`.
-- Engineering workflow: 76 `context-packaging`, 77 `task-dag-decomposition`, 78 `code-review`, 79 `refactoring`, 80 `documentation-generation`, 81 `failure-diagnosis`, 82 `solution-optimality-evaluation`, 101 `implementation-structure-design`.
+- Engineering workflow: 76 `context-packaging`, 77 `task-dag-decomposition`, 78 `code-review`, 79 `refactoring`, 80 `documentation-generation`, 81 `failure-diagnosis`, 82 `solution-optimality-evaluation`, 101 `implementation-structure-design`, 102 `agent-execution-discipline`.
 - Technology selection: 83 `technology-stack-selection`, 84 `language-runtime-selection`, 85 `language-idiom-enforcement`, 86 `language-testing-strategy`, 87 `language-performance-safety`, 88 `package-dependency-management`.
 - Language professional usage: 89 `go-professional-usage`, 90 `java-jvm-professional-usage`, 91 `typescript-professional-usage`, 92 `python-professional-usage`, 93 `rust-professional-usage`, 94 `cpp-professional-usage`, 95 `shell-cli-professional-usage`, 96 `sql-professional-usage`.
 - Interface, storage, and global correctness: 97 `sdk-library-contract-design`, 98 `cli-daemon-interface-design`, 99 `file-storage-processing`, 100 `i18n-timezone-money-safety`.
@@ -110,9 +110,9 @@ Domain extension routing:
 
 Runtime profile awareness:
 
-- Recommended: 19 professional skills top-level, 101 foundation capabilities compiled into references.
-- Full: 19 professional skills + 7 domain extensions top-level, 101 foundation capabilities compiled into references.
-- Dev: 19 professional skills + 101 foundation capabilities + 7 domain extensions top-level.
+- Recommended: 19 professional skills top-level, 102 foundation capabilities compiled into references.
+- Full: 19 professional skills + 7 domain extensions top-level, 102 foundation capabilities compiled into references.
+- Dev: 19 professional skills + 102 foundation capabilities + 7 domain extensions top-level.
 
 ## Risk Escalation Rules
 Escalate one level for any risk trigger that affects user data, money, permissions, external systems, production state, or irreversible operations. Escalate to high or critical when more than one high-impact trigger is present or when rollback is unclear.
@@ -140,6 +140,10 @@ Route by evidence in the request:
 - If the request asks where to put a function, class, component, hook, service, repository method, helper, utility, file, or directory, select `implementation-structure-design`; add `module-boundary-design` and `architecture-impact-reviewer` when the decision could alter module boundaries or dependency direction.
 - If AI-generated implementation adds any function, class, file, directory, component, hook, service, repository, adapter, utility, abstraction, or dependency, select `ai-code-review-refactor`, `implementation-structure-design`, and `code-review`.
 - If refactoring extracts, moves, splits, or collapses code, select `refactoring`, `implementation-structure-design`, and `code-review`.
+- If the change is being executed by an AI or agent and has any non-trivial diagnosis, code-mutation, deployment, or handoff component, select `agent-execution-discipline` alongside the substantive skills so the execution carries evidence inventory, verified-cause statement, route-repair ledger (after repeated failure), same-pattern scan record, reuse-and-placement rationale, and a proactive closure package.
+- If an agent has retried the same approach twice without success, force a route change via `agent-execution-discipline` and route the substantive diagnosis to `failure-diagnosis`; do not permit a third same-path retry.
+- If an agent proposes a local fix for a bug or defect, require `agent-execution-discipline` with a same-pattern scan record and route to `change-impact-analyzer` when the scan reveals occurrences in other modules.
+- If an agent claims a change is complete or ready for handoff, require the `agent-execution-discipline` proactive closure package (boundary, validation results, residual risk, handoff target) regardless of which professional skills handled the substantive work.
 - If data, cache, queue, search, or storage behavior is the change surface, route to `data-middleware-change-builder`.
 - If the request touches Redis, ElastiCache, Memorystore, Memcached, cache stampede, hot keys, eviction, maxmemory, RDB/AOF, Redis Cluster, Sentinel, or cache invalidation, select `cache-design`, `data-middleware-change-builder`, and `reliability-observability-gate` when production behavior is affected.
 - If the request touches Kafka, Kafka topics, partitions, consumer groups, offset commits, schema registry, topic retention, compaction, consumer lag, DLQ, poison messages, replay, or transactional producers, select `message-queue-design`, `data-middleware-change-builder`, and `bigdata-product-extension` when streaming analytics or data pipelines are involved.
@@ -268,6 +272,7 @@ Each task:
 - delivery gate
 - documentation gate
 - AI review gate
+- execution discipline gate
 
 ## 11. Next Actions
 - next skill calls

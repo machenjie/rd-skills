@@ -7,7 +7,7 @@ ChangeForge Skill Mesh is a skill-authoring repository. Its source content, regi
 The source repo contains authored material:
 
 - `src/professional-skills`: 19 top-level professional skills.
-- `src/foundation/capabilities`: 101 implemented foundation capabilities plus `_template`.
+- `src/foundation/capabilities`: 102 implemented foundation capabilities plus `_template`.
 - `src/domain-extensions`: 7 optional domain extension skills.
 - `src/registry`: `skills.yaml`, `capabilities.yaml`, `domain-extensions.yaml`, and `routing-rules.yaml`.
 
@@ -36,6 +36,12 @@ Foundation capabilities are compact engineering rules and decision aids. In `rec
 Language capabilities are professional engineering rules, not language tutorials or personal technical asset mappings.
 
 Domain extensions add domain-specific risk and routing rules. They are top-level in `full` and `dev`, and indexed by the router for profile-aware routing.
+
+## Agent Execution Discipline
+
+The `agent-execution-discipline` foundation capability (id 102, group `engineering-workflow`) enforces evidence-driven completion, verified-cause diagnosis, route-repair after repeated failure, same-pattern scan discipline, reuse-and-placement rationale, and proactive closure for every agent-assisted change.
+
+It is a foundation capability, not a top-level professional skill. The router selects it through `change-forge-router` and compiles its reference into the professional skills that consume it. It does not introduce runtime hooks, persistent state files, entertainment rhetoric, or PUA-style narration.
 
 ## Reference Loading Model
 

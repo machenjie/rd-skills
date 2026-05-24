@@ -21,6 +21,7 @@ Use whenever code is added, moved, extracted, or reorganized, including:
 - Deciding where a new behavior should live.
 - Modifying an existing function or class when responsibility boundaries are unclear.
 - AI-generated code proposes a new abstraction, utility, file, directory, or helper.
+- An agent-assisted change needs proof that reuse search and placement rationale happened before new structure was accepted.
 - Similar logic already exists somewhere in the codebase.
 - A change could be implemented by reuse, extension, composition, extraction, or new code.
 - A file starts accumulating mixed responsibilities.
@@ -44,6 +45,7 @@ Do not use to justify speculative abstractions. If there is only one current use
 - Private stays private. If code is used only inside one module, keep it private or internal. Do not export it just in case.
 - Dependency direction must not change accidentally. New imports must respect module boundary and layered architecture rules.
 - Tests follow the structure. Tests must be placed next to the unit, module, or integration boundary according to project convention and must prove the selected structure is usable through public APIs, not internals.
+- Structure decisions must be attachable to execution evidence. When the change is agent-assisted, the plan must be referenced from the Execution Discipline Report rather than left as an implicit reviewer assumption.
 
 # Industry Benchmarks
 
@@ -70,6 +72,8 @@ Escalate to `security-privacy-gate` when placement affects authorization, authen
 Escalate to `data-api-contract-changer` when placement changes public DTOs, API contracts, generated client surfaces, SDK exports, schemas, event payloads, or versioned configuration.
 
 Escalate to `quality-test-gate` when the selected structure cannot be tested through a public behavior boundary or would require brittle tests against private internals.
+
+Escalate to `agent-execution-discipline` when an agent adds structure without documenting reuse search, rejected alternatives, placement rationale, validation result, and closure boundary.
 
 # Critical Details
 
@@ -183,6 +187,7 @@ Return an Implementation Structure Plan for every non-trivial code addition, mov
 - **Dependency direction**: new imports; allowed by boundary rule; cycles introduced yes or no.
 - **Test placement**: unit tests; integration tests; contract tests; confirmation that test location follows project convention.
 - **Rejected alternatives**: alternatives considered and why each was rejected for non-trivial structure decisions.
+- **Execution linkage**: evidence inventory or handoff reference showing when the structure plan was produced and which validation proves the selected placement works.
 
 # Quality Gate
 
@@ -196,6 +201,7 @@ Return an Implementation Structure Plan for every non-trivial code addition, mov
 8. New imports respect dependency direction and do not introduce cycles.
 9. Tests are placed according to project convention and exercise public behavior.
 10. Rejected alternatives are documented for non-trivial structure decisions.
+11. Agent-assisted structure additions are tied to execution evidence and handoff boundary.
 
 # Used By
 
@@ -210,6 +216,8 @@ Return an Implementation Structure Plan for every non-trivial code addition, mov
 # Handoff
 
 Hand off to `module-boundary-design` when ownership or dependency direction is unclear; `layered-architecture-design` when layer responsibility is unclear; `page-component-decomposition` when UI component decomposition is primary; `service-business-logic` when backend service orchestration is primary; `refactoring` when the target structure is chosen and behavior-preserving movement must be sequenced; `code-review` when a completed diff must be assessed against the structure plan.
+
+Hand off to `agent-execution-discipline` when reuse search, placement rationale, same-pattern scan, or validation evidence is missing from an agent-assisted change.
 
 # Completion Criteria
 

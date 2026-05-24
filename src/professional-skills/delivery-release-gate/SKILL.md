@@ -23,6 +23,7 @@ Make every release execution safe, observable, and reversible — by defining en
 - Post-release monitoring and rollback readiness validation.
 - Incident mitigation releases, emergency rollbacks, or hotfixes where mitigation must be separated from final resolution.
 - Regulated or audited releases requiring change approval evidence, deployment audit events, and retention-ready release artifacts.
+- Agent-assisted release work where a failed pipeline, migration, deploy, or rollback is being retried or closed.
 
 ## Do Not Use When
 - The change is source-code-only with no deployment, runtime configuration, release coordination, or consumer notification involved.
@@ -42,6 +43,7 @@ Make every release execution safe, observable, and reversible — by defining en
 - **Emergency deployment does not remove evidence obligations** — hotfixes and incident mitigations still require approver, artifact, rollback, customer communication owner, and post-release validation.
 - **Helm releases must document chart version, appVersion, values overlays, rendered manifest diff, CRD/hook behavior, upgrade flags, rollback scope, and post-upgrade verification.**
 - **Helm rollback must not be treated as full system rollback.** Database schema, external config, CRDs, secrets, cloud resources, and migrated data may need separate rollback or forward-fix.
+- **No repeated deploy retry without route repair.** After two failed pipeline or deployment attempts on the same signature, require inspected evidence, a new hypothesis, and a changed route before another attempt.
 
 ## Industry Benchmarks
 - **DORA Metrics (Accelerate — Forsgren, Humble, Kim)**: Deployment frequency, Lead time for changes, Mean time to restore (MTTR), Change failure rate — the four metrics that measure delivery health. Elite teams: deployment frequency daily+, MTTR < 1 hour, change failure rate < 5%.
@@ -111,6 +113,7 @@ All checks pass → Rolling update with monitored rollout window
 - Escalate when Terraform, Pulumi, Crossplane, or other IaC changes affect production IAM, public exposure, DNS, CDN, WAF, KMS, VPC/subnet, or cloud account/project boundaries without reviewed plan evidence.
 - Escalate when a regulated release lacks change approval evidence, artifact digest, scan evidence, or audit retention target.
 - Escalate when an emergency release lacks an incident commander, technical lead, communications owner, or rollback decision signal.
+- Escalate to `agent-execution-discipline` when an agent claims deployment readiness without pipeline output, rollback evidence, residual risk, and handoff boundary.
 
 ## Critical Details
 - **Kubernetes rolling update guarantee**: `maxUnavailable: 0` ensures no capacity reduction during rollout; `maxSurge: 1` controls the speed. Misconfigured rolling updates can take down entire services.
@@ -171,6 +174,7 @@ Return a structured release plan with:
 - **Incident release plan**: SEV severity, mitigation vs. resolution, incident roles, customer/status page communication owner, and validation signal when applicable.
 - **Compliance evidence**: Change approval, deploy audit event, artifact digest, SBOM/vulnerability scan evidence, evidence owner, and retention period.
 - **Post-release monitoring plan**: Named owner, dashboards, metrics, SLO burn rate, duration of watch window.
+- **Execution discipline evidence**: Deployment commands or pipeline links, exit status, failed-attempt ledger when applicable, route repair decision, and closure package.
 - **Release notes**: Human-readable changelog entries (Keep a Changelog format) for affected audiences.
 - **Residual risks**: Known risks with mitigation or acceptance rationale.
 
@@ -188,6 +192,7 @@ Return a structured release plan with:
 11. IaC/cloud governance changes have reviewed plan evidence, blast-radius boundary, IAM/network/KMS/DNS impact review, and rollback procedure.
 12. Regulated releases retain approval, audit event, artifact digest, SBOM/vulnerability scan evidence, owner, and retention period.
 13. Incident hotfixes distinguish mitigation from resolution and identify incident commander, technical lead, communications owner, and validation signal.
+14. Agent-assisted release work includes evidence inventory, route repair after repeated failure, residual risks, and handoff target.
 
 ## Handoff
 - **reliability-observability-gate** — for SLO burn rate targets, canary metric baselines, and post-release alert thresholds.
@@ -196,6 +201,7 @@ Return a structured release plan with:
 - **change-documentation-gate** — for release notes, runbook updates, and consumer migration guide publishing.
 - **quality-test-gate** — when release gate criteria require test evidence that has not yet been produced.
 - **failure-diagnosis** — when a release is part of incident mitigation or root-cause confirmation.
+- **agent-execution-discipline** — when release closure lacks evidence, route repair, risk boundary, or validation results.
 
 ## Completion Criteria
 The change has an approved release plan with an immutably tagged artifact, verified environment configuration, cloud/IaC governance evidence when applicable, a backward-compatible migration sequence with tested rollback, a disableable feature flag if applicable, a tested rollback procedure, a named post-release monitoring owner, incident or compliance evidence when applicable, a communication plan executed, and release notes published before the deployment window opens.

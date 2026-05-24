@@ -1,0 +1,41 @@
+---
+id: agent-repeated-failure-route-repair
+description: |
+  An agent has run the same build command twice and gotten the same failure
+  twice. Discipline forbids a third same-path retry; route must change.
+prompt: |
+  The agent ran "npm run build" twice. Both runs produced the identical
+  TypeScript compile error in src/api/orders.ts. The agent is about to run
+  "npm run build" a third time with no changes. Decide what to do.
+expected:
+  complexity: L2
+  risk_level: medium
+  risk_triggers:
+    - same agent approach failed twice
+    - route repair required
+  skills:
+    - ai-code-review-refactor
+  capabilities:
+    - agent-execution-discipline
+    - failure-diagnosis
+    - implementation-structure-design
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - AI review gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - delivery-release-gate
+    - reliability-observability-gate
+    - security-privacy-gate
+  capabilities:
+    - release-rollback
+    - data-migration-design
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+notes: |
+  After two failed attempts on the same path, the agent must change the
+  route — reread output, inspect the call site, shrink scope, or escalate.
+  A third same-path retry is a discipline violation.

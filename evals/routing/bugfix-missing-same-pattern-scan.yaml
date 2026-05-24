@@ -1,0 +1,46 @@
+---
+id: bugfix-missing-same-pattern-scan
+description: |
+  Agent proposes a one-line null-check fix at the reported bug site without
+  scanning the rest of the codebase for the same defect pattern.
+prompt: |
+  A bug report says GET /users/{id}/profile throws "Cannot read property
+  'name' of undefined" when the user has no profile. The agent's proposed
+  fix adds a single null-check in src/users/profile-controller.ts and
+  declares the bug fixed. The agent did not scan whether other controllers
+  or services dereference the same profile object the same way.
+expected:
+  complexity: L3
+  risk_level: medium
+  risk_triggers:
+    - local fix without same pattern scan
+    - bug may exist in multiple modules
+  skills:
+    - change-impact-analyzer
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - agent-execution-discipline
+    - implementation-structure-design
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - impact gate
+    - implementation gate
+    - test gate
+    - AI review gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+notes: |
+  Before any local fix the agent must scan for the same pattern in the
+  rest of the codebase and either cover all instances or justify the
+  local-only decision.

@@ -19,6 +19,7 @@ Define the minimum evidence needed to prove a change works correctly, does not r
 - When a code change involves financial calculations, authorization, state machines, or safety-critical behavior.
 - When regression risk from a cross-cutting refactoring is unclear.
 - When a release gate requires test evidence that has not yet been produced.
+- When an agent claims a fix is complete but supplies no command output, failing-before/passing-after evidence, or validator result.
 - When product experiments, analytics events, exposure logging, or metric guardrails need verification.
 - When ML model rollout, feature store changes, drift monitoring, fairness audits, or model rollback require validation.
 - When monorepo affected-test selection, incremental build, build cache, or generated-file policies can hide regressions.
@@ -38,6 +39,7 @@ Define the minimum evidence needed to prove a change works correctly, does not r
 - **Concurrency and idempotency tests are required when code uses shared state, queues, or distributed writes**: race conditions that cannot be detected in sequential unit tests require explicit concurrency verification.
 - **Experiment and model rollout tests require data validity checks**: exposure logging, sample ratio mismatch, feature point-in-time correctness, training-serving skew, drift metrics, and rollback version must be verified like code behavior.
 - **Affected-test selection must be proven against a full-suite baseline**: monorepo speedups are valid only when module graph, dependency edges, cache keys, and generated inputs cannot skip impacted tests.
+- **Agent-provided test evidence must be concrete**: accept command output, exit codes, logs, fixtures, screenshots, or recorded validator results; reject "tests should pass" or undocumented local runs.
 
 ## Industry Benchmarks
 - **Test Pyramid (Mike Cohn)**: Many unit tests, fewer integration tests, few E2E tests. Unit tests are fast and cheap; E2E tests are slow and expensive — invert the pyramid at your peril.
@@ -110,6 +112,7 @@ Is the change a low-risk refactoring with no behavior change?
 - Escalate when experiment launch lacks exposure logging tests, sample ratio mismatch detection, or guardrail rollback verification.
 - Escalate when ML model rollout lacks model registry version pinning, training-serving skew checks, drift monitoring, fairness/bias audit, or rollback model verification.
 - Escalate when monorepo affected-test selection has no full-suite comparison or cache keys omit lockfiles, generated inputs, or tool versions.
+- Escalate to `agent-execution-discipline` when an agent closes a test gate without an evidence inventory or repeats the same failing test command twice without route repair.
 
 ## Critical Details
 - **Test Doubles hierarchy**: Dummy (placeholder, never used) < Stub (returns canned response) < Fake (working implementation, e.g. in-memory DB) < Mock (verifies interactions) < Spy (records calls). Choose the simplest double that provides enough information.
@@ -169,6 +172,7 @@ Return a test strategy with:
 - **Experiment test obligations**: exposure event assertion, assignment stability, sample ratio mismatch detection, primary/guardrail metric query validation, and rollback-on-guardrail regression evidence.
 - **MLOps test obligations**: model version registry check, feature store point-in-time correctness, training-serving skew test, drift metric threshold, fairness/bias evaluation, shadow/canary plan, and rollback model verification.
 - **Monorepo test obligations**: module graph, affected tests, cache key inputs, generated file policy, and full-test fallback cadence.
+- **Execution evidence**: Commands run, exit codes, relevant output, artifacts produced, and any unrun test obligations with rationale.
 - **Residual risks**: Accepted gaps with explicit business justification and mitigating controls.
 
 ## Quality Gate
@@ -185,6 +189,7 @@ Return a test strategy with:
 11. Experiments verify exposure logging, assignment stability, SRM detection, metric queries, and guardrail rollback.
 12. ML model rollouts verify model version, feature store correctness, drift/fairness metrics, online/offline metric alignment, and rollback model.
 13. Monorepo affected-test and cache policies are validated against module graph changes and a full-suite fallback.
+14. Agent-reported test completion includes evidence inventory and does not rely on unsupported claims.
 
 ## Handoff
 - **backend-change-builder** — with test obligations for service, repository, and API layers.
@@ -195,6 +200,7 @@ Return a test strategy with:
 - **security-privacy-gate** — with security-specific test obligations for auth, input handling, and data access.
 - **ai-product-extension** — with ML evaluation, drift, fairness, model registry, and rollback obligations.
 - **bigdata-product-extension** — with analytics event, feature store, data quality, and warehouse validation obligations.
+- **agent-execution-discipline** — when test evidence, route repair, or closure package is missing from an agent-assisted change.
 
 ## Completion Criteria
 The change has a proportional, executable verification plan where every material risk maps to test evidence or an explicitly accepted residual risk with justification — and the complete test strategy can be handed to a builder without ambiguity about what must pass before release.

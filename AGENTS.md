@@ -48,3 +48,16 @@ Runtime skills must be emitted into `dist/`. Installed skill folders must contai
 `SKILL.md` is loaded when a skill is selected. `references/` is not assumed to be fully loaded automatically. The router selects capabilities, and professional skills read only selected capability references according to the L1/L2/L3/L4/L5 `Reference Loading Policy`.
 
 References are a precision mechanism, not a dumping ground. Programming language knowledge is represented as professional engineering rules and language-runtime capabilities, not as personal technical asset mapping or beginner guides.
+
+## Agent Execution Discipline
+
+Every agent-assisted change must obey these execution rules:
+
+1. No evidence, no completion.
+2. No verified cause, no diagnosis.
+3. No repeated same-path retry after two failures.
+4. No local fix without same-pattern scan.
+5. No new structure without reuse and placement rationale.
+6. No handoff without risk, boundary, and validation result.
+
+These rules are behavior constraints only. Do not add entertainment rhetoric, corporate-flavor narration, user-shaming language, or runtime-specific PUA state files.

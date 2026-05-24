@@ -21,6 +21,7 @@ Ensure every production-bound change has explicit reliability expectations, obse
 - Database migrations, reindexing, or data processing that affects production query performance.
 - Incident response tooling, runbook, alerting rule, or on-call routing changes.
 - Changes that introduce or modify circuit breakers, rate limiters, throttling, or fallback behavior.
+- Agent-assisted reliability investigation or incident closure that needs verified cause, metric evidence, and residual-risk statement.
 
 ## Do Not Use When
 - The change is a static documentation edit or cosmetic UI change with zero runtime behavior impact.
@@ -37,6 +38,7 @@ Ensure every production-bound change has explicit reliability expectations, obse
 - **Recovery plans must be tested before they are needed**: a runbook that has never been executed will fail under incident pressure — conduct game days or chaos engineering exercises.
 - **Cardinality limits on metric labels**: high-cardinality labels (user_id, request_id, URL path with IDs) destroy time-series databases — use aggregated label values (endpoint name, status class) instead.
 - **Cost and capacity budgets are reliability budgets**: an autoscaling rule, storage growth pattern, query scan, or egress path that can exceed budget without alerting is an operational risk, not only a finance concern.
+- **Reliability closure requires verified cause**: do not accept environment blame, intermittent flakiness claims, or incident closure without evidence tied to metrics, logs, traces, configuration, dependency version, or input.
 
 ## Industry Benchmarks
 - **Google SRE Book (Beyer et al.) — Chapters 3, 4, 6**: SLIs, SLOs, error budgets, toil reduction. The canonical reference for production reliability engineering. SLO = reliability commitment; error budget = innovation vs. stability balance.
@@ -147,6 +149,7 @@ Change is infrastructure-only with no behavior change?
 - Escalate when a cloud resource, autoscaling policy, query scan, storage lifecycle, or egress path can exceed budget without a cost anomaly alert and owner.
 - Escalate when capacity forecast shows less than 2x peak headroom or when the only path to headroom requires unapproved spend.
 - Escalate when incident severity, incident commander, technical lead, communications lead, or customer communication cadence is undefined for a production-critical path.
+- Escalate to `agent-execution-discipline` when an agent repeats the same diagnosis path twice, skips evidence collection, or hands off an incident without boundary and validation results.
 
 ## Critical Details
 - **Multi-window multi-burn-rate alerting math**: a 1% error rate on an SLO of 99.9% burns the 28-day error budget in 28 hours. Fast-burn alert: if burn rate > 14x over 1 hour, page immediately. Slow-burn alert: if burn rate > 6x over 6 hours, page with lower urgency.
@@ -203,6 +206,7 @@ Return a reliability and observability plan with:
 - **Incident readiness**: severity classification, incident roles, mitigation criteria, customer communication cadence, status page criteria, and postmortem ownership.
 - **Model operations signals**: when ML is involved, model version, drift metric, training-serving skew signal, and rollback model version.
 - **Recovery plan**: runbook location, tested recovery steps, rollback decision criteria.
+- **Execution discipline evidence**: Verified-cause statement, evidence inventory, false hypotheses, route-repair ledger when repeated investigation failed, and closure package.
 - **Chaos/game day obligations**: failure mode scenarios to test in staging before production deployment.
 - **Residual risks**: accepted gaps with justification and mitigation.
 
@@ -219,6 +223,7 @@ Return a reliability and observability plan with:
 10. Rollback decision criteria are explicit: which signals, at which thresholds, trigger an immediate rollback.
 11. Cost and capacity guardrails are defined for material resource changes, including unit costs, egress/storage exposure, capacity forecast, and anomaly alert owner.
 12. Incident roles, severity, customer communication cadence, and postmortem ownership are defined for production-critical paths.
+13. Agent-assisted reliability closure includes verified cause, evidence, residual risks, and no third same-path retry.
 
 ## Handoff
 - **delivery-release-gate** — for canary traffic thresholds, rollout monitoring windows, and rollback decision signals.
@@ -229,6 +234,7 @@ Return a reliability and observability plan with:
 - **security-privacy-gate** — for PII exclusion from logs and audit log requirements.
 - **failure-diagnosis** — for SEV incident evidence collection, timeline reconstruction, root cause analysis, and postmortem action items.
 - **change-documentation-gate** — for customer advisories, status page entries, runbook updates, incident reports, and postmortem summaries.
+- **agent-execution-discipline** — when incident or reliability closure lacks evidence, verified cause, route repair, or handoff boundary.
 
 ## Completion Criteria
 The change is production-ready from a reliability and observability perspective when every user-facing path has an SLI, error budget headroom is confirmed, multi-burn-rate alerts are configured, structured logging with trace propagation is implemented, cardinality of new metrics is bounded, circuit breakers have tested fallback behavior, queue consumers have DLQ and depth alerts, cost and capacity guardrails are owned and alertable, incident handoff is defined, a tested recovery runbook exists, and rollback decision criteria are explicit.

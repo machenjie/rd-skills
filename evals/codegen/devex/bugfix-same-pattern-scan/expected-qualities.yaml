@@ -1,0 +1,46 @@
+id: bugfix-same-pattern-scan
+category: devex
+complexity: L3
+focus:
+  - same-pattern scan before local fix
+  - bug impact scope
+  - regression testing
+  - execution discipline closure
+route_hints:
+  skills:
+    - change-impact-analyzer
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - agent-execution-discipline
+    - implementation-structure-design
+    - regression-testing
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - impact gate
+    - implementation gate
+    - test gate
+    - AI review gate
+    - execution discipline gate
+expected_outcomes:
+  - The defect pattern is defined before code is edited.
+  - Relevant controllers, services, serializers, and tests are scanned for the pattern.
+  - All in-scope occurrences are fixed or explicitly excluded with rationale.
+  - Regression tests prove missing-profile behavior at public boundaries.
+required_qualities:
+  - Same-pattern scan record includes pattern signature, scope, matches, and decision.
+  - Fixes preserve authorization and do not hide unrelated data errors.
+  - Tests cover at least the reported endpoint and one sibling path when matched.
+  - Completion evidence includes validation command output and residual risk.
+forbidden_shortcuts:
+  - Applying a one-line null check only at the reported line with no scan.
+  - Adding a blanket try/catch or default object that hides real data problems.
+  - Ignoring a matched occurrence in another backend module without rationale.
+  - Claiming completion without regression test evidence.
+evidence:
+  - Pattern search output or inspected-file list.
+  - Regression test for missing profile on the reported endpoint.
+  - Coverage or rationale for sibling matches.
+  - Execution Discipline Report with closure package.

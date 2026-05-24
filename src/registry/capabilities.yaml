@@ -922,3 +922,13 @@ capabilities:
     triggers: [implementation structure code structure function placement class placement reuse existing function reuse existing class new helper new utility new file new directory component placement hook placement service method repository method shared utils common utils dependency direction cohesion coupling]
     risk_notes: [Poor placement creates duplicated logic shared utility pollution accidental public APIs circular dependencies architecture drift and unmaintainable AI generated patches]
     expected_outputs: [implementation structure plan with reuse candidates placement rationale private public decisions file directory ownership dependency direction shared utility audit and test placement]
+
+  - id: "102"
+    name: agent-execution-discipline
+    group: engineering-workflow
+    path: src/foundation/capabilities/agent-execution-discipline
+    status: implemented
+    used_by: [ai-code-review-refactor, quality-test-gate, delivery-release-gate, reliability-observability-gate, change-impact-analyzer, backend-change-builder, frontend-change-builder]
+    triggers: [agent execution AI assisted change evidence based completion verified diagnosis repeated retry route repair same pattern scan reuse rationale placement rationale proactive closure handoff readiness]
+    risk_notes: [Agent assisted changes silently ship without evidence diagnose without verified cause retry the same failing path duplicate logic across the codebase add structure without justification and hand off without risk or validation summary]
+    expected_outputs: [execution discipline report with evidence inventory verified cause statement route repair record same pattern scan results reuse and placement rationale and handoff package with risk boundary and validation results]

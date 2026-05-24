@@ -17,6 +17,7 @@ Expose the complete blast radius of a proposed change before design or implement
 - Before a release or migration when downstream impact on consumers, integrations, or dependent services is unclear.
 - When a change request arrives with narrow stated scope but hints at wider behavioral, data, or contract implications.
 - When a rollback plan cannot be defined without understanding the full write path and state mutations involved.
+- When an agent proposes a local fix and has not scanned for the same defect pattern across the affected codebase.
 
 ## Do Not Use When
 - The change is a narrowly scoped mechanical edit with fully understood ownership, no behavioral change, and no contract, migration, or release risk.
@@ -30,6 +31,7 @@ Expose the complete blast radius of a proposed change before design or implement
 - Rollback implications must be analyzed for every stateful change — "just redeploy the old version" is not a rollback plan when data has been migrated.
 - Make unknown ownership explicit — do not assume a surface is safe because its owner is not on the current thread.
 - Surface all open questions as actionable placeholders with proposed owners, not hidden assumptions.
+- Local fixes require same-pattern scan evidence: name the pattern searched, scope scanned, related occurrences, and why the fix is local or broader.
 
 ## Industry Benchmarks
 - **Architecture Review Board (ARB) Impact Analysis**: Structured surface-by-surface review before implementation approval — mandatory for tier-1 systems in regulated industries.
@@ -130,6 +132,7 @@ For each change being analyzed, explicitly answer these four questions ("N/A" re
 - Escalate when concurrent changes from other teams affect overlapping surfaces — coordination risk is high.
 - Escalate when the change requires feature flags that are not yet in place and the release window is fixed.
 - Escalate when the observability gap during rollout would prevent early detection of a regression.
+- Escalate to `agent-execution-discipline` when an agent attempts to hand off impact analysis without evidence inventory, boundary, residual risk, and validation result.
 
 ## Critical Details
 - The quietest surfaces are the most dangerous: documentation, alert thresholds, test fixtures, client SDKs, and feature flag configurations are frequently overlooked in blast radius analysis.
@@ -181,6 +184,7 @@ Return a structured impact analysis with:
 - **Specialist routing**: Which professional skills must be engaged based on identified impacts.
 - **Release concerns**: Feature flag dependencies, deployment sequencing, staged rollout requirements.
 - **Open questions**: Unknown surfaces, undetermined owners, or impact dimensions requiring further investigation — each with proposed owner and urgency.
+- **Same-pattern scan record**: Pattern signature, directories or globs searched, other occurrences found, and local-only or broad-fix rationale when a bug fix is proposed.
 - **Risk summary**: Overall blast radius classification (Low / Medium / High / Critical) with key risk factors listed.
 
 ## Quality Gate
@@ -194,6 +198,7 @@ Return a structured impact analysis with:
 8. Open questions are listed with proposed owners and not silently resolved.
 9. Specialist skills required are named and routed.
 10. A rollback plan exists that accounts for all stateful changes.
+11. Agent-assisted local fixes include same-pattern scan evidence and closure boundary.
 
 ## Handoff
 - **domain-impact-modeler** — when business rules, invariants, state machines, or domain events are affected.
@@ -203,6 +208,7 @@ Return a structured impact analysis with:
 - **security-privacy-gate** — when permission rules, auth flows, data access, or audit trails are affected.
 - **reliability-observability-gate** — when SLO paths, alert thresholds, or performance-critical paths are affected.
 - **task-dag-planner** — when the impact analysis reveals a multi-phase implementation requiring dependency sequencing.
+- **agent-execution-discipline** — when analysis lacks evidence, same-pattern scan, residual risk, or handoff package.
 
 ## Completion Criteria
 The implementation plan can be scoped and executed with clear risk boundaries, verified specialist routing, explicit compatibility and rollback analysis, identified ownership for every impacted surface, and no silently assumed safe-by-default surfaces.

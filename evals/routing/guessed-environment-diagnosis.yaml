@@ -1,0 +1,41 @@
+---
+id: guessed-environment-diagnosis
+description: |
+  Agent attempts to diagnose a failing integration test by speculating
+  about the user's environment instead of inspecting the code or logs.
+prompt: |
+  An integration test fails with "ECONNREFUSED 127.0.0.1:5432". The agent
+  responds: "This is probably your local environment — postgres might not
+  be running on your machine, or maybe a background process is using the
+  port. Try restarting." The agent has not inspected the test setup, the
+  config, the CI logs, or the test fixture.
+expected:
+  complexity: L2
+  risk_level: medium
+  risk_triggers:
+    - agent diagnosis without verified cause
+    - environment-blame without inspection
+  skills:
+    - ai-code-review-refactor
+  capabilities:
+    - agent-execution-discipline
+    - failure-diagnosis
+    - implementation-structure-design
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - AI review gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - delivery-release-gate
+    - security-privacy-gate
+  capabilities:
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+notes: |
+  "Probably your environment" is not a diagnosis. A verified cause must
+  point to a specific symbol, file, configuration key, dependency version,
+  environment value, or input.
