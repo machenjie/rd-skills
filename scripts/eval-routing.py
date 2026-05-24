@@ -122,6 +122,8 @@ RISK_REQUIRED_SKILLS: dict[str, tuple[str, ...]] = {
         "change-documentation-gate",
     ),
     "cost anomaly": ("reliability-observability-gate",),
+    "missing test evidence": ("quality-test-gate",),
+    "hallucinated API risk": ("ai-code-review-refactor",),
     "payment": ("security-privacy-gate",),
     "subscription": ("security-privacy-gate",),
     "billing": ("security-privacy-gate",),
