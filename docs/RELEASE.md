@@ -24,7 +24,7 @@ Expected top-level runtime counts:
 - `full`: 19 professional skills plus 7 domain extensions.
 - `dev`: 19 professional skills plus 102 foundation capabilities plus 7 domain extensions.
 
-Foundation capability count is 101 in every profile: compiled into professional references for `recommended` and `full`, and also top-level in `dev`.
+Foundation capability count is 102 in every profile: compiled into professional references for `recommended` and `full`, and also top-level in `dev`.
 
 The profile top-level counts are 19 for `recommended`, 26 for `full`, and 128 for `dev`.
 

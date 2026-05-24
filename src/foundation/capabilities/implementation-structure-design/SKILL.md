@@ -178,6 +178,7 @@ Backend placement must decide controller, service, domain, repository, adapter, 
 Return an Implementation Structure Plan for every non-trivial code addition, move, extraction, or reorganization:
 
 - **Existing structure inspected**: files searched; existing functions, classes, modules, services, repositories, hooks, and components considered; reuse candidates; decision.
+- **Same-pattern structure scan**: same file, same module, adjacent modules, shared/common/utils, tests, docs, and generated files checked; equivalent patterns listed or explicitly marked absent.
 - **Reuse decision**: reuse existing; extend existing; compose existing; adapter needed; new code required; why reuse is insufficient.
 - **Function decisions**: new functions; existing functions modified; private or public; responsibility; file location; tests.
 - **Class decisions**: new classes; existing classes reused or extended; why a class is needed instead of a function; state, invariant, lifecycle, dependency injection, polymorphism, or protocol owned; public or private; tests.
@@ -202,6 +203,7 @@ Return an Implementation Structure Plan for every non-trivial code addition, mov
 9. Tests are placed according to project convention and exercise public behavior.
 10. Rejected alternatives are documented for non-trivial structure decisions.
 11. Agent-assisted structure additions are tied to execution evidence and handoff boundary.
+12. Same-pattern structure scan is documented before adding or moving functions, classes, files, or directories.
 
 # Used By
 
@@ -221,4 +223,4 @@ Hand off to `agent-execution-discipline` when reuse search, placement rationale,
 
 # Completion Criteria
 
-The capability is complete when the implementation has an explicit structure decision before code is written or accepted, all reuse candidates and rejected alternatives are documented, new functions/classes/files/directories have ownership and placement rationale, shared utility pollution is ruled out, dependency direction is preserved, and tests are placed at the observable behavior boundary.
+The capability is complete when the implementation has an explicit structure decision before code is written or accepted, all reuse candidates and rejected alternatives are documented, same-pattern structure scan is recorded, new functions/classes/files/directories have ownership and placement rationale, shared utility pollution is ruled out, dependency direction is preserved, and tests are placed at the observable behavior boundary.

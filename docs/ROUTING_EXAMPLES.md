@@ -56,3 +56,36 @@ Request: "Use an AI agent to approve wallet-based subscription payments."
 - Domain extension: `web3-product-extension`, `payment-trading-extension`, and `ai-product-extension` when all three signals are real.
 - Gates: explicit risk escalation, human approval, threat model, deterministic payment state machine, wallet/key boundary review, AI side-effect controls, rollback and audit trail.
 - Evidence: approval record, threat model summary, test matrix, auditability notes, release blockers.
+
+## 6. Agent Claims Completion Without Evidence
+
+Request: "修复已经提交，但没有测试输出。"
+
+- Level: L2.
+- Professional path: `quality-test-gate`, `ai-code-review-refactor`.
+- Foundation capabilities: `agent-execution-discipline`, `regression-testing`, `code-review`.
+- Domain extension: none unless the changed product surface adds domain-specific risk.
+- Gates: test gate, AI review gate, execution discipline gate.
+- Evidence: command output, exit code, skipped checks, residual risks.
+
+## 7. Repeated Same-Path Failure
+
+Request: "又失败了，不要继续改同一个参数，换方法找根因。"
+
+- Level: L2 or L3 depending on blast radius.
+- Professional path: `change-forge-router`, `quality-test-gate`.
+- Foundation capabilities: `agent-execution-discipline`, `failure-diagnosis`, `solution-optimality-evaluation`.
+- Domain extension: none unless the failing path is domain-specific.
+- Gates: execution discipline gate, test gate.
+- Evidence: route repair ledger, rejected hypotheses, next validation command.
+
+## 8. Local Fix Without Same-Pattern Scan
+
+Request: "这个 bug 只改了一处，请检查同模块是否还有同类问题。"
+
+- Level: L3.
+- Professional path: `change-impact-analyzer`, `quality-test-gate`, `ai-code-review-refactor`.
+- Foundation capabilities: `agent-execution-discipline`, `implementation-structure-design`, `regression-testing`.
+- Domain extension: none unless same-pattern matches cross a domain-specific boundary.
+- Gates: impact gate, test gate, AI review gate, execution discipline gate.
+- Evidence: same-pattern scan record, affected files, regression tests, residual risk.

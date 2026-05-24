@@ -9,10 +9,11 @@ Loads cases from ``evals/routing/*.yaml`` and validates that each case:
 * uses risk triggers and quality gates that are declared in
   ``src/registry/routing-rules.yaml``;
 * keeps ``expected.*`` and ``forbidden.*`` disjoint;
-* satisfies the risk-driven required-gate rules derived from the routing
-  rules (auth/PII → security gate; database migration → data + release;
-  payment → payment-trading-extension; wallet → web3; AI prompt → ai-product;
-  etc.);
+* satisfies the risk-driven required route rules derived from the routing
+    rules (auth/PII → security gate; database migration → data + release;
+    payment → payment-trading-extension; wallet → web3; AI prompt → ai-product;
+    agent execution risks → agent-execution-discipline and execution discipline
+    gate; etc.);
 * respects L1 anti-over-routing - heavy gates and design-time skills must
   not appear unless the case opts in through ``risk_triggers``.
 * requires L2+ implementation cases that route to backend, frontend, or
@@ -140,6 +141,56 @@ RISK_REQUIRED_DOMAIN_EXTENSIONS: dict[str, str] = {
     "rag": "ai-product-extension",
 }
 
+RISK_REQUIRED_CAPABILITIES: dict[str, tuple[str, ...]] = {
+    "agent claims completion without evidence": ("agent-execution-discipline",),
+    "agent diagnosis without verified cause": (
+        "agent-execution-discipline",
+        "failure-diagnosis",
+    ),
+    "same agent approach failed twice": (
+        "agent-execution-discipline",
+        "failure-diagnosis",
+    ),
+    "local fix without same pattern scan": ("agent-execution-discipline",),
+    "new structure without reuse and placement rationale": (
+        "agent-execution-discipline",
+        "implementation-structure-design",
+    ),
+    "handoff without risk boundary and validation results": (
+        "agent-execution-discipline",
+    ),
+    "missing test evidence": ("agent-execution-discipline",),
+    "environment-blame without inspection": (
+        "agent-execution-discipline",
+        "failure-diagnosis",
+    ),
+    "route repair required": ("agent-execution-discipline",),
+    "bug may exist in multiple modules": ("agent-execution-discipline",),
+    "shared utility pollution risk": (
+        "implementation-structure-design",
+        "agent-execution-discipline",
+    ),
+    "business logic in shared utils": (
+        "implementation-structure-design",
+        "agent-execution-discipline",
+    ),
+    "hallucinated API risk": ("agent-execution-discipline",),
+}
+
+RISK_REQUIRED_QUALITY_GATES: dict[str, tuple[str, ...]] = {
+    "agent claims completion without evidence": ("execution discipline gate",),
+    "agent diagnosis without verified cause": ("execution discipline gate",),
+    "same agent approach failed twice": ("execution discipline gate",),
+    "local fix without same pattern scan": ("execution discipline gate",),
+    "new structure without reuse and placement rationale": (
+        "execution discipline gate",
+        "implementation gate",
+    ),
+    "handoff without risk boundary and validation results": (
+        "execution discipline gate",
+    ),
+}
+
 # Skills and extensions that are explicitly forbidden at L1 unless the case
 # opts in by declaring a risk trigger that requires them.
 L1_OVER_ROUTING_SKILLS: tuple[str, ...] = (
@@ -154,6 +205,13 @@ L1_OVER_ROUTING_SKILLS: tuple[str, ...] = (
     "security-privacy-gate",
     "reliability-observability-gate",
     "delivery-release-gate",
+)
+
+L1_OVER_ROUTING_CAPABILITIES: tuple[str, ...] = (
+    "agent-execution-discipline",
+    "implementation-structure-design",
+    "failure-diagnosis",
+    "solution-optimality-evaluation",
 )
 
 EXPECTED_FIELDS: tuple[str, ...] = (
@@ -462,9 +520,13 @@ def _enforce_risk_required(
     errors: list[str],
 ) -> None:
     expected_skills = set(expected_sets["skills"])
+    expected_capabilities = set(expected_sets["capabilities"])
     expected_extensions = set(expected_sets["domain_extensions"])
+    expected_gates = {gate.casefold() for gate in expected_sets["quality_gates"]}
     forbidden_skills = set(forbidden_sets["skills"])
+    forbidden_capabilities = set(forbidden_sets["capabilities"])
     forbidden_extensions = set(forbidden_sets["domain_extensions"])
+    forbidden_gates = {gate.casefold() for gate in forbidden_sets["quality_gates"]}
 
     for trigger in normalized_triggers:
         required_skills = RISK_REQUIRED_SKILLS.get(trigger, ())
@@ -478,6 +540,31 @@ def _enforce_risk_required(
                 errors.append(
                     f"{rel}: risk_trigger '{trigger}' requires '{skill}' "
                     f"but it is listed in forbidden.skills"
+                )
+        required_capabilities = RISK_REQUIRED_CAPABILITIES.get(trigger, ())
+        for capability in required_capabilities:
+            if capability not in expected_capabilities:
+                errors.append(
+                    f"{rel}: risk_trigger '{trigger}' requires "
+                    f"expected.capabilities to include '{capability}'"
+                )
+            if capability in forbidden_capabilities:
+                errors.append(
+                    f"{rel}: risk_trigger '{trigger}' requires '{capability}' "
+                    f"but it is listed in forbidden.capabilities"
+                )
+        required_gates = RISK_REQUIRED_QUALITY_GATES.get(trigger, ())
+        for gate in required_gates:
+            gate_key = gate.casefold()
+            if gate_key not in expected_gates:
+                errors.append(
+                    f"{rel}: risk_trigger '{trigger}' requires "
+                    f"expected.quality_gates to include '{gate}'"
+                )
+            if gate_key in forbidden_gates:
+                errors.append(
+                    f"{rel}: risk_trigger '{trigger}' requires '{gate}' "
+                    f"but it is listed in forbidden.quality_gates"
                 )
         required_extension = RISK_REQUIRED_DOMAIN_EXTENSIONS.get(trigger)
         if required_extension is not None:
@@ -506,8 +593,10 @@ def _enforce_l1_anti_over_routing(
         return
 
     opt_in_skills: set[str] = set()
+    opt_in_capabilities: set[str] = set()
     for trigger in normalized_triggers:
         opt_in_skills.update(RISK_REQUIRED_SKILLS.get(trigger, ()))
+        opt_in_capabilities.update(RISK_REQUIRED_CAPABILITIES.get(trigger, ()))
 
     expected_skills = set(expected_sets["skills"])
     over_routed = (
@@ -517,6 +606,17 @@ def _enforce_l1_anti_over_routing(
         errors.append(
             f"{rel}: L1 case over-routes to {sorted(over_routed)} without a "
             f"matching risk_trigger"
+        )
+
+    expected_capabilities = set(expected_sets["capabilities"])
+    over_routed_capabilities = (
+        expected_capabilities.intersection(L1_OVER_ROUTING_CAPABILITIES)
+        - opt_in_capabilities
+    )
+    if over_routed_capabilities:
+        errors.append(
+            f"{rel}: L1 case over-routes to capabilities "
+            f"{sorted(over_routed_capabilities)} without a matching risk_trigger"
         )
 
     if expected_sets["domain_extensions"]:
@@ -604,12 +704,14 @@ def _is_l1_anti_over_routing_case(data: dict[str, Any]) -> bool:
     if expected.get("complexity") != "L1":
         return False
     forbidden_skills = set(_case_forbidden_list(data, "skills"))
+    forbidden_capabilities = set(_case_forbidden_list(data, "capabilities"))
     forbidden_gates = {
         gate.casefold()
         for gate in _case_forbidden_list(data, "quality_gates")
     }
     return bool(
         forbidden_skills.intersection(L1_OVER_ROUTING_SKILLS)
+        or forbidden_capabilities.intersection(L1_OVER_ROUTING_CAPABILITIES)
         or forbidden_gates.intersection(
             {
                 "architecture gate",
@@ -834,8 +936,10 @@ def _enforce_l1_actual_anti_over_routing(
     risk_triggers = _as_string_list(expected.get("risk_triggers"))
     normalized_triggers = [trigger.casefold() for trigger in risk_triggers or []]
     opt_in_skills: set[str] = set()
+    opt_in_capabilities: set[str] = set()
     for trigger in normalized_triggers:
         opt_in_skills.update(RISK_REQUIRED_SKILLS.get(trigger, ()))
+        opt_in_capabilities.update(RISK_REQUIRED_CAPABILITIES.get(trigger, ()))
 
     over_routed = (
         set(actual_sets["skills"]).intersection(L1_OVER_ROUTING_SKILLS)
@@ -845,6 +949,16 @@ def _enforce_l1_actual_anti_over_routing(
         errors.append(
             f"{rel}: actual L1 output over-routes to {sorted(over_routed)} "
             "without a matching risk_trigger"
+        )
+
+    over_routed_capabilities = (
+        set(actual_sets["capabilities"]).intersection(L1_OVER_ROUTING_CAPABILITIES)
+        - opt_in_capabilities
+    )
+    if over_routed_capabilities:
+        errors.append(
+            f"{rel}: actual L1 output over-routes to capabilities "
+            f"{sorted(over_routed_capabilities)} without a matching risk_trigger"
         )
     if actual_sets["domain_extensions"]:
         errors.append(

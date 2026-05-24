@@ -928,7 +928,7 @@ capabilities:
     group: engineering-workflow
     path: src/foundation/capabilities/agent-execution-discipline
     status: implemented
-    used_by: [ai-code-review-refactor, quality-test-gate, delivery-release-gate, reliability-observability-gate, change-impact-analyzer, backend-change-builder, frontend-change-builder]
+    used_by: [change-forge-router, change-intake-compiler, change-impact-analyzer, acceptance-criteria-builder, task-dag-planner, experience-impact-modeler, domain-impact-modeler, architecture-impact-reviewer, data-api-contract-changer, frontend-change-builder, backend-change-builder, data-middleware-change-builder, integration-change-builder, quality-test-gate, security-privacy-gate, reliability-observability-gate, delivery-release-gate, ai-code-review-refactor, change-documentation-gate]
     triggers: [agent execution AI assisted change evidence based completion verified diagnosis repeated retry route repair same pattern scan reuse rationale placement rationale proactive closure handoff readiness]
     risk_notes: [Agent assisted changes silently ship without evidence diagnose without verified cause retry the same failing path duplicate logic across the codebase add structure without justification and hand off without risk or validation summary]
     expected_outputs: [execution discipline report with evidence inventory verified cause statement route repair record same pattern scan results reuse and placement rationale and handoff package with risk boundary and validation results]

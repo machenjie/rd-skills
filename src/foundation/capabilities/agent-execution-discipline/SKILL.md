@@ -161,13 +161,25 @@ Return an Execution Discipline Report alongside any non-trivial agent-assisted c
 
 # Used By
 
-- ai-code-review-refactor
-- quality-test-gate
-- delivery-release-gate
-- reliability-observability-gate
+- change-forge-router
+- change-intake-compiler
 - change-impact-analyzer
-- backend-change-builder
+- acceptance-criteria-builder
+- task-dag-planner
+- experience-impact-modeler
+- domain-impact-modeler
+- architecture-impact-reviewer
+- data-api-contract-changer
 - frontend-change-builder
+- backend-change-builder
+- data-middleware-change-builder
+- integration-change-builder
+- quality-test-gate
+- security-privacy-gate
+- reliability-observability-gate
+- delivery-release-gate
+- ai-code-review-refactor
+- change-documentation-gate
 
 # Handoff
 
