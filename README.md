@@ -6,6 +6,39 @@ This repository is an authoring/build/install repository. Runtime skills are gen
 
 ChangeForge is self-contained. It does not ingest, scan, index, summarize, map, package, or install any personal technical asset library. It does not create external asset mappings or assume user-specific knowledge sources are available at runtime.
 
+## Usage
+
+For day-to-day use, build a runtime profile, install the generated skills into the target agent runtime, then ask the agent to use the relevant ChangeForge skill for the change you are making.
+
+```bash
+python3 scripts/build.py --profile full
+python3 installers/install.py --agent copilot --scope user --profile full --dry-run
+python3 installers/install.py --agent copilot --scope user --profile full
+python3 installers/doctor.py --agent copilot --scope user --profile full
+```
+
+Use `recommended` for global installs, `full` for project installs that should expose domain extensions as top-level skills, and `dev` only for ChangeForge authoring/debugging. Project installs use `--target` as the target project root:
+
+```bash
+python3 installers/install.py --agent copilot --scope project --target /path/to/project --profile full
+```
+
+After installation, start with `change-forge-router` when the right workflow is unclear, or invoke a specific skill such as `frontend-change-builder`, `backend-change-builder`, `data-api-contract-changer`, `quality-test-gate`, or `delivery-release-gate` when the work is already scoped.
+
+See [docs/USAGE.md](docs/USAGE.md) for the full usage guide, including profile selection, agent-specific install examples, OpenAI API zip output, upgrade, uninstall, and authoring workflows.
+
+## Community And Governance
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): contribution workflow, validation commands, and pull request expectations.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): participation standards for maintainers, contributors, and users.
+- [SECURITY.md](SECURITY.md): vulnerability reporting and security handling policy.
+- [SUPPORT.md](SUPPORT.md): support channels and scope.
+- [GOVERNANCE.md](GOVERNANCE.md): maintainer responsibilities, decision process, and release authority.
+- [CHANGELOG.md](CHANGELOG.md): human-readable release history.
+- [docs/OPEN_SOURCE_READINESS.md](docs/OPEN_SOURCE_READINESS.md): open-source readiness audit and remaining publication gates.
+
+Before publishing this repository as open source, maintainers must choose an OSI-approved license, add the corresponding `LICENSE` file, and update the `pyproject.toml` license metadata. The repository currently records proprietary license metadata until that owner decision is made.
+
 ## Layers
 
 ChangeForge has three authoring layers:
@@ -83,6 +116,10 @@ actual router outputs:
 ```bash
 python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
 ```
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=machenjie/rd-skills&type=Date)](https://star-history.com/#machenjie/rd-skills&Date)
 
 ## License Semantics
 

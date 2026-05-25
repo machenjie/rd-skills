@@ -5,9 +5,31 @@ description = "Authoring, validation, build, packaging, and installation tools f
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Proprietary" }
+keywords = [
+  "agent-skills",
+  "change-management",
+  "developer-tools",
+  "quality-gates",
+  "skill-authoring",
+]
 authors = [
   { name = "ChangeForge" }
 ]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.urls]
+Homepage = "https://github.com/machenjie/rd-skills"
+Documentation = "https://github.com/machenjie/rd-skills/tree/master/docs"
+Issues = "https://github.com/machenjie/rd-skills/issues"
+Source = "https://github.com/machenjie/rd-skills"
 
 [tool.changeforge]
 repository_kind = "skill-authoring"

@@ -101,6 +101,8 @@ The Codex recommended user smoke must install 19 top-level skills. The Codex, Cl
 ## Release Checklist
 
 - Source structure matches the registry counts.
+- Open-source publication status has been checked against [OPEN_SOURCE_READINESS.md](OPEN_SOURCE_READINESS.md) when publishing publicly.
+- License metadata, root `LICENSE`, contribution licensing, and security contact path are resolved before describing a release as open source.
 - Routing and code generation benchmark validators pass.
 - No banned `src/toolbox` or `registry/toolbox.yaml` path exists.
 - No personal asset mapping, raw `src/`, or raw registry content is installed.
