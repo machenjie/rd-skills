@@ -119,13 +119,7 @@ python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
 
 ## Star History
 
-<a href="https://www.star-history.com/?type=date&repos=machenjie%2Frd-skills">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=machenjie/rd-skills&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=machenjie/rd-skills&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=machenjie/rd-skills&type=date&legend=top-left" />
- </picture>
-</a>
+[![Star History Chart](https://api.star-history.com/chart?repos=machenjie/rd-skills&type=date&legend=top-left)](https://www.star-history.com/?repos=machenjie%2Frd-skills&type=date&legend=top-left)
 
 ## License Semantics
 
