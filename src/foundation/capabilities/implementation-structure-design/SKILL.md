@@ -65,14 +65,14 @@ Select this capability when an implementation needs a placement decision before 
 - `backend-change-builder` for service, repository, controller, validator, job, mapper, transaction, and domain logic placement.
 - `frontend-change-builder` for component, hook, state, API client, form validator, route, and shared UI placement.
 - `architecture-impact-reviewer` and `module-boundary-design` when placement could alter module boundaries or dependency direction.
-- `ai-code-review-refactor` and `code-review` when generated code adds helpers, utilities, abstractions, files, directories, or imports without local-pattern evidence.
+- `ai-code-review-refactor` and `code-review` when generated code adds helpers, utilities, abstractions, objects, hierarchies, files, directories, or imports without local-pattern evidence.
 - `refactoring` when behavior-preserving movement needs a target structure before extraction, move, split, inline, or collapse steps.
 
 Prefer adjacent capabilities when the main question is broader: `module-boundary-design` for module ownership and public interfaces, `layered-architecture-design` for layer responsibility, `page-component-decomposition` for UI hierarchy, `service-business-logic` for backend orchestration responsibility, and `refactoring` for behavior-preserving movement after the target structure is chosen.
 
 # Risk Escalation Rules
 
-Escalate to `architecture-impact-reviewer` when the decision adds a new module, directory boundary, public export, cross-layer import, service boundary, shared abstraction, or dependency direction exception.
+Escalate to `architecture-impact-reviewer` when the decision adds a new module, directory boundary, public export, cross-layer import, service boundary, shared abstraction, class hierarchy, inheritance relationship, polymorphic interface, object collaboration boundary, or dependency direction exception.
 
 Escalate to `security-privacy-gate` when placement affects authorization, authentication, tenant isolation, secrets, sensitive data handling, upload processing, or code that could bypass a trust boundary.
 
@@ -260,10 +260,10 @@ Return an Implementation Structure Plan for every non-trivial code addition, mov
 
 # Handoff
 
-Hand off to `module-boundary-design` when ownership or dependency direction is unclear; `layered-architecture-design` when layer responsibility is unclear; `page-component-decomposition` when UI component decomposition is primary; `service-business-logic` when backend service orchestration is primary; `refactoring` when the target structure is chosen and behavior-preserving movement must be sequenced; `code-review` when a completed diff must be assessed against the structure plan.
+Hand off to `module-boundary-design` when ownership, public object contract, module API, or dependency direction is unclear; `layered-architecture-design` when layer responsibility is unclear; `architecture-impact-reviewer` when inheritance, class hierarchy, polymorphic interface, or object collaboration boundary affects module or architectural contracts; `page-component-decomposition` when UI component decomposition is primary; `service-business-logic` when backend service orchestration is primary; `refactoring` when the target structure is chosen and behavior-preserving movement must be sequenced; `code-review` when a completed diff must be assessed against the structure plan.
 
 Hand off to `agent-execution-discipline` when reuse search, placement rationale, same-pattern scan, or validation evidence is missing from an agent-assisted change.
 
 # Completion Criteria
 
-The capability is complete when the implementation has an explicit structure decision before code is written or accepted, all reuse candidates and rejected alternatives are documented, same-pattern structure scan is recorded, new functions/classes/files/directories have ownership and placement rationale, shared utility pollution is ruled out, dependency direction is preserved, and tests are placed at the observable behavior boundary.
+The capability is complete when the implementation has an explicit structure decision before code is written or accepted, all reuse candidates and rejected alternatives are documented, same-pattern structure scan is recorded, object-oriented decisions justify object versus function/module/record, encapsulation and inheritance choices are tested through observable behavior, new functions/classes/files/directories have ownership and placement rationale, shared utility pollution is ruled out, dependency direction is preserved, and tests are placed at the observable behavior boundary.
