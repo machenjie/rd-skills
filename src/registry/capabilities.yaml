@@ -919,9 +919,9 @@ capabilities:
     path: src/foundation/capabilities/implementation-structure-design
     status: implemented
     used_by: [backend-change-builder, frontend-change-builder, ai-code-review-refactor, architecture-impact-reviewer, code-review, refactoring, quality-test-gate]
-    triggers: [implementation structure code structure function placement class placement reuse existing function reuse existing class new helper new utility new file new directory component placement hook placement service method repository method shared utils common utils dependency direction cohesion coupling]
+    triggers: [implementation structure code structure function placement class placement object modeling object-oriented design encapsulation inheritance composition polymorphism class hierarchy value object domain object service object adapter strategy delegation interface abstract class subclassing traits protocols substitutability object collaboration reuse existing function reuse existing class new helper new utility new file new directory component placement hook placement service method repository method shared utils common utils dependency direction cohesion coupling]
     risk_notes: [Poor placement creates duplicated logic shared utility pollution accidental public APIs circular dependencies architecture drift and unmaintainable AI generated patches]
-    expected_outputs: [implementation structure plan with reuse candidates placement rationale private public decisions file directory ownership dependency direction shared utility audit and test placement]
+    expected_outputs: [implementation structure plan with reuse candidates object versus function decisions encapsulation invariants inheritance evidence placement rationale private public decisions file directory ownership dependency direction shared utility audit and test placement]
 
   - id: "102"
     name: agent-execution-discipline
