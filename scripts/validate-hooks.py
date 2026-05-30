@@ -99,6 +99,24 @@ def _validate_python_files(errors: list[str]) -> None:
         if PROJECT_SOURCE_WRITE_RE.search(text):
             errors.append(f"{relpath(ROOT, path)}: hook scripts must not write project source")
 
+    stop_script = HOOK_SCRIPTS_DIR / "changeforge_stop_closure_gate.py"
+    if stop_script.is_file():
+        text = stop_script.read_text(encoding="utf-8")
+        if "emit_warning(" in text:
+            errors.append("changeforge_stop_closure_gate.py: Stop hook must not use emit_warning")
+        if "emit_stop_reminder(" not in text:
+            errors.append("changeforge_stop_closure_gate.py: Stop hook must use emit_stop_reminder")
+
+    common_script = HOOK_SCRIPTS_DIR / "changeforge_common.py"
+    if common_script.is_file():
+        common_text = common_script.read_text(encoding="utf-8")
+        if "hookSpecificOutput" not in common_text or "additionalContext" not in common_text:
+            errors.append(
+                "changeforge_common.py: Codex warnings must use hookSpecificOutput.additionalContext"
+            )
+        if "CHANGEFORGE_AGENT" not in common_text:
+            errors.append("changeforge_common.py: detect_runtime must support CHANGEFORGE_AGENT override")
+
 
 def _load_json(path: Path, errors: list[str]) -> Any:
     if not path.is_file():
@@ -132,6 +150,14 @@ def _validate_template(
         if USER_ABSOLUTE_PATH_RE.search(command):
             errors.append(
                 f"{relpath(ROOT, path)}:{context}: hook command must not contain a user absolute path"
+            )
+        if path == CODEX_TEMPLATE and "CHANGEFORGE_AGENT=codex" not in command:
+            errors.append(
+                f"{relpath(ROOT, path)}:{context}: Codex hook command must set CHANGEFORGE_AGENT=codex"
+            )
+        if path == CODEX_TEMPLATE and "/usr/bin/env python3" not in command:
+            errors.append(
+                f"{relpath(ROOT, path)}:{context}: Codex hook command should use /usr/bin/env python3"
             )
 
     for timeout, context in _timeouts(hooks):

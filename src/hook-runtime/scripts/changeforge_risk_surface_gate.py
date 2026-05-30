@@ -6,9 +6,11 @@ from __future__ import annotations
 from changeforge_common import (
     compact_name,
     cwd_from_event,
+    debug_log,
     detect_runtime,
     emit_block,
     emit_warning,
+    event_name,
     extract_bash_command,
     extract_changed_paths,
     hook_mode,
@@ -123,6 +125,10 @@ def main() -> int:
         paths = extract_changed_paths(event)
         command = extract_bash_command(event)
         findings = _risk_findings(paths, command)
+        debug_log(
+            repo,
+            f"risk gate runtime={runtime} event={event_name(event)} tool={tool_name(event)} paths={paths} command={command!r} findings={findings}",
+        )
         merge_state(
             repo,
             runtime,
@@ -138,12 +144,16 @@ def main() -> int:
             return 0
         message = _warning_message(findings)
         if mode == "block":
-            emit_block(runtime, message)
-            return 2
-        emit_warning(runtime, message)
+            emit_block(runtime, event_name(event), message)
+            return 0
+        emit_warning(runtime, event_name(event), message)
         return 0
     except Exception as exc:
-        emit_warning(runtime, f"ChangeForge Hook Runtime warning: risk surface gate failed open: {exc}")
+        emit_warning(
+            runtime,
+            event_name(event),
+            f"ChangeForge Hook Runtime warning: risk surface gate failed open: {exc}",
+        )
         return 0
 
 

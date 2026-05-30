@@ -9,9 +9,11 @@ from pathlib import Path
 from changeforge_common import (
     compact_name,
     cwd_from_event,
+    debug_log,
     detect_runtime,
     emit_block,
     emit_warning,
+    event_name,
     extract_changed_paths,
     hook_mode,
     is_post_tool_use,
@@ -110,6 +112,10 @@ def main() -> int:
         if not paths:
             return 0
         findings = _structure_findings(event, paths, tool)
+        debug_log(
+            repo,
+            f"structure gate runtime={runtime} event={event_name(event)} tool={tool_name(event)} paths={paths} findings={findings}",
+        )
         merge_state(
             repo,
             runtime,
@@ -123,12 +129,16 @@ def main() -> int:
             return 0
         message = _warning_message(findings)
         if mode == "block":
-            emit_block(runtime, message)
-            return 2
-        emit_warning(runtime, message)
+            emit_block(runtime, event_name(event), message)
+            return 0
+        emit_warning(runtime, event_name(event), message)
         return 0
     except Exception as exc:
-        emit_warning(runtime, f"ChangeForge Hook Runtime warning: structure gate failed open: {exc}")
+        emit_warning(
+            runtime,
+            event_name(event),
+            f"ChangeForge Hook Runtime warning: structure gate failed open: {exc}",
+        )
         return 0
 
 

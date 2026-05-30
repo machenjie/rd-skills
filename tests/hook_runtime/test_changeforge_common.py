@@ -30,6 +30,7 @@ def run_hook(script_name: str, stdin: str, cwd: Path, cache: Path) -> subprocess
     env = os.environ.copy()
     env["XDG_CACHE_HOME"] = str(cache)
     env.pop("CHANGEFORGE_HOOK_MODE", None)
+    env.pop("CHANGEFORGE_AGENT", None)
     return subprocess.run(
         [sys.executable, str(SCRIPT_DIR / script_name)],
         input=stdin,
@@ -56,6 +57,7 @@ class ChangeForgeCommonTests(unittest.TestCase):
     def test_runtime_and_tool_normalization(self) -> None:
         common = load_common()
         event = {
+            "runtime": "codex",
             "hookEventName": "PostToolUse",
             "toolName": "apply_patch",
             "toolInput": {"file_path": "src/services/order_service.py"},
@@ -63,6 +65,21 @@ class ChangeForgeCommonTests(unittest.TestCase):
         self.assertEqual(common.detect_runtime(event), "codex")
         self.assertEqual(common.event_name(event), "PostToolUse")
         self.assertEqual(common.tool_name(event), "apply_patch")
+
+    def test_runtime_detection_prefers_env_override_and_codex_snake_case(self) -> None:
+        common = load_common()
+        previous_agent = os.environ.get("CHANGEFORGE_AGENT")
+        os.environ["CHANGEFORGE_AGENT"] = "codex"
+        try:
+            self.assertEqual(common.detect_runtime({"hookEventName": "Stop"}), "codex")
+        finally:
+            if previous_agent is None:
+                os.environ.pop("CHANGEFORGE_AGENT", None)
+            else:
+                os.environ["CHANGEFORGE_AGENT"] = previous_agent
+
+        self.assertEqual(common.detect_runtime({"hook_event_name": "PostToolUse"}), "codex")
+        self.assertEqual(common.detect_runtime({"hookEventName": "PostToolUse"}), "claude")
 
     def test_extract_changed_paths_from_apply_patch(self) -> None:
         common = load_common()
@@ -76,6 +93,29 @@ class ChangeForgeCommonTests(unittest.TestCase):
             common.extract_bash_command(event),
             "kubectl apply -f deploy/helm/values.yaml",
         )
+
+    def test_debug_log_writes_to_cache_when_enabled(self) -> None:
+        common = load_common()
+        previous_cache = os.environ.get("XDG_CACHE_HOME")
+        previous_debug = os.environ.get("CHANGEFORGE_HOOK_DEBUG")
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            os.environ["XDG_CACHE_HOME"] = cache
+            os.environ["CHANGEFORGE_HOOK_DEBUG"] = "1"
+            try:
+                common.debug_log(Path(cwd), "structure gate runtime=codex")
+            finally:
+                if previous_cache is None:
+                    os.environ.pop("XDG_CACHE_HOME", None)
+                else:
+                    os.environ["XDG_CACHE_HOME"] = previous_cache
+                if previous_debug is None:
+                    os.environ.pop("CHANGEFORGE_HOOK_DEBUG", None)
+                else:
+                    os.environ["CHANGEFORGE_HOOK_DEBUG"] = previous_debug
+
+            debug_logs = list(Path(cache).glob("changeforge/hooks/*/debug.log"))
+            self.assertEqual(len(debug_logs), 1)
+            self.assertIn("structure gate runtime=codex", debug_logs[0].read_text())
 
 
 if __name__ == "__main__":

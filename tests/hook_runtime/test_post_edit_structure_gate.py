@@ -20,6 +20,7 @@ def run_structure(event: dict) -> subprocess.CompletedProcess[str]:
         env = os.environ.copy()
         env["XDG_CACHE_HOME"] = cache
         env.pop("CHANGEFORGE_HOOK_MODE", None)
+        env.pop("CHANGEFORGE_AGENT", None)
         return subprocess.run(
             [sys.executable, str(SCRIPT_DIR / "changeforge_post_edit_structure_gate.py")],
             input=json.dumps(event),

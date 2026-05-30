@@ -31,6 +31,7 @@ def run_stop(event: dict, cwd: Path, cache: Path) -> subprocess.CompletedProcess
     env = os.environ.copy()
     env["XDG_CACHE_HOME"] = str(cache)
     env.pop("CHANGEFORGE_HOOK_MODE", None)
+    env.pop("CHANGEFORGE_AGENT", None)
     return subprocess.run(
         [sys.executable, str(SCRIPT_DIR / "changeforge_stop_closure_gate.py")],
         input=json.dumps(event),

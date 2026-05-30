@@ -100,6 +100,23 @@ manual enablement must be deliberate:
 Do not overwrite existing project hook configuration without reviewing user
 hooks first.
 
+## Codex Activation Checklist
+
+1. Copy `dist/codex/project/.codex` into the target repository root.
+2. Run `/hooks` in Codex.
+3. Confirm the project hook is listed.
+4. Trust the hook after reviewing the command.
+5. Confirm `[features].hooks` is not disabled.
+6. Set `CHANGEFORGE_HOOK_DEBUG=1` for troubleshooting.
+7. Trigger an `apply_patch` or `Bash` tool call.
+8. Inspect `${XDG_CACHE_HOME:-~/.cache}/changeforge/hooks/<repo_hash>/debug.log`.
+
+Codex `PostToolUse` ignores plain text stdout. ChangeForge hooks therefore emit
+JSON with `hookSpecificOutput.additionalContext`.
+
+Codex `Stop` requires JSON stdout. Closure Gate uses JSON output and only uses
+continuation behavior when `CHANGEFORGE_HOOK_MODE=block`.
+
 ## Validate Hooks
 
 Run the hook validator after routing evaluation and before build validation:
@@ -115,16 +132,26 @@ python3 scripts/validate-installation.py
 ```
 
 `validate-hooks.py` checks script presence, Python compilation, template JSON,
-required hook events, timeout limits, no direct `src/` hook commands, no
-user-specific absolute paths, no network imports, and no project-source writes.
-The `unittest` command exercises hook behavior fixtures and must discover the
-hook runtime tests from the repository-level `tests` directory.
+required hook events, timeout limits, Codex command protocol, Codex JSON warning
+output, Stop output separation, no direct `src/` hook commands, no user-specific
+absolute paths, no network imports, and no project-source writes. The `unittest`
+command exercises hook behavior fixtures and must discover the hook runtime tests
+from the repository-level `tests` directory.
 
 ## Troubleshooting
 
 If hooks do not run, confirm the generated command path matches the target
 project hook directory and that the target runtime has approved or trusted
 project hooks where required.
+
+If Codex hooks appear inactive:
+
+1. Run `/hooks` inside Codex.
+2. Confirm the project hook is listed.
+3. Confirm the project hook is trusted.
+4. Set `CHANGEFORGE_HOOK_DEBUG=1`.
+5. Trigger an `apply_patch` or `Bash` action.
+6. Inspect `~/.cache/changeforge/hooks/<repo_hash>/debug.log`.
 
 If reminders appear stale, remove the per-turn state cache for the project:
 

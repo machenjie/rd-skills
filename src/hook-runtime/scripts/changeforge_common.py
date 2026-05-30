@@ -72,6 +72,10 @@ def read_event() -> dict:
 
 def detect_runtime(event: dict) -> str:
     """Return codex / claude / unknown."""
+    forced = os.environ.get("CHANGEFORGE_AGENT", "").strip().casefold()
+    if forced in KNOWN_RUNTIMES:
+        return forced
+
     runtime_value = event.get("runtime") or event.get("agent") or event.get("runtimeName")
     if isinstance(runtime_value, str):
         runtime = runtime_value.strip().casefold()
@@ -80,9 +84,9 @@ def detect_runtime(event: dict) -> str:
         if "claude" in runtime:
             return "claude"
 
-    if "hookEventName" in event or "toolName" in event or "toolInput" in event:
-        return "codex"
     if "hook_event_name" in event or "tool_name" in event or "tool_input" in event:
+        return "codex"
+    if "hookEventName" in event or "toolName" in event or "toolInput" in event:
         return "claude"
     return "unknown"
 
@@ -232,23 +236,70 @@ def save_state(repo: Path, state: dict) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(next_state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     except Exception as exc:
-        print(f"ChangeForge Hook Runtime warning: unable to save hook state: {exc}")
+        print(f"ChangeForge Hook Runtime warning: unable to save hook state: {exc}", file=sys.stderr)
 
 
-def emit_warning(runtime: str, message: str) -> None:
+def emit_warning(runtime: str, hook_event_name: str, message: str) -> None:
     """Emit runtime-compatible additional context."""
     if runtime not in KNOWN_RUNTIMES:
         return
     text = message.strip()
-    if text:
-        print(text)
+    if not text:
+        return
+    if runtime == "codex":
+        event = hook_event_name or "PostToolUse"
+        print(
+            json.dumps(
+                {
+                    "hookSpecificOutput": {
+                        "hookEventName": event,
+                        "additionalContext": text,
+                    }
+                },
+                sort_keys=True,
+            )
+        )
+        return
+    print(text)
 
 
-def emit_block(runtime: str, reason: str) -> None:
+def emit_stop_reminder(runtime: str, message: str, *, continue_turn: bool) -> None:
+    """Emit Stop-compatible output."""
+    if runtime not in KNOWN_RUNTIMES:
+        return
+    text = message.strip()
+    if not text:
+        return
+    if runtime == "codex":
+        if continue_turn:
+            print(json.dumps({"decision": "block", "reason": text}, sort_keys=True))
+        else:
+            print(json.dumps({"systemMessage": text}, sort_keys=True))
+        return
+    print(text)
+
+
+def emit_block(runtime: str, hook_event_name: str, reason: str) -> None:
     """Only used when hook mode is block."""
     if runtime not in KNOWN_RUNTIMES:
         return
     print(json.dumps({"decision": "block", "reason": reason.strip()}, sort_keys=True))
+
+
+def debug_enabled() -> bool:
+    return os.environ.get("CHANGEFORGE_HOOK_DEBUG", "").strip().casefold() in {"1", "true", "yes"}
+
+
+def debug_log(repo: Path, message: str) -> None:
+    if not debug_enabled():
+        return
+    try:
+        path = _state_path(repo).with_name("debug.log")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as file:
+            file.write(f"{datetime.now(timezone.utc).isoformat()} {message}\n")
+    except Exception:
+        return
 
 
 def hook_mode() -> str:

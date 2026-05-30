@@ -6,9 +6,10 @@ from __future__ import annotations
 from changeforge_common import (
     clear_state,
     cwd_from_event,
+    debug_log,
     detect_runtime,
-    emit_block,
-    emit_warning,
+    emit_stop_reminder,
+    event_name,
     hook_mode,
     is_stop,
     load_state,
@@ -42,6 +43,10 @@ def main() -> int:
     try:
         repo = repo_root(cwd_from_event(event))
         state = load_state(repo)
+        debug_log(
+            repo,
+            f"stop gate runtime={runtime} event={event_name(event)} has_surface={_has_closure_surface(state)} validation_seen={state.get('validation_seen')}",
+        )
         if not _has_closure_surface(state):
             return 0
         if mode == "monitor":
@@ -49,14 +54,27 @@ def main() -> int:
             return 0
         message = _closure_message(state, _final_text(event))
         clear_state(repo, runtime)
-        if mode == "block":
-            emit_block(runtime, message)
-            return 2
-        emit_warning(runtime, message)
+        emit_stop_reminder(
+            runtime,
+            message,
+            continue_turn=_should_continue_stop(event, mode),
+        )
         return 0
     except Exception as exc:
-        emit_warning(runtime, f"ChangeForge Hook Runtime warning: closure gate failed open: {exc}")
+        emit_stop_reminder(
+            runtime,
+            f"ChangeForge Hook Runtime warning: closure gate failed open: {exc}",
+            continue_turn=False,
+        )
         return 0
+
+
+def _should_continue_stop(event: dict, mode: str) -> bool:
+    if mode != "block":
+        return False
+    if bool(event.get("stop_hook_active") or event.get("stopHookActive")):
+        return False
+    return True
 
 
 def _has_closure_surface(state: dict) -> bool:

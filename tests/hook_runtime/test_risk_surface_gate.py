@@ -20,6 +20,7 @@ def run_risk(event: dict) -> subprocess.CompletedProcess[str]:
         env = os.environ.copy()
         env["XDG_CACHE_HOME"] = cache
         env.pop("CHANGEFORGE_HOOK_MODE", None)
+        env.pop("CHANGEFORGE_AGENT", None)
         return subprocess.run(
             [sys.executable, str(SCRIPT_DIR / "changeforge_risk_surface_gate.py")],
             input=json.dumps(event),
