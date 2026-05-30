@@ -1,0 +1,42 @@
+id: component-hook-naming-placement
+category: frontend
+complexity: L3
+focus:
+  - component naming and ownership
+  - hook placement and state scope
+  - feature versus shared classification
+  - language naming convention
+route_hints:
+  skills:
+    - frontend-change-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - language-idiom-enforcement
+    - page-component-decomposition
+    - state-management-design
+    - frontend-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+expected_outcomes:
+  - Security-settings specific UI stays in the owning feature unless a reusable design-system contract exists.
+  - Hook names express behavior and state scope instead of generic useFeature or useData buckets.
+  - Component names describe rendered role and product meaning.
+  - Shared components remain domain-free and use existing design primitives.
+required_qualities:
+  - Existing feature components, hooks, design primitives, and test patterns are inspected before adding new code.
+  - New or renamed props, state variables, hooks, components, files, and directories follow repository and TypeScript conventions.
+  - Feature-local versus shared placement is explicit and rejects dumping-ground common placement.
+  - Tests use user-visible behavior and accessible queries for render, dismiss, and persistence.
+forbidden_shortcuts:
+  - Adding security-specific copy to components/common.
+  - Creating useFeature, useData, or useThing for a single settings flow.
+  - Naming props data, item, value, or info when the security concept is known.
+  - Testing only snapshots without user interaction.
+evidence:
+  - Implementation Structure Plan with naming decisions and responsibility taxonomy.
+  - Component or feature tests for render and dismiss behavior.
+  - Review note confirming shared UI remains generic.
+  - Language idiom note for hook, component, prop, and file names.

@@ -1,0 +1,54 @@
+---
+id: implementation-naming-taxonomy
+description: |
+  Naming and responsibility taxonomy must route to implementation structure
+  and language idiom checks, not a style-only review.
+prompt: |
+  Review a TypeScript backend change that proposes `common/helper.ts`,
+  `OrderProcessor`, `data`, and `handle()` for cancellation deadline behavior.
+  Decide the right variable, function, method, class, file, and directory names;
+  classify whether the behavior is business/domain, service, adapter, helper,
+  utility, common/shared, or public API; and decide whether the deadline check
+  belongs on the existing OrderPolicy method, OrderService, or a new helper.
+expected:
+  complexity: L2
+  risk_level: medium
+  risk_triggers: []
+  skills:
+    - backend-change-builder
+    - architecture-impact-reviewer
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - language-idiom-enforcement
+    - module-boundary-design
+    - service-business-logic
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - delivery-release-gate
+  capabilities:
+    - package-dependency-management
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - API/data gate
+    - delivery gate
+notes: |
+  Vague common/shared/helper names should be rejected unless domain-free.
+  Method placement is accepted only when it protects class state, invariant,
+  lifecycle, or collaborator boundary. Naming must follow repository vocabulary
+  and TypeScript convention.

@@ -52,6 +52,15 @@ Select when implementation quality depends on language-specific idioms. Always p
 
 # Critical Details
 
+## Naming Discipline
+
+- Use project-local naming conventions before generic style guides.
+- Public names must follow the language's public API convention strictly.
+- Private/internal names may be shorter only when scope is tiny and meaning is obvious.
+- Boolean names must read as predicates in the language's convention.
+- Collection names must express element meaning and cardinality.
+- Names must not encode temporary implementation details such as `new`, `old`, `tmp`, `final`, or `fixed`.
+
 - **Error handling idiom is per-language**:
   - Go: explicit `if err != nil` return; wrap with `fmt.Errorf("...: %w", err)`; sentinel + `errors.Is/As`.
   - Rust: `Result<T, E>` + `?`; `thiserror` for libraries, `anyhow` for binaries; no `unwrap()` outside tests and `main`.

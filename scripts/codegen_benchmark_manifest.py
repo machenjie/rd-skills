@@ -6,12 +6,14 @@ from __future__ import annotations
 EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
     "backend": (
         "idempotent-payment-create",
+        "method-vs-service-vs-helper",
         "object-auth-order-read",
         "service-method-vs-new-helper",
         "webhook-signature-replay",
     ),
     "frontend": (
         "accessible-form-error-state",
+        "component-hook-naming-placement",
         "feature-local-component-vs-shared-component",
         "optimistic-ui-rollback",
     ),

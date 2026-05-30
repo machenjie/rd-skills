@@ -187,6 +187,7 @@ Return a structured review with:
 - **Dependency audit**: Each new dependency with CVE status, license, transitive size, and standard-library alternative.
 - **Refactor boundary analysis**: Scope of behavioral change, equivalence evidence, and test coverage delta.
 - **Implementation Structure Plan**: Reuse candidates inspected, reuse vs. extension vs. composition vs. new code decision, function/class/file/directory placement, public/private boundary, shared utils audit, dependency direction, test placement, and rejected alternatives.
+- **Naming evidence**: AI-added or AI-renamed variables, functions, methods, classes, files, and directories match repository vocabulary, language convention, semantic responsibility, and local pattern scan; vague names are listed with required replacements.
 - **Execution Discipline Report**: Evidence inventory, verified-cause statement when diagnosis is involved, route-repair ledger after repeated failure, same-pattern scan record for local fixes, and closure package.
 - **Test quality assessment**: Mock-only tests flagged; missing error path tests listed.
 - **Security review note**: Auth, permission, and data access paths reviewed adversarially or escalated.
@@ -206,8 +207,9 @@ Return a structured review with:
 10. The review result is either: Approved with evidence, or Returned with a numbered remediation list.
 11. AI-added functions, classes, files, directories, components, hooks, services, repositories, adapters, utilities, and abstractions have reuse and placement rationale.
 12. AI-added abstractions are justified against existing local patterns and the simplest sufficient alternative.
-13. AI-generated code did not introduce business logic into shared, common, or utils.
-14. AI-assisted completion is not accepted without execution evidence, validation results, residual risk, and handoff boundary.
+13. AI-added or AI-renamed variables, functions, methods, classes, files, and directories follow repository vocabulary, language convention, semantic responsibility, and local pattern scan evidence.
+14. AI-generated code did not introduce business logic into shared, common, or utils.
+15. AI-assisted completion is not accepted without execution evidence, validation results, residual risk, and handoff boundary.
 
 ## Handoff
 - **security-privacy-gate** — for auth, permission, payment, or sensitive data code that requires adversarial review.

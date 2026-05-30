@@ -775,9 +775,9 @@ capabilities:
     path: src/foundation/capabilities/language-idiom-enforcement
     status: implemented
     used_by: [backend-change-builder, frontend-change-builder, ai-code-review-refactor, quality-test-gate]
-    triggers: [language idioms error handling type modeling resource management module boundaries naming concurrency formatting standard library hallucinated APIs non idiomatic code]
+    triggers: [language idioms error handling type modeling resource management module boundaries naming casing visibility exports public API naming predicate boolean names collection names concurrency formatting standard library hallucinated APIs non idiomatic code]
     risk_notes: [Non idiomatic code hides correctness defects and increases maintenance cost even when tests pass]
-    expected_outputs: [idiom review with local conventions risks required rewrites justified exceptions tooling checks and residual concerns]
+    expected_outputs: [idiom review with local conventions naming discipline risks required rewrites justified exceptions tooling checks and residual concerns]
   - id: "86"
     name: language-testing-strategy
     group: technology-selection
@@ -919,9 +919,9 @@ capabilities:
     path: src/foundation/capabilities/implementation-structure-design
     status: implemented
     used_by: [backend-change-builder, frontend-change-builder, ai-code-review-refactor, architecture-impact-reviewer, code-review, refactoring, quality-test-gate]
-    triggers: [implementation structure code structure function placement class placement object modeling object-oriented design object responsibility encapsulation invariant protection inheritance composition polymorphism class hierarchy value object domain object service object adapter strategy delegation interface abstract class subclassing traits protocols substitutability object collaboration reuse existing function reuse existing class new helper new utility new file new directory component placement hook placement service method repository method shared utils common utils dependency direction cohesion coupling]
-    risk_notes: [Poor placement creates duplicated logic shared utility pollution accidental public APIs circular dependencies architecture drift and unmaintainable AI generated patches]
-    expected_outputs: [implementation structure plan with reuse candidates object versus function decisions encapsulation invariants inheritance evidence placement rationale private public decisions file directory ownership dependency direction shared utility audit and test placement]
+    triggers: [implementation structure code structure variable naming function naming method naming class naming file naming directory naming package naming module naming public API naming function placement method placement class placement object modeling object-oriented design object responsibility encapsulation invariant protection inheritance composition polymorphism class hierarchy value object domain object service object adapter strategy delegation interface abstract class subclassing traits protocols substitutability object collaboration reuse existing function reuse existing class business component module feature service repository adapter client helper utility common shared public private internal classification new helper new utility new file new directory component placement hook placement service method repository method shared utils common utils dependency direction cohesion coupling]
+    risk_notes: [Poor naming and placement create duplicated logic shared utility pollution accidental public APIs circular dependencies architecture drift and unmaintainable AI generated patches]
+    expected_outputs: [implementation structure plan with reuse candidates vocabulary and naming decisions responsibility taxonomy object versus function decisions method placement decisions encapsulation invariants inheritance evidence placement rationale private public decisions file directory ownership dependency direction shared utility audit and test placement]
 
   - id: "102"
     name: agent-execution-discipline
