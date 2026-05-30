@@ -1,6 +1,6 @@
 # Operating Model
 
-ChangeForge Skill Mesh is a skill-authoring repository. Its source content, registries, validators, builders, packagers, and installers exist to produce runtime skill folders in `dist/`; source folders under `src/` are never installed directly.
+ChangeForge Skill Mesh is a skill-authoring repository. Its source content, registries, validators, builders, packagers, installers, and approved runtime support sources exist to produce generated runtime artifacts in `dist/`; source folders under `src/` are never installed directly.
 
 ## Source Repo Vs Runtime Install
 
@@ -10,8 +10,9 @@ The source repo contains authored material:
 - `src/foundation/capabilities`: 102 implemented foundation capabilities plus `_template`.
 - `src/domain-extensions`: 7 optional domain extension skills.
 - `src/registry`: `skills.yaml`, `capabilities.yaml`, `domain-extensions.yaml`, and `routing-rules.yaml`.
+- `src/hook-runtime`: optional project-level hook runtime source for warning-only execution reminders.
 
-Runtime installs consume only generated outputs under `dist/`. Installed skill directories must contain `SKILL.md` at their root. Raw `src/`, raw registry folders, and foundation capability source trees are not installed in `recommended` or `full`.
+Runtime installs consume only generated outputs under `dist/`. Installed skill directories must contain `SKILL.md` at their root. Raw `src/`, raw registry folders, foundation capability source trees, and raw hook runtime source are not installed.
 
 ## No Personal Asset Mapping
 
@@ -41,7 +42,13 @@ Domain extensions add domain-specific risk and routing rules. They are top-level
 
 The `agent-execution-discipline` foundation capability (id 102, group `engineering-workflow`) enforces evidence-driven completion, verified-cause diagnosis, route-repair after repeated failure, same-pattern scan discipline, reuse-and-placement rationale, and proactive closure for every agent-assisted change.
 
-It is a foundation capability, not a top-level professional skill. The router selects it through `change-forge-router` and compiles its reference into the professional skills that consume it. It does not introduce runtime hooks, persistent state files, entertainment rhetoric, or PUA-style narration.
+It is a foundation capability, not a top-level professional skill. The router selects it through `change-forge-router` and compiles its reference into the professional skills that consume it. The capability itself does not introduce runtime hooks, persistent state files, entertainment rhetoric, or PUA-style narration.
+
+## Optional Hook Runtime
+
+The optional ChangeForge Hook Runtime is a project-level support artifact, not a skill and not a replacement for `change-forge-router`. It may emit warning-only reminders after tool use or before handoff, but it must not select a complete route, read every compiled reference, ingest personal content, or install raw `src/hook-runtime`.
+
+Hook runtime state is operational cache stored outside the project source tree under the user's cache directory. It is not a PUA state file, not runtime skill content, and not a user-specific corpus mapping. First-stage hook support is build-only; installer, upgrade, and doctor integration remain deferred until they can merge project hook configuration safely.
 
 ## Reference Loading Model
 

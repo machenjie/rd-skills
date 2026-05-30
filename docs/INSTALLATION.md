@@ -35,6 +35,22 @@ python3 scripts/build.py --profile dev
 
 For project installs, `--target` is the project root. For user and admin installs, omitting `--target` uses the default skills directory; supplying `--target` treats it as an explicit skills directory override.
 
+## Optional Hook Runtime
+
+Builds also emit optional project-level hook artifacts:
+
+- Codex project hook runtime: `dist/codex/project/.codex`
+- Claude project hook fragment and scripts: `dist/claude/project/.claude`
+
+The hook runtime is not a skill and does not replace `change-forge-router`. It
+adds warning-only reminders after tools run or before the agent stops. The first
+stage does not install hooks through `installers/install.py`, `upgrade.py`, or
+`doctor.py`; enable hooks manually only after reviewing and merging project hook
+configuration.
+
+See [HOOKS.md](HOOKS.md) for hook modes, validation, manual enablement, and
+troubleshooting.
+
 ## Codex
 
 ```bash

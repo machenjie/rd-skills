@@ -1,0 +1,6 @@
+{
+  "runtime": "codex",
+  "hookEventName": "Stop",
+  "cwd": "/tmp/changeforge-hook-test",
+  "finalResponse": "Done."
+}

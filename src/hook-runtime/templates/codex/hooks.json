@@ -1,0 +1,46 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "apply_patch|Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_post_edit_structure_gate.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking ChangeForge structure gate"
+          },
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_risk_surface_gate.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking ChangeForge risk surface gate"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_risk_surface_gate.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking ChangeForge command risk"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_stop_closure_gate.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking ChangeForge closure gate"
+          }
+        ]
+      }
+    ]
+  }
+}

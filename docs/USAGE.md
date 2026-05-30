@@ -33,6 +33,17 @@ python3 scripts/build.py --profile dev
 
 The build writes deterministic runtime outputs under `dist/`, including agent-specific layouts for Codex, Claude Code, GitHub Copilot, and OpenAI API zip bundles.
 
+The build also refreshes optional Codex and Claude project hook artifacts. Hooks
+are warning-only execution reminders and are not installed by the first-stage
+installer flow:
+
+```text
+dist/codex/project/.codex
+dist/claude/project/.claude
+```
+
+See [HOOKS.md](HOOKS.md) before enabling hooks manually.
+
 ## Install For GitHub Copilot
 
 Install to the current user's Copilot skills directory:
@@ -198,6 +209,8 @@ python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
 python3 scripts/eval-routing.py
+python3 scripts/validate-hooks.py
+python3 -m unittest discover -s tests
 python3 scripts/validate-codegen-benchmarks.py
 python3 scripts/run-codegen-benchmarks.py --limit 3
 python3 scripts/build.py --profile recommended

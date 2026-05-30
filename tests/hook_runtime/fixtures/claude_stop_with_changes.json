@@ -1,0 +1,6 @@
+{
+  "runtime": "claude",
+  "hook_event_name": "Stop",
+  "cwd": "/tmp/changeforge-hook-test",
+  "response": "Finished."
+}

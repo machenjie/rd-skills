@@ -45,6 +45,26 @@ REQUIRED_DIST_DIRS = (
     "openai-api/zips",
 )
 
+REQUIRED_HOOK_DIST_FILES = (
+    "codex/project/.codex/hooks.json",
+    "codex/project/.codex/.changeforge-hook-manifest.json",
+    "codex/project/.codex/hooks/changeforge_common.py",
+    "codex/project/.codex/hooks/changeforge_post_edit_structure_gate.py",
+    "codex/project/.codex/hooks/changeforge_risk_surface_gate.py",
+    "codex/project/.codex/hooks/changeforge_stop_closure_gate.py",
+    "claude/project/.claude/settings.changeforge-hooks.fragment.json",
+    "claude/project/.claude/.changeforge-hook-manifest.json",
+    "claude/project/.claude/hooks/changeforge_common.py",
+    "claude/project/.claude/hooks/changeforge_post_edit_structure_gate.py",
+    "claude/project/.claude/hooks/changeforge_risk_surface_gate.py",
+    "claude/project/.claude/hooks/changeforge_stop_closure_gate.py",
+)
+EXPECTED_HOOK_NAMES = {
+    "changeforge_post_edit_structure_gate",
+    "changeforge_risk_surface_gate",
+    "changeforge_stop_closure_gate",
+}
+
 PROFILE_SKILL_ROOTS = (
     DIST_DIR / "universal" / "skills",
     DIST_DIR / "codex" / "project" / ".agents" / "skills",
@@ -85,6 +105,7 @@ def main() -> int:
         capability_files_by_skill,
         errors,
     )
+    _validate_hook_runtime(errors)
     _validate_zips(
         professional_names,
         capability_names,
@@ -106,7 +127,7 @@ def main() -> int:
     print(
         "validate-installation: validated "
         f"{len(PROFILE_SKILL_ROOTS)} runtime root(s), {built_count} built skill directory(s), "
-        f"and {zip_count} zip(s)."
+        f"{len(REQUIRED_HOOK_DIST_FILES)} hook runtime file(s), and {zip_count} zip(s)."
     )
     return 0
 
@@ -292,6 +313,51 @@ def _validate_profile_roots(
                     capability_files_by_skill,
                     errors,
                 )
+
+
+def _validate_hook_runtime(errors: list[str]) -> None:
+    for relative in REQUIRED_HOOK_DIST_FILES:
+        path = DIST_DIR / relative
+        if not path.is_file():
+            errors.append(f"missing hook runtime file: dist/{relative}")
+    _validate_hook_manifest(
+        DIST_DIR / "codex/project/.codex/.changeforge-hook-manifest.json",
+        agent="codex",
+        errors=errors,
+    )
+    _validate_hook_manifest(
+        DIST_DIR / "claude/project/.claude/.changeforge-hook-manifest.json",
+        agent="claude",
+        errors=errors,
+    )
+
+
+def _validate_hook_manifest(path: Path, *, agent: str, errors: list[str]) -> None:
+    if not path.is_file():
+        return
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        errors.append(f"{relpath(ROOT, path)}: invalid JSON: {exc}")
+        return
+    if not isinstance(data, dict):
+        errors.append(f"{relpath(ROOT, path)}: hook manifest must be a JSON object")
+        return
+    if data.get("kind") != "changeforge-hook-runtime":
+        errors.append(f"{relpath(ROOT, path)}: kind must be changeforge-hook-runtime")
+    if data.get("agent") != agent:
+        errors.append(f"{relpath(ROOT, path)}: agent must be {agent}")
+    if data.get("scope") != "project":
+        errors.append(f"{relpath(ROOT, path)}: scope must be project")
+    hooks = data.get("hooks")
+    if (
+        not isinstance(hooks, list)
+        or not all(isinstance(hook, str) for hook in hooks)
+        or set(hooks) != EXPECTED_HOOK_NAMES
+    ):
+        errors.append(
+            f"{relpath(ROOT, path)}: hooks must be {', '.join(sorted(EXPECTED_HOOK_NAMES))}"
+        )
 
 
 def _expected_profile_names(

@@ -27,6 +27,10 @@ After installation, start with `change-forge-router` when the right workflow is 
 
 See [docs/USAGE.md](docs/USAGE.md) for the full usage guide, including profile selection, agent-specific install examples, OpenAI API zip output, upgrade, uninstall, and authoring workflows.
 
+Optional project-level hook artifacts are also built for Codex and Claude Code.
+They are warning-only execution reminders, not skills and not a replacement for
+`change-forge-router`. See [docs/HOOKS.md](docs/HOOKS.md).
+
 ## Community And Governance
 
 - [CONTRIBUTING.md](CONTRIBUTING.md): contribution workflow, validation commands, and pull request expectations.
@@ -60,6 +64,8 @@ Build outputs are written to `dist/`:
 - `dist/copilot/project`: GitHub Copilot project skill layouts for `.github/skills`, `.agents/skills`, or `.claude/skills`.
 - `dist/copilot/user`: GitHub Copilot user skill layouts for `~/.copilot/skills` or `~/.agents/skills`.
 - `dist/openai-api/zips/<profile>`: OpenAI API hosted skill packages named `<skill-name>.zip`.
+- `dist/codex/project/.codex`: optional Codex project hook runtime.
+- `dist/claude/project/.claude`: optional Claude project hook runtime fragment and scripts.
 
 ## Runtime Profiles
 
@@ -100,6 +106,8 @@ python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
 python3 scripts/eval-routing.py
+python3 scripts/validate-hooks.py
+python3 -m unittest discover -s tests
 python3 scripts/validate-codegen-benchmarks.py
 python3 scripts/run-codegen-benchmarks.py --limit 3
 python3 scripts/build.py --profile recommended

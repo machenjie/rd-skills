@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/hook-state.v1.schema.json",
+  "title": "ChangeForge Hook State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "runtime",
+    "changed_paths",
+    "structure_findings",
+    "risk_surfaces",
+    "suggested_skills",
+    "suggested_capabilities",
+    "suggested_domain_extensions",
+    "suggested_gates",
+    "validation_seen",
+    "updated_at"
+  ],
+  "properties": {
+    "runtime": {
+      "type": "string",
+      "enum": ["codex", "claude", "unknown"]
+    },
+    "changed_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "structure_findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "risk_surfaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "suggested_skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "suggested_capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "suggested_domain_extensions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "suggested_gates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "validation_seen": {
+      "type": "boolean"
+    },
+    "updated_at": {
+      "type": "string"
+    }
+  }
+}

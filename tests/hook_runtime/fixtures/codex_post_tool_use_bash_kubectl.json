@@ -1,0 +1,9 @@
+{
+  "runtime": "codex",
+  "hookEventName": "PostToolUse",
+  "toolName": "Bash",
+  "cwd": "/tmp/changeforge-hook-test",
+  "toolInput": {
+    "command": "kubectl apply -f deploy/helm/values.yaml"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/hook-event.v1.schema.json",
+  "title": "ChangeForge Hook Event",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "runtime": {
+      "type": "string"
+    },
+    "hook_event_name": {
+      "type": "string"
+    },
+    "hookEventName": {
+      "type": "string"
+    },
+    "tool_name": {
+      "type": "string"
+    },
+    "toolName": {
+      "type": "string"
+    },
+    "cwd": {
+      "type": "string"
+    },
+    "tool_input": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "toolInput": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

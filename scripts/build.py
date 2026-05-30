@@ -19,6 +19,7 @@ from validation_utils import ValidationProblem, load_yaml_file, parse_frontmatte
 ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = ROOT / "src"
 REGISTRY_DIR = SRC_DIR / "registry"
+HOOK_RUNTIME_ROOT = SRC_DIR / "hook-runtime"
 DIST_DIR = ROOT / "dist"
 UNIVERSAL_SKILLS_ROOT = DIST_DIR / "universal" / "skills"
 OPENAI_ZIP_DIR = DIST_DIR / "openai-api" / "zips"
@@ -39,6 +40,11 @@ AGENT_SKILL_ROOTS = (
     DIST_DIR / "copilot" / "project" / ".github" / "skills",
     DIST_DIR / "copilot" / "user" / ".copilot" / "skills",
 )
+
+HOOK_OUTPUT_ROOTS = {
+    ("codex", "project"): DIST_DIR / "codex" / "project" / ".codex",
+    ("claude", "project"): DIST_DIR / "claude" / "project" / ".claude",
+}
 
 
 @dataclass(frozen=True)
@@ -114,6 +120,7 @@ def build_profile(profile: str) -> dict[str, int]:
         domain_extensions,
         routing_rules,
     )
+    _build_hook_runtime()
     _cleanup_legacy_openai_zips(OPENAI_ZIP_DIR)
     zip_count = _package_openai_zips(
         UNIVERSAL_SKILLS_ROOT / profile,
@@ -374,6 +381,68 @@ def _copy_skill_tree(source: Path, destination: Path) -> None:
     if destination.exists():
         shutil.rmtree(destination)
     shutil.copytree(source, destination, ignore=ignore)
+
+
+def _build_hook_runtime() -> None:
+    if not HOOK_RUNTIME_ROOT.is_dir():
+        raise BuildError(f"missing hook runtime source: {HOOK_RUNTIME_ROOT.relative_to(ROOT)}")
+    _build_codex_hook_runtime()
+    _build_claude_hook_runtime()
+
+
+def _build_codex_hook_runtime() -> None:
+    target = HOOK_OUTPUT_ROOTS[("codex", "project")]
+    hooks_dir = target / "hooks"
+    _reset_dir(hooks_dir)
+    _copy_hook_scripts(hooks_dir)
+    shutil.copy2(
+        HOOK_RUNTIME_ROOT / "templates" / "codex" / "hooks.json",
+        target / "hooks.json",
+    )
+    _write_hook_manifest(target, agent="codex", scope="project")
+
+
+def _build_claude_hook_runtime() -> None:
+    target = HOOK_OUTPUT_ROOTS[("claude", "project")]
+    hooks_dir = target / "hooks"
+    _reset_dir(hooks_dir)
+    _copy_hook_scripts(hooks_dir)
+    shutil.copy2(
+        HOOK_RUNTIME_ROOT
+        / "templates"
+        / "claude"
+        / "settings.changeforge-hooks.fragment.json",
+        target / "settings.changeforge-hooks.fragment.json",
+    )
+    _write_hook_manifest(target, agent="claude", scope="project")
+
+
+def _copy_hook_scripts(target: Path) -> None:
+    scripts_dir = HOOK_RUNTIME_ROOT / "scripts"
+    if not scripts_dir.is_dir():
+        raise BuildError(f"missing hook script directory: {scripts_dir.relative_to(ROOT)}")
+    for path in sorted(scripts_dir.glob("*.py")):
+        destination = target / path.name
+        shutil.copy2(path, destination)
+        destination.chmod(0o755)
+
+
+def _write_hook_manifest(target: Path, agent: str, scope: str) -> None:
+    manifest = {
+        "kind": "changeforge-hook-runtime",
+        "agent": agent,
+        "scope": scope,
+        "source_version": _source_version(),
+        "hooks": [
+            "changeforge_post_edit_structure_gate",
+            "changeforge_risk_surface_gate",
+            "changeforge_stop_closure_gate",
+        ],
+    }
+    (target / ".changeforge-hook-manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _write_capability_references(destination: Path, capabilities: list[Capability]) -> None:
