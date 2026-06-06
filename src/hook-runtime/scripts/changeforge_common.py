@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 import sys
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -237,6 +238,8 @@ def load_state(repo: Path) -> dict:
             state[key] = []
     if not isinstance(state.get("validation_seen"), bool):
         state["validation_seen"] = False
+    if not isinstance(state.get("turn_id"), str):
+        state["turn_id"] = ""
     return state
 
 
@@ -361,6 +364,8 @@ def merge_state(
 ) -> dict:
     state = load_state(repo)
     state["runtime"] = runtime
+    if not state.get("turn_id"):
+        state["turn_id"] = _new_turn_id()
     for key, values in (
         ("changed_paths", changed_paths),
         ("structure_findings", structure_findings),
@@ -459,6 +464,14 @@ def write_telemetry_event(
     required_references_detected: bool = False,
     validation_evidence_detected: bool = False,
     residual_risk_detected: bool = False,
+    stage_manifest_detected: bool = False,
+    manifest_current_stage: str = "",
+    manifest_selected_skills: Iterable[str] = (),
+    manifest_selected_capabilities: Iterable[str] = (),
+    manifest_selected_domain_extensions: Iterable[str] = (),
+    manifest_required_references: Iterable[str] = (),
+    manifest_required_quality_gates: Iterable[str] = (),
+    manifest_skipped_quality_gates: Iterable[str] = (),
 ) -> None:
     """Append one telemetry record as JSONL. Fails open on any error.
 
@@ -481,7 +494,7 @@ def write_telemetry_event(
             "runtime": runtime,
             "hook_name": hook_name,
             "event_name": event_name,
-            "session_id": session_id.strip() or f"{repo_hash[:8]}-{_utc_date()}",
+            "session_id": session_id.strip() or _fallback_session_id(repo, repo_hash),
             "mode": mode,
             "tool_name": tool_name,
             "changed_paths": _capped_items(changed_paths),
@@ -497,6 +510,16 @@ def write_telemetry_event(
             "required_references_detected": bool(required_references_detected),
             "validation_evidence_detected": bool(validation_evidence_detected),
             "residual_risk_detected": bool(residual_risk_detected),
+            "stage_manifest_detected": bool(stage_manifest_detected),
+            "manifest_current_stage": str(manifest_current_stage).strip()[:MAX_TELEMETRY_VALUE_LEN],
+            "manifest_selected_skills": _capped_items(manifest_selected_skills),
+            "manifest_selected_capabilities": _capped_items(manifest_selected_capabilities),
+            "manifest_selected_domain_extensions": _capped_items(
+                manifest_selected_domain_extensions
+            ),
+            "manifest_required_references": _capped_items(manifest_required_references),
+            "manifest_required_quality_gates": _capped_items(manifest_required_quality_gates),
+            "manifest_skipped_quality_gates": _capped_items(manifest_skipped_quality_gates),
         }
         target = root / "sessions" / f"{_utc_date()}.jsonl"
         line = json.dumps(record, sort_keys=True)
@@ -508,6 +531,200 @@ def write_telemetry_event(
 
 def _utc_date() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def _new_turn_id() -> str:
+    """Short random identifier for one agent turn (no prompt, no path)."""
+    return uuid.uuid4().hex[:12]
+
+
+def current_turn_id(repo: Path) -> str:
+    """Return the persisted per-turn id, or empty string when none exists."""
+    try:
+        turn = load_state(repo).get("turn_id")
+    except Exception:
+        return ""
+    return turn.strip() if isinstance(turn, str) else ""
+
+
+def ensure_turn_id(repo: Path) -> str:
+    """Return the per-turn id, creating and persisting one when absent.
+
+    The id lives in the cache-side hook state for the life of a turn and is
+    reset by clear_state at the Stop event, so telemetry records from one turn
+    share a session id without merging unrelated turns into a single day.
+    """
+    turn = current_turn_id(repo)
+    if turn:
+        return turn
+    turn = _new_turn_id()
+    try:
+        state = load_state(repo)
+        state["turn_id"] = turn
+        save_state(repo, state)
+    except Exception:
+        return turn
+    return turn
+
+
+def _fallback_session_id(repo: Path, repo_hash: str) -> str:
+    """Per-turn fallback session id when the runtime supplies none.
+
+    Coarse date-only fallback merged every turn of a repo in one day into one
+    session, which corrupted closure review. A per-turn id keeps unrelated turns
+    apart while still grouping every hook within one turn.
+    """
+    try:
+        turn = ensure_turn_id(repo)
+    except Exception:
+        turn = _new_turn_id()
+    return f"{repo_hash[:8]}-{_utc_date()}-{turn}"
+
+
+# --- Route / stage manifest parsing -------------------------------------------
+# The Stop gate parses the agent's final handoff for the changeforge_route and
+# changeforge_stage_route manifests so telemetry records what the route actually
+# selected, not merely that a manifest token appeared. This is a minimal,
+# dependency-free line parser (the hook runtime must not require PyYAML) and it
+# always fails open: a malformed manifest yields empty fields, never an error.
+ROUTE_MANIFEST_KEY = "changeforge_route"
+STAGE_MANIFEST_KEY = "changeforge_stage_route"
+_MANIFEST_LIST_KEYS = (
+    "selected_skills",
+    "selected_capabilities",
+    "selected_domain_extensions",
+    "required_references",
+    "required_quality_gates",
+)
+
+
+def extract_manifest_fields(text: str) -> dict:
+    """Extract route/stage manifest facts from agent final text. Fail open.
+
+    ``changeforge_route`` is not a substring of ``changeforge_stage_route`` (the
+    stage key carries ``stage_`` before ``route``), so plain presence checks do
+    not cross-trigger between the two manifests.
+    """
+    result: dict[str, Any] = {
+        "route_present": False,
+        "stage_present": False,
+        "current_stage": "",
+        "selected_skills": [],
+        "selected_capabilities": [],
+        "selected_domain_extensions": [],
+        "required_references": [],
+        "required_quality_gates": [],
+        "skipped_quality_gates": [],
+    }
+    if not isinstance(text, str) or not text:
+        return result
+    try:
+        result["route_present"] = ROUTE_MANIFEST_KEY in text
+        result["stage_present"] = STAGE_MANIFEST_KEY in text
+        route_block = _manifest_block(text, ROUTE_MANIFEST_KEY)
+        stage_at = route_block.find(f"{STAGE_MANIFEST_KEY}:")
+        if stage_at != -1:
+            # Keep the route segment from absorbing stage-manifest list values
+            # when both manifests share a single fenced block.
+            route_block = route_block[:stage_at]
+        if route_block:
+            for key in _MANIFEST_LIST_KEYS:
+                result[key] = _manifest_list_field(route_block, key)
+            result["skipped_quality_gates"] = _manifest_skipped_gates(route_block)
+        stage_block = _manifest_block(text, STAGE_MANIFEST_KEY)
+        if stage_block:
+            result["current_stage"] = _manifest_scalar_field(stage_block, "current_stage")
+    except Exception:
+        return result
+    return result
+
+
+def _fenced_blocks(text: str) -> list[str]:
+    blocks: list[str] = []
+    buffer: list[str] = []
+    in_block = False
+    for line in text.splitlines():
+        if line.lstrip().startswith("```"):
+            if in_block:
+                blocks.append("\n".join(buffer))
+                buffer = []
+                in_block = False
+            else:
+                in_block = True
+            continue
+        if in_block:
+            buffer.append(line)
+    if in_block and buffer:
+        blocks.append("\n".join(buffer))
+    return blocks
+
+
+def _manifest_block(text: str, key: str) -> str:
+    marker = f"{key}:"
+    for block in _fenced_blocks(text):
+        if marker in block:
+            return block
+    index = text.find(marker)
+    return text[index:] if index != -1 else ""
+
+
+def _manifest_unquote(raw: str) -> str:
+    value = raw.strip()
+    if len(value) >= 2 and value[0] in "\"'" and value[-1] == value[0]:
+        value = value[1:-1]
+    return value.strip()
+
+
+def _manifest_list_field(segment: str, key: str) -> list[str]:
+    key_re = re.compile(r"^(\s*)" + re.escape(key) + r":\s*(.*)$")
+    item_re = re.compile(r"^(\s*)-\s+(.*)$")
+    values: list[str] = []
+    capturing = False
+    key_indent = 0
+    for line in segment.splitlines():
+        if not capturing:
+            match = key_re.match(line)
+            if not match:
+                continue
+            inline = match.group(2).strip()
+            if inline.startswith("[") and inline.endswith("]"):
+                inner = inline[1:-1].strip()
+                if inner:
+                    values.extend(_manifest_unquote(part) for part in inner.split(","))
+                return [v for v in values if v]
+            if inline and inline not in ("|", ">", "|-", ">-"):
+                return values  # scalar value, not a list
+            key_indent = len(match.group(1))
+            capturing = True
+            continue
+        item = item_re.match(line)
+        if item and len(item.group(1)) > key_indent:
+            values.append(_manifest_unquote(item.group(2)))
+            continue
+        if not line.strip():
+            continue
+        if len(line) - len(line.lstrip()) <= key_indent:
+            break
+    return [v for v in values if v]
+
+
+def _manifest_scalar_field(segment: str, key: str) -> str:
+    pattern = re.compile(r"^\s*" + re.escape(key) + r":\s*(.+?)\s*$", re.MULTILINE)
+    match = pattern.search(segment)
+    return _manifest_unquote(match.group(1)) if match else ""
+
+
+def _manifest_skipped_gates(segment: str) -> list[str]:
+    gates: list[str] = []
+    for item in _manifest_list_field(segment, "skipped_quality_gates"):
+        text = item.strip()
+        if text.startswith("gate:"):
+            gates.append(text[len("gate:"):].strip())
+        elif "=>" in text:
+            gates.append(text.split("=>", 1)[0].strip())
+        else:
+            gates.append(text)
+    return [g for g in gates if g]
 
 
 def _capped_items(values: Iterable[str]) -> list[str]:
@@ -571,6 +788,7 @@ def _empty_state() -> dict:
         "suggested_domain_extensions": [],
         "suggested_gates": [],
         "validation_seen": False,
+        "turn_id": "",
         "updated_at": "",
     }
 

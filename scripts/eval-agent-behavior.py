@@ -4,8 +4,12 @@
 Reads human-reviewed behavior samples under ``evals/agent-behavior/`` and scores
 the captured ``changeforge_route`` manifest against each sample's expectations.
 It validates route recall/precision, capability recall, reference adherence,
-quality-gate closure, and validation evidence. It never calls a model, never
-reaches the network, and never edits skills, routing rules, or capabilities.
+quality-gate closure, validation evidence, and the ``changeforge_stage_route``
+stage projection (presence, stage correctness, stage capability alignment,
+skipped-capability rationale, and context-budget validity). Missing router
+self-use references in the manifest are a hard error. It never calls a model,
+never reaches the network, and never edits skills, routing rules, or
+capabilities.
 
 With no samples it prints ``no samples found`` and exits 0 so it can sit in the
 standard validation workflow without blocking fresh checkouts.
@@ -24,6 +28,7 @@ from typing import Any
 from telemetry_utils import (
     dump_yaml,
     extract_route_manifest,
+    extract_stage_manifest,
     load_registry_names,
     manifest_string_list,
 )
@@ -44,6 +49,14 @@ ROUTER_SELF_REFERENCES = (
     "references/capability-index.md",
     "references/domain-extension-index.md",
 )
+VALID_BUDGET_MODES = {"minimal", "single-stage", "staged-plan"}
+STAGE_SCORE_KEYS = (
+    "stage_presence",
+    "stage_correctness",
+    "stage_capability_alignment",
+    "skipped_capability_rationale",
+    "context_budget_validity",
+)
 SCORE_KEYS = (
     "route_recall",
     "route_precision",
@@ -51,6 +64,7 @@ SCORE_KEYS = (
     "reference_adherence",
     "gate_closure",
     "validation_evidence_score",
+    *STAGE_SCORE_KEYS,
 )
 
 
@@ -175,7 +189,13 @@ def _evaluate_sample(
         "gate_closure": _gate_closure(expected_gates, required_gates, skipped_gates),
         "validation_evidence_score": 1.0 if _has_validation_evidence(data, manifest) else 0.0,
     }
+    scores.update(_stage_scores(expected, _resolve_stage_manifest(data)))
     missing_self_refs = [ref for ref in ROUTER_SELF_REFERENCES if ref not in manifest_refs]
+    if missing_self_refs:
+        errors.append(
+            "route manifest required_references is missing router self-use reference(s): "
+            + ", ".join(missing_self_refs)
+        )
     residual = _has_residual_risk(data, manifest)
 
     return SampleResult(
@@ -206,6 +226,103 @@ def _resolve_manifest(data: dict[str, Any]) -> dict[str, Any] | None:
     if isinstance(actual, str):
         return extract_route_manifest(actual)
     return None
+
+
+def _resolve_stage_manifest(data: dict[str, Any]) -> dict[str, Any] | None:
+    # Primary form: a flat 'stage_manifest' mapping (two-level, parser-safe).
+    manifest = data.get("stage_manifest")
+    if isinstance(manifest, dict):
+        return manifest
+    actual = data.get("actual")
+    if isinstance(actual, dict):
+        nested = actual.get("stage_route_manifest")
+        if isinstance(nested, dict):
+            return nested
+        raw = actual.get("raw_output")
+        if isinstance(raw, str):
+            return extract_stage_manifest(raw)
+    if isinstance(actual, str):
+        return extract_stage_manifest(actual)
+    return None
+
+
+def _stage_scores(
+    expected: dict[str, Any],
+    manifest: dict[str, Any] | None,
+) -> dict[str, float]:
+    """Score the changeforge_stage_route projection.
+
+    Stage scoring is conditional: a sample opts in by declaring
+    ``expected_stage``. Samples that do not test stage behavior score 1.0 on
+    every stage dimension so the aggregate is not penalized for an untested
+    concern. A sample that declares ``expected_stage`` but produced no stage
+    manifest scores 0.0 across the stage dimensions.
+    """
+    expected_stage = str(expected.get("expected_stage", "")).strip()
+    if not expected_stage:
+        return {key: 1.0 for key in STAGE_SCORE_KEYS}
+    if not isinstance(manifest, dict):
+        return {key: 0.0 for key in STAGE_SCORE_KEYS}
+
+    current = str(manifest.get("current_stage", "")).strip()
+    selected = set(manifest_string_list(manifest, "selected_capabilities"))
+    skipped = _stage_skipped(manifest)
+    budget = _stage_budget_mode(manifest)
+
+    if skipped:
+        with_reason = sum(1 for _cap, reason in skipped if reason)
+        rationale = with_reason / len(skipped)
+    else:
+        rationale = 0.0 if expected.get("require_skipped_rationale") else 1.0
+
+    expected_budget = str(expected.get("expected_context_budget_mode", "")).strip()
+    if expected_budget:
+        budget_validity = 1.0 if budget == expected_budget else 0.0
+    else:
+        budget_validity = 1.0 if budget in VALID_BUDGET_MODES else 0.0
+
+    return {
+        "stage_presence": 1.0 if current else 0.0,
+        "stage_correctness": 1.0 if current == expected_stage else 0.0,
+        "stage_capability_alignment": _recall(
+            _expected_list(expected, "expected_stage_capabilities"), selected
+        ),
+        "skipped_capability_rationale": rationale,
+        "context_budget_validity": budget_validity,
+    }
+
+
+def _stage_skipped(manifest: dict[str, Any]) -> list[tuple[str, str]]:
+    """Return (capability, reason) pairs from either the mapping or string form."""
+    entries = manifest.get("skipped_capabilities")
+    result: list[tuple[str, str]] = []
+    if not isinstance(entries, list):
+        return result
+    for entry in entries:
+        if isinstance(entry, dict):
+            cap = str(entry.get("capability", "")).strip()
+            reason = str(entry.get("reason", "")).strip()
+            if cap:
+                result.append((cap, reason))
+        elif isinstance(entry, str) and "=>" in entry:
+            cap, _, reason = entry.partition("=>")
+            if cap.strip():
+                result.append((cap.strip(), reason.strip()))
+        elif isinstance(entry, str) and entry.strip():
+            result.append((entry.strip(), ""))
+    return result
+
+
+def _stage_budget_mode(manifest: dict[str, Any]) -> str:
+    mode = manifest.get("context_budget_mode")
+    if isinstance(mode, str) and mode.strip():
+        return mode.strip()
+    budget = manifest.get("context_budget")
+    if isinstance(budget, dict):
+        nested = budget.get("mode")
+        if isinstance(nested, str):
+            return nested.strip()
+    return ""
 
 
 def _skipped_gate_names(manifest: dict[str, Any]) -> set[str]:

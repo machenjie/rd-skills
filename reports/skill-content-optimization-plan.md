@@ -10,7 +10,7 @@ this pass; **P2/P3** are documented for a later, separately-reviewed change.
 | Kind | Count | Heavy | Notes |
 | --- | --- | --- | --- |
 | Professional skills | 19 | 0 over 350 lines | 8 carry a duplicated Solution Optimality block |
-| Foundation capabilities | 103 | 2 over 250 lines | `implementation-structure-design` (547), `ci-cd` (261) |
+| Foundation capabilities | 104 | 2 over 250 lines | `implementation-structure-design` (547), `ci-cd` (261) |
 | Domain extensions | 7 | 0 over 300 lines | all within budget |
 
 Professionalism is uniformly high: **0** skills fall below the professionalism gate,
@@ -20,7 +20,7 @@ opportunity is context efficiency, not professionalism.
 Suggested-action distribution: `KEEP_AS_IS` 117, `MERGE_DUPLICATE_CONTENT` 8,
 `MOVE_SECTIONS_TO_REFERENCES` 2, `TIGHTEN_BODY` 1, `SPLIT_CAPABILITY` 1.
 
-Top-level profile counts must remain **recommended = 19, full = 26, dev = 129** through
+Top-level profile counts must remain **recommended = 19, full = 26, dev = 130** through
 every phase.
 
 ---
@@ -171,7 +171,7 @@ this reason.
   - **`used_by` migration:** copy the parent's `used_by` set to the new capability so
     every consuming professional skill compiles both references; verify via
     `build.py` that `references/capabilities/` reflects both.
-  - **Runtime profile impact:** `dev` top-level count rises by 1 (129 → 130);
+  - **Runtime profile impact:** `dev` top-level count rises by 1 (130 → 131);
     `recommended`/`full` top-level counts are **unchanged** (capabilities are references
     there). Update `EXPECTED_PROFILE_TOP_LEVEL_COUNTS` and the prose counts in
     `docs/RUNTIME_PROFILES.md`, `docs/USAGE.md`, and `docs/OPERATING_MODEL.md`.

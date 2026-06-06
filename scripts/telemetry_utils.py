@@ -31,6 +31,7 @@ from validation_utils import load_yaml_text
 TELEMETRY_SCHEMA_VERSION = "1"
 TELEMETRY_SUBDIRS = ("sessions", "reports", "suggestions", "promoted")
 ROUTE_MANIFEST_KEY = "changeforge_route"
+STAGE_MANIFEST_KEY = "changeforge_stage_route"
 _ROUTE_MANIFEST_FENCE_RE = re.compile(
     r"```[a-zA-Z0-9]*\s*\n(?P<block>.*?)```",
     re.DOTALL,
@@ -119,30 +120,45 @@ def extract_route_manifest(text: str) -> dict[str, Any] | None:
     the manifest, or a fenced block that is already the manifest body. Returns
     the manifest mapping, or None when no parseable manifest is present.
     """
-    if not isinstance(text, str) or ROUTE_MANIFEST_KEY not in text:
+    return _extract_manifest(text, ROUTE_MANIFEST_KEY)
+
+
+def extract_stage_manifest(text: str) -> dict[str, Any] | None:
+    """Extract and parse the ``changeforge_stage_route`` YAML block from output.
+
+    Mirrors :func:`extract_route_manifest`. Without PyYAML the repository loader
+    flattens deeply nested mappings, so the stage manifest is most reliable in a
+    flat, two-level form (scalars and lists of scalars); callers that read the
+    skipped-capability and context-budget fields tolerate both shapes.
+    """
+    return _extract_manifest(text, STAGE_MANIFEST_KEY)
+
+
+def _extract_manifest(text: str, key: str) -> dict[str, Any] | None:
+    if not isinstance(text, str) or key not in text:
         return None
     for match in _ROUTE_MANIFEST_FENCE_RE.finditer(text):
         block = match.group("block")
-        if ROUTE_MANIFEST_KEY not in block:
+        if key not in block:
             continue
-        manifest = _load_manifest_block(block)
+        manifest = _load_manifest_block(block, key)
         if manifest is not None:
             return manifest
     # Fall back to parsing from the key onward when no fence is present.
-    index = text.find(f"{ROUTE_MANIFEST_KEY}:")
+    index = text.find(f"{key}:")
     if index != -1:
-        return _load_manifest_block(text[index:])
+        return _load_manifest_block(text[index:], key)
     return None
 
 
-def _load_manifest_block(block: str) -> dict[str, Any] | None:
+def _load_manifest_block(block: str, key: str = ROUTE_MANIFEST_KEY) -> dict[str, Any] | None:
     try:
-        loaded = load_yaml_text(block, Path("changeforge_route"))
+        loaded = load_yaml_text(block, Path(key))
     except Exception:
         return None
     if not isinstance(loaded, dict):
         return None
-    inner = loaded.get(ROUTE_MANIFEST_KEY, loaded)
+    inner = loaded.get(key, loaded)
     return inner if isinstance(inner, dict) else None
 
 

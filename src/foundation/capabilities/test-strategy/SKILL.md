@@ -19,6 +19,14 @@ Use this capability when: a change requires verification planning and the approp
 
 Do not use this capability for: selecting test tooling or writing the tests themselves (use `unit-testing`, `integration-testing`, `contract-testing`, `e2e-testing`); test data management beyond the strategy selection (use `test-data-management`); post-deployment observability monitoring (use `observability-design`); changes so trivial that the test level is self-evident (typo fix in a static string with no behavior change — unit test only, zero planning required).
 
+# Stage Fit
+
+Owns testing strategy; also shapes acceptance in requirement-intake. Per-stage focus:
+
+- **testing**: risk-based layer selection across unit, integration, contract, e2e, and regression.
+- **requirement-intake**: translate acceptance criteria into a testable layer plan.
+- **bug-fix**: require a regression test that reproduces the defect before the fix.
+
 # Non-Negotiable Rules
 
 - **Select test levels based on change type, impact area, risk level, and failure consequence — not based on team habit or test framework availability.** "We always write E2E tests" is not a test strategy. "This is an auth flow change with multi-tenant isolation implications; it requires unit tests for guard logic, integration tests for session behavior, and a security permission matrix test for tenant isolation" is a test strategy.

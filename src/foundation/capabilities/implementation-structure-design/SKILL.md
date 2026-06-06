@@ -40,6 +40,14 @@ Do not use to justify speculative abstractions. If there is only one current use
 
 Do not wrap procedural code in objects merely to make it look structured. Do not introduce inheritance for code sharing alone.
 
+# Stage Fit
+
+Owns implementation-planning; also informs coding, code-review, and refactoring. Per-stage focus:
+
+- **implementation-planning**: reuse ladder, naming, object/function/file/directory placement, visibility, test placement.
+- **coding**: keep new structure minimal and follow the planned boundaries and dependency direction.
+- **code-review / refactoring**: check reuse, placement, and dependency direction against the plan.
+
 # Non-Negotiable Rules
 
 - Search before adding. Before creating any new function, class, file, or directory, inspect existing nearby code and project-wide equivalents. Adding duplicate logic without checking existing code is rejected.

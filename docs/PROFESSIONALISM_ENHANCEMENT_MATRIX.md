@@ -54,6 +54,34 @@ router, the stage launcher, or other capabilities.
 - Heavy detail already in references (`solution-optimality.md`, capability references) was left in
   place rather than promoted into bodies.
 
+## Known Open Findings
+
+The "Strong / None needed" assessments above describe professional depth, not the absence of all
+advisory findings. `scripts/audit-professionalism-coverage.py` is report-only and currently reports
+**15 low-severity findings** (see [reports/professionalism-coverage.md](../reports/professionalism-coverage.md)).
+They are accepted or deferred, not regressions:
+
+- **body-size (3):** `change-forge-router` (396 lines), `ci-cd` (261), and `implementation-structure-design`
+  (555) exceed the advisory body-line budget. Tracked in
+  [config/skill-content-exceptions.yaml](../config/skill-content-exceptions.yaml); a capability split is
+  documented as plan-only P3 in
+  [reports/skill-content-optimization-plan.md](../reports/skill-content-optimization-plan.md). The
+  compact `Stage Fit` blocks added to key capabilities add a few lines each but stay well inside the
+  per-skill budget except for the already-tracked `implementation-structure-design`.
+- **rule-duplication (11):** shared professional rule lines repeat across professional, capability, and
+  domain-extension bodies. They are kept in-body deliberately so each skill stays self-contained when
+  only its `SKILL.md` is loaded; consolidating into a shared reference is a deferred context-efficiency
+  option, not a correctness fix.
+- **trigger-breadth (1):** the `implementation-structure-design` routing trigger is one long string
+  (107 words). It is deferred with the P3 split above; narrowing it without the split risks
+  under-routing the structure capability.
+
+The `skill-stage-declaration` findings previously reported here are resolved: every top-level
+professional skill is now referenced in
+[docs/ENGINEERING_STAGE_MODEL.md](ENGINEERING_STAGE_MODEL.md) (Stage Launch Matrix, Product Surface
+Selector, or the Cross-Stage and Planning Professional Skills section). Re-run
+`scripts/audit-professionalism-coverage.py` after authoring changes to refresh the count.
+
 ## Validation
 
 - `scripts/validate-stage-routing-architecture.py`: stage model, stage launcher, router contract,

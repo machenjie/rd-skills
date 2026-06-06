@@ -71,6 +71,58 @@ manifest:
   skipped_quality_gates: []
 """
 
+MISSING_SELF_REF_SAMPLE = """id: sample-missing-self-ref
+description: manifest omits router self-use references
+prompt: do something
+validation_evidence: true
+residual_risk: true
+expected:
+  selected_skills:
+    - backend-change-builder
+  forbidden_skills: []
+  selected_capabilities: []
+  required_references: []
+  required_quality_gates: []
+manifest:
+  schema_version: 1
+  selected_skills:
+    - backend-change-builder
+  selected_capabilities: []
+  selected_domain_extensions: []
+  required_references:
+    - references/routing-rules.md
+  required_quality_gates: []
+  skipped_quality_gates: []
+"""
+
+STAGE_MISSING_SAMPLE = """id: sample-stage-missing
+description: declares a stage expectation but emits no stage manifest
+prompt: do a multi-file backend change
+validation_evidence: true
+residual_risk: true
+expected:
+  selected_skills:
+    - backend-change-builder
+  forbidden_skills: []
+  selected_capabilities: []
+  required_references: []
+  required_quality_gates: []
+  expected_stage: coding
+manifest:
+  schema_version: 1
+  selected_skills:
+    - backend-change-builder
+  selected_capabilities: []
+  selected_domain_extensions: []
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+  required_quality_gates: []
+  skipped_quality_gates: []
+"""
+
 
 def _run(samples_dir: Path, output_dir: Path) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
@@ -134,6 +186,24 @@ class EvalAgentBehaviorTests(unittest.TestCase):
                 check=False,
             )
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_missing_self_references_is_error(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            samples = Path(tmp) / "samples"
+            samples.mkdir()
+            (samples / "sr.yaml").write_text(MISSING_SELF_REF_SAMPLE, encoding="utf-8")
+            result = _run(samples, Path(tmp) / "out")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("self-use reference", result.stderr)
+
+    def test_declared_stage_without_manifest_scores_zero(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            samples = Path(tmp) / "samples"
+            samples.mkdir()
+            (samples / "sm.yaml").write_text(STAGE_MISSING_SAMPLE, encoding="utf-8")
+            result = _run(samples, Path(tmp) / "out")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("stage_presence=0.00", result.stdout)
 
 
 if __name__ == "__main__":

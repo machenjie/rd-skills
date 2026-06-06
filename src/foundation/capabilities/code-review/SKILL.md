@@ -19,6 +19,14 @@ Use this capability when reviewing: a pull-request diff, AI-generated implementa
 
 Do not use this capability as a **style-only pass**, a broad approval ritual, or a substitute for running the tests and static analysis that prove behavior. Do not use `code-review` as the primary pre-implementation structure designer; use `implementation-structure-design` before coding, `refactoring` for behavior-preserving movement, and `code-review` to assess completed diffs. Do not use it as a substitute for `threat-modeling` when the change introduces an entirely new attack surface.
 
+# Stage Fit
+
+Owns code-review; also gates bug-fix and refactoring output. Per-stage focus:
+
+- **code-review**: severity-classified findings with evidence, security surfaces, test gaps, hallucinated-API check.
+- **bug-fix**: confirm minimal diff, same-pattern scan, and regression coverage.
+- **refactoring**: confirm behavior preservation and characterization-test coverage.
+
 # Non-Negotiable Rules
 
 - **Every finding is grounded in file evidence**, a contract excerpt, a reproducible scenario, or a named failure mode. "I don't like this" is not a finding.

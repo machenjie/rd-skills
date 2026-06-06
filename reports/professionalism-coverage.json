@@ -5,62 +5,14 @@
     "product_surfaces_checked": 21,
     "language_surfaces_checked": 8,
     "bodies_checked": 131,
-    "total_findings": 23
+    "total_findings": 15
   },
   "findings": [
-    {
-      "check": "skill-stage-declaration",
-      "severity": "low",
-      "target": "acceptance-criteria-builder",
-      "message": "professional skill is not referenced in the stage model (stage matrix or product surface selector)"
-    },
-    {
-      "check": "skill-stage-declaration",
-      "severity": "low",
-      "target": "change-impact-analyzer",
-      "message": "professional skill is not referenced in the stage model (stage matrix or product surface selector)"
-    },
-    {
-      "check": "skill-stage-declaration",
-      "severity": "low",
-      "target": "change-intake-compiler",
-      "message": "professional skill is not referenced in the stage model (stage matrix or product surface selector)"
-    },
-    {
-      "check": "skill-stage-declaration",
-      "severity": "low",
-      "target": "domain-impact-modeler",
-      "message": "professional skill is not referenced in the stage model (stage matrix or product surface selector)"
-    },
-    {
-      "check": "skill-stage-declaration",
-      "severity": "low",
-      "target": "experience-impact-modeler",
-      "message": "professional skill is not referenced in the stage model (stage matrix or product surface selector)"
-    },
-    {
-      "check": "skill-stage-declaration",
-      "severity": "low",
-      "target": "reliability-observability-gate",
-      "message": "professional skill is not referenced in the stage model (stage matrix or product surface selector)"
-    },
-    {
-      "check": "skill-stage-declaration",
-      "severity": "low",
-      "target": "security-privacy-gate",
-      "message": "professional skill is not referenced in the stage model (stage matrix or product surface selector)"
-    },
-    {
-      "check": "skill-stage-declaration",
-      "severity": "low",
-      "target": "task-dag-planner",
-      "message": "professional skill is not referenced in the stage model (stage matrix or product surface selector)"
-    },
     {
       "check": "body-size",
       "severity": "low",
       "target": "src\\professional-skills\\change-forge-router\\SKILL.md",
-      "message": "body is 395 lines (advisory limit 350 for professional-skill)"
+      "message": "body is 396 lines (advisory limit 350 for professional-skill)"
     },
     {
       "check": "body-size",
@@ -72,7 +24,7 @@
       "check": "body-size",
       "severity": "low",
       "target": "src\\foundation\\capabilities\\implementation-structure-design\\SKILL.md",
-      "message": "body is 547 lines (advisory limit 250 for foundation-capability)"
+      "message": "body is 555 lines (advisory limit 250 for foundation-capability)"
     },
     {
       "check": "trigger-breadth",

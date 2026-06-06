@@ -19,6 +19,14 @@ Use this capability when: simplifying a method, class, or module that has accumu
 
 Do not use this capability to: change observable behavior and label it as a refactor ("I just cleaned it up" while changing return values, validation logic, or error handling); rewrite stable, correct, well-tested code in a different style or paradigm purely out of preference; churn public API contracts, database column names, configuration keys, or metric names without a compatibility plan and consumer impact review; or optimize for performance (use `profiling` to identify the bottleneck first; optimization changes are not structure-only — they require before/after measurement).
 
+# Stage Fit
+
+Owns refactoring; also supports structural change during bug-fix. Per-stage focus:
+
+- **refactoring**: behavior-preserving extract/move/inline/merge/split; characterization tests; rollback path.
+- **bug-fix**: apply structural change only when the verified root cause requires it.
+- **code-review**: confirm the refactor preserved public behavior with test evidence.
+
 # Non-Negotiable Rules
 
 - **Refactoring must preserve observable behavior unless a behavior change is explicitly approved, documented, and reviewed as a separate step.** "Observable behavior" means: the outputs produced for the same inputs (function return values, API response shapes, database mutations, emitted events, side effects visible to callers). Internal representation changes (private field names, local variable renaming, private method extraction) are not observable. Changing a `null` return to an empty array is observable — it is a behavior change, not a refactor.

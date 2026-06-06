@@ -33,14 +33,14 @@ supported_change_types:
 runtime_profiles:
   - name: recommended
     top_level: 19 professional skills
-    foundation_mode: 102 foundation capabilities compiled into professional references
+    foundation_mode: 104 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 19 professional skills and 7 domain extensions
-    foundation_mode: 102 foundation capabilities compiled into professional references
+    foundation_mode: 104 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 19 professional skills, 102 foundation capabilities, and 7 domain extensions
+    top_level: 19 professional skills, 104 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -802,7 +802,9 @@ routing_rules:
       - code review generated code correctness maintainability refactoring behavior preserving extraction movement
       - testing unit integration contract e2e regression release rollout rollback migration config handoff validation evidence residual risk
       - launch only current stage minimum capabilities explicitly skip out-of-stage heavy capabilities context budget next stage handoff
-    priority: 88
+    # Stage launcher outranks agent-execution-discipline (88) so stage selection
+    # runs before per-change execution discipline when both apply.
+    priority: 89
   - route_to: documentation-generation
     triggers:
       - update docs for actual behavior API contracts migrations configuration operations and release impact

@@ -21,6 +21,14 @@ Use it for agent-assisted diagnosis whenever an agent blames environment, flakin
 
 Do not use this capability for preventive architecture reviews (use `architecture-impact-reviewer`), performance capacity planning (use `performance-budgeting` and `reliability-observability-gate`), or dependency risk assessment before upgrade (use `dependency-vulnerability-scanning`). Do not diagnose the same failure twice without first confirming the first diagnosis was correct — re-diagnosis without new evidence compounds confusion.
 
+# Stage Fit
+
+Owns debugging-diagnosis; also supports release-delivery and incident triage. Per-stage focus:
+
+- **debugging-diagnosis**: evidence first; symptom/root-cause/contributing-factor split; eliminated hypotheses; verified cause.
+- **bug-fix**: hand off a verified cause so the fix targets the root, not a symptom.
+- **release-delivery**: triage regressions and incidents against rollout and rollback signals.
+
 # Non-Negotiable Rules
 
 - **Evidence first; hypothesis second.** Never start with a hypothesis and look for evidence to support it. Start with evidence (logs, metrics, traces, error messages, timeline of events) and derive hypotheses that are consistent with all evidence. Confirmation bias is the leading cause of wrong diagnosis.

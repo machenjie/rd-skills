@@ -110,9 +110,9 @@ Domain extension routing:
 
 Runtime profile awareness:
 
-- Recommended: 19 professional skills top-level, 102 foundation capabilities compiled into references.
-- Full: 19 professional skills + 7 domain extensions top-level, 102 foundation capabilities compiled into references.
-- Dev: 19 professional skills + 102 foundation capabilities + 7 domain extensions top-level.
+- Recommended: 19 professional skills top-level, 104 foundation capabilities compiled into references.
+- Full: 19 professional skills + 7 domain extensions top-level, 104 foundation capabilities compiled into references.
+- Dev: 19 professional skills + 104 foundation capabilities + 7 domain extensions top-level.
 
 ## Risk Escalation Rules
 Escalate one level for any risk trigger that affects user data, money, permissions, external systems, production state, or irreversible operations. Escalate to high or critical when more than one high-impact trigger is present or when rollback is unclear.
@@ -391,6 +391,7 @@ The route passes only when:
 - Complexity and risk match the escalation triggers.
 - The task DAG is acyclic, reviewable, acceptance-linked, and rollback-aware.
 - The `changeforge_route` manifest is present, lists the router self-use references and selected capability references, maps each selected capability to a selected skill, and records every skipped gate with a reason.
+- For non-trivial engineering tasks, the `changeforge_stage_route` manifest is present, names one `current_stage`, records `skipped_capabilities` with reasons, and matches the `## Stage Professionalism` section.
 - The route does not rely on undeclared asset ingestion, external knowledge stores, or undeclared runtime content.
 
 ## Handoff

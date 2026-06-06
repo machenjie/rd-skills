@@ -27,6 +27,11 @@ Ensure every production-bound change has explicit reliability expectations, obse
 - The change is a static documentation edit or cosmetic UI change with zero runtime behavior impact.
 - The change is a test-only addition with no production deployment.
 
+## Stage Fit
+Launched for debugging-diagnosis and release-delivery production-risk review. Per-stage focus:
+- **debugging-diagnosis**: SLI/SLO signals, logs/metrics/traces, and error-budget burn to locate degradation.
+- **release-delivery**: performance and capacity budgets, alerts, rollback signals, and recovery readiness.
+
 ## Non-Negotiable Rules
 - **Every user-facing path must have an SLI**: if there is no measurable signal, there is no way to detect degradation before users report it.
 - **SLOs must be defined before the feature ships**: an SLO added after an incident is a post-hoc measurement, not a reliability commitment.
