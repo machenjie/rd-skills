@@ -364,9 +364,8 @@ changeforge_stage_route:
   skipped_capabilities:
     - capability: <heavy capability not launched this stage>
       reason: <why it is skipped this stage>
-  context_budget:
-    mode: <minimal|single-stage|staged-plan>
-    rationale: <why this budget fits the change level>
+  context_budget_mode: <minimal|single-stage|staged-plan>
+  context_budget_rationale: <why this budget fits the change level>
   required_evidence: []
   required_quality_gates: []
   handoff_target: <next stage owner skill or blocked>
@@ -377,7 +376,7 @@ Stage manifest rules:
 - Emit `changeforge_stage_route` only for non-trivial engineering tasks; omit it for a single trivial edit whose stage is obvious.
 - `current_stage` must be one engineering stage; a cross-stage task is split and re-emitted per stage rather than collapsed into one plan.
 - Every entry in `skipped_capabilities` must carry a `reason`; a heavy capability is either launched this stage or skipped with a reason, never dropped silently.
-- `context_budget.mode` is `minimal` for L1, `single-stage` for L2, and `staged-plan` for L3 and higher.
+- `context_budget_mode` is `minimal` for L1, `single-stage` for L2, and `staged-plan` for L3 and higher.
 - The stage manifest is consistent with `changeforge_route`; it sequences professional launch within the same route, it does not define a second route.
 
 ## Quality Gate

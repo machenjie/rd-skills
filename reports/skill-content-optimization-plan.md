@@ -9,15 +9,15 @@ this pass; **P2/P3** are documented for a later, separately-reviewed change.
 
 | Kind | Count | Heavy | Notes |
 | --- | --- | --- | --- |
-| Professional skills | 19 | 0 over 350 lines | 8 carry a duplicated Solution Optimality block |
-| Foundation capabilities | 104 | 2 over 250 lines | `implementation-structure-design` (547), `ci-cd` (261) |
+| Professional skills | 19 | 1 over 350 lines | `change-forge-router` (396) is the sole heavy skill |
+| Foundation capabilities | 104 | 2 over 250 lines | `implementation-structure-design` (555), `ci-cd` (261) |
 | Domain extensions | 7 | 0 over 300 lines | all within budget |
 
 Professionalism is uniformly high: **0** skills fall below the professionalism gate,
 so there is **no P0 rewrite work**. The corpus is professionally authored; the
 opportunity is context efficiency, not professionalism.
 
-Suggested-action distribution: `KEEP_AS_IS` 117, `MERGE_DUPLICATE_CONTENT` 8,
+Suggested-action distribution: `KEEP_AS_IS` 126, `MERGE_DUPLICATE_CONTENT` 0,
 `MOVE_SECTIONS_TO_REFERENCES` 2, `TIGHTEN_BODY` 1, `SPLIT_CAPABILITY` 1.
 
 Top-level profile counts must remain **recommended = 19, full = 26, dev = 130** through

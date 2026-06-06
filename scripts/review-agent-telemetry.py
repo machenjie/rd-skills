@@ -94,6 +94,14 @@ STRUCTURE_FINDING_KEYS = (
     "comment_findings",
 )
 
+# The four references the router must always declare for its own self-use.
+ROUTER_SELF_REFERENCES = frozenset({
+    "references/routing-rules.md",
+    "references/skill-registry.md",
+    "references/capability-index.md",
+    "references/domain-extension-index.md",
+})
+
 
 @dataclass
 class SessionSummary:
@@ -256,6 +264,9 @@ def _analyze_repo(
         "sessions": len(sessions),
         "missed_router": issue_counts.get("missed_router", 0),
         "missed_reference": _count_metric(sessions.values(), _is_missing_reference),
+        "incomplete_required_references": _count_metric(
+            sessions.values(), _is_incomplete_required_references
+        ),
         "missed_gate": _count_metric(sessions.values(), _is_missing_gate),
         "validation_evidence_missing": issue_counts.get("missed_validation_evidence", 0),
         "residual_risk_missing": issue_counts.get("missed_residual_risk", 0),
@@ -333,6 +344,7 @@ def _detect_issues(session: SessionSummary) -> list[Suggestion]:
         _detect_possible_over_routing,
         _detect_hook_false_positive,
         _detect_hook_false_negative,
+        _detect_incomplete_required_references,
     )
     for index, detector in enumerate(detectors):
         result = detector(session)
@@ -537,6 +549,29 @@ def _is_missing_reference(session: SessionSummary) -> bool:
     return session.stop_seen and session.has_code_change and not session.references_seen
 
 
+def _is_incomplete_required_references(session: SessionSummary) -> bool:
+    """True when references were seen but one or more router self-references are absent."""
+    if not (session.stop_seen and session.has_code_change and session.references_seen):
+        return False
+    return not ROUTER_SELF_REFERENCES.issubset(session.manifest_required_references)
+
+
+def _detect_incomplete_required_references(session: SessionSummary) -> Suggestion | None:
+    if not (session.stop_seen and session.has_code_change and session.references_seen):
+        return None
+    missing = sorted(ROUTER_SELF_REFERENCES - session.manifest_required_references)
+    if not missing:
+        return None
+    return _suggestion(
+        "incomplete_required_references",
+        "medium",
+        "route manifest required_references missing router self-reference(s): " + _short(missing),
+        session,
+        "Add all four router self-use references to required_references in the changeforge_route manifest.",
+        "evals/agent-behavior/samples",
+    )
+
+
 def _is_missing_gate(session: SessionSummary) -> bool:
     if not (session.risk_surfaces and session.stop_seen):
         return False
@@ -618,6 +653,7 @@ def _render_markdown(
         f"- sessions: {summary['sessions']}",
         f"- missed router: {summary['missed_router']}",
         f"- missed reference: {summary['missed_reference']}",
+        f"- incomplete required references: {summary['incomplete_required_references']}",
         f"- missed gate: {summary['missed_gate']}",
         f"- validation evidence missing: {summary['validation_evidence_missing']}",
         f"- residual risk missing: {summary['residual_risk_missing']}",
