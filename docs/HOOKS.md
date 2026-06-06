@@ -31,6 +31,20 @@ The first-stage runtime provides three reminder gates:
 The default behavior is warning-only. A hook failure must fail open and must not
 interrupt normal agent execution.
 
+## Telemetry
+
+In addition to their reminders, all three gates append a small telemetry record
+to the user cache after each watched event. Telemetry is a runtime fact log used
+for offline review; it is never written into project source or `dist/`, and it
+records no prompts, environment variables, secrets, or full command output. The
+Stop Closure Gate records closure-completeness facts only: whether a
+`changeforge_route` manifest, changed files, validation evidence, residual risk,
+and required references were present.
+
+Telemetry is enabled by default and can be disabled with `CHANGEFORGE_TELEMETRY=off`.
+See [TELEMETRY.md](TELEMETRY.md) for the data model, the offline review tool, and
+the human promotion workflow.
+
 ## Why Hooks Do Not Replace change-forge-router
 
 `change-forge-router` remains the semantic entry point for classifying a request,
@@ -152,6 +166,29 @@ manual enablement must be deliberate:
 Do not overwrite existing project hook configuration without reviewing user
 hooks first.
 
+## Installer-Assisted Hook Enablement
+
+The installer can also place hooks for Codex and Claude **project** scope. Hooks
+are never installed by default; they require `--with-hooks` and are written only
+when neither `--dry-run` nor `--hooks-dry-run` is set. Existing project hook
+configuration is always preserved.
+
+```bash
+python3 scripts/build.py --profile full
+# Show the merge plan without writing anything:
+python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full --with-hooks --hooks-dry-run
+# Write hook scripts and merge config (preserving existing hooks):
+python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full --with-hooks
+# Inspect installed hooks:
+python3 installers/doctor.py --check-hooks --target /path/to/project
+```
+
+For Codex, the installer merges ChangeForge hook groups into an existing
+`.codex/hooks.json` without removing user hooks. For Claude, it places
+`settings.changeforge-hooks.fragment.json` and never modifies an existing
+`.claude/settings.json`; merge the fragment's `hooks` into `settings.json` by
+hand. The installer never trusts hooks automatically.
+
 ## Codex Activation Checklist
 
 1. Copy `dist/codex/project/.codex` into the target repository root.
@@ -176,6 +213,7 @@ Run the hook validator after routing evaluation and before build validation:
 ```bash
 python3 scripts/eval-routing.py
 python3 scripts/validate-hooks.py
+python3 scripts/eval-agent-behavior.py
 python3 -m unittest discover -s tests
 python3 scripts/build.py --profile recommended
 python3 scripts/build.py --profile full

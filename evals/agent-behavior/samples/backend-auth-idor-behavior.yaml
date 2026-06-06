@@ -1,0 +1,75 @@
+id: backend-auth-idor-behavior
+description: |
+  Backend object-level authorization fix should route through security and
+  permission review and emit a complete changeforge_route manifest.
+prompt: |
+  Fix GET /orders/{id}: authenticated users can fetch an order by id even when
+  it belongs to a different account. Return 403 without leaking existence and
+  add regression coverage.
+validation_evidence: true
+residual_risk: true
+expected:
+  selected_skills:
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+  forbidden_skills:
+    - frontend-change-builder
+    - data-middleware-change-builder
+  selected_capabilities:
+    - implementation-structure-design
+    - permission-boundary-modeling
+    - authentication-authorization
+    - regression-testing
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+  required_quality_gates:
+    - security gate
+    - test gate
+    - implementation gate
+manifest:
+  schema_version: 1
+  route_id: backend-auth-idor
+  complexity: L3
+  risk_level: high
+  execution_mode: implement
+  selected_skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+    - change-documentation-gate
+  selected_capabilities:
+    - implementation-structure-design
+    - permission-boundary-modeling
+    - authentication-authorization
+    - web-security
+    - input-validation
+    - regression-testing
+    - logging-error-handling
+  selected_domain_extensions: []
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/41-authentication-authorization.md
+    - references/capabilities/16-permission-boundary-modeling.md
+  required_quality_gates:
+    - requirement gate
+    - impact gate
+    - implementation gate
+    - security gate
+    - test gate
+    - documentation gate
+  skipped_quality_gates:
+    - delivery gate => no deployment or migration change in scope
+    - reliability gate => no performance or capacity change in scope
+  handoff_target: backend-change-builder
+notes: |
+  Captured and human-reviewed from a routing exercise. Used as a regression guard
+  for object-level authorization routing and closure completeness.

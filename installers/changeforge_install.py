@@ -6,6 +6,7 @@ import json
 import re
 import shutil
 import sys
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -55,9 +56,43 @@ FOUNDATION_MODES = {
     "dev": "top-level-and-compiled-references",
 }
 
+# Optional project hook runtime. Hooks are warning-only execution reminders and
+# are never installed by default. Only Codex and Claude project scopes are
+# supported, and existing project hook configuration is always preserved.
+HOOK_SOURCE_ROOTS = {
+    "codex": ROOT / "dist" / "codex" / "project" / ".codex",
+    "claude": ROOT / "dist" / "claude" / "project" / ".claude",
+}
+HOOK_PROJECT_SUBPATH = {
+    "codex": Path(".codex"),
+    "claude": Path(".claude"),
+}
+HOOK_MANIFEST_NAME = ".changeforge-hook-manifest.json"
+HOOK_SCRIPT_NAMES = (
+    "changeforge_common.py",
+    "changeforge_post_edit_structure_gate.py",
+    "changeforge_risk_surface_gate.py",
+    "changeforge_stop_closure_gate.py",
+)
+
 
 class InstallError(Exception):
     """Raised for unsafe or unsupported install operations."""
+
+
+@dataclass
+class HookPlan:
+    """Describes how project hooks would be installed without writing anything."""
+
+    agent: str
+    source_root: Path
+    target_root: Path
+    script_actions: list[tuple[Path, Path, str]] = field(default_factory=list)
+    manifest_action: tuple[Path, Path, str] | None = None
+    config_target: Path | None = None
+    config_payload: dict[str, Any] | None = None
+    config_summary: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
 
 
 def source_version() -> str:
@@ -353,3 +388,190 @@ def version_changes(
         "removed": sorted(old_names - new_names),
         "changed": changed,
     }
+
+
+def hooks_supported(agent: str, scope: str) -> bool:
+    """Hooks are only supported for Codex and Claude project installs."""
+    return agent in HOOK_SOURCE_ROOTS and scope == "project"
+
+
+def plan_hook_install(agent: str, project_root: Path) -> HookPlan:
+    """Compute a merge-safe hook install plan without writing anything."""
+    source_root = HOOK_SOURCE_ROOTS.get(agent)
+    if source_root is None:
+        raise InstallError(f"hooks are only supported for codex and claude, not {agent}")
+    if not source_root.is_dir():
+        raise InstallError(
+            f"missing built hook runtime {source_root.relative_to(ROOT)}; "
+            "run python3 scripts/build.py --profile <profile>"
+        )
+
+    target_root = project_root.expanduser().resolve() / HOOK_PROJECT_SUBPATH[agent]
+    plan = HookPlan(agent=agent, source_root=source_root, target_root=target_root)
+
+    for script_name in HOOK_SCRIPT_NAMES:
+        source_script = source_root / "hooks" / script_name
+        if not source_script.is_file():
+            raise InstallError(f"missing built hook script {source_script.relative_to(ROOT)}")
+        destination = target_root / "hooks" / script_name
+        action = "overwrite" if destination.exists() else "create"
+        plan.script_actions.append((source_script, destination, action))
+
+    manifest_source = source_root / HOOK_MANIFEST_NAME
+    manifest_target = target_root / HOOK_MANIFEST_NAME
+    plan.manifest_action = (
+        manifest_source,
+        manifest_target,
+        "overwrite" if manifest_target.exists() else "create",
+    )
+
+    if agent == "codex":
+        _plan_codex_config(plan)
+    else:
+        _plan_claude_config(plan)
+    plan.notes.extend(_hook_activation_notes(agent))
+    return plan
+
+
+def _plan_codex_config(plan: HookPlan) -> None:
+    source_config = load_json(plan.source_root / "hooks.json")
+    if not isinstance(source_config, dict):
+        raise InstallError("built codex hooks.json is malformed")
+    target_config_path = plan.target_root / "hooks.json"
+    plan.config_target = target_config_path
+    existing = load_json(target_config_path)
+    if existing is None:
+        plan.config_payload = source_config
+        plan.config_summary.append("create new .codex/hooks.json from ChangeForge template")
+        return
+    merged, summary = _merge_codex_hooks(existing, source_config)
+    plan.config_payload = merged
+    plan.config_summary.extend(summary)
+    plan.config_summary.append("existing .codex/hooks.json hooks are preserved")
+
+
+def _plan_claude_config(plan: HookPlan) -> None:
+    fragment_name = "settings.changeforge-hooks.fragment.json"
+    source_fragment = load_json(plan.source_root / fragment_name)
+    if not isinstance(source_fragment, dict):
+        raise InstallError("built claude settings fragment is malformed")
+    plan.config_target = plan.target_root / fragment_name
+    plan.config_payload = source_fragment
+    plan.config_summary.append(f"place {fragment_name} (settings.json is never modified)")
+    plan.config_summary.append(
+        "merge the fragment 'hooks' into .claude/settings.json manually after review"
+    )
+
+
+def _merge_codex_hooks(
+    existing: dict[str, Any],
+    source: dict[str, Any],
+) -> tuple[dict[str, Any], list[str]]:
+    merged = json.loads(json.dumps(existing))
+    existing_hooks = merged.get("hooks")
+    if not isinstance(existing_hooks, dict):
+        raise InstallError(
+            "existing .codex/hooks.json 'hooks' is not an object; merge ChangeForge hooks manually"
+        )
+    source_hooks = source.get("hooks", {})
+    if not isinstance(source_hooks, dict):
+        raise InstallError("built codex hooks.json 'hooks' is not an object")
+
+    known_commands = _collect_hook_commands(existing_hooks)
+    summary: list[str] = []
+    for event, groups in source_hooks.items():
+        if not isinstance(groups, list):
+            continue
+        target_groups = existing_hooks.setdefault(event, [])
+        if not isinstance(target_groups, list):
+            raise InstallError(f"existing hooks.{event} is not a list; merge manually")
+        for group in groups:
+            new_group = _group_with_new_commands(group, known_commands)
+            if new_group is not None:
+                target_groups.append(new_group)
+                summary.append(f"add {event} hook group: {group.get('matcher', '(stop)')}")
+    if not summary:
+        summary.append("ChangeForge hooks already present; no command added")
+    return merged, summary
+
+
+def _collect_hook_commands(value: Any) -> set[str]:
+    commands: set[str] = set()
+    if isinstance(value, dict):
+        command = value.get("command")
+        if isinstance(command, str):
+            commands.add(command)
+        for child in value.values():
+            commands |= _collect_hook_commands(child)
+    elif isinstance(value, list):
+        for child in value:
+            commands |= _collect_hook_commands(child)
+    return commands
+
+
+def _group_with_new_commands(group: Any, known_commands: set[str]) -> dict[str, Any] | None:
+    if not isinstance(group, dict):
+        return None
+    hooks = group.get("hooks")
+    if not isinstance(hooks, list):
+        return None
+    fresh = [
+        hook
+        for hook in hooks
+        if isinstance(hook, dict)
+        and isinstance(hook.get("command"), str)
+        and hook["command"] not in known_commands
+    ]
+    if not fresh:
+        return None
+    for hook in fresh:
+        known_commands.add(hook["command"])
+    new_group = {key: value for key, value in group.items() if key != "hooks"}
+    new_group["hooks"] = fresh
+    return new_group
+
+
+def _hook_activation_notes(agent: str) -> list[str]:
+    notes = [
+        "hooks are warning-only; default mode is CHANGEFORGE_HOOK_MODE=warn",
+        "hooks are not auto-trusted",
+    ]
+    if agent == "codex":
+        notes.append("run /hooks in Codex and trust the project hook after reviewing the command")
+    else:
+        notes.append("merge settings.changeforge-hooks.fragment.json into .claude/settings.json")
+    return notes
+
+
+def apply_hook_install(plan: HookPlan, dry_run: bool) -> None:
+    """Write the planned hook files. Preserves existing project hook config."""
+    if dry_run:
+        return
+    hooks_dir = plan.target_root / "hooks"
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+    for source_script, destination, _action in plan.script_actions:
+        shutil.copy2(source_script, destination)
+        destination.chmod(0o755)
+    if plan.manifest_action is not None:
+        manifest_source, manifest_target, _ = plan.manifest_action
+        shutil.copy2(manifest_source, manifest_target)
+    if plan.config_target is not None and plan.config_payload is not None:
+        write_json(plan.config_target, plan.config_payload)
+
+
+def render_hook_plan(plan: HookPlan) -> list[str]:
+    """Human-readable description of a hook plan for dry-run output."""
+    lines = [
+        f"hooks: agent {plan.agent}",
+        f"hooks: target {plan.target_root}",
+    ]
+    for _source, destination, action in plan.script_actions:
+        lines.append(f"hooks: {action} script {destination.name}")
+    if plan.manifest_action is not None:
+        lines.append(f"hooks: {plan.manifest_action[2]} {HOOK_MANIFEST_NAME}")
+    for summary in plan.config_summary:
+        lines.append(f"hooks: config: {summary}")
+    for note in plan.notes:
+        lines.append(f"hooks: note: {note}")
+    return lines
+

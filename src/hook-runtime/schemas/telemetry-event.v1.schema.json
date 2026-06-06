@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/telemetry-event.v1.schema.json",
+  "title": "ChangeForge Hook Telemetry Event",
+  "description": "One JSONL record appended by a ChangeForge hook to the user cache. Telemetry is a runtime fact log for offline review. It must never contain prompts, environment variables, secrets, full command arguments, or command output.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "timestamp_utc",
+    "repo_hash",
+    "cwd_hash",
+    "runtime",
+    "hook_name",
+    "event_name",
+    "session_id",
+    "mode",
+    "tool_name",
+    "changed_paths",
+    "hook_findings",
+    "suggested_skills",
+    "suggested_capabilities",
+    "route_manifest_detected",
+    "required_references_detected",
+    "validation_evidence_detected",
+    "residual_risk_detected"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1"
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "description": "UTC ISO 8601 timestamp."
+    },
+    "repo_hash": {
+      "type": "string",
+      "description": "SHA-256 prefix of the resolved repository root. Never the absolute path."
+    },
+    "cwd_hash": {
+      "type": "string",
+      "description": "SHA-256 prefix of the resolved working directory. Never the absolute path."
+    },
+    "runtime": {
+      "type": "string",
+      "enum": ["codex", "claude", "unknown"]
+    },
+    "hook_name": {
+      "type": "string",
+      "enum": [
+        "post_edit_structure_gate",
+        "risk_surface_gate",
+        "stop_closure_gate"
+      ]
+    },
+    "event_name": {
+      "type": "string",
+      "description": "Hook event such as PostToolUse or Stop."
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Session or turn identifier, or a repo+date fallback. Never a prompt."
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["off", "monitor", "warn", "block"]
+    },
+    "tool_name": {
+      "type": "string"
+    },
+    "changed_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "added_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "command_program": {
+      "type": "string",
+      "description": "Only the leading executable name of an observed command, truncated. Never full arguments."
+    },
+    "hook_findings": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "suggested_skills": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "suggested_capabilities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "suggested_gates": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "suggested_domain_extensions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "risk_surfaces": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "route_manifest_detected": { "type": "boolean" },
+    "required_references_detected": { "type": "boolean" },
+    "validation_evidence_detected": { "type": "boolean" },
+    "residual_risk_detected": { "type": "boolean" }
+  }
+}

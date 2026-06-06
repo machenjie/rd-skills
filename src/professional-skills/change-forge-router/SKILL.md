@@ -292,6 +292,48 @@ Populate Required References for router self-use and for every selected support 
 - For L3 and higher changes, include `references/checklist.md` when present.
 - For L4/L5 changes with a selected domain extension, include the selected domain extension `SKILL.md` and any selected domain extension reference.
 
+### Machine-Readable Route Manifest
+After the Markdown Routing Result, also emit one fenced YAML block named `changeforge_route`. The Markdown result stays the human-readable explanation; the manifest is the machine-readable summary that hooks, doctor, telemetry review, and routing/agent-behavior eval tools parse. The manifest never replaces the human-readable sections and never changes the minimum sufficient routing principle.
+
+```yaml
+changeforge_route:
+  schema_version: 1
+  route_id: <kebab-case id for this routing decision>
+  complexity: <L1|L2|L3|L4|L5>
+  risk_level: <low|medium|high|critical>
+  execution_mode: <clarify|analyze|plan|implement|review|release|document|blocked>
+  selected_skills:
+    - <professional skill name>
+  selected_capabilities:
+    - <capability name (must map to a selected skill via used_by)>
+  selected_domain_extensions:
+    - <domain extension name, or omit when none>
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - <references/capabilities/<id>-<name>.md for each selected capability>
+  required_quality_gates:
+    - <gate name that must close before release>
+  skipped_quality_gates:
+    - gate: <gate name>
+      reason: <why this gate is not needed>
+  blocking_questions:
+    - <question that blocks safe execution, or omit when none>
+  assumptions:
+    - <explicit assumption used in place of a missing answer>
+  handoff_target: <next skill name or blocked>
+```
+
+Manifest rules:
+
+- `selected_capabilities` must each map to a `selected_skills` entry through the capability `used_by` relationship; do not list a capability whose owning skill is absent.
+- `required_references` must include the four router self-use references above plus the deterministic `references/capabilities/<capability-id>-<capability-name>.md` path for every selected capability.
+- `skipped_quality_gates` must give a `reason` for each skipped gate; never drop a gate silently. A gate is either in `required_quality_gates` or in `skipped_quality_gates` with a reason.
+- Keep `selected_skills`, `selected_capabilities`, `required_quality_gates`, and `skipped_quality_gates` consistent with the Markdown sections; the manifest is a projection of the same decision, not a second route.
+- The manifest is read by tooling. It does not substitute for the human-readable routing explanation, and it does not authorize any tool to mutate skills, routing rules, or capabilities.
+
 ## Quality Gate
 The route passes only when:
 
@@ -302,6 +344,7 @@ The route passes only when:
 - Every impacted area has a selected skill, a quality gate, a non-blocking assumption, or an explicit skip reason.
 - Complexity and risk match the escalation triggers.
 - The task DAG is acyclic, reviewable, acceptance-linked, and rollback-aware.
+- The `changeforge_route` manifest is present, lists the router self-use references and selected capability references, maps each selected capability to a selected skill, and records every skipped gate with a reason.
 - The route does not rely on undeclared asset ingestion, external knowledge stores, or undeclared runtime content.
 
 ## Handoff

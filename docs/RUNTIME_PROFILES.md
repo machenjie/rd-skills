@@ -65,6 +65,8 @@ Every profile generates these router files:
 
 No profile emits raw registry files, raw `src/` content, personal asset mappings, or `toolbox-mapping.md`.
 
+No profile emits telemetry. Runtime telemetry is an operational fact log written to the user cache (`${XDG_CACHE_HOME:-~/.cache}/changeforge/telemetry/`) by the optional hook runtime; it is never part of a built profile, never installed into `dist/`, and never treated as runtime skill content. See [TELEMETRY.md](TELEMETRY.md).
+
 ## Reference Loading
 
 `SKILL.md` is loaded when a skill is selected. Compiled `references/` are targeted support, not automatic context. The router selects capabilities, professional skills read only selected capability references, and L1/L2/L3/L4/L5 policy determines whether indexes, checklists, and domain extension references are required.

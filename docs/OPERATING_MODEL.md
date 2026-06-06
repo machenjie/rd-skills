@@ -48,7 +48,15 @@ It is a foundation capability, not a top-level professional skill. The router se
 
 The optional ChangeForge Hook Runtime is a project-level support artifact, not a skill and not a replacement for `change-forge-router`. It may emit warning-only reminders after tool use or before handoff, but it must not select a complete route, read every compiled reference, ingest personal content, or install raw `src/hook-runtime`.
 
-Hook runtime state is operational cache stored outside the project source tree under the user's cache directory. It is not a PUA state file, not runtime skill content, and not a user-specific corpus mapping. First-stage hook support is build-only; installer, upgrade, and doctor integration remain deferred until they can merge project hook configuration safely.
+Hook runtime state is operational cache stored outside the project source tree under the user's cache directory. It is not a PUA state file, not runtime skill content, and not a user-specific corpus mapping. Hooks are built into `dist/` and may be placed into a Codex or Claude project with `installers/install.py --with-hooks` (project scope only), which preserves existing project hook configuration and never auto-trusts hooks.
+
+## Telemetry, Review, And Human Promotion
+
+When the hook runtime is enabled, hooks also append a runtime fact log to the user cache under `${XDG_CACHE_HOME:-~/.cache}/changeforge/telemetry/<repo_hash>/`. Telemetry is operational cache, not project source and not runtime skill content. It records execution-time facts only: changed paths, hook findings, suggested skills and capabilities, and closure-completeness flags. It never records prompts, environment variables, secrets, or full command output, and it never edits `SKILL.md`, `routing-rules.yaml`, or `capabilities.yaml`.
+
+`change-forge-router` emits a machine-readable `changeforge_route` manifest alongside its human-readable result so hooks, `doctor`, telemetry review, and the eval tools can check closure completeness mechanically. The manifest does not replace the human-readable routing explanation and does not authorize any tool to mutate skill rules.
+
+The improvement loop is observe → review → human-promote: `scripts/review-agent-telemetry.py` analyzes telemetry and writes advisory suggestions; a human reviews them; `scripts/promote-telemetry-suggestion.py` generates candidate golden cases, hook fixtures, or agent-behavior samples for human completion; and `scripts/eval-agent-behavior.py` scores captured outputs against expected route manifests. No tool performs online self-learning or auto-applies a suggestion. See [TELEMETRY.md](TELEMETRY.md).
 
 ## Reference Loading Model
 

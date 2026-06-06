@@ -29,6 +29,25 @@ def main() -> int:
     parser.add_argument("--scope", choices=SCOPES)
     parser.add_argument("--target", type=Path, help="Project root, or explicit user/admin skills dir.")
     parser.add_argument("--profile", choices=PROFILES, help="Expected installed profile.")
+    parser.add_argument(
+        "--telemetry-report",
+        type=Path,
+        help="Optional review report to summarize (markdown, json, or yaml).",
+    )
+    parser.add_argument(
+        "--telemetry-root",
+        type=Path,
+        help="Optional telemetry root; doctor finds the latest review report under it.",
+    )
+    parser.add_argument(
+        "--repo-hash",
+        help="Optional repo hash to scope --telemetry-root report discovery.",
+    )
+    parser.add_argument(
+        "--check-hooks",
+        action="store_true",
+        help="Inspect optional project hook files, manifest, and config references.",
+    )
     args = parser.parse_args()
 
     try:
@@ -55,6 +74,12 @@ def main() -> int:
         _inspect_skill_dirs(label, path, duplicate_index, issues)
 
     _inspect_duplicates(duplicate_index, issues)
+
+    if args.telemetry_report is not None or args.telemetry_root is not None:
+        _report_telemetry(args.telemetry_report, args.telemetry_root, args.repo_hash)
+
+    if args.check_hooks:
+        _check_project_hooks(args.target, issues)
 
     if issues:
         print("doctor: issues")
@@ -176,6 +201,99 @@ def _inspect_duplicates(duplicate_index: dict[str, list[str]], issues: list[str]
     for name, locations in sorted(duplicate_index.items()):
         if len(locations) > 1:
             issues.append(f"duplicate skill name {name!r} found in: {', '.join(locations)}")
+
+
+def _report_telemetry(
+    report_arg: Path | None,
+    telemetry_root: Path | None,
+    repo_hash: str | None,
+) -> None:
+    """Show an informational telemetry summary. This never changes doctor's exit.
+
+    Telemetry is optional. Doctor reads a generated review report and prints its
+    counts; it does not fix telemetry, never reads prompts, and never mutates
+    skills. When no report is available it points to review-agent-telemetry.py.
+    """
+    # Lazy import: changeforge_install puts scripts/ on sys.path when it loads.
+    from telemetry_utils import find_latest_report, read_report_summary, resolve_telemetry_root
+
+    print("doctor: telemetry summary")
+    report_path = report_arg
+    if report_path is None and telemetry_root is not None:
+        report_path = find_latest_report(resolve_telemetry_root(telemetry_root), repo_hash)
+
+    if report_path is None:
+        print("- no review report found; run scripts/review-agent-telemetry.py to generate one")
+        return
+
+    summary = read_report_summary(report_path)
+    if summary is None:
+        print(f"- could not read telemetry summary from {report_path}")
+        print("- run scripts/review-agent-telemetry.py to regenerate the report")
+        return
+
+    print(f"- report: {report_path}")
+    for label, key in (
+        ("sessions", "sessions"),
+        ("missed router", "missed_router"),
+        ("missed reference", "missed_reference"),
+        ("missed gate", "missed_gate"),
+        ("validation evidence missing", "validation_evidence_missing"),
+        ("residual risk missing", "residual_risk_missing"),
+        ("high severity suggestions", "high_severity_suggestions"),
+    ):
+        print(f"- {label}: {summary.get(key, 'n/a')}")
+    print("- telemetry is advisory; review suggestions before any human promotion")
+
+
+def _check_project_hooks(target: Path | None, issues: list[str]) -> None:
+    """Inspect optional project hook files and config references.
+
+    Hooks are never required. This reports presence of hook scripts, the hook
+    manifest, and whether the project hook config references the generated hook
+    scripts. It only adds an issue when hooks look partially installed.
+    """
+    project_root = (target.expanduser().resolve() if target is not None else Path.cwd().resolve())
+    print(f"doctor: project hooks ({project_root})")
+    hook_specs = (
+        ("codex", project_root / ".codex", "hooks.json"),
+        ("claude", project_root / ".claude", "settings.changeforge-hooks.fragment.json"),
+    )
+    any_present = False
+    for agent, hook_root, config_name in hook_specs:
+        scripts_dir = hook_root / "hooks"
+        manifest_path = hook_root / ".changeforge-hook-manifest.json"
+        config_path = hook_root / config_name
+        present_signals = [scripts_dir.is_dir(), manifest_path.is_file(), config_path.is_file()]
+        if not any(present_signals):
+            continue
+        any_present = True
+        scripts = sorted(scripts_dir.glob("changeforge_*.py")) if scripts_dir.is_dir() else []
+        print(f"- {agent}: hook scripts: {len(scripts)} found in {scripts_dir}")
+        if not scripts:
+            issues.append(f"{agent}: hook config or manifest present but no changeforge_* hook scripts")
+        if manifest_path.is_file():
+            print(f"- {agent}: manifest present")
+        else:
+            issues.append(f"{agent}: missing {manifest_path.name}")
+        if config_path.is_file():
+            references = _config_references_hooks(config_path)
+            state = "references generated hooks" if references else "does NOT reference changeforge hooks"
+            print(f"- {agent}: {config_name} {state}")
+            if not references:
+                issues.append(f"{agent}: {config_name} does not reference changeforge hook scripts")
+        else:
+            print(f"- {agent}: {config_name} not found (manual merge may be pending)")
+    if not any_present:
+        print("- no project hooks installed (this is fine; hooks are optional)")
+
+
+def _config_references_hooks(config_path: Path) -> bool:
+    try:
+        text = config_path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    return "changeforge_" in text
 
 
 def _print_remediation(issues: list[str]) -> None:
