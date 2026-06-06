@@ -35,6 +35,16 @@ Use when Rust code is added, reviewed, refactored, or selected for a system / se
 
 Do not use to teach Rust syntax. Do not use to introduce Rust solely because of safety appeal — require named team ownership, hiring plan, and ecosystem fit for the target domain.
 
+# Stage Fit
+
+Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
+
+- **coding**: ownership/borrowing, `Result`/`?` error model, justified `unsafe` boundary, trait design, async runtime choice.
+- **debugging-diagnosis**: lifetime/borrow errors, `panic`/`unwrap` paths, async deadlock, `Send`/`Sync` violation.
+- **code-review**: unjustified `unsafe`, `clone()` overuse, premature trait abstraction, error-type erosion.
+- **refactoring**: module/visibility boundary, public trait/type compatibility, lifetime simplification.
+- **testing**: unit and `#[should_panic]`, property tests, `miri` or sanitizer for `unsafe`.
+
 # Non-Negotiable Rules
 
 - **`unsafe` requires a `// SAFETY:` comment** documenting every invariant the caller (or the surrounding code) must uphold. Reviewed by ≥ 2 engineers including one fluent in unsafe Rust. Covered by `miri` tests where feasible.

@@ -32,6 +32,16 @@ Use when shell scripts, CLI commands, install / release / rollback scripts, CI s
 
 Do not use to bless ad-hoc commands as permanent automation without dry-run, idempotency, target validation, and tests. Do not use to teach shell syntax.
 
+# Stage Fit
+
+Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
+
+- **coding**: `set -euo pipefail`, quoting, injection-safe argument passing, idempotency, exit codes.
+- **debugging-diagnosis**: word-splitting/globbing bugs, unset-variable failures, non-portable constructs, silent pipe failure.
+- **code-review**: unquoted expansion, `eval` and command injection, missing target validation, destructive `rm` safety.
+- **refactoring**: function extraction, `shellcheck`-clean rewrite, POSIX vs bash portability.
+- **testing**: dry-run and `bats`, idempotency re-run, target-validation tests.
+
 # Non-Negotiable Rules
 
 - **Strict-mode header** at the top of every Bash script: `set -euo pipefail` + (optional) `IFS=$'\n\t'`. Failure exits the script; unset variables are errors; pipeline failures propagate.

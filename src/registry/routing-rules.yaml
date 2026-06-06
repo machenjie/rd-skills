@@ -170,6 +170,31 @@ domain_extension_signals:
     signals: payment subscription billing invoice refund chargeback trading ledger balance checkout reconciliation settlement entitlement
   - extension: low-level-systems-extension
     signals: OS kernel driver native performance C C++ Rust systems FFI ABI syscall memory safety
+engineering_stage_signals:
+  - stage: requirement-intake
+    signals: requirement clarify scope non-goal acceptance criteria
+  - stage: architecture-design
+    signals: design architecture module boundary dependency direction data ownership service boundary extensibility reversibility
+  - stage: implementation-planning
+    signals: code placement reuse decision object function class file directory design naming public private internal boundary
+  - stage: coding
+    signals: coding implementation language idiom error handling resource cleanup input validation concurrency minimal implementation
+  - stage: debugging-diagnosis
+    signals: debugging diagnosis reproduce evidence logs metrics traces hypothesis elimination root cause
+  - stage: bug-fix
+    signals: bug fix minimal fix same pattern scan regression test compatibility upstream downstream impact
+  - stage: code-review
+    signals: code review generated code correctness maintainability security reliability test evidence hallucinated API
+  - stage: refactoring
+    signals: refactoring behavior preserving extraction movement inline merge split dependency direction rollback
+  - stage: testing
+    signals: testing unit integration contract e2e regression fixture mock concurrency language specific test
+  - stage: release-delivery
+    signals: release rollout rollback migration config feature flag canary blue green observability
+  - stage: documentation-handoff
+    signals: documentation handoff change boundary validation evidence residual risk runbook changelog next action
+  - stage: skill-authoring
+    signals: SKILL.md capability reference registry routing rule skill authoring
 quality_gates:
   - requirement gate
   - impact gate
@@ -770,6 +795,14 @@ routing_rules:
       - decide whether skill content belongs in SKILL.md body references foundation capability professional skill or domain extension
       - review skill boundary triggers non-goals output contract context budget reference loading and registry impact
     priority: 60
+  - route_to: engineering-stage-professionalism
+    triggers:
+      - determine current engineering stage before launching professional capability design architecture module boundary dependency direction
+      - coding implementation language idiom debugging diagnosis reproduce root cause bug fix regression same pattern scan
+      - code review generated code correctness maintainability refactoring behavior preserving extraction movement
+      - testing unit integration contract e2e regression release rollout rollback migration config handoff validation evidence residual risk
+      - launch only current stage minimum capabilities explicitly skip out-of-stage heavy capabilities context budget next stage handoff
+    priority: 88
   - route_to: documentation-generation
     triggers:
       - update docs for actual behavior API contracts migrations configuration operations and release impact

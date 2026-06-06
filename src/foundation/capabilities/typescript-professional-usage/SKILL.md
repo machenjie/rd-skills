@@ -34,6 +34,16 @@ Use when TypeScript code, public type definitions, frontend state, Node.js servi
 
 Do not use to teach TypeScript syntax. Do not use to bless `any` as a shortcut. Do not use for raw JavaScript projects — require TypeScript migration first.
 
+# Stage Fit
+
+Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
+
+- **coding**: strict types, `unknown` over `any`, runtime validation at boundaries, async error handling, state modeling.
+- **debugging-diagnosis**: undefined/null boundary, unhandled promise rejection, stale closure, API schema mismatch.
+- **code-review**: unsafe cast, public type breakage, bundle impact.
+- **refactoring**: discriminated-union extraction, type-narrowing preservation, public API compatibility.
+- **testing**: component behavior, API contract, runtime schema tests.
+
 # Non-Negotiable Rules
 
 - **`strict: true`** plus `noUncheckedIndexedAccess` mandatory. Any disable of strict flags requires inline justification + owner + expiration.

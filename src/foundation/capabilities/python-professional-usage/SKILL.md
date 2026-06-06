@@ -34,6 +34,16 @@ Use when Python services, async APIs, scripts, automation, data/AI pipelines, li
 
 Do not use for syntax lessons. Do not use to bless ad-hoc scripts that mutate production state without dry-run / idempotency / rollback. Do not use to justify staying on EOL Python.
 
+# Stage Fit
+
+Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
+
+- **coding**: type hints, runtime validation, packaging, async/sync boundary, context manager.
+- **debugging-diagnosis**: blocking call in async, fixture leakage, import side effects, GIL/concurrency.
+- **code-review**: dynamic boundary validation, mutable defaults, broad `except`.
+- **refactoring**: module/package boundary, public `__all__` surface, dependency-injection seams.
+- **testing**: pytest fixtures, monkeypatch boundaries, deterministic data.
+
 # Non-Negotiable Rules
 
 - **Type hints protect module boundaries.** Public functions and class methods are fully annotated. `mypy --strict` (or pyright strict) passes in CI. `Any` is justified inline with `# type: ignore[reason]` or replaced with `object` / `unknown`-pattern `TypeVar`.

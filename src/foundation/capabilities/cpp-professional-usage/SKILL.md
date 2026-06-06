@@ -38,6 +38,16 @@ Use when C or C++ code, native extensions (Python C ext / Node N-API / JNI), emb
 
 Do not use to teach C/C++ syntax. Do not use to bless manual `new`/`delete` patterns where smart pointers (or Rust) would prevent the bug.
 
+# Stage Fit
+
+Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
+
+- **coding**: RAII/ownership, bounds, integer overflow, const-correctness, deterministic resource cleanup.
+- **debugging-diagnosis**: undefined behavior, use-after-free, data race, leak under ASan/UBSan/TSan/Valgrind.
+- **code-review**: raw `new`/`delete`, missing rule-of-five, aliasing, unchecked buffer.
+- **refactoring**: header/ABI boundary, ownership-transfer clarity, RAII wrapper extraction.
+- **testing**: sanitizer builds, parser fuzzing, deterministic teardown.
+
 # Non-Negotiable Rules
 
 - **RAII is mandatory.** Every resource (memory, file handle, socket, lock, GPU buffer, DB connection) is owned by an object whose destructor releases it. No raw owning pointers (`new T` without an immediate smart-pointer adoption is rejected). Prefer stack allocation; then `std::unique_ptr<T>`; then `std::shared_ptr<T>` only when shared ownership is genuine.

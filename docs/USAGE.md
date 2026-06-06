@@ -208,7 +208,9 @@ python3 scripts/validate-capabilities.py
 python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
+python3 scripts/validate-stage-routing-architecture.py
 python3 scripts/audit-skill-content.py
+python3 scripts/audit-professionalism-coverage.py
 python3 scripts/validate-skill-content-size.py
 python3 scripts/eval-routing.py
 python3 scripts/validate-hooks.py
@@ -229,6 +231,16 @@ body, section, table, or duplicated block crosses a budget defined in
 [SKILL_CONTENT_GOVERNANCE.md](SKILL_CONTENT_GOVERNANCE.md) without a recorded
 exception in `config/skill-content-exceptions.yaml`; it is warning-only by default
 and only exits non-zero with `--strict`. Neither tool blocks the build.
+
+`scripts/validate-stage-routing-architecture.py` is a blocking structural check: it
+verifies that the engineering stage model, the `engineering-stage-professionalism`
+launcher, the router Stage Professionalism contract and stage manifest, and the
+stage routes are present and that no language-deep checklist or stage matrix is
+copied into the router or launcher body. `scripts/audit-professionalism-coverage.py`
+is review-only: it writes `reports/professionalism-coverage.md` and
+`reports/professionalism-coverage.json` to flag stage/surface ownership gaps,
+over-long bodies, duplicated rules, and broad triggers, and exits 0 unless run with
+`--strict`. It does not block the build.
 
 Then use `installers/upgrade.py` for an existing managed install, or `installers/install.py --backup` when replacing a managed install intentionally.
 

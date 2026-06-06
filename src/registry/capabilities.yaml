@@ -942,3 +942,13 @@ capabilities:
     triggers: [SKILL.md authoring skill writing skill content governance skill slimming skill splitting skill reference design capability authoring routing rule authoring skill registry update prompt skill design agent skill package design professional skill review]
     risk_notes: [Poorly written skills cause over-routing under-routing context bloat stale rules missing references and unreliable Agent behavior]
     expected_outputs: [skill authoring plan with boundary trigger non-goals reference split routing impact validation impact and context budget rationale]
+
+  - id: "104"
+    name: engineering-stage-professionalism
+    group: engineering-workflow
+    path: src/foundation/capabilities/engineering-stage-professionalism
+    status: implemented
+    used_by: [change-forge-router, backend-change-builder, frontend-change-builder, data-api-contract-changer, architecture-impact-reviewer, ai-code-review-refactor, quality-test-gate, delivery-release-gate]
+    triggers: [engineering stage launch current stage product surface language surface risk surface minimum sufficient capability stage by stage execution explicit skip context budget next stage handoff design coding debugging bug fix code review refactoring testing release documentation handoff]
+    risk_notes: [Loading every relevant capability at once bloats context hides the next action and launches out-of-stage considerations such as architecture review during coding or release gate during code review]
+    expected_outputs: [stage professional launch plan with current and next stage product and language surface selected and explicitly skipped capabilities skip rationale context budget required evidence quality gates and handoff target]
