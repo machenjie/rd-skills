@@ -122,6 +122,14 @@ Return IoT/embedded change assessment with:
 - **Fleet impact**: staged rollout percentage, health check criteria, automatic rollback thresholds.
 - **Block/pass decision** with required conditions for approval.
 
+## Evidence Contract
+Close an IoT/embedded change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`), because the loss path is bricked fleets and physical safety:
+- **Basis**: the OTA safety rule, resource-limit budget, or safety-critical failsafe the change rests on.
+- **Files and boundaries inspected**: the firmware update path, control loop, and protocol layer read, with the secure-boot chain and the power-loss/recovery boundary confirmed.
+- **Placement rationale**: why the A/B partition, watchdog, and failsafe logic live where they do, and that no integer-overflow or resource exhaustion can drive an unsafe actuator output.
+- **Validation commands**: the OTA rollback rehearsal, power-loss recovery test, resource-budget measurement, and clock-sync check run, each with its outcome.
+- **Residual risk**: the connectivity-loss, protocol-compatibility, field-diagnosis, or hardware-fault path that remains, with the named owner and the staged-rollout rollback threshold.
+
 ## Quality Gate
 1. OTA update uses A/B partition scheme with validated rollback procedure tested on hardware.
 2. Firmware images are cryptographically signed and verified during boot (secure boot chain).

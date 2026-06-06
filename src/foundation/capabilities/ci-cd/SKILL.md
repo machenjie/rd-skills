@@ -13,9 +13,7 @@ Design CI/CD pipelines that **prove change quality through automated evidence**,
 
 # When To Use
 
-Use this capability when creating or modifying: CI workflows (GitHub Actions, GitLab CI, Jenkins, CircleCI, Buildkite, Azure Pipelines, Tekton, Drone), release pipelines, artifact build and publishing, image build and promotion, environment promotion logic, approval gates, deployment strategies (rolling, blue/green, canary), feature-flag cut-overs, infrastructure-as-code (Terraform, Pulumi, Crossplane) plan/apply pipelines, database-migration pipelines, monorepo affected-test and incremental-build workflows, supply-chain security controls (SBOM, signing, provenance), compliance evidence capture, or failure handling and rollback hooks.
-
-Use this capability for Helm chart pipelines, Helm release promotion, `helm lint`, `helm template`, `helm diff`, chart dependency locking, OCI chart packaging, and rendered manifest validation.
+Use this capability when creating or modifying: CI workflows (GitHub Actions, GitLab CI, Jenkins, CircleCI, Buildkite, Azure Pipelines, Tekton, Drone), release pipelines, artifact build and publishing, image build and promotion, environment promotion logic, approval gates, deployment strategies (rolling, blue/green, canary), feature-flag cut-overs, infrastructure-as-code (Terraform, Pulumi, Crossplane) plan/apply pipelines, database-migration pipelines, monorepo affected-test and incremental-build workflows, supply-chain security controls (SBOM, signing, provenance), compliance evidence capture, failure handling and rollback hooks, or Helm chart pipelines (`helm lint`, `helm template`, `helm diff`, chart dependency locking, OCI chart packaging, rendered manifest validation).
 
 # Do Not Use When
 
@@ -44,8 +42,6 @@ Anchor against: **DORA four key metrics** (Deployment Frequency, Lead Time for C
 
 ### Pipeline Stage Design — Fail-Fast Ordering
 
-Cheap and deterministic checks run first to give fast feedback; expensive or blocking checks run later to avoid wasting time on already-broken builds:
-
 | Stage | Typical checks | Block on failure? | Speed target |
 | --- | --- | --- | --- |
 | **Pre-merge / PR** | Lint, format, unit tests, secrets scan, PR policy (reviewers, size) | Yes | < 5 min |
@@ -69,23 +65,7 @@ Cheap and deterministic checks run first to give fast feedback; expensive or blo
 
 ### Decision Tree: Should This Gate Block?
 
-```
-Is this a security finding (SAST HIGH+, secrets detected, CVE CRITICAL in runtime image)?
-└─ Yes → BLOCK (no bypasses except documented emergency exception with CISO sign-off).
-
-Is this a failing unit / integration / regression test?
-├─ Flaky (known) → Quarantine track; still BLOCK on mandatory suite.
-└─ New failure → BLOCK. Fix or revert.
-
-Is this a MEDIUM dependency vulnerability in a dev-only package?
-└─ Warn only; track in vulnerability backlog; SLA = 30 days.
-
-Is this a build-time lint / format failure?
-└─ BLOCK in CI; developer-class fix (< 15 min).
-
-Is this a production deploy to regulated environment?
-└─ Require: change-ticket, approval(s), deploy window, rollback plan, post-deploy test.
-```
+The gate-blocking rule is in Non-Negotiable Rules ("Required checks block promotion … except via a named, audited emergency-override"). Full worked decision tree for security findings, flaky vs new test failures, dev-only vulnerabilities, lint failures, and regulated-environment deploys: `references/pipeline-benchmarks.md`.
 
 ### Supply-Chain Security Hardening
 

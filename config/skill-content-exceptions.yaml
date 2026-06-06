@@ -6,23 +6,17 @@
 # tracked rather than forgotten.
 #
 # allow tokens: body_lines | section_lines | table_rows | duplicate_block | repeated_phrase
+#
+# The former implementation-structure-design and ci-cd body overages were resolved
+# by reference decomposition and body tightening (see
+# reports/skill-content-optimization-plan.md).
 exceptions:
-  - path: src/foundation/capabilities/implementation-structure-design/SKILL.md
-    allow: [body_lines]
-    reason: >-
-      Heaviest capability (555 lines, Critical Details ~361). Classified
-      SPLIT_CAPABILITY; tracked as P3 (plan-only, high risk) in
-      reports/skill-content-optimization-plan.md.
-
-  - path: src/foundation/capabilities/ci-cd/SKILL.md
-    allow: [body_lines]
-    reason: >-
-      261-line CI/CD capability. Classified TIGHTEN_BODY; tracked as P2 in
-      reports/skill-content-optimization-plan.md.
-
   - path: src/professional-skills/change-forge-router/SKILL.md
     allow: [section_lines]
     reason: >-
-      Router Output Contract (route manifest) is ~185 lines and is the router's core
-      machine-readable contract. Classified MOVE_SECTIONS_TO_REFERENCES; tracked as P2
-      in reports/skill-content-optimization-plan.md.
+      Output Contract is the router's canonical Markdown Routing Result template
+      (sections 1-12). It must stay in the body: validate-skill-body-links parses its
+      "## 10. Quality Gates" block and validate-stage-routing-architecture requires its
+      Stage Professionalism fields. The machine-readable manifest schemas were already
+      moved to references/route-manifest.md (P2 in
+      reports/skill-content-optimization-plan.md).

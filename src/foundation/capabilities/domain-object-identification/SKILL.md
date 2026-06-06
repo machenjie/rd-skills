@@ -57,7 +57,14 @@ Return a domain object inventory with: object name, category, identity, owner, l
 
 # Quality Gate
 
-The inventory is complete only when rules, state transitions, permissions, persistence, and events can be assigned to explicit domain owners.
+1. Every identified object has an explicit category (entity, value object, aggregate root, domain service, or policy) with a justification.
+2. Every entity has a defined identity and lifecycle; every value object is defined by its attributes and has no identity.
+3. Each business rule, invariant, and state transition is assigned to exactly one explicit domain owner.
+4. Aggregate boundaries are drawn so that each invariant is enforceable within a single aggregate's consistency boundary.
+5. Permission, persistence, and event implications are named for each object, not deferred.
+6. Relationships and aggregate references use identity, not deep object nesting across aggregate boundaries.
+7. External resource and integration names do not overwrite internal domain language without explicit review.
+8. No rule, transition, permission, persistence concern, or event is left without an assigned owner.
 
 # Used By
 

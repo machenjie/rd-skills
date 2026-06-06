@@ -161,6 +161,14 @@ Return big data change assessment with:
 - **Lineage registration requirements**: data assets to register before deployment.
 - **Block/pass decision** with required conditions for approval.
 
+## Evidence Contract
+Close a big-data change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`), because the loss path is silent data corruption at scale:
+- **Basis**: the schema-compatibility rule, freshness SLA, or experiment contract the change rests on.
+- **Files and boundaries inspected**: the schema, partition strategy, and pipeline stages read, with the producer/consumer boundary and the late-arriving-data window confirmed.
+- **Placement rationale**: why the partition key, idempotency boundary, and point-in-time feature join are shaped as they are, with the skew and cost implication.
+- **Validation commands**: the schema-evolution test, pipeline re-run idempotency check, backfill/replay rehearsal, and SRM check run, each with its outcome.
+- **Residual risk**: the schema-drift, freshness, warehouse-cost, or experiment-SRM path that remains, with the named owner and the lineage registration.
+
 ## Quality Gate
 1. Schema changes are registered in schema registry with BACKWARD or FULL compatibility enforcement.
 2. All downstream consumers of a changed schema are identified and validated.

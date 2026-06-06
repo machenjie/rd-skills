@@ -190,6 +190,14 @@ Return a reliability and observability plan with:
 - **Chaos/game day obligations**: failure mode scenarios to test in staging before production deployment.
 - **Residual risks**: accepted gaps with justification and mitigation.
 
+## Evidence Contract
+Close a reliability and observability plan only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the SLI/SLO target and error-budget headroom the plan rests on, and the RED/USE signal set it instruments.
+- **Files and boundaries inspected**: the request paths, dependencies, and resource limits examined, and the saturation or contention point identified.
+- **Placement rationale**: where each log field, metric, trace span, and burn-rate alert attaches, and which alert owner and runbook it routes to.
+- **Validation commands**: the load test, chaos/game-day scenario, or burn-rate query run, each with its outcome.
+- **Residual risk**: the capacity, cost, or recovery path that remains unverified, with the scaling or rollback trigger and the named owner.
+
 ## Quality Gate
 1. Every user-facing path has an SLI with a documented SLO target.
 2. Error budget headroom is confirmed before deployment — feature is blocked if budget is exhausted.

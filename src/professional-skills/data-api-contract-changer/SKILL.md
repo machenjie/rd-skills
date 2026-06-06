@@ -158,6 +158,14 @@ Return a structured contract change plan with:
 - **Rollback safety**: Whether rollback is safe without data intervention; required rollback script.
 - **Test obligations**: Consumer contract tests, migration tests, rollback tests, idempotency tests.
 
+## Evidence Contract
+Close a contract change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the compatibility class, schema standard (OpenAPI/JSON Schema/Protobuf), and error-code stability rule the change rests on.
+- **Files and boundaries inspected**: the schema, DTOs, and named consumers read, and the DTO-vs-internal-model boundary confirmed for each changed field.
+- **Placement rationale**: why the change is expand-contract phased as it is, with the pagination/sort stability decision and the rejected breaking alternative.
+- **Validation commands**: the consumer-driven contract tests, migration tests, and rollback tests run, each with its outcome.
+- **Residual risk**: the consumer not yet migrated, the irreversible migration step, or the unversioned field that remains, and the named owner of the follow-up.
+
 ## Quality Gate
 1. Compatibility class is explicitly declared for every contract change.
 2. All consumers are enumerated with migration readiness assessment.

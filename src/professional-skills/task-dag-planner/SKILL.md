@@ -152,6 +152,14 @@ Return a task DAG with:
 - **Risk per task**: Rollback cost and reversibility for each high-risk task.
 - **Residual risk summary**: Accepted risks with justification and mitigating controls.
 
+## Evidence Contract
+Close a task DAG only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the change request and dependency facts each task and edge rests on.
+- **Files and boundaries inspected**: the surfaces, owners, and shared artifacts each task touches, and the tasks that therefore cannot run concurrently because they would collide on the same file or resource.
+- **Placement rationale**: why each node is a single reviewable patch unit with a named input, output, owner, and dependency edge, and why the parallelism map is safe.
+- **Validation commands**: the verification node attached to each task — the literal command or check that must pass before downstream work unblocks — and the rollback procedure for each irreversible task.
+- **Residual risk**: the sequencing or rollback assumption that remains unproven, with the named owner.
+
 ## Quality Gate
 1. All task dependencies form a valid DAG (no circular dependencies; topological sort succeeds).
 2. No task combines more than one distinct risk domain (migration, authorization change, API change) into a single unreviewed unit.

@@ -1,0 +1,62 @@
+---
+id: go-backend-goroutine-leak-bugfix
+description: |
+  A Go backend bug fix for a leaked goroutine caused by a missing context
+  cancellation. Stage-aware bug-fix routing that must select the Go language
+  capability and require a same-pattern scan and regression test, without
+  escalating to API, data, security, or release gates.
+prompt: |
+  A Go service leaks goroutines under load: handleSubscribe spawns a worker
+  goroutine that ranges over a channel but never returns when the request
+  context is cancelled, so each cancelled request leaks one goroutine and a
+  connection. Fix the leak by propagating ctx cancellation into the worker,
+  add a regression test with the race detector, and check whether the same
+  missing-cancellation pattern exists in the other stream handlers.
+expected:
+  complexity: L2
+  risk_level: low
+  risk_triggers: []
+  skills:
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - go-professional-usage
+    - failure-diagnosis
+    - agent-execution-discipline
+    - implementation-structure-design
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - integration-change-builder
+    - security-privacy-gate
+    - delivery-release-gate
+    - architecture-impact-reviewer
+  capabilities:
+    - api-contract-design
+    - data-migration-design
+    - threat-modeling
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - API/data gate
+    - architecture gate
+    - security gate
+    - delivery gate
+notes: |
+  A Go-specific backend bug fix must select go-professional-usage for the
+  goroutine-lifecycle and context-cancellation concerns, failure-diagnosis for
+  the verified root cause, and agent-execution-discipline for the same-pattern
+  scan across sibling handlers plus a race-detector regression test. It is a
+  behavior-restoring local fix: it must not route to API/data, security,
+  architecture, or release gates, and no domain extension applies.
