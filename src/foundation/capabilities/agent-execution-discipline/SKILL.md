@@ -27,6 +27,14 @@ Do not use for trivial L1 changes such as text copy edits, README typo fixes, lo
 
 Do not use to add narrative storytelling, persona styling, emoji-laden status lines, or persistent runtime state for "agent mood" or "agent score". This capability is a behavior constraint, not a runtime feature.
 
+# Stage Fit
+
+Launched across stages as the execution kernel, with emphasis in debugging-diagnosis, bug-fix, and documentation-handoff. Per-stage focus:
+
+- **debugging-diagnosis**: verified cause before fix; no same-path retry after two failures.
+- **bug-fix**: same-pattern scan, minimal diff, reuse and placement rationale.
+- **documentation-handoff**: evidence inventory, residual risk, and validation results before closure.
+
 # Non-Negotiable Rules
 
 - **Evidence-based completion.** A change is not complete until concrete evidence (test output, validator output, fixture diff, screenshot, log excerpt, or measured result) is attached to the completion claim.

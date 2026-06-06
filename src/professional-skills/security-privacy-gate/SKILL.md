@@ -28,6 +28,11 @@ Prevent security and privacy regressions by systematically reviewing trust bound
 - The change is a static content or documentation update with no code execution, data handling, or permission boundary involvement.
 - A formal security audit or penetration test is in progress by an independent security team that will provide its own findings.
 
+## Stage Fit
+Risk-escalation gate across all stages; deepest in coding, code-review, and release-delivery. Per-stage focus:
+- **coding / code-review**: authn/authz, object-level authorization, input/output handling, injection, and secrets.
+- **release-delivery**: dependency exposure, IAM and configuration exposure, and privacy obligations before ship.
+
 ## Non-Negotiable Rules
 - **Object-level authorization (IDOR prevention) must be enforced for every data access**: route-level or function-level authorization is insufficient — every database query that retrieves user-owned data must verify that the requesting user owns or has permission to access that specific record.
 - **Input validation at every trust boundary**: validate type, length, format, and allowed values for every input that crosses a trust boundary — client to server, server to external service, file upload, URL parameter.

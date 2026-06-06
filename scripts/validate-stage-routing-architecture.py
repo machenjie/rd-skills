@@ -19,10 +19,13 @@ is present and wired:
    docs/ENGINEERING_STAGE_MODEL.md and referenced, not duplicated).
 9. The recommended/full/dev profile count math is intact.
 10. The authored capability count matches scripts/validation_utils.
+11. Prose counts in docs and routing-rules match the canonical foundation
+    capability count and the dev profile top-level count (no stale 102/128).
 """
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from validation_utils import (
@@ -99,6 +102,41 @@ LANGUAGE_DEEP_MARKER_LIMIT = 2
 # Distinctive marker of the canonical full stage matrix. It must live only in the
 # stage-model document, never copied into a SKILL body.
 FULL_MATRIX_MARKER = "do not launch by default"
+
+# Files whose prose counts must track the canonical foundation-capability count
+# and the dev profile top-level count. Stale 102/128 prose drifts from the
+# enforced constants in scripts/validation_utils and is a documentation defect.
+DOC_COUNT_FILES = (
+    "README.md",
+    "docs/RUNTIME_PROFILES.md",
+    "docs/OPERATING_MODEL.md",
+    "docs/USAGE.md",
+    "docs/INSTALLATION.md",
+    "docs/RELEASE.md",
+    "docs/PACKAGING.md",
+    "docs/SKILL_CONTENT_GOVERNANCE.md",
+    "src/registry/routing-rules.yaml",
+    "src/professional-skills/change-forge-router/SKILL.md",
+    "src/foundation/capabilities/README.md",
+)
+
+# A number immediately tied to "foundation capabilities" (or the composite
+# "+ N foundation" / "foundation capability count is N") is a count, not an id.
+# Capability id references ("id 102", "102 `agent-execution-discipline`") put the
+# number before a backtick name or punctuation, never before "foundation".
+_FOUNDATION_COUNT_RES = (
+    re.compile(r"(\d+)\s+(?:implemented\s+)?foundation\s+capabilit(?:y|ies)"),
+    re.compile(r"(\d+)\s+implemented\s+capabilities"),
+    re.compile(r"\+\s*(\d+)\s+foundation\b"),
+    re.compile(r"[Ff]oundation capability count is (\d+)"),
+)
+# Dev profile total phrasings: "`dev` = N" and "N for `dev`".
+_DEV_COUNT_RES = (
+    re.compile(r"`dev`\s*=\s*(\d+)"),
+    re.compile(r"(\d+)\s+for\s+`dev`"),
+)
+# "Top-level count: N" appears once per profile in RUNTIME_PROFILES.md.
+_TOP_LEVEL_COUNT_RE = re.compile(r"Top-level count:\s*(\d+)")
 
 
 def _read_body(path: Path, errors: list[str]) -> str | None:
@@ -293,6 +331,48 @@ def _check_capability_count_consistency(errors: list[str]) -> None:
         )
 
 
+def _check_doc_count_consistency(errors: list[str]) -> None:
+    """Scan curated docs and routing-rules for stale foundation/dev counts.
+
+    The enforced constants live in scripts/validation_utils. Prose copies of the
+    counts ("102 foundation capabilities", "128 for `dev`") drift silently; this
+    check fails when a count in scanned prose no longer matches the canonical
+    foundation capability count or the dev profile top-level count.
+    """
+    foundation = EXPECTED_FOUNDATION_CAPABILITY_COUNT
+    dev_total = EXPECTED_PROFILE_TOP_LEVEL_COUNTS["dev"]
+    allowed_top_level = set(EXPECTED_PROFILE_TOP_LEVEL_COUNTS.values())
+    for rel in DOC_COUNT_FILES:
+        path = ROOT / rel
+        if not path.is_file():
+            continue
+        for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            snippet = line.strip()[:80]
+            for pattern in _FOUNDATION_COUNT_RES:
+                for match in pattern.finditer(line):
+                    value = int(match.group(1))
+                    if value != foundation:
+                        errors.append(
+                            f"{rel}:{line_no}: stale foundation capability count {value} "
+                            f"(expected {foundation}): {snippet}"
+                        )
+            for pattern in _DEV_COUNT_RES:
+                for match in pattern.finditer(line):
+                    value = int(match.group(1))
+                    if value != dev_total:
+                        errors.append(
+                            f"{rel}:{line_no}: stale dev profile top-level count {value} "
+                            f"(expected {dev_total}): {snippet}"
+                        )
+            for match in _TOP_LEVEL_COUNT_RE.finditer(line):
+                value = int(match.group(1))
+                if value not in allowed_top_level:
+                    errors.append(
+                        f"{rel}:{line_no}: stale top-level count {value} "
+                        f"(expected one of {sorted(allowed_top_level)}): {snippet}"
+                    )
+
+
 def main() -> int:
     errors: list[str] = []
 
@@ -306,6 +386,7 @@ def main() -> int:
     _check_matrix_not_duplicated(errors)
     _check_profile_count_logic(errors)
     _check_capability_count_consistency(errors)
+    _check_doc_count_consistency(errors)
 
     if errors:
         return fail_many("validate-stage-routing-architecture", errors)

@@ -114,10 +114,30 @@ class SessionSummary:
     validation_seen: bool = False
     residual_risk_seen: bool = False
     references_seen: bool = False
+    stage_manifest_seen: bool = False
+    manifest_current_stage: str = ""
+    manifest_selected_skills: set[str] = field(default_factory=set)
+    manifest_selected_capabilities: set[str] = field(default_factory=set)
+    manifest_selected_domain_extensions: set[str] = field(default_factory=set)
+    manifest_required_references: set[str] = field(default_factory=set)
+    manifest_required_quality_gates: set[str] = field(default_factory=set)
+    manifest_skipped_quality_gates: set[str] = field(default_factory=set)
 
     @property
     def has_code_change(self) -> bool:
         return bool(self.changed_paths or self.risk_surfaces or self.structural_findings)
+
+    @property
+    def is_non_trivial(self) -> bool:
+        """A change that should carry a stage manifest, not a single trivial edit."""
+        return len(self.changed_paths) > 1 or bool(self.risk_surfaces) or bool(
+            self.structural_findings
+        )
+
+    @property
+    def manifest_selected(self) -> set[str]:
+        """Capabilities and domain extensions the route manifest actually named."""
+        return self.manifest_selected_capabilities | self.manifest_selected_domain_extensions
 
     @property
     def structural_findings(self) -> set[str]:
@@ -274,6 +294,28 @@ def _session_summaries(
             session.validation_seen |= bool(record.get("validation_evidence_detected"))
             session.residual_risk_seen |= bool(record.get("residual_risk_detected"))
             session.references_seen |= bool(record.get("required_references_detected"))
+            session.stage_manifest_seen |= bool(record.get("stage_manifest_detected"))
+            stage = record.get("manifest_current_stage")
+            if isinstance(stage, str) and stage.strip():
+                session.manifest_current_stage = stage.strip()
+            session.manifest_selected_skills.update(
+                _string_list(record.get("manifest_selected_skills"))
+            )
+            session.manifest_selected_capabilities.update(
+                _string_list(record.get("manifest_selected_capabilities"))
+            )
+            session.manifest_selected_domain_extensions.update(
+                _string_list(record.get("manifest_selected_domain_extensions"))
+            )
+            session.manifest_required_references.update(
+                _string_list(record.get("manifest_required_references"))
+            )
+            session.manifest_required_quality_gates.update(
+                _string_list(record.get("manifest_required_quality_gates"))
+            )
+            session.manifest_skipped_quality_gates.update(
+                _string_list(record.get("manifest_skipped_quality_gates"))
+            )
     return sessions
 
 
@@ -285,6 +327,7 @@ def _detect_issues(session: SessionSummary) -> list[Suggestion]:
         _detect_missed_reuse_evidence,
         _detect_missed_language_capability,
         _detect_missed_middleware_capability,
+        _detect_missed_stage_manifest,
         _detect_missed_validation_evidence,
         _detect_missed_residual_risk,
         _detect_possible_over_routing,
@@ -314,69 +357,101 @@ def _detect_missed_router(session: SessionSummary) -> Suggestion | None:
 
 def _detect_missed_implementation_structure(session: SessionSummary) -> Suggestion | None:
     structural = session.structural_findings
-    if structural and session.stop_seen and not session.manifest_seen:
-        return _suggestion(
-            "missed_implementation_structure",
-            "medium",
-            f"structural changes ({_short(sorted(structural))}) without a route manifest",
-            session,
-            "Select implementation-structure-design and record reuse and placement rationale.",
-            "evals/agent-behavior/samples",
-        )
-    return None
+    if not (structural and session.stop_seen):
+        return None
+    if "implementation-structure-design" in session.manifest_selected_capabilities:
+        return None
+    detail = (
+        "route manifest omits implementation-structure-design"
+        if session.manifest_seen
+        else "no route manifest"
+    )
+    return _suggestion(
+        "missed_implementation_structure",
+        "medium",
+        f"structural changes ({_short(sorted(structural))}) but {detail}",
+        session,
+        "Select implementation-structure-design and record reuse and placement rationale.",
+        "evals/agent-behavior/samples",
+    )
 
 
 def _detect_missed_reuse_evidence(session: SessionSummary) -> Suggestion | None:
     reuse = session.findings.get("reuse_findings", set())
-    if reuse and session.stop_seen and not session.manifest_seen:
-        return _suggestion(
-            "missed_reuse_evidence",
-            "medium",
-            f"reuse-sensitive change ({_short(sorted(reuse))}) without reuse-ladder evidence",
-            session,
-            "Record the reuse ladder before adding helper/common/utils/shared/service/repository code.",
-            "evals/agent-behavior/samples",
-        )
-    return None
+    if not (reuse and session.stop_seen):
+        return None
+    if "implementation-structure-design" in session.manifest_selected_capabilities:
+        return None
+    detail = (
+        "route manifest omits implementation-structure-design"
+        if session.manifest_seen
+        else "no reuse-ladder evidence"
+    )
+    return _suggestion(
+        "missed_reuse_evidence",
+        "medium",
+        f"reuse-sensitive change ({_short(sorted(reuse))}) with {detail}",
+        session,
+        "Record the reuse ladder before adding helper/common/utils/shared/service/repository code.",
+        "evals/agent-behavior/samples",
+    )
 
 
 def _detect_missed_language_capability(session: SessionSummary) -> Suggestion | None:
-    if session.manifest_seen or not session.stop_seen:
+    if not session.stop_seen:
         return None
     expected = _expected_language_capabilities(session.changed_paths)
-    missing = sorted(expected - session.suggested_capabilities)
-    if missing:
-        return _suggestion(
-            "missed_language_capability",
-            "medium",
-            f"language files changed without {_short(missing)} capability in the route",
-            session,
-            f"Select the matching language professional usage capability: {', '.join(missing)}.",
-            "evals/routing",
-        )
-    return None
+    if not expected:
+        return None
+    missing = sorted(expected - session.manifest_selected_capabilities)
+    if not missing:
+        return None
+    detail = "route manifest omits" if session.manifest_seen else "no route manifest selects"
+    return _suggestion(
+        "missed_language_capability",
+        "medium",
+        f"language files changed but {detail} {_short(missing)}",
+        session,
+        f"Select the matching language professional usage capability: {', '.join(missing)}.",
+        "evals/routing",
+    )
 
 
 def _detect_missed_middleware_capability(session: SessionSummary) -> Suggestion | None:
-    if not session.risk_surfaces or session.manifest_seen or not session.stop_seen:
+    if not session.risk_surfaces or not session.stop_seen:
         return None
-    expectations = sorted(
-        {
-            MIDDLEWARE_EXPECTATION[surface]
-            for surface in session.risk_surfaces
-            if surface in MIDDLEWARE_EXPECTATION
-        }
+    expectations = {
+        MIDDLEWARE_EXPECTATION[surface]
+        for surface in session.risk_surfaces
+        if surface in MIDDLEWARE_EXPECTATION
+    }
+    missing = sorted(expectations - session.manifest_selected)
+    if not missing:
+        return None
+    detail = "route manifest omits" if session.manifest_seen else "no route manifest selects"
+    return _suggestion(
+        "missed_middleware_capability",
+        "high",
+        f"middleware risk surfaces {_short(sorted(session.risk_surfaces))} but {detail} {_short(missing)}",
+        session,
+        f"Select the matching capability/gate: {', '.join(missing)}.",
+        "evals/routing",
     )
-    if expectations:
-        return _suggestion(
-            "missed_middleware_capability",
-            "high",
-            f"middleware risk surfaces {_short(sorted(session.risk_surfaces))} without a route manifest",
-            session,
-            f"Select the matching capability/gate: {', '.join(expectations)}.",
-            "evals/routing",
-        )
-    return None
+
+
+def _detect_missed_stage_manifest(session: SessionSummary) -> Suggestion | None:
+    if not (session.stop_seen and session.manifest_seen):
+        return None
+    if session.stage_manifest_seen or not session.is_non_trivial:
+        return None
+    return _suggestion(
+        "missed_stage_manifest",
+        "medium",
+        "non-trivial change emitted changeforge_route but no changeforge_stage_route",
+        session,
+        "Emit a changeforge_stage_route naming the current stage and explicitly skipped capabilities.",
+        "evals/agent-behavior/samples",
+    )
 
 
 def _detect_missed_validation_evidence(session: SessionSummary) -> Suggestion | None:
@@ -463,7 +538,9 @@ def _is_missing_reference(session: SessionSummary) -> bool:
 
 
 def _is_missing_gate(session: SessionSummary) -> bool:
-    return bool(session.risk_surfaces) and session.stop_seen and not session.manifest_seen
+    if not (session.risk_surfaces and session.stop_seen):
+        return False
+    return not session.manifest_required_quality_gates and not session.manifest_skipped_quality_gates
 
 
 def _count_metric(

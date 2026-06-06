@@ -10,6 +10,7 @@ from changeforge_common import (
     detect_runtime,
     emit_stop_reminder,
     event_name,
+    extract_manifest_fields,
     hook_mode,
     is_stop,
     load_state,
@@ -91,7 +92,8 @@ def main() -> int:
         if not _has_closure_surface(state):
             return 0
         final_text = _final_text(event)
-        signals = _closure_signals(final_text, state)
+        manifest = extract_manifest_fields(final_text)
+        signals = _closure_signals(final_text, state, manifest)
         write_telemetry_event(
             repo,
             runtime=runtime,
@@ -111,6 +113,14 @@ def main() -> int:
             required_references_detected=signals["references"],
             validation_evidence_detected=signals["validation"],
             residual_risk_detected=signals["risk"],
+            stage_manifest_detected=bool(manifest.get("stage_present")),
+            manifest_current_stage=manifest.get("current_stage", ""),
+            manifest_selected_skills=manifest.get("selected_skills", []),
+            manifest_selected_capabilities=manifest.get("selected_capabilities", []),
+            manifest_selected_domain_extensions=manifest.get("selected_domain_extensions", []),
+            manifest_required_references=manifest.get("required_references", []),
+            manifest_required_quality_gates=manifest.get("required_quality_gates", []),
+            manifest_skipped_quality_gates=manifest.get("skipped_quality_gates", []),
         )
         if mode == "monitor":
             clear_state(repo, runtime)
@@ -149,12 +159,14 @@ def _has_closure_surface(state: dict) -> bool:
     )
 
 
-def _closure_signals(final_text: str, state: dict) -> dict[str, bool]:
+def _closure_signals(final_text: str, state: dict, manifest: dict) -> dict[str, bool]:
     """Completeness flags for telemetry. This is presence detection only.
 
     The Stop gate does not judge semantic correctness; it records whether the
     final handoff text contains each kind of closure evidence so offline review
     can spot missing route manifests, validation, references, or residual risk.
+    The parsed manifest sharpens route and reference detection beyond a bare
+    keyword scan.
     """
     lowered = final_text.casefold()
 
@@ -162,10 +174,10 @@ def _closure_signals(final_text: str, state: dict) -> dict[str, bool]:
         return any(keyword.casefold() in lowered for keyword in CLOSURE_KEYWORDS[group])
 
     return {
-        "route_manifest": "changeforge_route" in lowered,
+        "route_manifest": bool(manifest.get("route_present")) or "changeforge_route" in lowered,
         "validation": bool(state.get("validation_seen")) or has("validation"),
         "risk": has("risk"),
-        "references": "reference" in lowered,
+        "references": bool(manifest.get("required_references")) or "reference" in lowered,
         "skills": has("skills"),
     }
 
@@ -219,7 +231,9 @@ def _closure_message(state: dict, final_text: str) -> str:
     return f"""ChangeForge Closure Gate reminder.
 {detail_text}
 This turn changed files or triggered risk surfaces. Before final handoff, include:
-- ChangeForge skill path used
+- the changeforge_route manifest: selected skills, selected capabilities, required references, and required quality gates
+- for non-trivial engineering work, the changeforge_stage_route manifest: current stage, launched and explicitly skipped capabilities, and next-stage handoff
+- required references: the router self-use references plus the selected capability references
 - changed files
 - structure/reuse/placement rationale if structure gate fired
 - validation commands and results

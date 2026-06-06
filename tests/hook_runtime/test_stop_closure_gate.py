@@ -84,6 +84,18 @@ def load_state(cwd: Path, cache: Path) -> dict:
             os.environ["XDG_CACHE_HOME"] = previous_cache
 
 
+def read_telemetry(cache: Path) -> list[dict]:
+    import glob
+
+    records: list[dict] = []
+    pattern = str(cache / "changeforge" / "telemetry" / "*" / "sessions" / "*.jsonl")
+    for file_path in glob.glob(pattern):
+        for line in Path(file_path).read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                records.append(json.loads(line))
+    return records
+
+
 class StopClosureGateTests(unittest.TestCase):
     def test_empty_state_is_silent(self) -> None:
         event = json.loads((FIXTURE_DIR / "codex_stop_with_changes.json").read_text())
@@ -268,6 +280,60 @@ class StopClosureGateTests(unittest.TestCase):
             run_stop(event, cwd, cache, mode="block", agent="codex")
             state = load_state(cwd, cache)
         self.assertNotEqual(state["comment_findings"], [])
+
+    def test_route_and_stage_manifest_recorded_in_telemetry(self) -> None:
+        manifest_text = (
+            "Routing done.\n\n"
+            "```yaml\n"
+            "changeforge_route:\n"
+            "  selected_skills:\n"
+            "    - backend-change-builder\n"
+            "  selected_capabilities:\n"
+            "    - implementation-structure-design\n"
+            "    - authentication-authorization\n"
+            "  required_references:\n"
+            "    - references/routing-rules.md\n"
+            "  required_quality_gates:\n"
+            "    - security gate\n"
+            "  skipped_quality_gates:\n"
+            "    - gate: delivery gate\n"
+            "      reason: no deploy\n"
+            "```\n\n"
+            "```yaml\n"
+            "changeforge_stage_route:\n"
+            "  current_stage: coding\n"
+            "  selected_capabilities: []\n"
+            "```\n"
+        )
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": manifest_text}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, changed_paths=["src/services/order_service.py"])
+            run_stop(event, cwd, cache, mode="monitor")
+            records = read_telemetry(cache)
+        self.assertEqual(len(records), 1)
+        record = records[0]
+        self.assertTrue(record["route_manifest_detected"])
+        self.assertTrue(record["stage_manifest_detected"])
+        self.assertEqual(record["manifest_current_stage"], "coding")
+        self.assertIn(
+            "implementation-structure-design", record["manifest_selected_capabilities"]
+        )
+        self.assertIn(
+            "authentication-authorization", record["manifest_selected_capabilities"]
+        )
+        self.assertEqual(record["manifest_skipped_quality_gates"], ["delivery gate"])
+
+    def test_closure_reminder_requests_route_and_stage_manifest(self) -> None:
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": "done"}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, changed_paths=["a.py"])
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("changeforge_route", result.stdout)
+        self.assertIn("changeforge_stage_route", result.stdout)
+        self.assertIn("required references", result.stdout)
 
 
 if __name__ == "__main__":

@@ -29,6 +29,11 @@ Make every release execution safe, observable, and reversible — by defining en
 - The change is source-code-only with no deployment, runtime configuration, release coordination, or consumer notification involved.
 - The change is a documentation-only edit with no deployment artifact.
 
+## Stage Fit
+Owns release-delivery; also serves infrastructure-deployment, kubernetes-helm, and ci-cd surfaces. Per-stage focus:
+- **release-delivery**: rollout sequence, rollback trigger, config and migration compatibility, health checks, alert ownership.
+- **documentation-handoff**: release notes, runbook, and post-release verification.
+
 ## Non-Negotiable Rules
 - **Define rollback before release** — every deployable change must have a documented, tested rollback procedure before deployment begins; "revert the commit" is not a rollback plan.
 - **Verify all environment configuration and secrets references** before deployment — missing or misconfigured environment variables are the leading cause of post-deploy failures.

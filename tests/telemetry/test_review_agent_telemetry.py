@@ -108,6 +108,51 @@ class ReviewAgentTelemetryTests(unittest.TestCase):
             result = _run("--telemetry-root", str(root), "--fail-on-high-severity")
             self.assertEqual(result.returncode, 1)
 
+    def test_detects_missing_capability_even_with_manifest(self) -> None:
+        # A manifest is present and closure evidence is complete, but the
+        # manifest omits the go language capability and
+        # implementation-structure-design, and there is no stage manifest.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "telemetry"
+            repo_hash = "repohashaaaaaaaaaaaaaaaa"
+            structure = {"structure_findings": ["src/services/order_service.go: new file"]}
+            self._seed(
+                root,
+                repo_hash,
+                [
+                    _record(
+                        changed_paths=["src/services/order_service.go"],
+                        hook_findings=structure,
+                    ),
+                    _record(
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=[
+                            "src/services/order_service.go",
+                            "src/services/order_repo.go",
+                        ],
+                        route_manifest_detected=True,
+                        required_references_detected=True,
+                        validation_evidence_detected=True,
+                        residual_risk_detected=True,
+                        stage_manifest_detected=False,
+                        manifest_selected_capabilities=["logging-error-handling"],
+                        manifest_required_quality_gates=["test gate"],
+                        hook_findings=structure,
+                    ),
+                ],
+            )
+            result = _run("--telemetry-root", str(root), "--format", "json")
+            self.assertEqual(result.returncode, 0)
+            report = list((root / repo_hash / "reports").glob("*-agent-telemetry-review.json"))
+            self.assertTrue(report)
+            text = report[0].read_text(encoding="utf-8")
+            self.assertIn("missed_language_capability", text)
+            self.assertIn("missed_implementation_structure", text)
+            self.assertIn("missed_stage_manifest", text)
+            # A route manifest was present, so this is not a missed-router case.
+            self.assertNotIn('"type": "missed_router"', text)
+
 
 if __name__ == "__main__":
     unittest.main()

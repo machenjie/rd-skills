@@ -182,6 +182,116 @@ class TelemetryWriterTests(unittest.TestCase):
         self.assertTrue(records)
         self.assertEqual(records[0]["hook_name"], "post_edit_structure_gate")
 
+    def test_extract_manifest_fields_parses_route_and_stage(self) -> None:
+        common = load_common()
+        text = (
+            "Routing result.\n\n"
+            "```yaml\n"
+            "changeforge_route:\n"
+            "  selected_skills:\n"
+            "    - backend-change-builder\n"
+            "  selected_capabilities:\n"
+            "    - implementation-structure-design\n"
+            "    - authentication-authorization\n"
+            "  selected_domain_extensions: []\n"
+            "  required_references:\n"
+            "    - references/routing-rules.md\n"
+            "  required_quality_gates:\n"
+            "    - security gate\n"
+            "  skipped_quality_gates:\n"
+            "    - gate: delivery gate\n"
+            "      reason: no deploy\n"
+            "```\n\n"
+            "```yaml\n"
+            "changeforge_stage_route:\n"
+            "  current_stage: coding\n"
+            "  selected_capabilities: []\n"
+            "```\n"
+        )
+        result = common.extract_manifest_fields(text)
+        self.assertTrue(result["route_present"])
+        self.assertTrue(result["stage_present"])
+        self.assertEqual(result["current_stage"], "coding")
+        self.assertEqual(
+            result["selected_capabilities"],
+            ["implementation-structure-design", "authentication-authorization"],
+        )
+        self.assertEqual(result["selected_skills"], ["backend-change-builder"])
+        self.assertEqual(result["required_references"], ["references/routing-rules.md"])
+        self.assertEqual(result["required_quality_gates"], ["security gate"])
+        self.assertEqual(result["skipped_quality_gates"], ["delivery gate"])
+
+    def test_extract_manifest_fields_empty_on_no_manifest(self) -> None:
+        common = load_common()
+        result = common.extract_manifest_fields("just prose, no manifest here")
+        self.assertFalse(result["route_present"])
+        self.assertFalse(result["stage_present"])
+        self.assertEqual(result["selected_capabilities"], [])
+        self.assertEqual(result["current_stage"], "")
+
+    def test_extract_manifest_fields_route_not_triggered_by_stage_only(self) -> None:
+        common = load_common()
+        text = "```yaml\nchangeforge_stage_route:\n  current_stage: testing\n```\n"
+        result = common.extract_manifest_fields(text)
+        self.assertFalse(result["route_present"])
+        self.assertTrue(result["stage_present"])
+        self.assertEqual(result["current_stage"], "testing")
+
+    def test_fallback_session_id_groups_one_turn_not_a_day(self) -> None:
+        common = load_common()
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            os.environ["XDG_CACHE_HOME"] = cache
+            os.environ.pop("CHANGEFORGE_TELEMETRY", None)
+            repo = Path(cwd)
+            common.write_telemetry_event(
+                repo,
+                runtime="codex",
+                hook_name="post_edit_structure_gate",
+                event_name="PostToolUse",
+                mode="warn",
+            )
+            common.write_telemetry_event(
+                repo,
+                runtime="codex",
+                hook_name="stop_closure_gate",
+                event_name="Stop",
+                mode="warn",
+            )
+            records = read_records(Path(cache))
+        self.assertEqual(len(records), 2)
+        session_id = records[0]["session_id"]
+        # Both hooks in one turn share a session id (so review can correlate them).
+        self.assertEqual(records[0]["session_id"], records[1]["session_id"])
+        # The fallback id carries a per-turn component, not just the date.
+        self.assertRegex(session_id, r"^[0-9a-f]{8}-\d{4}-\d{2}-\d{2}-[0-9a-f]{12}$")
+
+    def test_manifest_fields_recorded_when_provided(self) -> None:
+        common = load_common()
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            os.environ["XDG_CACHE_HOME"] = cache
+            os.environ.pop("CHANGEFORGE_TELEMETRY", None)
+            common.write_telemetry_event(
+                Path(cwd),
+                runtime="codex",
+                hook_name="stop_closure_gate",
+                event_name="Stop",
+                mode="warn",
+                session_id="sess-9",
+                stage_manifest_detected=True,
+                manifest_current_stage="coding",
+                manifest_selected_capabilities=["implementation-structure-design"],
+                manifest_skipped_quality_gates=["delivery gate"],
+            )
+            records = read_records(Path(cache))
+        self.assertEqual(len(records), 1)
+        record = records[0]
+        self.assertTrue(record["stage_manifest_detected"])
+        self.assertEqual(record["manifest_current_stage"], "coding")
+        self.assertEqual(
+            record["manifest_selected_capabilities"], ["implementation-structure-design"]
+        )
+        self.assertEqual(record["manifest_skipped_quality_gates"], ["delivery gate"])
+
 
 if __name__ == "__main__":
     unittest.main()

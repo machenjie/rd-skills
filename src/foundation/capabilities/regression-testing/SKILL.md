@@ -19,6 +19,14 @@ Use this capability when: a bug is confirmed and a fix is being prepared — the
 
 Do not use this capability to: write general happy-path tests unrelated to a specific defect (those belong in `test-strategy`); write load or performance tests (use `performance-budgeting`); write contract tests (use `api-contract-design`); or duplicate tests that already reproduce the defect and are present in the test suite (verify coverage first before adding).
 
+# Stage Fit
+
+Launched in bug-fix and testing; also gates refactoring. Per-stage focus:
+
+- **bug-fix**: a test that reproduces the defect before the fix and passes after it; same-pattern coverage.
+- **testing**: protect existing behavior while adding new coverage.
+- **refactoring**: characterization tests that prove behavior was preserved.
+
 # Non-Negotiable Rules
 
 - **Every confirmed defect must have a regression test unless technically impossible, and impossibility must be documented.** "Technically impossible" means: the defect is in a non-deterministic timing or concurrency condition that cannot be reliably reproduced in a test; the defect requires hardware state that cannot be emulated; or the test infrastructure cannot simulate the required condition. Impossibility must be documented with: defect ID/reference, specific reason reproduction is infeasible, residual risk rating, and compensating control (monitoring, alerting, manual test script, chaos experiment). "We didn't have time" is not a valid impossibility reason.

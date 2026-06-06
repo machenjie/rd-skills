@@ -151,4 +151,26 @@ concerns. The full per-stage checklist lives in the language capability body, no
 - Every skipped heavy capability must state a skip reason.
 - A cross-stage task is split into stages; it does not load every capability at once.
 - L1 changes launch only the current stage's minimum set. L3/L4/L5 may plan across stages but still execute stage by stage.
+- When both apply, select `engineering-stage-professionalism` before `agent-execution-discipline`: pick the stage first (routing priority 89), then apply execution discipline (priority 88) within that stage.
 - The matrices above are referenced, not copied into individual skills.
+
+## 5. Cross-Stage and Planning Professional Skills
+
+Some professional skills are not owned by a single stage: they compile intake, plan work
+across stages, model cross-cutting impact, or gate risk at any stage. The router selects
+them when their signal appears and hands the result to the owning stage. Each still
+launches the minimum sufficient capability set; none is loaded by default in every stage.
+
+| Professional skill | Primary stage(s) | Role |
+| --- | --- | --- |
+| `change-intake-compiler` | requirement-intake | Compile a raw request into a structured change request: current vs desired behavior, non-goals, constraints, assumptions, and missing information. |
+| `acceptance-criteria-builder` | requirement-intake, testing | Turn the change request into verifiable acceptance criteria and link them to required test evidence. |
+| `change-impact-analyzer` | architecture-design, cross-stage planning | Map blast radius across product, domain, API, data, frontend, backend, integration, security, and operations before implementation. |
+| `task-dag-planner` | implementation-planning, multi-stage planning | Decompose a multi-stage change into ordered, reviewable, rollback-aware tasks with explicit dependencies and validation points. |
+| `experience-impact-modeler` | requirement-intake, frontend-product flow | Model user and page flows, interaction states, and usability risk for product-facing change. |
+| `domain-impact-modeler` | architecture-design, domain behavior | Model entities, invariants, state machines, and domain events, and protect consistency boundaries. |
+| `security-privacy-gate` | risk escalation across all stages | Review auth, object authorization, input/output, injection, secrets, dependencies, and privacy whenever a security or privacy signal appears. |
+| `reliability-observability-gate` | debugging-diagnosis, release-delivery | Set SLI/SLO, performance and capacity, logging/metrics/traces/alerts, and recovery expectations for production-risk change. |
+
+These skills are listed here so no top-level professional skill is invisible to the stage
+model. They are launched by router signal, not by default in every stage.

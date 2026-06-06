@@ -30,6 +30,12 @@ expected:
     - security gate
     - test gate
     - implementation gate
+  expected_stage: bug-fix
+  expected_stage_capabilities:
+    - permission-boundary-modeling
+    - regression-testing
+  expected_context_budget_mode: staged-plan
+  require_skipped_rationale: true
 manifest:
   schema_version: 1
   route_id: backend-auth-idor
@@ -70,6 +76,28 @@ manifest:
     - delivery gate => no deployment or migration change in scope
     - reliability gate => no performance or capacity change in scope
   handoff_target: backend-change-builder
+stage_manifest:
+  schema_version: 1
+  current_stage: bug-fix
+  next_stage: testing
+  product_surface: backend-product
+  language_surface: none
+  selected_skills:
+    - backend-change-builder
+    - security-privacy-gate
+  selected_capabilities:
+    - implementation-structure-design
+    - permission-boundary-modeling
+    - authentication-authorization
+    - regression-testing
+  skipped_capabilities:
+    - architecture-tradeoff-analysis => module boundaries are unchanged by this fix
+    - performance-budgeting => no latency or capacity change in scope
+  context_budget_mode: staged-plan
+  required_quality_gates:
+    - security gate
+    - test gate
+  handoff_target: testing
 notes: |
   Captured and human-reviewed from a routing exercise. Used as a regression guard
   for object-level authorization routing and closure completeness.
