@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import importlib.util
 import json
 import os
@@ -40,6 +41,28 @@ def run_hook(script_name: str, stdin: str, cwd: Path, cache: Path) -> subprocess
         env=env,
         check=False,
     )
+
+
+NEW_FINDING_FIELDS = (
+    "file_naming_findings",
+    "reuse_findings",
+    "extension_reuse_findings",
+    "advanced_refactor_findings",
+    "comment_findings",
+)
+
+
+@contextlib.contextmanager
+def cache_env(cache: Path):
+    previous = os.environ.get("XDG_CACHE_HOME")
+    os.environ["XDG_CACHE_HOME"] = str(cache)
+    try:
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop("XDG_CACHE_HOME", None)
+        else:
+            os.environ["XDG_CACHE_HOME"] = previous
 
 
 class ChangeForgeCommonTests(unittest.TestCase):
@@ -116,6 +139,74 @@ class ChangeForgeCommonTests(unittest.TestCase):
             debug_logs = list(Path(cache).glob("changeforge/hooks/*/debug.log"))
             self.assertEqual(len(debug_logs), 1)
             self.assertIn("structure gate runtime=codex", debug_logs[0].read_text())
+
+    def test_new_state_fields_initialized(self) -> None:
+        common = load_common()
+        state = common._empty_state()
+        for field in NEW_FINDING_FIELDS:
+            self.assertEqual(state[field], [])
+        self.assertTrue(all(field in common.STATE_LIST_FIELDS for field in NEW_FINDING_FIELDS))
+
+    def test_new_state_fields_round_trip(self) -> None:
+        common = load_common()
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            with cache_env(Path(cache)):
+                common.save_state(
+                    Path(cwd),
+                    {
+                        "runtime": "codex",
+                        "file_naming_findings": ["a.go: mismatch"],
+                        "comment_findings": ["a.go: uncommented"],
+                    },
+                )
+                loaded = common.load_state(Path(cwd))
+        self.assertEqual(loaded["file_naming_findings"], ["a.go: mismatch"])
+        self.assertEqual(loaded["comment_findings"], ["a.go: uncommented"])
+
+    def test_merge_state_supports_finding_fields(self) -> None:
+        common = load_common()
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            with cache_env(Path(cache)):
+                common.merge_state(
+                    Path(cwd),
+                    "codex",
+                    file_naming_findings=["x"],
+                    reuse_findings=["y"],
+                    extension_reuse_findings=["z"],
+                    advanced_refactor_findings=["w"],
+                    comment_findings=["c"],
+                )
+                state = common.load_state(Path(cwd))
+        self.assertEqual(state["file_naming_findings"], ["x"])
+        self.assertEqual(state["reuse_findings"], ["y"])
+        self.assertEqual(state["extension_reuse_findings"], ["z"])
+        self.assertEqual(state["advanced_refactor_findings"], ["w"])
+        self.assertEqual(state["comment_findings"], ["c"])
+
+    def test_legacy_state_file_missing_fields_is_compatible(self) -> None:
+        common = load_common()
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            with cache_env(Path(cache)):
+                path = common._state_path(Path(cwd))
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(
+                    json.dumps({"runtime": "codex", "changed_paths": ["a.py"]}),
+                    encoding="utf-8",
+                )
+                loaded = common.load_state(Path(cwd))
+        self.assertEqual(loaded["changed_paths"], ["a.py"])
+        for field in NEW_FINDING_FIELDS:
+            self.assertEqual(loaded[field], [])
+
+    def test_state_written_to_cache_not_project_source(self) -> None:
+        common = load_common()
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            with cache_env(Path(cache)):
+                common.merge_state(Path(cwd), "codex", changed_paths=["a.py"])
+            cache_state = list(Path(cache).glob("changeforge/hooks/*/current-turn.json"))
+            project_state = list(Path(cwd).rglob("current-turn.json"))
+        self.assertEqual(len(cache_state), 1)
+        self.assertEqual(project_state, [])
 
 
 if __name__ == "__main__":

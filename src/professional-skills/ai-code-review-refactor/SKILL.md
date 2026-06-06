@@ -38,6 +38,12 @@ Critically review, validate, and safely refactor AI-generated or AI-assisted cod
 - Security-sensitive paths (auth, permissions, payment, data access) cannot be accepted from AI output without adversarial review.
 - Type annotations from AI must be verified against the actual runtime types — AI generates plausible signatures, not necessarily correct ones.
 - Generated code that introduces `any`, `Object`, or untyped assertions in strongly-typed codebases must be explicitly justified.
+- Reject any AI-generated file addition without same-directory and parent-module file naming evidence.
+- Reject any AI-generated helper/utility/common/shared code without a reuse ladder record.
+- Reject duplicated logic when existing code could be reused, extended, composed, wrapped, or extracted.
+- Reject extension of existing functions/classes/methods/services without old-behavior preservation evidence.
+- Reject object/class/interface/inheritance/reflection structure without an advanced refactoring structure decision.
+- AI-generated comments are suspect. Reject comments that restate code, invent intent, describe only the happy path, hide uncertainty, or become stale immediately. Require comments only where they document contract, invariant, edge case, non-obvious decision, test scenario, or public API behavior.
 
 ## Industry Benchmarks
 - **OWASP Code Review Guide**: Security-focused code review checklist — injection points, auth bypass, insecure defaults, input handling.
@@ -193,6 +199,36 @@ Return a structured review with:
 - **Security review note**: Auth, permission, and data access paths reviewed adversarially or escalated.
 - **Architecture drift flag**: Any new abstractions, boundaries, or coupling evaluated against existing patterns.
 - **Approval status**: Approved with evidence / Returned for remediation with numbered action items.
+- **Local naming evidence**:
+  same-directory file names inspected;
+  parent-module naming pattern inspected;
+  selected filename/function/class/method name;
+  rejected alternatives;
+  repository vocabulary alignment.
+- **Reuse ladder review**:
+  direct reuse candidates;
+  extension reuse candidates;
+  composition/wrapper candidates;
+  extraction candidates;
+  final new-code justification.
+- **Extension safety review**:
+  old behavior preserved;
+  compatibility risk;
+  old behavior tests;
+  new behavior tests;
+  rejected parallel implementation.
+- **Advanced refactor review**:
+  object/function/module choice;
+  class/interface/inheritance/reflection justification;
+  state/invariant/lifecycle/collaborator rationale;
+  public behavior tests.
+- **Comment quality review**:
+  exported declarations missing doc comments;
+  public APIs with incomplete contract comments;
+  complex internal logic missing critical comments;
+  tests missing scenario/regression comments;
+  redundant or misleading comments removed;
+  AI-generated comments accepted / rewritten / rejected.
 
 ## Quality Gate
 1. All external API calls verified to exist in the declared dependency version.
@@ -210,6 +246,15 @@ Return a structured review with:
 13. AI-added or AI-renamed variables, functions, methods, classes, files, and directories follow repository vocabulary, language convention, semantic responsibility, and local pattern scan evidence.
 14. AI-generated code did not introduce business logic into shared, common, or utils.
 15. AI-assisted completion is not accepted without execution evidence, validation results, residual risk, and handoff boundary.
+16. Reject exported/public declarations without language-standard doc comments.
+17. Reject complex business, concurrency, transaction, retry, compatibility, fallback, performance-sensitive, or security-sensitive logic without concise intent comments.
+18. Reject non-trivial tests that do not explain scenario, regression, fixture purpose, or edge case.
+19. Reject comments that merely repeat the code.
+20. Reject AI-generated comments that claim intent not proven by code or tests.
+21. Reject AI-generated file additions without same-directory and parent-module naming evidence.
+22. Reject AI-generated helper/utility/common/shared code without reuse ladder evidence.
+23. Reject AI-generated duplicated logic when an existing implementation can be reused or extended safely.
+24. Reject AI-generated advanced abstraction without advanced refactor evidence.
 
 ## Handoff
 - **security-privacy-gate** — for auth, permission, payment, or sensitive data code that requires adversarial review.
