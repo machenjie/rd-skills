@@ -208,6 +208,8 @@ python3 scripts/validate-capabilities.py
 python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
+python3 scripts/audit-skill-content.py
+python3 scripts/validate-skill-content-size.py
 python3 scripts/eval-routing.py
 python3 scripts/validate-hooks.py
 python3 scripts/eval-agent-behavior.py
@@ -219,6 +221,14 @@ python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
 python3 scripts/validate-installation.py
 ```
+
+`scripts/audit-skill-content.py` writes the advisory content audit to
+`reports/skill-content-audit.md` and `reports/skill-content-audit.json`; it never
+fails the workflow. `scripts/validate-skill-content-size.py` warns when a `SKILL.md`
+body, section, table, or duplicated block crosses a budget defined in
+[SKILL_CONTENT_GOVERNANCE.md](SKILL_CONTENT_GOVERNANCE.md) without a recorded
+exception in `config/skill-content-exceptions.yaml`; it is warning-only by default
+and only exits non-zero with `--strict`. Neither tool blocks the build.
 
 Then use `installers/upgrade.py` for an existing managed install, or `installers/install.py --backup` when replacing a managed install intentionally.
 

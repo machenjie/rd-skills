@@ -1,0 +1,28 @@
+# Skill-content size exceptions for scripts/validate-skill-content-size.py
+#
+# Each exception records a DELIBERATE governance-threshold overage. An exception is
+# not a free pass: it must name the check it suppresses and a reason, ideally
+# pointing at reports/skill-content-optimization-plan.md so the overage stays
+# tracked rather than forgotten.
+#
+# allow tokens: body_lines | section_lines | table_rows | duplicate_block | repeated_phrase
+exceptions:
+  - path: src/foundation/capabilities/implementation-structure-design/SKILL.md
+    allow: [body_lines]
+    reason: >-
+      Heaviest capability (547 lines, Critical Details ~361). Classified
+      SPLIT_CAPABILITY; tracked as P3 (plan-only, high risk) in
+      reports/skill-content-optimization-plan.md.
+
+  - path: src/foundation/capabilities/ci-cd/SKILL.md
+    allow: [body_lines]
+    reason: >-
+      261-line CI/CD capability. Classified TIGHTEN_BODY; tracked as P2 in
+      reports/skill-content-optimization-plan.md.
+
+  - path: src/professional-skills/change-forge-router/SKILL.md
+    allow: [section_lines]
+    reason: >-
+      Router Output Contract (route manifest) is ~141 lines and is the router's core
+      machine-readable contract. Classified MOVE_SECTIONS_TO_REFERENCES; tracked as P2
+      in reports/skill-content-optimization-plan.md.
