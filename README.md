@@ -105,6 +105,7 @@ python3 scripts/validate-capabilities.py
 python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
+python3 scripts/validate-skill-content-size.py
 python3 scripts/eval-routing.py
 python3 scripts/validate-hooks.py
 python3 -m unittest discover -s tests
@@ -113,6 +114,7 @@ python3 scripts/run-codegen-benchmarks.py --limit 3
 python3 scripts/build.py --profile recommended
 python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
+python3 scripts/validate-runtime-reference-links.py
 python3 scripts/validate-installation.py
 ```
 

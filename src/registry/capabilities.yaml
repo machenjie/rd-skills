@@ -919,7 +919,13 @@ capabilities:
     path: src/foundation/capabilities/implementation-structure-design
     status: implemented
     used_by: [backend-change-builder, frontend-change-builder, ai-code-review-refactor, architecture-impact-reviewer, code-review, refactoring, quality-test-gate]
-    triggers: [implementation structure code structure variable naming function naming method naming class naming file naming directory naming package naming module naming public API naming function placement method placement class placement object modeling object-oriented design object responsibility encapsulation invariant protection inheritance composition polymorphism class hierarchy value object domain object service object adapter strategy delegation interface abstract class subclassing traits protocols substitutability object collaboration reuse existing function reuse existing class business component module feature service repository adapter client helper utility common shared public private internal classification new helper new utility new file new directory component placement hook placement service method repository method shared utils common utils dependency direction cohesion coupling]
+    triggers:
+      - variable naming function naming method naming class naming file naming directory naming package naming module naming public API naming
+      - reuse existing function reuse existing class reuse existing module extension reuse composition adapter wrapper delegation
+      - function placement method placement class placement file placement directory placement component placement hook placement service method repository method public private internal
+      - object modeling object-oriented design object responsibility encapsulation invariant protection inheritance polymorphism class hierarchy value object domain object service object interface abstract class subclassing traits protocols substitutability object collaboration
+      - shared utils common utils helper utility business logic in utils dependency direction cohesion coupling shared common pollution
+      - doc comments exported comments public API comments test comments redundant comments stale comments comment quality
     risk_notes: [Poor naming and placement create duplicated logic shared utility pollution accidental public APIs circular dependencies architecture drift and unmaintainable AI generated patches]
     expected_outputs: [implementation structure plan with reuse candidates vocabulary and naming decisions responsibility taxonomy object versus function decisions method placement decisions encapsulation invariants inheritance evidence placement rationale private public decisions file directory ownership dependency direction shared utility audit and test placement]
 

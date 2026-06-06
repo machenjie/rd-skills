@@ -15,16 +15,16 @@
 | Heavy domain extensions (> 300 lines) | 0 |
 | Split candidates (score ≥ 60) | 0 |
 | Low-professionalism candidates (< 70) | 0 |
-| Move-to-reference candidates | 1 |
+| Move-to-reference candidates | 0 |
 | Shared duplicated lines (≥ 3 files) | 12 |
 
 Suggested-action distribution:
 
 | Classification | Count |
 | --- | --- |
-| KEEP_AS_IS | 129 |
+| KEEP_AS_IS | 130 |
 | TIGHTEN_BODY | 0 |
-| MOVE_SECTIONS_TO_REFERENCES | 1 |
+| MOVE_SECTIONS_TO_REFERENCES | 0 |
 | MERGE_DUPLICATE_CONTENT | 0 |
 | SPLIT_CAPABILITY | 0 |
 | REWRITE_FOR_PROFESSIONALISM | 0 |
@@ -36,7 +36,6 @@ Suggested-action distribution:
 
 | Skill | Kind | Lines | Efficiency | Top finding |
 | --- | --- | --- | --- | --- |
-| `change-forge-router` | professional-skill | 330 | 61 | body 330 lines exceeds review threshold 250 |
 | `error-code-design` | foundation-capability | 227 | 82 | section 'Industry Benchmarks' is 103 lines (> 80) — reference candidate |
 | `concurrency-control` | foundation-capability | 210 | 82 | section 'Industry Benchmarks' is 81 lines (> 80) — reference candidate |
 | `degradation-circuit-breaking` | foundation-capability | 210 | 82 | section 'Industry Benchmarks' is 101 lines (> 80) — reference candidate |
@@ -46,6 +45,7 @@ Suggested-action distribution:
 | `form-validation-design` | foundation-capability | 203 | 82 | section 'Industry Benchmarks' is 86 lines (> 80) — reference candidate |
 | `ai-code-review-refactor` | professional-skill | 244 | 84 | - |
 | `quality-test-gate` | professional-skill | 228 | 84 | - |
+| `security-privacy-gate` | professional-skill | 227 | 84 | - |
 
 ### 2.2 Lowest Professionalism
 
@@ -81,7 +81,6 @@ Suggested-action distribution:
 
 | Skill | Kind | Lines | Split score | Oversized sections |
 | --- | --- | --- | --- | --- |
-| `change-forge-router` | professional-skill | 330 | 32 | Output Contract (119) |
 | `error-code-design` | foundation-capability | 227 | 26 | Industry Benchmarks (103) |
 | `concurrency-control` | foundation-capability | 210 | 26 | Industry Benchmarks (81) |
 | `degradation-circuit-breaking` | foundation-capability | 210 | 26 | Industry Benchmarks (101) |
@@ -91,6 +90,7 @@ Suggested-action distribution:
 | `performance-budgeting` | foundation-capability | 208 | 14 | Industry Benchmarks (100) |
 | `solution-optimality-evaluation` | foundation-capability | 205 | 14 | Industry Benchmarks (114) |
 | `requirement-structuring` | foundation-capability | 198 | 14 | Industry Benchmarks (98) |
+| `language-idiom-enforcement` | foundation-capability | 185 | 14 | Critical Details (88) |
 
 ## 3. Per Skill Findings
 
@@ -102,6 +102,7 @@ Suggested-action distribution:
 | `quality-test-gate` | 228 | 3349 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
 | `security-privacy-gate` | 227 | 3346 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
 | `reliability-observability-gate` | 221 | 3394 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
+| `change-forge-router` | 215 | 3631 | 100 | 88 | 100 | 0 | KEEP_AS_IS | - | low |
 | `delivery-release-gate` | 213 | 3154 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
 | `architecture-impact-reviewer` | 209 | 2729 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
 | `backend-change-builder` | 195 | 2620 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -116,22 +117,13 @@ Suggested-action distribution:
 | `task-dag-planner` | 177 | 2628 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
 | `domain-impact-modeler` | 172 | 2534 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-intake-compiler` | 162 | 2360 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
-| `change-forge-router` | 330 | 4019 | 100 | 61 | 100 | 32 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
-
-#### Detailed findings — Professional Skills
-
-- **`change-forge-router`** (MOVE_SECTIONS_TO_REFERENCES, P2, risk: low)
-  - Path: `src/professional-skills/change-forge-router/SKILL.md`
-  - Suggested action: Move oversized sections/tables into references/*.md; keep a concise body summary.
-  - Finding: body 330 lines exceeds review threshold 250
-  - Finding: section 'Output Contract' is 119 lines (> 80) — reference candidate
 
 ### 3.2 Foundation Capabilities (104)
 
 | Skill | Lines | Words | Prof | Ctx | Route | Split | Classification | Phase | Risk |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `ci-cd` | 241 | 3227 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
-| `implementation-structure-design` | 237 | 3748 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `implementation-structure-design` | 237 | 3742 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `agent-execution-discipline` | 233 | 2308 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `error-code-design` | 227 | 2997 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
 | `failure-diagnosis` | 216 | 2989 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
@@ -181,7 +173,7 @@ Suggested-action distribution:
 | `controller-api-implementation` | 172 | 2555 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `indexing-query-optimization` | 172 | 2526 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `relational-database` | 171 | 2615 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `skill-authoring-expert` | 171 | 1407 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `skill-authoring-expert` | 171 | 1414 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `requirement-clarification` | 169 | 2420 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `refactoring` | 168 | 2700 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `nosql-database` | 167 | 2561 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -249,9 +241,9 @@ Suggested-action distribution:
 
 ## 4. Classification Index
 
-- **KEEP_AS_IS** (129): `acceptance-criteria-builder`, `acceptance-standard-definition`, `agent-execution-discipline`, `ai-code-review-refactor`, `ai-product-extension`, `api-contract-design`, `architecture-impact-reviewer`, `architecture-style-selection`, `architecture-tradeoff-analysis`, `async-job-design`, `authentication-authorization`, `authentication-security`, `backend-change-builder`, `backup-recovery`, `bigdata-product-extension`, `business-rule-extraction`, `cache-design`, `change-documentation-gate`, `change-impact-analyzer`, `change-intake-compiler`, `ci-cd`, `cli-daemon-interface-design`, `code-review`, `concurrency-control`, `containerization`, `context-packaging`, `contract-testing`, `controller-api-implementation`, `cpp-professional-usage`, `data-api-contract-changer`, `data-middleware-change-builder`, `data-migration-design`, `data-model-design`, `degradation-circuit-breaking`, `delivery-release-gate`, `dependency-vulnerability-scanning`, `design-system-rules`, `documentation-generation`, `domain-event-modeling`, `domain-impact-modeler`, `domain-logic-implementation`, `domain-object-identification`, `dto-schema-design`, `e2e-testing`, `engineering-stage-professionalism`, `error-code-design`, `event-driven-architecture`, `experience-impact-modeler`, `extensibility-design`, `failure-diagnosis`, `file-storage-processing`, `form-validation-design`, `frontend-api-integration`, `frontend-change-builder`, `frontend-testing`, `go-professional-usage`, `i18n-timezone-money-safety`, `idempotency-retry-design`, `implementation-structure-design`, `indexing-query-optimization`, `information-architecture`, `input-validation`, `integration-change-builder`, `integration-testing`, `interaction-state-modeling`, `iot-embedded-extension`, `java-jvm-professional-usage`, `kubernetes-gateway`, `language-idiom-enforcement`, `language-performance-safety`, `language-runtime-selection`, `language-testing-strategy`, `layered-architecture-design`, `logging-error-handling`, `low-level-systems-extension`, `message-queue-design`, `microservice-splitting`, `mobile-product-extension`, `module-boundary-design`, `non-goal-boundary-definition`, `nosql-database`, `observability`, `package-dependency-management`, `page-component-decomposition`, `payment-trading-extension`, `performance-budgeting`, `permission-boundary-modeling`, `profiling`, `project-initialization`, `prototype-description`, `python-professional-usage`, `quality-test-gate`, `refactoring`, `regression-testing`, `relational-database`, `release-rollback`, `reliability-observability-gate`, `repository-persistence`, `requirement-clarification`, `requirement-structuring`, `routing-navigation-design`, `rust-professional-usage`, `scenario-decomposition`, `sdk-library-contract-design`, `search-analytics-design`, `secret-configuration-security`, `security-privacy-gate`, `service-business-logic`, `shell-cli-professional-usage`, `skill-authoring-expert`, `solution-optimality-evaluation`, `sql-professional-usage`, `state-machine-modeling`, `state-management-design`, `task-dag-decomposition`, `task-dag-planner`, `technology-stack-selection`, `test-data-management`, `test-strategy`, `threat-modeling`, `transaction-consistency`, `typescript-professional-usage`, `unit-testing`, `use-case-modeling`, `user-flow-modeling`, `user-role-identification`, `version-compatibility`, `web-security`, `web3-product-extension`
+- **KEEP_AS_IS** (130): `acceptance-criteria-builder`, `acceptance-standard-definition`, `agent-execution-discipline`, `ai-code-review-refactor`, `ai-product-extension`, `api-contract-design`, `architecture-impact-reviewer`, `architecture-style-selection`, `architecture-tradeoff-analysis`, `async-job-design`, `authentication-authorization`, `authentication-security`, `backend-change-builder`, `backup-recovery`, `bigdata-product-extension`, `business-rule-extraction`, `cache-design`, `change-documentation-gate`, `change-forge-router`, `change-impact-analyzer`, `change-intake-compiler`, `ci-cd`, `cli-daemon-interface-design`, `code-review`, `concurrency-control`, `containerization`, `context-packaging`, `contract-testing`, `controller-api-implementation`, `cpp-professional-usage`, `data-api-contract-changer`, `data-middleware-change-builder`, `data-migration-design`, `data-model-design`, `degradation-circuit-breaking`, `delivery-release-gate`, `dependency-vulnerability-scanning`, `design-system-rules`, `documentation-generation`, `domain-event-modeling`, `domain-impact-modeler`, `domain-logic-implementation`, `domain-object-identification`, `dto-schema-design`, `e2e-testing`, `engineering-stage-professionalism`, `error-code-design`, `event-driven-architecture`, `experience-impact-modeler`, `extensibility-design`, `failure-diagnosis`, `file-storage-processing`, `form-validation-design`, `frontend-api-integration`, `frontend-change-builder`, `frontend-testing`, `go-professional-usage`, `i18n-timezone-money-safety`, `idempotency-retry-design`, `implementation-structure-design`, `indexing-query-optimization`, `information-architecture`, `input-validation`, `integration-change-builder`, `integration-testing`, `interaction-state-modeling`, `iot-embedded-extension`, `java-jvm-professional-usage`, `kubernetes-gateway`, `language-idiom-enforcement`, `language-performance-safety`, `language-runtime-selection`, `language-testing-strategy`, `layered-architecture-design`, `logging-error-handling`, `low-level-systems-extension`, `message-queue-design`, `microservice-splitting`, `mobile-product-extension`, `module-boundary-design`, `non-goal-boundary-definition`, `nosql-database`, `observability`, `package-dependency-management`, `page-component-decomposition`, `payment-trading-extension`, `performance-budgeting`, `permission-boundary-modeling`, `profiling`, `project-initialization`, `prototype-description`, `python-professional-usage`, `quality-test-gate`, `refactoring`, `regression-testing`, `relational-database`, `release-rollback`, `reliability-observability-gate`, `repository-persistence`, `requirement-clarification`, `requirement-structuring`, `routing-navigation-design`, `rust-professional-usage`, `scenario-decomposition`, `sdk-library-contract-design`, `search-analytics-design`, `secret-configuration-security`, `security-privacy-gate`, `service-business-logic`, `shell-cli-professional-usage`, `skill-authoring-expert`, `solution-optimality-evaluation`, `sql-professional-usage`, `state-machine-modeling`, `state-management-design`, `task-dag-decomposition`, `task-dag-planner`, `technology-stack-selection`, `test-data-management`, `test-strategy`, `threat-modeling`, `transaction-consistency`, `typescript-professional-usage`, `unit-testing`, `use-case-modeling`, `user-flow-modeling`, `user-role-identification`, `version-compatibility`, `web-security`, `web3-product-extension`
 - **TIGHTEN_BODY** (0): _none_
-- **MOVE_SECTIONS_TO_REFERENCES** (1): `change-forge-router`
+- **MOVE_SECTIONS_TO_REFERENCES** (0): _none_
 - **SPLIT_CAPABILITY** (0): _none_
 - **MERGE_DUPLICATE_CONTENT** (0): _none_
 - **REWRITE_FOR_PROFESSIONALISM** (0): _none_
@@ -263,14 +255,14 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 
 | Files | Excerpt |
 | --- | --- |
-| 19 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
-| 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
+| 19 | do not load every reference by default. treat references as targeted support selected by t |
 | 19 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 19 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
+| 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 19 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
 | 19 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
-| 19 | do not load every reference by default. treat references as targeted support selected by t |
+| 18 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 18 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
 | 8 | **accepted exceptions** with owner / scope / expiration |

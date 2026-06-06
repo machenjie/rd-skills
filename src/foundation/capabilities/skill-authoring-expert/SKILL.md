@@ -92,7 +92,7 @@ Use this capability when:
 1. **Body versus references.** The `SKILL.md` body carries boundary, triggers, non-goals, decision rules, and output contract; `references` carries deep checklists, examples, anti-examples, benchmarks, and long tables.
 2. **Layer responsibilities.** A professional skill is a runtime entry point; a foundation capability is a compact decision aid compiled into professional `references`; a domain extension adds domain-specific product rules.
 3. **Registry alignment.** Registry entries, routing rules, `used_by`, and expected counts must stay mutually consistent; `used_by` drives which professional skills compile a capability.
-4. **Reference loading policy.** New references must align with the L1–L5 Reference Loading Policy and state when each reference loads, anchored on `references/capabilities/index.md` and per-capability files.
+4. **Reference loading policy.** Source/dev-only authoring note: new professional-skill references must align with the L1–L5 Reference Loading Policy and state when each reference loads, anchored on the compiled professional-skill `references/capabilities/index.md` and per-capability files.
 5. **Move, do not delete.** Large anti-examples, benchmarks, and deep checklists move into references rather than being deleted from the system.
 6. **Content is decisions, not keywords.** A skill must carry decision rules, failure modes, and an output contract, not just trigger keywords.
 7. **Naming consistency.** A new skill name is kebab-case, and the directory name, frontmatter name, and registry name must match exactly.

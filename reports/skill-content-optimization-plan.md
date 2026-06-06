@@ -11,8 +11,8 @@ count, or profile change).
 
 | Kind | Count | Heavy | Notes |
 | --- | --- | --- | --- |
-| Professional skills | 19 | 0 over 350 lines | `change-forge-router` (330) is within the heavy budget; its Routing Result template stays in body by validator design |
-| Foundation capabilities | 104 | 0 over 250 lines | `implementation-structure-design` (245) and `ci-cd` (249) tightened under budget |
+| Professional skills | 19 | 0 over 350 lines | `change-forge-router` (215) is below the 220-line target; its Routing Result template now lives in `references/route-result-template.md` |
+| Foundation capabilities | 104 | 0 over 250 lines | `implementation-structure-design` (237) and `ci-cd` (249) tightened under budget |
 | Domain extensions | 7 | 0 over 300 lines | all within budget |
 
 Professionalism is uniformly high: **0** skills fall below the professionalism gate, and
@@ -20,9 +20,8 @@ the three previously-thin foundation Quality Gates (`documentation-generation`,
 `domain-logic-implementation`, `domain-object-identification`) now score 100 after being
 rewritten as numbered verifiable checklists.
 
-Suggested-action distribution: `KEEP_AS_IS` 129, `MERGE_DUPLICATE_CONTENT` 0,
-`MOVE_SECTIONS_TO_REFERENCES` 1 (the intentional router Output Contract template),
-`TIGHTEN_BODY` 0, `SPLIT_CAPABILITY` 0.
+Suggested-action distribution: `KEEP_AS_IS` 130, `MERGE_DUPLICATE_CONTENT` 0,
+`MOVE_SECTIONS_TO_REFERENCES` 0, `TIGHTEN_BODY` 0, `SPLIT_CAPABILITY` 0.
 
 Top-level profile counts remain **recommended = 19, full = 26, dev = 130**.
 
@@ -107,18 +106,23 @@ lines each; profile counts unchanged.
 
 ## P2 — Reference splits (implemented)
 
-### P2.1 `change-forge-router` — relocate the route-manifest schemas (DONE)
+### P2.1 `change-forge-router` — relocate route templates and manifest schemas (DONE)
 
 - **Moved:** the two machine-readable manifest YAML schema blocks
   (`changeforge_route`, `changeforge_stage_route`) and their rules to
-  `references/route-manifest.md`. The body keeps a compact field list plus a pointer.
-- **Kept in body (by validator design):** the Markdown Routing Result template
-  (sections 1-12, including `## 10. Quality Gates`), the risk triggers, and the
-  Professional skill / Foundation capability / Domain extension routing blocks, all of
-  which `validate-skill-body-links.py` and `validate-stage-routing-architecture.py` parse.
-- **Result:** router body 396 -> 330 lines. The remaining Output Contract section
-  (the Routing Result template) is recorded as a deliberate `section_lines` exception in
-  `config/skill-content-exceptions.yaml`.
+  `references/route-manifest.md`; the Markdown Routing Result template (sections 1-12,
+  including `## 10. Quality Gates` and `## 12. Stage Professionalism`) to
+  `references/route-result-template.md`.
+- **Kept in body:** a compact Output Contract summary, the required section list, the
+  manifest-consistency and skip-reason rules, and explicit pointers to both references.
+  The risk triggers and Professional skill / Foundation capability / Domain extension
+  routing blocks remain in body because they are runtime-critical routing selectors.
+- **Validator change:** `validate-skill-body-links.py` parses Quality Gates from
+  `references/route-result-template.md`; `validate-stage-routing-architecture.py` checks
+  stage fields in the template/reference and only requires the router body to point to the
+  template and name `changeforge_stage_route`.
+- **Result:** router body 396 -> 215 lines. The `section_lines` exception was removed
+  from `config/skill-content-exceptions.yaml`.
 
 ### P2.2 `change-intake-compiler` — summarize the template and deepen analysis (DONE)
 
@@ -152,14 +156,14 @@ this reason.
 
 ## P3 — Capability decomposition (implemented via references)
 
-### P3.1 `implementation-structure-design` (was 555 lines, now 245)
+### P3.1 `implementation-structure-design` (was 555 lines, now 237)
 
 - **Approach taken — reference decomposition + body tightening (one capability, no
   registry/count/profile change):** `Critical Details` was reorganized into five
   decision-critical in-body subsections — `## Naming`, `## Reuse & Placement`,
   `## Object Modeling`, `## Placement Boundaries`, `## Shared-Utility Pollution` — each
-  ending with a pointer to a focused reference. The deep walkthroughs, decision trees, and
-  record templates moved to five new reference files:
+  ending with a source/dev-only deep reference pointer for skill authors. The deep
+  walkthroughs, decision trees, and record templates moved to five reference files:
   - `references/naming.md` (full naming taxonomy table),
   - `references/reuse-and-placement.md` (discovery protocol, reuse ladder, function tree),
   - `references/object-modeling.md` (object/method/class decision trees),
@@ -172,7 +176,7 @@ this reason.
   compiled weight in `recommended`/`full`; the references serve the `dev` profile and skill
   authors. This keeps `EXPECTED_FOUNDATION_CAPABILITY_COUNT` at 104 and the dev profile at
   130 — no registry, `used_by`, routing-rule, or prose-count churn.
-- **Result:** body 555 -> 245 lines (under the 250 budget); `split_candidate_score` cleared.
+- **Result:** body 555 -> 237 lines (under the 250 budget); `split_candidate_score` cleared.
 
 ## P4 — Evidence-contract and stage-aware professionalism (implemented)
 
@@ -197,10 +201,10 @@ this reason.
   `scripts/validate-skill-content-size.py` (warning-only guardrail) with
   `config/skill-content-exceptions.yaml`; both wired into the
   [authoring workflow](../docs/USAGE.md#authoring-workflow).
-- **Future:** the P2/P3 work has landed and the warn baseline is clean (the only
-  recorded exception is the router Output Contract template). Consider running the size
-  validator with `--strict` in a CI gate so bodies cannot silently re-inflate. Do not
-  enable `--strict` in CI until the exceptions list reflects every intended overage.
+- **Future:** the P2/P3 work has landed and the warn baseline is clean with no recorded
+  content-size exceptions. Consider running the size validator with `--strict` in a CI
+  gate so bodies cannot silently re-inflate. Do not enable `--strict` in CI until the
+  exceptions list reflects every intended overage.
 
 ---
 
@@ -212,7 +216,7 @@ this reason.
   on a plain selection.
 - The required, uniform `Reference Loading Policy` contract is left untouched — it is a
   deliberate shared contract enforced by `validate-skills.py`, not duplication to remove.
-- Foundation capabilities now use a flat, skill-owned reference layer for depth (e.g.
-  `implementation-structure-design/references/*.md`): the decision-critical rules stay in
-  the compiled body and the deep catalog moves to references, so the reference model stays
-  flat and nothing is duplicated between body and reference.
+- Foundation capabilities keep decision-critical rules in the compiled body. Capability
+  nested references such as `implementation-structure-design/references/*.md` are
+  source/dev-only deep references for skill authors and the dev profile; they are not
+  copied into recommended/full runtime skills, so the runtime reference model stays flat.

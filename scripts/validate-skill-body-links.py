@@ -30,6 +30,12 @@ CAPABILITIES_REGISTRY = REGISTRY_DIR / "capabilities.yaml"
 DOMAIN_EXTENSIONS_REGISTRY = REGISTRY_DIR / "domain-extensions.yaml"
 ROUTING_RULES_REGISTRY = REGISTRY_DIR / "routing-rules.yaml"
 ROUTER_SKILL = PROFESSIONAL_SKILLS_DIR / "change-forge-router" / "SKILL.md"
+ROUTER_RESULT_TEMPLATE = (
+    PROFESSIONAL_SKILLS_DIR
+    / "change-forge-router"
+    / "references"
+    / "route-result-template.md"
+)
 
 LIST_ITEM_RE = re.compile(r"^\s{0,3}(?:[-*+]|\d+[.)])\s+(.+?)\s*$")
 BACKTICK_RE = re.compile(r"`([^`\n]+)`")
@@ -430,15 +436,18 @@ def _split_router_risk_triggers(trigger_text: str) -> list[str]:
 
 
 def _validate_router_quality_gates(
-    body: str,
+    template_body: str | None,
     file_path: Path,
     registry_names: RegistryNames,
     errors: list[str],
 ) -> None:
-    context = f"{relpath(ROOT, file_path)}:Router quality gates"
-    gates = _extract_router_quality_gates(body)
+    context = f"{relpath(ROOT, ROUTER_RESULT_TEMPLATE)}:Router quality gates"
+    if template_body is None:
+        errors.append(f"{context}: missing route result template")
+        return
+    gates = _extract_router_quality_gates(template_body)
     if gates is None:
-        errors.append(f"{context}: missing quality gate list in Output Contract")
+        errors.append(f"{context}: missing quality gate list in route result template")
         return
 
     for gate in gates:
@@ -470,6 +479,11 @@ def _validate_router_body(
     registry_names: RegistryNames,
     errors: list[str],
 ) -> None:
+    template_body = (
+        ROUTER_RESULT_TEMPLATE.read_text(encoding="utf-8")
+        if ROUTER_RESULT_TEMPLATE.is_file()
+        else None
+    )
     _validate_router_backtick_block(
         body,
         file_path,
@@ -494,7 +508,7 @@ def _validate_router_body(
         "domain extension",
         errors,
     )
-    _validate_router_quality_gates(body, file_path, registry_names, errors)
+    _validate_router_quality_gates(template_body, file_path, registry_names, errors)
     _validate_router_risk_triggers(body, file_path, registry_names, errors)
 
 

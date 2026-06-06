@@ -96,6 +96,23 @@ LANGUAGE_DEEP_MARKERS = (
 LANGUAGE_DEEP_MARKER_LIMIT = 2
 BACKTICK_RE = re.compile(r"`([^`\n]+)`")
 TABLE_ROW_RE = re.compile(r"^\s*\|(.+)\|\s*$")
+RULE_DUPLICATION_IGNORE_FRAGMENTS = (
+    # Required Reference Loading Policy contract.
+    "do not load every reference by default",
+    "l1 changes: do not read references",
+    "l2 changes: read `references/capabilities/index.md`",
+    "l3 changes: read all selected capability references",
+    "l4/l5 changes: read all selected capability references",
+    "selected capability reference path format:",
+    "`42 idempotency-retry-design`",
+    "`82 solution-optimality-evaluation`",
+    # Canonical evidence and capability-contract lines intentionally repeated.
+    "all five canonical answers are concrete",
+    "answer schema: `agent-execution-discipline`",
+    "pinned versions are review baselines",
+    "launched in coding, bug-fix, code-review, refactoring, and testing",
+    "**block/pass decision** with required conditions for approval",
+)
 
 
 @dataclass
@@ -385,6 +402,8 @@ def _check_cross_file_rule_duplication(report: Report) -> None:
             if len(line) < 60 or line.startswith("#") or line.startswith("|"):
                 continue
             key = line.casefold()
+            if any(fragment in key for fragment in RULE_DUPLICATION_IGNORE_FRAGMENTS):
+                continue
             if key in seen:
                 continue
             seen.add(key)

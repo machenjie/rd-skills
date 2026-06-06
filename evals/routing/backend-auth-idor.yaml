@@ -10,6 +10,16 @@ prompt: |
 expected:
   complexity: L3
   risk_level: high
+  expected_stage: bug-fix
+  expected_context_budget_mode: staged-plan
+  expected_required_references:
+    - references/capabilities/101-implementation-structure-design.md
+    - references/capabilities/16-permission-boundary-modeling.md
+    - references/capabilities/41-authentication-authorization.md
+    - references/capabilities/44-logging-error-handling.md
+    - references/capabilities/53-input-validation.md
+    - references/capabilities/54-web-security.md
+    - references/capabilities/64-regression-testing.md
   risk_triggers:
     - auth
     - authorization
@@ -57,4 +67,3 @@ forbidden:
     - AI review gate
 notes: |
   IDOR risk must route through security and permission boundary modeling.
-

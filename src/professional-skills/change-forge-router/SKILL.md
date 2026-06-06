@@ -11,8 +11,6 @@ changeforge_version: 0.1.0
 ## Mission
 Route any product, code, delivery, documentation, review, or test-generation request through the smallest professional ChangeForge path that can safely resolve the change, expose risk, define acceptance, plan work, select foundation capabilities, apply domain extensions, and declare quality gates.
 
-The router is the orchestration brain. It decides what to use, what to skip, what to ask, what to defer, and what evidence is required before downstream work starts.
-
 ## When To Use
 Use before implementation, investigation, review, release, or documentation work when the request does not already provide a complete skill path, risk level, impact model, capability set, execution mode, and quality gate plan.
 
@@ -49,13 +47,7 @@ Classify the request across these dimensions:
 - Domain extension signals: Web3, AI, mobile, big data, IoT/embedded, payment/trading, low-level systems, or none.
 - Runtime profile: recommended, full, or dev awareness.
 
-Complexity routing rules:
-
-- L1 isolated local change: use only the relevant builder, review, or test skills. Add intake or acceptance only if the request is unclear or done state is untestable.
-- L2 single-module change: include intake, impact when blast radius is uncertain, acceptance, implementation, and test.
-- L3 multi-module product change: include intake, impact, domain or architecture if affected, data/API if affected, implementation, security when needed, tests, and docs.
-- L4 product-grade high-risk change: include the full relevant path across intake, impact, acceptance, domain/experience/architecture/data/API, implementation, gates, delivery, docs, and AI code review where generated code quality is material.
-- L5 regulated/financial/Web3/AI/migration/production-critical: include the matching domain extension, security, reliability, delivery, rollback, documentation, evidence requirements, and explicit stop conditions.
+Complexity routing: L1 uses only the relevant local builder/review/test path; L2 adds intake/acceptance/implementation/test and impact when blast radius is uncertain; L3 adds affected domain, architecture, data/API, security, docs, and test gates; L4 uses the full relevant product-grade path; L5 adds domain extension, security, reliability, delivery, rollback, documentation, evidence, and stop conditions.
 
 Professional skill routing:
 
@@ -108,11 +100,7 @@ Domain extension routing:
 - `payment-trading-extension`: payment, subscription, billing, invoice, refund, chargeback, trading, ledger, balance, checkout, reconciliation, settlement, entitlement, or tax.
 - `low-level-systems-extension`: OS, kernel, driver, native performance, C, C++, Rust systems, FFI, ABI, syscall, memory safety, atomics, descriptor, or platform runtime.
 
-Runtime profile awareness:
-
-- Recommended: 19 professional skills top-level, 104 foundation capabilities compiled into references.
-- Full: 19 professional skills + 7 domain extensions top-level, 104 foundation capabilities compiled into references.
-- Dev: 19 professional skills + 104 foundation capabilities + 7 domain extensions top-level.
+Runtime profile awareness: recommended has 19 professional skills; full has 19 professional skills plus 7 domain extensions; dev has 19 professional skills, 104 foundation capabilities, and 7 domain extensions. Foundation capabilities compile into professional references in every profile.
 
 ## Risk Escalation Rules
 Escalate one level for any risk trigger that affects user data, money, permissions, external systems, production state, or irreversible operations. Escalate to high or critical when more than one high-impact trigger is present or when rollback is unclear.
@@ -191,111 +179,8 @@ Do not load every reference by default. Treat references as targeted support sel
 - L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
 - Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
 
-Examples:
-- `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md`
-- `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-evaluation.md`
-
 ## Output Contract
-Return this exact structure:
-
-```markdown
-# ChangeForge Routing Result
-
-## 1. Request Classification
-- Change type:
-- Complexity:
-- Risk level:
-- Execution mode:
-- Product area:
-- Code area:
-- Domain extension signals:
-
-## 2. Interpreted Change
-- Current behavior:
-- Desired behavior:
-- User value:
-- Constraints:
-- Non-goals:
-
-## 3. Missing Information
-- Blocking:
-- Non-blocking:
-- Assumptions:
-
-## 4. Impact Areas
-- Product behavior:
-- UX:
-- Domain:
-- API:
-- Data:
-- Frontend:
-- Backend:
-- Integration:
-- Security:
-- Testing:
-- Reliability:
-- Delivery:
-- Documentation:
-
-## 5. Professional Skill Path
-| Order | Skill | Why | Input | Output |
-| --- | --- | --- | --- | --- |
-
-## 6. Foundation Capabilities
-| Capability ID | Capability | Why | Used By | Expected Output |
-| --- | --- | --- | --- | --- |
-
-## 7. Domain Extensions
-| Extension | Why | Risks | Required Outputs |
-| --- | --- | --- | --- |
-
-## 8. Required References
-| Skill | Reference | Why | Required/Optional |
-| --- | --- | --- | --- |
-
-## 9. Task DAG
-Each task:
-- id
-- name
-- skill
-- capabilities
-- depends_on
-- files_or_artifacts
-- acceptance
-- rollback_note
-
-## 10. Quality Gates
-- requirement gate
-- impact gate
-- domain gate
-- architecture gate
-- API/data gate
-- implementation gate
-- security gate
-- test gate
-- reliability gate
-- delivery gate
-- documentation gate
-- AI review gate
-- execution discipline gate
-
-## 11. Next Actions
-- next skill calls
-- blocked/unblocked status
-- recommended execution mode
-
-## 12. Stage Professionalism
-- Current engineering stage:
-- Next engineering stage:
-- Product surface:
-- Language surface:
-- Stage-specific capabilities:
-- Capabilities explicitly skipped:
-- Skip rationale:
-- Context budget decision:
-- Required evidence:
-- Next stage handoff:
-```
+Return the Markdown Routing Result using `references/route-result-template.md` as the exact section template. It owns sections 1-12: Request Classification, Interpreted Change, Missing Information, Impact Areas, Professional Skill Path, Foundation Capabilities, Domain Extensions, Required References, Task DAG, Quality Gates, Next Actions, and Stage Professionalism.
 
 Use `None` when a domain extension is not selected. Use `Skipped: reason` for quality gates that are not needed. Use concrete assumptions rather than silent gaps.
 

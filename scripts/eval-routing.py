@@ -51,6 +51,7 @@ OUTPUTS_DIR = ROOT / "evals" / "routing-outputs"
 
 VALID_COMPLEXITIES = {"L1", "L2", "L3", "L4", "L5"}
 VALID_RISK_LEVELS = {"low", "medium", "high", "critical"}
+VALID_CONTEXT_BUDGET_MODES = {"minimal", "single-stage", "staged-plan"}
 MIN_ROUTING_CASES = 30
 MIN_L1_ANTI_OVER_ROUTING_CASES = 8
 MIN_DOMAIN_EXTENSION_CASES = 2
@@ -279,6 +280,51 @@ def _load_registry_names() -> tuple[set[str], set[str], set[str]]:
     return skills, capabilities, extensions
 
 
+def _load_capability_metadata() -> dict[str, dict[str, Any]]:
+    """Return capability name -> {id, used_by} from capabilities.yaml."""
+
+    path = REGISTRY_DIR / "capabilities.yaml"
+    if not path.is_file():
+        return {}
+    try:
+        data = load_yaml_file(path)
+    except ValidationProblem:
+        return {}
+    metadata: dict[str, dict[str, Any]] = {}
+    for entry in registry_items(data, "capabilities", path, []):
+        if not isinstance(entry, dict):
+            continue
+        name = entry.get("name")
+        capability_id = entry.get("id")
+        used_by = entry.get("used_by")
+        if not isinstance(name, str) or not isinstance(capability_id, str):
+            continue
+        if not isinstance(used_by, list):
+            used_by = []
+        metadata[name] = {
+            "id": capability_id.strip(),
+            "used_by": {
+                item.strip()
+                for item in used_by
+                if isinstance(item, str) and item.strip()
+            },
+        }
+    return metadata
+
+
+def _capability_reference_path(
+    capability: str,
+    capability_metadata: dict[str, dict[str, Any]],
+) -> str | None:
+    entry = capability_metadata.get(capability)
+    if not entry:
+        return None
+    capability_id = entry.get("id")
+    if not isinstance(capability_id, str) or not capability_id:
+        return None
+    return f"references/capabilities/{capability_id}-{capability}.md"
+
+
 def _load_routing_allow_lists() -> tuple[set[str], set[str]]:
     """Return (risk_triggers, quality_gates) declared in routing-rules.yaml."""
 
@@ -372,6 +418,39 @@ def _validate_case(  # noqa: C901 - branchy validator by design
     structure_required = expected.get("structure_required")
     if structure_required is not None and not isinstance(structure_required, bool):
         errors.append(f"{rel}: expected.structure_required must be a boolean")
+
+    stage_route_required = expected.get("stage_route_required")
+    if stage_route_required is not None and not isinstance(stage_route_required, bool):
+        errors.append(f"{rel}: expected.stage_route_required must be a boolean")
+    if stage_route_required is False:
+        reason = expected.get("stage_route_skip_reason")
+        if not isinstance(reason, str) or not reason.strip():
+            errors.append(
+                f"{rel}: expected.stage_route_skip_reason is required when "
+                "expected.stage_route_required is false"
+            )
+
+    expected_stage = expected.get("expected_stage")
+    if expected_stage is not None:
+        if not isinstance(expected_stage, str) or not expected_stage.strip():
+            errors.append(f"{rel}: expected.expected_stage must be a non-empty string")
+
+    expected_budget = expected.get("expected_context_budget_mode")
+    if expected_budget is not None:
+        if (
+            not isinstance(expected_budget, str)
+            or expected_budget not in VALID_CONTEXT_BUDGET_MODES
+        ):
+            errors.append(
+                f"{rel}: expected.expected_context_budget_mode must be one of "
+                f"{sorted(VALID_CONTEXT_BUDGET_MODES)}"
+            )
+
+    expected_refs = _as_string_list(expected.get("expected_required_references"))
+    if expected_refs is None:
+        errors.append(
+            f"{rel}: expected.expected_required_references must be a list of strings"
+        )
 
     risk_triggers = _as_string_list(expected.get("risk_triggers"))
     if risk_triggers is None:
@@ -698,6 +777,20 @@ def _case_expected_list(data: dict[str, Any], field: str) -> list[str]:
     return values if values is not None else []
 
 
+def _case_expected_required_references(
+    data: dict[str, Any],
+    capability_metadata: dict[str, dict[str, Any]],
+) -> list[str]:
+    expected = _case_expected(data)
+    explicit = _as_string_list(expected.get("expected_required_references"))
+    references = set(explicit if explicit is not None else [])
+    for capability in _case_expected_list(data, "capabilities"):
+        reference = _capability_reference_path(capability, capability_metadata)
+        if reference is not None:
+            references.add(reference)
+    return sorted(references)
+
+
 def _case_forbidden_list(data: dict[str, Any], field: str) -> list[str]:
     forbidden = data.get("forbidden")
     if not isinstance(forbidden, dict):
@@ -861,6 +954,8 @@ def _reference_pairs(value: Any) -> set[tuple[str, str]] | None:
                 skill, reference = raw.split(":", 1)
             elif "|" in raw:
                 skill, reference = raw.split("|", 1)
+            elif raw:
+                skill, reference = "", raw
             else:
                 return None
             pairs.add((skill.strip(), reference.strip()))
@@ -876,6 +971,72 @@ def _actual_reference_pairs(actual: dict[str, Any]) -> set[tuple[str, str]] | No
         or actual.get("references")
     )
     return _reference_pairs(value)
+
+
+def _actual_stage_manifest(output_data: dict[str, Any], actual: dict[str, Any]) -> dict[str, Any] | None:
+    for container in (actual, output_data):
+        for key in ("stage_route_manifest", "stage_manifest", "changeforge_stage_route"):
+            value = container.get(key)
+            if isinstance(value, dict):
+                return value
+    return None
+
+
+def _expected_context_budget_mode(expected: dict[str, Any]) -> str | None:
+    explicit = expected.get("expected_context_budget_mode")
+    if isinstance(explicit, str) and explicit.strip():
+        return explicit.strip()
+    complexity = expected.get("complexity")
+    if complexity == "L1":
+        return "minimal"
+    if complexity == "L2":
+        return "single-stage"
+    if complexity in {"L3", "L4", "L5"}:
+        return "staged-plan"
+    return None
+
+
+def _stage_route_required(expected: dict[str, Any]) -> bool:
+    explicit = expected.get("stage_route_required")
+    if isinstance(explicit, bool):
+        return explicit
+    return expected.get("complexity") in {"L2", "L3", "L4", "L5"}
+
+
+def _stage_skipped_without_reason(manifest: dict[str, Any]) -> list[str]:
+    entries = manifest.get("skipped_capabilities")
+    if not isinstance(entries, list):
+        return []
+    missing: list[str] = []
+    for entry in entries:
+        if isinstance(entry, dict):
+            capability = str(entry.get("capability", "")).strip()
+            reason = str(entry.get("reason", "")).strip()
+            if capability and not reason:
+                missing.append(capability)
+        elif isinstance(entry, str):
+            if "=>" in entry:
+                capability, _sep, reason = entry.partition("=>")
+                if capability.strip() and not reason.strip():
+                    missing.append(capability.strip())
+            elif entry.strip():
+                missing.append(entry.strip())
+    return missing
+
+
+def _reference_paths(references: set[tuple[str, str]]) -> set[str]:
+    return {reference for _skill, reference in references}
+
+
+def _missing_router_self_references(
+    references: set[tuple[str, str]],
+) -> list[tuple[str, str]]:
+    paths = _reference_paths(references)
+    missing: list[tuple[str, str]] = []
+    for skill, reference in ROUTER_SELF_REFERENCES:
+        if (skill, reference) not in references and reference not in paths:
+            missing.append((skill, reference))
+    return missing
 
 
 def _compare_required_subset(
@@ -1001,6 +1162,72 @@ def _enforce_l4_l5_actual_gate_coverage(
             errors.append(f"{rel}: actual L4/L5 output is missing '{skill}'")
 
 
+def _enforce_actual_capability_references(
+    rel: str,
+    actual_sets: dict[str, list[str]],
+    reference_paths: set[str],
+    capability_metadata: dict[str, dict[str, Any]],
+    errors: list[str],
+) -> None:
+    selected_skills = set(actual_sets["skills"])
+    for capability in actual_sets["capabilities"]:
+        metadata = capability_metadata.get(capability)
+        if metadata is None:
+            continue
+        used_by = metadata.get("used_by")
+        if isinstance(used_by, set) and selected_skills and not selected_skills & used_by:
+            errors.append(
+                f"{rel}: selected capability '{capability}' does not map to any "
+                "actual selected skill through used_by"
+            )
+        reference = _capability_reference_path(capability, capability_metadata)
+        if reference is not None and reference not in reference_paths:
+            errors.append(
+                f"{rel}: actual.required_references is missing selected capability "
+                f"reference '{reference}'"
+            )
+
+
+def _enforce_actual_stage_route(
+    rel: str,
+    expected: dict[str, Any],
+    output_data: dict[str, Any],
+    actual: dict[str, Any],
+    errors: list[str],
+) -> None:
+    manifest = _actual_stage_manifest(output_data, actual)
+    if _stage_route_required(expected) and manifest is None:
+        errors.append(f"{rel}: actual output is missing changeforge_stage_route")
+        return
+    if manifest is None:
+        return
+
+    current = manifest.get("current_stage")
+    if not isinstance(current, str) or not current.strip():
+        errors.append(f"{rel}: changeforge_stage_route.current_stage is required")
+    expected_stage = expected.get("expected_stage")
+    if isinstance(expected_stage, str) and expected_stage.strip() and current != expected_stage:
+        errors.append(
+            f"{rel}: changeforge_stage_route.current_stage must be "
+            f"{expected_stage!r}, found {current!r}"
+        )
+
+    actual_budget = manifest.get("context_budget_mode")
+    expected_budget = _expected_context_budget_mode(expected)
+    if expected_budget is not None and actual_budget != expected_budget:
+        errors.append(
+            f"{rel}: changeforge_stage_route.context_budget_mode must be "
+            f"{expected_budget!r}, found {actual_budget!r}"
+        )
+
+    skipped_missing_reason = _stage_skipped_without_reason(manifest)
+    if skipped_missing_reason:
+        errors.append(
+            f"{rel}: changeforge_stage_route.skipped_capabilities missing reason for "
+            f"{skipped_missing_reason}"
+        )
+
+
 def _compare_candidate_output(  # noqa: C901 - schema comparison is branchy.
     case_path: Path,
     case_data: dict[str, Any],
@@ -1010,9 +1237,10 @@ def _compare_candidate_output(  # noqa: C901 - schema comparison is branchy.
     capabilities: set[str],
     extensions: set[str],
     allowed_gates: set[str],
+    capability_metadata: dict[str, dict[str, Any]],
     errors: list[str],
 ) -> None:
-    rel = relpath(ROOT, output_path)
+    rel = _display_path(output_path)
     if not isinstance(output_data, dict):
         errors.append(f"{rel}: top-level must be a mapping")
         return
@@ -1095,18 +1323,35 @@ def _compare_candidate_output(  # noqa: C901 - schema comparison is branchy.
     if references is None:
         errors.append(
             f"{rel}: actual.required_references must be a list of "
-            "{skill, reference} mappings or 'skill:reference' strings"
+            "{skill, reference} mappings, 'skill:reference' strings, or plain reference paths"
         )
+        reference_paths: set[str] = set()
     else:
-        missing_refs = sorted(set(ROUTER_SELF_REFERENCES) - references)
+        reference_paths = _reference_paths(references)
+        missing_refs = _missing_router_self_references(references)
         if missing_refs:
             errors.append(
                 f"{rel}: actual.required_references is missing router "
                 f"self-use references {missing_refs}"
             )
+        _compare_required_subset(
+            rel,
+            "required_references",
+            _case_expected_required_references(case_data, capability_metadata),
+            reference_paths,
+            errors,
+        )
+        _enforce_actual_capability_references(
+            rel,
+            actual_sets,
+            reference_paths,
+            capability_metadata,
+            errors,
+        )
 
     _enforce_l1_actual_anti_over_routing(rel, expected, actual_sets, errors)
     _enforce_l4_l5_actual_gate_coverage(rel, expected, actual_sets, errors)
+    _enforce_actual_stage_route(rel, expected, output_data, actual, errors)
 
 
 def _iter_case_files() -> list[Path]:
@@ -1221,10 +1466,15 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     skills, capabilities, extensions = _load_registry_names()
+    capability_metadata = _load_capability_metadata()
     allowed_triggers, allowed_gates = _load_routing_allow_lists()
     if not skills or not capabilities or not extensions:
         errors.append(
             "registry data appears empty or unreadable; run validate-registry first."
+        )
+    if not capability_metadata:
+        errors.append(
+            "capability metadata appears empty or unreadable; run validate-registry first."
         )
     if not allowed_triggers or not allowed_gates:
         errors.append(
@@ -1297,6 +1547,7 @@ def main(argv: list[str] | None = None) -> int:
             capabilities,
             extensions,
             allowed_gates,
+            capability_metadata,
             errors,
         )
         compared_outputs += 1
