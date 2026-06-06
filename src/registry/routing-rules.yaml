@@ -764,6 +764,12 @@ routing_rules:
       - proactive closure handoff package boundary validation result residual risk handoff target
       - agent claims done without evidence agent fix without scan agent diagnosis probably environment
     priority: 88
+  - route_to: skill-authoring-expert
+    triggers:
+      - SKILL.md authoring skill writing skill content governance skill slimming skill splitting skill reference design capability authoring routing rule authoring skill registry update prompt skill design agent skill package design professional skill review
+      - decide whether skill content belongs in SKILL.md body references foundation capability professional skill or domain extension
+      - review skill boundary triggers non-goals output contract context budget reference loading and registry impact
+    priority: 60
   - route_to: documentation-generation
     triggers:
       - update docs for actual behavior API contracts migrations configuration operations and release impact

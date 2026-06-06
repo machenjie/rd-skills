@@ -208,8 +208,11 @@ python3 scripts/validate-capabilities.py
 python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
+python3 scripts/audit-skill-content.py
+python3 scripts/validate-skill-content-size.py
 python3 scripts/eval-routing.py
 python3 scripts/validate-hooks.py
+python3 scripts/eval-agent-behavior.py
 python3 -m unittest discover -s tests
 python3 scripts/validate-codegen-benchmarks.py
 python3 scripts/run-codegen-benchmarks.py --limit 3
@@ -219,7 +222,39 @@ python3 scripts/build.py --profile dev
 python3 scripts/validate-installation.py
 ```
 
+`scripts/audit-skill-content.py` writes the advisory content audit to
+`reports/skill-content-audit.md` and `reports/skill-content-audit.json`; it never
+fails the workflow. `scripts/validate-skill-content-size.py` warns when a `SKILL.md`
+body, section, table, or duplicated block crosses a budget defined in
+[SKILL_CONTENT_GOVERNANCE.md](SKILL_CONTENT_GOVERNANCE.md) without a recorded
+exception in `config/skill-content-exceptions.yaml`; it is warning-only by default
+and only exits non-zero with `--strict`. Neither tool blocks the build.
+
 Then use `installers/upgrade.py` for an existing managed install, or `installers/install.py --backup` when replacing a managed install intentionally.
+
+## Telemetry Review Workflow
+
+When the optional hook runtime is enabled, hooks record a runtime fact log in the
+user cache. You can review it offline and promote findings into golden cases.
+Telemetry never edits skill rules; promotion is always a human decision.
+
+```bash
+# Review real agent behavior and write a report plus suggestions:
+python3 scripts/review-agent-telemetry.py
+
+# Turn one reviewed suggestion into a candidate (dry run, then write):
+python3 scripts/promote-telemetry-suggestion.py --id <suggestion-id> --suggestions <path>
+python3 scripts/promote-telemetry-suggestion.py --id <suggestion-id> --suggestions <path> --write
+
+# Score captured, human-reviewed agent outputs against expected route manifests:
+python3 scripts/eval-agent-behavior.py
+
+# Summarize telemetry from doctor (advisory only):
+python3 installers/doctor.py --telemetry-root ~/.cache/changeforge/telemetry
+```
+
+See [TELEMETRY.md](TELEMETRY.md) for the full data flow, privacy guarantees, and
+the route manifest contract.
 
 ## Troubleshooting
 

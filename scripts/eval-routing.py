@@ -224,14 +224,19 @@ EXPECTED_FIELDS: tuple[str, ...] = (
 )
 
 ACTUAL_LIST_ALIASES: dict[str, tuple[str, ...]] = {
-    "skills": ("skills", "skill_path", "professional_skills"),
+    "skills": ("skills", "skill_path", "professional_skills", "selected_skills"),
     "capabilities": (
         "capabilities",
         "foundation_capabilities",
         "capability_path",
+        "selected_capabilities",
     ),
-    "domain_extensions": ("domain_extensions", "extensions"),
-    "quality_gates": ("quality_gates", "gates"),
+    "domain_extensions": (
+        "domain_extensions",
+        "extensions",
+        "selected_domain_extensions",
+    ),
+    "quality_gates": ("quality_gates", "gates", "required_quality_gates"),
 }
 
 

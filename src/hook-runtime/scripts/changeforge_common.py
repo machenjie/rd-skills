@@ -30,6 +30,18 @@ STATE_LIST_FIELDS = (
 )
 KNOWN_RUNTIMES = {"codex", "claude"}
 HOOK_MODES = {"off", "monitor", "warn", "block"}
+
+# Telemetry is an operational fact log written to the user cache. It never
+# touches project source, never records prompts, environment variables, secrets,
+# or full command output, and always fails open. The schema version lets the
+# offline review tooling evolve without breaking older session files.
+TELEMETRY_SCHEMA_VERSION = "1"
+TELEMETRY_DISABLED_VALUES = {"0", "off", "false", "no"}
+TELEMETRY_SUBDIRS = ("sessions", "reports", "suggestions", "promoted")
+MAX_TELEMETRY_ITEMS = 50
+MAX_TELEMETRY_VALUE_LEN = 300
+MAX_COMMAND_PROGRAM_LEN = 40
+ENV_ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 PATH_KEYS = {
     "file",
     "file_path",
@@ -384,15 +396,163 @@ def normalize_path(path: str) -> str:
     return _clean_path(path).replace("\\", "/").lstrip("./")
 
 
+def telemetry_enabled() -> bool:
+    """Telemetry defaults on; CHANGEFORGE_TELEMETRY=off (or 0/false/no) disables it."""
+    value = os.environ.get("CHANGEFORGE_TELEMETRY", "").strip().casefold()
+    return value not in TELEMETRY_DISABLED_VALUES
+
+
+def telemetry_root(repo: Path) -> Path:
+    """Per-repository telemetry directory under the user cache (path-free hash)."""
+    return _cache_base() / "changeforge" / "telemetry" / _repo_hash(repo)
+
+
+def session_id_from_event(event: dict) -> str:
+    """Best-effort session/turn identifier from the hook event, never a prompt."""
+    for key in (
+        "session_id",
+        "sessionId",
+        "turn_id",
+        "turnId",
+        "conversation_id",
+        "conversationId",
+    ):
+        value = event.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()[:120]
+    return ""
+
+
+def summarize_command_program(command: str) -> str:
+    """Return only the program token of a command, skipping NAME=value prefixes.
+
+    Full command arguments may contain secrets, so telemetry records only the
+    leading executable name (for example ``kubectl`` or ``helm``), truncated.
+    """
+    for part in command.strip().split():
+        if ENV_ASSIGNMENT_RE.match(part):
+            continue
+        return part[:MAX_COMMAND_PROGRAM_LEN]
+    return ""
+
+
+def write_telemetry_event(
+    repo: Path,
+    *,
+    runtime: str,
+    hook_name: str,
+    event_name: str,
+    mode: str,
+    session_id: str = "",
+    cwd: str | None = None,
+    tool_name: str = "",
+    changed_paths: Iterable[str] = (),
+    added_paths: Iterable[str] = (),
+    command_program: str = "",
+    hook_findings: dict[str, Iterable[str]] | None = None,
+    suggested_skills: Iterable[str] = (),
+    suggested_capabilities: Iterable[str] = (),
+    suggested_gates: Iterable[str] = (),
+    suggested_domain_extensions: Iterable[str] = (),
+    risk_surfaces: Iterable[str] = (),
+    route_manifest_detected: bool = False,
+    required_references_detected: bool = False,
+    validation_evidence_detected: bool = False,
+    residual_risk_detected: bool = False,
+) -> None:
+    """Append one telemetry record as JSONL. Fails open on any error.
+
+    Telemetry is a runtime fact log for offline review. It records what a hook
+    observed, not prompts, environment variables, secrets, or command output.
+    """
+    if not telemetry_enabled():
+        return
+    try:
+        repo_hash = _repo_hash(repo)
+        cwd_hash = _hash_text(cwd.strip()) if isinstance(cwd, str) and cwd.strip() else repo_hash
+        root = telemetry_root(repo)
+        for sub in TELEMETRY_SUBDIRS:
+            (root / sub).mkdir(parents=True, exist_ok=True)
+        record = {
+            "schema_version": TELEMETRY_SCHEMA_VERSION,
+            "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+            "repo_hash": repo_hash,
+            "cwd_hash": cwd_hash,
+            "runtime": runtime,
+            "hook_name": hook_name,
+            "event_name": event_name,
+            "session_id": session_id.strip() or f"{repo_hash[:8]}-{_utc_date()}",
+            "mode": mode,
+            "tool_name": tool_name,
+            "changed_paths": _capped_items(changed_paths),
+            "added_paths": _capped_items(added_paths),
+            "command_program": command_program[:MAX_COMMAND_PROGRAM_LEN],
+            "hook_findings": _clean_findings(hook_findings),
+            "suggested_skills": _capped_items(suggested_skills),
+            "suggested_capabilities": _capped_items(suggested_capabilities),
+            "suggested_gates": _capped_items(suggested_gates),
+            "suggested_domain_extensions": _capped_items(suggested_domain_extensions),
+            "risk_surfaces": _capped_items(risk_surfaces),
+            "route_manifest_detected": bool(route_manifest_detected),
+            "required_references_detected": bool(required_references_detected),
+            "validation_evidence_detected": bool(validation_evidence_detected),
+            "residual_risk_detected": bool(residual_risk_detected),
+        }
+        target = root / "sessions" / f"{_utc_date()}.jsonl"
+        line = json.dumps(record, sort_keys=True)
+        with target.open("a", encoding="utf-8") as handle:
+            handle.write(line + "\n")
+    except Exception as exc:
+        debug_log(repo, f"telemetry write failed open: {exc}")
+
+
+def _utc_date() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def _capped_items(values: Iterable[str]) -> list[str]:
+    out: list[str] = []
+    for raw in values:
+        text = str(raw).strip()
+        if not text:
+            continue
+        out.append(text[:MAX_TELEMETRY_VALUE_LEN])
+        if len(out) >= MAX_TELEMETRY_ITEMS:
+            break
+    return _unique(out)
+
+
+def _clean_findings(findings: dict[str, Iterable[str]] | None) -> dict[str, list[str]]:
+    if not isinstance(findings, dict):
+        return {}
+    cleaned: dict[str, list[str]] = {}
+    for key, values in findings.items():
+        if isinstance(values, (list, tuple)):
+            cleaned[str(key)] = _capped_items(values)
+    return cleaned
+
+
 def _state_path(repo: Path) -> Path:
+    return _cache_base() / "changeforge" / "hooks" / _repo_hash(repo) / "current-turn.json"
+
+
+def _cache_base() -> Path:
+    """Resolve the ChangeForge cache root, honoring XDG_CACHE_HOME."""
     cache_root = os.environ.get("XDG_CACHE_HOME")
-    base = Path(cache_root).expanduser() if cache_root else Path.home() / ".cache"
+    return Path(cache_root).expanduser() if cache_root else Path.home() / ".cache"
+
+
+def _hash_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()[:24]
+
+
+def _repo_hash(repo: Path) -> str:
+    """Stable, path-free identifier for a repository root."""
     try:
         repo_key = str(repo.expanduser().resolve())
     except OSError:
         repo_key = str(repo)
-    repo_hash = hashlib.sha256(repo_key.encode("utf-8")).hexdigest()[:24]
-    return base / "changeforge" / "hooks" / repo_hash / "current-turn.json"
+    return _hash_text(repo_key)
 
 
 def _empty_state() -> dict:

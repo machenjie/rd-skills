@@ -28,7 +28,9 @@ from changeforge_common import (
     normalize_path,
     read_event,
     repo_root,
+    session_id_from_event,
     tool_name,
+    write_telemetry_event,
 )
 
 
@@ -368,6 +370,36 @@ def main() -> int:
             extension_reuse_findings=extension_reuse_findings,
             advanced_refactor_findings=advanced_refactor_findings,
             comment_findings=comment_findings,
+            suggested_skills=_suggested_skills(any_findings),
+            suggested_capabilities=_suggested_capabilities(
+                structure_findings,
+                file_naming_findings,
+                reuse_findings,
+                extension_reuse_findings,
+                advanced_refactor_findings,
+                comment_findings,
+            ),
+            suggested_gates=["code-review"] if any_findings else [],
+        )
+        write_telemetry_event(
+            repo,
+            runtime=runtime,
+            hook_name="post_edit_structure_gate",
+            event_name=event_name(event),
+            mode=mode,
+            session_id=session_id_from_event(event),
+            cwd=cwd_from_event(event),
+            tool_name=tool_name(event),
+            changed_paths=paths,
+            added_paths=sorted(added_paths),
+            hook_findings={
+                "structure_findings": structure_findings,
+                "file_naming_findings": file_naming_findings,
+                "reuse_findings": reuse_findings,
+                "extension_reuse_findings": extension_reuse_findings,
+                "advanced_refactor_findings": advanced_refactor_findings,
+                "comment_findings": comment_findings,
+            },
             suggested_skills=_suggested_skills(any_findings),
             suggested_capabilities=_suggested_capabilities(
                 structure_findings,

@@ -15,6 +15,8 @@ from changeforge_common import (
     load_state,
     read_event,
     repo_root,
+    session_id_from_event,
+    write_telemetry_event,
 )
 
 
@@ -88,16 +90,40 @@ def main() -> int:
         )
         if not _has_closure_surface(state):
             return 0
+        final_text = _final_text(event)
+        signals = _closure_signals(final_text, state)
+        write_telemetry_event(
+            repo,
+            runtime=runtime,
+            hook_name="stop_closure_gate",
+            event_name=event_name(event),
+            mode=mode,
+            session_id=session_id_from_event(event),
+            cwd=cwd_from_event(event),
+            changed_paths=state.get("changed_paths", []),
+            hook_findings=_stop_findings(state),
+            suggested_skills=state.get("suggested_skills", []),
+            suggested_capabilities=state.get("suggested_capabilities", []),
+            suggested_gates=state.get("suggested_gates", []),
+            suggested_domain_extensions=state.get("suggested_domain_extensions", []),
+            risk_surfaces=state.get("risk_surfaces", []),
+            route_manifest_detected=signals["route_manifest"],
+            required_references_detected=signals["references"],
+            validation_evidence_detected=signals["validation"],
+            residual_risk_detected=signals["risk"],
+        )
         if mode == "monitor":
             clear_state(repo, runtime)
             return 0
-        message = _closure_message(state, _final_text(event))
-        clear_state(repo, runtime)
-        emit_stop_reminder(
-            runtime,
-            message,
-            continue_turn=_should_continue_stop(event, mode),
-        )
+        missing = _missing_keyword_groups(final_text, state) if final_text else []
+        stop_hook_active = bool(event.get("stop_hook_active") or event.get("stopHookActive"))
+        should_block = mode == "block" and bool(missing) and not stop_hook_active
+        message = _closure_message(state, final_text)
+        if should_block:
+            emit_stop_reminder(runtime, message, continue_turn=True)
+        else:
+            clear_state(repo, runtime)
+            emit_stop_reminder(runtime, message, continue_turn=False)
         return 0
     except Exception as exc:
         emit_stop_reminder(
@@ -108,12 +134,6 @@ def main() -> int:
         return 0
 
 
-def _should_continue_stop(event: dict, mode: str) -> bool:
-    if mode != "block":
-        return False
-    if bool(event.get("stop_hook_active") or event.get("stopHookActive")):
-        return False
-    return True
 
 
 def _has_closure_surface(state: dict) -> bool:
@@ -127,6 +147,41 @@ def _has_closure_surface(state: dict) -> bool:
         or state.get("advanced_refactor_findings")
         or state.get("comment_findings")
     )
+
+
+def _closure_signals(final_text: str, state: dict) -> dict[str, bool]:
+    """Completeness flags for telemetry. This is presence detection only.
+
+    The Stop gate does not judge semantic correctness; it records whether the
+    final handoff text contains each kind of closure evidence so offline review
+    can spot missing route manifests, validation, references, or residual risk.
+    """
+    lowered = final_text.casefold()
+
+    def has(group: str) -> bool:
+        return any(keyword.casefold() in lowered for keyword in CLOSURE_KEYWORDS[group])
+
+    return {
+        "route_manifest": "changeforge_route" in lowered,
+        "validation": bool(state.get("validation_seen")) or has("validation"),
+        "risk": has("risk"),
+        "references": "reference" in lowered,
+        "skills": has("skills"),
+    }
+
+
+def _stop_findings(state: dict) -> dict[str, list[str]]:
+    return {
+        key: list(state.get(key, []))
+        for key in (
+            "structure_findings",
+            "file_naming_findings",
+            "reuse_findings",
+            "extension_reuse_findings",
+            "advanced_refactor_findings",
+            "comment_findings",
+        )
+    }
 
 
 def _closure_message(state: dict, final_text: str) -> str:

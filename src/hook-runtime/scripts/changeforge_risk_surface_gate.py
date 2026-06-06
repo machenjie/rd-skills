@@ -19,7 +19,10 @@ from changeforge_common import (
     normalize_path,
     read_event,
     repo_root,
+    session_id_from_event,
+    summarize_command_program,
     tool_name,
+    write_telemetry_event,
 )
 
 
@@ -139,6 +142,27 @@ def main() -> int:
             suggested_domain_extensions=_collect(findings, "domain_extensions"),
             suggested_gates=_collect(findings, "gates"),
             validation_seen=_looks_like_validation(command),
+        )
+        write_telemetry_event(
+            repo,
+            runtime=runtime,
+            hook_name="risk_surface_gate",
+            event_name=event_name(event),
+            mode=mode,
+            session_id=session_id_from_event(event),
+            cwd=cwd_from_event(event),
+            tool_name=tool_name(event),
+            changed_paths=paths,
+            command_program=summarize_command_program(command),
+            hook_findings={
+                "risk_surfaces": [str(finding["name"]) for finding in findings],
+            },
+            suggested_skills=_collect(findings, "skills"),
+            suggested_capabilities=_collect(findings, "capabilities"),
+            suggested_domain_extensions=_collect(findings, "domain_extensions"),
+            suggested_gates=_collect(findings, "gates"),
+            risk_surfaces=[str(finding["name"]) for finding in findings],
+            validation_evidence_detected=_looks_like_validation(command),
         )
         if not findings or mode == "monitor":
             return 0

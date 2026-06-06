@@ -23,3 +23,7 @@ runtime/**
 
 dist/
 evals/routing-outputs/
+
+# Generated agent-behavior eval reports (working area)
+evals/agent-behavior/outputs/*
+!evals/agent-behavior/outputs/.gitkeep
