@@ -105,364 +105,46 @@ Escalate to `agent-execution-discipline` when an agent adds structure without do
 
 # Critical Details
 
-## Repository Local Pattern Discovery Protocol
+The full discovery protocol, decision trees, and record templates live in this capability's `references/` (loaded in the dev profile and by skill authors). The body below carries the decision-critical rules compiled into every consuming professional skill. Resolve every structure decision under five questions: naming, reuse and placement, object modeling, placement boundaries, and shared-utility pollution.
 
-Before adding or renaming any variable, parameter, field, function, method, class, struct, interface, component, hook, service, repository, adapter, helper, utility, file, package, module, or directory, inspect local conventions in this order:
+## Reuse & Placement
 
-1. Same file:
-   - existing helpers;
-   - private functions;
-   - methods;
-   - naming shape;
-   - comment style;
-   - error handling style;
-   - test shape.
+Discover local convention before adding or renaming anything: inspect the same file, same directory, parent module, sibling modules, tests, and generated/registry files in that order, and treat shared/common/utils as a last resort only after proving the behavior is domain-free. Record files inspected, detected naming/test/placement conventions, reuse candidates found, and rejected locations.
 
-2. Same directory:
-   - file naming pattern;
-   - suffix/prefix convention;
-   - public/private split;
-   - test file naming;
-   - sibling class/function naming;
-   - local helper placement.
+Choose the first valid reuse-ladder level and reject new code when a lower-cost level fits:
 
-3. Parent directory or parent module:
-   - module ownership;
-   - exported API;
-   - internal/shared boundary;
-   - parent naming pattern;
-   - existing package/module style.
+1. Direct reuse of an existing function, method, class, component, hook, service, repository, adapter, or utility with matching semantics.
+2. Same-file extension of a private helper or method when responsibility stays single.
+3. Same-module extension without changing old behavior.
+4. Backward-compatible public-API extension only when the contract stays coherent.
+5. Composition of existing units.
+6. Adapter or wrapper only when the call boundary or external shape requires it.
+7. Extraction of duplicated or mixed behavior into a clearer private or module-internal abstraction.
+8. New code only after every earlier level is rejected with evidence.
 
-4. Sibling modules:
-   - equivalent feature/component/service/repository patterns;
-   - similar naming and placement decisions.
+Produce a Reuse Ladder Record naming the candidates at each level, the final decision, and why lower-cost levels were insufficient. Full discovery protocol and the function-placement decision tree: `references/reuse-and-placement.md`.
 
-5. Shared/common/utils:
-   - only after proving the behavior is pure technical utility and domain-free;
-   - never use shared/common/utils to avoid choosing the owning module.
+## Advanced Refactoring & Extension Reuse
 
-6. Tests:
-   - naming convention;
-   - placement convention;
-   - test helper/fixture style;
-   - test comment style.
+Prefer extending the existing owner over a parallel implementation only when responsibility stays single, existing callers keep their behavior, the change is backward compatible, new parameters are optional or a parameter object, no vague `type`/`kind`/`mode`/`flag`/`strategy` switch is added, and tests cover both old and new behavior. Reject extension when the owner would become ambiguous, the case belongs to a different owner, compatibility cannot be proven, the change requires cross-layer imports, or the name would have to become vague.
 
-7. Generated or registry files:
-   - whether new names require index/export/registration updates;
-   - generated source-of-truth and regeneration policy.
+When refactoring, escalate only as far as needed: inline cleanup, then function extraction, then object extraction (only for real state/invariant/lifecycle/collaborator ownership), then interface or protocol extraction (only with multiple implementations today or a real external test seam), then inheritance (only with proven substitutability, a stable base contract, and per-subtype contract tests), then reflection or metadata dispatch (only when a framework or schema mapping requires it, with a type-safety boundary and a malformed-metadata fallback). Produce an Extension Safety Record and an Advanced Refactoring Decision. Full conditions and record templates: `references/advanced-refactoring.md`.
 
-The Implementation Structure Plan must state:
+## Naming
 
-- files inspected;
-- directories inspected;
-- existing functions/classes/modules/services/repositories/hooks/components considered;
-- detected naming convention;
-- detected file naming convention;
-- detected test naming convention;
-- detected placement convention;
-- reuse candidates found;
-- rejected locations and why;
-- final selected name and location;
-- whether comments are required for the new or changed structure.
+Names are architecture: a name must reveal owner, concept, role, and boundary, and a vague name is a structure defect, not a cosmetic issue. Prefer existing repository vocabulary over invented synonyms, and follow language convention for casing and visibility through `language-idiom-enforcement`. Variables name the value they hold, functions name behavior, and predicates read as booleans. Classify every name into the narrowest accurate category — business/domain, feature, component, module, service, domain/value object, repository, adapter/client, utility, helper, or common/shared — and reject a category when the behavior does not match it (for example, a `utility` that carries order, tenant, invoice, or permission terms is misclassified domain logic). Full naming taxonomy table with per-category placement and reject rules: `references/naming.md`.
 
-## Reuse Ladder
+## Object Modeling
 
-When adding behavior, choose the first valid option:
+Decide object responsibility before creating a class: identity, value semantics, lifecycle, state, invariant, policy, protocol role, or collaboration boundary. A class is justified only when a function or existing service method is insufficient — it must own state or lifecycle, enforce invariants across operations, implement a protocol with real variants today, or model a domain or value object. Place a method on a class only when it uses or protects that class's state, invariant, lifecycle, or collaborator; otherwise use a service, module function, adapter, or local helper, and never let the method force the object to import infrastructure or UI concerns. Encapsulation must protect invariants, not hide a data bag behind getters and setters. Inheritance is exceptional: use it only for a genuinely substitutable type hierarchy with a stable base contract and per-subtype tests, and never for code sharing alone — prefer composition, delegation, or strategy. Reject generic `Manager`, `Processor`, `Handler`, `Helper`, or `Util` class names unless explicitly justified. Full object, method, and class decision trees: `references/object-modeling.md`.
 
-1. Direct reuse:
-   - call an existing function, method, class, component, hook, service, repository, adapter, or utility with matching semantics.
+## Placement Boundaries
 
-2. Same-file extension:
-   - extend an existing private helper, local function, or method if responsibility remains single.
+A new file needs a cohesive owner and a convention-compliant name; add to an existing file when it already owns the responsibility, and reject a filename that introduces a new suffix, prefix, pluralization, or layer word the surrounding directory does not use. A new directory must represent a business capability, layer, adapter, feature, or generated-code boundary — never a convenience folder. Keep private code private and do not export "just in case." New imports must respect module-boundary and layered-architecture dependency direction and introduce no cycles. Frontend placement decides feature-local versus shared for components, hooks, validators, state, API clients, and routes; feature-local state does not move to a global store without real cross-feature ownership. Backend placement decides controller, service, domain, repository, adapter, validator, mapper, DTO, and job ownership; business rules never live in transport handlers, generic utilities, or persistence adapters. Full file and directory decision trees: `references/placement-boundaries.md`.
 
-3. Same-module extension:
-   - extend an existing module-internal function, class, service, repository, adapter, or helper without changing old behavior.
+## Shared-Utility Pollution
 
-4. Existing public API extension:
-   - add a backward-compatible option, overload, parameter object, strategy, or branch only when the public contract remains coherent.
-
-5. Composition:
-   - compose existing functions/classes/services into the required behavior.
-
-6. Adapter/wrapper:
-   - wrap an existing behavior only when the call boundary, dependency direction, or external API shape requires adaptation.
-
-7. Extraction:
-   - extract duplicated or mixed behavior into a clearer private or module-internal abstraction.
-
-8. New code:
-   - create a new function/class/file/directory only after all previous levels are rejected with evidence.
-
-Reject new code when an earlier ladder level can satisfy the requirement with lower structural cost.
-
-The plan must include a Reuse Ladder Record:
-
-- direct reuse candidates;
-- same-file extension candidates;
-- same-module extension candidates;
-- existing public API extension candidates;
-- composition candidates;
-- adapter/wrapper candidates;
-- extraction candidates;
-- final decision;
-- why lower-cost reuse levels were insufficient.
-
-## Extension Reuse Without Behavioral Drift
-
-When an existing function, method, class, service, repository, adapter, component, hook, or module already owns the concept but lacks a case, prefer extending it over creating a parallel implementation only if all conditions hold:
-
-- The original responsibility remains single and naturally named.
-- Existing callers keep the same behavior.
-- The extension is backward compatible.
-- New parameters are optional or represented by a clear parameter object.
-- No unrelated mode flags are added.
-- No vague `type`, `kind`, `mode`, `flag`, or `strategy` switch is added unless the existing abstraction is already designed for that variation.
-- Existing tests still pass.
-- New tests cover both old behavior and newly supported behavior.
-- Error behavior and edge cases remain compatible.
-- The extension does not force the owner to import a forbidden layer.
-- The extension does not turn the owner into a generic manager, processor, util, or mixed-responsibility branch pile.
-
-Reject extension reuse when:
-
-- the old function/class would become ambiguous;
-- the new case belongs to a different owner;
-- compatibility cannot be proven;
-- tests cannot cover old and new behavior clearly;
-- the extension requires cross-layer imports;
-- the name would need to become vague to fit both old and new responsibilities.
-
-The plan must include an Extension Safety Record:
-
-- existing owner;
-- missing case being added;
-- old behavior preserved or changed;
-- compatibility risk;
-- tests covering old behavior;
-- tests covering new behavior;
-- rejected parallel implementation and why;
-- confirmation that responsibility remains single.
-
-## Advanced Refactoring Structure Protocol
-
-When refactoring, evaluate these options in order:
-
-1. Inline cleanup:
-   - rename;
-   - simplify condition;
-   - remove duplication inside the same function;
-   - reduce nested control flow.
-
-2. Function extraction:
-   - extract when a block has a nameable responsibility;
-   - keep private if used once or only locally;
-   - move to module-internal only when reused by multiple files in the module;
-   - do not create a shared utility for one caller.
-
-3. Object extraction:
-   Extract a class/object only when at least one is true:
-   - it owns state across multiple operations;
-   - it protects invariants;
-   - it models lifecycle transitions;
-   - it coordinates collaborators;
-   - it represents a domain object;
-   - it represents a value object;
-   - it represents a service object;
-   - it represents an adapter;
-   - it represents a strategy;
-   - it represents a protocol participant;
-   - it gives a real boundary that a function cannot express clearly.
-
-4. Interface or protocol extraction:
-   Extract only when:
-   - multiple implementations exist now;
-   - a test seam is needed for an external dependency;
-   - framework/plugin boundaries require it;
-   - dependency inversion removes a real architectural violation;
-   - the interface expresses stable behavior rather than one implementation.
-
-5. Inheritance:
-   Use only when:
-   - subtypes are genuinely substitutable;
-   - the base class has a stable contract;
-   - initialization and lifecycle are safe;
-   - contract tests cover every subtype;
-   - callers do not need to branch on concrete subtype;
-   - inheritance is not being used merely for helper reuse.
-
-   Reject inheritance when composition, delegation, strategy, or extraction is simpler.
-
-6. Reflection or metadata-driven dispatch:
-   Use only when:
-   - framework integration requires it;
-   - plugin discovery requires it;
-   - schema/annotation/metadata mapping avoids repetitive boilerplate safely;
-   - compile-time alternatives would create worse duplication or coupling.
-
-   Reflection must include:
-   - type-safety boundary;
-   - failure behavior;
-   - discoverability notes;
-   - test coverage;
-   - security consideration if inputs influence reflection;
-   - fallback when metadata is missing or malformed.
-
-The plan must include an Advanced Refactoring Decision:
-
-- why inline cleanup is insufficient;
-- why function extraction is insufficient or sufficient;
-- why object/class/interface is justified or rejected;
-- state/invariant/lifecycle/collaborator decision;
-- composition vs inheritance decision;
-- substitutability evidence if inheritance is used;
-- reflection safety decision if reflection is used;
-- public behavior tests used to prove the refactor.
-
-## Naming Taxonomy
-
-Use the narrowest accurate category. Do not use these words interchangeably:
-
-| Category | Means | Belongs In | Naming Guidance | Reject When |
-| --- | --- | --- | --- | --- |
-| Business / Domain | Core business concept, rule, invariant, lifecycle, permission, event, or policy | Domain module, application service, use case, policy, state machine | Use business vocabulary from requirements and existing domain model | It is only formatting, parsing, transport, or persistence mechanics |
-| Feature | User-visible capability or product workflow slice | Feature module, route/page area, feature-local component/state/tests | Name after the user outcome or workflow, not implementation mechanics | It is reused by unrelated features or has no product behavior |
-| Component | UI composition unit with props, slots, state, render behavior, accessibility contract | Feature-local UI folder or design-system/component package | Name by rendered role and product meaning | It contains data access, business rules, or global state ownership |
-| Module | Coherent code boundary with owner, public API, allowed dependencies | Module/package directory | Name after owned capability or technical layer | It is just a folder for convenience |
-| Service | Application orchestration, use case coordination, transaction boundary, external operation boundary | Application/backend service layer | Name after use case or owned operation | It only wraps one repository call or hides procedural helpers |
-| Domain Object / Value Object | Object with identity or value semantics, invariants, lifecycle, or behavior | Domain model | Name after the concept it protects | It is a DTO, record, or getter/setter bag |
-| Repository | Persistence boundary and query/write contract | Infrastructure or data access layer behind an interface | Name after aggregate/resource being persisted | It leaks ORM/persistence types into domain logic |
-| Adapter / Client | External system, framework, transport, provider, or infrastructure boundary | Infrastructure/integration/adapter directory | Name after external system and role | It contains business rules instead of translation, retry, or failure handling |
-| Utility | Pure technical, domain-free helper reused across modules | Shared/common utility package | Name by technical transformation; no business terms | It contains order, tenant, invoice, permission, workflow, or other domain terms |
-| Helper | Small local implementation detail private to a file/module | Same file or module-internal area | Prefer private/local names and keep scope narrow | It becomes public, reused widely, or hides a missing domain/service concept |
-| Common / Shared | Stable cross-module technical contract or primitive | Shared/common package with clear ownership | Use only for domain-free primitives or intentional public contracts | It is used to avoid choosing the owning module |
-
-## Function Decision Tree
-
-```text
-Need new behavior?
-|-- Does an existing function already implement the same semantic behavior?
-|   |-- Yes: Reuse it directly.
-|   `-- No
-|-- Is there an existing function with the same concept but missing a case?
-|   |-- Yes: Extend it only if its responsibility remains single and tests cover old and new behavior.
-|   `-- No
-|-- Is this behavior private to one file or class?
-|   |-- Yes: Add a private or local helper in the same file.
-|   `-- No
-|-- Is this behavior private to one module?
-|   |-- Yes: Add a module-internal function.
-|   `-- No
-|-- Is this behavior a stable public contract used by multiple modules?
-|   |-- Yes: Add to the module public API with compatibility review.
-|   `-- No: Keep local; do not export.
-```
-
-## Object-Oriented Structure Decision Tree
-
-```text
-Considering object-oriented structure?
-|-- Is there a real domain object, value object, service object, adapter, strategy, or protocol participant?
-|   |-- Yes: Name the role, owner, lifecycle, collaborators, and observable behavior.
-|   `-- No: Prefer a function, module operation, or plain data record.
-|-- Does the object protect invariants or prevent invalid state transitions?
-|   |-- Yes: Encapsulate state mutation and expose behavior-oriented methods.
-|   `-- No
-|-- Does the object only group stateless helpers or mirror DTO fields with getters/setters?
-|   |-- Yes: Reject object; use functions, records, or module-local helpers.
-|   `-- No
-|-- Are multiple behavior variants required today?
-|   |-- Yes: Prefer interface + composition, strategy, or delegation unless taxonomy is real.
-|   `-- No: Do not pre-build extension points.
-|-- Is inheritance being considered?
-|   |-- Yes: Prove substitutability, base-class contract compatibility, initialization safety, and tests for each subtype.
-|   `-- No: Keep composition/delegation explicit.
-|-- Would callers need to know concrete subclasses or internal state to use it correctly?
-|   |-- Yes: Boundary is leaky; redesign interface or keep logic local.
-|   `-- No: Object boundary may be accepted with tests through public behavior.
-```
-
-Object design is a structural decision, not a name-only exercise. A good object name exposes stable responsibility and the boundary it protects. A bad object name such as generic manager, processor, helper, or util usually signals scattered procedural logic, a hidden data bag, or a hierarchy that future callers must understand to avoid invalid use.
-
-Inheritance must be treated as a public contract. Every subtype must preserve base-class preconditions, postconditions, error behavior, and lifecycle expectations. If inheritance is only used to share helper code, replace it with composition, delegation, extraction, or a private helper.
-
-## Method Placement Decision Tree
-
-```text
-Considering a method on an existing or new class?
-|-- Does the method use or protect object state, invariants, lifecycle, or collaborators?
-|   |-- Yes: Method placement may be appropriate.
-|   `-- No
-|-- Is the method behavior naturally expressed in the object's vocabulary?
-|   |-- Yes: Keep near the object if dependency direction allows it.
-|   `-- No: Use a service, module function, adapter, or local helper.
-|-- Would adding the method force the object to import infrastructure or UI concerns?
-|   |-- Yes: Reject; place orchestration in a service or adapter.
-|   `-- No
-|-- Does it make the class a generic manager/processor/helper?
-|   |-- Yes: Split by responsibility or move behavior to the correct owner.
-|   `-- No: Accept with tests through public behavior.
-```
-
-## Class Decision Tree
-
-```text
-Considering a new class?
-|-- Does it own mutable state or lifecycle?
-|   |-- Yes: Class may be appropriate.
-|   `-- No
-|-- Does it enforce invariants across multiple operations?
-|   |-- Yes: Class, value object, or domain object may be appropriate.
-|   `-- No
-|-- Does it implement an interface or protocol with multiple concrete implementations today?
-|   |-- Yes: Class or strategy may be appropriate.
-|   `-- No
-|-- Does it only group stateless helper functions?
-|   |-- Yes: Reject class; use functions or module-local helpers.
-|   `-- Continue
-|-- Is it replacing a clear existing service or class?
-|   |-- Yes: Extend or compose the existing class.
-|   `-- Create only with owner, responsibility, tests, and dependency justification.
-```
-
-## File Decision Tree
-
-```text
-Need a new file?
-|-- Does an existing file already own this responsibility?
-|   |-- Yes: Add there unless it would exceed cohesion or readability threshold.
-|   `-- No
-|-- Is the new logic a private helper for one feature or module?
-|   |-- Yes: Add under the module internal or private area.
-|   `-- No
-|-- Is it a public module contract?
-|   |-- Yes: Put under module api, public, or export surface.
-|   `-- No
-|-- Is it an adapter to external infrastructure?
-|   |-- Yes: Put under adapter, infrastructure, or integration area.
-|   `-- No
-|-- Is it pure shared technical utility?
-|   |-- Yes: Put under shared or common only if no business terminology appears.
-|   `-- No: Keep in the owning business module.
-```
-
-## Directory Decision Tree
-
-```text
-Need a new directory?
-|-- Does it represent a business capability or bounded context?
-|   |-- Yes: Create module or capability directory with owner and public API.
-|   `-- No
-|-- Does it represent a layer inside an existing module?
-|   |-- Yes: Follow existing layer convention.
-|   `-- No
-|-- Does it represent an external adapter or generated-code boundary?
-|   |-- Yes: Create with source-of-truth and regeneration policy.
-|   `-- No: Reject directory. Use existing structure.
-```
-
-Frontend placement must decide feature-local versus shared for components, hooks, validators, state, API clients, and route code. Avoid turning `components/common`, `hooks`, or `utils` into dumping grounds. Feature-local state must not move to a global store without actual cross-feature ownership.
-
-Backend placement must decide controller, service, domain, repository, adapter, validator, mapper, DTO, and job ownership. Business rules do not belong in transport handlers, generic utilities, or persistence adapters.
+Shared, common, and utils packages may hold pure technical, domain-free utilities only. Business logic — order, tenant, invoice, booking, cancellation, entitlement, permission, workflow, or any other domain term — belongs to the owning module or domain capability, never to a shared bucket used to avoid choosing an owner. A helper placed in `common` to dodge the ownership decision is a structure defect. Audit every shared utility added: confirm it is domain-free and that no business vocabulary appears in its name or body.
 
 # Failure Modes
 

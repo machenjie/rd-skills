@@ -164,6 +164,14 @@ Return a backend implementation plan or review with:
 - **Execution discipline evidence**: Commands run, outputs, same-pattern scan, reuse-and-placement rationale, residual risks, and validation results.
 - **Test obligations**: Unit tests for auth, validation, error paths; integration tests for transactions.
 
+## Evidence Contract
+Close a backend change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the authorization, consistency, or idempotency rule the change rests on, and the OWASP API/RFC 7807 benchmark it satisfies.
+- **Files and boundaries inspected**: the controllers, services, repositories, and validators read, and the exact object-level authorization point confirmed for each resource operation.
+- **Placement rationale**: why each new service method, repository call, validator, mapper, or helper lives where it does, with dependency direction and the shared/utils audit (via `implementation-structure-design`).
+- **Validation commands**: the literal unit and integration tests and validators run for the auth, transaction, idempotency, and error paths, each with its outcome.
+- **Residual risk**: the concurrency, partial-write, DLQ, or rollback path that remains untested or assumed, and the named owner of the follow-up.
+
 ## Quality Gate
 1. Every trust boundary has explicit input validation covering type, range, presence, and injection prevention.
 2. Object-level authorization is enforced server-side for every resource operation — IDOR prevention verified.

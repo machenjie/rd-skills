@@ -164,6 +164,14 @@ Return an experience impact model with:
 - **Responsive behavior**: Breakpoints and layout adaptation for affected screens.
 - **Risk classification**: Flows with payment, destruction, permission-denial, or onboarding that require escalation.
 
+## Evidence Contract
+Close an experience impact model only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the user flow and the WCAG criteria the change is judged against.
+- **Files and boundaries inspected**: every interactive screen's full state matrix — loading, empty, error, permission-denied, partial-success, timeout, retry, cancel, and back-navigation — with each state's content and behavior named or marked not-applicable.
+- **Placement rationale**: why each analytics event, A/B exposure, and guardrail metric binds to the UI behavior it does, with the naming taxonomy.
+- **Validation commands**: the accessibility checks, keyboard walkthrough, and exposure/guardrail assertions that will verify the flow, each with its expected signal.
+- **Residual risk**: the unhandled state, untested breakpoint, or guardrail-regression path that remains, with the named owner.
+
 ## Quality Gate
 1. All actors and entry points are enumerated — no orphaned flows.
 2. Every interactive element has specifications for all 8 required states (empty, loading, success, error, validation, disabled, permission-denied, unrecoverable).

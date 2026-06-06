@@ -183,6 +183,14 @@ Return a structured release plan with:
 - **Release notes**: Human-readable changelog entries (Keep a Changelog format) for affected audiences.
 - **Residual risks**: Known risks with mitigation or acceptance rationale.
 
+## Evidence Contract
+Close a release plan only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the rollout topology (flag/canary/blue-green) and schema/config compatibility rule the plan rests on.
+- **Files and boundaries inspected**: the environment config, migration scripts, IaC/Helm values, and secret references read, and the staging-parity boundary confirmed.
+- **Placement rationale**: why the migration sequences before or after the code deploy, and why the rollback boundary is drawn where it is.
+- **Validation commands**: the staging deploy, rollback rehearsal, `helm diff`/IaC plan, and pipeline run, each with its outcome.
+- **Residual risk**: the rollback trigger, post-release watch signal, and the unverified compatibility path that remains, with the named owner.
+
 ## Quality Gate
 1. Every deployment artifact is immutably tagged — no `latest` tags in production.
 2. All environment variables required by the new version are verified to exist in the target environment.

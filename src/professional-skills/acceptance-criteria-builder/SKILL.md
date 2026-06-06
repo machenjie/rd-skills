@@ -160,6 +160,14 @@ Return a structured acceptance criteria document with:
 - **Traceability map**: Each criterion ID → source requirement ID or change request section.
 - **Coverage summary**: Happy path, edge cases, error states, non-functional — confirmed covered or explicitly deferred with rationale.
 
+## Evidence Contract
+Close an acceptance criteria set only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the source requirement or change-request section each criterion traces to, with its RFC 2119 level.
+- **Files and boundaries inspected**: the behaviors and states enumerated — happy, negative, edge, permission, and regression cases — and any case explicitly out of scope.
+- **Placement rationale**: the verification layer each criterion maps to (unit / integration / contract / E2E / manual / not-automatable-with-rationale), keyed to the change type (bug fix, refactor, API, migration, UI, infra).
+- **Validation commands**: for each criterion, the concrete test or structured manual procedure that will prove it, and the observable pass and reject conditions.
+- **Residual risk**: the deferred or non-verifiable criterion with its compensating evidence and the named owner.
+
 ## Quality Gate
 1. Every criterion has a named actor, precondition, action, and observable expected outcome.
 2. Every criterion has a defined verification method — no criterion left as "TBD."

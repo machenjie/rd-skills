@@ -192,6 +192,14 @@ Return a test strategy with:
 - **Execution evidence**: Commands run, exit codes, relevant output, artifacts produced, and any unrun test obligations with rationale.
 - **Residual risks**: Accepted gaps with explicit business justification and mitigating controls.
 
+## Evidence Contract
+Close a test strategy only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the risk-to-test mapping each test layer rests on, and why that layer is the right depth for the risk.
+- **Files and boundaries inspected**: the code paths, branches, and integration seams the strategy covers, and the mock-versus-real boundary chosen for each dependency.
+- **Placement rationale**: why each test sits at its level (unit/integration/contract/E2E/migration) instead of a cheaper or more expensive one.
+- **Validation commands**: the literal test suites and validators run, each with its exit code and the obligation it satisfies.
+- **Residual risk**: the accepted coverage gap or non-automatable obligation with its compensating manual evidence, and the named owner of the follow-up.
+
 ## Quality Gate
 1. Every material risk has an identified test with pass/fail criteria.
 2. Negative paths (error, denial, failure) are covered for all behavioral changes.

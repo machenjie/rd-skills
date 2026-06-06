@@ -58,7 +58,14 @@ Return a domain implementation contract with: domain owner, invariants, operatio
 
 # Quality Gate
 
-The domain implementation is complete only when each invariant has one authority, invalid states are rejected near the domain, and tests prove both allowed and forbidden behavior.
+1. Every invariant has exactly one authority in the domain; it is not duplicated across controller, service, SQL, and frontend.
+2. Invalid states are rejected as close to the domain as possible, before persistence, not after.
+3. Each allowed and each forbidden state transition is enumerated, with the rejection outcome for forbidden ones.
+4. Tests prove both allowed behavior and forbidden behavior (the rejection path), not just the happy path.
+5. Value objects enforce their own validity at construction; no partially-valid value object can exist.
+6. Domain logic does not import controller, transport, ORM, or UI concerns; dependency direction points inward.
+7. Persistence constraints reinforce the invariants rather than being the only place they are enforced.
+8. Failure outcomes are explicit domain results or typed errors, not silent nulls or swallowed exceptions.
 
 # Used By
 

@@ -157,6 +157,14 @@ Return a structured impact analysis with:
 - **Same-pattern scan record**: Pattern signature, directories or globs searched, other occurrences found, and local-only or broad-fix rationale when a bug fix is proposed.
 - **Risk summary**: Overall blast radius classification (Low / Medium / High / Critical) with key risk factors listed.
 
+## Evidence Contract
+Close an impact analysis only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the change under analysis and the surfaces it plausibly reaches, stated before scanning so nothing is assumed safe by omission.
+- **Files and boundaries inspected**: the hard blast-radius scan actually run — call chain and callers, configuration and environment variables, database tables and migrations, message topics, cache keys, API consumers, test directories, documentation, CI/CD pipelines, and deployment resources — with what each surface revealed or "none found".
+- **Placement rationale**: why each surface is classified Direct, Indirect, Downstream, or None, and why each specialist routing is required.
+- **Validation commands**: the greps, call-graph queries, schema or consumer lookups run to confirm each impact, each with its outcome.
+- **Residual risk**: the Unknown surface or unverified downstream effect that remains, with its proposed owner and urgency.
+
 ## Quality Gate
 1. Every relevant surface is marked as: Direct / Indirect / Downstream / None (with explicit rationale) / Unknown (with proposed investigation owner).
 2. All public or internal API contract impacts are identified with named consumer list and compatibility assessment.

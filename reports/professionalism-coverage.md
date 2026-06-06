@@ -5,13 +5,7 @@
 - Product surfaces checked: 21
 - Language surfaces checked: 8
 - Skill bodies checked: 131
-- Total findings: 15
-
-## body-size
-
-- [low] `src\professional-skills\change-forge-router\SKILL.md` — body is 396 lines (advisory limit 350 for professional-skill)
-- [low] `src\foundation\capabilities\ci-cd\SKILL.md` — body is 261 lines (advisory limit 250 for foundation-capability)
-- [low] `src\foundation\capabilities\implementation-structure-design\SKILL.md` — body is 555 lines (advisory limit 250 for foundation-capability)
+- Total findings: 12
 
 ## rule-duplication
 

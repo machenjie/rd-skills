@@ -159,6 +159,14 @@ Return a documentation impact assessment with:
 - **Release notes draft**: Changelog entries for this change, categorized by Keep a Changelog standard.
 - **Open items**: Documentation debt that is accepted but deferred, with owner and due date.
 
+## Evidence Contract
+Close a documentation gate only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`). Treat docs as handoff evidence, not optional commentary.
+- **Basis**: the code, schema, command, or config change that makes each documentation update necessary.
+- **Files and boundaries inspected**: every documentation artifact in scope — README, API docs, ADR, migration notes, runbook, changelog, operator notes — each marked Updated, Not-required-with-rationale, or Outstanding.
+- **Placement rationale**: why each update lands in the artifact and audience it does, and what changed, what did not, and how a reader verifies the change.
+- **Validation commands**: the checks that prove the docs match reality — example/command re-run, schema or API-doc regeneration, link check — each with its outcome.
+- **Residual risk**: the deferred doc, the next owner, and the rollback or follow-up note that remains.
+
 ## Quality Gate
 1. All user-facing behavior changes have updated user documentation or user-visible changelog entries.
 2. All public or internal API contract changes have updated API documentation (OpenAPI spec or equivalent).

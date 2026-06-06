@@ -126,6 +126,14 @@ Return financial change assessment with:
 - **Financial arithmetic**: decimal/fixed-point arithmetic confirmation, currency and rounding rules.
 - **Block/pass decision** with required conditions for approval.
 
+## Evidence Contract
+Close a financial change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`), because the loss path is money and audit integrity:
+- **Basis**: the double-entry invariant, idempotency rule, or PCI/regulatory control the change rests on.
+- **Files and boundaries inspected**: the payment state machine, ledger entries, and provider webhook path read, with the server-side-truth boundary confirmed and PAN excluded from every log.
+- **Placement rationale**: why each idempotency key, ledger posting, and reconciliation job is shaped as it is, and that ledger corrections are offsetting entries, never mutations.
+- **Validation commands**: the idempotent-retry test, double-entry balance assertion, webhook-replay test, and reconciliation run, each with its outcome.
+- **Residual risk**: the settlement, chargeback, refund-double-loss, money-precision, or timezone/tax path that remains, with the named owner.
+
 ## Quality Gate
 1. Payment state machine is complete with all invalid transitions tested and returning correct errors.
 2. Every payment-mutating operation uses an idempotency key; duplicate operations are tested.

@@ -130,6 +130,14 @@ Return Web3 change assessment with:
 - **Observability plan**: on-chain event indexing, balance monitoring, anomaly alerting.
 - **Block/pass decision** with required conditions for approval.
 
+## Evidence Contract
+Close a Web3 change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`), because the loss path is irreversible asset drain:
+- **Basis**: the SWC entry, EIP-712 domain rule, or custody policy the change rests on.
+- **Files and boundaries inspected**: the contract, signing path, and chain-data boundary read, with the on-chain/off-chain trust boundary and the network/chain-ID binding confirmed.
+- **Placement rationale**: why signing authority, nonce/replay protection, and slippage/MEV defenses live where they do, and that no private key or seed ever reaches a server, log, or network path.
+- **Validation commands**: the contract tests, fork/reorg simulation, signature-replay test, and upgrade storage-layout check run, each with its outcome.
+- **Residual risk**: the reorg-depth, oracle-staleness, upgrade, or asset freeze/recovery path that remains, with the named owner and the audit gate.
+
 ## Quality Gate
 1. All contracts use Solidity ≥ 0.8.0 or SafeMath; no integer overflow/underflow risk.
 2. Reentrancy protection is implemented (CEI pattern + ReentrancyGuard) for all ETH/token transfers.

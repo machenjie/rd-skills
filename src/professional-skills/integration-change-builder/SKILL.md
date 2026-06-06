@@ -155,6 +155,14 @@ Return an integration design with:
 - **Test obligations**: Sandbox tests (normal, timeout, rate-limit, signature-failure cases), idempotency tests, reconciliation tests.
 - **Observability**: Metrics (success rate, latency, retry rate, circuit state, reconciliation drift), alert thresholds, and on-call routing.
 
+## Evidence Contract
+Close an integration change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the provider contract, signature scheme, or idempotency rule the change rests on, treating third-party failure as the expected case.
+- **Files and boundaries inspected**: the client, retry/circuit-breaker config, webhook verifier, and credential store read, and the sandbox-vs-production boundary confirmed.
+- **Placement rationale**: why the timeout, retry budget, idempotency key, and reconciliation job live where they do, with dependency direction (via `implementation-structure-design`).
+- **Validation commands**: the sandbox tests for normal, timeout, rate-limit, and signature-failure cases plus idempotency and reconciliation tests, each with its outcome.
+- **Residual risk**: the retry-storm, replay, drift, or credential-rotation path that remains untested or assumed, and the named owner of the follow-up.
+
 ## Quality Gate
 1. All outbound HTTP calls have explicit connection timeout and read timeout configured.
 2. Retry policy uses exponential backoff with jitter; max retry count is bounded; non-retryable 4xx errors are not retried.

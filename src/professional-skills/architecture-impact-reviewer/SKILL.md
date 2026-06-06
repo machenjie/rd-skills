@@ -181,6 +181,14 @@ Return a structured architecture review with:
 - **ADR requirement**: Yes/No — whether a written ADR is required before implementation.
 - **Open risks**: Unresolved design risks with proposed owners and review dates.
 
+## Evidence Contract
+Close an architecture review only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the existing module boundaries, dependency directions, and parent-directory conventions the review starts from — structure-first, before any new boundary is proposed.
+- **Files and boundaries inspected**: the existing modules, public interfaces, shared functions, and dependency edges read, and where the change would alter them.
+- **Placement rationale**: why any new directory, class, interface, or service is justified over reusing existing structure, with at least one simpler alternative and the explicit reason it is rejected.
+- **Validation commands**: the dependency-graph, affected-test, or build-cache checks run to confirm no cycle or boundary violation, each with its outcome.
+- **Residual risk**: the accepted tradeoff, failure blast radius, or deferred ADR that remains, with the named owner and review date.
+
 ## Quality Gate
 1. The chosen design is demonstrably simpler than at least one alternative that was explicitly considered.
 2. Every new boundary has a named owner and a failure handling strategy.

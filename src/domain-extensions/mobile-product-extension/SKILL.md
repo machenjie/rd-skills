@@ -126,6 +126,14 @@ Return mobile change assessment with:
 - **Version compatibility**: oldest supported app version compatibility with the backend change.
 - **Block/pass decision** with required conditions for approval.
 
+## Evidence Contract
+Close a mobile change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`), because a shipped binary cannot be hot-fixed:
+- **Basis**: the platform lifecycle rule, permission policy, or store guideline the change rests on.
+- **Files and boundaries inspected**: the lifecycle transitions, offline queue, and push path read, with the Android/iOS platform difference and the oldest-supported-version boundary confirmed.
+- **Placement rationale**: why state preservation, offline-conflict resolution, and permission-degradation UX live where they do.
+- **Validation commands**: the lifecycle/backgrounding test, offline-sync-conflict test, permission-denied walkthrough, and push-delivery check run on the device matrix, each with its outcome.
+- **Residual risk**: the deep-link, background-execution-limit, version-skew, or store-review path that remains, with the named owner and the staged-rollout gate.
+
 ## Quality Gate
 1. Offline state and sync conflict resolution are explicitly designed and tested.
 2. App lifecycle transitions (background, foreground, terminate) are handled; state is preserved and restored.

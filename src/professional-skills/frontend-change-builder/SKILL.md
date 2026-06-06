@@ -158,6 +158,14 @@ Return a frontend implementation plan or review with:
 - **Test strategy**: Unit tests (component behavior), integration tests (user flow), accessibility tests (axe-core), and visual regression tests.
 - **Residual risks**: Known risks accepted with justification.
 
+## Evidence Contract
+Close a frontend change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the design-system rule, accessibility obligation, or API contract the change rests on, and the WCAG/Core Web Vitals benchmark it satisfies.
+- **Files and boundaries inspected**: the components, hooks, stores, and API clients read, and the server-state vs client-state vs form-state vs derived-state ownership confirmed.
+- **Placement rationale**: why each component, hook, store slice, API client, or form validator is feature-local versus shared, with the reuse decision (via `implementation-structure-design`).
+- **Validation commands**: the component, user-flow, and a11y tests run (including axe-core), each with its outcome.
+- **Residual risk**: the interaction state, bundle-size, or cross-browser path that remains untested or assumed, and the named owner of the follow-up.
+
 ## Quality Gate
 1. All required states (loading, empty, error, success, disabled, validation) are implemented for every interactive element.
 2. WCAG 2.1 AA is satisfied: accessible names on all interactive elements, keyboard operability, sufficient color contrast.

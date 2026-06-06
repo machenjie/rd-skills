@@ -153,6 +153,14 @@ Return a data and middleware change plan with:
 - **Test obligations**: Query plan tests, cache invalidation tests, DLQ tests, migration tests.
 - **Observability**: Metrics (query latency, cache hit rate, queue depth, DLQ depth) and alert thresholds.
 
+## Evidence Contract
+Close a data or middleware change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the source-of-truth declaration, consistency model, or delivery semantic the change rests on, and the access pattern that justifies it.
+- **Files and boundaries inspected**: the schemas, queries, cache keys, and consumer groups read, and the invalidation or offset-commit boundary confirmed.
+- **Placement rationale**: why each index, cache key, queue, or migration step is shaped as it is, with the rejected alternative and its query-plan or throughput evidence.
+- **Validation commands**: the query-plan, cache-invalidation, DLQ/replay, TTL, and migration-rollback checks run, each with its outcome.
+- **Residual risk**: the stampede, hot-key, lag, ordering, or partial-migration path that remains untested or assumed, and the named owner of the follow-up.
+
 ## Quality Gate
 1. Source of truth is declared for every entity affected by the change.
 2. Consistency model is explicit for every read/write path — no implicit assumptions about replication lag.

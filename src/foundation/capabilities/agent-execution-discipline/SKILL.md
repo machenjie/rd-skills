@@ -142,6 +142,18 @@ Every handoff must include:
 - **Residual risk**: what remains untested, unmigrated, unrolled-back, or unmonitored.
 - **Handoff target**: next skill or human, with the specific question or action required.
 
+## Evidence Contract Answer Set
+
+The canonical evidence contract is the five questions every professional skill's own Evidence Contract must answer for its change. It is the shared backbone the skills specialize; the skill names the concrete artifact for each answer, this capability enforces that none is skipped:
+
+1. **Basis** — what authority backs the change: the requirement, contract, standard, prior art, or repository convention it rests on.
+2. **Files and boundaries inspected** — which files, modules, call sites, configs, and trust or ownership boundaries were actually read, and what was found.
+3. **Placement rationale** — why each new or changed element lives where it does: reuse-vs-new decision, owner, and dependency direction (schema from `implementation-structure-design`).
+4. **Validation commands** — the literal commands or checks run to prove the change works, with outcomes (schema from the Evidence Inventory above).
+5. **Residual risk** — what remains untested, unmigrated, unmonitored, or assumed, and who owns the follow-up.
+
+A skill-level Evidence Contract that cannot fill all five answers is incomplete; the missing answer is the next action, not a detail to defer.
+
 # Failure Modes
 
 - Agent declares "done" with no command output, diff, or validator result attached.
@@ -191,6 +203,7 @@ Return an Execution Discipline Report alongside any non-trivial agent-assisted c
 10. Any extension of existing logic has an Extension Safety Record.
 11. Any exported/public declaration has a doc comment in the language-standard format.
 12. Any complex internal logic and non-trivial test has required comments or an explicit omission rationale.
+13. When a professional skill emits an Evidence Contract, all five canonical answers — basis, files and boundaries inspected, placement rationale, validation commands, residual risk — are present and non-empty.
 
 # Used By
 

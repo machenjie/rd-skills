@@ -205,6 +205,14 @@ Return a structured review with:
   redundant or misleading comments removed;
   AI-generated comments accepted / rewritten / rejected.
 
+## Evidence Contract
+Close an AI-code review or refactor only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`). Keep the two phases distinct: review only finds problems; refactor must prove behavior is preserved.
+- **Basis**: the standard, repository pattern, or real API the judgment rests on — every cited symbol or signature verified to exist, not assumed.
+- **Files and boundaries inspected**: the same-pattern scan across the codebase, the call sites read, and the duplication or boundary drift found.
+- **Placement rationale**: the reuse-versus-new and placement decision for each added or moved element (via `implementation-structure-design`), with the rejected alternative.
+- **Validation commands**: the hallucinated-API check plus the characterization or regression tests that prove a refactor preserved behavior, each with its outcome.
+- **Residual risk**: the unreviewed path, untested branch, or accepted finding that remains, and the named owner of the follow-up.
+
 ## Quality Gate
 1. All external API calls verified to exist in the declared dependency version.
 2. All new dependencies have passed CVE scan and license review.

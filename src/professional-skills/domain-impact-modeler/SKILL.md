@@ -147,6 +147,14 @@ Return a domain impact model with:
 - **Risk classification**: Per-context risk level with escalation triggers identified.
 - **Team coordination required**: Named teams or owners that must review or approve before implementation proceeds.
 
+## Evidence Contract
+Close a domain impact model only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the business rule, invariant, and ubiquitous-language term the model rests on.
+- **Files and boundaries inspected**: the aggregates, value objects, domain services, policies, state machines, and domain events examined, and the bounded-context boundary each change sits within.
+- **Placement rationale**: why each rule and invariant has exactly one enforcement owner in the domain, and confirmation that no business rule leaks into a controller, SQL query, frontend validator, or test mock.
+- **Validation commands**: the tests proving both allowed and forbidden transitions, and the cross-context language audit, each with its outcome.
+- **Residual risk**: the cross-domain side effect, event-versioning gap, or compensation path that remains unverified, with the named owner.
+
 ## Quality Gate
 1. Every aggregate affected has an identified owning bounded context with explicit ownership rules.
 2. Aggregate invariants are enforced at the aggregate root, not only in the application layer.

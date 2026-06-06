@@ -5,27 +5,9 @@
     "product_surfaces_checked": 21,
     "language_surfaces_checked": 8,
     "bodies_checked": 131,
-    "total_findings": 15
+    "total_findings": 12
   },
   "findings": [
-    {
-      "check": "body-size",
-      "severity": "low",
-      "target": "src\\professional-skills\\change-forge-router\\SKILL.md",
-      "message": "body is 396 lines (advisory limit 350 for professional-skill)"
-    },
-    {
-      "check": "body-size",
-      "severity": "low",
-      "target": "src\\foundation\\capabilities\\ci-cd\\SKILL.md",
-      "message": "body is 261 lines (advisory limit 250 for foundation-capability)"
-    },
-    {
-      "check": "body-size",
-      "severity": "low",
-      "target": "src\\foundation\\capabilities\\implementation-structure-design\\SKILL.md",
-      "message": "body is 555 lines (advisory limit 250 for foundation-capability)"
-    },
     {
       "check": "trigger-breadth",
       "severity": "low",

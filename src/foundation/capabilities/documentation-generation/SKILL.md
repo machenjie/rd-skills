@@ -58,7 +58,14 @@ Return a documentation update plan with: target audience, affected docs, source 
 
 # Quality Gate
 
-The documentation is complete only when it is source-backed, audience-appropriate, and accurate enough to guide operation, integration, migration, and review.
+1. Every documented behavior, command, and config value is backed by a source: code, schema, API definition, or a runnable example, not an assumption.
+2. The document names its target audience (operator, integrator, contributor, end user) and matches that audience's depth.
+3. Every code example, command, and snippet has been executed or regenerated against the current version and produces the shown output.
+4. API, config, and schema references match the authoritative definition; no drifted parameter, default, or field name remains.
+5. Breaking changes carry a migration note, deprecation notice, and the version the change lands in.
+6. Operational paths (deploy, rollback, alert, runbook) are documented where the change introduces or alters them.
+7. Stale or contradicted sections are updated or removed, not left alongside the new content.
+8. Each updated artifact has a named owner and a verification method by which a reader can confirm it matches reality.
 
 # Used By
 

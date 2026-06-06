@@ -124,6 +124,14 @@ Return systems-level change assessment with:
 - **Resource lifecycle audit**: all allocations paired with deallocation, file descriptors with `O_CLOEXEC`, all resources cleaned up on error paths.
 - **Block/pass decision** with required conditions for approval.
 
+## Evidence Contract
+Close a systems-level change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`), because the loss path is memory corruption and privilege escalation:
+- **Basis**: the memory-safety rule, ABI/FFI contract, or memory-ordering guarantee the change rests on.
+- **Files and boundaries inspected**: the ownership and lifetime of each allocation, the lock order, and the syscall surface read, with the ABI boundary and the unsafe/FFI boundary confirmed.
+- **Placement rationale**: why each ownership transfer, atomic ordering, and resource-cleanup path is shaped as it is, with the rejected lock-free or shared-state alternative.
+- **Validation commands**: the ASan/UBSan/TSan or `miri` build, the fuzz/property test, and the reproducible benchmark run, each with its outcome.
+- **Residual risk**: the UB, descriptor-leak, signal-safety, or cross-platform-build path that remains, with the named owner.
+
 ## Quality Gate
 1. All C/C++ changes run AddressSanitizer and UndefinedBehaviorSanitizer in CI with zero violations.
 2. All Rust `unsafe` blocks have documented safety invariants; `cargo-geiger` baseline is not exceeded.

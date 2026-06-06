@@ -146,6 +146,14 @@ Return AI-specific change assessment with:
 - **Context window analysis**: token budget, PII exclusion, permission-scoped content.
 - **Block/pass decision** with required conditions for approval.
 
+## Evidence Contract
+Close an AI change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`), because the loss path is silent data leak and unsafe action:
+- **Basis**: the retrieval permission rule, tool-use scope, or evaluation threshold the change rests on.
+- **Files and boundaries inspected**: the prompt assembly, retrieval query, and tool-call path read, with the ACL/RBAC filter confirmed on every vector query and the trust boundary for untrusted input identified.
+- **Placement rationale**: why each prompt-injection defense, tool allowlist, confirmation gate, and human-escalation threshold lives where it does.
+- **Validation commands**: the golden-dataset eval (normal, adversarial, edge, fairness), hallucination-rate measure, and shadow/canary comparison run, each with its outcome.
+- **Residual risk**: the model-drift, training-serving-skew, fallback, or human-review-boundary path that remains, with the named owner and the rollback model.
+
 ## Quality Gate
 1. Retrieval is permission-filtered with the same ACL/RBAC as direct data access — cross-tenant retrieval test passes.
 2. Prompt structure separates system instructions, user input, and retrieved content using role-based or structural delimiters.

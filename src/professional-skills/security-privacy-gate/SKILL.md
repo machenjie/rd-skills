@@ -198,6 +198,14 @@ Return a security and privacy review with:
 - **Compensating controls**: For accepted residual Medium/Low risks, documented mitigating controls.
 - **Gate decision**: Approved / Blocked / Conditionally approved with conditions specified.
 
+## Evidence Contract
+Close a security and privacy review only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: the CWE/OWASP ASVS control or privacy obligation each finding is judged against, with its severity class.
+- **Files and boundaries inspected**: the trust boundaries, object-authorization points, secret stores, and dependency manifests actually audited, and what each revealed.
+- **Placement rationale**: why each required control belongs at the boundary chosen (input validation, output encoding, authz check) rather than deeper or shallower.
+- **Validation commands**: the SAST, dependency-CVE scan, IDOR/authz test, and secret scan run, each with its outcome and the finding it confirms or clears.
+- **Residual risk**: the accepted Medium/Low finding with its compensating control, and the named owner of the follow-up.
+
 ## Quality Gate
 1. Every data access endpoint has object-level authorization with a cross-user IDOR test.
 2. All SQL queries use parameterized queries or ORM methods — no string-interpolated SQL.

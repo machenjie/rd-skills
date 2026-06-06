@@ -45,46 +45,7 @@ Transform ambiguous, incomplete, or solution-premixed change input — from any 
 
 ### Change Request Structure Template
 
-```
-## Change Request
-
-**ID**: [CR-NNNN or issue reference]
-**Source**: [Stakeholder name / issue URL / meeting date]
-**Submitted by**: [Name and role]
-
-### Summary
-[One sentence: who does what and why]
-
-### Current Behavior
-[Observable state today — what happens now, including error messages, outputs, user experience]
-
-### Desired Behavior
-[Observable state after the change — what must be true when done, without specifying how]
-
-### Non-Goals
-[What will NOT change and must not be affected — equally important as goals]
-
-### Constraints
-[Technical, regulatory, time, resource, or compatibility constraints the implementation must respect]
-
-### Assumptions
-[Believed-to-be-true statements that have not been confirmed — each must be validated before implementation]
-
-### Open Questions
-[Unknown information required before implementation can proceed — each with proposed owner and due date]
-
-### User Value
-[Who benefits: role/persona, how they benefit, measurable improvement if known]
-
-### Affected Surfaces
-[Product features, APIs, data models, integrations, systems named at the product level]
-
-### Completion Signal
-[Observable, verifiable evidence that the change is done — testable condition, not a task checkbox]
-
-### Risk Flags
-[Early signals of impact, compliance, security, or rollback risk that downstream analysis must investigate]
-```
+The full Change Request template, with per-field authoring notes, lives in `references/change-request-template.md`; the same fields are enumerated in the Output Contract below.
 
 ## Technical Selection Criteria
 Evaluate every field of the Change Request against:
@@ -130,6 +91,14 @@ All fields present and non-empty → Route to change-impact-analyzer
 - Open questions that are resolved silently by the implementer become hidden requirements — they create delivery risk when the implied answer turns out to be wrong.
 - Multiple communication sources (Slack, issue tracker, meeting notes) frequently contain contradictory statements from the same requester — synthesize and highlight contradictions in open questions, do not silently pick one.
 - The Change Request is the contract for acceptance criteria — if the acceptance criteria builder cannot derive criteria from it, the request is not ready.
+- Classify every gap as blocking or non-blocking with a hard rule: a gap is **blocking** when a wrong answer would change the contract, architecture, data model, security posture, or acceptance signal — capture it as an Open Question with an owner and deadline and do not start implementation. A gap is **non-blocking** only when any reasonable answer leaves the contract and acceptance unchanged — capture it as an explicit Assumption with a validation path. When unsure, treat the gap as blocking.
+
+### Intake Analysis Techniques
+
+- **Unimplementable-requirement detection**: flag a request that cannot be satisfied as stated — physically or technically impossible, internally self-contradictory, in conflict with a stated constraint or system invariant, or dependent on data the system does not and cannot hold. Return it as a blocking Open Question with the specific impossibility named and the closest implementable alternative proposed, rather than silently implementing a different thing.
+- **Implicit non-goal identification**: infer the boundaries the requester assumed but did not state, and confirm them as explicit Non-Goals. A login-performance request usually implies "no login-UX redesign"; a copy fix usually implies "no layout change." Surfacing an implicit non-goal is cheaper than reverting unwanted scope.
+- **Acceptance-signal reverse-derivation**: when no completion signal is given, derive it backward from "what observable evidence would convince the requester this is done?" Turn that evidence into a testable condition — automated test, structured manual check, or metric threshold — and feed it to `acceptance-criteria-builder`.
+- **Business-term glossary generation**: extract every domain term in the raw input (entity, status, role, event, money or threshold term) and define it against the existing domain vocabulary. Flag any term used with two meanings, or a new synonym for an established concept, as a blocking ambiguity so naming stays consistent with `implementation-structure-design`.
 
 ### Anti-Examples
 
