@@ -97,6 +97,219 @@ Escalate to `agent-execution-discipline` when an agent adds structure without do
 
 # Critical Details
 
+## Repository Local Pattern Discovery Protocol
+
+Before adding or renaming any variable, parameter, field, function, method, class, struct, interface, component, hook, service, repository, adapter, helper, utility, file, package, module, or directory, inspect local conventions in this order:
+
+1. Same file:
+   - existing helpers;
+   - private functions;
+   - methods;
+   - naming shape;
+   - comment style;
+   - error handling style;
+   - test shape.
+
+2. Same directory:
+   - file naming pattern;
+   - suffix/prefix convention;
+   - public/private split;
+   - test file naming;
+   - sibling class/function naming;
+   - local helper placement.
+
+3. Parent directory or parent module:
+   - module ownership;
+   - exported API;
+   - internal/shared boundary;
+   - parent naming pattern;
+   - existing package/module style.
+
+4. Sibling modules:
+   - equivalent feature/component/service/repository patterns;
+   - similar naming and placement decisions.
+
+5. Shared/common/utils:
+   - only after proving the behavior is pure technical utility and domain-free;
+   - never use shared/common/utils to avoid choosing the owning module.
+
+6. Tests:
+   - naming convention;
+   - placement convention;
+   - test helper/fixture style;
+   - test comment style.
+
+7. Generated or registry files:
+   - whether new names require index/export/registration updates;
+   - generated source-of-truth and regeneration policy.
+
+The Implementation Structure Plan must state:
+
+- files inspected;
+- directories inspected;
+- existing functions/classes/modules/services/repositories/hooks/components considered;
+- detected naming convention;
+- detected file naming convention;
+- detected test naming convention;
+- detected placement convention;
+- reuse candidates found;
+- rejected locations and why;
+- final selected name and location;
+- whether comments are required for the new or changed structure.
+
+## Reuse Ladder
+
+When adding behavior, choose the first valid option:
+
+1. Direct reuse:
+   - call an existing function, method, class, component, hook, service, repository, adapter, or utility with matching semantics.
+
+2. Same-file extension:
+   - extend an existing private helper, local function, or method if responsibility remains single.
+
+3. Same-module extension:
+   - extend an existing module-internal function, class, service, repository, adapter, or helper without changing old behavior.
+
+4. Existing public API extension:
+   - add a backward-compatible option, overload, parameter object, strategy, or branch only when the public contract remains coherent.
+
+5. Composition:
+   - compose existing functions/classes/services into the required behavior.
+
+6. Adapter/wrapper:
+   - wrap an existing behavior only when the call boundary, dependency direction, or external API shape requires adaptation.
+
+7. Extraction:
+   - extract duplicated or mixed behavior into a clearer private or module-internal abstraction.
+
+8. New code:
+   - create a new function/class/file/directory only after all previous levels are rejected with evidence.
+
+Reject new code when an earlier ladder level can satisfy the requirement with lower structural cost.
+
+The plan must include a Reuse Ladder Record:
+
+- direct reuse candidates;
+- same-file extension candidates;
+- same-module extension candidates;
+- existing public API extension candidates;
+- composition candidates;
+- adapter/wrapper candidates;
+- extraction candidates;
+- final decision;
+- why lower-cost reuse levels were insufficient.
+
+## Extension Reuse Without Behavioral Drift
+
+When an existing function, method, class, service, repository, adapter, component, hook, or module already owns the concept but lacks a case, prefer extending it over creating a parallel implementation only if all conditions hold:
+
+- The original responsibility remains single and naturally named.
+- Existing callers keep the same behavior.
+- The extension is backward compatible.
+- New parameters are optional or represented by a clear parameter object.
+- No unrelated mode flags are added.
+- No vague `type`, `kind`, `mode`, `flag`, or `strategy` switch is added unless the existing abstraction is already designed for that variation.
+- Existing tests still pass.
+- New tests cover both old behavior and newly supported behavior.
+- Error behavior and edge cases remain compatible.
+- The extension does not force the owner to import a forbidden layer.
+- The extension does not turn the owner into a generic manager, processor, util, or mixed-responsibility branch pile.
+
+Reject extension reuse when:
+
+- the old function/class would become ambiguous;
+- the new case belongs to a different owner;
+- compatibility cannot be proven;
+- tests cannot cover old and new behavior clearly;
+- the extension requires cross-layer imports;
+- the name would need to become vague to fit both old and new responsibilities.
+
+The plan must include an Extension Safety Record:
+
+- existing owner;
+- missing case being added;
+- old behavior preserved or changed;
+- compatibility risk;
+- tests covering old behavior;
+- tests covering new behavior;
+- rejected parallel implementation and why;
+- confirmation that responsibility remains single.
+
+## Advanced Refactoring Structure Protocol
+
+When refactoring, evaluate these options in order:
+
+1. Inline cleanup:
+   - rename;
+   - simplify condition;
+   - remove duplication inside the same function;
+   - reduce nested control flow.
+
+2. Function extraction:
+   - extract when a block has a nameable responsibility;
+   - keep private if used once or only locally;
+   - move to module-internal only when reused by multiple files in the module;
+   - do not create a shared utility for one caller.
+
+3. Object extraction:
+   Extract a class/object only when at least one is true:
+   - it owns state across multiple operations;
+   - it protects invariants;
+   - it models lifecycle transitions;
+   - it coordinates collaborators;
+   - it represents a domain object;
+   - it represents a value object;
+   - it represents a service object;
+   - it represents an adapter;
+   - it represents a strategy;
+   - it represents a protocol participant;
+   - it gives a real boundary that a function cannot express clearly.
+
+4. Interface or protocol extraction:
+   Extract only when:
+   - multiple implementations exist now;
+   - a test seam is needed for an external dependency;
+   - framework/plugin boundaries require it;
+   - dependency inversion removes a real architectural violation;
+   - the interface expresses stable behavior rather than one implementation.
+
+5. Inheritance:
+   Use only when:
+   - subtypes are genuinely substitutable;
+   - the base class has a stable contract;
+   - initialization and lifecycle are safe;
+   - contract tests cover every subtype;
+   - callers do not need to branch on concrete subtype;
+   - inheritance is not being used merely for helper reuse.
+
+   Reject inheritance when composition, delegation, strategy, or extraction is simpler.
+
+6. Reflection or metadata-driven dispatch:
+   Use only when:
+   - framework integration requires it;
+   - plugin discovery requires it;
+   - schema/annotation/metadata mapping avoids repetitive boilerplate safely;
+   - compile-time alternatives would create worse duplication or coupling.
+
+   Reflection must include:
+   - type-safety boundary;
+   - failure behavior;
+   - discoverability notes;
+   - test coverage;
+   - security consideration if inputs influence reflection;
+   - fallback when metadata is missing or malformed.
+
+The plan must include an Advanced Refactoring Decision:
+
+- why inline cleanup is insufficient;
+- why function extraction is insufficient or sufficient;
+- why object/class/interface is justified or rejected;
+- state/invariant/lifecycle/collaborator decision;
+- composition vs inheritance decision;
+- substitutability evidence if inheritance is used;
+- reflection safety decision if reflection is used;
+- public behavior tests used to prove the refactor.
+
 ## Naming Taxonomy
 
 Use the narrowest accurate category. Do not use these words interchangeably:
@@ -281,6 +494,14 @@ Return an Implementation Structure Plan for every non-trivial code addition, mov
 - **Test placement**: unit tests; integration tests; contract tests; confirmation that test location follows project convention.
 - **Rejected alternatives**: alternatives considered and why each was rejected for non-trivial structure decisions.
 - **Execution linkage**: evidence inventory or handoff reference showing when the structure plan was produced and which validation proves the selected placement works.
+- **Comment decisions**:
+  - exported/public declarations requiring doc comments;
+  - non-exported complex functions/classes/methods requiring comments;
+  - tests requiring scenario/regression comments;
+  - critical internal logic requiring inline comments;
+  - comments intentionally omitted because naming and local context are sufficient;
+  - redundant comments removed;
+  - comment style matched to language and repository convention.
 
 # Quality Gate
 
@@ -301,6 +522,17 @@ Return an Implementation Structure Plan for every non-trivial code addition, mov
 15. Rejected alternatives are documented for non-trivial structure decisions.
 16. Agent-assisted structure additions are tied to execution evidence and handoff boundary.
 17. Same-pattern structure scan is documented before adding, renaming, or moving variables, functions, methods, classes, files, or directories.
+18. Every added or renamed file includes same-directory and parent-module naming convention evidence.
+19. A new file is rejected when the same responsibility belongs in an existing cohesive file.
+20. A filename is rejected when it uses a new suffix, prefix, pluralization, layer word, or abbreviation not used by the surrounding directory without explicit justification.
+21. Every new function/class/file/directory includes a Reuse Ladder Record.
+22. Every extension of existing logic includes an Extension Safety Record.
+23. Every advanced refactor includes an Advanced Refactoring Decision.
+24. Every new exported/public function, method, class, interface, struct, component, hook, constant, variable, or module API has a language-standard doc comment.
+25. Every non-trivial class/function/method with business rules, state transitions, compatibility behavior, concurrency, retry, transaction, idempotency, external API quirks, performance tradeoff, or security-sensitive logic has concise comments where needed.
+26. Every non-trivial test explains the behavior, regression, edge case, fixture contract, or integration scenario being protected.
+27. No comment merely restates obvious code.
+28. If comments are needed to explain confusing code, the plan first considers renaming, extraction, or simplification.
 
 # Used By
 

@@ -35,6 +35,14 @@ Do not use to add narrative storytelling, persona styling, emoji-laden status li
 - **Same-pattern scan before local fix.** Before applying a local fix to a bug, defect, or wrong call, the agent must scan for the same pattern in the rest of the codebase. If the pattern exists elsewhere, the fix must either cover all instances or explicitly justify why it is local-only.
 - **Reuse and placement rationale before new structure.** No new function, class, file, directory, component, hook, service, repository, adapter, utility, or abstraction may be added without an explicit reuse search, placement decision, and shared/common/utils audit. This rule delegates to `implementation-structure-design` for the placement schema.
 - **Proactive closure with risk, boundary, and validation result.** Every handoff or task closure must include: the change boundary, the validation results that were actually run, the residual risks, and the next-skill or human handoff target. Silent handoff is rejected.
+- **Local convention scan before naming.**
+  Before adding or renaming any file, function, method, class, directory, component, hook, service, repository, adapter, helper, or utility, the agent must inspect same-file, same-directory, parent-module, sibling-module, and test naming conventions.
+- **Reuse ladder before new code.**
+  Before adding new code, the agent must walk the reuse ladder and record why direct reuse, extension reuse, composition, adapter/wrapper, and extraction are insufficient.
+- **Extension safety before modifying existing logic.**
+  When extending an existing function, method, class, service, repository, adapter, component, or hook, the agent must prove old behavior is preserved and new behavior is covered by tests.
+- **Comment quality evidence.**
+  Any agent-assisted code addition or refactor must record whether exported declarations, complex internal logic, and non-trivial tests require comments. Missing required comments are not acceptable completion.
 
 # Industry Benchmarks
 
@@ -148,6 +156,18 @@ Return an Execution Discipline Report alongside any non-trivial agent-assisted c
 - **Reuse and placement rationale**: presence confirmed (schema from `implementation-structure-design`).
 - **Proactive closure package**: boundary, validation results, residual risk, handoff target.
 - **Discipline violations**: any rule violation that was accepted with justification, or "none".
+- **Local convention scan record**:
+  same file, same directory, parent module, sibling module, tests, selected convention.
+- **Reuse ladder record**:
+  direct reuse, extension reuse, composition, adapter/wrapper, extraction, new code decision.
+- **Extension safety record**:
+  old behavior preserved, compatibility risk, tests covering old and new behavior.
+- **Comment quality record**:
+  exported/public comments added;
+  complex internal logic comments added;
+  test scenario/regression comments added;
+  redundant comments removed;
+  comments intentionally omitted with reason.
 
 # Quality Gate
 
@@ -158,6 +178,11 @@ Return an Execution Discipline Report alongside any non-trivial agent-assisted c
 5. Any new function, class, file, directory, component, hook, service, repository, adapter, utility, or abstraction carries reuse and placement rationale.
 6. The closure package lists boundary, validation results, residual risks, and the next handoff target.
 7. No entertainment rhetoric, persona narration, emoji status lines, or runtime PUA state are introduced by the change.
+8. Any new or renamed structure has local naming convention evidence.
+9. Any new code has a Reuse Ladder Record.
+10. Any extension of existing logic has an Extension Safety Record.
+11. Any exported/public declaration has a doc comment in the language-standard format.
+12. Any complex internal logic and non-trivial test has required comments or an explicit omission rationale.
 
 # Used By
 

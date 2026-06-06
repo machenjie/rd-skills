@@ -74,6 +74,21 @@ def seed_state(cwd: Path, cache: Path) -> None:
             os.environ["XDG_CACHE_HOME"] = previous_cache
 
 
+def seed_state_fields(cwd: Path, cache: Path, **fields: object) -> None:
+    common = load_common()
+    previous_cache = os.environ.get("XDG_CACHE_HOME")
+    os.environ["XDG_CACHE_HOME"] = str(cache)
+    try:
+        state: dict[str, object] = {"runtime": fields.pop("runtime", "codex")}
+        state.update(fields)
+        common.save_state(cwd, state)
+    finally:
+        if previous_cache is None:
+            os.environ.pop("XDG_CACHE_HOME", None)
+        else:
+            os.environ["XDG_CACHE_HOME"] = previous_cache
+
+
 class CodexOutputProtocolTests(unittest.TestCase):
     def test_post_tool_use_warning_outputs_hook_specific_json(self) -> None:
         event = {
@@ -169,6 +184,64 @@ class CodexOutputProtocolTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertNotEqual(payload.get("decision"), "block")
         self.assertIn("systemMessage", payload)
+
+    def test_post_tool_use_includes_comment_quality_context(self) -> None:
+        event = {
+            "hook_event_name": "PostToolUse",
+            "tool_name": "apply_patch",
+            "tool_input": {
+                "command": (
+                    "*** Begin Patch\n"
+                    "*** Add File: collector/exchange_info.go\n"
+                    "+package collector\n"
+                    "+func ExchangeInfo() error {\n"
+                    "+    return nil\n"
+                    "+}\n"
+                    "*** End Patch"
+                )
+            },
+            "turn_id": "t1",
+        }
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            event["cwd"] = cwd
+            result = run_hook(
+                "changeforge_post_edit_structure_gate.py",
+                event,
+                Path(cwd),
+                Path(cache),
+            )
+        self.assertEqual(result.returncode, 0)
+        payload = json.loads(result.stdout)
+        context = payload["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("comment", context.casefold())
+        self.assertIn("comment findings", context)
+
+    def test_stop_comment_findings_emit_valid_json(self) -> None:
+        event = {
+            "hook_event_name": "Stop",
+            "stop_hook_active": False,
+            "last_assistant_message": "Done",
+            "turn_id": "t1",
+        }
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            event["cwd"] = cwd
+            seed_state_fields(
+                Path(cwd),
+                Path(cache),
+                changed_paths=["collector/exchange_info.go"],
+                comment_findings=["collector/exchange_info.go: uncommented exported function"],
+            )
+            result = run_hook(
+                "changeforge_stop_closure_gate.py",
+                event,
+                Path(cwd),
+                Path(cache),
+                mode="warn",
+            )
+        self.assertEqual(result.returncode, 0)
+        payload = json.loads(result.stdout)
+        self.assertIn("systemMessage", payload)
+        self.assertIn("comment quality evidence", payload["systemMessage"])
 
 
 if __name__ == "__main__":

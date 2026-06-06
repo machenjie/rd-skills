@@ -136,6 +136,23 @@ Is the change a low-risk refactoring with no behavior change?
 | `expect(wrapper.find('.error-text').exists()).toBe(true)` | Tests CSS class, not behavior | `expect(screen.getByRole('alert')).toHaveTextContent('Invalid email')` |
 | Mock returns `user.role = 'admin'` but real code never returns that value | Test validates a scenario that cannot happen | Contract test or integration test against real auth provider |
 
+## Test Comment Discipline
+
+Test comments are required when the test protects a non-obvious scenario:
+
+- regression test for a prior bug;
+- boundary or edge case;
+- integration contract;
+- concurrency/race behavior;
+- retry/idempotency behavior;
+- external provider quirk;
+- migration/backfill behavior;
+- security or permission denial;
+- performance-sensitive behavior;
+- golden fixture contract.
+
+A test should not need comments for a trivial happy path when the test name is already precise. Prefer precise test names first, comments second.
+
 ## Failure Modes
 - **Happy-path-only tests miss regressions**: a change that inadvertently breaks the error path ships to production undetected.
 - **Excessive mocks validate fantasies**: the mock returns data the real service never returns — the test passes, production fails.
@@ -190,6 +207,10 @@ Return a test strategy with:
 12. ML model rollouts verify model version, feature store correctness, drift/fairness metrics, online/offline metric alignment, and rollback model.
 13. Monorepo affected-test and cache policies are validated against module graph changes and a full-suite fallback.
 14. Agent-reported test completion includes evidence inventory and does not rely on unsupported claims.
+15. Non-trivial tests have names or comments that explain the protected behavior.
+16. Regression tests mention the historical bug, failure mode, or invariant being protected.
+17. Fixture/golden data explains the contract it represents.
+18. Test comments explain scenario and purpose, not test framework mechanics.
 
 ## Handoff
 - **backend-change-builder** — with test obligations for service, repository, and API layers.

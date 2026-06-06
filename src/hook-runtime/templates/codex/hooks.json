@@ -8,7 +8,7 @@
             "type": "command",
             "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_post_edit_structure_gate.py\"",
             "timeout": 10,
-            "statusMessage": "Checking ChangeForge structure gate"
+            "statusMessage": "Checking ChangeForge structure, naming, reuse, and comment gate"
           },
           {
             "type": "command",

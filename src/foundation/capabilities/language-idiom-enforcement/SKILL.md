@@ -85,6 +85,59 @@ Select when implementation quality depends on language-specific idioms. Always p
 - **Public API discipline**: every public function/class has a doc comment in the language's standard format (rustdoc / godoc / JSDoc / Javadoc / docstring) with parameter contracts, error/exception conditions, and at least one example for non-trivial APIs.
 - **Naming**: follow the language's convention strictly (camelCase / snake_case / PascalCase per language defaults); never mix conventions within one file.
 
+## Comment Quality Discipline
+
+Comments are part of professional language idiom. They must explain contract, intent, invariants, edge cases, and non-obvious reasoning. They must not restate obvious code.
+
+Required comments:
+
+1. Public / exported API comments
+   - Every exported class, struct, interface, function, method, constant, variable, component, hook, module API, SDK API, and public type must have a language-standard doc comment.
+   - The comment must follow the language convention:
+     - Go: godoc starts with the exported identifier.
+     - Rust: rustdoc `///`.
+     - TypeScript: JSDoc for exported APIs.
+     - Java/Kotlin: Javadoc/KDoc for public APIs.
+     - Python: docstring for public modules/classes/functions.
+     - C++: project-standard Doxygen or local convention.
+   - The comment must describe behavior, contract, important parameters, return value, error/exception behavior, side effects, concurrency expectations, and non-trivial examples when appropriate.
+
+2. Class / object comments
+   - Required when the class/object owns state, lifecycle, invariants, external resources, concurrency, transactions, or domain rules.
+   - The comment should explain responsibility and invariant, not list fields mechanically.
+
+3. Function / method comments
+   - Required for exported functions and methods.
+   - Required for non-exported functions when behavior is non-trivial, reused across files, encodes a business rule, handles compatibility, performs retries, has concurrency behavior, mutates persistent state, or has surprising edge cases.
+   - Not required for tiny private helpers when the name and local context are sufficient.
+
+4. Test comments
+   - Test names must express behavior.
+   - Complex tests must explain the scenario, regression reason, edge case, or production bug being protected.
+   - Fixtures and golden files must explain what contract they represent.
+   - Do not add comments that merely repeat `Arrange / Act / Assert` unless the project convention requires it.
+
+5. Inline comments inside function bodies
+   - Use comments for critical logic only:
+     - business rule authority;
+     - compatibility branch;
+     - state transition;
+     - concurrency or locking reason;
+     - idempotency or retry decision;
+     - transaction boundary;
+     - performance tradeoff;
+     - external API quirk;
+     - security-sensitive validation;
+     - fallback behavior;
+     - non-obvious algorithm step.
+   - Avoid comments for obvious assignments, simple conditionals, basic loops, and direct function calls.
+
+6. Comment minimalism
+   - Prefer better naming and extraction over explanatory comments.
+   - If a comment explains confusing code, first try to simplify or rename the code.
+   - Delete stale, redundant, misleading, or decorative comments.
+   - Do not generate banner comments, noise comments, or comments that narrate every line.
+
 # Failure Modes
 
 - **Cross-language idiom contamination** — Symptom: Go code with abstract factories and `interface{}` dispatch; Rust code with deep `Box<dyn Trait>` hierarchies mimicking Java. Cause: author fluent in different language. Detection: code review against language-specific style guide. Impact: maintainers fluent in the target language find code unreadable and bug-prone.
@@ -117,6 +170,11 @@ Return an **Idiom Review Report** containing:
 5. AI-generated blocks (if any) are explicitly audited; hallucinated APIs corrected.
 6. Security-relevant idioms (parameterized queries, escaped shell args, safe deserialization, path-traversal guards) verified.
 7. Local repository conventions take precedence; any deviation from project convention has explicit justification.
+8. Exported/public APIs have language-standard doc comments.
+9. Important non-exported complex logic has concise intent comments.
+10. Tests with non-trivial scenarios document the scenario or regression being protected.
+11. Inline comments explain why, contract, invariant, edge case, compatibility, or risk — not obvious syntax.
+12. Redundant, stale, decorative, or line-by-line comments are rejected.
 
 # Used By
 

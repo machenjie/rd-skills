@@ -39,6 +39,16 @@ USER_ABSOLUTE_PATH_RE = re.compile(
 PROJECT_SOURCE_WRITE_RE = re.compile(
     r"(repo\s*/|cwd\s*/|project\s*/|source\s*/).*(write_text|write_bytes|open\()"
 )
+GIT_MUTATION_RE = re.compile(
+    r"git\s+(commit|checkout|reset|push|rebase|cherry-pick|clean|stash)\b"
+)
+STATE_FINDING_FIELDS = (
+    "file_naming_findings",
+    "reuse_findings",
+    "extension_reuse_findings",
+    "advanced_refactor_findings",
+    "comment_findings",
+)
 
 
 def main() -> int:
@@ -98,6 +108,10 @@ def _validate_python_files(errors: list[str]) -> None:
             errors.append(f"{relpath(ROOT, path)}: hook scripts must not modify project source")
         if PROJECT_SOURCE_WRITE_RE.search(text):
             errors.append(f"{relpath(ROOT, path)}: hook scripts must not write project source")
+        if GIT_MUTATION_RE.search(text):
+            errors.append(
+                f"{relpath(ROOT, path)}: hook scripts must not run mutating git commands"
+            )
 
     stop_script = HOOK_SCRIPTS_DIR / "changeforge_stop_closure_gate.py"
     if stop_script.is_file():
@@ -106,6 +120,15 @@ def _validate_python_files(errors: list[str]) -> None:
             errors.append("changeforge_stop_closure_gate.py: Stop hook must not use emit_warning")
         if "emit_stop_reminder(" not in text:
             errors.append("changeforge_stop_closure_gate.py: Stop hook must use emit_stop_reminder")
+
+    structure_script = HOOK_SCRIPTS_DIR / "changeforge_post_edit_structure_gate.py"
+    if structure_script.is_file():
+        structure_text = structure_script.read_text(encoding="utf-8")
+        for field in STATE_FINDING_FIELDS:
+            if field not in structure_text:
+                errors.append(
+                    f"changeforge_post_edit_structure_gate.py: structure gate must populate {field}"
+                )
 
     common_script = HOOK_SCRIPTS_DIR / "changeforge_common.py"
     if common_script.is_file():
@@ -116,6 +139,11 @@ def _validate_python_files(errors: list[str]) -> None:
             )
         if "CHANGEFORGE_AGENT" not in common_text:
             errors.append("changeforge_common.py: detect_runtime must support CHANGEFORGE_AGENT override")
+        for field in STATE_FINDING_FIELDS:
+            if field not in common_text:
+                errors.append(
+                    f"changeforge_common.py: hook state must track {field}"
+                )
 
 
 def _load_json(path: Path, errors: list[str]) -> Any:
@@ -143,6 +171,20 @@ def _validate_template(
         if required_event not in hooks:
             errors.append(f"{relpath(ROOT, path)}: missing {required_event} hook")
 
+    matchers = _post_tool_matchers(hooks)
+    if not any("edit" in matcher.casefold() for matcher in matchers):
+        errors.append(
+            f"{relpath(ROOT, path)}: PostToolUse must include an Edit/Write/MultiEdit matcher"
+        )
+    if not any("bash" in matcher.casefold() for matcher in matchers):
+        errors.append(f"{relpath(ROOT, path)}: PostToolUse must include a Bash matcher")
+    if path == CODEX_TEMPLATE and not any(
+        "apply_patch" in matcher.casefold() for matcher in matchers
+    ):
+        errors.append(
+            f"{relpath(ROOT, path)}: Codex PostToolUse must include an apply_patch matcher"
+        )
+
     for command, context in _commands(hooks):
         lowered = command.casefold()
         if "src/" in lowered or "src\\" in lowered:
@@ -166,6 +208,18 @@ def _validate_template(
             errors.append(
                 f"{relpath(ROOT, path)}:{context}: timeout {timeout} exceeds {limit_label}"
             )
+
+
+def _post_tool_matchers(hooks: dict[str, Any]) -> list[str]:
+    matchers: list[str] = []
+    post = hooks.get("PostToolUse")
+    if isinstance(post, list):
+        for entry in post:
+            if isinstance(entry, dict):
+                matcher = entry.get("matcher")
+                if isinstance(matcher, str):
+                    matchers.append(matcher)
+    return matchers
 
 
 def _commands(value: Any, context: str = "hooks") -> list[tuple[str, str]]:

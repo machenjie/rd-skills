@@ -13,11 +13,20 @@ The first-stage runtime provides three reminder gates:
 - Post-Edit Structure Gate: runs after edit tools and warns when changed paths
   look like structural code, shared utilities, public interfaces, SDK/client
   code, adapters, dependency files, or new service/repository/helper-style files.
+  It also layers lightweight sub-gates that remind on new-file naming pattern
+  mismatches against same-directory siblings, reuse-ladder evidence for
+  helper/common/utils/shared/service/repository roles, extension-reuse safety
+  when a patch modifies existing logic, advanced-refactor evidence when
+  class/interface/inheritance/reflection keywords appear, and comment-quality
+  evidence when exported/public declarations, test functions, or complex logic
+  are added.
 - Risk Surface Gate: runs after edit tools and shell commands and warns when
   paths or commands touch auth, data contracts, cache, queue, Kubernetes, Helm,
   or big-data surfaces.
 - Stop Closure Gate: runs before final handoff and reminds the agent to include
-  skill path, changed files, validation evidence, residual risk, and next steps.
+  skill path, changed files, validation evidence, residual risk, next steps, and
+  the structure-evidence records (file naming, reuse ladder, extension safety,
+  advanced refactor, comment quality) for any structure sub-gate that fired.
 
 The default behavior is warning-only. A hook failure must fail open and must not
 interrupt normal agent execution.
@@ -32,6 +41,49 @@ file.
 
 Use hooks as a guardrail for missed execution-time evidence, not as a planning
 system.
+
+## Codex Post-Execution Limitation
+
+Codex project hooks currently operate as execution-time guardrails. For Codex,
+ChangeForge relies on PostToolUse and Stop reminders rather than assuming a
+stable pre-edit planning hook. Therefore, hooks cannot replace upfront routing or
+implementation structure planning. They can only detect edited paths, patch
+signals, and missing closure evidence after execution has begun.
+
+## Hook Capability Boundary
+
+Hooks can:
+- remind on new file naming pattern mismatches;
+- remind on structural path changes;
+- remind on helper/common/utils/shared pollution risk;
+- remind on reuse ladder evidence;
+- remind on extension reuse safety;
+- remind on advanced refactor evidence;
+- remind on comment quality evidence;
+- remind on Stop-stage closure evidence.
+
+Hooks cannot:
+- replace `change-forge-router`;
+- replace `implementation-structure-design`;
+- call LLMs;
+- perform whole-repository complex AST analysis;
+- automatically rename files;
+- modify project source;
+- access the network;
+- read every compiled reference;
+- prove semantic correctness.
+
+## Recommended Hook Rollout
+
+1. Start with `CHANGEFORGE_HOOK_MODE=warn`.
+2. Collect false positives with fixture-backed tests.
+3. Only enable `block` for high-confidence violations:
+   - new common/utils/helper file without reuse evidence;
+   - dependency file changes without dependency review;
+   - Stop without validation evidence;
+   - Stop without residual risk.
+4. Keep fail-open behavior for hook runtime errors.
+5. Do not enable broad block mode until warning behavior is stable.
 
 ## Supported Runtimes
 
