@@ -34,6 +34,16 @@ Use when Go code is added, reviewed, refactored, AI-generated, or tested. Use wh
 
 Do not use to teach Go syntax. Do not use to force Go where the workload (CPU-heavy ML, complex UI, deep async data flows) points elsewhere.
 
+# Stage Fit
+
+Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
+
+- **coding**: context propagation, error wrapping, defer/resource cleanup, goroutine lifecycle, small interfaces, package boundary.
+- **debugging-diagnosis**: race, goroutine leak, context cancellation, wrapped-error loss, deadlock.
+- **code-review**: premature interfaces, hidden shared state, ignored errors, context misuse.
+- **refactoring**: package cycle, exported API drift, table-driven test coverage.
+- **testing**: race detector, table tests, integration seam.
+
 # Non-Negotiable Rules
 
 - **`context.Context` propagated end-to-end**: handler → service → repository → DB/HTTP/RPC client. No `context.TODO()` outside main / tests / init. No `context.Background()` mid-request. All external calls accept and honor context cancellation.

@@ -35,6 +35,16 @@ Use when Java / Kotlin / JVM code is added, reviewed, refactored, or selected fo
 
 Do not use for syntax lessons. Do not use to add Spring annotations, DDD ceremony, or hexagonal-architecture layering that does not protect a real risk.
 
+# Stage Fit
+
+Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
+
+- **coding**: null safety, immutability, exception model, executor/thread lifecycle, equals/hashCode contract.
+- **debugging-diagnosis**: thread/connection-pool exhaustion, deadlock, GC pause / memory leak, swallowed exception.
+- **code-review**: over-abstraction and DI/DDD ceremony, mutable shared state, resource leak without try-with-resources.
+- **refactoring**: package/module boundary, public API and serialization compatibility, transaction boundary.
+- **testing**: JUnit with concurrency, contract tests, injected clock for deterministic time.
+
 # Non-Negotiable Rules
 
 - **Spring `@Transactional` boundaries respect proxy semantics.** Self-invocation (`this.txMethod()`) bypasses the proxy and the transaction. Either inject self via `ApplicationContext` / `@Lazy` self-injection, or restructure to call the proxied bean. **AspectJ weaving** is the alternative if self-invocation is unavoidable.

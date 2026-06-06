@@ -31,6 +31,16 @@ Use when SQL queries, migrations, reports, analytics, indexes, transaction behav
 
 Do not use as a syntax lesson. Do not use to bypass `data-migration-design` (schema-evolution planning) or `transaction-consistency` (isolation / two-phase) when the change is structurally about those.
 
+# Stage Fit
+
+Launched in coding, bug-fix, code-review, refactoring, and testing. Per-stage focus:
+
+- **coding**: parameterization, set-based logic, explicit columns, transaction isolation, index-aware predicates.
+- **debugging-diagnosis**: missing/unused index, lock contention, plan regression, N+1 or full scan.
+- **code-review**: injection risk, implicit cast, non-sargable predicate, unbounded result set.
+- **refactoring**: view/CTE extraction, migration expand-contract, result-shape compatibility.
+- **testing**: migration validation, isolation-level tests, deterministic seed data.
+
 # Non-Negotiable Rules
 
 - **Parameterized queries always.** No string concatenation of user input (or any input) into SQL. Use driver-native parameters (`$1` Postgres, `?` MySQL, named params), prepared statements, or query-builder macros (sqlx, Diesel, jOOQ).

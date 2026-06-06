@@ -93,7 +93,7 @@ Foundation capability groups:
 - Quality testing: 58 `test-strategy`, 59 `unit-testing`, 60 `integration-testing`, 61 `contract-testing`, 62 `e2e-testing`, 63 `test-data-management`, 64 `regression-testing`.
 - Reliability operations: 65 `performance-budgeting`, 66 `profiling`, 67 `concurrency-control`, 68 `degradation-circuit-breaking`, 69 `observability`, 70 `backup-recovery`.
 - Delivery platform: 71 `project-initialization`, 72 `containerization`, 73 `ci-cd`, 74 `kubernetes-gateway`, 75 `release-rollback`.
-- Engineering workflow: 76 `context-packaging`, 77 `task-dag-decomposition`, 78 `code-review`, 79 `refactoring`, 80 `documentation-generation`, 81 `failure-diagnosis`, 82 `solution-optimality-evaluation`, 101 `implementation-structure-design`, 102 `agent-execution-discipline`.
+- Engineering workflow: 76 `context-packaging`, 77 `task-dag-decomposition`, 78 `code-review`, 79 `refactoring`, 80 `documentation-generation`, 81 `failure-diagnosis`, 82 `solution-optimality-evaluation`, 101 `implementation-structure-design`, 102 `agent-execution-discipline`, 103 `skill-authoring-expert`, 104 `engineering-stage-professionalism`.
 - Technology selection: 83 `technology-stack-selection`, 84 `language-runtime-selection`, 85 `language-idiom-enforcement`, 86 `language-testing-strategy`, 87 `language-performance-safety`, 88 `package-dependency-management`.
 - Language professional usage: 89 `go-professional-usage`, 90 `java-jvm-professional-usage`, 91 `typescript-professional-usage`, 92 `python-professional-usage`, 93 `rust-professional-usage`, 94 `cpp-professional-usage`, 95 `shell-cli-professional-usage`, 96 `sql-professional-usage`.
 - Interface, storage, and global correctness: 97 `sdk-library-contract-design`, 98 `cli-daemon-interface-design`, 99 `file-storage-processing`, 100 `i18n-timezone-money-safety`.
@@ -147,6 +147,8 @@ Route by evidence in the request:
 - If an agent has retried the same approach twice without success, force a route change via `agent-execution-discipline` and route the substantive diagnosis to `failure-diagnosis`; do not permit a third same-path retry.
 - If an agent proposes a local fix for a bug or defect, require `agent-execution-discipline` with a same-pattern scan record and route to `change-impact-analyzer` when the scan reveals occurrences in other modules.
 - If an agent claims a change is complete or ready for handoff, require the `agent-execution-discipline` proactive closure package (boundary, validation results, residual risk, handoff target) regardless of which professional skills handled the substantive work.
+- If the request is a non-trivial engineering task spanning design, implementation planning, coding, debugging, bug fix, code review, refactoring, testing, or release, select `engineering-stage-professionalism` to name the current engineering stage, launch only that stage's minimum capabilities, record skipped heavy capabilities with a reason, set a context budget, and name the next-stage handoff; do not launch every stage's capabilities at once, do not launch architecture deep review during coding, and do not launch the release gate during code review.
+- If the task edits a SKILL.md body, a foundation capability, a professional skill, a domain extension, a `references` file, the skill registry, or routing rules, select `skill-authoring-expert` so the change keeps a clear boundary, precise triggers, a testable output contract, synchronized registry impact, and a disciplined context budget.
 - If data, cache, queue, search, or storage behavior is the change surface, route to `data-middleware-change-builder`.
 - If the request touches Redis, ElastiCache, Memorystore, Memcached, cache stampede, hot keys, eviction, maxmemory, RDB/AOF, Redis Cluster, Sentinel, or cache invalidation, select `cache-design`, `data-middleware-change-builder`, and `reliability-observability-gate` when production behavior is affected.
 - If the request touches Kafka, Kafka topics, partitions, consumer groups, offset commits, schema registry, topic retention, compaction, consumer lag, DLQ, poison messages, replay, or transactional producers, select `message-queue-design`, `data-middleware-change-builder`, and `bigdata-product-extension` when streaming analytics or data pipelines are involved.
@@ -281,6 +283,18 @@ Each task:
 - next skill calls
 - blocked/unblocked status
 - recommended execution mode
+
+## 12. Stage Professionalism
+- Current engineering stage:
+- Next engineering stage:
+- Product surface:
+- Language surface:
+- Stage-specific capabilities:
+- Capabilities explicitly skipped:
+- Skip rationale:
+- Context budget decision:
+- Required evidence:
+- Next stage handoff:
 ```
 
 Use `None` when a domain extension is not selected. Use `Skipped: reason` for quality gates that are not needed. Use concrete assumptions rather than silent gaps.
@@ -333,6 +347,38 @@ Manifest rules:
 - `skipped_quality_gates` must give a `reason` for each skipped gate; never drop a gate silently. A gate is either in `required_quality_gates` or in `skipped_quality_gates` with a reason.
 - Keep `selected_skills`, `selected_capabilities`, `required_quality_gates`, and `skipped_quality_gates` consistent with the Markdown sections; the manifest is a projection of the same decision, not a second route.
 - The manifest is read by tooling. It does not substitute for the human-readable routing explanation, and it does not authorize any tool to mutate skills, routing rules, or capabilities.
+
+### Machine-Readable Stage Route Manifest
+For non-trivial engineering tasks, also emit one fenced YAML block named `changeforge_stage_route`. It is the machine-readable projection of the `## Stage Professionalism` section and of the `engineering-stage-professionalism` Stage Professional Launch Plan. It records the current and next engineering stage, the product and language surface, the capabilities launched this stage, the heavy capabilities explicitly skipped with a reason, the context budget, required evidence, required gates, and the next-stage handoff. It does not replace the human-readable routing result and does not authorize any tool to mutate skills.
+
+```yaml
+changeforge_stage_route:
+  schema_version: 1
+  current_stage: <requirement-intake|architecture-design|implementation-planning|coding|debugging-diagnosis|bug-fix|code-review|refactoring|testing|release-delivery|documentation-handoff|skill-authoring>
+  next_stage: <next engineering stage or closed>
+  product_surface: <product surface, or none>
+  language_surface: <language, or none>
+  selected_skills: []
+  selected_capabilities: []
+  selected_domain_extensions: []
+  skipped_capabilities:
+    - capability: <heavy capability not launched this stage>
+      reason: <why it is skipped this stage>
+  context_budget:
+    mode: <minimal|single-stage|staged-plan>
+    rationale: <why this budget fits the change level>
+  required_evidence: []
+  required_quality_gates: []
+  handoff_target: <next stage owner skill or blocked>
+```
+
+Stage manifest rules:
+
+- Emit `changeforge_stage_route` only for non-trivial engineering tasks; omit it for a single trivial edit whose stage is obvious.
+- `current_stage` must be one engineering stage; a cross-stage task is split and re-emitted per stage rather than collapsed into one plan.
+- Every entry in `skipped_capabilities` must carry a `reason`; a heavy capability is either launched this stage or skipped with a reason, never dropped silently.
+- `context_budget.mode` is `minimal` for L1, `single-stage` for L2, and `staged-plan` for L3 and higher.
+- The stage manifest is consistent with `changeforge_route`; it sequences professional launch within the same route, it does not define a second route.
 
 ## Quality Gate
 The route passes only when:
