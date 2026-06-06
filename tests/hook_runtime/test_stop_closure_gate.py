@@ -231,6 +231,44 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertEqual(state["changed_paths"], [])
         self.assertEqual(state["comment_findings"], [])
 
+    def test_block_mode_does_not_block_when_evidence_complete(self) -> None:
+        # Response covers all five base closure groups; state has no conditional
+        # findings.  Block mode must emit a non-blocking reminder, not "block".
+        event = {
+            "hook_event_name": "Stop",
+            "runtime": "codex",
+            "stop_hook_active": False,
+            "last_assistant_message": (
+                "I used the ChangeForge skill path. Changed files are listed. "
+                "Verified with tests, validation passes. Residual risk is none. "
+                "Next steps: deploy."
+            ),
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, runtime="codex", changed_paths=["a.go"])
+            result = run_stop(event, cwd, cache, mode="block", agent="codex")
+        self.assertEqual(result.returncode, 0)
+        payload = json.loads(result.stdout)
+        self.assertNotEqual(payload.get("decision"), "block")
+        self.assertIn("systemMessage", payload)
+
+    def test_block_mode_preserves_state_when_blocking(self) -> None:
+        # When block mode fires (evidence missing), state must NOT be cleared so
+        # the agent can satisfy requirements on the next stop event.
+        event = {
+            "hook_event_name": "Stop",
+            "runtime": "codex",
+            "stop_hook_active": False,
+            "last_assistant_message": "done",
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, runtime="codex", comment_findings=["a.go: uncommented"])
+            run_stop(event, cwd, cache, mode="block", agent="codex")
+            state = load_state(cwd, cache)
+        self.assertNotEqual(state["comment_findings"], [])
+
 
 if __name__ == "__main__":
     unittest.main()

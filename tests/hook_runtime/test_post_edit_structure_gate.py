@@ -322,6 +322,93 @@ class PostEditStructureGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertNotIn("Traceback", result.stderr)
 
+    # --- Comment Gate positive tests (existing doc comment → no finding) ---
+
+    def test_go_exported_function_with_godoc_does_not_trigger_comment_gate(self) -> None:
+        body = (
+            "package collector\n\n"
+            "// ExchangeInfo returns the exchange information.\n"
+            "func ExchangeInfo() error {\n"
+            "    return nil\n"
+            "}"
+        )
+        result = run_structure(apply_patch_event(add_file_patch("collector/exchange_info.go", body)))
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("comment findings", result.stdout)
+
+    def test_typescript_export_function_with_jsdoc_does_not_trigger_comment_gate(self) -> None:
+        body = (
+            "/** Fetches all orders from the API. */\n"
+            "export function fetchOrders(): Promise<Order[]> {\n"
+            "  return http.get('/orders');\n"
+            "}"
+        )
+        result = run_structure(apply_patch_event(add_file_patch("web/src/api/orders.ts", body)))
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("comment findings", result.stdout)
+
+    def test_python_public_function_with_docstring_does_not_trigger_comment_gate(self) -> None:
+        body = (
+            "def calculate_totals(entries):\n"
+            '    """Calculates totals from a list of entries."""\n'
+            "    return sum(e.amount for e in entries)"
+        )
+        result = run_structure(apply_patch_event(add_file_patch("billing/summary.py", body)))
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("comment findings", result.stdout)
+
+    def test_rust_pub_fn_with_rustdoc_does_not_trigger_comment_gate(self) -> None:
+        body = (
+            "/// Returns a snapshot of the current market state.\n"
+            "pub fn market_snapshot() -> Snapshot {\n"
+            "    Snapshot::default()\n"
+            "}"
+        )
+        result = run_structure(apply_patch_event(add_file_patch("src/market/snapshot.rs", body)))
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("comment findings", result.stdout)
+
+    # --- File Naming Gate positive test (matching sibling pattern → no finding) ---
+
+    def test_file_naming_matching_sibling_pattern_does_not_warn(self) -> None:
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd = Path(cwd_s).resolve()
+            cache = Path(cache_s)
+            _git_init(cwd)
+            collector = cwd / "collector"
+            collector.mkdir()
+            for name in ("exchange.go", "rvol.go", "source_whitelist.go", "exchange_test.go"):
+                (collector / name).write_text("package collector\n", encoding="utf-8")
+            event = apply_patch_event(
+                add_file_patch("collector/market_snapshot.go", "package collector\n\nvar snap = 1")
+            )
+            result = run_gate(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("file naming findings", result.stdout)
+
+    # --- Extension Reuse Gate: context lines must not trigger a finding ---
+
+    def test_extension_gate_ignores_context_case_lines(self) -> None:
+        # The existing "case \"a\":" line is unchanged context (space-prefixed).
+        # Only the return value was replaced.  No new case branch was added, so
+        # no "new switch/case branch" signal should be emitted.
+        patch = (
+            "*** Begin Patch\n"
+            "*** Update File: internal/router/dispatch.go\n"
+            "@@\n"
+            " func Dispatch(kind string) error {\n"
+            "     switch kind {\n"
+            "     case \"a\":\n"
+            "-        return old()\n"
+            "+        return new()\n"
+            "     }\n"
+            " }\n"
+            "*** End Patch\n"
+        )
+        result = run_structure(apply_patch_event(patch))
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("new switch/case branch", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

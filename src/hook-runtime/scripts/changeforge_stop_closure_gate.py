@@ -91,13 +91,16 @@ def main() -> int:
         if mode == "monitor":
             clear_state(repo, runtime)
             return 0
-        message = _closure_message(state, _final_text(event))
-        clear_state(repo, runtime)
-        emit_stop_reminder(
-            runtime,
-            message,
-            continue_turn=_should_continue_stop(event, mode),
-        )
+        final_text = _final_text(event)
+        missing = _missing_keyword_groups(final_text, state) if final_text else []
+        stop_hook_active = bool(event.get("stop_hook_active") or event.get("stopHookActive"))
+        should_block = mode == "block" and bool(missing) and not stop_hook_active
+        message = _closure_message(state, final_text)
+        if should_block:
+            emit_stop_reminder(runtime, message, continue_turn=True)
+        else:
+            clear_state(repo, runtime)
+            emit_stop_reminder(runtime, message, continue_turn=False)
         return 0
     except Exception as exc:
         emit_stop_reminder(
@@ -108,12 +111,6 @@ def main() -> int:
         return 0
 
 
-def _should_continue_stop(event: dict, mode: str) -> bool:
-    if mode != "block":
-        return False
-    if bool(event.get("stop_hook_active") or event.get("stopHookActive")):
-        return False
-    return True
 
 
 def _has_closure_surface(state: dict) -> bool:
