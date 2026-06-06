@@ -10,7 +10,7 @@ exceptions:
   - path: src/foundation/capabilities/implementation-structure-design/SKILL.md
     allow: [body_lines]
     reason: >-
-      Heaviest capability (547 lines, Critical Details ~361). Classified
+      Heaviest capability (555 lines, Critical Details ~361). Classified
       SPLIT_CAPABILITY; tracked as P3 (plan-only, high risk) in
       reports/skill-content-optimization-plan.md.
 
@@ -23,6 +23,6 @@ exceptions:
   - path: src/professional-skills/change-forge-router/SKILL.md
     allow: [section_lines]
     reason: >-
-      Router Output Contract (route manifest) is ~141 lines and is the router's core
+      Router Output Contract (route manifest) is ~185 lines and is the router's core
       machine-readable contract. Classified MOVE_SECTIONS_TO_REFERENCES; tracked as P2
       in reports/skill-content-optimization-plan.md.
