@@ -221,6 +221,7 @@ python3 scripts/run-codegen-benchmarks.py --limit 3
 python3 scripts/build.py --profile recommended
 python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
+python3 scripts/validate-runtime-reference-links.py
 python3 scripts/validate-installation.py
 ```
 
@@ -241,6 +242,11 @@ is review-only: it writes `reports/professionalism-coverage.md` and
 `reports/professionalism-coverage.json` to flag stage/surface ownership gaps,
 over-long bodies, duplicated rules, and broad triggers, and exits 0 unless run with
 `--strict`. It does not block the build.
+
+`scripts/validate-runtime-reference-links.py` runs after the three profile builds
+and checks built `dist/universal/skills/{recommended,full,dev}` Markdown local
+links. Source/dev-only deep references remain source-authoring aids and are not
+treated as runtime-loadable links.
 
 Then use `installers/upgrade.py` for an existing managed install, or `installers/install.py --backup` when replacing a managed install intentionally.
 

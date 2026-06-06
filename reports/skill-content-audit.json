@@ -25,7 +25,6 @@
       "src/professional-skills/architecture-impact-reviewer/SKILL.md",
       "src/professional-skills/backend-change-builder/SKILL.md",
       "src/professional-skills/change-documentation-gate/SKILL.md",
-      "src/professional-skills/change-forge-router/SKILL.md",
       "src/professional-skills/change-impact-analyzer/SKILL.md",
       "src/professional-skills/change-intake-compiler/SKILL.md",
       "src/professional-skills/data-api-contract-changer/SKILL.md",
@@ -46,7 +45,6 @@
       "src/professional-skills/architecture-impact-reviewer/SKILL.md",
       "src/professional-skills/backend-change-builder/SKILL.md",
       "src/professional-skills/change-documentation-gate/SKILL.md",
-      "src/professional-skills/change-forge-router/SKILL.md",
       "src/professional-skills/change-impact-analyzer/SKILL.md",
       "src/professional-skills/change-intake-compiler/SKILL.md",
       "src/professional-skills/data-api-contract-changer/SKILL.md",
@@ -387,44 +385,36 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 3,
-      "bullet_count": 142,
-      "classification": "MOVE_SECTIONS_TO_REFERENCES",
-      "code_block_count": 1,
-      "context_efficiency_score": 61,
+      "bullet_count": 132,
+      "classification": "KEEP_AS_IS",
+      "code_block_count": 0,
+      "context_efficiency_score": 88,
       "critical_details_length": 58,
-      "findings": [
-        "body 330 lines exceeds review threshold 250",
-        "section 'Output Contract' is 119 lines (> 80) \u2014 reference candidate"
-      ],
+      "findings": [],
       "has_shared_optimality": false,
       "heading_count": 16,
       "kind": "professional-skill",
-      "largest_section_lines": 119,
-      "largest_section_title": "Output Contract",
+      "largest_section_lines": 67,
+      "largest_section_title": "Technical Selection Criteria",
       "largest_table_rows": 0,
-      "line_count": 330,
+      "line_count": 215,
       "name": "change-forge-router",
       "optimality_section_length": 0,
-      "output_contract_length": 119,
-      "oversized_sections": [
-        {
-          "lines": 119,
-          "title": "Output Contract"
-        }
-      ],
+      "output_contract_length": 20,
+      "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/change-forge-router/SKILL.md",
       "professionalism_score": 100,
-      "recommended_phase": "P2",
+      "recommended_phase": "-",
       "reference_link_count": 0,
-      "repeated_phrase_count": 8,
+      "repeated_phrase_count": 6,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
-      "split_candidate_score": 32,
-      "suggested_action": "Move oversized sections/tables into references/*.md; keep a concise body summary.",
+      "split_candidate_score": 0,
+      "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 0,
       "used_by_count": 0,
-      "word_count": 4019
+      "word_count": 3631
     },
     {
       "anti_example_section_length": 10,
@@ -2466,7 +2456,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 7,
-      "word_count": 3748
+      "word_count": 3742
     },
     {
       "anti_example_section_length": 13,
@@ -4003,7 +3993,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 4,
-      "word_count": 1407
+      "word_count": 1414
     },
     {
       "anti_example_section_length": 0,
@@ -4858,8 +4848,7 @@
   ],
   "summary": {
     "classifications": {
-      "KEEP_AS_IS": 129,
-      "MOVE_SECTIONS_TO_REFERENCES": 1
+      "KEEP_AS_IS": 130
     },
     "domain_extensions": 7,
     "foundation_capabilities": 104,
@@ -4867,7 +4856,7 @@
     "heavy_foundation": 0,
     "heavy_professional": 0,
     "low_professionalism": 0,
-    "move_to_reference": 1,
+    "move_to_reference": 0,
     "professional_skills": 19,
     "split_candidates": 0
   },

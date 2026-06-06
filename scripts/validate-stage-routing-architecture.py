@@ -10,7 +10,8 @@ is present and wired:
 2. The engineering-stage-professionalism foundation capability exists and is
    registered.
 3. The skill-authoring-expert foundation capability exists.
-4. change-forge-router declares the Stage Professionalism output contract.
+4. change-forge-router points to the route result template, which declares the
+   Stage Professionalism output contract.
 5. routing-rules.yaml declares a stage-specific route and stage signals.
 6. The router declares a machine-readable stage route manifest.
 7. No long language-deep checklist is copied into the router or the stage
@@ -52,6 +53,12 @@ REGISTRY_DIR = ROOT / "src" / "registry"
 CAPABILITIES_REGISTRY = REGISTRY_DIR / "capabilities.yaml"
 ROUTING_RULES_REGISTRY = REGISTRY_DIR / "routing-rules.yaml"
 ROUTER_SKILL = PROFESSIONAL_SKILLS_DIR / "change-forge-router" / "SKILL.md"
+ROUTER_RESULT_TEMPLATE = (
+    PROFESSIONAL_SKILLS_DIR
+    / "change-forge-router"
+    / "references"
+    / "route-result-template.md"
+)
 
 STAGE_CAPABILITY = "engineering-stage-professionalism"
 AUTHORING_CAPABILITY = "skill-authoring-expert"
@@ -117,6 +124,7 @@ DOC_COUNT_FILES = (
     "docs/SKILL_CONTENT_GOVERNANCE.md",
     "src/registry/routing-rules.yaml",
     "src/professional-skills/change-forge-router/SKILL.md",
+    "src/professional-skills/change-forge-router/references/route-result-template.md",
     "src/foundation/capabilities/README.md",
 )
 
@@ -212,11 +220,24 @@ def _check_router_stage_contract(errors: list[str]) -> None:
     if body is None:
         return
     folded = body.casefold()
+    if "references/route-result-template.md" not in folded:
+        errors.append(
+            f"{relpath(ROOT, ROUTER_SKILL)}: router must point to "
+            "references/route-result-template.md"
+        )
+    if not ROUTER_RESULT_TEMPLATE.is_file():
+        errors.append(
+            f"{relpath(ROOT, ROUTER_RESULT_TEMPLATE)}: missing route result template"
+        )
+        template = ""
+    else:
+        template = ROUTER_RESULT_TEMPLATE.read_text(encoding="utf-8")
+    template_folded = template.casefold()
     for field in ROUTER_STAGE_FIELDS:
-        if field.casefold() not in folded:
+        if field.casefold() not in template_folded:
             errors.append(
-                f"{relpath(ROOT, ROUTER_SKILL)}: router is missing Stage Professionalism "
-                f"output field '{field}'"
+                f"{relpath(ROOT, ROUTER_RESULT_TEMPLATE)}: route result template is "
+                f"missing Stage Professionalism output field '{field}'"
             )
     if "changeforge_stage_route" not in folded:
         errors.append(

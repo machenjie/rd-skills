@@ -46,6 +46,12 @@ expected:
   complexity: L1 | L2 | L3 | L4 | L5
   risk_level: low | medium | high | critical
   structure_required: false  # optional override for pure config/test/text/L1 exceptions
+  expected_stage: bug-fix | debugging-diagnosis | code-review | refactoring | testing
+  expected_context_budget_mode: minimal | single-stage | staged-plan
+  expected_required_references:
+    - references/capabilities/<id>-<capability-name>.md
+  stage_route_required: false  # optional; must include stage_route_skip_reason
+  stage_route_skip_reason: <why no stage route applies>
   risk_triggers:
     - <one or more values from routing-rules.yaml:risk_escalation_triggers>
   skills:
@@ -78,6 +84,17 @@ does not warrant them.
   set to `false` only when an implementation-gate case is a pure
   configuration, pure test, pure text, or L1-small change that does not
   need a structure plan.
+- `expected.expected_stage`, when present, declares the expected
+  `changeforge_stage_route.current_stage` in captured router output.
+- `expected.expected_context_budget_mode`, when present, must be one of
+  `minimal`, `single-stage`, or `staged-plan`. Captured output defaults
+  are `minimal` for L1, `single-stage` for L2, and `staged-plan` for
+  L3-L5.
+- `expected.expected_required_references`, when present, lists additional
+  runtime reference paths that captured output must include.
+- `expected.stage_route_required: false` can suppress the L2-L5 stage
+  route requirement only when `expected.stage_route_skip_reason` explains
+  why the case has no applicable stage route.
 - All `expected.*` and `forbidden.*` names exist in their respective
   registries.
 - `risk_triggers` are drawn from `routing-rules.yaml:risk_escalation_triggers`.
@@ -145,11 +162,23 @@ actual:
   quality_gates:
     - security gate
   required_references:
-    - "change-forge-router:references/routing-rules.md"
-    - "change-forge-router:references/skill-registry.md"
-    - "change-forge-router:references/capability-index.md"
-    - "change-forge-router:references/domain-extension-index.md"
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/16-permission-boundary-modeling.md
+  stage_route_manifest:
+    current_stage: bug-fix
+    context_budget_mode: staged-plan
+    skipped_capabilities:
+      - capability: release-rollback
+        reason: no release sequencing required for this route
 ```
+
+`required_references` may use plain runtime paths or legacy
+`skill:reference-path` entries. Selected foundation capabilities must include
+their deterministic compiled path:
+`references/capabilities/<id>-<capability-name>.md`.
 
 The comparison mode enforces:
 
@@ -159,6 +188,15 @@ The comparison mode enforces:
 - `forbidden.domain_extensions` and `forbidden.quality_gates` do not appear.
 - Complexity and risk level match the golden case.
 - Router self-use references are present in `actual.required_references`.
+- L2-L5 actual output includes `changeforge_stage_route` or
+  `stage_route_manifest`, unless the golden case explicitly disables that
+  requirement with a skip reason.
+- `current_stage` and `context_budget_mode` match the golden case or the
+  complexity-derived default.
+- Every selected capability exists in the registry, belongs to at least one
+  selected skill through `used_by`, and has its deterministic compiled
+  capability reference in `actual.required_references`.
+- Any skipped capability in the stage route includes a concrete reason.
 - L1 actual output does not over-route to heavyweight skills or domain
   extensions unless the golden case declares a matching risk trigger.
 - L4/L5 actual output does not omit any expected security, reliability,

@@ -10,13 +10,4 @@
 # The former implementation-structure-design and ci-cd body overages were resolved
 # by reference decomposition and body tightening (see
 # reports/skill-content-optimization-plan.md).
-exceptions:
-  - path: src/professional-skills/change-forge-router/SKILL.md
-    allow: [section_lines]
-    reason: >-
-      Output Contract is the router's canonical Markdown Routing Result template
-      (sections 1-12). It must stay in the body: validate-skill-body-links parses its
-      "## 10. Quality Gates" block and validate-stage-routing-architecture requires its
-      Stage Professionalism fields. The machine-readable manifest schemas were already
-      moved to references/route-manifest.md (P2 in
-      reports/skill-content-optimization-plan.md).
+exceptions: []
