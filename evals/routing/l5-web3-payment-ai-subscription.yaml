@@ -13,6 +13,8 @@ prompt: |
   AI side-effect controls, audit trail, and rollback.
 expected:
   complexity: L5
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
   risk_triggers:
     - payment
     - subscription

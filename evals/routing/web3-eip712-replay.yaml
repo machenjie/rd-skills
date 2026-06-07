@@ -10,6 +10,8 @@ prompt: |
 expected:
   complexity: L4
   risk_level: critical
+  expected_stage: bug-fix
+  expected_context_budget_mode: staged-plan
   risk_triggers:
     - wallet
     - private key

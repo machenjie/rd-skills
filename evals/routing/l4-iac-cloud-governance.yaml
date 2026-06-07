@@ -10,6 +10,8 @@ prompt: |
   resource detection, IAM diff review, and cost delta approval.
 expected:
   complexity: L4
+  expected_stage: release-delivery
+  expected_context_budget_mode: staged-plan
   risk_triggers:
     - production deployment
     - secret/config change

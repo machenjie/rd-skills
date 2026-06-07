@@ -10,6 +10,8 @@ prompt: |
 expected:
   complexity: L2
   risk_level: medium
+  expected_stage: debugging-diagnosis
+  expected_context_budget_mode: single-stage
   risk_triggers:
     - same agent approach failed twice
     - route repair required

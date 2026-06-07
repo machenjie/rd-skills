@@ -46,7 +46,7 @@ expected:
   complexity: L1 | L2 | L3 | L4 | L5
   risk_level: low | medium | high | critical
   structure_required: false  # optional override for pure config/test/text/L1 exceptions
-  expected_stage: bug-fix | debugging-diagnosis | code-review | refactoring | testing
+  expected_stage: requirement-intake | architecture-design | implementation-planning | coding | debugging-diagnosis | bug-fix | code-review | refactoring | testing | release-delivery | documentation-handoff | skill-authoring
   expected_context_budget_mode: minimal | single-stage | staged-plan
   expected_required_references:
     - references/capabilities/<id>-<capability-name>.md
@@ -84,8 +84,10 @@ does not warrant them.
   set to `false` only when an implementation-gate case is a pure
   configuration, pure test, pure text, or L1-small change that does not
   need a structure plan.
-- `expected.expected_stage`, when present, declares the expected
-  `changeforge_stage_route.current_stage` in captured router output.
+- `expected.expected_stage` must be present for L2-L5 cases unless
+  `expected.stage_route_required: false` is set with a skip reason. It
+  declares the expected canonical `changeforge_stage_route.current_stage`
+  in captured router output.
 - `expected.expected_context_budget_mode`, when present, must be one of
   `minimal`, `single-stage`, or `staged-plan`. Captured output defaults
   are `minimal` for L1, `single-stage` for L2, and `staged-plan` for
@@ -191,11 +193,13 @@ The comparison mode enforces:
 - L2-L5 actual output includes `changeforge_stage_route` or
   `stage_route_manifest`, unless the golden case explicitly disables that
   requirement with a skip reason.
-- `current_stage` and `context_budget_mode` match the golden case or the
-  complexity-derived default.
+- `current_stage` is a canonical stage from
+  `routing-rules.yaml:engineering_stage_signals`, and `current_stage` and
+  `context_budget_mode` match the golden case or the complexity-derived
+  default.
 - Every selected capability exists in the registry, belongs to at least one
-  selected skill through `used_by`, and has its deterministic compiled
-  capability reference in `actual.required_references`.
+  selected skill or domain extension through `used_by`, and has its
+  deterministic compiled capability reference in `actual.required_references`.
 - Any skipped capability in the stage route includes a concrete reason.
 - L1 actual output does not over-route to heavyweight skills or domain
   extensions unless the golden case declares a matching risk trigger.

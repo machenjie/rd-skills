@@ -10,6 +10,8 @@ prompt: |
   cache key correctness.
 expected:
   complexity: L3
+  expected_stage: architecture-design
+  expected_context_budget_mode: staged-plan
   risk_triggers: []
   skills:
     - architecture-impact-reviewer

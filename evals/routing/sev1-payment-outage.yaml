@@ -10,6 +10,8 @@ prompt: |
 expected:
   complexity: L5
   risk_level: critical
+  expected_stage: debugging-diagnosis
+  expected_context_budget_mode: staged-plan
   risk_triggers:
     - production incident
     - payment

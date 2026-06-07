@@ -11,6 +11,8 @@ prompt: |
   fields. Plan migration, backfill, dual-write, cutover, and rollback.
 expected:
   complexity: L4
+  expected_stage: release-delivery
+  expected_context_budget_mode: staged-plan
   risk_triggers:
     - database migration
     - production deployment

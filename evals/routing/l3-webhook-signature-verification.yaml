@@ -10,6 +10,8 @@ prompt: |
   idempotent processing keyed on the provider's event id.
 expected:
   complexity: L3
+  expected_stage: bug-fix
+  expected_context_budget_mode: staged-plan
   risk_triggers:
     - webhook
     - external integration

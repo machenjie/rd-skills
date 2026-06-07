@@ -9,6 +9,8 @@ prompt: |
   passing.
 expected:
   complexity: L2
+  expected_stage: refactoring
+  expected_context_budget_mode: single-stage
   risk_triggers: []
   skills:
     - ai-code-review-refactor

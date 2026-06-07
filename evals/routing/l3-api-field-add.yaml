@@ -9,6 +9,8 @@ prompt: |
   working unchanged.
 expected:
   complexity: L3
+  expected_stage: coding
+  expected_context_budget_mode: staged-plan
   risk_triggers:
     - auth
   skills:
