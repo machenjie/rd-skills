@@ -19,6 +19,8 @@ Loads cases from ``evals/routing/*.yaml`` and validates that each case:
 * requires L2+ implementation cases that route to backend, frontend, or
   AI review implementation skills to include ``implementation-structure-design``
   unless the case explicitly sets ``expected.structure_required: false``.
+* requires L2-L5 stage-aware cases to declare the expected canonical
+  engineering stage unless they explicitly opt out with a skip reason.
 
 By default this remains an offline golden spec check. It does not invoke
 any agent or model. When ``--candidate-output`` or ``--candidate-output-dir``
@@ -325,18 +327,18 @@ def _capability_reference_path(
     return f"references/capabilities/{capability_id}-{capability}.md"
 
 
-def _load_routing_allow_lists() -> tuple[set[str], set[str]]:
-    """Return (risk_triggers, quality_gates) declared in routing-rules.yaml."""
+def _load_routing_allow_lists() -> tuple[set[str], set[str], set[str]]:
+    """Return (risk_triggers, quality_gates, stages) from routing-rules.yaml."""
 
     path = REGISTRY_DIR / "routing-rules.yaml"
     if not path.is_file():
-        return set(), set()
+        return set(), set(), set()
     try:
         data = load_yaml_file(path)
     except ValidationProblem:
-        return set(), set()
+        return set(), set(), set()
     if not isinstance(data, dict):
-        return set(), set()
+        return set(), set(), set()
     triggers = {
         str(item).strip().casefold()
         for item in data.get("risk_escalation_triggers", []) or []
@@ -347,7 +349,14 @@ def _load_routing_allow_lists() -> tuple[set[str], set[str]]:
         for item in data.get("quality_gates", []) or []
         if isinstance(item, (str, int))
     }
-    return triggers, gates
+    stages: set[str] = set()
+    for entry in data.get("engineering_stage_signals", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        stage = entry.get("stage")
+        if isinstance(stage, str) and stage.strip():
+            stages.add(stage.strip())
+    return triggers, gates, stages
 
 
 def _as_string_list(value: Any) -> list[str] | None:
@@ -372,6 +381,7 @@ def _validate_case(  # noqa: C901 - branchy validator by design
     extensions: set[str],
     allowed_triggers: set[str],
     allowed_gates: set[str],
+    allowed_stages: set[str],
     errors: list[str],
 ) -> None:
     rel = relpath(ROOT, path)
@@ -431,9 +441,22 @@ def _validate_case(  # noqa: C901 - branchy validator by design
             )
 
     expected_stage = expected.get("expected_stage")
+    stage_required = (
+        complexity in {"L2", "L3", "L4", "L5"} and stage_route_required is not False
+    )
+    if stage_required and expected_stage is None:
+        errors.append(
+            f"{rel}: expected.expected_stage is required for {complexity} cases "
+            "unless expected.stage_route_required is false"
+        )
     if expected_stage is not None:
         if not isinstance(expected_stage, str) or not expected_stage.strip():
             errors.append(f"{rel}: expected.expected_stage must be a non-empty string")
+        elif expected_stage.strip() not in allowed_stages:
+            errors.append(
+                f"{rel}: expected.expected_stage must be one of "
+                f"{sorted(allowed_stages)}, found '{expected_stage.strip()}'"
+            )
 
     expected_budget = expected.get("expected_context_budget_mode")
     if expected_budget is not None:
@@ -1169,16 +1192,22 @@ def _enforce_actual_capability_references(
     capability_metadata: dict[str, dict[str, Any]],
     errors: list[str],
 ) -> None:
-    selected_skills = set(actual_sets["skills"])
+    selected_owners = set(actual_sets["skills"]) | set(
+        actual_sets["domain_extensions"]
+    )
     for capability in actual_sets["capabilities"]:
         metadata = capability_metadata.get(capability)
         if metadata is None:
             continue
         used_by = metadata.get("used_by")
-        if isinstance(used_by, set) and selected_skills and not selected_skills & used_by:
+        if (
+            isinstance(used_by, set)
+            and selected_owners
+            and not selected_owners & used_by
+        ):
             errors.append(
                 f"{rel}: selected capability '{capability}' does not map to any "
-                "actual selected skill through used_by"
+                "actual selected skill or domain extension through used_by"
             )
         reference = _capability_reference_path(capability, capability_metadata)
         if reference is not None and reference not in reference_paths:
@@ -1193,6 +1222,7 @@ def _enforce_actual_stage_route(
     expected: dict[str, Any],
     output_data: dict[str, Any],
     actual: dict[str, Any],
+    allowed_stages: set[str],
     errors: list[str],
 ) -> None:
     manifest = _actual_stage_manifest(output_data, actual)
@@ -1205,8 +1235,17 @@ def _enforce_actual_stage_route(
     current = manifest.get("current_stage")
     if not isinstance(current, str) or not current.strip():
         errors.append(f"{rel}: changeforge_stage_route.current_stage is required")
+    elif current.strip() not in allowed_stages:
+        errors.append(
+            f"{rel}: changeforge_stage_route.current_stage must be one of "
+            f"{sorted(allowed_stages)}, found '{current.strip()}'"
+        )
     expected_stage = expected.get("expected_stage")
-    if isinstance(expected_stage, str) and expected_stage.strip() and current != expected_stage:
+    if (
+        isinstance(expected_stage, str)
+        and expected_stage.strip()
+        and current != expected_stage
+    ):
         errors.append(
             f"{rel}: changeforge_stage_route.current_stage must be "
             f"{expected_stage!r}, found {current!r}"
@@ -1237,6 +1276,7 @@ def _compare_candidate_output(  # noqa: C901 - schema comparison is branchy.
     capabilities: set[str],
     extensions: set[str],
     allowed_gates: set[str],
+    allowed_stages: set[str],
     capability_metadata: dict[str, dict[str, Any]],
     errors: list[str],
 ) -> None:
@@ -1351,7 +1391,14 @@ def _compare_candidate_output(  # noqa: C901 - schema comparison is branchy.
 
     _enforce_l1_actual_anti_over_routing(rel, expected, actual_sets, errors)
     _enforce_l4_l5_actual_gate_coverage(rel, expected, actual_sets, errors)
-    _enforce_actual_stage_route(rel, expected, output_data, actual, errors)
+    _enforce_actual_stage_route(
+        rel,
+        expected,
+        output_data,
+        actual,
+        allowed_stages,
+        errors,
+    )
 
 
 def _iter_case_files() -> list[Path]:
@@ -1467,7 +1514,7 @@ def main(argv: list[str] | None = None) -> int:
 
     skills, capabilities, extensions = _load_registry_names()
     capability_metadata = _load_capability_metadata()
-    allowed_triggers, allowed_gates = _load_routing_allow_lists()
+    allowed_triggers, allowed_gates, allowed_stages = _load_routing_allow_lists()
     if not skills or not capabilities or not extensions:
         errors.append(
             "registry data appears empty or unreadable; run validate-registry first."
@@ -1480,6 +1527,8 @@ def main(argv: list[str] | None = None) -> int:
         errors.append(
             "routing-rules.yaml is missing risk_escalation_triggers or quality_gates."
         )
+    if not allowed_stages:
+        errors.append("routing-rules.yaml is missing engineering_stage_signals.")
 
     seen_ids: set[str] = set()
     cases: dict[str, tuple[Path, dict[str, Any]]] = {}
@@ -1502,6 +1551,7 @@ def main(argv: list[str] | None = None) -> int:
             extensions,
             allowed_triggers,
             allowed_gates,
+            allowed_stages,
             errors,
         )
 
@@ -1547,6 +1597,7 @@ def main(argv: list[str] | None = None) -> int:
             capabilities,
             extensions,
             allowed_gates,
+            allowed_stages,
             capability_metadata,
             errors,
         )

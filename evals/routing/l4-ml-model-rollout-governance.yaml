@@ -10,6 +10,8 @@ prompt: |
   canary model rollout, fairness audit, and rollback model version.
 expected:
   complexity: L4
+  expected_stage: release-delivery
+  expected_context_budget_mode: staged-plan
   risk_triggers:
     - production deployment
   skills:

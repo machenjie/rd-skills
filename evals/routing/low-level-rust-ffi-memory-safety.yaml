@@ -9,6 +9,8 @@ prompt: |
 expected:
   complexity: L4
   risk_level: high
+  expected_stage: coding
+  expected_context_budget_mode: staged-plan
   risk_triggers:
     - production deployment
   skills:

@@ -1,14 +1,31 @@
 from __future__ import annotations
 
+import importlib.util
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import ModuleType
 
 
 ROOT = Path(__file__).resolve().parents[2]
 EVAL_SCRIPT = ROOT / "scripts" / "eval-routing.py"
+SCRIPTS_DIR = ROOT / "scripts"
+
+
+def _load_eval_routing() -> ModuleType:
+    if str(SCRIPTS_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS_DIR))
+    spec = importlib.util.spec_from_file_location("eval_routing", EVAL_SCRIPT)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("could not import eval-routing.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+EVAL_ROUTING = _load_eval_routing()
 
 
 VALID_BACKEND_AUTH_IDOR = """case_id: backend-auth-idor
@@ -77,6 +94,43 @@ def _run_candidate(candidate_text: str) -> subprocess.CompletedProcess[str]:
         )
 
 
+def _validate_case_data(case_data: dict[str, object]) -> list[str]:
+    skills, capabilities, extensions = EVAL_ROUTING._load_registry_names()
+    allowed_triggers, allowed_gates, allowed_stages = (
+        EVAL_ROUTING._load_routing_allow_lists()
+    )
+    errors: list[str] = []
+    EVAL_ROUTING._validate_case(
+        ROOT / "evals" / "routing" / f"{case_data['id']}.yaml",
+        case_data,
+        set(),
+        skills,
+        capabilities,
+        extensions,
+        allowed_triggers,
+        allowed_gates,
+        allowed_stages,
+        errors,
+    )
+    return errors
+
+
+def _minimal_l2_case() -> dict[str, object]:
+    return {
+        "id": "test-stage-required",
+        "description": "Synthetic L2 routing case.",
+        "prompt": "Add a backend behavior change.",
+        "expected": {
+            "complexity": "L2",
+            "risk_triggers": [],
+            "skills": ["backend-change-builder"],
+            "capabilities": ["implementation-structure-design"],
+            "domain_extensions": [],
+            "quality_gates": ["implementation gate"],
+        },
+    }
+
+
 class EvalRoutingCandidateTests(unittest.TestCase):
     def test_valid_candidate_with_stage_and_references_passes(self) -> None:
         result = _run_candidate(VALID_BACKEND_AUTH_IDOR)
@@ -106,6 +160,15 @@ class EvalRoutingCandidateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("current_stage must be 'bug-fix'", result.stderr)
 
+    def test_unknown_candidate_stage_fails(self) -> None:
+        candidate = VALID_BACKEND_AUTH_IDOR.replace(
+            "current_stage: bug-fix",
+            "current_stage: not-a-stage",
+        )
+        result = _run_candidate(candidate)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("current_stage must be one of", result.stderr)
+
     def test_missing_selected_capability_reference_fails(self) -> None:
         candidate = VALID_BACKEND_AUTH_IDOR.replace(
             "    - references/capabilities/53-input-validation.md\n",
@@ -117,6 +180,77 @@ class EvalRoutingCandidateTests(unittest.TestCase):
             "missing selected capability reference "
             "'references/capabilities/53-input-validation.md'",
             result.stderr,
+        )
+
+    def test_l2_plus_golden_requires_expected_stage(self) -> None:
+        case_data = _minimal_l2_case()
+        errors = _validate_case_data(case_data)
+        self.assertIn(
+            "evals/routing/test-stage-required.yaml: expected.expected_stage "
+            "is required for L2 cases unless expected.stage_route_required is false",
+            errors,
+        )
+
+    def test_unknown_golden_expected_stage_fails(self) -> None:
+        case_data = _minimal_l2_case()
+        expected = case_data["expected"]
+        assert isinstance(expected, dict)
+        expected["expected_stage"] = "not-a-stage"
+        expected["expected_context_budget_mode"] = "single-stage"
+        errors = _validate_case_data(case_data)
+        self.assertTrue(
+            any("expected.expected_stage must be one of" in error for error in errors),
+            errors,
+        )
+
+    def test_stage_route_skip_reason_allows_missing_expected_stage(self) -> None:
+        case_data = _minimal_l2_case()
+        expected = case_data["expected"]
+        assert isinstance(expected, dict)
+        expected["stage_route_required"] = False
+        expected["stage_route_skip_reason"] = "single trivial edit has no stage route"
+        errors = _validate_case_data(case_data)
+        self.assertNotIn(
+            "expected.expected_stage is required",
+            "\n".join(errors),
+        )
+
+    def test_domain_extension_can_own_selected_capability(self) -> None:
+        metadata = EVAL_ROUTING._load_capability_metadata()
+        actual_sets = {
+            "skills": ["frontend-change-builder"],
+            "capabilities": ["python-professional-usage"],
+            "domain_extensions": ["ai-product-extension"],
+        }
+        errors: list[str] = []
+        EVAL_ROUTING._enforce_actual_capability_references(
+            "candidate.yaml",
+            actual_sets,
+            {"references/capabilities/92-python-professional-usage.md"},
+            metadata,
+            errors,
+        )
+        self.assertEqual(errors, [])
+
+    def test_unowned_selected_capability_still_fails(self) -> None:
+        metadata = EVAL_ROUTING._load_capability_metadata()
+        actual_sets = {
+            "skills": ["frontend-change-builder"],
+            "capabilities": ["python-professional-usage"],
+            "domain_extensions": ["web3-product-extension"],
+        }
+        errors: list[str] = []
+        EVAL_ROUTING._enforce_actual_capability_references(
+            "candidate.yaml",
+            actual_sets,
+            {"references/capabilities/92-python-professional-usage.md"},
+            metadata,
+            errors,
+        )
+        self.assertIn(
+            "candidate.yaml: selected capability 'python-professional-usage' "
+            "does not map to any actual selected skill or domain extension through used_by",
+            errors,
         )
 
 

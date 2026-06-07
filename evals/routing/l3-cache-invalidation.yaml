@@ -9,6 +9,8 @@ prompt: |
   protection, and fallback when Redis is unavailable.
 expected:
   complexity: L3
+  expected_stage: coding
+  expected_context_budget_mode: staged-plan
   risk_triggers: []
   skills:
     - change-impact-analyzer

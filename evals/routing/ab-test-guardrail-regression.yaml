@@ -10,6 +10,8 @@ prompt: |
 expected:
   complexity: L3
   risk_level: medium
+  expected_stage: testing
+  expected_context_budget_mode: staged-plan
   risk_triggers: []
   skills:
     - experience-impact-modeler

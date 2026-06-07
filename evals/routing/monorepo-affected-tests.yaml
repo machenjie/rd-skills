@@ -9,6 +9,8 @@ prompt: |
 expected:
   complexity: L3
   risk_level: medium
+  expected_stage: bug-fix
+  expected_context_budget_mode: staged-plan
   risk_triggers: []
   skills:
     - architecture-impact-reviewer

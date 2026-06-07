@@ -9,6 +9,8 @@ prompt: |
   impact, egress and storage lifecycle cost, and a cost anomaly alert.
 expected:
   complexity: L3
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
   risk_triggers:
     - cost anomaly
   skills:

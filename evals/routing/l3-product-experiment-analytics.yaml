@@ -10,6 +10,8 @@ prompt: |
   and rollback if guardrails regress.
 expected:
   complexity: L3
+  expected_stage: release-delivery
+  expected_context_budget_mode: staged-plan
   risk_triggers: []
   skills:
     - experience-impact-modeler

@@ -10,6 +10,8 @@ prompt: |
 expected:
   complexity: L4
   risk_level: high
+  expected_stage: release-delivery
+  expected_context_budget_mode: staged-plan
   risk_triggers:
     - regulated workload
     - compliance evidence

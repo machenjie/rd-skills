@@ -9,6 +9,8 @@ prompt: |
   already exists.
 expected:
   complexity: L2
+  expected_stage: coding
+  expected_context_budget_mode: single-stage
   risk_triggers: []
   skills:
     - experience-impact-modeler

@@ -12,6 +12,8 @@ prompt: |
 expected:
   complexity: L3
   risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: staged-plan
   risk_triggers:
     - agent claims completion without evidence
     - missing test evidence

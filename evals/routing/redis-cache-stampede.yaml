@@ -7,6 +7,8 @@ prompt: |
 expected:
   complexity: L3
   risk_level: high
+  expected_stage: bug-fix
+  expected_context_budget_mode: staged-plan
   risk_triggers: []
   skills:
     - data-middleware-change-builder
