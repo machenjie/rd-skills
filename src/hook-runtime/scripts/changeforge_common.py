@@ -494,7 +494,7 @@ def write_telemetry_event(
             "runtime": runtime,
             "hook_name": hook_name,
             "event_name": event_name,
-            "session_id": session_id.strip() or _fallback_session_id(repo, repo_hash),
+            "session_id": _telemetry_session_id(repo, repo_hash, session_id),
             "mode": mode,
             "tool_name": tool_name,
             "changed_paths": _capped_items(changed_paths),
@@ -579,6 +579,25 @@ def _fallback_session_id(repo: Path, repo_hash: str) -> str:
     except Exception:
         turn = _new_turn_id()
     return f"{repo_hash[:8]}-{_utc_date()}-{turn}"
+
+
+def _telemetry_session_id(repo: Path, repo_hash: str, provided: str) -> str:
+    """Per-turn telemetry session id, even when the runtime supplies one.
+
+    A runtime-supplied session id (for example the Codex CLI session UUID) stays
+    stable across an entire CLI run, so recording it verbatim merged every turn
+    of that run into one telemetry session and corrupted per-turn closure review.
+    Scope the recorded id by the per-turn turn_id so each turn is reviewed on its
+    own while the runtime id is preserved as a traceable prefix.
+    """
+    runtime_id = provided.strip()
+    if not runtime_id:
+        return _fallback_session_id(repo, repo_hash)
+    try:
+        turn = ensure_turn_id(repo)
+    except Exception:
+        turn = _new_turn_id()
+    return f"{runtime_id[:80]}:{turn}"
 
 
 # --- Route / stage manifest parsing -------------------------------------------

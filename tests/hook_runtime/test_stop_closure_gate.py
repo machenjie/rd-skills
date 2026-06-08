@@ -335,6 +335,33 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertIn("changeforge_stage_route", result.stdout)
         self.assertIn("required references", result.stdout)
 
+    def test_closure_reminder_flags_missing_route_manifest(self) -> None:
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": "done"}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, changed_paths=["a.py"])
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("MISSING", result.stdout)
+        self.assertIn("no changeforge_route manifest", result.stdout)
+
+    def test_closure_reminder_omits_missing_flag_when_manifest_present(self) -> None:
+        manifest_text = (
+            "Done.\n\n"
+            "```yaml\n"
+            "changeforge_route:\n"
+            "  selected_skills:\n"
+            "    - backend-change-builder\n"
+            "```\n"
+        )
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": manifest_text}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, changed_paths=["a.py"])
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("MISSING", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

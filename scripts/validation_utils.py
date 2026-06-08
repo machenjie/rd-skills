@@ -123,125 +123,117 @@ def _parse_scalar(raw: str) -> Any:
     return value
 
 
-def _simple_yaml_load(text: str) -> dict[str, Any]:
-    """Parse the small YAML subset used by ChangeForge registries.
+def _is_yaml_list_marker(content: str) -> bool:
+    return content == "-" or content.startswith("- ")
 
-    This intentionally supports only top-level mappings, lists of scalars or
-    mappings, and scalar child lists inside list mappings. If richer YAML is
-    introduced, PyYAML should be available in the validation environment.
+
+def _is_block_scalar(value: str) -> bool:
+    """A YAML block scalar indicator; only the indicator is retained."""
+    return value[:1] in {"|", ">"}
+
+
+def _yaml_significant_lines(text: str) -> list[tuple[int, str]]:
+    """Return (indent, stripped-content) for each structural YAML line.
+
+    Blank lines, comments, and frontmatter delimiters are dropped so the
+    recursive parser sees only structural lines.
     """
-
-    lines = text.splitlines()
-    result: dict[str, Any] = {}
-    index = 0
-
-    while index < len(lines):
-        raw_line = lines[index]
+    lines: list[tuple[int, str]] = []
+    for raw_line in text.splitlines():
         stripped = raw_line.strip()
         if not stripped or stripped.startswith("#") or stripped == FRONTMATTER_DELIMITER:
-            index += 1
             continue
-        if raw_line.startswith((" ", "\t")) or ":" not in raw_line:
-            index += 1
-            continue
+        indent = len(raw_line) - len(raw_line.lstrip(" "))
+        lines.append((indent, stripped))
+    return lines
 
-        key, raw_value = raw_line.split(":", 1)
+
+def _simple_yaml_load(text: str) -> dict[str, Any]:
+    """Parse the indentation-based YAML subset used by ChangeForge assets.
+
+    Supports nested mappings, lists of scalars, and lists of mappings (whose
+    items may carry nested mapping values) to any depth. Block scalars retain
+    only their indicator, matching the historical fallback. PyYAML is still
+    preferred when available; this keeps the validation, routing, and telemetry
+    tooling free of a hard YAML dependency.
+    """
+    value, _ = _parse_yaml_block(_yaml_significant_lines(text), 0, 0)
+    return value if isinstance(value, dict) else {}
+
+
+def _parse_yaml_block(
+    lines: list[tuple[int, str]], start: int, indent: int
+) -> tuple[Any, int]:
+    if start >= len(lines):
+        return {}, start
+    if _is_yaml_list_marker(lines[start][1]):
+        return _parse_yaml_list(lines, start, indent)
+    return _parse_yaml_map(lines, start, indent)
+
+
+def _parse_yaml_map(
+    lines: list[tuple[int, str]], start: int, indent: int
+) -> tuple[dict[str, Any], int]:
+    result: dict[str, Any] = {}
+    index = start
+    while index < len(lines):
+        line_indent, content = lines[index]
+        if line_indent < indent or _is_yaml_list_marker(content):
+            break
+        if line_indent > indent or ":" not in content:
+            index += 1
+            continue
+        key, raw_value = content.split(":", 1)
         key = key.strip()
         value = raw_value.strip()
         if value:
             result[key] = _parse_scalar(value)
             index += 1
+            if _is_block_scalar(value):
+                while index < len(lines) and lines[index][0] > indent:
+                    index += 1
             continue
-
-        block: list[str] = []
         index += 1
-        while index < len(lines):
-            next_line = lines[index]
-            next_stripped = next_line.strip()
-            if not next_stripped or next_stripped.startswith("#"):
-                index += 1
-                continue
-            if not next_line.startswith((" ", "\t")):
-                break
-            block.append(next_line)
-            index += 1
-
-        result[key] = _parse_yaml_list_block(block)
-
-    return result
+        if index < len(lines) and lines[index][0] > indent:
+            child, index = _parse_yaml_block(lines, index, lines[index][0])
+            result[key] = child
+        else:
+            # Match the historical fallback: an empty root key is an empty
+            # mapping, an empty nested key is an empty (scalar child) list.
+            result[key] = {} if indent == 0 else []
+    return result, index
 
 
-def _parse_yaml_list_block(block: list[str]) -> Any:
+def _parse_yaml_list(
+    lines: list[tuple[int, str]], start: int, indent: int
+) -> tuple[list[Any], int]:
     items: list[Any] = []
-    current: dict[str, Any] | Any | None = None
-    list_indent: int | None = None
-    child_list_key: str | None = None
-    saw_list = False
-
-    for raw_line in block:
-        stripped = raw_line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        indent = len(raw_line) - len(raw_line.lstrip(" "))
-        is_list_item = stripped.startswith("- ")
-        if not saw_list and isinstance(current, dict) and is_list_item and child_list_key:
-            current[child_list_key].append(_parse_scalar(stripped[2:].strip()))
-            continue
-
-        if is_list_item and (list_indent is None or indent <= list_indent):
-            saw_list = True
-            list_indent = indent if list_indent is None else list_indent
-            if current is not None:
-                items.append(current)
-            content = stripped[2:].strip()
-            if not content:
-                current = {}
-            elif ":" in content and not content.startswith(("'", '"')):
-                key, raw_value = content.split(":", 1)
-                value = raw_value.strip()
-                if value:
-                    current = {key.strip(): _parse_scalar(value)}
-                    child_list_key = None
-                else:
-                    child_list_key = key.strip()
-                    current = {child_list_key: []}
+    index = start
+    while index < len(lines):
+        line_indent, content = lines[index]
+        if line_indent != indent or not _is_yaml_list_marker(content):
+            break
+        remainder = content[1:].strip()
+        index += 1
+        child_lines: list[tuple[int, str]] = []
+        while index < len(lines) and lines[index][0] > indent:
+            child_lines.append(lines[index])
+            index += 1
+        if not remainder:
+            if child_lines:
+                value, _ = _parse_yaml_block(child_lines, 0, child_lines[0][0])
+                items.append(value)
             else:
-                current = _parse_scalar(content)
-                child_list_key = None
-            continue
-
-        if isinstance(current, dict) and is_list_item and child_list_key:
-            current[child_list_key].append(_parse_scalar(stripped[2:].strip()))
-            continue
-
-        if isinstance(current, dict) and ":" in stripped:
-            key, raw_value = stripped.split(":", 1)
-            value = raw_value.strip()
-            if value:
-                current[key.strip()] = _parse_scalar(value)
-                child_list_key = None
-            else:
-                child_list_key = key.strip()
-                current[child_list_key] = []
-            continue
-
-        if not saw_list and ":" in stripped:
-            key, raw_value = stripped.split(":", 1)
-            value = raw_value.strip()
-            current = current if isinstance(current, dict) else {}
-            if value:
-                current[key.strip()] = _parse_scalar(value)
-                child_list_key = None
-            else:
-                child_list_key = key.strip()
-                current[child_list_key] = []
-            continue
-
-    if current is not None:
-        if saw_list:
-            items.append(current)
-
-    return items if saw_list else (current if isinstance(current, dict) else {})
+                items.append(None)
+        elif ":" in remainder and remainder[:1] not in {"'", '"', "[", "{"}:
+            # A mapping item: the inline key shares the dash line, so re-anchor
+            # it (and any continuation keys) one block level deeper.
+            synthesized = [(indent + 2, remainder), *child_lines]
+            value, _ = _parse_yaml_block(synthesized, 0, indent + 2)
+            items.append(value)
+        else:
+            items.append(_parse_scalar(remainder))
+    return items, index
 
 
 def load_yaml_text(text: str, path: Path) -> Any:
