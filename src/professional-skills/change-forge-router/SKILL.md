@@ -30,6 +30,7 @@ Do not use the router to invoke every skill, invent a product program around a l
 - Route domain extensions only when domain signals are present; do not attach them because they are available.
 - Route foundation capabilities as targeted support for selected professional skills; do not list all capabilities unless the user asks for a catalog.
 - Include skipped or deferred areas implicitly through the impact matrix and quality gates instead of padding the professional path.
+- Treat the machine-readable `changeforge_route` manifest as mandatory routing output and closure evidence: emit it when routing and restate it, with `changeforge_stage_route` for non-trivial engineering work, in the final handoff of a routed change instead of dropping it after the first turn.
 - Never install source authoring directories as runtime content and never route to out-of-scope asset ingestion, scanning, indexing, summarization, mapping, packaging, or installation.
 
 ## Industry Benchmarks

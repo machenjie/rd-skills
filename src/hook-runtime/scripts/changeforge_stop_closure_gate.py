@@ -128,7 +128,7 @@ def main() -> int:
         missing = _missing_keyword_groups(final_text, state) if final_text else []
         stop_hook_active = bool(event.get("stop_hook_active") or event.get("stopHookActive"))
         should_block = mode == "block" and bool(missing) and not stop_hook_active
-        message = _closure_message(state, final_text)
+        message = _closure_message(state, final_text, manifest)
         if should_block:
             emit_stop_reminder(runtime, message, continue_turn=True)
         else:
@@ -196,8 +196,11 @@ def _stop_findings(state: dict) -> dict[str, list[str]]:
     }
 
 
-def _closure_message(state: dict, final_text: str) -> str:
+def _closure_message(state: dict, final_text: str, manifest: dict | None = None) -> str:
     missing = _missing_keyword_groups(final_text, state) if final_text else []
+    route_present = bool(manifest and manifest.get("route_present")) or (
+        "changeforge_route" in final_text.casefold() if final_text else False
+    )
     details: list[str] = []
     if state.get("structure_findings"):
         details.append("- structure gate fired")
@@ -228,7 +231,17 @@ def _closure_message(state: dict, final_text: str) -> str:
         detail_text = f"\nObserved this turn:\n{detail_text}\n"
     evidence_text = _structure_evidence_block(state)
 
-    return f"""ChangeForge Closure Gate reminder.
+    headline = "ChangeForge Closure Gate reminder."
+    if not route_present:
+        headline += (
+            " MISSING: this handoff has no changeforge_route manifest. Real changes"
+            " were observed but the route was not emitted in machine-readable form."
+            " Emit the changeforge_route manifest (and changeforge_stage_route for"
+            " non-trivial engineering work) so the route is reviewable, not only"
+            " described in prose."
+        )
+
+    return f"""{headline}
 {detail_text}
 This turn changed files or triggered risk surfaces. Before final handoff, include:
 - the changeforge_route manifest: selected skills, selected capabilities, required references, and required quality gates

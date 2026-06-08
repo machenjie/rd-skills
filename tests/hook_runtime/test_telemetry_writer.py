@@ -94,7 +94,7 @@ class TelemetryWriterTests(unittest.TestCase):
             "residual_risk_detected",
         ):
             self.assertIn(field, record)
-        self.assertEqual(record["session_id"], "sess-1")
+        self.assertRegex(record["session_id"], r"^sess-1:[0-9a-f]{12}$")
         self.assertEqual(record["changed_paths"], ["src/services/order_service.py"])
 
     def test_no_absolute_paths_recorded(self) -> None:
@@ -264,6 +264,50 @@ class TelemetryWriterTests(unittest.TestCase):
         self.assertEqual(records[0]["session_id"], records[1]["session_id"])
         # The fallback id carries a per-turn component, not just the date.
         self.assertRegex(session_id, r"^[0-9a-f]{8}-\d{4}-\d{2}-\d{2}-[0-9a-f]{12}$")
+
+    def test_runtime_session_id_is_scoped_per_turn(self) -> None:
+        common = load_common()
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            os.environ["XDG_CACHE_HOME"] = cache
+            os.environ.pop("CHANGEFORGE_TELEMETRY", None)
+            repo = Path(cwd)
+            # Two hooks in one turn share the stable runtime CLI session id ...
+            common.write_telemetry_event(
+                repo,
+                runtime="codex",
+                hook_name="post_edit_structure_gate",
+                event_name="PostToolUse",
+                mode="warn",
+                session_id="cli-uuid",
+            )
+            common.write_telemetry_event(
+                repo,
+                runtime="codex",
+                hook_name="stop_closure_gate",
+                event_name="Stop",
+                mode="warn",
+                session_id="cli-uuid",
+            )
+            # ... the Stop boundary clears per-turn state ...
+            common.clear_state(repo, "codex")
+            # ... so the next turn under the same CLI session id is a new session.
+            common.write_telemetry_event(
+                repo,
+                runtime="codex",
+                hook_name="post_edit_structure_gate",
+                event_name="PostToolUse",
+                mode="warn",
+                session_id="cli-uuid",
+            )
+            records = read_records(Path(cache))
+        self.assertEqual(len(records), 3)
+        first, second, third = (record["session_id"] for record in records)
+        # Same turn -> same scoped id; the runtime id stays a traceable prefix.
+        self.assertEqual(first, second)
+        self.assertTrue(first.startswith("cli-uuid:"))
+        # A stable runtime session id must not merge unrelated turns.
+        self.assertNotEqual(first, third)
+        self.assertTrue(third.startswith("cli-uuid:"))
 
     def test_manifest_fields_recorded_when_provided(self) -> None:
         common = load_common()
