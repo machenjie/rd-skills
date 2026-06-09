@@ -165,6 +165,15 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertIn("comment quality evidence", result.stdout)
 
+    def test_structure_quality_findings_request_clarity_evidence(self) -> None:
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": "done"}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, structure_quality_findings=["x.ts: boolean parameter"])
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("code clarity evidence", result.stdout)
+
     def test_missing_closure_signals_listed(self) -> None:
         # The final response covers the base closure groups but omits naming,
         # reuse, and comment evidence, so only those conditional groups are flagged.
@@ -185,6 +194,7 @@ class StopClosureGateTests(unittest.TestCase):
                 file_naming_findings=["a.py: mismatch"],
                 reuse_findings=["a.py: reuse"],
                 comment_findings=["a.py: uncommented"],
+                structure_quality_findings=["a.py: weak signature"],
             )
             result = run_stop(event, cwd, cache)
         self.assertEqual(result.returncode, 0)
@@ -192,6 +202,7 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertIn("naming", result.stdout)
         self.assertIn("reuse", result.stdout)
         self.assertIn("comments", result.stdout)
+        self.assertIn("clarity", result.stdout)
 
     def test_missing_comment_keyword_listed(self) -> None:
         event = {

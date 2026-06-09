@@ -30,8 +30,8 @@ handoff target stage.
 - Handoff: implementation-planning.
 
 ### implementation-planning
-- Purpose: code placement, reuse decision, object/function/class/file/directory design, naming, public/private/internal boundaries.
-- Launch: `implementation-structure-design`, `module-boundary-design`, `language-idiom-enforcement` (naming only).
+- Purpose: code placement, reuse decision, object/function/class/file/directory design, naming, readable main flow, public/private/internal boundaries.
+- Launch: `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` (naming only).
 - Do not launch by default: full architecture review, release gate, deep performance profiling.
 - Required evidence: reuse candidates, placement rationale, visibility decisions, test placement.
 - Handoff: coding.
@@ -58,15 +58,15 @@ handoff target stage.
 - Handoff: testing or code-review.
 
 ### code-review
-- Purpose: correctness, structure, naming, reuse, security, reliability, test evidence, hallucinated-API check.
-- Launch: `code-review`, `implementation-structure-design`, `language-idiom-enforcement`, `ai-code-review-refactor` (for generated code).
+- Purpose: correctness, structure, naming, reuse, readability, security, reliability, test evidence, hallucinated-API check.
+- Launch: `code-review`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`, `ai-code-review-refactor` (for generated code).
 - Do not launch by default: release gate, deployment, infrastructure capabilities.
 - Required evidence: findings with severity, evidence, impacted file, required fix, validation required.
 - Handoff: refactoring, bug-fix, or testing.
 
 ### refactoring
-- Purpose: behavior-preserving structure change — extract, move, inline, merge, split, dependency direction, rollback.
-- Launch: `refactoring`, `implementation-structure-design`, `code-review`, `regression-testing`.
+- Purpose: behavior-preserving structure change — extract, move, inline, merge, split, cleanup, readability, dependency direction, rollback.
+- Launch: `refactoring`, `implementation-structure-design`, `code-clarity-maintainability`, `code-review`, `regression-testing`.
 - Do not launch by default: feature design, release gate. Add `architecture-impact-reviewer` only when boundaries shift.
 - Required evidence: characterization tests, preserved behavior, selection rationale, rollback path.
 - Handoff: testing or code-review.

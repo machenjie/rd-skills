@@ -1,0 +1,42 @@
+---
+id: test-structure-helper-pollution
+description: |
+  A business fixture is added to shared test utilities.
+prompt: |
+  The AI adds makeCancelledOrderWithRefundWindow() to tests/shared/utils so
+  every test can reuse it. The fixture is order-domain specific and the tests
+  also call a private cancellation helper directly.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: testing
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  skills:
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - module-boundary-design
+    - test-data-management
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+    - delivery-release-gate
+  capabilities:
+    - package-dependency-management
+    - data-migration-design
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Test helpers must preserve module ownership and verify public behavior, not private helper internals.

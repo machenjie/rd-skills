@@ -8,6 +8,7 @@
     "runtime",
     "changed_paths",
     "structure_findings",
+    "structure_quality_findings",
     "risk_surfaces",
     "suggested_skills",
     "suggested_capabilities",
@@ -28,6 +29,42 @@
       }
     },
     "structure_findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "file_naming_findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reuse_findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "extension_reuse_findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "advanced_refactor_findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "comment_findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "structure_quality_findings": {
       "type": "array",
       "items": {
         "type": "string"
@@ -65,6 +102,9 @@
     },
     "validation_seen": {
       "type": "boolean"
+    },
+    "turn_id": {
+      "type": "string"
     },
     "updated_at": {
       "type": "string"

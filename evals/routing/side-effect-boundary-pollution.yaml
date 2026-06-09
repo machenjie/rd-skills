@@ -1,0 +1,43 @@
+---
+id: side-effect-boundary-pollution
+description: |
+  A domain policy writes to the database and calls an external API.
+prompt: |
+  Review a change where OrderPolicy.checkCancellation() now writes an audit
+  row, updates order status in the database, calls a payment API, and emits a
+  notification event while deciding whether cancellation is allowed.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: single-stage
+  risk_triggers:
+    - unreadable main flow
+  skills:
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - business-rule-extraction
+    - domain-logic-implementation
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+    - delivery-release-gate
+  capabilities:
+    - package-dependency-management
+    - data-migration-design
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Pure policy should be separated from persistence, external API, event, and notification side effects.

@@ -33,14 +33,14 @@ supported_change_types:
 runtime_profiles:
   - name: recommended
     top_level: 19 professional skills
-    foundation_mode: 104 foundation capabilities compiled into professional references
+    foundation_mode: 105 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 19 professional skills and 7 domain extensions
-    foundation_mode: 104 foundation capabilities compiled into professional references
+    foundation_mode: 105 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 19 professional skills, 104 foundation capabilities, and 7 domain extensions
+    top_level: 19 professional skills, 105 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -104,6 +104,9 @@ risk_escalation_triggers:
   - bug may exist in multiple modules
   - shared utility pollution risk
   - business logic in shared utils
+  - unreadable main flow
+  - oversized function class or file
+  - change locality violation
   - hallucinated API risk
   - dependency surface
 failure_routing:
@@ -123,6 +126,8 @@ failure_routing:
     route_to: architecture-impact-reviewer
   - condition: implementation structure or placement unclear
     route_to: implementation-structure-design
+  - condition: code is hard to read or maintain
+    route_to: code-clarity-maintainability
   - condition: agent claims completion without evidence
     route_to: agent-execution-discipline
   - condition: agent diagnosis without verified cause
@@ -184,9 +189,9 @@ engineering_stage_signals:
   - stage: bug-fix
     signals: bug fix minimal fix same pattern scan regression test compatibility upstream downstream impact
   - stage: code-review
-    signals: code review generated code correctness maintainability security reliability test evidence hallucinated API
+    signals: code review generated code correctness maintainability readability security reliability test evidence hallucinated API
   - stage: refactoring
-    signals: refactoring behavior preserving extraction movement inline merge split dependency direction rollback
+    signals: refactoring behavior preserving extraction movement inline merge split dependency direction rollback clarity
   - stage: testing
     signals: testing unit integration contract e2e regression fixture mock concurrency language specific test
   - stage: release-delivery
@@ -326,6 +331,7 @@ routing_rules:
     triggers:
       - define test strategy unit integration contract E2E migration rollback regression fixtures mocks coverage
       - choose risk based verification evidence
+      - review test structure helper fixture factory mock golden file ownership public behavior private helper tests
       - verify A/B experiment exposure logging sample ratio mismatch guardrail rollback ML drift fairness monorepo affected tests cache correctness
     priority: 70
   - route_to: security-privacy-gate
@@ -355,7 +361,7 @@ routing_rules:
     triggers:
       - review AI generated code hallucinated APIs hidden assumptions over abstraction duplicate code missing tests architecture drift
       - refactor AI assisted code safely
-      - review AI generated implementation structure plan reuse rationale placement rationale shared utils pollution and invented abstractions
+      - review AI generated implementation structure plan reuse rationale placement rationale shared utils pollution invented abstractions stateless helper bags side effect pollution cleanup debt
     priority: 70
   - route_to: change-documentation-gate
     triggers:
@@ -457,6 +463,7 @@ routing_rules:
     triggers:
       - design module boundaries business capability ownership dependency direction interfaces coupling circular dependencies
       - prevent arbitrary folder driven architecture and cross module internal access
+      - directory too large module split sibling parent child producer consumer orchestrator adapter port public API expansion change locality shared common ownership
     priority: 60
   - route_to: layered-architecture-design
     triggers:
@@ -763,13 +770,13 @@ routing_rules:
     priority: 60
   - route_to: code-review
     triggers:
-      - review generated modified code correctness maintainability boundaries security tests dependencies naming errors
+      - review generated modified code correctness maintainability readability boundaries security tests dependencies naming errors
       - detect hallucinated APIs contract breaks missing tests unsafe dependency use and error handling regressions
     priority: 60
   - route_to: refactoring
     triggers:
-      - refactor while preserving behavior characterization tests boundaries contracts compatibility and rollback notes
-      - separate structural cleanup from behavior change and protect risky refactors with tests
+      - refactor while preserving behavior characterization tests boundaries contracts compatibility cleanup feature flag removal deprecated API dead code rollback notes
+      - separate structural cleanup from behavior change and protect risky refactors with tests before after complexity evidence
     priority: 60
   - route_to: implementation-structure-design
     triggers:
@@ -779,6 +786,13 @@ routing_rules:
       - new helper new utility new file new directory code structure implementation structure project structure folder structure responsibility placement
       - cohesion coupling shared utils common utils helper function service method domain service component placement hook placement repository method
       - decide reuse extend compose adapter private internal public export file ownership directory boundary dependency direction circular dependency test placement
+      - file main object main responsibility oversized file oversized class large function object split function signature boolean trap weak type bag side effect boundary collaborator dependency injection lifecycle invariant state machine
+    priority: 60
+  - route_to: code-clarity-maintainability
+    triggers:
+      - code clarity readability maintainability main flow happy path guard clause nested control flow cognitive complexity
+      - oversized function class file unreadable flow complex condition magic value boolean flag mode kind weakly typed parameter bag comments explain why
+      - change locality deletion path extension point cleanup deprecation feature flag compatibility branch future maintainer navigation
     priority: 60
   - route_to: agent-execution-discipline
     triggers:

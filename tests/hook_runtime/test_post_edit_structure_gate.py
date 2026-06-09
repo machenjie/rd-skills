@@ -267,6 +267,59 @@ class PostEditStructureGateTests(unittest.TestCase):
         self.assertIn("comment findings", result.stdout)
         self.assertIn("complex logic", result.stdout)
 
+    def test_large_new_file_triggers_structure_quality_gate(self) -> None:
+        body = "package services\n\n" + "\n".join(
+            f"func helper{i}() int {{ return {i} }}" for i in range(190)
+        )
+        result = run_structure(apply_patch_event(add_file_patch("internal/services/order_service.go", body)))
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("structure quality findings", result.stdout)
+        self.assertIn("new file adds", result.stdout)
+        self.assertIn("code-clarity-maintainability", result.stdout)
+
+    def test_boolean_and_weak_parameters_trigger_signature_quality_gate(self) -> None:
+        body = (
+            "export function searchOrders(filter: any, includeDrafts: boolean, mode: string, "
+            "page: number, tenantId: string): Order[] {\n"
+            "  return [];\n"
+            "}"
+        )
+        result = run_structure(apply_patch_event(add_file_patch("web/src/orders/search.ts", body)))
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("structure quality findings", result.stdout)
+        self.assertIn("boolean parameter", result.stdout)
+        self.assertIn("weak", result.stdout)
+
+    def test_shared_test_business_fixture_triggers_module_boundary_suggestion(self) -> None:
+        body = (
+            "export const orderCancellationFixture = {\n"
+            "  orderId: 'ord_1',\n"
+            "  cancellationDeadline: '2026-01-01'\n"
+            "};"
+        )
+        result = run_structure(
+            apply_patch_event(add_file_patch("tests/shared/utils/order_fixture.ts", body))
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("shared/common/utils contains business vocabulary", result.stdout)
+        self.assertIn("module-boundary-design", result.stdout)
+
+    def test_cleanup_without_owner_or_expiry_triggers_refactoring_suggestion(self) -> None:
+        patch = (
+            "*** Begin Patch\n"
+            "*** Update File: internal/orders/checkout.ts\n"
+            "@@\n"
+            " export function checkout() {\n"
+            "+  // TODO keep deprecated compatibility flag path for now\n"
+            "+  if (useLegacyOrderFlag()) return legacyCheckout();\n"
+            " }\n"
+            "*** End Patch\n"
+        )
+        result = run_structure(apply_patch_event(patch))
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("cleanup/deprecation/feature flag signal lacks owner or expiry", result.stdout)
+        self.assertIn("refactoring", result.stdout)
+
     def test_private_helper_does_not_trigger_strong_comment_reminder(self) -> None:
         body = "package widget\n\nfunc helper() int {\n    return 1\n}"
         result = run_structure(apply_patch_event(add_file_patch("pkg/widget/widget.go", body)))

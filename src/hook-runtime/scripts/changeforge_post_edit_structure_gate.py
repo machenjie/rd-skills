@@ -260,6 +260,52 @@ IGNORABLE_SUFFIXES = {
     ".gz",
 }
 MIN_SIBLINGS_FOR_NAMING = 3
+NEW_FILE_LINE_THRESHOLD = 180
+ADDED_FUNCTION_THRESHOLD = 6
+ADDED_ADVANCED_STRUCTURE_THRESHOLD = 4
+PUBLIC_EXPORT_THRESHOLD = 4
+BRANCH_SIGNAL_THRESHOLD = 8
+PARAMETER_COUNT_THRESHOLD = 4
+
+BUSINESS_TOKENS = {
+    "account",
+    "auth",
+    "booking",
+    "cancellation",
+    "entitlement",
+    "invoice",
+    "ledger",
+    "order",
+    "payment",
+    "permission",
+    "refund",
+    "shipping",
+    "subscription",
+    "tenant",
+    "user",
+}
+BRANCH_TOKENS = {"if", "else", "elif", "switch", "case", "fallback", "mode", "kind", "strategy"}
+WEAK_TYPE_RE = re.compile(
+    r"\b(any|Object|Record\s*<\s*string\s*,\s*any\s*>|map\s*\[\s*string\s*\]\s*(interface\s*\{\}|any)|interface\s*\{\})\b"
+)
+BOOLEAN_PARAM_RE = re.compile(
+    r"(:\s*bool(?:ean)?\b|\bbool(?:ean)?\s+\w+|\b\w+\s+bool\b|\bBoolean\s+\w+)"
+)
+FUNCTION_WITH_PARAMS_RE = re.compile(
+    r"\b(?:def|func|function|fn)\s+\w+\s*\(([^)]*)\)|\b(?:public|private|protected)\b[^;{()]*\w+\s*\(([^)]*)\)"
+)
+CONSTRUCTOR_WITH_PARAMS_RE = re.compile(
+    r"\bconstructor\s*\(([^)]*)\)|\b__init__\s*\(([^)]*)\)"
+)
+PUBLIC_EXPORT_RE = re.compile(r"^\s*(export\s+|pub\s+|public\s+)")
+CLEANUP_SIGNAL_RE = re.compile(
+    r"\b(todo|deprecated|deprecation|compat|compatibility|legacy|feature\s*flag|flagged|flag)\b",
+    re.IGNORECASE,
+)
+CLEANUP_OWNER_EXPIRY_RE = re.compile(
+    r"\b(owner|expiry|expires|expire|sunset|remove\s+by|removal|ticket|issue|until)\b",
+    re.IGNORECASE,
+)
 
 # Per-language declaration patterns for the comment-quality reminder. Each entry
 # matches an exported/public/test declaration that usually needs a doc comment.
@@ -336,6 +382,11 @@ def main() -> int:
         extension_reuse_findings = _extension_reuse_findings(patch_text, added_paths, paths)
         advanced_refactor_findings = _advanced_refactor_findings(patch_text, added_paths)
         comment_findings = _comment_findings(added_by_file)
+        structure_quality_findings = _structure_quality_findings(
+            added_by_file,
+            added_paths,
+            paths,
+        )
 
         any_findings = bool(
             structure_findings
@@ -344,11 +395,12 @@ def main() -> int:
             or extension_reuse_findings
             or advanced_refactor_findings
             or comment_findings
+            or structure_quality_findings
         )
         debug_log(
             repo,
             "structure gate runtime={runtime} event={event} tool={tool} paths={paths} "
-            "naming={naming} reuse={reuse} extension={extension} advanced={advanced} comment={comment}".format(
+            "naming={naming} reuse={reuse} extension={extension} advanced={advanced} comment={comment} quality={quality}".format(
                 runtime=runtime,
                 event=event_name(event),
                 tool=tool_name(event),
@@ -358,6 +410,7 @@ def main() -> int:
                 extension=extension_reuse_findings,
                 advanced=advanced_refactor_findings,
                 comment=comment_findings,
+                quality=structure_quality_findings,
             ),
         )
         merge_state(
@@ -370,6 +423,7 @@ def main() -> int:
             extension_reuse_findings=extension_reuse_findings,
             advanced_refactor_findings=advanced_refactor_findings,
             comment_findings=comment_findings,
+            structure_quality_findings=structure_quality_findings,
             suggested_skills=_suggested_skills(any_findings),
             suggested_capabilities=_suggested_capabilities(
                 structure_findings,
@@ -378,6 +432,7 @@ def main() -> int:
                 extension_reuse_findings,
                 advanced_refactor_findings,
                 comment_findings,
+                structure_quality_findings,
             ),
             suggested_gates=["code-review"] if any_findings else [],
         )
@@ -399,6 +454,7 @@ def main() -> int:
                 "extension_reuse_findings": extension_reuse_findings,
                 "advanced_refactor_findings": advanced_refactor_findings,
                 "comment_findings": comment_findings,
+                "structure_quality_findings": structure_quality_findings,
             },
             suggested_skills=_suggested_skills(any_findings),
             suggested_capabilities=_suggested_capabilities(
@@ -408,6 +464,7 @@ def main() -> int:
                 extension_reuse_findings,
                 advanced_refactor_findings,
                 comment_findings,
+                structure_quality_findings,
             ),
             suggested_gates=["code-review"] if any_findings else [],
         )
@@ -420,6 +477,7 @@ def main() -> int:
             extension_reuse_findings,
             advanced_refactor_findings,
             comment_findings,
+            structure_quality_findings,
         )
         if mode == "block":
             emit_block(runtime, event_name(event), message)
@@ -603,6 +661,126 @@ def _comment_findings(added_by_file: dict[str, list[str]]) -> list[str]:
         if reasons:
             findings.append(f"{path}: {', '.join(reasons)}")
     return _unique(findings)
+
+
+def _structure_quality_findings(
+    added_by_file: dict[str, list[str]],
+    added_paths: set[str],
+    paths: list[str],
+) -> list[str]:
+    findings: list[str] = []
+    changed_paths = {normalize_path(path) for path in paths}
+    for path in sorted(changed_paths):
+        if not _is_code_file(path):
+            continue
+        lines = added_by_file.get(path, [])
+        if not lines:
+            continue
+        reasons: list[str] = []
+        nonblank_count = sum(1 for line in lines if line.strip())
+        if path in added_paths and nonblank_count > NEW_FILE_LINE_THRESHOLD:
+            reasons.append(f"new file adds {nonblank_count} lines")
+
+        function_count = sum(1 for line in lines if DEF_LINE_RE.search(line))
+        if function_count > ADDED_FUNCTION_THRESHOLD:
+            reasons.append(f"adds {function_count} functions")
+
+        advanced_count = _advanced_structure_count(lines)
+        if advanced_count > ADDED_ADVANCED_STRUCTURE_THRESHOLD:
+            reasons.append(f"adds {advanced_count} class/interface/factory/strategy signals")
+
+        signature_reasons = _signature_quality_reasons(lines)
+        reasons.extend(signature_reasons)
+
+        public_exports = sum(1 for line in lines if PUBLIC_EXPORT_RE.search(line))
+        if public_exports > PUBLIC_EXPORT_THRESHOLD:
+            reasons.append(f"adds {public_exports} public exports")
+
+        branch_count = _branch_signal_count(lines)
+        if branch_count > BRANCH_SIGNAL_THRESHOLD:
+            reasons.append(f"adds {branch_count} branch/mode/fallback signals")
+
+        if _shared_path_with_business_terms(path, lines):
+            reasons.append("shared/common/utils contains business vocabulary")
+
+        cleanup_lines = [
+            line.strip()
+            for line in lines
+            if CLEANUP_SIGNAL_RE.search(line) and not CLEANUP_OWNER_EXPIRY_RE.search(line)
+        ]
+        if cleanup_lines:
+            reasons.append("cleanup/deprecation/feature flag signal lacks owner or expiry")
+
+        role_tokens = sorted({"manager", "processor", "helper", "util", "common", "shared"}.intersection(_path_tokens(path)))
+        if role_tokens:
+            reasons.append(f"filename uses broad role token ({', '.join(role_tokens)})")
+
+        if reasons:
+            findings.append(f"{path}: {', '.join(_unique(reasons))}")
+    return _unique(findings)
+
+
+def _advanced_structure_count(lines: list[str]) -> int:
+    count = 0
+    for line in lines:
+        for pattern, _label in ADVANCED_REFACTOR_PATTERNS:
+            if pattern.search(line):
+                count += 1
+    return count
+
+
+def _signature_quality_reasons(lines: list[str]) -> list[str]:
+    reasons: list[str] = []
+    for line in lines:
+        params = _parameter_lists(line)
+        for param_list in params:
+            parameter_count = _parameter_count(param_list)
+            if parameter_count > PARAMETER_COUNT_THRESHOLD:
+                reasons.append(f"signature has {parameter_count} parameters")
+            if BOOLEAN_PARAM_RE.search(param_list):
+                reasons.append("boolean parameter")
+            if WEAK_TYPE_RE.search(param_list):
+                reasons.append("weakly typed parameter bag")
+    blob = "\n".join(lines)
+    if WEAK_TYPE_RE.search(blob):
+        reasons.append("weak type usage")
+    return _unique(reasons)
+
+
+def _parameter_lists(line: str) -> list[str]:
+    params: list[str] = []
+    for pattern in (FUNCTION_WITH_PARAMS_RE, CONSTRUCTOR_WITH_PARAMS_RE):
+        for match in pattern.finditer(line):
+            for group in match.groups():
+                if group is not None:
+                    params.append(group)
+    return params
+
+
+def _parameter_count(param_list: str) -> int:
+    items = [
+        item.strip()
+        for item in param_list.split(",")
+        if item.strip() and item.strip() not in {"self", "this"}
+    ]
+    return len(items)
+
+
+def _branch_signal_count(lines: list[str]) -> int:
+    count = 0
+    for line in lines:
+        for word in re.split(r"[^A-Za-z0-9]+", line):
+            for piece in _split_camel(word):
+                if piece and piece.casefold() in BRANCH_TOKENS:
+                    count += 1
+    return count
+
+
+def _shared_path_with_business_terms(path: str, lines: list[str]) -> bool:
+    path_tokens = _path_tokens(path)
+    if not {"shared", "common", "utils", "util"}.intersection(path_tokens):
+        return False
+    return bool(BUSINESS_TOKENS.intersection(path_tokens | _code_tokens(lines)))
 
 
 def _declaration_signal(path: str, lines: list[str]) -> str:
@@ -837,6 +1015,7 @@ def _suggested_capabilities(
     extension_reuse_findings: list[str],
     advanced_refactor_findings: list[str],
     comment_findings: list[str],
+    structure_quality_findings: list[str],
 ) -> list[str]:
     capabilities: list[str] = []
     if (
@@ -845,8 +1024,15 @@ def _suggested_capabilities(
         or reuse_findings
         or extension_reuse_findings
         or advanced_refactor_findings
+        or structure_quality_findings
     ):
         capabilities.append("implementation-structure-design")
+    if structure_quality_findings:
+        capabilities.append("code-clarity-maintainability")
+    if any("shared/common/utils" in finding for finding in structure_quality_findings):
+        capabilities.append("module-boundary-design")
+    if any("cleanup/deprecation/feature flag" in finding for finding in structure_quality_findings):
+        capabilities.append("refactoring")
     if comment_findings or advanced_refactor_findings:
         capabilities.append("language-idiom-enforcement")
     if (
@@ -856,6 +1042,7 @@ def _suggested_capabilities(
         or extension_reuse_findings
         or advanced_refactor_findings
         or comment_findings
+        or structure_quality_findings
     ):
         capabilities.append("agent-execution-discipline")
     return _unique(capabilities)
@@ -868,6 +1055,7 @@ def _warning_message(
     extension_reuse_findings: list[str],
     advanced_refactor_findings: list[str],
     comment_findings: list[str],
+    structure_quality_findings: list[str],
 ) -> str:
     sections: list[str] = []
     for title, findings in (
@@ -877,6 +1065,7 @@ def _warning_message(
         ("extension reuse findings", extension_reuse_findings),
         ("advanced refactor findings", advanced_refactor_findings),
         ("comment findings", comment_findings),
+        ("structure quality findings", structure_quality_findings),
     ):
         if findings:
             sections.append(_section(title, findings))
@@ -892,12 +1081,16 @@ Before continuing, provide:
 - extension safety record (old behavior preserved, compatibility risk, old and new behavior tests)
 - advanced refactor decision (object/function/module choice, class/interface/inheritance/reflection justification, public behavior tests)
 - comment quality evidence (exported/public doc comments, complex-logic comments, non-trivial test comments, redundant comments removed)
+- code clarity review (main flow, nested branches, signature traps, weak type bags, side-effect boundary, cleanup/deprecation owner and expiry)
 - placement rationale, module ownership, and dependency direction
 - same-pattern scan
 - validation commands and results
 
 Expected ChangeForge route:
 - implementation-structure-design
+- code-clarity-maintainability
+- module-boundary-design when shared/common or directory boundary risk is present
+- refactoring when cleanup, deprecation, feature flag, or compatibility branch risk is present
 - agent-execution-discipline
 - language-idiom-enforcement
 - code-review

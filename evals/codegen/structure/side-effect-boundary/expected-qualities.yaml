@@ -1,0 +1,43 @@
+id: side-effect-boundary
+category: structure
+complexity: L3
+focus:
+  - side effect boundary
+  - pure policy testing
+  - structured return contract
+  - service orchestration clarity
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - refactoring
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - AI review gate
+    - test gate
+expected_outcomes:
+  - Business decisions are pure and testable without infrastructure mocks.
+  - Persistence, external API calls, cache, events, and logging live in orchestration or adapters.
+  - Return contracts distinguish allowed, denied, empty, partial, failed, and retryable states.
+  - Existing observable cancellation behavior is preserved.
+required_qualities:
+  - Side effects are classified before moving code.
+  - Function signatures are structured and avoid boolean/null ambiguity.
+  - Public behavior tests cover denied, allowed, external failure, and partial side-effect cases.
+  - Refactor steps separate movement from behavior changes.
+forbidden_shortcuts:
+  - Keeping database writes inside the policy.
+  - Hiding side effects inside a generic helper.
+  - Returning only boolean or null for complex outcomes.
+  - Testing private helper calls instead of observable behavior.
+evidence:
+  - Side effect boundary decision record.
+  - Code clarity review for the cancellation flow.
+  - Passing unit and service-level tests.
+  - Behavior preservation evidence for old cancellation outcomes.

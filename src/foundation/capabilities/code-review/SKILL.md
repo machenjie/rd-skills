@@ -67,6 +67,7 @@ Anchor against: **OWASP Code Review Guide v2** and **OWASP ASVS v4** for securit
 | **Tests** | Material behavior changes are tested; critical failure paths are tested; tests assert behavior (not implementation internals); no test that passes regardless of code |
 | **Boundaries** | No layer violation (controller→repository, UI→database, domain→framework); coupling delta is intentional; imports respect module boundaries |
 | **Structure placement** | New functions reuse existing behavior when semantics match; new classes require state/lifecycle/invariants/polymorphism; new files have one owner; new directories represent real boundaries; shared/common/utils are not polluted with business logic; exports are minimal; imports respect dependency direction |
+| **Clarity and maintainability** | Main flow readable; oversized functions/classes/files assessed; signatures structured; pure logic separated from side effects; change locality preserved; compatibility and feature flag cleanup planned |
 | **Concurrency** | Race conditions; shared mutable state; lock ordering; missing idempotency key; duplicate-submit risk |
 | **Dependencies** | No new CVE-impacted package; license compatible with project; version pinned; tree-shaking / bundle impact assessed (frontend) |
 | **Performance** | N+1 queries; unbounded collection operations; missing pagination; synchronous blocking in async path; unbounded fan-out; missing caching where contractually warranted |
@@ -113,6 +114,8 @@ Review focuses on **behavior and risk before style**. Key refinements:
 - **Error handling is a security surface.** Returning HTTP 500 with a full stack trace leaks internal paths and framework versions. Logging an error with the full SQL query logs schema and data. Returning `ok: true` on a write failure leaves the caller with a false belief about system state.
 - **Boundary violations compound over time.** One controller→repository shortcut becomes a pattern; a domain object importing an ORM becomes untestable. Name the boundary rule, cite the ADR or layered-architecture-design output, and treat the finding as High.
 - **Structure placement is reviewable.** A new helper that duplicates existing semantics, a class that only groups stateless functions, a feature rule in shared utilities, a one-off directory with no boundary, or a public export used by one module is a maintainability finding with concrete remediation.
+- **Structure quality findings have severity.** Unreadable main flow, oversized functions/classes/files, mixed responsibilities, side-effect pollution, weak signatures, boolean traps, weakly typed parameter bags, public API overexposure, change-locality violations, poor test structure, stale compatibility branches, feature flags without removal plans, global singleton misuse, service locator misuse, and dependency-injection bloat are review findings when they increase risk.
+- **Severity calibration for structure quality:** High when the issue spreads boundary pollution, blocks public-behavior tests, hides behavior risk, or makes a small change modify unrelated modules; Medium when maintainability risk is local to one module; Low when clarity is minor and easily remediated without behavioral risk.
 - **Generated code from OpenAPI / gRPC / GraphQL contracts must be regenerated, not hand-edited.** Hand-edited generated stubs diverge from contracts; the review must check whether generated files are regenerated on contract change.
 - **Mass assignment.** Any model binding that accepts all request fields without an allowlist can be exploited to set privileged fields (e.g., `is_admin`, `balance`). Check frameworks' mass-assignment protection (Rails `strong_parameters`, Spring `@JsonIgnoreProperties`, Mongoose `strict`).
 - **SQL / NoSQL injection.** Even ORMs can be parameterization-bypassed via raw-query escapes, concatenated filters, or JSON operators (`$where` in Mongo). Verify every dynamic query fragment.
@@ -152,6 +155,9 @@ Review focuses on **behavior and risk before style**. Key refinements:
 - Blocking finding accepted with "we'll fix later" and no ticket; ships in the next deploy.
 - Boundary violation approved; pattern propagates across the codebase; architecture becomes unmaintainable.
 - Structure placement drift approved; duplicate helpers, speculative classes, mixed-responsibility files, polluted shared utilities, and accidental public APIs accumulate across the codebase.
+- Unreadable main flow is approved because tests pass; the next bug fix changes the wrong branch.
+- A feature flag ships without owner or expiry and leaves old and new behavior tangled in the same function.
+- Test helpers become a shared dumping ground for business fixtures, hiding module ownership and making tests hard to delete.
 - Mass assignment accepted; attacker sets `is_admin: true` via unguarded field.
 - IaC diff approved without blast-radius review; security group opens 0.0.0.0/0 to production DB.
 - Generated code (OpenAPI stubs) hand-edited rather than regenerated; contract drift accumulates silently.
@@ -168,7 +174,7 @@ Return a code review report with, per finding:
 
 - `finding_id` (stable within review)
 - `severity` (Critical / High / Medium / Low)
-- `surface` (correctness / security / API-hallucination / error-handling / data-exposure / tests / boundary / structure-placement / concurrency / dependency / performance / config-infra)
+- `surface` (correctness / security / API-hallucination / error-handling / data-exposure / tests / boundary / structure-placement / clarity-maintainability / concurrency / dependency / performance / config-infra)
 - `file`, `line_range` (or logical unit if multi-file)
 - `description` (what is wrong, evidence)
 - `impact` (operational/security/user consequence if not fixed)
@@ -197,6 +203,8 @@ The review is complete only when:
 8. Review summary states non-findings on high-risk surfaces.
 9. Growth surfaces, client/pool lifecycle, and cleanup paths are reviewed whenever code touches bulk data, external calls, async work, caches, files, cursors, streams, or long-lived handles.
 10. Structure placement is reviewed whenever code adds functions, classes, files, directories, components, hooks, services, repositories, adapters, helpers, utilities, imports, or exports.
+11. Code clarity and maintainability are reviewed whenever the diff adds branch-heavy flow, long functions/classes/files, boolean flags, weakly typed bags, fallback or compatibility paths, feature flags, shared test helpers, public exports, or cross-module edits.
+12. Feature flags, deprecated APIs, dead code, and compatibility branches have owner and removal evidence or receive a finding.
 
 # Used By
 

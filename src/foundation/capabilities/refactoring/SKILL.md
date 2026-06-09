@@ -36,6 +36,9 @@ Owns refactoring; also supports structural change during bug-fix. Per-stage focu
 - **Formatting changes must not be mixed with semantic changes in the same commit.** A commit that reformats 400 lines of code while also changing 3 lines of logic makes it impossible to review the logical change. Rule: formatting-only commits are separate from logic-movement commits. Use automated formatters (prettier, black, gofmt) to separate formatting from semantic changes completely.
 - **Refactoring must not be used to smuggle performance optimizations without measurement.** "I refactored this to be more efficient" while changing an O(n²) algorithm to O(n log n) is a behavior-change-adjacent optimization, not a pure structural change. Optimization requires baseline measurement and validation. Refactor and optimize in separate changes.
 - **Authorization, financial calculations, and data integrity logic must have behavior-equivalence tests before any structural change.** These are the highest-risk code categories. A refactoring mistake in an authorization check can introduce a privilege escalation. A refactoring mistake in a financial calculation can produce incorrect totals. Extract characterization tests that cover all branches before touching these areas.
+- **Large object, large file, and large module refactors need an explicit split target.** Splitting is not complete until the new object, file, or module ownership and relationship type are named.
+- **Cleanup is part of refactoring, not optional polish.** Dead code, deprecated APIs, stale compatibility branches, and expired feature flags require owner, expiry, removal sequence, and behavior preservation evidence.
+- **A refactor must prove complexity decreased or explain why it did not.** Before/after evidence can be cognitive complexity, branch count, dependency count, public API surface, collaborator count, directory density, or test readability.
 
 # Industry Benchmarks
 
@@ -118,6 +121,8 @@ Escalate when: the refactoring touches authorization, financial calculation, or 
 - **Characterization tests are written to capture current behavior, not ideal behavior.** If the current code has a bug, the characterization test captures the buggy behavior. The goal is not to fix behavior — it is to detect if the structural change accidentally also changes behavior. Fix bugs in separate commits after the refactoring is complete and the structure is stable.
 - **Authorization and financial code is the highest-risk category.** A sign flip in a conditional during an Extract Method, a wrong variable name during a Move Method, a missing `await` during an async extraction — any of these in authorization or financial code cause security incidents or financial loss. These sections require 100% branch coverage via characterization tests before any structural change, and a separate reviewer for the refactoring PR.
 - **"Parallel change" (expand-contract) is the safe pattern for public contract refactoring.** (1) Expand: add the new interface alongside the old one — both exist, consumers use the old one. (2) Migrate: update all consumers to use the new interface. (3) Contract: remove the old interface. Each phase is a separate PR. This pattern allows rollback at each stage and avoids a big-bang migration that cannot be unwound.
+- **Object, file, and module split refactors follow the selected structure plan.** Use `implementation-structure-design` for file/object/function targets and `module-boundary-design` for module relationship type and dependency direction before moving code.
+- **Compatibility branches must have an exit.** Deprecated APIs, feature flags, legacy switches, and fallback behavior need a named owner, expiry condition or date, removal trigger, and tests proving both old and new behavior until removal.
 
 # Failure Modes
 
@@ -127,6 +132,9 @@ Escalate when: the refactoring touches authorization, financial calculation, or 
 - Formatter run mixed with logic changes in same commit — code reviewer sees 800-line diff of whitespace changes plus 10 lines of logic; misses the logic change in the noise.
 - `calculateTotal()` refactored without characterization tests — floating-point rounding behavior changes from `Math.round` to `Math.floor` during extraction — invoice totals off by $0.01; discovered in monthly reconciliation.
 - Authorization check refactored: `if (user.role !== 'guest')` extracted to `isAuthorized(user)` — during extraction, condition inverted: `if (user.role === 'guest')` — all non-guest users lose access; prod incident.
+- Large service split into five files but every change still edits all five because the split followed method names instead of responsibility boundaries.
+- Deprecated API retained forever with no sunset, so new behavior keeps carrying legacy branches and tests can no longer show which path matters.
+- Feature flag cleanup skipped after rollout, leaving old and new behavior active in the same function for months.
 
 # Output Contract
 
@@ -145,6 +153,14 @@ Return a refactoring plan with:
 - `verification_commands` (commands to confirm behavior preservation after each step)
 - `mutation_testing_plan` (which tool; which target module; threshold for test suite adequacy)
 - `excluded_changes` (changes explicitly out of scope that were identified during refactoring; tracked as separate work items)
+- `object_split_refactor_plan` (large object or method-cluster split target, new owners, public behavior tests, and rejected splits)
+- `file_split_refactor_plan` (large file split target, main responsibility per resulting file, private/public impact, and import changes)
+- `module_split_refactor_plan` (module relationship type, dependency direction, public API impact, and migration steps)
+- `cleanup_deprecation_plan` (dead code, deprecated API, legacy branch, or compatibility cleanup owner, expiry, and removal sequence)
+- `feature_flag_removal_plan` (flag owner, rollout state, old/new behavior tests, removal trigger, and cleanup validation)
+- `dead_code_removal_assessment` (callers searched, generated/runtime references checked, and deletion safety)
+- `before_after_complexity_evidence` (cognitive complexity, branch count, collaborator count, dependency count, public API surface, directory density, or test clarity)
+- `compatibility_branch_owner_and_expiry` (owner, expiry condition, follow-up artifact, and tests proving safe coexistence)
 
 # Quality Gate
 
@@ -161,6 +177,9 @@ The refactoring plan is complete only when:
 9. Verification commands are defined to confirm behavior preservation after all steps.
 10. All behavior changes discovered during refactoring planning are extracted to separate work items.
 11. Authorization, financial, and data-integrity code is covered by characterization tests before any structural change.
+12. Large object, file, and module splits name the target owner, relationship type, and behavior-preservation tests.
+13. Dead code, deprecated APIs, feature flags, and compatibility branches have removal owner, expiry, and cleanup validation.
+14. Before/after complexity evidence is recorded or the lack of reduction is justified.
 
 # Used By
 

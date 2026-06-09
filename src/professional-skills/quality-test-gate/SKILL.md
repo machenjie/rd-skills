@@ -40,6 +40,8 @@ Define the minimum evidence needed to prove a change works correctly, does not r
 - **Experiment and model rollout tests require data validity checks**: exposure logging, sample ratio mismatch, feature point-in-time correctness, training-serving skew, drift metrics, and rollback version must be verified like code behavior.
 - **Affected-test selection must be proven against a full-suite baseline**: monorepo speedups are valid only when module graph, dependency edges, cache keys, and generated inputs cannot skip impacted tests.
 - **Agent-provided test evidence must be concrete**: accept command output, exit codes, logs, fixtures, screenshots, or recorded validator results; reject "tests should pass" or undocumented local runs.
+- **Test structure follows module structure**: test files, fixtures, factories, mocks, and golden data must have an owning module or contract boundary; shared test helpers must not become business-fixture dumping grounds.
+- **Tests exercise public behavior by default**: refactors and splits are verified through public APIs, module contracts, or observable behavior, not private helper calls that freeze implementation details.
 
 ## Industry Benchmarks
 - **Test Pyramid (Mike Cohn)**: Many unit tests, fewer integration tests, few E2E tests. Unit tests are fast and cheap; E2E tests are slow and expensive — invert the pyramid at your peril.
@@ -126,6 +128,10 @@ Is the change a low-risk refactoring with no behavior change?
 - **Training-serving skew test**: feature values used in offline training must match online serving semantics, including point-in-time joins, default values, null handling, and late-arriving data.
 - **Build cache correctness test**: intentionally change a dependency, generated file input, lockfile, and test fixture in CI dry runs to prove the cache key invalidates the affected build/test shard.
 
+## Test Structure Boundary Discipline
+
+Tests are part of the implementation structure. When production code is split by object, file, or module boundary, test structure must either follow that boundary or explicitly justify a different local convention. Fixtures, factories, mocks, and golden files need owners; shared test utilities may hold pure technical helpers only. Load `references/test-structure-boundaries.md` when a change adds shared test helpers, tests private helpers, moves modules, or introduces business fixtures.
+
 ### Anti-Examples
 
 | Test Approach | Problem | Corrected Approach |
@@ -181,6 +187,7 @@ Return a test strategy with:
 - **Risk-to-test mapping**: Each identified risk paired with its required test type, depth, and pass criteria.
 - **Test level breakdown**: Unit / integration / contract / E2E / migration count and rationale.
 - **Fixture strategy**: Data setup, isolation approach, and test data generation method.
+- **Test structure strategy**: test file placement, fixture/factory/mock/golden ownership, public-behavior boundary, and shared helper audit.
 - **Mock boundaries**: Which dependencies are mocked vs. real, and how mock assumptions are validated.
 - **Migration test plan**: Forward execution, rollback execution, and data integrity assertion approach.
 - **Coverage obligations**: Specific logical branches or code paths that must be covered (not aggregate percentage).
@@ -219,6 +226,10 @@ Close a test strategy only when all five canonical answers are concrete (answer 
 16. Regression tests mention the historical bug, failure mode, or invariant being protected.
 17. Fixture/golden data explains the contract it represents.
 18. Test comments explain scenario and purpose, not test framework mechanics.
+19. Test files and helpers follow the owning module boundary or document the local convention.
+20. Shared test utilities contain only pure technical helpers, not module-specific business fixtures.
+21. Tests do not rely on private helper access when public behavior can prove the outcome.
+22. Module splits include corresponding test and fixture ownership review.
 
 ## Handoff
 - **backend-change-builder** — with test obligations for service, repository, and API layers.

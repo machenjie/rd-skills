@@ -1,0 +1,43 @@
+id: oversized-service-object-split
+category: structure
+complexity: L3
+focus:
+  - oversized service object split
+  - file main responsibility
+  - pure policy extraction
+  - public behavior tests
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - refactoring
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - AI review gate
+    - test gate
+expected_outcomes:
+  - OrderService remains an orchestrator instead of absorbing more rule branches.
+  - Cancellation and refund decisions move to cohesive policy, rule, value-object, or domain owners.
+  - Pure decision logic can be unit tested without database or external API mocks.
+  - Existing public behavior is preserved while premium grace and disputed hold behavior is added.
+required_qualities:
+  - Main object per changed file is documented.
+  - Oversized service assessment names split reasons and rejected alternatives.
+  - Function signatures avoid boolean traps and weakly typed bags.
+  - Public behavior tests cover old and new cancellation outcomes.
+forbidden_shortcuts:
+  - Adding another branch-heavy method to OrderService.
+  - Creating a stateless CancellationHelper bag.
+  - Putting order rules in shared/common/utils.
+  - Testing only private helper methods.
+evidence:
+  - Implementation Structure Plan with object split decision.
+  - Code Clarity Maintainability Review with main-flow assessment.
+  - Refactor plan with behavior preservation evidence.
+  - Test output proving public behavior.

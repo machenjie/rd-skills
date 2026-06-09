@@ -1,0 +1,47 @@
+---
+id: oversized-object-file-split
+description: |
+  A generated OrderService keeps absorbing rules, states, and external calls.
+prompt: |
+  Review an AI patch that adds cancellation windows, refund eligibility,
+  shipment state checks, invoice updates, payment API calls, notification
+  sends, and retry fallback branches into one 900-line OrderService file.
+  Decide whether to keep adding methods or split the object/file.
+expected:
+  complexity: L3
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - oversized function class or file
+    - unreadable main flow
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - refactoring
+    - unit-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - AI review gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - package-dependency-management
+  domain_extensions:
+    - web3-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  The expected route must force file/object split assessment and public behavior tests.

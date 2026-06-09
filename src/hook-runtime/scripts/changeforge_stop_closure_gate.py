@@ -59,6 +59,18 @@ CONDITIONAL_KEYWORDS = {
         "regression",
         "edge case",
     ],
+    "clarity": [
+        "clarity",
+        "main flow",
+        "readability",
+        "maintainability",
+        "signature",
+        "side effect",
+        "cleanup",
+        "deprecation",
+        "feature flag",
+        "change locality",
+    ],
 }
 CONDITIONAL_GROUP_BY_STATE = {
     "file_naming_findings": "naming",
@@ -66,6 +78,7 @@ CONDITIONAL_GROUP_BY_STATE = {
     "extension_reuse_findings": "extension_safety",
     "advanced_refactor_findings": "refactor",
     "comment_findings": "comments",
+    "structure_quality_findings": "clarity",
 }
 
 
@@ -156,6 +169,7 @@ def _has_closure_surface(state: dict) -> bool:
         or state.get("extension_reuse_findings")
         or state.get("advanced_refactor_findings")
         or state.get("comment_findings")
+        or state.get("structure_quality_findings")
     )
 
 
@@ -192,6 +206,7 @@ def _stop_findings(state: dict) -> dict[str, list[str]]:
             "extension_reuse_findings",
             "advanced_refactor_findings",
             "comment_findings",
+            "structure_quality_findings",
         )
     }
 
@@ -214,6 +229,8 @@ def _closure_message(state: dict, final_text: str, manifest: dict | None = None)
         details.append("- advanced refactor gate fired")
     if state.get("comment_findings"):
         details.append("- comment quality gate fired")
+    if state.get("structure_quality_findings"):
+        details.append("- structure quality gate fired")
     if state.get("risk_surfaces"):
         details.append(f"- risk surfaces: {', '.join(state['risk_surfaces'])}")
     if state.get("changed_paths"):
@@ -297,6 +314,15 @@ def _structure_evidence_block(state: dict) -> str:
             "  - non-trivial test comments added\n"
             "  - critical internal logic comments added\n"
             "  - redundant comments avoided or removed"
+        )
+    if state.get("structure_quality_findings"):
+        blocks.append(
+            "- code clarity evidence:\n"
+            "  - main flow assessment\n"
+            "  - nested branch and signature trap review\n"
+            "  - side-effect boundary review\n"
+            "  - cleanup/deprecation owner and expiry\n"
+            "  - change locality or deletion-path review"
         )
     if not blocks:
         return ""

@@ -36,6 +36,7 @@ Implement or review product-grade frontend changes that are state-complete, acce
 - **Do not store sensitive information in `localStorage` or `sessionStorage`**: authentication tokens in browser storage are accessible to any JavaScript on the page — use `httpOnly` cookies for session tokens.
 - **Code splitting is required for large route-level modules**: a single bundle that blocks initial page rendering is a Core Web Vitals failure.
 - **Plan frontend implementation structure before adding code**: inspect existing components, hooks, routes, state stores, API clients, validators, and helpers before creating new ones; feature-local code stays local unless shared ownership is real.
+- **Keep frontend flow readable**: component render paths, hooks, validation, async side effects, fallback states, and compatibility branches must be separated enough that user-visible behavior is easy to trace.
 - **Agent frontend fixes require execution discipline**: no local UI or state fix is accepted without scan evidence for the same component/hook pattern and validation through appropriate tests or manual artifacts.
 
 ## Industry Benchmarks
@@ -70,6 +71,7 @@ Evaluate every frontend change against:
 - **Output encoding**: Is all user-generated content rendered through safe text rendering (`.textContent`, JSX text nodes) — never via `innerHTML` with unsanitized content?
 - **Performance**: Is this component on the critical render path? Does it require code splitting, lazy loading, or server-side rendering?
 - **Frontend structure**: Existing components, hooks, state stores, API clients, validators, and helpers inspected; feature-local vs. shared decision; component/hook/state/API/helper placement; new imports and dependency direction; test placement.
+- **Code clarity**: Main render/user-action flow is readable; complex conditions are named; hooks avoid mixed side effects and decisions; shared UI/helper abstractions have current consumers.
 - **Test strategy**: Are tests written against behavior (user interactions, accessibility queries) rather than implementation details?
 
 ### Decision Tree: State Management Choice
@@ -154,6 +156,7 @@ Return a frontend implementation plan or review with:
 - **Security review**: XSS prevention, token storage, CSP implications, third-party script review.
 - **Performance considerations**: Code splitting, lazy loading, rendering strategy, and Core Web Vitals impact.
 - **Frontend structure**: Component, hook, state, API client, route, form validator, and helper placement; feature-local vs. shared decision; reuse candidates; public/private boundary; test placement.
+- **Code clarity and maintainability**: main-flow readability, hook/component purpose, signature/props clarity, side-effect boundary, change locality, and cleanup/deprecation plan.
 - **Execution discipline evidence**: Test or screenshot artifacts, command outputs, same-pattern scan, placement rationale, residual risks, and closure boundary.
 - **Test strategy**: Unit tests (component behavior), integration tests (user flow), accessibility tests (axe-core), and visual regression tests.
 - **Residual risks**: Known risks accepted with justification.
@@ -182,6 +185,7 @@ Close a frontend change only when all five canonical answers are concrete (answe
 13. Feature-local state is not moved to global state without cross-feature ownership.
 14. No business logic is added to shared UI, common hooks, or generic utils.
 15. Agent-assisted frontend changes include evidence, same-pattern scan for local fixes, and closure package.
+16. Main render and user-action flows remain readable; large components/hooks, mixed side effects, boolean traps, weak props/options, and stale compatibility branches are split or justified.
 
 ## Handoff
 - **experience-impact-modeler** — if UX states or user flows are underspecified before implementation begins.

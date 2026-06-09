@@ -44,6 +44,11 @@ Critically review, validate, and safely refactor AI-generated or AI-assisted cod
 - Reject extension of existing functions/classes/methods/services without old-behavior preservation evidence.
 - Reject object/class/interface/inheritance/reflection structure without an advanced refactoring structure decision.
 - AI-generated comments are suspect. Reject comments that restate code, invent intent, describe only the happy path, hide uncertainty, or become stale immediately. Require comments only where they document contract, invariant, edge case, non-obvious decision, test scenario, or public API behavior.
+- Reject AI-generated helper bags, factories, strategies, registries, or interfaces that do not match current variation, state, invariant, lifecycle, or collaborator boundaries.
+- Reject AI-generated code that piles validation, business decisions, I/O, persistence, events, logging, mapping, and fallback in one function without an explicit orchestration boundary.
+- Reject AI-generated shared/common/utils additions that contain business vocabulary, business fixtures, permission rules, order/payment/tenant logic, or module-specific assumptions.
+- Reject AI-generated compatibility branches, deprecated API use, TODO cleanup, and feature flags without owner, expiry, and removal plan.
+- Reject generated code that only adds new abstractions or branches while leaving obsolete code, duplicate logic, or old paths in place without a cleanup assessment.
 
 ## Industry Benchmarks
 - **OWASP Code Review Guide**: Security-focused code review checklist — injection points, auth bypass, insecure defaults, input handling.
@@ -80,6 +85,7 @@ Evaluate AI-generated code across these dimensions:
 - **Error path coverage**: Every failure mode (upstream error, invalid input, timeout, empty result) has an explicit code path and test.
 - **Refactor boundary**: The changed code's observable behavior is identical to the original — diff is structurally equivalent, not just approximately similar.
 - **Test quality**: Tests assert real behavioral outcomes, not implementation structure — mock-only tests pass even when the production logic is broken.
+- **Clarity and cleanup**: Main flow remains readable; generated helpers are not stateless bags; I/O and decisions are separated; obsolete code, feature flags, and deprecated branches have a deletion path.
 
 ### Decision Tree: Accept or Return for Remediation
 
@@ -133,6 +139,10 @@ Load [references/solution-optimality.md](references/solution-optimality.md) for 
 | `lodash.deepClone(obj)` (using non-existent method) | Hallucinated API | Verify method name and version; replace with `structuredClone` or `_.cloneDeep` |
 | `catch (e) {}` (swallowed exception) | Silent failure | Require logging, error propagation, or explicit ignore with comment |
 | New `AbstractFactory` for single implementation | Over-abstraction | Collapse to direct instantiation; reintroduce factory when second implementation exists |
+| New stateless `Helper` class with unrelated methods | Helper bag | Move methods to owning objects/modules or collapse to local functions |
+| Policy function writes to database and emits events | Side-effect pollution | Split pure policy from orchestrating service and adapter side effects |
+| Business fixture added to shared test utils | Test ownership pollution | Move fixture/factory to owning module test boundary |
+| Feature flag added with no cleanup path | Permanent compatibility debt | Add owner, expiry, old/new tests, and removal plan |
 | Test asserts `expect(mockFn).toHaveBeenCalled()` only | Mock-only test | Add assertion on actual output or side effect |
 | `import { compress } from 'lz4-wasm'` (new dep) | Undeclared dependency | CVE scan, license review, standard-library alternative evaluation |
 
@@ -147,6 +157,9 @@ Load [references/solution-optimality.md](references/solution-optimality.md) for 
 - **Security bypass via AI-generated check**: a generated RBAC check validates role name as a string comparison but misses case-sensitivity or role hierarchy.
 - **Generated migration has no rollback**: AI writes `ALTER TABLE DROP COLUMN` without a corresponding rollback migration — accepted without review.
 - **Generated comments describe intent, not behavior**: reviewers skip the code because the comment "looks complete" — the edge case is invisible.
+- **Generated helper bag becomes permanent API**: a stateless class collects unrelated helpers, gains public exports, and is too coupled to delete.
+- **Generated side-effect pollution hides business decisions**: a policy writes the database and calls an API, so pure decision tests require mocks for infrastructure.
+- **Generated code only adds paths**: deprecated branches, feature flags, TODOs, and compatibility code remain with no owner or expiry.
 
 ## Reference Loading Policy
 Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
@@ -204,6 +217,14 @@ Return a structured review with:
   tests missing scenario/regression comments;
   redundant or misleading comments removed;
   AI-generated comments accepted / rewritten / rejected.
+- **Clarity and maintainability review**:
+  main-flow readability;
+  oversized function/class/file findings;
+  side-effect boundary findings;
+  stateless helper bag findings;
+  speculative interface/factory/strategy findings;
+  cleanup/deprecation/feature-flag removal findings;
+  change-locality findings.
 
 ## Evidence Contract
 Close an AI-code review or refactor only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`). Keep the two phases distinct: review only finds problems; refactor must prove behavior is preserved.
@@ -238,6 +259,10 @@ Close an AI-code review or refactor only when all five canonical answers are con
 22. Reject AI-generated helper/utility/common/shared code without reuse ladder evidence.
 23. Reject AI-generated duplicated logic when an existing implementation can be reused or extended safely.
 24. Reject AI-generated advanced abstraction without advanced refactor evidence.
+25. Reject AI-generated stateless helper bags and speculative factories, strategies, interfaces, or registries without current variation and public behavior tests.
+26. Reject AI-generated functions that mix policy, validation, mutation, persistence, external API calls, events, logging, mapping, and fallback without an orchestration boundary.
+27. Reject AI-generated feature flags, deprecated API use, compatibility branches, dead code, and TODO cleanup without owner, expiry, and removal plan.
+28. Reject AI-generated test helpers that place business fixtures in shared/common test utilities instead of the owning module boundary.
 
 ## Handoff
 - **security-privacy-gate** — for auth, permission, payment, or sensitive data code that requires adversarial review.
