@@ -31,6 +31,7 @@ Owns code-review; also gates bug-fix and refactoring output. Per-stage focus:
 
 - **Every finding is grounded in file evidence**, a contract excerpt, a reproducible scenario, or a named failure mode. "I don't like this" is not a finding.
 - **Findings are severity-classified**: Critical (must fix before merge) / High (fix before production) / Medium (fix in sprint) / Low (advisory). Severity is calibrated against *operational and user impact*, not aesthetic preference.
+- **Spec compliance is reviewed before code quality.** Stage 1 checks whether the change meets the requirement, acceptance criteria, non-goals, plan task, API/schema compatibility, and old-behavior preservation. Stage 2 reviews structure, naming, reuse, test quality, performance, security, and maintainability, and is entered only after Stage 1 passes. Good code that does not meet the requirement fails Stage 1; "the code is clean" never substitutes for a missing requirement. A reviewer who reads only the diff without the requirement and plan, or an implementer self-reviewing in place of independent review, is a process finding.
 - **Security surfaces are always reviewed**, regardless of stated scope: authentication, authorization, input handling, output encoding, secrets, SQL/NoSQL injection, deserialization, SSRF, insecure direct object references, privilege escalation, cryptographic misuse. Not reviewing these is a finding of severity High.
 - **Hallucinated APIs and libraries are checked.** AI-generated code often invents method signatures, configuration keys, flag names, and version-incompatible APIs. Every new API call, flag, config key, and library must be confirmed to exist in the project's actual dependency graph and documentation. If it cannot be confirmed: severity High — requires verification.
 - **Tests cover changed behavior.** For every material behavioral change: at least one new or modified test asserts the new behavior under normal path, at least one test covers the failure/edge case. Absence of tests for changed behavior is a **High** finding.
@@ -186,6 +187,10 @@ Return a code review report with, per finding:
 Plus a review summary with:
 - `explicit_non_findings` (high-risk surfaces checked, no issue found — per surface)
 - `blocking_count` (Critical + High unresolved)
+- `spec_compliance_result` (Stage 1 pass/fail, naming the requirement, acceptance criterion, non-goal, or compatibility gap that fails)
+- `code_quality_result` (Stage 2 result, recorded only after spec compliance passes)
+- `re_review_required` (which stage must be re-reviewed after a fix)
+- `approval_scope` (what the approval covers and what it explicitly does not)
 - `overall_status` (Approved / Approved-with-conditions / Changes-required / Blocked)
 - `owner` (reviewer identity)
 
@@ -205,6 +210,7 @@ The review is complete only when:
 10. Structure placement is reviewed whenever code adds functions, classes, files, directories, components, hooks, services, repositories, adapters, helpers, utilities, imports, or exports.
 11. Code clarity and maintainability are reviewed whenever the diff adds branch-heavy flow, long functions/classes/files, boolean flags, weakly typed bags, fallback or compatibility paths, feature flags, shared test helpers, public exports, or cross-module edits.
 12. Feature flags, deprecated APIs, dead code, and compatibility branches have owner and removal evidence or receive a finding.
+13. Stage 1 spec compliance (requirement, acceptance criteria, non-goals, plan, API/schema compatibility, old-behavior preservation) passed before Stage 2 code-quality approval; out-of-order review or implementer self-review in place of independent review is a process finding.
 
 # Used By
 

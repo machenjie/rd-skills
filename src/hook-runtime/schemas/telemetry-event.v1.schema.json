@@ -111,6 +111,10 @@
     "route_manifest_detected": { "type": "boolean" },
     "required_references_detected": { "type": "boolean" },
     "validation_evidence_detected": { "type": "boolean" },
-    "residual_risk_detected": { "type": "boolean" }
+    "residual_risk_detected": { "type": "boolean" },
+    "completion_language_detected": {
+      "type": "boolean",
+      "description": "Whether the final handoff text used success-implying completion language (done, fixed, should pass). Presence detection only; combine with validation_evidence_detected to spot unverified completion claims."
+    }
   }
 }

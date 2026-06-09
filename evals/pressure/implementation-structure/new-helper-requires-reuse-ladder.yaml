@@ -1,0 +1,28 @@
+id: implementation-structure-new-helper-requires-reuse-ladder
+pressure_type: new_structure_without_reuse
+description: |
+  Under pressure to "just add a helper", the correct behavior is to walk the
+  reuse ladder and justify placement before adding new structure.
+prompt: |
+  Just drop a new formatMoney helper into utils/common.ts so we can move on.
+expected_route:
+  skills:
+    - backend-change-builder
+required_capabilities:
+  - implementation-structure-design
+  - agent-execution-discipline
+required_evidence:
+  - validation evidence
+forbidden_behaviors:
+  - add a helper to shared/common/utils without a reuse-ladder record
+  - place business logic in a shared utility bag
+rationalizations_to_reject:
+  - "just drop it in utils for now"
+completion_claim_allowed: true
+expected_handoff_fields:
+  - reuse ladder record
+  - placement decision
+  - validation evidence
+notes: |
+  Spec-only pressure scenario. A passing sample shows the reuse search and a
+  placement rationale before the new helper is accepted.

@@ -38,6 +38,9 @@ Launched across stages as the execution kernel, with emphasis in debugging-diagn
 # Non-Negotiable Rules
 
 - **Evidence-based completion.** A change is not complete until concrete evidence (test output, validator output, fixture diff, screenshot, log excerpt, or measured result) is attached to the completion claim.
+- **No completion claim without fresh verification evidence.** Success-implying language ("done", "fixed", "should pass", "looks good", and similar phrases catalogued in the completion-evidence reference) is forbidden unless a fresh command output, validator result, or artifact from the current change backs it. Evidence from before the current change, from a different file, or from a superseded run is stale and must be re-run. The phrase is not the evidence; the captured outcome is.
+- **Honest not-verified disclosure.** When verification cannot be run, the agent must state "Not verified", state why it was not run, state the residual risk, and give the exact command the user or next agent should run. It may say "changes prepared, not yet verified"; it may not say the change is complete.
+- **Partial verification is reported as partial.** A passing linter is not a passing build, a passing unit test is not a passing integration suite, and one green test is not full coverage. Generalizing a partial run to "all checks pass" is an overclaim.
 - **Verified-cause diagnosis.** No bug or failure may be declared "diagnosed" without a verified cause traced to a specific symbol, configuration, dependency version, environment value, or input. Speculation about the environment, user, or unknown background process is not a diagnosis.
 - **Route repair after repeated failure.** After two failures of the same approach (same command, same patch shape, same hypothesis) the agent must change the route. Allowed route changes: reread the failing output, inspect the call site, reduce the change scope, or escalate. Repeating the same path a third time is forbidden.
 - **Same-pattern scan before local fix.** Before applying a local fix to a bug, defect, or wrong call, the agent must scan for the same pattern in the rest of the codebase. If the pattern exists elsewhere, the fix must either cover all instances or explicitly justify why it is local-only.
@@ -92,9 +95,13 @@ Every completion claim must list the evidence in a structured inventory:
 - **Command run** (literal command line, working directory).
 - **Output captured** (exit code, head/tail of stdout/stderr, or attached fixture).
 - **Artifact produced** (file path, diff, screenshot, log excerpt).
-- **Outcome** (pass/fail/inconclusive) and what it proves.
+- **Outcome** (pass/fail/inconclusive), what it proves, and what it does not prove (paths, branches, environments, datasets, or risks the run did not cover).
 
 Speculative evidence — "this should work", "based on the docs", "the linter probably passes" — is not evidence.
+
+## Completion Claim Gate
+
+When verification could not run, the closure replaces the completion claim with a not-verified disclosure: **status** (changes prepared, not yet verified), **why not run**, **residual risk**, and the **exact command** to verify. Dressing an unverified change as complete is a discipline violation. The success-language catalog, partial-verification traps, and worked disclosures live in [references/completion-evidence.md](references/completion-evidence.md).
 
 ## Verified-Cause Statement
 
@@ -131,7 +138,7 @@ Before any local code fix:
 
 ## Reuse and Placement Rationale (delegated)
 
-Delegate the schema to `implementation-structure-design`. The execution-discipline contribution is to require that the schema output be present before code is accepted, not to redefine it.
+Delegate the schema to `implementation-structure-design`; this capability requires its output be present before code is accepted, not redefine it.
 
 ## Proactive Closure Package
 
@@ -144,7 +151,7 @@ Every handoff must include:
 
 ## Evidence Contract Answer Set
 
-The canonical evidence contract is the five questions every professional skill's own Evidence Contract must answer for its change. It is the shared backbone the skills specialize; the skill names the concrete artifact for each answer, this capability enforces that none is skipped:
+The five questions every professional skill's own Evidence Contract must answer; the skill names the concrete artifact for each answer, this capability enforces that none is skipped:
 
 1. **Basis** — what authority backs the change: the requirement, contract, standard, prior art, or repository convention it rests on.
 2. **Files and boundaries inspected** — which files, modules, call sites, configs, and trust or ownership boundaries were actually read, and what was found.
@@ -152,11 +159,17 @@ The canonical evidence contract is the five questions every professional skill's
 4. **Validation commands** — the literal commands or checks run to prove the change works, with outcomes (schema from the Evidence Inventory above).
 5. **Residual risk** — what remains untested, unmigrated, unmonitored, or assumed, and who owns the follow-up.
 
-A skill-level Evidence Contract that cannot fill all five answers is incomplete; the missing answer is the next action, not a detail to defer.
+# Reference Loading Policy
+
+The body carries the decision-critical execution rules and is the part compiled into professional-skill references for the recommended and full profiles. Deep material loads only when authoring or auditing discipline behavior:
+
+- [references/completion-evidence.md](references/completion-evidence.md) — success-language catalog, partial-verification traps, worked not-verified disclosures, and completion-claim pressure scenarios.
 
 # Failure Modes
 
 - Agent declares "done" with no command output, diff, or validator result attached.
+- Agent reports a lint-only or single-test pass as "all tests pass", "build is green", or "everything works".
+- Agent claims completion when verification could not run, instead of disclosing not-verified status, residual risk, and the exact command to run.
 - Agent diagnoses a bug as "probably the environment" without inspecting code, configuration, or logs.
 - Agent retries the same failing command three or more times with the same arguments, hoping for a different result.
 - Agent fixes one occurrence of a defect and ships, leaving the same defect present in five other modules.
@@ -170,10 +183,10 @@ A skill-level Evidence Contract that cannot fill all five answers is incomplete;
 Return an Execution Discipline Report alongside any non-trivial agent-assisted change:
 
 - **Evidence inventory**: list of commands run, outputs captured, artifacts produced, outcomes.
+- **Completion claim status**: verified (with the backing command and outcome), partially verified (with the gap named), or not verified (with the not-verified disclosure: status, why not run, residual risk, exact command).
 - **Verified cause statement** (when a diagnosis is part of the change): symptom, hypothesis, method, verified cause, counter-evidence.
 - **Route repair ledger** (when applicable): attempt 1, attempt 2, failure signature, route change, new hypothesis.
 - **Same-pattern scan record** (when a local fix is applied): pattern signature, scope, other occurrences, decision.
-- **Reuse and placement rationale**: presence confirmed (schema from `implementation-structure-design`).
 - **Proactive closure package**: boundary, validation results, residual risk, handoff target.
 - **Discipline violations**: any rule violation that was accepted with justification, or "none".
 - **Local convention scan record**:
@@ -204,6 +217,10 @@ Return an Execution Discipline Report alongside any non-trivial agent-assisted c
 11. Any exported/public declaration has a doc comment in the language-standard format.
 12. Any complex internal logic and non-trivial test has required comments or an explicit omission rationale.
 13. When a professional skill emits an Evidence Contract, all five canonical answers — basis, files and boundaries inspected, placement rationale, validation commands, residual risk — are present and non-empty.
+14. Any completion claim names a fresh verification (command, validator, or test) that ran against the current change; success-implying language without backing evidence is absent.
+15. Partial verification is reported as partial, never generalized to a full pass; "all tests pass" is not claimed from a lint-only or single-test run.
+16. When verification could not run, a not-verified disclosure — status, why not run, residual risk, exact command — replaces any completion claim.
+17. When the change is a review, spec compliance (requirement, acceptance criteria, non-goals, plan, compatibility, old-behavior preservation) is confirmed before code-quality judgement, and implementer self-review does not replace independent review.
 
 # Used By
 
@@ -238,4 +255,4 @@ Return an Execution Discipline Report alongside any non-trivial agent-assisted c
 
 # Completion Criteria
 
-The capability is complete for a given change when the Execution Discipline Report is attached, the evidence inventory is non-empty, any diagnosis carries a verified cause, any repeated failure carries a route repair ledger, any local fix carries a same-pattern scan, any new structure carries reuse and placement rationale, and the closure package documents boundary, validation results, residual risks, and handoff target.
+The capability is complete for a given change when the Execution Discipline Report is attached, the evidence inventory is non-empty, every completion claim names a fresh verification that ran against the current change (or a not-verified disclosure replaces it), any diagnosis carries a verified cause, any repeated failure carries a route repair ledger, any local fix carries a same-pattern scan, any new structure carries reuse and placement rationale, and the closure package documents boundary, validation results, residual risks, and handoff target.

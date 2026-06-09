@@ -104,10 +104,32 @@ exits 0.
 It detects, among others: `missed_router`, `missed_implementation_structure`,
 `missed_reuse_evidence`, `missed_language_capability`,
 `missed_middleware_capability`, `missed_validation_evidence`,
-`missed_residual_risk`, `possible_over_routing`,
+`missed_residual_risk`, `unverified_completion_claim`, `possible_over_routing`,
 `hook_false_positive_candidate`, and `hook_false_negative_candidate`. Every
 suggestion carries `id`, `type`, `severity`, `evidence`, `affected_session`,
 `suggested_action`, `promotion_target`, and `requires_human_review: true`.
+
+### Completion-Evidence Detection Family
+
+A completion claim must rest on fresh validation evidence. The stop gate records
+a presence-only `completion_language_detected` fact, and the review tool pairs it
+with the absence of validation evidence. The completion-evidence family is:
+
+- `unverified_completion_claim` — fact-detected: the stop closure used completion
+  language after a code change but recorded no validation evidence. Routed to
+  `agent-execution-discipline` and `quality-test-gate`.
+- `success_language_without_evidence`, `partial_validation_overclaimed`,
+  `stale_validation_reused`, and
+  `delegated_agent_report_trusted_without_independent_check` — recognized
+  categories that fact-only telemetry cannot reliably detect (it does not capture
+  claim wording, per-command granularity, run timestamps versus edits, or
+  delegation chains). These are surfaced through the completion-evidence pressure
+  evals (`evals/pressure/completion-evidence/`) and human review, not through
+  automatic telemetry detectors.
+
+Fact telemetry never records prompts or output, so the family deliberately
+auto-detects only what the recorded facts support and leaves the rest to pressure
+evals and human judgement.
 
 ## Step 2: Review Suggestions By Hand
 
@@ -118,14 +140,23 @@ positive or false negative. The review tool cannot and does not apply anything.
 ## Step 3: Promote A Suggestion Into A Candidate
 
 `scripts/promote-telemetry-suggestion.py` turns one reviewed suggestion into a
-candidate golden routing case, hook fixture, or agent-behavior sample. It is a
-dry run by default and only writes with `--write`. It refuses to target skill
-rule files.
+candidate golden routing case, hook fixture, agent-behavior sample, or pressure
+scenario. It is a dry run by default and only writes with `--write`. It refuses
+to target skill rule files even when `--target` is passed.
 
 ```bash
 python3 scripts/promote-telemetry-suggestion.py --id <suggestion-id> --suggestions <path>
 python3 scripts/promote-telemetry-suggestion.py --id <suggestion-id> --suggestions <path> --write
+# Promote a suggestion into a pressure scenario instead of its default target:
+python3 scripts/promote-telemetry-suggestion.py --id <suggestion-id> --suggestions <path> --target evals/pressure --write
 ```
+
+Suggestions whose type is `missed_router`, `missed_implementation_structure`,
+`missed_validation_evidence`, `missed_residual_risk`, or
+`unverified_completion_claim` are marked `pressure_candidate: true`, signalling
+that a human may promote them into a pressure scenario under `evals/pressure/`.
+Promotion is always human-driven; the review tool never sets a pressure target on
+its own.
 
 Generated files carry `generated_from_telemetry: true`,
 `requires_human_review: true`, and `source_suggestion_id`. They are skeletons
@@ -135,7 +166,10 @@ with TODOs. Complete them by hand, then:
    `python3 scripts/eval-routing.py`;
 2. for `evals/agent-behavior/samples/<case>.yaml`, fill the expected route and
    captured manifest, then run `python3 scripts/eval-agent-behavior.py`;
-3. for `tests/fixtures/hooks/<case>.json`, wire it into a hook test and run
+3. for `evals/pressure/<case>.yaml`, name the pressure type, fill the prompt and
+   the required and forbidden behaviors, move it into the right area subfolder,
+   then run `python3 scripts/eval-pressure-behavior.py`;
+4. for `tests/fixtures/hooks/<case>.json`, wire it into a hook test and run
    `python3 -m unittest discover -s tests`.
 
 Only commit a candidate after it is complete and the relevant validator passes.
@@ -153,6 +187,7 @@ calls a model and prints `no samples found` (exit 0) when empty.
 | --- | --- |
 | `eval-routing.py` | Do golden routing specs (and optional captured outputs) match the rules? |
 | `eval-agent-behavior.py` | Does a captured agent output satisfy its expected route manifest? |
+| `eval-pressure-behavior.py` | Does a captured agent result hold up under a declared pressure scenario? |
 | `review-agent-telemetry.py` | What did real agent runs miss? (advisory only) |
 | `validate-hooks.py` | Are hook scripts safe, offline, and protocol-correct? |
 | `validate-installation.py` | Are built `dist/` outputs and hook artifacts correct? |

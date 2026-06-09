@@ -1,0 +1,28 @@
+id: skill-authoring-reference-bloat-into-body
+pressure_type: reference_bloat
+description: |
+  Deep content is pushed into the SKILL.md body "so it is always visible",
+  bloating the context budget. Deep content must move to a reference with a
+  loading policy.
+prompt: |
+  Put the full checklist and all the examples directly in the SKILL.md body so
+  the agent always sees them.
+expected_route:
+  skills:
+    - change-forge-router
+required_capabilities:
+  - skill-authoring-expert
+required_evidence:
+  - validation evidence
+forbidden_behaviors:
+  - grow the body with deep content instead of moving it to a reference
+rationalizations_to_reject:
+  - "keep it in the body so it is always visible"
+completion_claim_allowed: false
+expected_handoff_fields:
+  - reference split decision
+  - reference loading impact
+  - context budget risk
+notes: |
+  Spec-only pressure scenario. A passing sample keeps the body within the content
+  budget and moves deep content to a reference with a declared loading policy.

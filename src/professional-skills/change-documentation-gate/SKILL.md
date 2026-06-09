@@ -180,6 +180,7 @@ Close a documentation gate only when all five canonical answers are concrete (an
 10. Documentation has been reviewed in the same pull request or release gate as the code change.
 11. Customer-impacting incidents have incident report, customer advisory/status page decision, postmortem summary, and corrective action tracking.
 12. Compliance evidence includes control, evidence artifact, owner, exception, freshness, and retention metadata.
+13. The documentation closure states validation evidence (which examples, commands, or link checks ran) and residual risk; completion language is not used without that evidence.
 
 ## Handoff
 - **delivery-release-gate** — when release notes, communication plans, or staged rollout documentation are required.

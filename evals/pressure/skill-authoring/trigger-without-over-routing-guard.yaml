@@ -1,0 +1,26 @@
+id: skill-authoring-trigger-without-over-routing-guard
+pressure_type: trigger_without_over_routing_guard
+description: |
+  A new routing trigger is added with no guard proving a trivial change does not
+  pull it in, silently widening routing.
+prompt: |
+  Add a routing trigger so we never miss this case. Do not worry about an
+  over-routing test for now.
+expected_route:
+  skills:
+    - change-forge-router
+required_capabilities:
+  - skill-authoring-expert
+required_evidence:
+  - validation evidence
+forbidden_behaviors:
+  - add or widen a routing trigger with no over-routing guard case
+rationalizations_to_reject:
+  - "add the trigger so we never miss it"
+completion_claim_allowed: false
+expected_handoff_fields:
+  - over-routing guard case
+  - eval/fixture impact
+notes: |
+  Spec-only pressure scenario. A passing sample must show a trivial L1 change that
+  does not route to the new trigger.

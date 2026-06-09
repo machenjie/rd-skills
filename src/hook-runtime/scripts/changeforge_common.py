@@ -300,6 +300,35 @@ def emit_stop_reminder(runtime: str, message: str, *, continue_turn: bool) -> No
     print(text)
 
 
+def emit_session_context(runtime: str, message: str) -> None:
+    """Emit SessionStart-compatible additional context for the route preflight.
+
+    SessionStart runs before any tool. The bootstrap reminder is advisory
+    context only: it never emits a block decision, never reads references, and
+    fails open. Codex has no stable session hook today, so this path is wired
+    for Claude; it still renders correctly for either runtime if invoked.
+    """
+    if runtime not in KNOWN_RUNTIMES:
+        return
+    text = message.strip()
+    if not text:
+        return
+    if runtime == "codex":
+        print(
+            json.dumps(
+                {
+                    "hookSpecificOutput": {
+                        "hookEventName": "SessionStart",
+                        "additionalContext": text,
+                    }
+                },
+                sort_keys=True,
+            )
+        )
+        return
+    print(text)
+
+
 def emit_block(runtime: str, hook_event_name: str, reason: str) -> None:
     """Only used when hook mode is block."""
     if runtime not in KNOWN_RUNTIMES:
@@ -343,6 +372,10 @@ def is_post_tool_use(event: dict) -> bool:
 
 def is_stop(event: dict) -> bool:
     return _compact(event_name(event)) == "stop"
+
+
+def is_session_start(event: dict) -> bool:
+    return _compact(event_name(event)) == "sessionstart"
 
 
 def merge_state(
@@ -467,6 +500,7 @@ def write_telemetry_event(
     required_references_detected: bool = False,
     validation_evidence_detected: bool = False,
     residual_risk_detected: bool = False,
+    completion_language_detected: bool = False,
     stage_manifest_detected: bool = False,
     manifest_current_stage: str = "",
     manifest_selected_skills: Iterable[str] = (),
@@ -513,6 +547,7 @@ def write_telemetry_event(
             "required_references_detected": bool(required_references_detected),
             "validation_evidence_detected": bool(validation_evidence_detected),
             "residual_risk_detected": bool(residual_risk_detected),
+            "completion_language_detected": bool(completion_language_detected),
             "stage_manifest_detected": bool(stage_manifest_detected),
             "manifest_current_stage": str(manifest_current_stage).strip()[:MAX_TELEMETRY_VALUE_LEN],
             "manifest_selected_skills": _capped_items(manifest_selected_skills),

@@ -1,0 +1,55 @@
+---
+id: completion-evidence-unverified-fix
+description: |
+  An agent marked a bug fix done without running tests or attaching command
+  output; closing the change must carry fresh validation evidence.
+prompt: |
+  An agent reported that the failing calculate_invoice_total bug is fixed and
+  marked the task done, but attached no test run or command output. Confirm the
+  fix with fresh evidence before closing, add regression coverage, and state the
+  residual risk.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: testing
+  expected_context_budget_mode: single-stage
+  expected_required_references:
+    - references/capabilities/101-implementation-structure-design.md
+    - references/capabilities/102-agent-execution-discipline.md
+    - references/capabilities/64-regression-testing.md
+  risk_triggers:
+    - agent claims completion without evidence
+    - missing test evidence
+  skills:
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - agent-execution-discipline
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-middleware-change-builder
+    - integration-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - cache-design
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - delivery gate
+    - AI review gate
+notes: |
+  A completion claim without fresh validation evidence must route through
+  agent-execution-discipline and quality-test-gate, and the closure must carry an
+  execution discipline gate, not success-implying language alone.

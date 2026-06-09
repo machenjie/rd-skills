@@ -2,13 +2,21 @@
 
 ChangeForge Hook Runtime is an optional project-level reminder layer. It is not
 a skill, does not replace `change-forge-router`, and does not read all compiled
-skill references. Its job is to notice execution-time signals after tools run or
-before an agent stops, then remind the agent to close the matching ChangeForge
-gate.
+skill references. Its job is to notice signals at session start, after tools
+run, or before an agent stops, then remind the agent to run a route preflight or
+close the matching ChangeForge gate.
 
 ## What ChangeForge Hook Runtime Does
 
-The first-stage runtime provides three reminder gates:
+The first-stage runtime provides these reminder gates:
+
+- Session Bootstrap (route preflight): runs at session start and reminds the
+  agent to classify the change and run a `change-forge-router` preflight before
+  engineering work, to require `implementation-structure-design` before new
+  structure, and to bind any completion claim to `agent-execution-discipline`.
+  It only emits a route preflight; it never selects a full route and never reads
+  references. It is wired as a Claude `SessionStart` hook. Codex has no stable
+  session-start hook, so Codex uses the install-time bootstrap fragment instead.
 
 - Post-Edit Structure Gate: runs after edit tools and warns when changed paths
   look like structural code, shared utilities, public interfaces, SDK/client
@@ -56,17 +64,58 @@ file.
 Use hooks as a guardrail for missed execution-time evidence, not as a planning
 system.
 
+## Session Bootstrap and Route Preflight
+
+The session bootstrap is a route-preflight reminder, not a router and not a
+planner. It tells the agent *when* to route, not *how* to route:
+
+- A possible engineering change (code, review, debug, test, refactor, release,
+  or skill authoring) triggers a `change-forge-router` preflight before acting.
+- A change that adds or modifies a function, class, file, directory, helper,
+  service, repository, adapter, or utility requires `implementation-structure-design`.
+- A pending completion claim binds to `agent-execution-discipline`: no
+  completion claim without fresh validation evidence and residual risk.
+- An explicit, in-scope user skill path is respected without re-routing.
+- Pure question, explanation, or translation needs no routing.
+
+The bootstrap keeps the same precision discipline as the rest of ChangeForge: a
+possible engineering change triggers a preflight, a confirmed risk, stage, or
+surface signal selects the skill path, and deep rules load only the selected
+references. It never loads every skill and never loads every reference.
+
+Bootstrap boundaries:
+
+- The bootstrap does not replace `change-forge-router`. It reminds the agent to
+  run the router; the router still classifies the change and selects the path.
+- The bootstrap is advisory. It never blocks execution and never overrides an
+  explicit in-scope instruction.
+- The bootstrap reads no references, calls no LLM, makes no network call, and
+  writes no project source.
+
+Runtime support:
+
+- Claude project hooks wire the bootstrap as a `SessionStart` hook
+  (`changeforge_session_bootstrap.py`).
+- Codex has no stable session-start hook, so the same guidance ships as an
+  install-time fragment (`changeforge-route-preflight.md`). Reference it from
+  the project's agent instructions to enable it.
+- Any runtime can install the advisory fragment with
+  `installers/install.py --with-bootstrap`.
+
 ## Codex Post-Execution Limitation
 
 Codex project hooks currently operate as execution-time guardrails. For Codex,
 ChangeForge relies on PostToolUse and Stop reminders rather than assuming a
 stable pre-edit planning hook. Therefore, hooks cannot replace upfront routing or
 implementation structure planning. They can only detect edited paths, patch
-signals, and missing closure evidence after execution has begun.
+signals, and missing closure evidence after execution has begun. The session
+bootstrap is the route preflight reminder; for Codex it ships as an install-time
+fragment rather than a SessionStart hook.
 
 ## Hook Capability Boundary
 
 Hooks can:
+- remind on route preflight at session start (Claude SessionStart);
 - remind on new file naming pattern mismatches;
 - remind on structural path changes;
 - remind on helper/common/utils/shared pollution risk;
@@ -134,20 +183,28 @@ Expected project hook outputs:
 ```text
 dist/codex/project/.codex/hooks.json
 dist/codex/project/.codex/.changeforge-hook-manifest.json
+dist/codex/project/.codex/changeforge-route-preflight.md
 dist/codex/project/.codex/hooks/changeforge_common.py
+dist/codex/project/.codex/hooks/changeforge_session_bootstrap.py
 dist/codex/project/.codex/hooks/changeforge_post_edit_structure_gate.py
 dist/codex/project/.codex/hooks/changeforge_risk_surface_gate.py
 dist/codex/project/.codex/hooks/changeforge_stop_closure_gate.py
 
 dist/claude/project/.claude/settings.changeforge-hooks.fragment.json
 dist/claude/project/.claude/.changeforge-hook-manifest.json
+dist/claude/project/.claude/changeforge-route-preflight.md
 dist/claude/project/.claude/hooks/changeforge_common.py
+dist/claude/project/.claude/hooks/changeforge_session_bootstrap.py
 dist/claude/project/.claude/hooks/changeforge_post_edit_structure_gate.py
 dist/claude/project/.claude/hooks/changeforge_risk_surface_gate.py
 dist/claude/project/.claude/hooks/changeforge_stop_closure_gate.py
+
+dist/universal/bootstrap/changeforge-route-preflight.md
 ```
 
-Do not install `src/hook-runtime` directly.
+The Codex hooks ship the session bootstrap script too, but Codex does not wire a
+`SessionStart` hook; Codex enables the route preflight through the advisory
+fragment instead. Do not install `src/hook-runtime` directly.
 
 ## Manually Enable Hooks
 
@@ -181,13 +238,20 @@ python3 installers/install.py --agent codex --scope project --target /path/to/pr
 python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full --with-hooks
 # Inspect installed hooks:
 python3 installers/doctor.py --check-hooks --target /path/to/project
+# Install only the advisory route-preflight fragment (any project install, incl. Codex):
+python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full --with-bootstrap
+# Inspect the advisory bootstrap fragment:
+python3 installers/doctor.py --check-bootstrap --target /path/to/project
 ```
 
 For Codex, the installer merges ChangeForge hook groups into an existing
 `.codex/hooks.json` without removing user hooks. For Claude, it places
 `settings.changeforge-hooks.fragment.json` and never modifies an existing
 `.claude/settings.json`; merge the fragment's `hooks` into `settings.json` by
-hand. The installer never trusts hooks automatically.
+hand, including the `SessionStart` bootstrap entry. The `--with-bootstrap` option
+writes only the advisory fragment to `.changeforge/changeforge-route-preflight.md`
+and never installs executable hooks. The installer never trusts hooks
+automatically.
 
 ## Codex Activation Checklist
 
@@ -222,11 +286,13 @@ python3 scripts/validate-installation.py
 ```
 
 `validate-hooks.py` checks script presence, Python compilation, template JSON,
-required hook events, timeout limits, Codex command protocol, Codex JSON warning
-output, Stop output separation, no direct `src/` hook commands, no user-specific
-absolute paths, no network imports, and no project-source writes. The `unittest`
-command exercises hook behavior fixtures and must discover the hook runtime tests
-from the repository-level `tests` directory.
+required hook events, the Claude `SessionStart` bootstrap wiring, the absence of
+a Codex `SessionStart` hook, the advisory bootstrap fragment, timeout limits,
+Codex command protocol, Codex JSON warning output, Stop output separation, no
+direct `src/` hook commands, no user-specific absolute paths, no network
+imports, and no project-source writes. The `unittest` command exercises hook
+behavior fixtures and must discover the hook runtime tests from the
+repository-level `tests` directory.
 
 ## Troubleshooting
 

@@ -48,6 +48,11 @@ def main() -> int:
         action="store_true",
         help="Inspect optional project hook files, manifest, and config references.",
     )
+    parser.add_argument(
+        "--check-bootstrap",
+        action="store_true",
+        help="Inspect the optional advisory route-preflight bootstrap fragment.",
+    )
     args = parser.parse_args()
 
     try:
@@ -80,6 +85,9 @@ def main() -> int:
 
     if args.check_hooks:
         _check_project_hooks(args.target, issues)
+
+    if args.check_bootstrap:
+        _check_project_bootstrap(args.target, issues)
 
     if issues:
         print("doctor: issues")
@@ -284,8 +292,45 @@ def _check_project_hooks(target: Path | None, issues: list[str]) -> None:
                 issues.append(f"{agent}: {config_name} does not reference changeforge hook scripts")
         else:
             print(f"- {agent}: {config_name} not found (manual merge may be pending)")
+        bootstrap_path = hook_root / "changeforge-route-preflight.md"
+        if bootstrap_path.is_file():
+            wired = (scripts_dir / "changeforge_session_bootstrap.py").is_file()
+            if agent == "claude":
+                detail = "SessionStart hook script present" if wired else "SessionStart hook script missing"
+            else:
+                detail = "advisory only (Codex has no session-start hook)"
+            print(f"- {agent}: route-preflight bootstrap fragment present ({detail})")
+        else:
+            print(f"- {agent}: route-preflight bootstrap fragment not found (optional)")
     if not any_present:
         print("- no project hooks installed (this is fine; hooks are optional)")
+
+
+def _check_project_bootstrap(target: Path | None, issues: list[str]) -> None:
+    """Inspect the optional standalone advisory route-preflight fragment.
+
+    The advisory fragment installed by ``install.py --with-bootstrap`` lives at
+    ``.changeforge/changeforge-route-preflight.md``. It is never required; this
+    only reports presence and never adds an issue for a missing optional file.
+    """
+    project_root = (target.expanduser().resolve() if target is not None else Path.cwd().resolve())
+    fragment = project_root / ".changeforge" / "changeforge-route-preflight.md"
+    print(f"doctor: route-preflight bootstrap ({project_root})")
+    if fragment.is_file():
+        print(f"- advisory fragment present: {fragment}")
+        if "change-forge-router" not in _safe_read(fragment):
+            issues.append(
+                "bootstrap fragment present but does not reference change-forge-router"
+            )
+    else:
+        print("- no advisory bootstrap fragment installed (this is fine; bootstrap is optional)")
+
+
+def _safe_read(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError:
+        return ""
 
 
 def _config_references_hooks(config_path: Path) -> bool:

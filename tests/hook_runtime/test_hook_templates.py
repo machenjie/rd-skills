@@ -44,6 +44,22 @@ class HookTemplateTests(unittest.TestCase):
         )
         self.assertIn("PostToolUse", data["hooks"])
         self.assertIn("Stop", data["hooks"])
+        self.assertIn("SessionStart", data["hooks"])
+        session_commands = json.dumps(data["hooks"]["SessionStart"])
+        self.assertIn("changeforge_session_bootstrap", session_commands)
+
+    def test_codex_fragment_has_no_session_start(self) -> None:
+        # Codex has no stable session-start hook; the bootstrap is advisory there.
+        data = json.loads((HOOK_ROOT / "templates" / "codex" / "hooks.json").read_text())
+        self.assertNotIn("SessionStart", data["hooks"])
+
+    def test_bootstrap_fragment_exists_and_points_to_router(self) -> None:
+        fragment = (
+            HOOK_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("change-forge-router", fragment)
+        self.assertIn("implementation-structure-design", fragment)
+        self.assertIn("agent-execution-discipline", fragment)
 
 
 if __name__ == "__main__":

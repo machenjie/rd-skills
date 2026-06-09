@@ -153,6 +153,59 @@ class ReviewAgentTelemetryTests(unittest.TestCase):
             # A route manifest was present, so this is not a missed-router case.
             self.assertNotIn('"type": "missed_router"', text)
 
+    def test_detects_unverified_completion_claim(self) -> None:
+        # Completion language at stop with a code change but no validation
+        # evidence must surface unverified_completion_claim.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "telemetry"
+            repo_hash = "repohashaaaaaaaaaaaaaaaa"
+            self._seed(
+                root,
+                repo_hash,
+                [
+                    _record(changed_paths=["src/pricing.py"]),
+                    _record(
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["src/pricing.py"],
+                        route_manifest_detected=True,
+                        completion_language_detected=True,
+                        validation_evidence_detected=False,
+                    ),
+                ],
+            )
+            result = _run("--telemetry-root", str(root))
+            suggestions = list((root / repo_hash / "suggestions").glob("*-suggestions.yaml"))
+            self.assertEqual(result.returncode, 0)
+            self.assertTrue(suggestions)
+            text = suggestions[0].read_text(encoding="utf-8")
+            self.assertIn("unverified_completion_claim", text)
+
+    def test_completion_claim_with_validation_is_not_flagged(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "telemetry"
+            repo_hash = "repohashaaaaaaaaaaaaaaaa"
+            self._seed(
+                root,
+                repo_hash,
+                [
+                    _record(changed_paths=["src/pricing.py"]),
+                    _record(
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["src/pricing.py"],
+                        route_manifest_detected=True,
+                        completion_language_detected=True,
+                        validation_evidence_detected=True,
+                        residual_risk_detected=True,
+                    ),
+                ],
+            )
+            result = _run("--telemetry-root", str(root))
+            suggestions = list((root / repo_hash / "suggestions").glob("*-suggestions.yaml"))
+            text = suggestions[0].read_text(encoding="utf-8") if suggestions else ""
+            self.assertNotIn("unverified_completion_claim", text)
+
 
 if __name__ == "__main__":
     unittest.main()

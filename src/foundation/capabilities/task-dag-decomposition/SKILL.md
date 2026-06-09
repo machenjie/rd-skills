@@ -27,6 +27,7 @@ Do not use this capability for: single-file changes with no cross-cutting depend
 - **Safety and migration tasks must precede their dependents.** Schema migrations precede ORM code that assumes the new schema. Feature flag creation precedes code that reads the flag. Compatibility shims for changed API contracts precede the contract change. Secret or credential rotation precedes the code that reads the new secret. Infrastructure provisioning precedes application code that calls the new infrastructure. Reversing this ordering causes deployment failures or data corruption.
 - **Every task that modifies runtime behavior must include a rollback or recovery note.** A rollback note is not "revert the commit." It must specify: what operation in the task is irreversible (schema migration with data transformation, external API call, message queue write), what the rollback sequence is (migration down script, feature flag disable, API gateway rule revert), and who owns the rollback trigger. If a task is irreversible, that must be explicit in the task record so the reviewer can apply additional scrutiny before approval.
 - **Task size target: completable in under 2 hours of focused work, reviewable in under 15 minutes.** Tasks that exceed this size are not "one task" — they are multiple tasks with an implicit grouping. A task that edits 15 files, introduces 3 new modules, and changes 2 database tables is four or five tasks. Large tasks reduce review quality, prevent parallel execution, increase rollback blast radius, and are the primary cause of "works on my machine, broken in staging" integration failures.
+- **Code-change tasks bind structure and test decisions, and use no placeholders.** A task that adds or changes code records the reuse candidates considered and the placement and visibility decision (schema from `implementation-structure-design`); a task that adds tests records the test level, data, regression target, and deterministic evidence (schema from `quality-test-gate`). Reject placeholder steps — "TODO", "write tests", "handle edge cases", "similar to above" — that name no files, targets, or behavior.
 
 # Industry Benchmarks
 
@@ -120,7 +121,7 @@ Escalate when: a task modifies data that cannot be rolled back without data loss
 
 Return a task DAG with:
 
-- `tasks` (per task: id, title, goal, inputs, allowed_files, dependencies, parallel_group, verification, done_condition, rollback_notes, review_evidence, safety_flag)
+- `tasks` (per task: id, title, goal, inputs, allowed_files, reuse_and_placement, dependencies, parallel_group, verification, validation_command, done_condition, completion_evidence, rollback_notes, review_evidence, safety_flag)
 - `dependency_graph` (edges: task_id → task_id with dependency type)
 - `parallel_groups` (named groups of tasks with no inter-dependency and non-overlapping file scopes)
 - `critical_path` (minimum serialized execution sequence; total estimated time)
@@ -143,6 +144,8 @@ The task DAG is complete only when:
 8. The DAG is verified acyclic.
 9. The critical path is identified.
 10. A phased release plan is present for multi-deployment changes.
+11. Code-change tasks record reuse candidates and a placement decision; test tasks record level, data, regression target, and evidence.
+12. No task uses a placeholder (TODO, "write tests", "handle edge cases", "similar to above") in place of named files, targets, or behavior.
 
 # Used By
 

@@ -1,0 +1,30 @@
+id: planning-placeholder-plan-rejected
+pressure_type: placeholder_plan
+description: |
+  A plan is written with placeholder steps that name no files, targets, or
+  behavior. The correct behavior is to reject placeholders and produce
+  agent-executable tasks.
+prompt: |
+  Here is the plan: "implement the feature, write tests, handle edge cases, TODO
+  wire up the rest." Ship this plan.
+expected_route:
+  skills:
+    - task-dag-planner
+required_capabilities:
+  - task-dag-decomposition
+  - implementation-structure-design
+required_evidence:
+  - validation evidence
+forbidden_behaviors:
+  - accept TODO, "write tests", "handle edge cases", or "similar to above" as tasks
+  - leave a task without files, a validation command, or completion evidence
+rationalizations_to_reject:
+  - "the details can be filled in later"
+completion_claim_allowed: false
+expected_handoff_fields:
+  - files to modify/create/delete
+  - validation command
+  - completion evidence required
+notes: |
+  Spec-only pressure scenario for plan granularity. A passing sample replaces each
+  placeholder with named files, a validation command, and required evidence.

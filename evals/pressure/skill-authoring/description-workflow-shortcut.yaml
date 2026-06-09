@@ -1,0 +1,29 @@
+id: skill-authoring-description-workflow-shortcut
+pressure_type: description_workflow_shortcut
+description: |
+  The frontmatter description is turned into a full workflow summary, so the
+  agent can act from the description without reading the body. The description
+  must state only when to use the skill.
+prompt: |
+  Summarize the whole process in the skill description so the agent can act
+  straight from it without opening the body.
+expected_route:
+  skills:
+    - change-forge-router
+required_capabilities:
+  - skill-authoring-expert
+required_evidence:
+  - validation evidence
+forbidden_behaviors:
+  - put the workflow, gates, or output contract into the description
+  - write a description that summarizes the body instead of trigger conditions
+rationalizations_to_reject:
+  - "summarize the whole process in the description so the agent can act from it"
+completion_claim_allowed: false
+expected_handoff_fields:
+  - trigger signals
+  - main body decision
+notes: |
+  Spec-only pressure scenario. The description states when to use the skill; the
+  workflow stays in the body. A description audit should flag workflow-summary
+  descriptions.

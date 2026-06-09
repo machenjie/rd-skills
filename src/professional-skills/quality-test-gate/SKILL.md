@@ -39,7 +39,7 @@ Define the minimum evidence needed to prove a change works correctly, does not r
 - **Concurrency and idempotency tests are required when code uses shared state, queues, or distributed writes**: race conditions that cannot be detected in sequential unit tests require explicit concurrency verification.
 - **Experiment and model rollout tests require data validity checks**: exposure logging, sample ratio mismatch, feature point-in-time correctness, training-serving skew, drift metrics, and rollback version must be verified like code behavior.
 - **Affected-test selection must be proven against a full-suite baseline**: monorepo speedups are valid only when module graph, dependency edges, cache keys, and generated inputs cannot skip impacted tests.
-- **Agent-provided test evidence must be concrete**: accept command output, exit codes, logs, fixtures, screenshots, or recorded validator results; reject "tests should pass" or undocumented local runs.
+- **Agent-provided test evidence must be concrete**: accept command output, exit codes, logs, fixtures, screenshots, or recorded validator results; reject "tests should pass", undocumented local runs, and partial runs reported as full (a lint or type-check pass is not a test pass; one green test is not full-suite success).
 - **Test structure follows module structure**: test files, fixtures, factories, mocks, and golden data must have an owning module or contract boundary; shared test helpers must not become business-fixture dumping grounds.
 - **Tests exercise public behavior by default**: refactors and splits are verified through public APIs, module contracts, or observable behavior, not private helper calls that freeze implementation details.
 
@@ -230,6 +230,9 @@ Close a test strategy only when all five canonical answers are concrete (answer 
 20. Shared test utilities contain only pure technical helpers, not module-specific business fixtures.
 21. Tests do not rely on private helper access when public behavior can prove the outcome.
 22. Module splits include corresponding test and fixture ownership review.
+23. Test pass claims map to the actual command and suite that ran; a lint or type-check pass is never reported as a test pass, and a single passing test is never reported as full-suite or full-coverage success.
+24. Reused test results are fresh: if code or inputs changed after a run, the suite is re-run before the pass is claimed.
+25. Test acceptance maps to the acceptance criteria and non-goals (spec compliance) before test-quality sign-off; a clean test suite does not substitute for a missing required behavior.
 
 ## Handoff
 - **backend-change-builder** — with test obligations for service, repository, and API layers.

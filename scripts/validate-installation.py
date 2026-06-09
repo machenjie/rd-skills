@@ -48,22 +48,34 @@ REQUIRED_DIST_DIRS = (
 REQUIRED_HOOK_DIST_FILES = (
     "codex/project/.codex/hooks.json",
     "codex/project/.codex/.changeforge-hook-manifest.json",
+    "codex/project/.codex/changeforge-route-preflight.md",
     "codex/project/.codex/hooks/changeforge_common.py",
+    "codex/project/.codex/hooks/changeforge_session_bootstrap.py",
     "codex/project/.codex/hooks/changeforge_post_edit_structure_gate.py",
     "codex/project/.codex/hooks/changeforge_risk_surface_gate.py",
     "codex/project/.codex/hooks/changeforge_stop_closure_gate.py",
     "claude/project/.claude/settings.changeforge-hooks.fragment.json",
     "claude/project/.claude/.changeforge-hook-manifest.json",
+    "claude/project/.claude/changeforge-route-preflight.md",
     "claude/project/.claude/hooks/changeforge_common.py",
+    "claude/project/.claude/hooks/changeforge_session_bootstrap.py",
     "claude/project/.claude/hooks/changeforge_post_edit_structure_gate.py",
     "claude/project/.claude/hooks/changeforge_risk_surface_gate.py",
     "claude/project/.claude/hooks/changeforge_stop_closure_gate.py",
+    "universal/bootstrap/changeforge-route-preflight.md",
 )
-EXPECTED_HOOK_NAMES = {
+BASE_HOOK_NAMES = {
     "changeforge_post_edit_structure_gate",
     "changeforge_risk_surface_gate",
     "changeforge_stop_closure_gate",
 }
+# Codex has no stable session-start hook, so only Claude wires the bootstrap as
+# a SessionStart hook. Both agents still ship the install-time bootstrap fragment.
+EXPECTED_HOOK_NAMES_BY_AGENT = {
+    "codex": frozenset(BASE_HOOK_NAMES),
+    "claude": frozenset(BASE_HOOK_NAMES | {"changeforge_session_bootstrap"}),
+}
+BOOTSTRAP_FRAGMENT_NAME = "changeforge-route-preflight.md"
 
 PROFILE_SKILL_ROOTS = (
     DIST_DIR / "universal" / "skills",
@@ -350,13 +362,22 @@ def _validate_hook_manifest(path: Path, *, agent: str, errors: list[str]) -> Non
     if data.get("scope") != "project":
         errors.append(f"{relpath(ROOT, path)}: scope must be project")
     hooks = data.get("hooks")
+    expected_hooks = EXPECTED_HOOK_NAMES_BY_AGENT[agent]
     if (
         not isinstance(hooks, list)
         or not all(isinstance(hook, str) for hook in hooks)
-        or set(hooks) != EXPECTED_HOOK_NAMES
+        or set(hooks) != set(expected_hooks)
     ):
         errors.append(
-            f"{relpath(ROOT, path)}: hooks must be {', '.join(sorted(EXPECTED_HOOK_NAMES))}"
+            f"{relpath(ROOT, path)}: hooks must be {', '.join(sorted(expected_hooks))}"
+        )
+    if data.get("bootstrap_fragment") != BOOTSTRAP_FRAGMENT_NAME:
+        errors.append(
+            f"{relpath(ROOT, path)}: bootstrap_fragment must be {BOOTSTRAP_FRAGMENT_NAME}"
+        )
+    if data.get("session_bootstrap_hook") is not (agent == "claude"):
+        errors.append(
+            f"{relpath(ROOT, path)}: session_bootstrap_hook must be {agent == 'claude'}"
         )
 
 

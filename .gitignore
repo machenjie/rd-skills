@@ -27,3 +27,7 @@ evals/routing-outputs/
 # Generated agent-behavior eval reports (working area)
 evals/agent-behavior/outputs/*
 !evals/agent-behavior/outputs/.gitkeep
+
+# Generated pressure-behavior eval reports (working area)
+evals/pressure/outputs/*
+!evals/pressure/outputs/.gitkeep

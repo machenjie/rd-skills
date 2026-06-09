@@ -1,0 +1,28 @@
+id: skill-authoring-edit-without-baseline
+pressure_type: edit_without_baseline
+description: |
+  A skill rule is edited with no baseline failure scenario. The change must show
+  the behavior it changes, not only the prose it edits.
+prompt: |
+  Tighten the wording of a discipline rule in a SKILL.md. It is obviously right,
+  so just edit the text and move on.
+expected_route:
+  skills:
+    - change-forge-router
+required_capabilities:
+  - skill-authoring-expert
+required_evidence:
+  - validation evidence
+forbidden_behaviors:
+  - edit a skill rule with no baseline failure scenario and no stated reason
+  - claim the change works without a before/after behavior case
+rationalizations_to_reject:
+  - "the change is obviously right, it needs no test"
+completion_claim_allowed: false
+expected_handoff_fields:
+  - baseline failure scenario
+  - expected behavior after change
+  - eval/fixture impact
+notes: |
+  Spec-only pressure scenario for skill-authoring. Add a human-reviewed captured
+  result to score it once a real sample exists.

@@ -55,6 +55,10 @@ Use this capability when:
 12. **References must have a loading policy.** Any new reference must state when it is loaded.
 13. **No dumping-ground references.** References must have an owner and a purpose; they are not a junk drawer.
 14. **Preserve professional vocabulary.** Do not flatten professional rules into generic advice.
+15. **No skill rule change without behavior evidence.** A skill or reference change must show the behavior it changes, not only the prose it edits. A new or edited skill includes a baseline failure scenario, or an explicit reason a baseline is impossible plus the expected-behavior case the change must pass.
+16. **Discipline rules are pressure-tested.** A skill that enforces discipline must hold under a plausible excuse to skip it, not only on the cooperative path.
+17. **Name the rationalizations.** A skill change names the rationalizations an agent may use to skip the rule, and the rule and its eval must reject each one.
+18. **Trigger changes carry an over-routing guard.** A new or widened routing trigger ships with a guard case proving a trivial change does not pull it in.
 
 # Industry Benchmarks
 
@@ -99,6 +103,7 @@ Use this capability when:
 8. **Compact capability.** A new capability stays compact and must not become an introductory tutorial.
 9. **Adjacency and handoff.** Every capability states its adjacent capabilities and its handoff targets.
 10. **Slimming preserves rigor.** No slimming action may reduce professional rigor; detail moves to references instead.
+11. **Description is a trigger, not a workflow.** The frontmatter description states when to use the skill and its scope; the workflow, gates, and output contract live in the body, and deep detail in references. A description that summarizes the workflow lets an agent act from the description without reading the body, and an over-broad description causes catch-all routing.
 
 # Failure Modes
 
@@ -133,7 +138,22 @@ Return a Skill Authoring Review:
 - Context budget risk:
 - Adjacent capabilities:
 - Required tests:
+- Baseline failure scenario:
+- Pressure scenario:
+- Expected failure without change:
+- Expected behavior after change:
+- Rationalizations blocked:
+- Eval/fixture impact:
+- Before/after behavior evidence:
+- Reference loading impact:
 - Handoff:
+
+Also return a Skill Behavior Test Decision:
+
+- Test type: routing / pressure / reference retrieval / output contract / hook fixture / agent behavior sample
+- Required files:
+- Expected pass/fail criteria:
+- Validation command:
 
 When slimming or restructuring, also return a Skill Slimming Decision:
 
@@ -157,6 +177,16 @@ When slimming or restructuring, also return a Skill Slimming Decision:
 9. The body holds no large, low-frequency content that belongs in references.
 10. New references declare a loading policy.
 11. validate-skills, validate-capabilities, validate-registry, and validate-installation pass.
+12. A skill rule change carries a baseline failure scenario, or an explicit reason a baseline is impossible plus an expected-behavior case.
+13. A discipline-rule change names the rationalizations it blocks and has a pressure case that applies them.
+14. A new or widened routing trigger has an over-routing guard case.
+
+# Reference Loading Policy
+
+The body carries the decision-critical authoring rules and is the part compiled into the professional-skill references that use this capability. Deep authoring material loads only when authoring or auditing a skill change:
+
+- [references/tdd-for-skills.md](references/tdd-for-skills.md) — the behavior-first loop, baseline failure template, and test-type selection.
+- [references/pressure-scenarios.md](references/pressure-scenarios.md) — the pressure scenario catalog, rationalizations to reject, and pressure case fields.
 
 # Used By
 

@@ -45,6 +45,11 @@ HOOK_OUTPUT_ROOTS = {
     ("codex", "project"): DIST_DIR / "codex" / "project" / ".codex",
     ("claude", "project"): DIST_DIR / "claude" / "project" / ".claude",
 }
+BOOTSTRAP_TEMPLATE = (
+    HOOK_RUNTIME_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"
+)
+BOOTSTRAP_FRAGMENT_NAME = "changeforge-route-preflight.md"
+UNIVERSAL_BOOTSTRAP_ROOT = DIST_DIR / "universal" / "bootstrap"
 
 
 @dataclass(frozen=True)
@@ -386,8 +391,11 @@ def _copy_skill_tree(source: Path, destination: Path) -> None:
 def _build_hook_runtime() -> None:
     if not HOOK_RUNTIME_ROOT.is_dir():
         raise BuildError(f"missing hook runtime source: {HOOK_RUNTIME_ROOT.relative_to(ROOT)}")
+    if not BOOTSTRAP_TEMPLATE.is_file():
+        raise BuildError(f"missing bootstrap template: {BOOTSTRAP_TEMPLATE.relative_to(ROOT)}")
     _build_codex_hook_runtime()
     _build_claude_hook_runtime()
+    _build_universal_bootstrap()
 
 
 def _build_codex_hook_runtime() -> None:
@@ -399,6 +407,7 @@ def _build_codex_hook_runtime() -> None:
         HOOK_RUNTIME_ROOT / "templates" / "codex" / "hooks.json",
         target / "hooks.json",
     )
+    _copy_bootstrap_fragment(target)
     _write_hook_manifest(target, agent="codex", scope="project")
 
 
@@ -414,7 +423,21 @@ def _build_claude_hook_runtime() -> None:
         / "settings.changeforge-hooks.fragment.json",
         target / "settings.changeforge-hooks.fragment.json",
     )
+    _copy_bootstrap_fragment(target)
     _write_hook_manifest(target, agent="claude", scope="project")
+
+
+def _build_universal_bootstrap() -> None:
+    _reset_dir(UNIVERSAL_BOOTSTRAP_ROOT)
+    shutil.copy2(
+        BOOTSTRAP_TEMPLATE,
+        UNIVERSAL_BOOTSTRAP_ROOT / BOOTSTRAP_FRAGMENT_NAME,
+    )
+
+
+def _copy_bootstrap_fragment(target: Path) -> None:
+    target.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(BOOTSTRAP_TEMPLATE, target / BOOTSTRAP_FRAGMENT_NAME)
 
 
 def _copy_hook_scripts(target: Path) -> None:
@@ -428,16 +451,24 @@ def _copy_hook_scripts(target: Path) -> None:
 
 
 def _write_hook_manifest(target: Path, agent: str, scope: str) -> None:
+    hooks = [
+        "changeforge_post_edit_structure_gate",
+        "changeforge_risk_surface_gate",
+        "changeforge_stop_closure_gate",
+    ]
+    # Codex has no stable session-start hook, so the bootstrap reminder is wired
+    # as a SessionStart hook for Claude only. Both runtimes still ship the
+    # install-time bootstrap fragment for the advisory path.
+    if agent == "claude":
+        hooks = ["changeforge_session_bootstrap", *hooks]
     manifest = {
         "kind": "changeforge-hook-runtime",
         "agent": agent,
         "scope": scope,
         "source_version": _source_version(),
-        "hooks": [
-            "changeforge_post_edit_structure_gate",
-            "changeforge_risk_surface_gate",
-            "changeforge_stop_closure_gate",
-        ],
+        "hooks": hooks,
+        "bootstrap_fragment": BOOTSTRAP_FRAGMENT_NAME,
+        "session_bootstrap_hook": agent == "claude",
     }
     (target / ".changeforge-hook-manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n",

@@ -12,15 +12,19 @@ from changeforge_install import (
     PROFILES,
     SCOPES,
     InstallError,
+    apply_bootstrap_install,
     apply_hook_install,
     backup_existing,
+    bootstrap_supported,
     find_unmanaged_conflicts,
     hooks_supported,
     list_skill_dirs,
     make_manifest,
     managed_names,
+    plan_bootstrap_install,
     plan_hook_install,
     read_manifest,
+    render_bootstrap_plan,
     render_hook_plan,
     replace_with_source,
     resolve_source_profile_dir,
@@ -51,6 +55,16 @@ def main() -> int:
         "--hooks-dry-run",
         action="store_true",
         help="Show the hook install plan without writing hook files.",
+    )
+    parser.add_argument(
+        "--with-bootstrap",
+        action="store_true",
+        help="Also install the advisory route-preflight bootstrap fragment (any project install).",
+    )
+    parser.add_argument(
+        "--bootstrap-dry-run",
+        action="store_true",
+        help="Show the bootstrap install plan without writing the fragment.",
     )
     args = parser.parse_args()
 
@@ -106,6 +120,8 @@ def main() -> int:
                 print(f"install: would create backup at {backup_path}")
             if args.with_hooks:
                 _install_hooks(args, scope)
+            if args.with_bootstrap:
+                _install_bootstrap(args, scope)
             return 0
 
         replace_with_source(source_dir, target_dir, source_names | old_managed, dry_run=False)
@@ -118,6 +134,8 @@ def main() -> int:
             print(f"install: backup written to {backup_path}")
         if args.with_hooks:
             _install_hooks(args, scope)
+        if args.with_bootstrap:
+            _install_bootstrap(args, scope)
         return 0
     except InstallError as exc:
         print(f"install: ERROR: {exc}", file=sys.stderr)
@@ -145,6 +163,29 @@ def _install_hooks(args: argparse.Namespace, scope: str) -> None:
         return
     apply_hook_install(plan, dry_run=False)
     print("install: hooks: installed project hooks; review and trust before enabling")
+
+
+def _install_bootstrap(args: argparse.Namespace, scope: str) -> None:
+    """Install the advisory route-preflight fragment, preserving user files.
+
+    The bootstrap fragment is plain guidance text, never an executable hook, so
+    it is safe for any project install. It is the bootstrap path for runtimes
+    without a session-start hook (such as Codex).
+    """
+    if not bootstrap_supported(args.agent, scope):
+        raise InstallError("--with-bootstrap is only supported for project installs")
+    if args.target is None:
+        raise InstallError("--with-bootstrap requires --target (the project root)")
+
+    plan = plan_bootstrap_install(args.agent, scope, args.target)
+    for line in render_bootstrap_plan(plan):
+        print(f"install: {line}")
+
+    if args.dry_run or args.bootstrap_dry_run:
+        print("install: bootstrap: dry run; no bootstrap fragment written")
+        return
+    apply_bootstrap_install(plan, dry_run=False)
+    print("install: bootstrap: installed advisory route-preflight fragment")
 
 
 if __name__ == "__main__":

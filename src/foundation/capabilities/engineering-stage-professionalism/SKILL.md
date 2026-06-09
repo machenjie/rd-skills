@@ -1,6 +1,6 @@
 ---
 name: engineering-stage-professionalism
-description: Stage launcher capability that decides the current engineering stage, product surface, language surface, and risk surface, then launches only the minimum professional capabilities that stage needs, explicitly skips heavy out-of-stage capabilities, sets a context budget, and names the next-stage handoff. Use to plan stage-by-stage execution of a code or product change, not to load every capability at once.
+description: Stage launcher capability for stage-by-stage execution of a code or product change. Use when deciding the current engineering stage, product surface, language surface, and risk surface, which minimum professional capabilities to launch versus skip, the context budget, and the next-stage handoff. Not for loading every capability at once.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "104"

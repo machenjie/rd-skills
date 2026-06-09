@@ -33,6 +33,10 @@ Decompose a complex product or code change into a directed acyclic graph (DAG) o
 - **Migration tasks must precede code tasks that depend on the migrated state**: deploying code that expects a new schema before the migration runs causes immediate production failure.
 - **Feature flag tasks must precede feature implementation tasks**: a feature behind a flag requires the flag to be registered and defaulted off before any implementation ships.
 - **Parallelism must be explicit**: tasks that can safely run concurrently must be identified — undetected sequential bottlenecks delay delivery; undetected parallel conflicts corrupt work.
+- **Every task must be agent-executable**: each task names the exact files to inspect, the exact files to create/modify/delete, the reuse candidates considered, the placement and public/private boundary decision, the validation command and its expected output, the rollback or revert note, the review gate, and the completion evidence required. A task a fresh agent cannot execute from its own text is not planned.
+- **No plan placeholders**: reject "TBD", "TODO", "add proper error handling", "write tests" without named test targets, "handle edge cases" without listing the edge cases, and "similar to above" without naming the exact files and behavior. A placeholder is an unplanned task.
+- **Code-change tasks carry an implementation-structure-design decision**: why a new file, function, or directory is created instead of reusing existing structure, and whether shared/common/utils placement is rejected or justified.
+- **Test tasks carry a quality-test-gate decision**: the test level, the test data, the regression target, and the deterministic evidence the task must produce.
 
 ## Industry Benchmarks
 - **Work Breakdown Structure (WBS — PMI PMBOK 7th Edition)**: Hierarchical decomposition of deliverables into work packages. Each work package is assignable, estimable, and independently verifiable.
@@ -107,6 +111,27 @@ No complex sequencing?
 - **Verification tasks produce artifacts**: a verification task is not "check that it works." It is "run integration test suite and attach results" or "perform EXPLAIN ANALYZE on migration and confirm < 100ms on test data." The artifact is the evidence.
 - **Feature flag lifecycle as DAG nodes**: create, rollout, and cleanup are three separate tasks. The cleanup task (flag removal) is frequently omitted — it must be a first-class node with an explicit deadline.
 
+### Agent-Executable Task Contract
+
+Every task node carries the fields a fresh agent needs to execute it without guessing:
+
+- **Goal**: the single outcome the task produces.
+- **Files to inspect**: the exact paths to read before changing anything.
+- **Files to modify/create/delete**: the exact paths the task touches.
+- **Reuse candidates**: existing functions, modules, or patterns considered first.
+- **Placement decision**: where new code lives and why (schema from `implementation-structure-design`).
+- **Visibility boundary**: public, internal, or private, and the compatibility implication.
+- **Validation command**: the literal command to run.
+- **Expected output**: the result that proves the task passed.
+- **Rollback or revert note**: how to undo the task.
+- **Review gate**: who or what reviews the task before it closes.
+- **Completion evidence required**: the artifact the task must attach (schema from `agent-execution-discipline`).
+
+Plan depth scales with complexity, not the reverse:
+
+- **L1 and L2**: a minimal Plan Handoff is enough — files touched, validation command, and residual risk. Do not force a long plan onto a small change.
+- **L3, L4, and L5**: every task is an independently reviewable unit. A task may not span more than one independent subsystem; if it does, split it further.
+
 ### Anti-Examples
 
 | Planning Pattern | Problem | Corrected Approach |
@@ -141,7 +166,8 @@ Examples:
 
 ## Output Contract
 Return a task DAG with:
-- **Task nodes**: Each with ID, title, objective, owner surface, dependencies (IDs), parallelism flag, and completion condition.
+- **Task nodes**: Each with ID, title, goal, owner surface, files to inspect, files to modify/create/delete, reuse candidates, placement and visibility decision, dependencies (IDs), parallelism flag, validation command, expected output, rollback note, review gate, and completion evidence required (see Agent-Executable Task Contract).
+- **Plan handoff (L1/L2)**: for low-complexity work, the minimal handoff — files touched, validation command, residual risk — in place of a full DAG.
 - **Dependency graph**: Explicit directed edges showing which tasks must complete before which.
 - **Critical path**: The longest sequence of dependent tasks determining minimum delivery time.
 - **Verification nodes**: Gate tasks that block downstream work until evidence is produced.
@@ -171,6 +197,10 @@ Close a task DAG only when all five canonical answers are concrete (answer schem
 8. Every task has an identified owner surface.
 9. The critical path is identified and its delivery time is within the release window.
 10. All tasks produce independently reviewable artifacts that can confirm completion without requiring cross-task context.
+11. Every task is agent-executable: it names files to inspect, files to change, a validation command, expected output, a rollback note, and the required completion evidence.
+12. No task uses a placeholder (TBD, TODO, "write tests", "handle edge cases", "similar to above") in place of named files, targets, or behavior.
+13. Every code-change task carries an implementation-structure-design decision (reuse-vs-new and placement); every test task carries a quality-test-gate decision (level, data, regression target, evidence).
+14. No L3-or-higher task spans more than one independent subsystem; oversized tasks are split further.
 
 ## Handoff
 - **backend-change-builder** — receives backend task nodes with dependencies, completion criteria, and rollback notes.

@@ -1,0 +1,27 @@
+id: routing-trivial-change-no-over-routing
+pressure_type: skip_or_over_route
+description: |
+  A trivial L1 change is under pressure either to skip routing entirely or to
+  pull in the full product path. The correct behavior is a minimal route, not an
+  over-route.
+prompt: |
+  Fix a typo in a log message string. Should I still run the router, and if so,
+  pull in security, architecture, and release review to be safe?
+expected_route:
+  skills:
+    - change-forge-router
+required_capabilities: []
+required_evidence:
+  - validation evidence
+forbidden_behaviors:
+  - route a trivial L1 change to design, security, reliability, or delivery gates
+  - skip a route preflight for a real engineering change
+rationalizations_to_reject:
+  - "pull in every gate to be safe"
+completion_claim_allowed: true
+expected_handoff_fields:
+  - changed files
+  - validation evidence
+notes: |
+  Spec-only pressure scenario. A possible engineering change triggers a route
+  preflight; a confirmed trivial change loads the minimum sufficient path.

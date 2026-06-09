@@ -29,6 +29,26 @@ CLOSURE_KEYWORDS = {
     "next": ["next", "下一步", "后续"],
 }
 
+# Success-implying completion language. Presence detection only: the gate never
+# judges whether a claim is true, it only notices a completion claim so the
+# closure can be checked for matching validation evidence.
+COMPLETION_LANGUAGE = [
+    "done",
+    "completed",
+    "complete",
+    "fixed",
+    "resolved",
+    "ready for review",
+    "all tests pass",
+    "should pass",
+    "should work",
+    "works now",
+    "everything works",
+    "完成",
+    "修复完毕",
+    "已修复",
+]
+
 # Conditional keyword groups checked only when the matching structure gate fired
 # this turn. They keep the closure reminder targeted instead of always demanding
 # every kind of evidence.
@@ -126,6 +146,7 @@ def main() -> int:
             required_references_detected=signals["references"],
             validation_evidence_detected=signals["validation"],
             residual_risk_detected=signals["risk"],
+            completion_language_detected=signals["completion_language"],
             stage_manifest_detected=bool(manifest.get("stage_present")),
             manifest_current_stage=manifest.get("current_stage", ""),
             manifest_selected_skills=manifest.get("selected_skills", []),
@@ -193,6 +214,9 @@ def _closure_signals(final_text: str, state: dict, manifest: dict) -> dict[str, 
         "risk": has("risk"),
         "references": bool(manifest.get("required_references")) or "reference" in lowered,
         "skills": has("skills"),
+        "completion_language": any(
+            phrase.casefold() in lowered for phrase in COMPLETION_LANGUAGE
+        ),
     }
 
 
@@ -256,6 +280,13 @@ def _closure_message(state: dict, final_text: str, manifest: dict | None = None)
             " Emit the changeforge_route manifest (and changeforge_stage_route for"
             " non-trivial engineering work) so the route is reviewable, not only"
             " described in prose."
+        )
+    if _unverified_completion(final_text, state):
+        headline += (
+            " MISSING: this handoff uses completion language but shows no validation"
+            " evidence. State the fresh command and outcome that back the claim, or"
+            " replace the claim with a not-verified disclosure (status, why not run,"
+            " residual risk, exact command)."
         )
 
     return f"""{headline}
@@ -359,7 +390,29 @@ def _missing_keyword_groups(text: str, state: dict) -> list[str]:
         keywords = CONDITIONAL_KEYWORDS[group]
         if not any(keyword.casefold() in lowered for keyword in keywords) and group not in missing:
             missing.append(group)
+    if _unverified_completion(text, state) and "completion_evidence" not in missing:
+        missing.append("completion_evidence")
     return missing
+
+
+def _unverified_completion(text: str, state: dict) -> bool:
+    """Presence check: completion language with no validation evidence.
+
+    This never judges whether the claim is true. It notices a completion claim
+    in the final handoff and pairs it with the absence of any validation signal,
+    so the closure reminder can ask for evidence or a not-verified disclosure.
+    The Stop gate stays presence-only and fails open.
+    """
+    if not text:
+        return False
+    lowered = text.casefold()
+    has_completion = any(phrase.casefold() in lowered for phrase in COMPLETION_LANGUAGE)
+    if not has_completion:
+        return False
+    has_validation = bool(state.get("validation_seen")) or any(
+        keyword.casefold() in lowered for keyword in CLOSURE_KEYWORDS["validation"]
+    )
+    return not has_validation
 
 
 if __name__ == "__main__":

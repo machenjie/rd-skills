@@ -59,7 +59,86 @@ THRESHOLDS = {
     "split_candidate_high": 60,
     # used_by fan-out that, combined with heavy body, is a concern.
     "used_by_fanout": 4,
+    # Frontmatter description risk gate. validate-skills enforces 120-700 chars;
+    # the audit flags descriptions that drift long enough to read like a body
+    # summary rather than a trigger condition.
+    "description_long_chars": 360,
 }
+
+# A description should say WHEN to use the skill, not summarize the whole workflow.
+DESCRIPTION_WORKFLOW_MARKERS = (
+    " then ",
+    " first ",
+    " next, ",
+    " step ",
+    " step-by-step",
+    " follow these",
+    " and then ",
+    "1.",
+    "2.",
+)
+DESCRIPTION_CATCHALL_MARKERS = (
+    "everything",
+    "anything",
+    "any change",
+    "all changes",
+    "all code",
+    "every change",
+    "general-purpose",
+    "general purpose",
+    "catch-all",
+)
+# Trigger framing or a scope noun shows the description names a situation it
+# applies to, not a bare process. A scoping preposition (for/of/across/into/...)
+# counts as trigger framing. Absence of all of these is the missing-trigger
+# signal, which is a high-precision guard against vague descriptions.
+DESCRIPTION_TRIGGER_MARKERS = (
+    "use when",
+    "use for",
+    " when ",
+    " for ",
+    " before ",
+    " during ",
+    " after ",
+    " of ",
+    " into ",
+    " across ",
+    " on ",
+    " in ",
+    " to ",
+    " with ",
+)
+DESCRIPTION_SCOPE_NOUNS = (
+    "change",
+    "code",
+    "product",
+    "api",
+    "schema",
+    "data",
+    "skill",
+    "review",
+    "test",
+    "release",
+    "migration",
+    "security",
+    "frontend",
+    "backend",
+    "deployment",
+    "request",
+)
+# ChangeForge descriptions conventionally open with a capability verb that states
+# what the skill does ("Designs ...", "Reviews ..."). A capability-verb opening
+# is itself trigger framing, so the missing-trigger check stays a high-precision
+# guard for genuinely vague descriptions.
+DESCRIPTION_CAPABILITY_VERBS = frozenset({
+    "designs", "defines", "reviews", "requires", "adds", "models", "guides",
+    "selects", "analyzes", "verifies", "produces", "identifies", "evaluates",
+    "decomposes", "structures", "separates", "prevents", "plans", "packages",
+    "implements", "extracts", "ensures", "enforces", "diagnoses", "describes",
+    "converts", "classifies", "builds", "breaks", "applies", "maps", "detects",
+    "manages", "maintains", "provides", "coordinates", "generates", "validates",
+    "creates", "optimizes", "reduces", "routes", "handles", "orchestrates",
+})
 
 HEADING_RE = re.compile(r"^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$")
 FENCE_RE = re.compile(r"^(```+|~~~+)")
@@ -130,6 +209,8 @@ class SkillMetrics:
     oversized_sections: list[dict] = field(default_factory=list)
     oversized_tables: list[int] = field(default_factory=list)
     used_by_count: int = 0
+    description_length: int = 0
+    description_findings: list[str] = field(default_factory=list)
     has_shared_optimality: bool = False
     professionalism_score: int = 100
     context_efficiency_score: int = 100
@@ -332,6 +413,39 @@ def _collect_files() -> list[tuple[str, Path]]:
             if skill_file.is_file():
                 files.append((kind, skill_file))
     return files
+
+
+def _description_findings(description: str | None) -> list[str]:
+    """Risk findings for a frontmatter description.
+
+    A description states WHEN to use a skill, not the whole workflow. Returns the
+    advisory findings: too long, workflow-summary, catch-all, or missing trigger.
+    """
+    findings: list[str] = []
+    text = (description or "").strip()
+    if not text:
+        findings.append("description: missing")
+        return findings
+    lowered = " " + text.casefold() + " "
+    if len(text) > THRESHOLDS["description_long_chars"]:
+        findings.append(
+            f"description: long ({len(text)} chars); keep it to trigger conditions, not a body summary"
+        )
+    if any(marker in lowered for marker in DESCRIPTION_WORKFLOW_MARKERS):
+        findings.append("description: reads like a workflow summary; move the workflow to the body")
+    if any(marker in lowered for marker in DESCRIPTION_CATCHALL_MARKERS):
+        findings.append("description: broad/catch-all wording risks over-routing; scope the trigger")
+    first_word_match = re.match(r"\s*([A-Za-z]+)", text)
+    starts_with_capability_verb = bool(
+        first_word_match and first_word_match.group(1).casefold() in DESCRIPTION_CAPABILITY_VERBS
+    )
+    has_trigger = starts_with_capability_verb or any(
+        marker in lowered for marker in DESCRIPTION_TRIGGER_MARKERS
+    )
+    has_scope = any(noun in lowered for noun in DESCRIPTION_SCOPE_NOUNS)
+    if not has_trigger and not has_scope:
+        findings.append("description: states no trigger condition or scope (when/for/use, or a scope noun)")
+    return findings
 
 
 def _base_metrics(kind: str, path: Path, body: str, used_by_counts: dict[str, int]) -> SkillMetrics:
@@ -661,8 +775,13 @@ def audit() -> dict:
             _metadata, _raw, body = parse_frontmatter(path)
         except ValidationProblem:
             body = path.read_text(encoding="utf-8")
+            _metadata = {}
         sections = parse_sections(body)
         metrics = _base_metrics(kind, path, body, used_by_counts)
+        description = _metadata.get("description") if isinstance(_metadata, dict) else None
+        metrics.description_length = len((description or "").strip())
+        metrics.description_findings = _description_findings(description)
+        metrics.findings.extend(metrics.description_findings)
         # Only a full inline block (> 20 lines) counts as shared duplication; a short
         # summary that points at a reference is the resolved state, not a defect.
         optimality_section = _find_section_contains(sections, "solution optimality")
@@ -824,6 +943,20 @@ def _format_md(result: dict) -> str:
         sections = ", ".join(f"{s['title']} ({s['lines']})" for s in item.oversized_sections) or "-"
         a(f"| `{item.name}` | {item.kind} | {item.line_count} | {item.split_candidate_score} | {sections} |")
     a("")
+
+    a("### 2.5 Description Risk (frontmatter triggers)")
+    a("")
+    description_risk = [m for m in metrics if m.description_findings]
+    if not description_risk:
+        a("No frontmatter description risks detected.")
+        a("")
+    else:
+        a("| Skill | Kind | Description chars | Description finding |")
+        a("| --- | --- | --- | --- |")
+        for item in sorted(description_risk, key=lambda m: m.description_length, reverse=True):
+            finding = "; ".join(f.replace("description: ", "") for f in item.description_findings)
+            a(f"| `{item.name}` | {item.kind} | {item.description_length} | {finding} |")
+        a("")
 
     a("## 3. Per Skill Findings")
     a("")

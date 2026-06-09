@@ -2,11 +2,11 @@
 """Generate human-review candidate artifacts from a telemetry suggestion.
 
 This tool turns one reviewed telemetry suggestion into a *candidate* golden
-routing case, hook fixture, or agent-behavior sample. It never edits
-``routing-rules.yaml``, ``SKILL.md``, ``capabilities.yaml``, or any other skill
-rule. It only writes skeleton files under ``evals/routing``,
-``tests/fixtures/hooks``, or ``evals/agent-behavior/samples`` for a human to
-review, complete, and commit.
+routing case, hook fixture, agent-behavior sample, or pressure scenario. It never
+edits ``routing-rules.yaml``, ``SKILL.md``, ``capabilities.yaml``, or any other
+skill rule. It only writes skeleton files under ``evals/routing``,
+``tests/fixtures/hooks``, ``evals/agent-behavior/samples``, or ``evals/pressure``
+for a human to review, complete, and commit.
 
 By default it is a dry run and prints the plan. Pass ``--write`` to write files.
 """
@@ -33,6 +33,7 @@ ALLOWED_TARGETS = {
     "evals/routing": ("yaml", "_routing_case"),
     "tests/fixtures/hooks": ("json", "_hook_fixture"),
     "evals/agent-behavior/samples": ("yaml", "_behavior_sample"),
+    "evals/pressure": ("yaml", "_pressure_scenario"),
 }
 FORBIDDEN_TARGET_HINTS = (
     "routing-rules",
@@ -62,7 +63,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    target = str(suggestion.get("promotion_target") or "").strip()
+    target = str(args.target or suggestion.get("promotion_target") or "").strip()
     if target not in ALLOWED_TARGETS:
         print(
             f"promote-telemetry-suggestion: ERROR: unsupported promotion_target '{target}'. "
@@ -198,6 +199,27 @@ def _behavior_sample(case_name: str, suggestion: dict[str, Any]) -> str:
     return _header_comment(suggestion) + dump_yaml(data)
 
 
+def _pressure_scenario(case_name: str, suggestion: dict[str, Any]) -> str:
+    data = {
+        "generated_from_telemetry": True,
+        "requires_human_review": True,
+        "source_suggestion_id": str(suggestion.get("id", "")),
+        "id": case_name,
+        "pressure_type": "TODO-name-the-pressure-type",
+        "description": _one_line(suggestion.get("evidence")),
+        "prompt": "TODO: replace with the realistic request that applies the pressure.",
+        "expected_route": {"skills": [], "capabilities": [], "stage": ""},
+        "required_capabilities": [],
+        "required_evidence": [],
+        "forbidden_behaviors": [],
+        "rationalizations_to_reject": [],
+        "completion_claim_allowed": False,
+        "expected_handoff_fields": [],
+        "notes": _notes(suggestion),
+    }
+    return _header_comment(suggestion) + dump_yaml(data)
+
+
 def _hook_fixture(case_name: str, suggestion: dict[str, Any]) -> str:
     data = {
         "_generated_from_telemetry": True,
@@ -262,6 +284,14 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument("--write", action="store_true", help="Write files (default is dry run).")
     parser.add_argument("--force", action="store_true", help="Overwrite an existing candidate file.")
+    parser.add_argument(
+        "--target",
+        default=None,
+        help=(
+            "Override the suggestion's promotion_target. Must be one of the allowed "
+            "candidate directories; used to promote a suggestion into a pressure scenario."
+        ),
+    )
     parser.add_argument(
         "--repo-root",
         type=Path,

@@ -220,6 +220,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 22,
+      "description_findings": [],
+      "description_length": 209,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 20,
@@ -247,38 +249,42 @@
       "word_count": 2270
     },
     {
-      "anti_example_section_length": 10,
+      "anti_example_section_length": 14,
       "benchmark_section_length": 22,
-      "bullet_count": 129,
-      "classification": "KEEP_AS_IS",
+      "bullet_count": 152,
+      "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
-      "context_efficiency_score": 84,
-      "critical_details_length": 20,
-      "findings": [],
+      "context_efficiency_score": 69,
+      "critical_details_length": 24,
+      "description_findings": [],
+      "description_length": 240,
+      "findings": [
+        "body 287 lines exceeds review threshold 250"
+      ],
       "has_shared_optimality": false,
-      "heading_count": 20,
+      "heading_count": 21,
       "kind": "professional-skill",
-      "largest_section_lines": 44,
+      "largest_section_lines": 57,
       "largest_section_title": "Output Contract",
-      "largest_table_rows": 9,
-      "line_count": 244,
+      "largest_table_rows": 10,
+      "line_count": 287,
       "name": "ai-code-review-refactor",
       "optimality_section_length": 5,
-      "output_contract_length": 44,
+      "output_contract_length": 57,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
       "professionalism_score": 100,
-      "recommended_phase": "-",
+      "recommended_phase": "P2",
       "reference_link_count": 1,
       "repeated_phrase_count": 8,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
-      "split_candidate_score": 0,
-      "suggested_action": "Within size and professionalism budget; no action required.",
+      "split_candidate_score": 18,
+      "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 2912
+      "word_count": 3653
     },
     {
       "anti_example_section_length": 10,
@@ -288,6 +294,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 22,
+      "description_findings": [],
+      "description_length": 215,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 21,
@@ -317,22 +325,24 @@
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 20,
-      "bullet_count": 112,
+      "bullet_count": 116,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 20,
+      "description_findings": [],
+      "description_length": 212,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 20,
       "kind": "professional-skill",
-      "largest_section_lines": 32,
+      "largest_section_lines": 33,
       "largest_section_title": "Technical Selection Criteria",
       "largest_table_rows": 7,
-      "line_count": 195,
+      "line_count": 199,
       "name": "backend-change-builder",
       "optimality_section_length": 5,
-      "output_contract_length": 14,
+      "output_contract_length": 15,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/backend-change-builder/SKILL.md",
@@ -346,16 +356,18 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 2620
+      "word_count": 2728
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 25,
-      "bullet_count": 99,
+      "bullet_count": 100,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 22,
+      "description_findings": [],
+      "description_length": 217,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 19,
@@ -363,7 +375,7 @@
       "largest_section_lines": 33,
       "largest_section_title": "Technical Selection Criteria",
       "largest_table_rows": 12,
-      "line_count": 186,
+      "line_count": 187,
       "name": "change-documentation-gate",
       "optimality_section_length": 0,
       "output_contract_length": 11,
@@ -380,16 +392,18 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 2530
+      "word_count": 2555
     },
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 3,
-      "bullet_count": 132,
+      "bullet_count": 135,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 88,
-      "critical_details_length": 58,
+      "critical_details_length": 60,
+      "description_findings": [],
+      "description_length": 308,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 16,
@@ -397,7 +411,7 @@
       "largest_section_lines": 67,
       "largest_section_title": "Technical Selection Criteria",
       "largest_table_rows": 0,
-      "line_count": 215,
+      "line_count": 218,
       "name": "change-forge-router",
       "optimality_section_length": 0,
       "output_contract_length": 20,
@@ -414,7 +428,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 0,
       "used_by_count": 0,
-      "word_count": 3631
+      "word_count": 3791
     },
     {
       "anti_example_section_length": 10,
@@ -424,6 +438,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 19,
+      "description_findings": [],
+      "description_length": 228,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 20,
@@ -458,6 +474,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 26,
+      "description_findings": [],
+      "description_length": 243,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 19,
@@ -492,6 +510,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 19,
+      "description_findings": [],
+      "description_length": 194,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 20,
@@ -526,6 +546,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 19,
+      "description_findings": [],
+      "description_length": 213,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 19,
@@ -560,6 +582,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 23,
+      "description_findings": [],
+      "description_length": 253,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 20,
@@ -594,6 +618,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 19,
+      "description_findings": [],
+      "description_length": 189,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 19,
@@ -628,6 +654,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 20,
+      "description_findings": [],
+      "description_length": 205,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 20,
@@ -657,22 +685,24 @@
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 20,
-      "bullet_count": 105,
+      "bullet_count": 109,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 20,
+      "description_findings": [],
+      "description_length": 214,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 20,
       "kind": "professional-skill",
-      "largest_section_lines": 29,
+      "largest_section_lines": 30,
       "largest_section_title": "Technical Selection Criteria",
       "largest_table_rows": 7,
-      "line_count": 188,
+      "line_count": 192,
       "name": "frontend-change-builder",
       "optimality_section_length": 5,
-      "output_contract_length": 13,
+      "output_contract_length": 14,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/frontend-change-builder/SKILL.md",
@@ -686,7 +716,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 2765
+      "word_count": 2862
     },
     {
       "anti_example_section_length": 10,
@@ -696,6 +726,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 20,
+      "description_findings": [],
+      "description_length": 234,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 20,
@@ -725,22 +757,24 @@
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 22,
-      "bullet_count": 134,
+      "bullet_count": 144,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 84,
-      "critical_details_length": 22,
+      "critical_details_length": 12,
+      "description_findings": [],
+      "description_length": 202,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 20,
+      "heading_count": 21,
       "kind": "professional-skill",
       "largest_section_lines": 37,
       "largest_section_title": "Technical Selection Criteria",
       "largest_table_rows": 9,
-      "line_count": 228,
+      "line_count": 242,
       "name": "quality-test-gate",
       "optimality_section_length": 0,
-      "output_contract_length": 16,
+      "output_contract_length": 17,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/quality-test-gate/SKILL.md",
@@ -754,7 +788,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 3349
+      "word_count": 3659
     },
     {
       "anti_example_section_length": 10,
@@ -764,6 +798,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 21,
+      "description_findings": [],
+      "description_length": 276,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 22,
@@ -798,6 +834,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 84,
       "critical_details_length": 22,
+      "description_findings": [],
+      "description_length": 273,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 22,
@@ -827,22 +865,24 @@
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 20,
-      "bullet_count": 93,
+      "bullet_count": 115,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 84,
-      "critical_details_length": 19,
+      "critical_details_length": 40,
+      "description_findings": [],
+      "description_length": 201,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 19,
+      "heading_count": 20,
       "kind": "professional-skill",
-      "largest_section_lines": 35,
-      "largest_section_title": "Technical Selection Criteria",
+      "largest_section_lines": 40,
+      "largest_section_title": "Critical Details",
       "largest_table_rows": 7,
-      "line_count": 177,
+      "line_count": 207,
       "name": "task-dag-planner",
       "optimality_section_length": 0,
-      "output_contract_length": 13,
+      "output_contract_length": 14,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/task-dag-planner/SKILL.md",
@@ -856,7 +896,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 2628
+      "word_count": 3122
     },
     {
       "anti_example_section_length": 0,
@@ -866,6 +906,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 100,
       "critical_details_length": 24,
+      "description_findings": [],
+      "description_length": 123,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 16,
@@ -895,19 +937,25 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 9,
-      "bullet_count": 120,
+      "bullet_count": 130,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 90,
-      "critical_details_length": 71,
-      "findings": [],
+      "critical_details_length": 73,
+      "description_findings": [
+        "description: long (365 chars); keep it to trigger conditions, not a body summary"
+      ],
+      "description_length": 365,
+      "findings": [
+        "description: long (365 chars); keep it to trigger conditions, not a body summary"
+      ],
       "has_shared_optimality": false,
-      "heading_count": 22,
+      "heading_count": 24,
       "kind": "foundation-capability",
-      "largest_section_lines": 71,
+      "largest_section_lines": 73,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 0,
-      "line_count": 233,
+      "line_count": 250,
       "name": "agent-execution-discipline",
       "optimality_section_length": 0,
       "output_contract_length": 24,
@@ -916,7 +964,7 @@
       "path": "src/foundation/capabilities/agent-execution-discipline/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 0,
+      "reference_link_count": 2,
       "repeated_phrase_count": 0,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -924,7 +972,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 19,
-      "word_count": 2308
+      "word_count": 2737
     },
     {
       "anti_example_section_length": 0,
@@ -934,6 +982,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 36,
+      "description_findings": [],
+      "description_length": 141,
       "findings": [
         "Industry Benchmarks is 46 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -970,6 +1020,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 17,
+      "description_findings": [],
+      "description_length": 145,
       "findings": [
         "Industry Benchmarks is 49 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1006,6 +1058,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 30,
+      "description_findings": [],
+      "description_length": 213,
       "findings": [
         "Industry Benchmarks is 52 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1042,6 +1096,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 39,
+      "description_findings": [],
+      "description_length": 139,
       "findings": [
         "Industry Benchmarks is 54 lines (> 40) \u2014 summarize and move the deep list to a reference",
         "Anti-Examples block is 15 lines (> 14) \u2014 move-to-reference candidate"
@@ -1079,6 +1135,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 34,
+      "description_findings": [],
+      "description_length": 124,
       "findings": [
         "Industry Benchmarks is 45 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1115,6 +1173,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 90,
       "critical_details_length": 29,
+      "description_findings": [],
+      "description_length": 131,
       "findings": [
         "Industry Benchmarks is 56 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1151,6 +1211,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 100,
       "critical_details_length": 35,
+      "description_findings": [],
+      "description_length": 134,
       "findings": [
         "Industry Benchmarks is 52 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1187,6 +1249,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 34,
+      "description_findings": [],
+      "description_length": 137,
       "findings": [
         "Industry Benchmarks is 45 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1223,6 +1287,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 90,
       "critical_details_length": 25,
+      "description_findings": [],
+      "description_length": 154,
       "findings": [
         "Industry Benchmarks is 58 lines (> 40) \u2014 summarize and move the deep list to a reference",
         "Anti-Examples block is 15 lines (> 14) \u2014 move-to-reference candidate"
@@ -1260,6 +1326,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 90,
       "critical_details_length": 73,
+      "description_findings": [],
+      "description_length": 122,
       "findings": [
         "Industry Benchmarks is 45 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1296,6 +1364,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 98,
       "critical_details_length": 13,
+      "description_findings": [],
+      "description_length": 194,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 15,
@@ -1323,26 +1393,64 @@
       "word_count": 1667
     },
     {
+      "anti_example_section_length": 0,
+      "benchmark_section_length": 4,
+      "bullet_count": 57,
+      "classification": "KEEP_AS_IS",
+      "code_block_count": 0,
+      "context_efficiency_score": 100,
+      "critical_details_length": 20,
+      "description_findings": [],
+      "description_length": 275,
+      "findings": [],
+      "has_shared_optimality": false,
+      "heading_count": 18,
+      "kind": "foundation-capability",
+      "largest_section_lines": 20,
+      "largest_section_title": "Critical Details",
+      "largest_table_rows": 0,
+      "line_count": 142,
+      "name": "code-clarity-maintainability",
+      "optimality_section_length": 0,
+      "output_contract_length": 15,
+      "oversized_sections": [],
+      "oversized_tables": [],
+      "path": "src/foundation/capabilities/code-clarity-maintainability/SKILL.md",
+      "professionalism_score": 100,
+      "recommended_phase": "-",
+      "reference_link_count": 0,
+      "repeated_phrase_count": 0,
+      "risk_of_change": "low",
+      "routing_clarity_score": 100,
+      "split_candidate_score": 0,
+      "suggested_action": "Compact decision aid within budget; no action required.",
+      "table_count": 0,
+      "used_by_count": 6,
+      "word_count": 1461
+    },
+    {
       "anti_example_section_length": 13,
-      "benchmark_section_length": 48,
-      "bullet_count": 83,
+      "benchmark_section_length": 49,
+      "bullet_count": 96,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 90,
-      "critical_details_length": 36,
+      "critical_details_length": 38,
+      "description_findings": [],
+      "description_length": 158,
       "findings": [
-        "Industry Benchmarks is 48 lines (> 40) \u2014 summarize and move the deep list to a reference"
+        "Industry Benchmarks is 49 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
       "has_shared_optimality": false,
       "heading_count": 19,
       "kind": "foundation-capability",
-      "largest_section_lines": 48,
+      "largest_section_lines": 49,
       "largest_section_title": "Industry Benchmarks",
-      "largest_table_rows": 14,
-      "line_count": 204,
+      "largest_table_rows": 15,
+      "line_count": 218,
       "name": "code-review",
       "optimality_section_length": 0,
-      "output_contract_length": 21,
+      "output_contract_length": 25,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/code-review/SKILL.md",
@@ -1356,7 +1464,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 3,
       "used_by_count": 2,
-      "word_count": 2992
+      "word_count": 3411
     },
     {
       "anti_example_section_length": 15,
@@ -1366,6 +1474,8 @@
       "code_block_count": 3,
       "context_efficiency_score": 82,
       "critical_details_length": 17,
+      "description_findings": [],
+      "description_length": 141,
       "findings": [
         "section 'Industry Benchmarks' is 81 lines (> 80) \u2014 reference candidate",
         "Industry Benchmarks is 81 lines (> 40) \u2014 summarize and move the deep list to a reference",
@@ -1409,6 +1519,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 90,
       "critical_details_length": 33,
+      "description_findings": [],
+      "description_length": 191,
       "findings": [
         "Industry Benchmarks is 63 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1445,6 +1557,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 16,
+      "description_findings": [],
+      "description_length": 156,
       "findings": [
         "Industry Benchmarks is 73 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1481,6 +1595,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 28,
+      "description_findings": [],
+      "description_length": 147,
       "findings": [
         "Industry Benchmarks is 50 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1517,6 +1633,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 12,
+      "description_findings": [],
+      "description_length": 160,
       "findings": [
         "Industry Benchmarks is 62 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1553,6 +1671,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 94,
       "critical_details_length": 19,
+      "description_findings": [],
+      "description_length": 255,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 16,
@@ -1587,6 +1707,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 90,
       "critical_details_length": 25,
+      "description_findings": [],
+      "description_length": 203,
       "findings": [
         "Industry Benchmarks is 78 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1623,6 +1745,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 27,
+      "description_findings": [],
+      "description_length": 206,
       "findings": [
         "Industry Benchmarks is 69 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1659,6 +1783,8 @@
       "code_block_count": 3,
       "context_efficiency_score": 82,
       "critical_details_length": 12,
+      "description_findings": [],
+      "description_length": 161,
       "findings": [
         "section 'Industry Benchmarks' is 101 lines (> 80) \u2014 reference candidate",
         "Industry Benchmarks is 101 lines (> 40) \u2014 summarize and move the deep list to a reference",
@@ -1702,6 +1828,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 24,
+      "description_findings": [],
+      "description_length": 201,
       "findings": [
         "Industry Benchmarks is 63 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1738,6 +1866,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 25,
+      "description_findings": [],
+      "description_length": 149,
       "findings": [
         "Industry Benchmarks is 59 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1774,6 +1904,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 100,
       "critical_details_length": 4,
+      "description_findings": [],
+      "description_length": 127,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 14,
@@ -1808,6 +1940,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 82,
       "critical_details_length": 24,
+      "description_findings": [],
+      "description_length": 201,
       "findings": [
         "section 'Industry Benchmarks' is 86 lines (> 80) \u2014 reference candidate",
         "Industry Benchmarks is 86 lines (> 40) \u2014 summarize and move the deep list to a reference"
@@ -1850,6 +1984,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 100,
       "critical_details_length": 4,
+      "description_findings": [],
+      "description_length": 126,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 14,
@@ -1884,6 +2020,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 100,
       "critical_details_length": 4,
+      "description_findings": [],
+      "description_length": 138,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 14,
@@ -1918,6 +2056,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 24,
+      "description_findings": [],
+      "description_length": 138,
       "findings": [
         "Industry Benchmarks is 72 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1954,6 +2094,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 23,
+      "description_findings": [],
+      "description_length": 122,
       "findings": [
         "Industry Benchmarks is 67 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -1990,7 +2132,15 @@
       "code_block_count": 0,
       "context_efficiency_score": 100,
       "critical_details_length": 8,
-      "findings": [],
+      "description_findings": [
+        "description: long (408 chars); keep it to trigger conditions, not a body summary",
+        "description: reads like a workflow summary; move the workflow to the body"
+      ],
+      "description_length": 408,
+      "findings": [
+        "description: long (408 chars); keep it to trigger conditions, not a body summary",
+        "description: reads like a workflow summary; move the workflow to the body"
+      ],
       "has_shared_optimality": false,
       "heading_count": 14,
       "kind": "foundation-capability",
@@ -2014,7 +2164,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 8,
-      "word_count": 1285
+      "word_count": 1288
     },
     {
       "anti_example_section_length": 14,
@@ -2024,6 +2174,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 82,
       "critical_details_length": 25,
+      "description_findings": [],
+      "description_length": 126,
       "findings": [
         "section 'Industry Benchmarks' is 103 lines (> 80) \u2014 reference candidate",
         "Industry Benchmarks is 103 lines (> 40) \u2014 summarize and move the deep list to a reference"
@@ -2066,6 +2218,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 24,
+      "description_findings": [],
+      "description_length": 134,
       "findings": [
         "Industry Benchmarks is 74 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2102,6 +2256,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 23,
+      "description_findings": [],
+      "description_length": 218,
       "findings": [
         "Industry Benchmarks is 62 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2138,6 +2294,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 90,
       "critical_details_length": 23,
+      "description_findings": [],
+      "description_length": 130,
       "findings": [
         "Industry Benchmarks is 75 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2174,6 +2332,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 98,
       "critical_details_length": 13,
+      "description_findings": [],
+      "description_length": 182,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 15,
@@ -2208,6 +2368,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 82,
       "critical_details_length": 24,
+      "description_findings": [],
+      "description_length": 156,
       "findings": [
         "section 'Industry Benchmarks' is 86 lines (> 80) \u2014 reference candidate",
         "Industry Benchmarks is 86 lines (> 40) \u2014 summarize and move the deep list to a reference"
@@ -2250,6 +2412,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 23,
+      "description_findings": [],
+      "description_length": 151,
       "findings": [
         "Industry Benchmarks is 78 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2286,6 +2450,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 23,
+      "description_findings": [],
+      "description_length": 142,
       "findings": [
         "Industry Benchmarks is 75 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2322,6 +2488,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 94,
       "critical_details_length": 16,
+      "description_findings": [],
+      "description_length": 260,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 16,
@@ -2356,6 +2524,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 98,
       "critical_details_length": 14,
+      "description_findings": [],
+      "description_length": 167,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 15,
@@ -2390,6 +2560,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 92,
       "critical_details_length": 23,
+      "description_findings": [],
+      "description_length": 201,
       "findings": [
         "section 'Industry Benchmarks' is 83 lines (> 80) \u2014 reference candidate",
         "Industry Benchmarks is 83 lines (> 40) \u2014 summarize and move the deep list to a reference"
@@ -2427,22 +2599,24 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 128,
+      "bullet_count": 131,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 90,
-      "critical_details_length": 43,
+      "critical_details_length": 47,
+      "description_findings": [],
+      "description_length": 297,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 21,
+      "heading_count": 22,
       "kind": "foundation-capability",
-      "largest_section_lines": 43,
+      "largest_section_lines": 47,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 0,
-      "line_count": 237,
+      "line_count": 244,
       "name": "implementation-structure-design",
       "optimality_section_length": 0,
-      "output_contract_length": 29,
+      "output_contract_length": 24,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/implementation-structure-design/SKILL.md",
@@ -2456,7 +2630,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 7,
-      "word_count": 3742
+      "word_count": 4070
     },
     {
       "anti_example_section_length": 13,
@@ -2466,6 +2640,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 23,
+      "description_findings": [],
+      "description_length": 127,
       "findings": [
         "Industry Benchmarks is 57 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2502,6 +2678,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 23,
+      "description_findings": [],
+      "description_length": 132,
       "findings": [
         "Industry Benchmarks is 46 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2538,6 +2716,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 10,
+      "description_findings": [],
+      "description_length": 157,
       "findings": [
         "Industry Benchmarks is 60 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2574,6 +2754,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 22,
+      "description_findings": [],
+      "description_length": 146,
       "findings": [
         "Industry Benchmarks is 47 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2610,6 +2792,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 19,
+      "description_findings": [],
+      "description_length": 142,
       "findings": [
         "Industry Benchmarks is 56 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2646,6 +2830,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 94,
       "critical_details_length": 15,
+      "description_findings": [],
+      "description_length": 234,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 16,
@@ -2680,6 +2866,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 90,
       "critical_details_length": 20,
+      "description_findings": [],
+      "description_length": 151,
       "findings": [
         "Industry Benchmarks is 73 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2716,6 +2904,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 92,
       "critical_details_length": 88,
+      "description_findings": [],
+      "description_length": 223,
       "findings": [
         "section 'Critical Details' is 88 lines (> 80) \u2014 reference candidate"
       ],
@@ -2757,6 +2947,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 218,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 16,
@@ -2791,6 +2983,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 98,
       "critical_details_length": 9,
+      "description_findings": [],
+      "description_length": 234,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 17,
@@ -2825,6 +3019,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 10,
+      "description_findings": [],
+      "description_length": 199,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 15,
@@ -2859,6 +3055,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 140,
       "findings": [
         "Industry Benchmarks is 79 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2895,6 +3093,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 20,
+      "description_findings": [],
+      "description_length": 157,
       "findings": [
         "Industry Benchmarks is 69 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2931,6 +3131,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 36,
+      "description_findings": [],
+      "description_length": 152,
       "findings": [
         "Industry Benchmarks is 56 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2967,6 +3169,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 149,
       "findings": [
         "Industry Benchmarks is 46 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -2998,24 +3202,26 @@
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 75,
-      "bullet_count": 44,
+      "bullet_count": 59,
       "classification": "KEEP_AS_IS",
       "code_block_count": 2,
       "context_efficiency_score": 100,
-      "critical_details_length": 18,
+      "critical_details_length": 20,
+      "description_findings": [],
+      "description_length": 133,
       "findings": [
         "Industry Benchmarks is 75 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
       "has_shared_optimality": false,
-      "heading_count": 21,
+      "heading_count": 18,
       "kind": "foundation-capability",
       "largest_section_lines": 75,
       "largest_section_title": "Industry Benchmarks",
       "largest_table_rows": 7,
-      "line_count": 191,
+      "line_count": 195,
       "name": "module-boundary-design",
       "optimality_section_length": 0,
-      "output_contract_length": 16,
+      "output_contract_length": 19,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/module-boundary-design/SKILL.md",
@@ -3028,8 +3234,8 @@
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
-      "used_by_count": 3,
-      "word_count": 2343
+      "used_by_count": 5,
+      "word_count": 2684
     },
     {
       "anti_example_section_length": 11,
@@ -3039,6 +3245,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 144,
       "findings": [
         "Industry Benchmarks is 78 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3075,6 +3283,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 120,
       "findings": [
         "Industry Benchmarks is 61 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3111,6 +3321,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 122,
       "findings": [
         "Industry Benchmarks is 73 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3147,6 +3359,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 16,
+      "description_findings": [],
+      "description_length": 227,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 16,
@@ -3181,6 +3395,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 7,
+      "description_findings": [],
+      "description_length": 158,
       "findings": [
         "Industry Benchmarks is 51 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3217,6 +3433,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 82,
       "critical_details_length": 19,
+      "description_findings": [],
+      "description_length": 141,
       "findings": [
         "section 'Industry Benchmarks' is 100 lines (> 80) \u2014 reference candidate",
         "Industry Benchmarks is 100 lines (> 40) \u2014 summarize and move the deep list to a reference"
@@ -3259,6 +3477,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 19,
+      "description_findings": [],
+      "description_length": 198,
       "findings": [
         "Industry Benchmarks is 69 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3295,6 +3515,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 19,
+      "description_findings": [],
+      "description_length": 148,
       "findings": [
         "Industry Benchmarks is 55 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3331,6 +3553,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 21,
+      "description_findings": [],
+      "description_length": 145,
       "findings": [
         "Industry Benchmarks is 50 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3367,6 +3591,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 130,
       "findings": [
         "Industry Benchmarks is 61 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3403,6 +3629,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 94,
       "critical_details_length": 14,
+      "description_findings": [],
+      "description_length": 269,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 16,
@@ -3432,11 +3660,13 @@
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 67,
-      "bullet_count": 46,
+      "bullet_count": 65,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 100,
-      "critical_details_length": 7,
+      "critical_details_length": 9,
+      "description_findings": [],
+      "description_length": 149,
       "findings": [
         "Industry Benchmarks is 67 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3446,10 +3676,10 @@
       "largest_section_lines": 67,
       "largest_section_title": "Industry Benchmarks",
       "largest_table_rows": 7,
-      "line_count": 168,
+      "line_count": 187,
       "name": "refactoring",
       "optimality_section_length": 0,
-      "output_contract_length": 18,
+      "output_contract_length": 26,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/refactoring/SKILL.md",
@@ -3463,7 +3693,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
       "used_by_count": 2,
-      "word_count": 2700
+      "word_count": 3086
     },
     {
       "anti_example_section_length": 11,
@@ -3473,6 +3703,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 149,
       "findings": [
         "Industry Benchmarks is 77 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3509,6 +3741,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 19,
+      "description_findings": [],
+      "description_length": 126,
       "findings": [
         "Industry Benchmarks is 71 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3545,6 +3779,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 8,
+      "description_findings": [],
+      "description_length": 154,
       "findings": [
         "Industry Benchmarks is 67 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3581,6 +3817,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 7,
+      "description_findings": [],
+      "description_length": 157,
       "findings": [
         "Industry Benchmarks is 76 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3617,6 +3855,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 157,
       "findings": [
         "Industry Benchmarks is 71 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3653,6 +3893,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 92,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 169,
       "findings": [
         "section 'Industry Benchmarks' is 98 lines (> 80) \u2014 reference candidate",
         "Industry Benchmarks is 98 lines (> 40) \u2014 summarize and move the deep list to a reference"
@@ -3695,6 +3937,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 129,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 17,
@@ -3729,6 +3973,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 94,
       "critical_details_length": 17,
+      "description_findings": [],
+      "description_length": 257,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 16,
@@ -3763,6 +4009,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 136,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 17,
@@ -3797,6 +4045,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 98,
       "critical_details_length": 15,
+      "description_findings": [],
+      "description_length": 181,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 15,
@@ -3831,6 +4081,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 150,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 17,
@@ -3865,6 +4117,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 19,
+      "description_findings": [],
+      "description_length": 172,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 17,
@@ -3899,6 +4153,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 162,
       "findings": [
         "Industry Benchmarks is 75 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -3935,6 +4191,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 94,
       "critical_details_length": 21,
+      "description_findings": [],
+      "description_length": 252,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 16,
@@ -3964,28 +4222,34 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 12,
-      "bullet_count": 120,
+      "bullet_count": 141,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
       "critical_details_length": 13,
-      "findings": [],
+      "description_findings": [
+        "description: long (541 chars); keep it to trigger conditions, not a body summary"
+      ],
+      "description_length": 541,
+      "findings": [
+        "description: long (541 chars); keep it to trigger conditions, not a body summary"
+      ],
       "has_shared_optimality": false,
-      "heading_count": 14,
+      "heading_count": 15,
       "kind": "foundation-capability",
-      "largest_section_lines": 30,
+      "largest_section_lines": 45,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 0,
-      "line_count": 171,
+      "line_count": 200,
       "name": "skill-authoring-expert",
       "optimality_section_length": 0,
-      "output_contract_length": 30,
+      "output_contract_length": 45,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/skill-authoring-expert/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "-",
-      "reference_link_count": 0,
+      "reference_link_count": 2,
       "repeated_phrase_count": 0,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
@@ -3993,7 +4257,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 4,
-      "word_count": 1414
+      "word_count": 1725
     },
     {
       "anti_example_section_length": 0,
@@ -4003,6 +4267,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 82,
       "critical_details_length": 8,
+      "description_findings": [],
+      "description_length": 348,
       "findings": [
         "section 'Industry Benchmarks' is 114 lines (> 80) \u2014 reference candidate",
         "Industry Benchmarks is 114 lines (> 40) \u2014 summarize and move the deep list to a reference"
@@ -4045,6 +4311,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 96,
       "critical_details_length": 20,
+      "description_findings": [],
+      "description_length": 260,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 16,
@@ -4079,6 +4347,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 168,
       "findings": [
         "Industry Benchmarks is 57 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -4115,6 +4385,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 120,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 17,
@@ -4144,11 +4416,13 @@
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 52,
-      "bullet_count": 36,
+      "bullet_count": 39,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 210,
       "findings": [
         "Industry Benchmarks is 52 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -4158,7 +4432,7 @@
       "largest_section_lines": 52,
       "largest_section_title": "Industry Benchmarks",
       "largest_table_rows": 7,
-      "line_count": 149,
+      "line_count": 152,
       "name": "task-dag-decomposition",
       "optimality_section_length": 0,
       "output_contract_length": 13,
@@ -4175,7 +4449,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
       "used_by_count": 1,
-      "word_count": 2374
+      "word_count": 2491
     },
     {
       "anti_example_section_length": 0,
@@ -4185,6 +4459,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 9,
+      "description_findings": [],
+      "description_length": 245,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 15,
@@ -4219,6 +4495,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 123,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 17,
@@ -4253,6 +4531,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 139,
       "findings": [
         "Industry Benchmarks is 44 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -4289,6 +4569,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 155,
       "findings": [
         "Industry Benchmarks is 55 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -4325,6 +4607,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 216,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 17,
@@ -4359,6 +4643,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 94,
       "critical_details_length": 17,
+      "description_findings": [],
+      "description_length": 231,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 16,
@@ -4393,6 +4679,8 @@
       "code_block_count": 2,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 140,
       "findings": [
         "Industry Benchmarks is 56 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -4429,6 +4717,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 92,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 125,
       "findings": [
         "section 'Industry Benchmarks' is 81 lines (> 80) \u2014 reference candidate",
         "Industry Benchmarks is 81 lines (> 40) \u2014 summarize and move the deep list to a reference"
@@ -4471,6 +4761,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 134,
       "findings": [
         "Industry Benchmarks is 44 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -4507,6 +4799,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 148,
       "findings": [
         "Industry Benchmarks is 44 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -4543,6 +4837,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 143,
       "findings": [
         "Industry Benchmarks is 48 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -4579,6 +4875,8 @@
       "code_block_count": 1,
       "context_efficiency_score": 100,
       "critical_details_length": 19,
+      "description_findings": [],
+      "description_length": 142,
       "findings": [
         "Industry Benchmarks is 41 lines (> 40) \u2014 summarize and move the deep list to a reference"
       ],
@@ -4615,6 +4913,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 98,
       "critical_details_length": 19,
+      "description_findings": [],
+      "description_length": 229,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 18,
@@ -4649,6 +4949,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 98,
       "critical_details_length": 20,
+      "description_findings": [],
+      "description_length": 194,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 19,
@@ -4683,6 +4985,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 98,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 231,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 17,
@@ -4717,6 +5021,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 98,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 254,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 17,
@@ -4751,6 +5057,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 98,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 252,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 17,
@@ -4785,6 +5093,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 98,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 232,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 17,
@@ -4819,6 +5129,8 @@
       "code_block_count": 0,
       "context_efficiency_score": 98,
       "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 217,
       "findings": [],
       "has_shared_optimality": false,
       "heading_count": 17,
@@ -4848,10 +5160,11 @@
   ],
   "summary": {
     "classifications": {
-      "KEEP_AS_IS": 130
+      "KEEP_AS_IS": 130,
+      "TIGHTEN_BODY": 1
     },
     "domain_extensions": 7,
-    "foundation_capabilities": 104,
+    "foundation_capabilities": 105,
     "heavy_domain": 0,
     "heavy_foundation": 0,
     "heavy_professional": 0,
@@ -4862,6 +5175,7 @@
   },
   "thresholds": {
     "common_phrase_min_files": 3,
+    "description_long_chars": 360,
     "domain_heavy_lines": 300,
     "foundation_heavy_lines": 250,
     "low_professionalism": 70,

@@ -31,6 +31,8 @@ python3 scripts/validate-skill-content-size.py
 python3 scripts/eval-routing.py
 python3 scripts/validate-stage-routing-architecture.py
 python3 scripts/validate-hooks.py
+python3 scripts/eval-agent-behavior.py
+python3 scripts/eval-pressure-behavior.py
 python3 -m unittest discover -s tests
 python3 scripts/validate-codegen-benchmarks.py
 python3 scripts/run-codegen-benchmarks.py --limit 3

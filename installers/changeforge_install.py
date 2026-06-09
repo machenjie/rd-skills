@@ -70,10 +70,21 @@ HOOK_PROJECT_SUBPATH = {
 HOOK_MANIFEST_NAME = ".changeforge-hook-manifest.json"
 HOOK_SCRIPT_NAMES = (
     "changeforge_common.py",
+    "changeforge_session_bootstrap.py",
     "changeforge_post_edit_structure_gate.py",
     "changeforge_risk_surface_gate.py",
     "changeforge_stop_closure_gate.py",
 )
+
+# Advisory route-preflight bootstrap. The fragment is plain guidance text, not an
+# executable hook, so it can be installed for any project scope and never needs
+# to be trusted. Codex has no session-start hook, so this is its bootstrap path.
+BOOTSTRAP_FRAGMENT_NAME = "changeforge-route-preflight.md"
+UNIVERSAL_BOOTSTRAP_SOURCE = (
+    ROOT / "dist" / "universal" / "bootstrap" / BOOTSTRAP_FRAGMENT_NAME
+)
+BOOTSTRAP_PROJECT_SUBPATH = Path(".changeforge")
+BOOTSTRAP_AGENTS = ("codex", "claude", "copilot")
 
 
 class InstallError(Exception):
@@ -89,6 +100,7 @@ class HookPlan:
     target_root: Path
     script_actions: list[tuple[Path, Path, str]] = field(default_factory=list)
     manifest_action: tuple[Path, Path, str] | None = None
+    bootstrap_action: tuple[Path, Path, str] | None = None
     config_target: Path | None = None
     config_payload: dict[str, Any] | None = None
     config_summary: list[str] = field(default_factory=list)
@@ -425,6 +437,15 @@ def plan_hook_install(agent: str, project_root: Path) -> HookPlan:
         "overwrite" if manifest_target.exists() else "create",
     )
 
+    bootstrap_source = source_root / BOOTSTRAP_FRAGMENT_NAME
+    if bootstrap_source.is_file():
+        bootstrap_target = target_root / BOOTSTRAP_FRAGMENT_NAME
+        plan.bootstrap_action = (
+            bootstrap_source,
+            bootstrap_target,
+            "overwrite" if bootstrap_target.exists() else "create",
+        )
+
     if agent == "codex":
         _plan_codex_config(plan)
     else:
@@ -555,6 +576,9 @@ def apply_hook_install(plan: HookPlan, dry_run: bool) -> None:
     if plan.manifest_action is not None:
         manifest_source, manifest_target, _ = plan.manifest_action
         shutil.copy2(manifest_source, manifest_target)
+    if plan.bootstrap_action is not None:
+        bootstrap_source, bootstrap_target, _ = plan.bootstrap_action
+        shutil.copy2(bootstrap_source, bootstrap_target)
     if plan.config_target is not None and plan.config_payload is not None:
         write_json(plan.config_target, plan.config_payload)
 
@@ -569,9 +593,89 @@ def render_hook_plan(plan: HookPlan) -> list[str]:
         lines.append(f"hooks: {action} script {destination.name}")
     if plan.manifest_action is not None:
         lines.append(f"hooks: {plan.manifest_action[2]} {HOOK_MANIFEST_NAME}")
+    if plan.bootstrap_action is not None:
+        lines.append(f"hooks: {plan.bootstrap_action[2]} {BOOTSTRAP_FRAGMENT_NAME}")
     for summary in plan.config_summary:
         lines.append(f"hooks: config: {summary}")
     for note in plan.notes:
         lines.append(f"hooks: note: {note}")
     return lines
+
+
+@dataclass
+class BootstrapPlan:
+    """Describes how the advisory route-preflight fragment would be installed."""
+
+    agent: str
+    scope: str
+    source: Path
+    target: Path
+    action: str
+    notes: list[str] = field(default_factory=list)
+
+
+def bootstrap_supported(agent: str, scope: str) -> bool:
+    """The advisory bootstrap fragment can be installed for any project scope."""
+    return scope == "project" and agent in BOOTSTRAP_AGENTS
+
+
+def plan_bootstrap_install(agent: str, scope: str, project_root: Path) -> BootstrapPlan:
+    """Plan a standalone advisory bootstrap install without writing anything.
+
+    This installs only the route-preflight guidance fragment. It is the
+    bootstrap path for runtimes without a session-start hook (such as Codex) and
+    for users who want the preflight reminder without trusting executable hooks.
+    """
+    if not bootstrap_supported(agent, scope):
+        raise InstallError("--with-bootstrap is only supported for project installs")
+    if not UNIVERSAL_BOOTSTRAP_SOURCE.is_file():
+        raise InstallError(
+            f"missing built bootstrap fragment {UNIVERSAL_BOOTSTRAP_SOURCE.relative_to(ROOT)}; "
+            "run python3 scripts/build.py --profile <profile>"
+        )
+    target = (
+        project_root.expanduser().resolve()
+        / BOOTSTRAP_PROJECT_SUBPATH
+        / BOOTSTRAP_FRAGMENT_NAME
+    )
+    action = "overwrite" if target.exists() else "create"
+    notes = [
+        "bootstrap is advisory route-preflight guidance, not an executable hook",
+        "reference this file from your agent instructions (for example AGENTS.md) to enable it",
+    ]
+    if agent == "claude":
+        notes.append(
+            "Claude project hooks can also wire this as a SessionStart hook via --with-hooks"
+        )
+    elif agent == "codex":
+        notes.append("Codex has no session-start hook; this advisory fragment is its bootstrap path")
+    return BootstrapPlan(
+        agent=agent,
+        scope=scope,
+        source=UNIVERSAL_BOOTSTRAP_SOURCE,
+        target=target,
+        action=action,
+        notes=notes,
+    )
+
+
+def apply_bootstrap_install(plan: BootstrapPlan, dry_run: bool) -> None:
+    """Write the planned bootstrap fragment. Only touches the managed fragment file."""
+    if dry_run:
+        return
+    plan.target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(plan.source, plan.target)
+
+
+def render_bootstrap_plan(plan: BootstrapPlan) -> list[str]:
+    """Human-readable description of a bootstrap plan for dry-run output."""
+    lines = [
+        f"bootstrap: agent {plan.agent}",
+        f"bootstrap: target {plan.target}",
+        f"bootstrap: {plan.action} {BOOTSTRAP_FRAGMENT_NAME}",
+    ]
+    for note in plan.notes:
+        lines.append(f"bootstrap: note: {note}")
+    return lines
+
 

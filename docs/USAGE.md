@@ -33,13 +33,15 @@ python3 scripts/build.py --profile dev
 
 The build writes deterministic runtime outputs under `dist/`, including agent-specific layouts for Codex, Claude Code, GitHub Copilot, and OpenAI API zip bundles.
 
-The build also refreshes optional Codex and Claude project hook artifacts. Hooks
-are warning-only execution reminders and are not installed by the first-stage
-installer flow:
+The build also refreshes optional Codex and Claude project hook artifacts, plus
+the advisory route-preflight bootstrap fragment. Hooks are warning-only
+execution reminders; the Claude `SessionStart` bootstrap adds a route preflight
+at session start, and Codex uses the advisory fragment instead:
 
 ```text
 dist/codex/project/.codex
 dist/claude/project/.claude
+dist/universal/bootstrap/changeforge-route-preflight.md
 ```
 
 See [HOOKS.md](HOOKS.md) before enabling hooks manually.
@@ -144,6 +146,21 @@ Common entry points:
 | `delivery-release-gate` | CI/CD, Docker, Kubernetes, environment configuration, rollout, rollback, and release checks. |
 
 Domain extensions are top-level skills in `full` and `dev`. Use them when the work clearly involves AI/ML, big data, IoT/embedded, low-level systems, mobile, payment/trading, or Web3 concerns.
+
+### Plan Depth Scales With Complexity
+
+`task-dag-planner` and `task-dag-decomposition` scale plan depth to the change, so
+planning never inflates context for a small change:
+
+- **L1 and L2**: a minimal Plan Handoff is enough — files touched, validation
+  command, and residual risk. Do not force a long task DAG onto a small change.
+- **L3, L4, and L5**: every task is an independently reviewable, agent-executable
+  unit — exact files to inspect and change, reuse and placement decision,
+  validation command and expected output, rollback note, and required completion
+  evidence. A task may not span more than one independent subsystem; split it
+  further if it does. Code-change tasks bind `implementation-structure-design`;
+  test tasks bind `quality-test-gate`. Placeholders (TBD, TODO, "write tests",
+  "handle edge cases", "similar to above") are rejected as unplanned work.
 
 ## OpenAI API Zip Output
 

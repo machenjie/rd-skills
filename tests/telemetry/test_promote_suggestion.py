@@ -120,6 +120,48 @@ class PromoteSuggestionTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertIn("not found", result.stderr)
 
+    def test_target_override_promotes_to_pressure_scenario(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_s:
+            tmp = Path(tmp_s)
+            suggestions = self._write_suggestions(tmp)
+            result = _run(
+                "--id",
+                "missed-router-abc123-0",
+                "--suggestions",
+                str(suggestions),
+                "--repo-root",
+                str(tmp),
+                "--target",
+                "evals/pressure",
+                "--write",
+            )
+            generated = tmp / "evals" / "pressure" / "telemetry-missed-router-abc123-0.yaml"
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue(generated.is_file())
+            text = generated.read_text(encoding="utf-8")
+            self.assertIn("generated_from_telemetry: true", text)
+            self.assertIn("requires_human_review: true", text)
+            self.assertIn("pressure_type:", text)
+            self.assertIn("source_suggestion_id: missed-router-abc123-0", text)
+
+    def test_target_override_still_refuses_skill_rule_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_s:
+            tmp = Path(tmp_s)
+            suggestions = self._write_suggestions(tmp)
+            result = _run(
+                "--id",
+                "missed-router-abc123-0",
+                "--suggestions",
+                str(suggestions),
+                "--repo-root",
+                str(tmp),
+                "--target",
+                "src/registry/capabilities.yaml",
+                "--write",
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("unsupported promotion_target", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

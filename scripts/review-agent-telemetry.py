@@ -102,6 +102,28 @@ ROUTER_SELF_REFERENCES = frozenset({
     "references/domain-extension-index.md",
 })
 
+# The completion-evidence detection family. Only unverified_completion_claim is
+# detectable from fact-only telemetry today; the rest are surfaced through
+# completion-evidence pressure evals and human review, because fact telemetry
+# does not capture claim wording, per-command granularity, or delegation chains.
+COMPLETION_EVIDENCE_DETECTION_TYPES = (
+    "unverified_completion_claim",
+    "success_language_without_evidence",
+    "partial_validation_overclaimed",
+    "stale_validation_reused",
+    "delegated_agent_report_trusted_without_independent_check",
+)
+
+# Detection types a human may promote into a pressure scenario (evals/pressure)
+# in addition to the suggestion's default routing or behavior-sample target.
+PRESSURE_CANDIDATE_TYPES = frozenset({
+    "missed_router",
+    "missed_implementation_structure",
+    "missed_validation_evidence",
+    "missed_residual_risk",
+    "unverified_completion_claim",
+})
+
 
 @dataclass
 class SessionSummary:
@@ -122,6 +144,7 @@ class SessionSummary:
     validation_seen: bool = False
     residual_risk_seen: bool = False
     references_seen: bool = False
+    completion_language_seen: bool = False
     stage_manifest_seen: bool = False
     manifest_current_stage: str = ""
     manifest_selected_skills: set[str] = field(default_factory=set)
@@ -167,6 +190,7 @@ class Suggestion:
     suggested_action: str
     promotion_target: str
     requires_human_review: bool = True
+    pressure_candidate: bool = False
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -178,6 +202,7 @@ class Suggestion:
             "suggested_action": self.suggested_action,
             "promotion_target": self.promotion_target,
             "requires_human_review": self.requires_human_review,
+            "pressure_candidate": self.pressure_candidate,
         }
 
 
@@ -269,6 +294,7 @@ def _analyze_repo(
         ),
         "missed_gate": _count_metric(sessions.values(), _is_missing_gate),
         "validation_evidence_missing": issue_counts.get("missed_validation_evidence", 0),
+        "unverified_completion_claims": issue_counts.get("unverified_completion_claim", 0),
         "residual_risk_missing": issue_counts.get("missed_residual_risk", 0),
         "high_severity_suggestions": sum(1 for s in suggestions if s.severity == "high"),
         "issue_counts": issue_counts,
@@ -305,6 +331,9 @@ def _session_summaries(
             session.validation_seen |= bool(record.get("validation_evidence_detected"))
             session.residual_risk_seen |= bool(record.get("residual_risk_detected"))
             session.references_seen |= bool(record.get("required_references_detected"))
+            session.completion_language_seen |= bool(
+                record.get("completion_language_detected")
+            )
             session.stage_manifest_seen |= bool(record.get("stage_manifest_detected"))
             stage = record.get("manifest_current_stage")
             if isinstance(stage, str) and stage.strip():
@@ -340,6 +369,7 @@ def _detect_issues(session: SessionSummary) -> list[Suggestion]:
         _detect_missed_middleware_capability,
         _detect_missed_stage_manifest,
         _detect_missed_validation_evidence,
+        _detect_unverified_completion_claim,
         _detect_missed_residual_risk,
         _detect_possible_over_routing,
         _detect_hook_false_positive,
@@ -492,6 +522,34 @@ def _detect_missed_residual_risk(session: SessionSummary) -> Suggestion | None:
     return None
 
 
+def _detect_unverified_completion_claim(session: SessionSummary) -> Suggestion | None:
+    """Completion language at stop with a code change but no validation evidence.
+
+    This is the fact-detectable member of the completion-evidence family
+    (see COMPLETION_EVIDENCE_DETECTION_TYPES). The presence-only completion
+    signal comes from the Stop gate; this detector pairs it with the absence of
+    validation evidence. It never reads prompts or output, only recorded facts.
+    """
+    if (
+        session.stop_seen
+        and session.has_code_change
+        and session.completion_language_seen
+        and not session.validation_seen
+    ):
+        return _suggestion(
+            "unverified_completion_claim",
+            "high",
+            "stop closure used completion language but recorded no validation evidence",
+            session,
+            "Bind the completion claim to a fresh validation command and outcome, or "
+            "replace it with a not-verified disclosure (status, why not run, residual "
+            "risk, exact command). Route through agent-execution-discipline and "
+            "quality-test-gate.",
+            "evals/agent-behavior/samples",
+        )
+    return None
+
+
 def _detect_possible_over_routing(session: SessionSummary) -> Suggestion | None:
     small_change = len(session.changed_paths) == 1 and not session.risk_surfaces
     no_structure = not session.structural_findings
@@ -611,6 +669,7 @@ def _suggestion(
         affected_session=session.session_id,
         suggested_action=action,
         promotion_target=promotion_target,
+        pressure_candidate=issue_type in PRESSURE_CANDIDATE_TYPES,
     )
 
 

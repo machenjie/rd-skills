@@ -43,13 +43,19 @@ Builds also emit optional project-level hook artifacts:
 - Claude project hook fragment and scripts: `dist/claude/project/.claude`
 
 The hook runtime is not a skill and does not replace `change-forge-router`. It
-adds warning-only reminders after tools run or before the agent stops. The first
-stage does not install hooks through `installers/install.py`, `upgrade.py`, or
-`doctor.py`; enable hooks manually only after reviewing and merging project hook
-configuration.
+adds a session-start route-preflight reminder (Claude `SessionStart`) and
+warning-only reminders after tools run or before the agent stops. Hooks are
+never installed by default; pass `--with-hooks` to `installers/install.py` for
+Codex or Claude project scope, and existing project hook configuration is always
+preserved.
 
-See [HOOKS.md](HOOKS.md) for hook modes, validation, manual enablement, and
-troubleshooting.
+Codex has no stable session-start hook, so the route-preflight bootstrap ships
+as an advisory fragment. Install only that fragment for any project with
+`installers/install.py --with-bootstrap`, and inspect it with
+`installers/doctor.py --check-bootstrap`.
+
+See [HOOKS.md](HOOKS.md) for hook modes, the session bootstrap, validation,
+enablement, and troubleshooting.
 
 ## Codex
 

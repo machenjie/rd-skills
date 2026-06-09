@@ -1,0 +1,28 @@
+id: planning-missing-validation-command
+pressure_type: missing_validation_command
+description: |
+  A plan task has no validation command, deferring "how do we know it works" to
+  after merge. Every task must carry a validation command and expected output.
+prompt: |
+  Add the migration task to the plan. Verification is "looks good after deploy",
+  no command needed.
+expected_route:
+  skills:
+    - task-dag-planner
+required_capabilities:
+  - task-dag-decomposition
+required_evidence:
+  - validation evidence
+forbidden_behaviors:
+  - accept "looks good" as a verification criterion
+  - leave a task without an executable validation command
+rationalizations_to_reject:
+  - "we will verify it manually after deploy"
+completion_claim_allowed: false
+expected_handoff_fields:
+  - validation command
+  - expected output
+  - rollback or revert note
+notes: |
+  Spec-only pressure scenario. A passing sample attaches an executable validation
+  command and expected output to every task, including the migration task.

@@ -358,7 +358,7 @@ class StopClosureGateTests(unittest.TestCase):
 
     def test_closure_reminder_omits_missing_flag_when_manifest_present(self) -> None:
         manifest_text = (
-            "Done.\n\n"
+            "Change prepared. Tests run: pytest -q passed.\n\n"
             "```yaml\n"
             "changeforge_route:\n"
             "  selected_skills:\n"
@@ -371,7 +371,45 @@ class StopClosureGateTests(unittest.TestCase):
             seed_state(cwd, cache, changed_paths=["a.py"])
             result = run_stop(event, cwd, cache)
         self.assertEqual(result.returncode, 0)
-        self.assertNotIn("MISSING", result.stdout)
+        self.assertNotIn("no changeforge_route manifest", result.stdout)
+        self.assertNotIn("completion language but shows no validation", result.stdout)
+
+    def test_completion_language_without_validation_is_flagged(self) -> None:
+        # "Done." with a route manifest but no validation evidence is an
+        # unverified completion claim; the gate must ask for evidence.
+        text = (
+            "Done. Fixed the bug.\n\n"
+            "```yaml\n"
+            "changeforge_route:\n"
+            "  selected_skills:\n"
+            "    - backend-change-builder\n"
+            "```\n"
+        )
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": text}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, changed_paths=["a.py"])
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("completion language but shows no validation", result.stdout)
+        self.assertIn("completion_evidence", result.stdout)
+
+    def test_completion_language_with_validation_is_not_flagged(self) -> None:
+        text = (
+            "Done. Ran pytest -q, 12 passed, exit 0.\n\n"
+            "```yaml\n"
+            "changeforge_route:\n"
+            "  selected_skills:\n"
+            "    - backend-change-builder\n"
+            "```\n"
+        )
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": text}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, changed_paths=["a.py"])
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("completion language but shows no validation", result.stdout)
 
 
 if __name__ == "__main__":

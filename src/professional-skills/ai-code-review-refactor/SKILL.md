@@ -108,6 +108,17 @@ Does it refactor existing logic?
 All checks pass → Approve with evidence
 ```
 
+## Two-Stage Review
+
+Review in order: spec compliance first, code quality second. Good code that does not meet the requirement is still a failed change.
+
+- **Stage 1 — Spec Compliance Review.** Confirm the change meets the requirement, the acceptance criteria, and the non-goals; matches the plan task; preserves API/schema compatibility; and preserves old behavior that must not change. If Stage 1 fails, return the change for spec remediation and do not record a code-quality approval — "the code is clean" never offsets a missing requirement.
+- **Stage 2 — Code Quality Review.** Only after Stage 1 passes, review structure, naming, reuse, test quality, performance, security, and maintainability.
+
+Forbidden: entering quality approval before spec compliance passes; letting a clean diff mask a missing requirement; reviewing the diff without the requirement and plan; and accepting an implementer's self-review in place of an independent review.
+
+For L4/L5 changes and large refactors, run a Review Loop: a Stage 1 spec issue is fixed and spec-re-reviewed; a Stage 2 quality issue is fixed and quality-re-reviewed; no open issue from either stage may carry into the next task. When the runtime supports a separate reviewer, prefer a fresh reviewer; when it does not, the same agent must perform the stages explicitly and in order rather than assume a subagent exists.
+
 ## Solution Optimality Self-Check
 Apply when reviewing AI-generated code that makes algorithmic choices, introduces data structures, changes concurrency models, or claims performance gains. Answer the **Three-Challenge Rule**: (1) why did the model choose this approach (AI optimizes for plausibility, not optimality), (2) is there a simpler sufficient implementation (AI over-engineers), (3) what is the strongest alternative and why is the AI's choice preferred. Verify complexity class, bounded memory/caches, I/O-call count, concurrency safety, and cognitive complexity on every non-trivial path.
 
@@ -186,6 +197,11 @@ Return a structured review with:
 - **Test quality assessment**: Mock-only tests flagged; missing error path tests listed.
 - **Security review note**: Auth, permission, and data access paths reviewed adversarially or escalated.
 - **Architecture drift flag**: Any new abstractions, boundaries, or coupling evaluated against existing patterns.
+- **Spec Compliance Result**: Stage 1 pass/fail, naming the requirement, acceptance criterion, non-goal, or compatibility gap that fails.
+- **Code Quality Result**: Stage 2 result, recorded only after spec compliance passes.
+- **Open Issues**: unresolved spec or quality issues, each tagged with its stage.
+- **Re-review Required**: which stage must be re-reviewed after the fix.
+- **Approval Scope**: what the approval covers and what it explicitly does not.
 - **Approval status**: Approved with evidence / Returned for remediation with numbered action items.
 - **Local naming evidence**:
   same-directory file names inspected;
@@ -263,6 +279,8 @@ Close an AI-code review or refactor only when all five canonical answers are con
 26. Reject AI-generated functions that mix policy, validation, mutation, persistence, external API calls, events, logging, mapping, and fallback without an orchestration boundary.
 27. Reject AI-generated feature flags, deprecated API use, compatibility branches, dead code, and TODO cleanup without owner, expiry, and removal plan.
 28. Reject AI-generated test helpers that place business fixtures in shared/common test utilities instead of the owning module boundary.
+29. Reject completion claims that use success-implying language ("done", "fixed", "should pass", "works") without a fresh command output, validator result, or artifact from the current change.
+30. Reject partial verification reported as full: a lint-only or single-test pass presented as "all tests pass" or "build is green" is returned for honest scoping with the gap named.
 
 ## Handoff
 - **security-privacy-gate** — for auth, permission, payment, or sensitive data code that requires adversarial review.

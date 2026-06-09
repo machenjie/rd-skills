@@ -71,7 +71,9 @@ class InstallHooksTests(unittest.TestCase):
             manifest = codex_dir / ".changeforge-hook-manifest.json"
             hooks_json = codex_dir / "hooks.json"
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(len(scripts), 4)
+            self.assertEqual(len(scripts), 5)
+            self.assertTrue((codex_dir / "hooks" / "changeforge_session_bootstrap.py").is_file())
+            self.assertTrue((codex_dir / "changeforge-route-preflight.md").is_file())
             self.assertTrue(manifest.is_file())
             self.assertTrue(hooks_json.is_file())
 
@@ -124,6 +126,38 @@ class InstallHooksTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 1)
         self.assertIn("only supported for codex and claude project", result.stderr)
+
+
+class InstallBootstrapTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        if not (DIST_CODEX_HOOKS / "hooks.json").is_file():
+            _build_recommended()
+
+    def test_bootstrap_dry_run_writes_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            result = _run_install(project, "--with-bootstrap", "--bootstrap-dry-run")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("bootstrap: dry run", result.stdout)
+            self.assertFalse((project / ".changeforge").exists())
+
+    def test_with_bootstrap_installs_advisory_fragment(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            result = _run_install(project, "--with-bootstrap")
+            fragment = project / ".changeforge" / "changeforge-route-preflight.md"
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue(fragment.is_file())
+            self.assertIn("change-forge-router", fragment.read_text(encoding="utf-8"))
+
+    def test_with_bootstrap_does_not_install_hook_scripts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            result = _run_install(project, "--with-bootstrap")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            # The advisory fragment must never pull in executable hook scripts.
+            self.assertFalse((project / ".codex" / "hooks").exists())
 
 
 if __name__ == "__main__":
