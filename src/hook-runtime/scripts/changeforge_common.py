@@ -237,8 +237,11 @@ def load_state(repo: Path) -> dict:
     for key in STATE_LIST_FIELDS:
         if not isinstance(state.get(key), list):
             state[key] = []
-    if not isinstance(state.get("validation_seen"), bool):
-        state["validation_seen"] = False
+    legacy_validation_seen = state.get("validation_seen")
+    if not isinstance(state.get("validation_command_seen"), bool):
+        state["validation_command_seen"] = bool(legacy_validation_seen)
+    # Backward-compatible alias for hook state written by older installations.
+    state["validation_seen"] = bool(state.get("validation_command_seen"))
     if not isinstance(state.get("turn_id"), str):
         state["turn_id"] = ""
     return state
@@ -251,7 +254,12 @@ def save_state(repo: Path, state: dict) -> None:
     next_state.update({key: value for key, value in state.items() if key in next_state})
     for key in STATE_LIST_FIELDS:
         next_state[key] = _unique(str(item) for item in next_state.get(key, []) if str(item))
-    next_state["validation_seen"] = bool(next_state.get("validation_seen"))
+    if "validation_command_seen" not in next_state:
+        next_state["validation_command_seen"] = bool(next_state.get("validation_seen"))
+    next_state["validation_command_seen"] = bool(next_state.get("validation_command_seen"))
+    # Keep the legacy key for already-installed state readers while new code uses
+    # validation_command_seen for the narrower "command observed" meaning.
+    next_state["validation_seen"] = next_state["validation_command_seen"]
     next_state["updated_at"] = datetime.now(timezone.utc).isoformat()
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -395,6 +403,7 @@ def merge_state(
     suggested_capabilities: Iterable[str] = (),
     suggested_domain_extensions: Iterable[str] = (),
     suggested_gates: Iterable[str] = (),
+    validation_command_seen: bool | None = None,
     validation_seen: bool | None = None,
 ) -> dict:
     state = load_state(repo)
@@ -417,8 +426,12 @@ def merge_state(
         ("suggested_gates", suggested_gates),
     ):
         state[key] = _unique([*state.get(key, []), *[str(value) for value in values if str(value)]])
-    if validation_seen is not None:
-        state["validation_seen"] = bool(state.get("validation_seen")) or validation_seen
+    command_seen = validation_command_seen if validation_command_seen is not None else validation_seen
+    if command_seen is not None:
+        state["validation_command_seen"] = (
+            bool(state.get("validation_command_seen")) or bool(command_seen)
+        )
+        state["validation_seen"] = state["validation_command_seen"]
     save_state(repo, state)
     return state
 
@@ -845,6 +858,7 @@ def _empty_state() -> dict:
         "suggested_capabilities": [],
         "suggested_domain_extensions": [],
         "suggested_gates": [],
+        "validation_command_seen": False,
         "validation_seen": False,
         "turn_id": "",
         "updated_at": "",

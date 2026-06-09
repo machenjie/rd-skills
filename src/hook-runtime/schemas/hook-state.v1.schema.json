@@ -14,6 +14,7 @@
     "suggested_capabilities",
     "suggested_domain_extensions",
     "suggested_gates",
+    "validation_command_seen",
     "validation_seen",
     "updated_at"
   ],
@@ -101,6 +102,11 @@
       }
     },
     "validation_seen": {
+      "description": "Backward-compatible alias for validation_command_seen.",
+      "type": "boolean"
+    },
+    "validation_command_seen": {
+      "description": "Whether a validation-looking command was observed this turn. This is not completion evidence without an outcome in the stop closure.",
       "type": "boolean"
     },
     "turn_id": {

@@ -9,6 +9,8 @@ prompt: |
 expected_route:
   skills:
     - quality-test-gate
+  capabilities:
+    - agent-execution-discipline
 required_capabilities:
   - agent-execution-discipline
 required_evidence:

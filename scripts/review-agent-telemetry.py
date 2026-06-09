@@ -296,6 +296,7 @@ def _analyze_repo(
         "validation_evidence_missing": issue_counts.get("missed_validation_evidence", 0),
         "unverified_completion_claims": issue_counts.get("unverified_completion_claim", 0),
         "residual_risk_missing": issue_counts.get("missed_residual_risk", 0),
+        "pressure_candidate_suggestions": sum(1 for s in suggestions if s.pressure_candidate),
         "high_severity_suggestions": sum(1 for s in suggestions if s.severity == "high"),
         "issue_counts": issue_counts,
     }
@@ -715,7 +716,9 @@ def _render_markdown(
         f"- incomplete required references: {summary['incomplete_required_references']}",
         f"- missed gate: {summary['missed_gate']}",
         f"- validation evidence missing: {summary['validation_evidence_missing']}",
+        f"- unverified completion claims: {summary['unverified_completion_claims']}",
         f"- residual risk missing: {summary['residual_risk_missing']}",
+        f"- pressure candidate suggestions: {summary['pressure_candidate_suggestions']}",
         f"- high severity suggestions: {summary['high_severity_suggestions']}",
         "",
         "## Issue Counts",

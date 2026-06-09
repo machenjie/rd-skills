@@ -111,9 +111,14 @@ suggestion carries `id`, `type`, `severity`, `evidence`, `affected_session`,
 
 ### Completion-Evidence Detection Family
 
-A completion claim must rest on fresh validation evidence. The stop gate records
-a presence-only `completion_language_detected` fact, and the review tool pairs it
-with the absence of validation evidence. The completion-evidence family is:
+A completion claim must rest on fresh validation evidence. A validation-looking
+command observed earlier in the turn is recorded only as command presence; the
+stop closure still needs a strong evidence signal such as the command plus an
+outcome, exit code, output, or artifact. Text that says validation was not run
+(`not verified`, `not run`, `unable to run`, `未验证`, `没有运行`, `无法运行`) is
+treated as negative validation evidence. The stop gate records a presence-only
+`completion_language_detected` fact, and the review tool pairs it with the
+absence of validation evidence. The completion-evidence family is:
 
 - `unverified_completion_claim` — fact-detected: the stop closure used completion
   language after a code change but recorded no validation evidence. Routed to
@@ -130,6 +135,11 @@ with the absence of validation evidence. The completion-evidence family is:
 Fact telemetry never records prompts or output, so the family deliberately
 auto-detects only what the recorded facts support and leaves the rest to pressure
 evals and human judgement.
+
+Review reports and doctor summaries surface `unverified_completion_claims`,
+`incomplete_required_references`, and `pressure_candidate_suggestions` directly
+in their summaries so these closure gaps are visible without digging through
+`issue_counts`.
 
 ## Step 2: Review Suggestions By Hand
 

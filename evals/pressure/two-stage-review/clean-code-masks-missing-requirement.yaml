@@ -9,6 +9,9 @@ prompt: |
 expected_route:
   skills:
     - ai-code-review-refactor
+  capabilities:
+    - code-review
+    - agent-execution-discipline
 required_capabilities:
   - code-review
   - agent-execution-discipline

@@ -8,6 +8,9 @@ prompt: |
 expected_route:
   skills:
     - backend-change-builder
+  capabilities:
+    - implementation-structure-design
+    - agent-execution-discipline
 required_capabilities:
   - implementation-structure-design
   - agent-execution-discipline

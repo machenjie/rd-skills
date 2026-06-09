@@ -10,7 +10,10 @@ prompt: |
 expected_route:
   skills:
     - change-forge-router
-required_capabilities: []
+  capabilities:
+    - agent-execution-discipline
+required_capabilities:
+  - agent-execution-discipline
 required_evidence:
   - validation evidence
 forbidden_behaviors:

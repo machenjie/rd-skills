@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import re
+
 from changeforge_common import (
     clear_state,
     cwd_from_event,
@@ -48,6 +50,49 @@ COMPLETION_LANGUAGE = [
     "修复完毕",
     "已修复",
 ]
+
+NEGATIVE_VALIDATION_PHRASES = [
+    "not verified",
+    "not run",
+    "not tested",
+    "unable to run",
+    "unable to verify",
+    "could not run",
+    "cannot run",
+    "did not run",
+    "validation not run",
+    "tests not run",
+    "tests are unavailable",
+    "test runner is not installed",
+    "未验证",
+    "没有运行",
+    "无法运行",
+    "未运行",
+]
+VALIDATION_COMMAND_RE = re.compile(
+    r"\b("
+    r"pytest|unittest|go\s+test|cargo\s+test|npm\s+test|pnpm\s+test|"
+    r"yarn\s+test|python3?\s+-m\s+unittest|scripts/validate[\w./-]*|"
+    r"validate[-_\w./]*|eval-routing|eval-agent-behavior|"
+    r"eval-pressure-behavior|run-codegen-benchmarks|validate-installation|"
+    r"build\.py"
+    r")\b",
+    re.IGNORECASE,
+)
+VALIDATION_OUTCOME_RE = re.compile(
+    r"\b("
+    r"exit\s*(code)?\s*0|return\s*code\s*0|0\s+errors?|0\s+failures?|"
+    r"\d+\s+passed|passed|passes|succeeded|success|green|validated|"
+    r"通过|成功|退出码\s*0"
+    r")\b",
+    re.IGNORECASE,
+)
+VALIDATION_ARTIFACT_RE = re.compile(
+    r"\b("
+    r"output|artifact|report|log|junit|coverage|snapshot|build artifact"
+    r")\b",
+    re.IGNORECASE,
+)
 
 # Conditional keyword groups checked only when the matching structure gate fired
 # this turn. They keep the closure reminder targeted instead of always demanding
@@ -120,7 +165,7 @@ def main() -> int:
         state = load_state(repo)
         debug_log(
             repo,
-            f"stop gate runtime={runtime} event={event_name(event)} has_surface={_has_closure_surface(state)} validation_seen={state.get('validation_seen')}",
+            f"stop gate runtime={runtime} event={event_name(event)} has_surface={_has_closure_surface(state)} validation_command_seen={state.get('validation_command_seen')}",
         )
         if not _has_closure_surface(state):
             return 0
@@ -210,7 +255,7 @@ def _closure_signals(final_text: str, state: dict, manifest: dict) -> dict[str, 
 
     return {
         "route_manifest": bool(manifest.get("route_present")) or "changeforge_route" in lowered,
-        "validation": bool(state.get("validation_seen")) or has("validation"),
+        "validation": _has_validation_evidence(final_text, state),
         "risk": has("risk"),
         "references": bool(manifest.get("required_references")) or "reference" in lowered,
         "skills": has("skills"),
@@ -259,7 +304,7 @@ def _closure_message(state: dict, final_text: str, manifest: dict | None = None)
         details.append(f"- risk surfaces: {', '.join(state['risk_surfaces'])}")
     if state.get("changed_paths"):
         details.append(f"- changed paths: {', '.join(state['changed_paths'])}")
-    if state.get("validation_seen"):
+    if state.get("validation_command_seen") or state.get("validation_seen"):
         details.append("- validation command was observed")
     if state.get("suggested_domain_extensions"):
         details.append(
@@ -382,6 +427,10 @@ def _missing_keyword_groups(text: str, state: dict) -> list[str]:
     lowered = text.casefold()
     missing: list[str] = []
     for group, keywords in CLOSURE_KEYWORDS.items():
+        if group == "validation":
+            if not _has_validation_evidence(text, state):
+                missing.append(group)
+            continue
         if not any(keyword.casefold() in lowered for keyword in keywords):
             missing.append(group)
     for state_key, group in CONDITIONAL_GROUP_BY_STATE.items():
@@ -409,10 +458,35 @@ def _unverified_completion(text: str, state: dict) -> bool:
     has_completion = any(phrase.casefold() in lowered for phrase in COMPLETION_LANGUAGE)
     if not has_completion:
         return False
-    has_validation = bool(state.get("validation_seen")) or any(
-        keyword.casefold() in lowered for keyword in CLOSURE_KEYWORDS["validation"]
-    )
-    return not has_validation
+    return not _has_validation_evidence(text, state)
+
+
+def _has_validation_evidence(text: str, state: dict) -> bool:
+    """Return true only for strong validation evidence in the closure text.
+
+    A command-like string in hook state means a validation command was observed,
+    not that it succeeded. The final handoff still needs an outcome, exit code,
+    output, or artifact signal. Negative validation disclosures explicitly block
+    this from being counted as evidence.
+    """
+    if not text:
+        return False
+    lowered = text.casefold()
+    if _has_negative_validation_phrase(lowered):
+        return False
+    command_seen = bool(state.get("validation_command_seen") or state.get("validation_seen"))
+    command_in_text = bool(VALIDATION_COMMAND_RE.search(text))
+    outcome_in_text = bool(VALIDATION_OUTCOME_RE.search(text))
+    artifact_in_text = bool(VALIDATION_ARTIFACT_RE.search(text))
+    if outcome_in_text and (command_seen or command_in_text or artifact_in_text):
+        return True
+    if command_in_text and artifact_in_text:
+        return True
+    return False
+
+
+def _has_negative_validation_phrase(lowered_text: str) -> bool:
+    return any(phrase.casefold() in lowered_text for phrase in NEGATIVE_VALIDATION_PHRASES)
 
 
 if __name__ == "__main__":

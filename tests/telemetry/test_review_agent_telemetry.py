@@ -176,10 +176,15 @@ class ReviewAgentTelemetryTests(unittest.TestCase):
             )
             result = _run("--telemetry-root", str(root))
             suggestions = list((root / repo_hash / "suggestions").glob("*-suggestions.yaml"))
+            report = list((root / repo_hash / "reports").glob("*-agent-telemetry-review.md"))
             self.assertEqual(result.returncode, 0)
             self.assertTrue(suggestions)
+            self.assertTrue(report)
             text = suggestions[0].read_text(encoding="utf-8")
             self.assertIn("unverified_completion_claim", text)
+            report_text = report[0].read_text(encoding="utf-8")
+            self.assertIn("- unverified completion claims: 1", report_text)
+            self.assertIn("- pressure candidate suggestions:", report_text)
 
     def test_completion_claim_with_validation_is_not_flagged(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

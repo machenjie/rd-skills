@@ -247,7 +247,10 @@ def _report_telemetry(
         ("missed reference", "missed_reference"),
         ("missed gate", "missed_gate"),
         ("validation evidence missing", "validation_evidence_missing"),
+        ("unverified completion claims", "unverified_completion_claims"),
+        ("incomplete required references", "incomplete_required_references"),
         ("residual risk missing", "residual_risk_missing"),
+        ("pressure candidate suggestions", "pressure_candidate_suggestions"),
         ("high severity suggestions", "high_severity_suggestions"),
     ):
         print(f"- {label}: {summary.get(key, 'n/a')}")

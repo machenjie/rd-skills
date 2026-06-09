@@ -9,6 +9,8 @@ prompt: |
 expected_route:
   skills:
     - change-forge-router
+  capabilities:
+    - skill-authoring-expert
 required_capabilities:
   - skill-authoring-expert
 required_evidence:

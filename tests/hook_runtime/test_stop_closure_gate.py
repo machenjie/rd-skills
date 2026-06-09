@@ -263,7 +263,7 @@ class StopClosureGateTests(unittest.TestCase):
             "stop_hook_active": False,
             "last_assistant_message": (
                 "I used the ChangeForge skill path. Changed files are listed. "
-                "Verified with tests, validation passes. Residual risk is none. "
+                "Validation: ran pytest -q, 12 passed, exit 0. Residual risk is none. "
                 "Next steps: deploy."
             ),
         }
@@ -410,6 +410,38 @@ class StopClosureGateTests(unittest.TestCase):
             result = run_stop(event, cwd, cache)
         self.assertEqual(result.returncode, 0)
         self.assertNotIn("completion language but shows no validation", result.stdout)
+
+    def test_completion_language_with_negative_validation_is_flagged(self) -> None:
+        text = (
+            "Done. Validation not run.\n\n"
+            "```yaml\n"
+            "changeforge_route:\n"
+            "  selected_skills:\n"
+            "    - backend-change-builder\n"
+            "```\n"
+        )
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": text}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, changed_paths=["a.py"])
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("completion language but shows no validation", result.stdout)
+        self.assertIn("not-verified disclosure", result.stdout)
+
+    def test_not_verified_disclosure_is_not_completion_claim(self) -> None:
+        text = (
+            "Changes prepared, not verified because tests are unavailable; "
+            "run pytest -q."
+        )
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": text}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, changed_paths=["a.py"])
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("completion language but shows no validation", result.stdout)
+        self.assertNotIn("completion_evidence", result.stdout)
 
 
 if __name__ == "__main__":

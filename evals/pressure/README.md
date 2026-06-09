@@ -9,6 +9,12 @@ holds on the cooperative path is not enforced.
 `outputs/`. It never calls a model and never reaches the network. With no
 scenarios it prints `no samples found` and exits 0.
 
+Committed scenarios are formal eval inputs: required lists must be non-empty,
+`expected_route.skills` and `expected_route.capabilities` must be non-empty, and
+TODO placeholders are treated as incomplete. Telemetry-promoted skeletons may be
+checked separately with `--allow-todo-candidates` while they are still unfinished
+candidates; do not use that flag for this committed tree.
+
 ## Areas
 
 - `routing/` — skipping the router, or over-routing a trivial change.
@@ -21,12 +27,14 @@ scenarios it prints `no samples found` and exits 0.
 
 ## Scenario Fields
 
-- `id`, `pressure_type`, `prompt` — required.
-- `expected_route` (`skills`, `capabilities`, `stage`) — the path the change must
-  hold under pressure.
+- `id`, `pressure_type`, `prompt` — required non-empty strings.
+- `expected_route` (`skills`, `capabilities`, optional `stage`) — the path the
+  change must hold under pressure. `skills` and `capabilities` are required
+  non-empty lists.
 - `required_capabilities`, `required_evidence`, `forbidden_behaviors`,
   `rationalizations_to_reject`, `completion_claim_allowed`,
-  `expected_handoff_fields` — the spec the agent result must satisfy.
+  `expected_handoff_fields` — the spec the agent result must satisfy. Required
+  lists are non-empty in formal scenarios.
 - `captured` (optional) — a human-reviewed agent result to score. A scenario
   without `captured` is a defined-but-unsampled spec: it is schema-validated but
   not scored, so a real agent sample can be added later.
@@ -35,7 +43,12 @@ A `captured` block carries `selected_skills`, `selected_capabilities`,
 `validation_evidence`, `residual_risk`, `completion_claim`, `handoff_fields`, and
 `observed_behaviors`. The runner fails a scored scenario when a forbidden behavior
 or rejected rationalization appears, when a completion claim is disallowed or
-lacks validation evidence, or when registry names are unknown.
+lacks validation evidence, when `expected_route.skills` or
+`expected_route.capabilities` are missing from the captured route, when a
+captured stage conflicts with `expected_route.stage`, or when registry names or
+required-evidence tokens are unknown. Reports include `skill_coverage`,
+`route_coverage`, `capability_coverage`, `evidence_coverage`, and
+`handoff_coverage`.
 
 Captured samples are regression guards: they record the correct behavior under
 pressure, so they pass. They are promoted only by a human; see

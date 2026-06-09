@@ -74,7 +74,10 @@ planner. It tells the agent *when* to route, not *how* to route:
 - A change that adds or modifies a function, class, file, directory, helper,
   service, repository, adapter, or utility requires `implementation-structure-design`.
 - A pending completion claim binds to `agent-execution-discipline`: no
-  completion claim without fresh validation evidence and residual risk.
+  completion claim without fresh validation evidence and residual risk. A
+  validation keyword is not evidence by itself; the closure needs the command
+  plus an outcome, exit code, output, or artifact, and negative phrases such as
+  `not verified` or `没有运行` stay non-evidence.
 - An explicit, in-scope user skill path is respected without re-routing.
 - Pure question, explanation, or translation needs no routing.
 

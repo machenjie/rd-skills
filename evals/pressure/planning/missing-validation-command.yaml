@@ -9,6 +9,8 @@ prompt: |
 expected_route:
   skills:
     - task-dag-planner
+  capabilities:
+    - task-dag-decomposition
 required_capabilities:
   - task-dag-decomposition
 required_evidence:

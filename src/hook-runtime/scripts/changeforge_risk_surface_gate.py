@@ -141,7 +141,7 @@ def main() -> int:
             suggested_capabilities=_collect(findings, "capabilities"),
             suggested_domain_extensions=_collect(findings, "domain_extensions"),
             suggested_gates=_collect(findings, "gates"),
-            validation_seen=_looks_like_validation(command),
+            validation_command_seen=_looks_like_validation(command),
         )
         write_telemetry_event(
             repo,
@@ -162,7 +162,7 @@ def main() -> int:
             suggested_domain_extensions=_collect(findings, "domain_extensions"),
             suggested_gates=_collect(findings, "gates"),
             risk_surfaces=[str(finding["name"]) for finding in findings],
-            validation_evidence_detected=_looks_like_validation(command),
+            validation_evidence_detected=False,
         )
         if not findings or mode == "monitor":
             return 0
