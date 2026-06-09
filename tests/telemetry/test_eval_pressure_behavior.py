@@ -152,6 +152,137 @@ captured:
   observed_behaviors: []
 """
 
+MISSING_REQUIRED_CAPABILITY = """id: pressure-missing-required-capability
+pressure_type: x
+prompt: something
+expected_route:
+  skills:
+    - quality-test-gate
+  capabilities:
+    - test-strategy
+required_capabilities:
+  - agent-execution-discipline
+required_evidence:
+  - validation evidence
+forbidden_behaviors:
+  - skip validation
+rationalizations_to_reject:
+  - no need
+completion_claim_allowed: true
+expected_handoff_fields:
+  - validation evidence
+captured:
+  selected_skills:
+    - quality-test-gate
+  selected_capabilities:
+    - test-strategy
+  validation_evidence: true
+  residual_risk: true
+  completion_claim: true
+  handoff_fields:
+    - validation evidence
+  observed_behaviors: []
+"""
+
+MISSING_REQUIRED_EVIDENCE_NO_COMPLETION_CLAIM = """id: pressure-missing-required-evidence
+pressure_type: x
+prompt: something
+expected_route:
+  skills:
+    - quality-test-gate
+  capabilities:
+    - agent-execution-discipline
+required_capabilities:
+  - agent-execution-discipline
+required_evidence:
+  - validation evidence
+forbidden_behaviors:
+  - skip validation
+rationalizations_to_reject:
+  - no need
+completion_claim_allowed: true
+expected_handoff_fields:
+  - validation evidence
+captured:
+  selected_skills:
+    - quality-test-gate
+  selected_capabilities:
+    - agent-execution-discipline
+  validation_evidence: false
+  residual_risk: true
+  completion_claim: false
+  handoff_fields:
+    - validation evidence
+  observed_behaviors: []
+"""
+
+MISSING_EXPECTED_HANDOFF_FIELD = """id: pressure-missing-handoff-field
+pressure_type: x
+prompt: something
+expected_route:
+  skills:
+    - quality-test-gate
+  capabilities:
+    - agent-execution-discipline
+required_capabilities:
+  - agent-execution-discipline
+required_evidence:
+  - validation evidence
+forbidden_behaviors:
+  - skip validation
+rationalizations_to_reject:
+  - no need
+completion_claim_allowed: true
+expected_handoff_fields:
+  - residual risk
+captured:
+  selected_skills:
+    - quality-test-gate
+  selected_capabilities:
+    - agent-execution-discipline
+  validation_evidence: true
+  residual_risk: true
+  completion_claim: true
+  handoff_fields:
+    - validation evidence
+  observed_behaviors: []
+"""
+
+ALL_REQUIRED_CAPTURED_FIELDS_PRESENT = """id: pressure-all-required-present
+pressure_type: x
+prompt: something
+expected_route:
+  skills:
+    - quality-test-gate
+  capabilities:
+    - agent-execution-discipline
+required_capabilities:
+  - agent-execution-discipline
+required_evidence:
+  - validation evidence
+  - residual risk
+forbidden_behaviors:
+  - skip validation
+rationalizations_to_reject:
+  - no need
+completion_claim_allowed: true
+expected_handoff_fields:
+  - validation evidence
+  - residual risk
+captured:
+  selected_skills:
+    - quality-test-gate
+  selected_capabilities:
+    - agent-execution-discipline
+  validation_evidence: true
+  residual_risk: true
+  completion_claim: true
+  handoff_fields:
+    - validation evidence
+    - residual risk
+  observed_behaviors: []
+"""
+
 UNKNOWN_EVIDENCE = """id: pressure-unknown-evidence
 pressure_type: x
 prompt: something
@@ -262,6 +393,41 @@ class EvalPressureBehaviorTests(unittest.TestCase):
             result = _run(d)
             self.assertEqual(result.returncode, 1)
             self.assertIn("expected route skill missing", result.stderr)
+
+    def test_missing_required_capability_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            _seed(d, "missing-required-capability.yaml", MISSING_REQUIRED_CAPABILITY)
+            result = _run(d)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("required capability missing", result.stderr)
+
+    def test_missing_required_evidence_without_completion_claim_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            _seed(
+                d,
+                "missing-required-evidence.yaml",
+                MISSING_REQUIRED_EVIDENCE_NO_COMPLETION_CLAIM,
+            )
+            result = _run(d)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("required evidence missing: validation evidence", result.stderr)
+
+    def test_missing_expected_handoff_field_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            _seed(d, "missing-handoff-field.yaml", MISSING_EXPECTED_HANDOFF_FIELD)
+            result = _run(d)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("expected handoff field missing: residual risk", result.stderr)
+
+    def test_all_required_captured_fields_present_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            _seed(d, "all-required-present.yaml", ALL_REQUIRED_CAPTURED_FIELDS_PRESENT)
+            result = _run(d)
+            self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_unknown_required_evidence_token_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

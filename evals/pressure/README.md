@@ -45,10 +45,12 @@ A `captured` block carries `selected_skills`, `selected_capabilities`,
 or rejected rationalization appears, when a completion claim is disallowed or
 lacks validation evidence, when `expected_route.skills` or
 `expected_route.capabilities` are missing from the captured route, when a
-captured stage conflicts with `expected_route.stage`, or when registry names or
-required-evidence tokens are unknown. Reports include `skill_coverage`,
-`route_coverage`, `capability_coverage`, `evidence_coverage`, and
-`handoff_coverage`.
+captured stage conflicts with `expected_route.stage`, when `required_capabilities`,
+`required_evidence`, or `expected_handoff_fields` are missing from the captured
+result, or when registry names or required-evidence tokens are unknown. Reports
+include `skill_coverage`, `route_coverage`, `capability_coverage`,
+`evidence_coverage`, and `handoff_coverage`; coverage remains report evidence,
+not the default correctness gate.
 
 Captured samples are regression guards: they record the correct behavior under
 pressure, so they pass. They are promoted only by a human; see

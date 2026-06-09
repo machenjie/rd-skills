@@ -271,13 +271,26 @@ def _score_captured(data: dict[str, Any], captured: dict[str, Any], result: Case
 
     required_caps = _string_list(data.get("required_capabilities"))
     result.scores["capability_coverage"] = _recall(required_caps, captured_caps)
+    for capability in required_caps:
+        if capability not in captured_caps:
+            result.violations.append(
+                "required capability missing from "
+                f"captured.selected_capabilities: {capability}"
+            )
 
     handoff_required = _string_list(data.get("expected_handoff_fields"))
     handoff_present = set(_string_list(captured.get("handoff_fields")))
     result.scores["handoff_coverage"] = _recall(handoff_required, handoff_present)
+    for field in handoff_required:
+        if field not in handoff_present:
+            result.violations.append(f"expected handoff field missing: {field}")
 
     required_evidence = _string_list(data.get("required_evidence"))
     result.scores["evidence_coverage"] = _evidence_coverage(required_evidence, captured)
+    for token in required_evidence:
+        flag = EVIDENCE_FLAGS.get(token.strip().casefold())
+        if flag is not None and not bool(captured.get(flag)):
+            result.violations.append(f"required evidence missing: {token}")
 
     # Forbidden behaviors and rationalizations the captured result must not show.
     observed = {item.casefold() for item in _string_list(captured.get("observed_behaviors"))}
