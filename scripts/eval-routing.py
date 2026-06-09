@@ -179,6 +179,15 @@ RISK_REQUIRED_CAPABILITIES: dict[str, tuple[str, ...]] = {
         "implementation-structure-design",
         "agent-execution-discipline",
     ),
+    "unreadable main flow": ("code-clarity-maintainability",),
+    "oversized function class or file": (
+        "implementation-structure-design",
+        "code-clarity-maintainability",
+    ),
+    "change locality violation": (
+        "module-boundary-design",
+        "code-clarity-maintainability",
+    ),
     "hallucinated API risk": ("agent-execution-discipline",),
 }
 
@@ -191,6 +200,9 @@ RISK_REQUIRED_QUALITY_GATES: dict[str, tuple[str, ...]] = {
         "execution discipline gate",
         "implementation gate",
     ),
+    "unreadable main flow": ("implementation gate",),
+    "oversized function class or file": ("implementation gate",),
+    "change locality violation": ("architecture gate", "implementation gate"),
     "handoff without risk boundary and validation results": (
         "execution discipline gate",
     ),

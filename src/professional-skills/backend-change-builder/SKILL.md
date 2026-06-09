@@ -37,6 +37,7 @@ Implement or review backend changes that preserve correctness, authorization int
 - **Structured logging with correlation** — every request must carry a correlation/trace ID through all log entries; logs must not contain plaintext secrets, passwords, or full PII.
 - **All non-trivial backend logic requires unit tests** — including auth logic, validation logic, error paths, retry behavior, and concurrency edge cases.
 - **Plan implementation structure before adding backend code** — inspect existing controllers, services, repositories, validators, mappers, jobs, helpers, and adapters before creating new functions, classes, files, or directories.
+- **Keep backend main flow readable** — validation, policy decisions, transactions, persistence, external calls, events, logging, and fallback handling must be named and separated enough that the use case can be reviewed without tracing infrastructure details.
 - **Agent backend fixes require execution discipline** — no local bug fix is accepted without same-pattern scan, test or validator evidence, and explicit boundary of changed backend behavior.
 
 ## Industry Benchmarks
@@ -73,6 +74,7 @@ Evaluate backend changes across these dimensions:
 - **Observability**: Logs (structured + correlated), metrics (latency, error rate, saturation), traces (distributed trace propagation).
 - **Concurrency**: Race condition analysis, lock scope, optimistic concurrency control, queue ordering guarantees.
 - **Implementation structure**: Existing services, repositories, validators, mappers, helpers, and adapters inspected; reuse vs. extension vs. composition vs. new code decision; function/class/file placement; public/private boundary; new imports and dependency direction.
+- **Code clarity**: Main service/use-case flow is readable; complex conditions are named; boolean or mode switches are justified; pure policy is separated from side effects; cleanup and compatibility branches have owner and expiry.
 - **Test coverage**: Unit tests for auth logic, validation logic, error paths; integration tests for transaction and idempotency behavior.
 
 ### Decision Tree: Authorization Check Required?
@@ -161,6 +163,7 @@ Return a backend implementation plan or review with:
 - **Observability plan**: Log fields with correlation ID, metrics emitted, alert thresholds.
 - **Concurrency analysis**: Race condition risk, locking strategy, ordering assumptions.
 - **Implementation structure**: Existing services/repositories/helpers inspected; reuse vs. new decision; function/class/file placement; public/private boundary; ownership; new imports and dependency direction.
+- **Code clarity and maintainability**: main-flow readability, side-effect boundary, signature clarity, change locality, and cleanup/deprecation plan.
 - **Execution discipline evidence**: Commands run, outputs, same-pattern scan, reuse-and-placement rationale, residual risks, and validation results.
 - **Test obligations**: Unit tests for auth, validation, error paths; integration tests for transactions.
 
@@ -188,6 +191,7 @@ Close a backend change only when all five canonical answers are concrete (answer
 13. No backend business logic is added to shared, common, or utils.
 14. New imports respect module and layer dependency direction.
 15. Agent-assisted backend changes include evidence, same-pattern scan for local fixes, and closure package.
+16. Backend use-case flow remains readable; large services/functions, boolean traps, weak parameter bags, side-effect pollution, and stale compatibility branches are split or justified.
 
 ## Handoff
 - **security-privacy-gate** — when authorization logic, PII handling, or sensitive data access requires adversarial review.

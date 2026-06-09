@@ -62,12 +62,12 @@ Map the stage to its launch set using the compact matrix below:
 | --- | --- | --- |
 | requirement-intake | `requirement-clarification`, `acceptance-standard-definition`, `non-goal-boundary-definition` | coding, language, testing |
 | architecture-design | `architecture-style-selection`, `module-boundary-design`, `solution-optimality-evaluation` | language idiom, coding |
-| implementation-planning | `implementation-structure-design`, `module-boundary-design` | full architecture review, release |
+| implementation-planning | `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability` | full architecture review, release |
 | coding | language professional usage, `language-idiom-enforcement`, `input-validation` | architecture deep review, release |
 | debugging-diagnosis | `failure-diagnosis`, `agent-execution-discipline`, `observability` | refactoring, new design |
 | bug-fix | `agent-execution-discipline`, `regression-testing`, `code-review` | architecture redesign |
-| code-review | `code-review`, `implementation-structure-design`, `ai-code-review-refactor` | release, deployment |
-| refactoring | `refactoring`, `implementation-structure-design`, `regression-testing` | feature design, release |
+| code-review | `code-review`, `implementation-structure-design`, `code-clarity-maintainability`, `ai-code-review-refactor` | release, deployment |
+| refactoring | `refactoring`, `implementation-structure-design`, `code-clarity-maintainability`, `regression-testing` | feature design, release |
 | testing | `test-strategy`, `language-testing-strategy`, matching test capability | new feature coding |
 | release-delivery | `ci-cd`, `release-rollback`, `observability` | language deep checks |
 | documentation-handoff | `documentation-generation`, `agent-execution-discipline` | coding capabilities |

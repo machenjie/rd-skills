@@ -68,6 +68,10 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "structure-placement-reuse-existing-function",
         "test-failure-no-env-blame",
     ),
+    "structure": (
+        "oversized-service-object-split",
+        "side-effect-boundary",
+    ),
     "finops": (
         "cloud-cost-regression",
     ),

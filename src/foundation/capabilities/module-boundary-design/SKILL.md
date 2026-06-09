@@ -28,6 +28,12 @@ Do not use this capability to organize code by technical type alone (e.g., `cont
 - **Every module boundary must have a named owner.** A module without an owner has no one to approve boundary changes, no one to maintain the contract, and no one to prevent inappropriate imports. Ownership must be declared (CODEOWNERS file, team annotation, README in module root).
 - **Dependency direction must be enforced by tooling, not convention.** Architecture decisions decay without automated enforcement. Dependency Cruiser (JavaScript/TypeScript), import-linter (Python), ArchUnit (Java), NDepend (.NET) must run in CI. A PR that introduces a forbidden import must fail CI — not pass and receive a review comment.
 - **Module public API surface must be minimal.** Export only what consumers need. Every additional exported type is a surface area that constrains the module's ability to refactor internally. The public API of a module is a commitment to all consumers.
+- **Directory size is a module-boundary signal.** A large directory is acceptable only when it still represents one owner, one capability or layer convention, one public API family, and one change rhythm.
+- **One directory should represent one module boundary unless it is explicitly a layer or grouping convention.** Mixed business object families, owners, public APIs, dependency clusters, jobs, adapters, domain code, infra, and test helpers require decomposition review.
+- **Every module split must declare its relationship type.** Use sibling, parent-child, producer-consumer, upper-lower layer, orchestrator, adapter/port, or shared technical module; do not split by arbitrary folder taste.
+- **Change locality is a boundary quality gate.** A small requirement should usually change the owning module and its tests; widespread edits require business justification or boundary repair.
+- **Public API expansion must be justified by real current consumers.** Do not export types, helpers, or submodule internals "just in case."
+- **Shared/common must not become a workaround for poor ownership decisions.** Shared technical modules contain domain-free utilities only and must not host business fixtures or rules.
 
 # Industry Benchmarks
 
@@ -118,6 +124,8 @@ Escalate when: a proposed import would create a circular dependency; a change mo
 - **"Barrel exports" (index.ts) control public API without changing folder structure.** In TypeScript/JavaScript, an `index.ts` that explicitly re-exports only the public types provides a stable public API without enforcing folder conventions on internal structure. Any internal refactoring that doesn't change the `index.ts` exports is safe. This pattern should be the default for every module.
 - **Domain events decouple modules without creating direct imports.** If `orders` needs to notify `inventory` when an order is placed, `orders` publishing an `OrderPlaced` event and `inventory` subscribing to it avoids a direct import in either direction. This is preferable to an orchestrator that imports both. Events must be defined in a shared schema module (not in either business capability module) to avoid the ownership coupling.
 - **Test isolation validates module boundary integrity.** If testing Module A requires importing Module B's internals (not its public API), the module boundary is leaky. Each module should be testable in isolation using only its public API and mocks/stubs for dependencies on other modules' public APIs.
+- **Module decomposition requires a named relationship.** Splits are not complete until the relationship type and dependency rule are named: sibling, parent-child, producer-consumer, upper-lower layer, orchestrator, adapter/port, or shared technical module. Source/dev-only deep reference for skill authors: `references/module-decomposition.md`.
+- **Change locality exposes boundary quality.** If adding one order rule changes `shared/utils`, `payments`, `notifications`, adapters, and tests unrelated to the owning module, the route must decide whether that spread is inherent product behavior or a module-boundary defect.
 
 ### Anti-examples
 
@@ -152,6 +160,9 @@ Return a module boundary map with:
 - `shared_module_audit` (list of items in shared/common/utils; classification: pure technical utility vs. business logic; business logic items must be moved to owning capability)
 - `ownership_declaration` (CODEOWNERS entries for each module)
 - `cross_boundary_communication` (for each inter-module dependency: direct import via public API, domain event, or orchestrator pattern — justified)
+- `directory_density_assessment` (business object families, owners, change rhythms, public APIs, naming clusters, dependency clusters, mixed roles, and file-count signal)
+- `module_relationship_type` (sibling / parent-child / producer-consumer / upper-lower layer / orchestrator / adapter-port / shared technical module)
+- `change_locality_gate` (owning module, authoritative rule location, extension point, shared/common pressure, cross-module import delta, public API expansion, and small-change spread)
 - `migration_impact` (existing code that violates the new boundaries; refactoring plan with priority)
 - `test_boundary` (each module testable in isolation using only its public API + mocks for dependencies)
 
@@ -169,12 +180,19 @@ The boundary design is complete only when:
 8. Cross-boundary communication pattern (direct import / event / orchestrator) is justified for each dependency.
 9. Import graph is visualized and reviewed (Dependency Cruiser `--output-type dot | dot -Tsvg`).
 10. Migration plan exists for existing violations.
+11. Large directories have a density assessment and are split or justified by one boundary.
+12. Every split declares the relationship type and allowed dependency direction.
+13. Change locality is checked for small requirements; widespread edits are justified by business behavior or routed to boundary repair.
+14. Public API expansion names current consumers and rejects speculative exports.
+15. Shared/common remains a pure technical module and is not used to avoid choosing an owner.
 
 # Used By
 
 - architecture-impact-reviewer
 - backend-change-builder
 - domain-impact-modeler
+- frontend-change-builder
+- ai-code-review-refactor
 
 # Handoff
 

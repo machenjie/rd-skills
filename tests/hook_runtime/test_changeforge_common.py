@@ -49,6 +49,7 @@ NEW_FINDING_FIELDS = (
     "extension_reuse_findings",
     "advanced_refactor_findings",
     "comment_findings",
+    "structure_quality_findings",
 )
 
 
@@ -157,11 +158,13 @@ class ChangeForgeCommonTests(unittest.TestCase):
                         "runtime": "codex",
                         "file_naming_findings": ["a.go: mismatch"],
                         "comment_findings": ["a.go: uncommented"],
+                        "structure_quality_findings": ["a.go: weak signature"],
                     },
                 )
                 loaded = common.load_state(Path(cwd))
         self.assertEqual(loaded["file_naming_findings"], ["a.go: mismatch"])
         self.assertEqual(loaded["comment_findings"], ["a.go: uncommented"])
+        self.assertEqual(loaded["structure_quality_findings"], ["a.go: weak signature"])
 
     def test_merge_state_supports_finding_fields(self) -> None:
         common = load_common()
@@ -175,6 +178,7 @@ class ChangeForgeCommonTests(unittest.TestCase):
                     extension_reuse_findings=["z"],
                     advanced_refactor_findings=["w"],
                     comment_findings=["c"],
+                    structure_quality_findings=["q"],
                 )
                 state = common.load_state(Path(cwd))
         self.assertEqual(state["file_naming_findings"], ["x"])
@@ -182,6 +186,7 @@ class ChangeForgeCommonTests(unittest.TestCase):
         self.assertEqual(state["extension_reuse_findings"], ["z"])
         self.assertEqual(state["advanced_refactor_findings"], ["w"])
         self.assertEqual(state["comment_findings"], ["c"])
+        self.assertEqual(state["structure_quality_findings"], ["q"])
 
     def test_legacy_state_file_missing_fields_is_compatible(self) -> None:
         common = load_common()

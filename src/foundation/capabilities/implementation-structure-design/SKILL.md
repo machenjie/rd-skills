@@ -62,9 +62,13 @@ Owns implementation-planning; also informs coding, code-review, and refactoring.
 - Encapsulation protects invariants, not arbitrary code. Keep state mutation private or internal by default, expose behavior-oriented methods, and reject objects that only hide procedural helper calls behind getters, setters, or generic manager methods.
 - Inheritance is exceptional. Use it only for a true substitutable type hierarchy, framework-required extension point, or protocol conformance with current variants and contract tests. Prefer composition, delegation, strategy, or explicit interfaces when variation is behavioral rather than taxonomic.
 - No business logic in shared, common, or utils. Shared utilities may contain pure technical utilities only. Business logic belongs to the owning module or domain capability.
+- Every new or changed file must have one primary owner or main responsibility; long files, large objects, and unrelated method clusters are structure signals that require split review or justification.
 - New functions need a single responsibility and a natural name. If a function name needs "and", "or", "manager", "helper", "misc", "common", or "util", the responsibility is probably unclear.
+- A function must have one readable purpose, structured parameters, and explicit return states; boolean flags, weakly typed bags, vague mode/kind switches, and unclear failure/empty/partial returns require signature review.
+- Pure decision logic and external side effects must be separated unless a local convention proves the combined boundary is intentional, testable, and contained.
 - New classes require state, lifecycle, dependency injection, invariants, polymorphism, or protocol conformance. Do not create a class when a pure function or existing service method is sufficient.
 - Class names must identify a real role. Generic `Manager`, `Processor`, `Handler`, `Helper`, or `Util` names require explicit rejection or justification.
+- Constructor and collaborator count is responsibility evidence; too many collaborators require object split, orchestration justification, or dependency-boundary cleanup.
 - New files require a cohesive owner. A file should group closely related behavior. Do not create one-file-per-function unless the local codebase already follows that pattern.
 - File names must match cohesive ownership.
 - New directories require a boundary. A directory must represent a business capability, layer, adapter, feature, or generated-code boundary, not a dumping ground.
@@ -105,7 +109,7 @@ Escalate to `agent-execution-discipline` when an agent adds structure without do
 
 # Critical Details
 
-The full discovery protocol, decision trees, and record templates live in this capability's `references/` (loaded in the dev profile and by skill authors). The body below carries the decision-critical rules compiled into every consuming professional skill. Resolve every structure decision under five questions: naming, reuse and placement, object modeling, placement boundaries, and shared-utility pollution.
+The full discovery protocol, decision trees, and record templates live in this capability's `references/` (loaded in the dev profile and by skill authors). The body below carries the decision-critical rules compiled into every consuming professional skill. Resolve every structure decision under six questions: naming, reuse and placement, object and module decomposition, object modeling, placement boundaries, and shared-utility pollution.
 
 ## Reuse & Placement
 
@@ -137,6 +141,10 @@ Names are architecture: a name must reveal owner, concept, role, and boundary, a
 ## Object Modeling
 
 Decide object responsibility before creating a class: identity, value semantics, lifecycle, state, invariant, policy, protocol role, or collaboration boundary. A class is justified only when a function or existing service method is insufficient — it must own state or lifecycle, enforce invariants across operations, implement a protocol with real variants today, or model a domain or value object. Place a method on a class only when it uses or protects that class's state, invariant, lifecycle, or collaborator; otherwise use a service, module function, adapter, or local helper, and never let the method force the object to import infrastructure or UI concerns. Encapsulation must protect invariants, not hide a data bag behind getters and setters. Inheritance is exceptional: use it only for a genuinely substitutable type hierarchy with a stable base contract and per-subtype tests, and never for code sharing alone — prefer composition, delegation, or strategy. Reject generic `Manager`, `Processor`, `Handler`, `Helper`, or `Util` class names unless explicitly justified. Source/dev-only deep reference for skill authors: `references/object-modeling.md`.
+
+## Object, Signature, And Side-Effect Decomposition
+
+Every file needs one main owner, one primary lifecycle or responsibility, and one coherent collaborator set. Long files, large objects, unrelated method clusters, constructor bloat, and branch-heavy functions are evidence to inspect; line count alone is not the decision. Functions need one readable purpose, structured parameters, clear return contracts, and explicit failure/empty/partial states. Pure calculations, business decisions, state mutation, persistence, external calls, events, logging, metrics, and cache access must be classified so policy and domain code stay testable without infrastructure. Source/dev-only deep reference for skill authors: `references/object-module-decomposition.md`.
 
 ## Placement Boundaries
 
@@ -176,6 +184,8 @@ Return an Implementation Structure Plan for every non-trivial code addition, mov
 - **Function decisions**: new functions; existing functions modified; private or public; responsibility; file location; tests.
 - **Method decisions**: new methods; existing methods modified or moved; owning class rationale; state/invariant/lifecycle/collaborator usage; rejected service/function alternatives.
 - **Object-oriented decisions**: object candidates; object versus function, module operation, or record; identity or value semantics; encapsulated state and invariants; lifecycle; collaborators; composition, delegation, strategy, or inheritance decision; substitutability and contract-test evidence for inheritance; rejected hierarchy or object alternatives.
+- **Main object / oversized / split decisions**: primary owner, lifecycle, invariant set, collaborator set, method clusters, mixed-role assessment, oversized signal, split type, rejected split rationale, and private helper justification.
+- **Signature / side-effect / collaborator decisions**: parameter object need, boolean flags, weakly typed bags, mode/kind switches, return and error model, side-effect classification, dependency injection, lifecycle ownership, resource cleanup, state-machine escalation, and dependency direction.
 - **Class decisions**: new classes; existing classes reused or extended; why a class is needed instead of a function; state, invariant, lifecycle, dependency injection, polymorphism, or protocol owned; public or private; tests.
 - **File decisions**: files modified; files added; why each new file is needed; owner; public API impact.
 - **Directory and module decisions**: directories added; boundary represented; owner; dependency direction; import rules.
@@ -184,14 +194,7 @@ Return an Implementation Structure Plan for every non-trivial code addition, mov
 - **Test placement**: unit tests; integration tests; contract tests; confirmation that test location follows project convention.
 - **Rejected alternatives**: alternatives considered and why each was rejected for non-trivial structure decisions.
 - **Execution linkage**: evidence inventory or handoff reference showing when the structure plan was produced and which validation proves the selected placement works.
-- **Comment decisions**:
-  - exported/public declarations requiring doc comments;
-  - non-exported complex functions/classes/methods requiring comments;
-  - tests requiring scenario/regression comments;
-  - critical internal logic requiring inline comments;
-  - comments intentionally omitted because naming and local context are sufficient;
-  - redundant comments removed;
-  - comment style matched to language and repository convention.
+- **Comment decisions**: exported/public doc comments, complex internal comments, test scenario/regression comments, critical inline comments, intentional omissions, redundant comments removed, and language/repository style.
 
 # Quality Gate
 
@@ -223,6 +226,10 @@ Return an Implementation Structure Plan for every non-trivial code addition, mov
 26. Every non-trivial test explains the behavior, regression, edge case, fixture contract, or integration scenario being protected.
 27. No comment merely restates obvious code.
 28. If comments are needed to explain confusing code, the plan first considers renaming, extraction, or simplification.
+29. Every changed file has one primary owner; oversized files, objects, and functions carry a split assessment based on responsibility, state, collaborators, branches, and testability.
+30. Function signatures avoid unjustified boolean traps, weakly typed bags, and vague mode/kind switches; public returns express failure, empty, partial, and retry states.
+31. Pure decision logic is separated from persistence, external APIs, events, cache mutation, logging side effects, and framework dependencies unless local convention justifies the boundary.
+32. Collaborator bloat, multi-state logic, and new objects are reviewed for split, state-machine modeling, lifecycle ownership, and public-behavior tests.
 
 # Used By
 
