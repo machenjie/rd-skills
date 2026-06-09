@@ -170,7 +170,7 @@ capabilities:
     group: architecture-design
     path: src/foundation/capabilities/module-boundary-design
     status: implemented
-    used_by: [architecture-impact-reviewer, backend-change-builder, ai-code-review-refactor]
+    used_by: [architecture-impact-reviewer, backend-change-builder, frontend-change-builder, domain-impact-modeler, ai-code-review-refactor]
     triggers: [define module ownership interfaces dependencies allowed coupling directory density module split relationship change locality public API expansion shared common ownership]
     risk_notes: [Weak boundaries spread changes across unrelated code amplify regressions expose internals and turn shared folders into business logic dumping grounds]
     expected_outputs: [module boundary map with ownership contracts dependencies forbidden crossings directory density module relationship type change locality and shared module audit]
@@ -965,7 +965,7 @@ capabilities:
     group: engineering-workflow
     path: src/foundation/capabilities/code-clarity-maintainability
     status: implemented
-    used_by: [change-forge-router, backend-change-builder, frontend-change-builder, ai-code-review-refactor, quality-test-gate]
+    used_by: [change-forge-router, architecture-impact-reviewer, backend-change-builder, frontend-change-builder, ai-code-review-refactor, quality-test-gate]
     triggers:
       - code clarity readability maintainability main flow happy path guard clause nesting function size cognitive complexity
       - complex condition boolean trap mode kind fallback compatibility magic number magic string comment quality readable tests

@@ -190,8 +190,8 @@ The boundary design is complete only when:
 
 - architecture-impact-reviewer
 - backend-change-builder
-- domain-impact-modeler
 - frontend-change-builder
+- domain-impact-modeler
 - ai-code-review-refactor
 
 # Handoff
@@ -200,18 +200,4 @@ Hand off to `layered-architecture-design` for presentation/application/domain/in
 
 # Completion Criteria
 
-The capability is complete when **every module boundary is defined by business capability, cross-boundary imports use explicit public contracts, circular dependencies are structurally prevented by automated tooling running in CI, shared utilities contain no business logic, and every boundary has a named owner with CODEOWNERS enforcement**.
-
-# Used By
-
-- architecture-impact-reviewer
-- backend-change-builder
-- ai-code-review-refactor
-
-# Handoff
-
-Hand off to layered-architecture-design for layer responsibilities, architecture-style-selection for overall style choice, or data-model-design when persistence ownership is unresolved.
-
-# Completion Criteria
-
-The capability is complete when module boundaries reflect business capability, avoid circular dependencies, and make coupling visible enough to enforce.
+The capability is complete when **every module boundary is defined by business capability, exposes an explicit public contract, prevents circular dependencies with automated tooling, restricts shared/common code to pure technical utilities, names an owner, evaluates directory density, declares the module relationship type, proves change locality for small requirements, and justifies every public API expansion with current consumers**.
