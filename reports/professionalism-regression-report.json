@@ -1,12 +1,12 @@
 {
   "baseline_changes": [],
   "blockers": [],
-  "generated_at": "2026-06-10T09:51:04.676477+00:00",
+  "generated_at": "2026-06-10T10:26:57.263425+00:00",
   "known_warnings": [],
-  "mode": "default",
+  "mode": "strict",
   "report_only": false,
   "status": "pass",
-  "strict": false,
+  "strict": true,
   "summary": {
     "baseline_changes": 0,
     "blockers": 0,

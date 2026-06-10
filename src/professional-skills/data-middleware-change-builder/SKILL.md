@@ -99,6 +99,7 @@ Select the data/middleware mode before changing storage, cache, queue, search, b
 - **Signal:** write path updates database, cache, search, or queue state in separate steps without transaction, outbox, or reconciliation. **Hidden risk:** durable data and derived stores diverge after partial success. **Required professional action:** choose a consistency boundary and recovery path before implementation. **Route to:** `transaction-consistency`, `backend-change-builder`. **Evidence required:** transaction/outbox decision, reconciliation job, partial-failure test.
 - **Signal:** repository/cache/queue/search errors are swallowed, generalized, or leaked as raw driver/SDK/database internals. **Hidden risk:** retryability and terminal failure are unclear, and diagnostics may leak internals. **Required professional action:** define data-layer failure contract. **Route to:** `failure-contract-design`, `logging-error-handling`. **Evidence required:** boundary translation map, retry/DLQ behavior, safe message, and negative tests.
 - **Signal:** cache/event/search/index mutation is hidden in mapper, getter, policy, or model conversion. **Hidden risk:** side-effect ordering and source-of-truth drift. **Required professional action:** trace data and side-effect flow. **Route to:** `data-side-effect-flow-tracing`, `cache-design`. **Evidence required:** flow map, source of truth, transaction/outbox ordering, and idempotency/compensation.
+- **Signal:** DB/cache/queue/search tests need private repository helpers, live infrastructure, wall-clock timing, random IDs, or broad shared fixtures to pass. **Hidden risk:** middleware tests become flaky or implementation-coupled while real boundary behavior remains unproven. **Required professional action:** design explicit test seams and contract/integration proof. **Route to:** `testability-seam-design`, `quality-test-gate`. **Evidence required:** public repository/queue/cache boundary, fake/stub/contract decision, deterministic controls, fixture owner, and validation output.
 
 ### Decision Tree: Index Design Required?
 
@@ -223,6 +224,7 @@ Close a data or middleware change only when all five canonical answers are concr
 - **failure-contract-design** — when repository, driver, cache, queue, or search failure semantics are unclear.
 - **data-side-effect-flow-tracing** — when cache/event/search/persistence side effects may be hidden or misordered.
 - **dependency-wiring-lifecycle** — when client, pool, subscription, stream, or shutdown ownership changes.
+- **testability-seam-design** — when middleware tests need deterministic DB/cache/queue/search seams or risk private-helper coupling.
 
 ## Completion Criteria
 Data and middleware changes are ready when source of truth is declared, consistency model is explicit, indexes are justified by access patterns with EXPLAIN evidence, cache invalidation is deterministic, queue semantics and DLQ routing are defined, every migration has a tested rollback, large table changes use online strategies, and failure modes for stale cache, queue duplication, replication lag, and migration rollback are explicitly analyzed.

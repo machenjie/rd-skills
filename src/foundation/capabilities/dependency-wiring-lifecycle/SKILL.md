@@ -68,6 +68,14 @@ Escalate to `architecture-impact-reviewer` when wiring changes module boundaries
 - Forgetting to close pools, timers, subscriptions, streams, or sockets on shutdown.
 - Binding untyped config late and discovering invalid wiring only after traffic starts.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` owns the active dependency-graph and lifecycle rules.
+
+If deep references are added later, load them only for L3+ work, cross-module composition roots, service locator risk, reusable client or pool lifecycle changes, shutdown cleanup gaps, or circular dependency evidence.
+
+Do not load deep references for L1/L2 local collaborator changes where the inline output contract can name the construction owner, lifecycle scope, and cleanup decision.
+
 # Output Contract
 
 Return a Dependency Wiring Plan:

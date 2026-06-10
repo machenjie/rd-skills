@@ -271,7 +271,7 @@
     {
       "anti_example_section_length": 14,
       "benchmark_section_length": 22,
-      "bullet_count": 187,
+      "bullet_count": 194,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 69,
@@ -279,7 +279,7 @@
       "description_findings": [],
       "description_length": 240,
       "findings": [
-        "body 337 lines exceeds review threshold 250"
+        "body 344 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 23,
@@ -287,7 +287,7 @@
       "largest_section_lines": 70,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 10,
-      "line_count": 337,
+      "line_count": 344,
       "name": "ai-code-review-refactor",
       "optimality_section_length": 5,
       "output_contract_length": 70,
@@ -304,26 +304,28 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 5005
+      "word_count": 5260
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 21,
-      "bullet_count": 144,
-      "classification": "KEEP_AS_IS",
+      "bullet_count": 148,
+      "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
-      "context_efficiency_score": 82,
+      "context_efficiency_score": 67,
       "critical_details_length": 22,
       "description_findings": [],
       "description_length": 215,
-      "findings": [],
+      "findings": [
+        "body 253 lines exceeds review threshold 250"
+      ],
       "has_shared_optimality": false,
       "heading_count": 23,
       "kind": "professional-skill",
-      "largest_section_lines": 42,
+      "largest_section_lines": 44,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 7,
-      "line_count": 249,
+      "line_count": 253,
       "name": "architecture-impact-reviewer",
       "optimality_section_length": 5,
       "output_contract_length": 26,
@@ -331,21 +333,21 @@
       "oversized_tables": [],
       "path": "src/professional-skills/architecture-impact-reviewer/SKILL.md",
       "professionalism_score": 100,
-      "recommended_phase": "-",
+      "recommended_phase": "P2",
       "reference_link_count": 1,
       "repeated_phrase_count": 9,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
-      "split_candidate_score": 0,
-      "suggested_action": "Within size and professionalism budget; no action required.",
+      "split_candidate_score": 18,
+      "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3757
+      "word_count": 3935
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 20,
-      "bullet_count": 152,
+      "bullet_count": 157,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 69,
@@ -353,15 +355,15 @@
       "description_findings": [],
       "description_length": 212,
       "findings": [
-        "body 253 lines exceeds review threshold 250"
+        "body 258 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 22,
       "kind": "professional-skill",
-      "largest_section_lines": 33,
+      "largest_section_lines": 35,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 253,
+      "line_count": 258,
       "name": "backend-change-builder",
       "optimality_section_length": 5,
       "output_contract_length": 32,
@@ -378,7 +380,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4295
+      "word_count": 4490
     },
     {
       "anti_example_section_length": 10,
@@ -565,7 +567,7 @@
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 23,
-      "bullet_count": 128,
+      "bullet_count": 130,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 84,
@@ -576,10 +578,10 @@
       "has_shared_optimality": false,
       "heading_count": 21,
       "kind": "professional-skill",
-      "largest_section_lines": 28,
+      "largest_section_lines": 29,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 221,
+      "line_count": 223,
       "name": "data-middleware-change-builder",
       "optimality_section_length": 0,
       "output_contract_length": 24,
@@ -596,26 +598,28 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3739
+      "word_count": 3815
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 22,
-      "bullet_count": 148,
-      "classification": "KEEP_AS_IS",
+      "bullet_count": 152,
+      "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
-      "context_efficiency_score": 84,
+      "context_efficiency_score": 69,
       "critical_details_length": 23,
       "description_findings": [],
       "description_length": 253,
-      "findings": [],
+      "findings": [
+        "body 252 lines exceeds review threshold 250"
+      ],
       "has_shared_optimality": false,
-      "heading_count": 22,
+      "heading_count": 23,
       "kind": "professional-skill",
-      "largest_section_lines": 27,
-      "largest_section_title": "Proactive Professional Triggers",
+      "largest_section_lines": 25,
+      "largest_section_title": "Output Contract",
       "largest_table_rows": 8,
-      "line_count": 245,
+      "line_count": 252,
       "name": "delivery-release-gate",
       "optimality_section_length": 0,
       "output_contract_length": 25,
@@ -623,16 +627,16 @@
       "oversized_tables": [],
       "path": "src/professional-skills/delivery-release-gate/SKILL.md",
       "professionalism_score": 100,
-      "recommended_phase": "-",
+      "recommended_phase": "P2",
       "reference_link_count": 0,
       "repeated_phrase_count": 8,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
-      "split_candidate_score": 0,
-      "suggested_action": "Within size and professionalism budget; no action required.",
+      "split_candidate_score": 18,
+      "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3966
+      "word_count": 4114
     },
     {
       "anti_example_section_length": 10,
@@ -709,7 +713,7 @@
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 20,
-      "bullet_count": 136,
+      "bullet_count": 139,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 84,
@@ -720,10 +724,10 @@
       "has_shared_optimality": false,
       "heading_count": 22,
       "kind": "professional-skill",
-      "largest_section_lines": 29,
+      "largest_section_lines": 30,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 8,
-      "line_count": 235,
+      "line_count": 238,
       "name": "frontend-change-builder",
       "optimality_section_length": 5,
       "output_contract_length": 24,
@@ -740,12 +744,12 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4111
+      "word_count": 4216
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 21,
-      "bullet_count": 124,
+      "bullet_count": 130,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 84,
@@ -756,10 +760,10 @@
       "has_shared_optimality": false,
       "heading_count": 22,
       "kind": "professional-skill",
-      "largest_section_lines": 29,
+      "largest_section_lines": 32,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 8,
-      "line_count": 222,
+      "line_count": 228,
       "name": "integration-change-builder",
       "optimality_section_length": 5,
       "output_contract_length": 24,
@@ -776,12 +780,12 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3876
+      "word_count": 4108
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 22,
-      "bullet_count": 177,
+      "bullet_count": 185,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 69,
@@ -789,15 +793,15 @@
       "description_findings": [],
       "description_length": 202,
       "findings": [
-        "body 290 lines exceeds review threshold 250"
+        "body 298 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 23,
       "kind": "professional-skill",
-      "largest_section_lines": 38,
+      "largest_section_lines": 42,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 290,
+      "line_count": 298,
       "name": "quality-test-gate",
       "optimality_section_length": 0,
       "output_contract_length": 28,
@@ -814,12 +818,12 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4878
+      "word_count": 5180
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 21,
-      "bullet_count": 162,
+      "bullet_count": 164,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 69,
@@ -827,7 +831,7 @@
       "description_findings": [],
       "description_length": 276,
       "findings": [
-        "body 269 lines exceeds review threshold 250"
+        "body 271 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 24,
@@ -835,7 +839,7 @@
       "largest_section_lines": 31,
       "largest_section_title": "Cost And Capacity Guardrails",
       "largest_table_rows": 7,
-      "line_count": 269,
+      "line_count": 271,
       "name": "reliability-observability-gate",
       "optimality_section_length": 5,
       "output_contract_length": 28,
@@ -852,7 +856,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4662
+      "word_count": 4740
     },
     {
       "anti_example_section_length": 11,
@@ -1016,12 +1020,12 @@
       "description_length": 238,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 15,
+      "heading_count": 16,
       "kind": "foundation-capability",
       "largest_section_lines": 18,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 0,
-      "line_count": 114,
+      "line_count": 122,
       "name": "algorithm-data-structure-selection",
       "optimality_section_length": 0,
       "output_contract_length": 18,
@@ -1038,7 +1042,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 7,
-      "word_count": 831
+      "word_count": 912
     },
     {
       "anti_example_section_length": 0,
@@ -1081,7 +1085,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 44,
+      "bullet_count": 45,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -1090,12 +1094,12 @@
       "description_length": 172,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 15,
+      "heading_count": 16,
       "kind": "foundation-capability",
       "largest_section_lines": 15,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 0,
-      "line_count": 104,
+      "line_count": 113,
       "name": "architecture-enforcement-tooling",
       "optimality_section_length": 0,
       "output_contract_length": 15,
@@ -1111,8 +1115,8 @@
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
-      "used_by_count": 6,
-      "word_count": 687
+      "used_by_count": 7,
+      "word_count": 771
     },
     {
       "anti_example_section_length": 0,
@@ -1459,7 +1463,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 49,
+      "bullet_count": 48,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -1468,12 +1472,12 @@
       "description_length": 230,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 15,
+      "heading_count": 16,
       "kind": "foundation-capability",
       "largest_section_lines": 16,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 0,
-      "line_count": 109,
+      "line_count": 116,
       "name": "cleanup-deletion-governance",
       "optimality_section_length": 0,
       "output_contract_length": 16,
@@ -1489,8 +1493,8 @@
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
-      "used_by_count": 9,
-      "word_count": 717
+      "used_by_count": 8,
+      "word_count": 797
     },
     {
       "anti_example_section_length": 0,
@@ -1648,7 +1652,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 51,
+      "bullet_count": 52,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -1661,12 +1665,12 @@
         "description: states no trigger condition or scope (when/for/use, or a scope noun)"
       ],
       "has_shared_optimality": false,
-      "heading_count": 15,
+      "heading_count": 16,
       "kind": "foundation-capability",
       "largest_section_lines": 19,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 0,
-      "line_count": 111,
+      "line_count": 120,
       "name": "configuration-runtime-policy",
       "optimality_section_length": 0,
       "output_contract_length": 19,
@@ -1682,8 +1686,8 @@
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
-      "used_by_count": 7,
-      "word_count": 742
+      "used_by_count": 8,
+      "word_count": 828
     },
     {
       "anti_example_section_length": 0,
@@ -1697,12 +1701,12 @@
       "description_length": 188,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 15,
+      "heading_count": 16,
       "kind": "foundation-capability",
       "largest_section_lines": 17,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 0,
-      "line_count": 107,
+      "line_count": 115,
       "name": "consumer-impact-analysis",
       "optimality_section_length": 0,
       "output_contract_length": 17,
@@ -1719,7 +1723,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 8,
-      "word_count": 664
+      "word_count": 743
     },
     {
       "anti_example_section_length": 14,
@@ -1999,12 +2003,12 @@
         "description: states no trigger condition or scope (when/for/use, or a scope noun)"
       ],
       "has_shared_optimality": false,
-      "heading_count": 15,
+      "heading_count": 16,
       "kind": "foundation-capability",
       "largest_section_lines": 18,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 0,
-      "line_count": 111,
+      "line_count": 119,
       "name": "data-side-effect-flow-tracing",
       "optimality_section_length": 0,
       "output_contract_length": 18,
@@ -2021,7 +2025,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 7,
-      "word_count": 771
+      "word_count": 850
     },
     {
       "anti_example_section_length": 15,
@@ -2118,12 +2122,12 @@
       "description_length": 206,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 15,
+      "heading_count": 16,
       "kind": "foundation-capability",
       "largest_section_lines": 18,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 0,
-      "line_count": 112,
+      "line_count": 120,
       "name": "dependency-wiring-lifecycle",
       "optimality_section_length": 0,
       "output_contract_length": 18,
@@ -2140,7 +2144,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 7,
-      "word_count": 850
+      "word_count": 932
     },
     {
       "anti_example_section_length": 0,
@@ -2608,12 +2612,12 @@
       "description_length": 201,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 15,
+      "heading_count": 16,
       "kind": "foundation-capability",
       "largest_section_lines": 17,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 0,
-      "line_count": 112,
+      "line_count": 132,
       "name": "failure-contract-design",
       "optimality_section_length": 0,
       "output_contract_length": 17,
@@ -2630,7 +2634,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 8,
-      "word_count": 795
+      "word_count": 1041
     },
     {
       "anti_example_section_length": 13,
@@ -3547,7 +3551,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 50,
+      "bullet_count": 49,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -3556,12 +3560,12 @@
       "description_length": 187,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 15,
+      "heading_count": 16,
       "kind": "foundation-capability",
       "largest_section_lines": 17,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 0,
-      "line_count": 110,
+      "line_count": 117,
       "name": "model-boundary-mapping",
       "optimality_section_length": 0,
       "output_contract_length": 17,
@@ -3577,8 +3581,8 @@
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
-      "used_by_count": 7,
-      "word_count": 739
+      "used_by_count": 6,
+      "word_count": 814
     },
     {
       "anti_example_section_length": 11,
@@ -4960,12 +4964,12 @@
       "description_length": 237,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 15,
+      "heading_count": 16,
       "kind": "foundation-capability",
       "largest_section_lines": 17,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 0,
-      "line_count": 112,
+      "line_count": 120,
       "name": "testability-seam-design",
       "optimality_section_length": 0,
       "output_contract_length": 17,
@@ -4982,7 +4986,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 6,
-      "word_count": 1000
+      "word_count": 1077
     },
     {
       "anti_example_section_length": 11,
@@ -5581,8 +5585,8 @@
   ],
   "summary": {
     "classifications": {
-      "KEEP_AS_IS": 136,
-      "TIGHTEN_BODY": 6
+      "KEEP_AS_IS": 134,
+      "TIGHTEN_BODY": 8
     },
     "domain_extensions": 7,
     "foundation_capabilities": 116,

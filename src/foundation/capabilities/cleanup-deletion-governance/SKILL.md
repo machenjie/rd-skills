@@ -65,6 +65,14 @@ Escalate to `data-api-contract-changer` when deleting API, schema, event, or gen
 - Expand/contract migration leaves dual-write code permanently.
 - Rollback after deletion is impossible because state or schema was removed first.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active cleanup and deletion governance rules.
+
+If deep references are added later, load them only for L3+ work, public or runtime deletion, stale flags/fallbacks/deprecated APIs, generated/reflection references, telemetry-driven removal, rollback-sensitive cleanup, or expand/contract cleanup.
+
+Do not load deep references for L1/L2 local deletions where caller search, owner, removal condition, tests, and rollback risk can be handled from the inline output contract.
+
 # Output Contract
 
 Return a Cleanup / Deletion Plan:
@@ -99,7 +107,6 @@ Close the plan only when caller searches, telemetry or explicit no-telemetry rat
 # Used By
 
 - ai-code-review-refactor
-- refactoring
 - backend-change-builder
 - frontend-change-builder
 - data-api-contract-changer

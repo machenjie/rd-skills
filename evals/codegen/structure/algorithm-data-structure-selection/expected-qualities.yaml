@@ -32,8 +32,8 @@ required_qualities:
   - Memory budget and batch size are explicit for 10M input scale.
   - Hot key, skew, stable ordering, approximate/exact, and online/offline tradeoffs are addressed when relevant.
 forbidden_shortcuts:
-  - Using nested scans over 10M records without bounded N.
-  - Loading all records into memory when streaming or chunking is required.
+  - Keeping O(n²) nested scans over 10M records without bounded N.
+  - Keeping load-all processing or loading all records into memory when streaming or chunking is required.
   - Choosing list, map, set, heap, tree, trie, graph, bloom filter, LRU, or LFU without access-pattern rationale.
   - Claiming optimization without benchmark or profile evidence.
 evidence:

@@ -32,7 +32,7 @@ required_qualities:
   - Rule failures are understandable to contributors.
   - Existing code can migrate incrementally when needed.
 forbidden_shortcuts:
-  - Writing architecture rules only in documentation with no CI gate.
+  - Leaving an architecture rule only in docs or documentation with no CI gate.
   - Adding import boundary rules without failure examples.
   - Blocking generated code without explicit exception policy.
   - Enforcing rules manually only in code review.

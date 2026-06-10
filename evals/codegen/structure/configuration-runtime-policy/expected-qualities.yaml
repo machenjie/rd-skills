@@ -32,9 +32,9 @@ required_qualities:
   - Secrets boundaries and observability are explicit.
   - Mode switch strategy drift is rejected or converted into explicit strategy design.
 forbidden_shortcuts:
-  - Adding permanent feature flags with no owner or expiry.
+  - Adding a permanent flag or permanent feature flags with no owner or expiry.
   - Letting mode or kind switches become hidden strategy systems.
-  - Allowing configuration to bypass domain or security invariants.
+  - Allowing config bypass invariant behavior or configuration to bypass domain or security invariants.
   - Accepting invalid config without fail-fast or safe degradation behavior.
 evidence:
   - Configuration policy decision.

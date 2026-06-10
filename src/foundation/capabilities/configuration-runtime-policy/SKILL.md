@@ -66,6 +66,14 @@ Escalate to `security-privacy-gate` when config can alter auth, tenant isolation
 - Default points to production dependency in tests or to unsafe development behavior in production.
 - Config change has no test matrix or rollout/rollback path.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active runtime configuration and feature-flag policy.
+
+If deep references are added later, load them only for L3+ work, public or operator-visible config changes, runtime behavior switches, feature-flag lifecycle risk, invariant bypass, rollout/rollback impact, or stale cleanup debt.
+
+Do not load deep references for L1/L2 local config edits where the inline output contract for schema, default, validation, owner, expiry, and cleanup can be satisfied.
+
 # Output Contract
 
 Return a Configuration Policy:
@@ -107,6 +115,7 @@ Close the policy only when schema, defaults, validation, owners, expiry, cleanup
 - frontend-change-builder
 - integration-change-builder
 - reliability-observability-gate
+- architecture-impact-reviewer
 - change-documentation-gate
 - ai-code-review-refactor
 

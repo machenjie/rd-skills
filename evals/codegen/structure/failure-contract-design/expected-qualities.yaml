@@ -34,7 +34,7 @@ required_qualities:
 forbidden_shortcuts:
   - Swallowing errors with silent fallback.
   - Returning generic errors for retryable, terminal, validation, permission, conflict, timeout, or cancellation states.
-  - Leaking raw database or SDK errors across API boundaries.
+  - Creating a raw DB/SDK leak by exposing raw database or SDK errors across API boundaries.
   - Leaving partial failure without compensation, rollback, DLQ, or explicit acceptance.
 evidence:
   - Failure contract decision.

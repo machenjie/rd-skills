@@ -32,7 +32,7 @@ required_qualities:
   - Telemetry identifies old/new usage before deletion.
   - Rollback preserves consumer compatibility.
 forbidden_shortcuts:
-  - Renaming API, SDK, schema, event, or public export fields directly with no compatibility path.
+  - Making a breaking field, schema, event, SDK, or public export change without consumer analysis or compatibility path.
   - Ignoring unknown consumer risk.
   - Shipping generated-client breaking changes without migration guide.
   - Removing old contract behavior without telemetry.

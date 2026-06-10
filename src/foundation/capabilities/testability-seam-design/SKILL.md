@@ -70,6 +70,14 @@ Escalate to `quality-test-gate` when test layer selection, fixture ownership, or
 - Refactoring first and adding characterization tests later.
 - Treating snapshot or golden updates as proof without naming the behavior protected.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active seam-design rules.
+
+If deep references are added later, load them only for L3+ work, AI-generated tests, private-helper export pressure, unclear public behavior boundaries, external contract doubles, or uncontrolled time/randomness/IO risks.
+
+Do not load deep references for L1/L2 local changes where the output contract can be satisfied from the inline public-boundary, seam map, and deterministic-test rules.
+
 # Output Contract
 
 Return a Testability Seam Plan:

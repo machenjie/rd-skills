@@ -63,6 +63,14 @@ Escalate to `data-api-contract-changer` when API/schema/event compatibility is a
 - Deploying producer before consumers can read the new schema.
 - Removing compatibility branch before telemetry proves old usage is gone.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active consumer impact rules.
+
+If deep references are added later, load them only for L3+ work, public API/SDK/schema/event/export changes, generated-client impact, unknown consumers, compatibility migrations, telemetry, rollout, or rollback risk.
+
+Do not load deep references for L1/L2 private changes where no public, package, schema, event, CLI, or generated contract is affected and the inline output contract is enough.
+
 # Output Contract
 
 Return a Consumer Impact Report:

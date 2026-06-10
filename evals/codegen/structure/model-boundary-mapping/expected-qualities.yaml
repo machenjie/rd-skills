@@ -32,9 +32,9 @@ required_qualities:
   - Event payloads are versioned contracts.
   - Mapping tests cover compatibility and semantic drift.
 forbidden_shortcuts:
-  - Using API DTO as domain object.
-  - Returning ORM or persistence model directly from API.
-  - Putting business rules in mapper code.
+  - Using API DTO as domain object or DTO as domain state.
+  - Returning ORM model to API or persistence model directly from API.
+  - Putting business logic in mapper code.
   - Losing null, default, or optional semantics during mapping.
 evidence:
   - Model boundary map.

@@ -70,6 +70,14 @@ Escalate to `reliability-observability-gate` when the algorithm affects SLOs, ba
 - Ignoring worst-case graph cycles, skewed keys, adversarial input, or stable ordering.
 - Adding a complex probabilistic structure without explaining approximate versus exact semantics.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active algorithm and data-structure decision rules.
+
+If deep references are added later, load them only for L3+ work, production-scale inputs, hot paths, unbounded load-all processing, unclear complexity, memory-budget risk, or benchmark/profile interpretation.
+
+Do not load deep references for L1/L2 local changes where input size is bounded and the inline output contract for time, space, memory, and rejected alternatives is enough.
+
 # Output Contract
 
 Return an Algorithm/Data Structure Decision:

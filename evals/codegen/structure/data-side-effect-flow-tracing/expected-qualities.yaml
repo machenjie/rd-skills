@@ -32,8 +32,8 @@ required_qualities:
   - Outbox, publish-after-commit, idempotency, and compensation are considered.
   - Tests cover ordering and hidden side-effect rejection.
 forbidden_shortcuts:
-  - Writing database, cache, event, or external API calls inside mapper or getter code.
-  - Publishing events before commit without explicit safety.
+  - Hiding a side effect in mapper/getter code, including database, cache, event, or external API calls.
+  - Publishing event before commit or events before commit without explicit safety.
   - Mutating cache without naming source of truth and invalidation.
   - Letting logging or metrics alter behavior.
 evidence:

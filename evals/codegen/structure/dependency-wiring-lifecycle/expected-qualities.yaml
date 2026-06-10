@@ -32,10 +32,10 @@ required_qualities:
   - Circular dependency checks are explicit.
   - Startup validation and cleanup cover long-lived dependencies.
 forbidden_shortcuts:
-  - Constructing HTTP or DB clients per request.
+  - Keeping per-operation client construction for HTTP, DB, cache, queue, or SDK clients.
   - Hiding dependencies behind a service locator.
   - Introducing a circular dependency graph.
-  - Omitting shutdown cleanup for pools, timers, subscriptions, files, or sockets.
+  - Missing shutdown cleanup for pools, timers, subscriptions, files, or sockets.
 evidence:
   - Dependency graph and lifecycle table.
   - Composition root diff or design note.

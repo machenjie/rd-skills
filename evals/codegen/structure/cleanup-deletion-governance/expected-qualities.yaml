@@ -32,8 +32,8 @@ required_qualities:
   - Compatibility branch and deprecated API owner are clear.
   - Expand-contract cleanup has staged deletion evidence.
 forbidden_shortcuts:
-  - Leaving feature flags, fallbacks, compatibility branches, or deprecated APIs permanently.
-  - Deleting code without caller search.
+  - Leaving stale flags, fallbacks, compatibility branches, or deprecated APIs permanently.
+  - Delete without caller search or deleting code without caller search.
   - Ignoring runtime, generated, or reflection references.
   - Removing behavior without telemetry or rollback path.
 evidence:

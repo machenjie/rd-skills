@@ -15,6 +15,7 @@ from validation_utils import (
     ValidationProblem,
     entry_path,
     entry_ref,
+    extract_section_body,
     fail_many,
     load_yaml_file,
     parse_frontmatter,
@@ -79,6 +80,24 @@ REQUIRED_SECTIONS = (
     "Used By",
     "Handoff",
     "Completion Criteria",
+)
+STRUCTURED_CODE_CORRECTNESS_CAPABILITIES = frozenset(
+    {
+        "107",
+        "108",
+        "109",
+        "110",
+        "111",
+        "112",
+        "113",
+        "114",
+        "115",
+        "116",
+    }
+)
+STRUCTURED_CODE_CORRECTNESS_REQUIRED_SECTIONS = (
+    "Evidence Contract",
+    "Reference Loading Policy",
 )
 ANTI_FRAGMENTATION_KEYWORDS = (
     "anti-fragmentation",
@@ -266,6 +285,43 @@ def _validate_targeted_content_keywords(
         )
 
 
+def _validate_structured_code_correctness_sections(
+    capability_id: str | None,
+    body: str,
+    context: str,
+    errors: list[str],
+) -> None:
+    if capability_id not in STRUCTURED_CODE_CORRECTNESS_CAPABILITIES:
+        return
+
+    validate_required_sections(
+        body,
+        STRUCTURED_CODE_CORRECTNESS_REQUIRED_SECTIONS,
+        context,
+        errors,
+    )
+
+    policy = extract_section_body(body, "Reference Loading Policy")
+    if policy is None:
+        return
+
+    folded = policy.casefold()
+    required_terms = (
+        "inline-only",
+        "deep reference",
+        "l1",
+        "l2",
+        "l3",
+        "output contract",
+    )
+    for term in required_terms:
+        if term not in folded:
+            errors.append(
+                f"{context}: structured code correctness Reference Loading Policy "
+                f"must mention '{term}'"
+            )
+
+
 def main() -> int:
     errors: list[str] = []
 
@@ -449,6 +505,12 @@ def main() -> int:
         )
 
         validate_required_sections(body, REQUIRED_SECTIONS, file_context, errors)
+        _validate_structured_code_correctness_sections(
+            normalized_capability_id,
+            body,
+            file_context,
+            errors,
+        )
         validate_no_beginner_sections(body, file_context, errors)
         validate_no_personal_references(raw_frontmatter + "\n" + body, file_context, errors)
         _validate_targeted_content_keywords(

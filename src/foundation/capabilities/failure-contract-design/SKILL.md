@@ -23,6 +23,12 @@ Do not use for pure local calculations with no boundary, no caller-visible failu
 
 Do not use to create a large error hierarchy when a small typed result or local exception mapping satisfies the boundary.
 
+Do not use `failure-contract-design` only to design API error code format; that belongs to `error-code-design`.
+
+Do not use `failure-contract-design` only to design log fields; that belongs to `logging-error-handling`.
+
+Do not use `failure-contract-design` only to design retry backoff; that belongs to `idempotency-retry-design`.
+
 # Non-Negotiable Rules
 
 - Every boundary declares its failure contract.
@@ -41,6 +47,10 @@ Anchor against RFC 7807 problem details, typed error/result patterns, exception 
 # Selection Rules
 
 Select this capability when the main risk is error semantics across layers. Use `error-code-design` for stable API error codes, `logging-error-handling` for log redaction and diagnostic fields, `idempotency-retry-design` for retry mechanics, `transaction-consistency` for rollback/compensation, and `observability` for production signals.
+
+This capability owns cross-layer failure taxonomy: retryable, terminal, validation, permission, conflict, timeout, cancellation, dependency, partial, and internal failures; boundary translation maps; fallback, degradation, compensation, and DLQ decisions; user-visible versus internal failure semantics; and async/message failure behavior.
+
+`error-code-design` owns API or client-visible error codes, HTTP status, machine-readable code, response body shape, remediation messages, and client behavior mapping. `logging-error-handling` owns structured logs, safe diagnostics, correlation or trace context, redaction, and log field conventions. `idempotency-retry-design` owns retry strategy, idempotency keys, dedupe windows, replay behavior, retry backoff, and duplicate safety.
 
 # Risk Escalation Rules
 
@@ -67,6 +77,14 @@ Escalate to `security-privacy-gate` when errors can expose secrets, PII, auth st
 - Losing root cause when wrapping errors.
 - Publishing partial success without compensation or explicit acceptance.
 - Queue consumer ACKs before durable processing and has no DLQ or replay behavior.
+
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active cross-boundary failure contract rules.
+
+If deep references are added later, load them only for L3+ work, public API or async/message boundaries, partial failure, raw dependency error leakage, fallback/degradation, compensation, DLQ, or unclear retryable versus terminal semantics.
+
+Do not load deep references for L1/L2 local error handling where the inline output contract for taxonomy, translation map, and handoff boundaries to error-code, logging, or retry capabilities is sufficient.
 
 # Output Contract
 
@@ -114,6 +132,8 @@ Close the contract only when failure states are typed or otherwise machine-disti
 # Handoff
 
 Hand off to `error-code-design` for public error codes, `logging-error-handling` for diagnostics, `observability` for metrics and traces, `idempotency-retry-design` for retries, `transaction-consistency` for compensation, and `delivery-release-gate` when failure behavior affects rollout or rollback.
+
+Keep ownership narrow: this capability defines failure categories and boundary semantics; `error-code-design` formats API/client-visible codes and responses, `logging-error-handling` formats diagnostic records, and `idempotency-retry-design` defines retry keys, dedupe, replay, and backoff mechanics.
 
 # Completion Criteria
 

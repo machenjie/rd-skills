@@ -32,9 +32,9 @@ required_qualities:
   - Characterization tests precede risky refactors.
   - Flaky test risk and deterministic clock/randomness strategy are documented.
 forbidden_shortcuts:
-  - Exporting private helper code only for tests.
-  - Mocking private call order instead of behavior.
-  - Using uncontrolled clock, randomness, UUID, or external I/O in tests.
+  - Export private helper code only for tests.
+  - Mock private call order instead of behavior.
+  - Using uncontrolled clock/random/IO, randomness, UUID, or external I/O in tests.
   - Sharing business fixtures without owner.
 evidence:
   - Testability seam plan.

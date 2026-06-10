@@ -1,7 +1,7 @@
 {
   "average_score": 41.26,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-10T09:49:31.832357+00:00",
+  "generated_at": "2026-06-10T10:26:57.909614+00:00",
   "items": [
     {
       "body_lines": 216,
@@ -29,7 +29,7 @@
       "warnings": []
     },
     {
-      "body_lines": 337,
+      "body_lines": 344,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -54,7 +54,7 @@
       "warnings": []
     },
     {
-      "body_lines": 249,
+      "body_lines": 253,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -79,7 +79,7 @@
       "warnings": []
     },
     {
-      "body_lines": 253,
+      "body_lines": 258,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -229,7 +229,7 @@
       "warnings": []
     },
     {
-      "body_lines": 221,
+      "body_lines": 223,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -254,7 +254,7 @@
       "warnings": []
     },
     {
-      "body_lines": 245,
+      "body_lines": 252,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -329,7 +329,7 @@
       "warnings": []
     },
     {
-      "body_lines": 235,
+      "body_lines": 238,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -354,7 +354,7 @@
       "warnings": []
     },
     {
-      "body_lines": 222,
+      "body_lines": 228,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -379,7 +379,7 @@
       "warnings": []
     },
     {
-      "body_lines": 290,
+      "body_lines": 298,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -404,7 +404,7 @@
       "warnings": []
     },
     {
-      "body_lines": 269,
+      "body_lines": 271,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -529,7 +529,7 @@
       "warnings": []
     },
     {
-      "body_lines": 114,
+      "body_lines": 122,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 2,
@@ -591,7 +591,7 @@
       ]
     },
     {
-      "body_lines": 104,
+      "body_lines": 113,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -841,7 +841,7 @@
       "warnings": []
     },
     {
-      "body_lines": 109,
+      "body_lines": 116,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 4,
@@ -968,7 +968,7 @@
       "warnings": []
     },
     {
-      "body_lines": 111,
+      "body_lines": 120,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -993,7 +993,7 @@
       "warnings": []
     },
     {
-      "body_lines": 107,
+      "body_lines": 115,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1193,7 +1193,7 @@
       "warnings": []
     },
     {
-      "body_lines": 111,
+      "body_lines": 119,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1268,7 +1268,7 @@
       "warnings": []
     },
     {
-      "body_lines": 112,
+      "body_lines": 120,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1619,7 +1619,7 @@
       "warnings": []
     },
     {
-      "body_lines": 112,
+      "body_lines": 132,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -2244,7 +2244,7 @@
       "warnings": []
     },
     {
-      "body_lines": 110,
+      "body_lines": 117,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -3183,7 +3183,7 @@
       "warnings": []
     },
     {
-      "body_lines": 112,
+      "body_lines": 120,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,

@@ -68,6 +68,14 @@ Escalate to `data-api-contract-changer` when public API, SDK, schema, event, or 
 - Generated model is edited by hand or leaks into domain code.
 - Null becomes default empty value and changes business meaning.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active model-boundary mapping rules.
+
+If deep references are added later, load them only for L3+ work, public contracts, generated clients, DTO/domain/persistence/event leakage, null/default semantic drift, or mapper ownership ambiguity.
+
+Do not load deep references for L1/L2 local mapper changes where source, target, validation owner, compatibility, and rejected leakage alternatives are clear from the inline output contract.
+
 # Output Contract
 
 Return a Model Boundary Map:
@@ -107,7 +115,6 @@ Close the map only when source/target models, validation location, mapping owner
 - integration-change-builder
 - ai-code-review-refactor
 - quality-test-gate
-- change-documentation-gate
 
 # Handoff
 
