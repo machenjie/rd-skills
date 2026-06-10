@@ -1467,6 +1467,14 @@ def _build_coverage_matrix(items: list[SkillScore]) -> CoverageMatrixReport:
             or any(term.casefold() in body.casefold() for term in REFERENCE_HINT_TERMS),
             partial=bool(_reference_files(path)),
         )
+        routing_coverage = _coverage_count_cell(routing_counts.get(item.name, 0))
+        benchmark_coverage = _coverage_count_cell(benchmark_counts.get(item.name, 0))
+        if item.name == "change-forge-router":
+            routing_coverage = (
+                "n/a (router owns routing fixture corpus; "
+                f"eval-routing cases={_routing_fixture_count()})"
+            )
+            benchmark_coverage = "n/a (covered by eval-routing and agent-behavior)"
         rows.append(
             CoverageRow(
                 name=item.name,
@@ -1479,8 +1487,8 @@ def _build_coverage_matrix(items: list[SkillScore]) -> CoverageMatrixReport:
                 failure_modes=failure_modes,
                 quality_gate=quality_gate,
                 reference_loading_hint=reference_hint,
-                routing_coverage=_coverage_count_cell(routing_counts.get(item.name, 0)),
-                benchmark_coverage=_coverage_count_cell(benchmark_counts.get(item.name, 0)),
+                routing_coverage=routing_coverage,
+                benchmark_coverage=benchmark_coverage,
                 anti_bloat_status=_anti_bloat_status(item.dimensions.get("anti_bloat_control", 0)),
                 status=item.status,
                 score=item.total,
@@ -1504,6 +1512,12 @@ def _coverage_cell(ok: bool, partial: bool = False) -> str:
 
 def _coverage_count_cell(count: int) -> str:
     return f"yes ({count})" if count else "no"
+
+
+def _routing_fixture_count() -> int:
+    if not ROUTING_EVALS_DIR.is_dir():
+        return 0
+    return sum(1 for path in ROUTING_EVALS_DIR.glob("*.yaml") if path.is_file())
 
 
 def _anti_bloat_status(score: int) -> str:

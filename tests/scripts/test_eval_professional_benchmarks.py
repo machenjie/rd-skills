@@ -301,6 +301,45 @@ class EvalProfessionalBenchmarksTests(unittest.TestCase):
             result = module._evaluate_case(case_dir, registry, {"bug-fix"}, "auto")
         self.assertTrue(any("vague content" in error for error in result.errors))
 
+    def test_adversarial_markdown_uses_detection_fields_instead_of_delta(self) -> None:
+        module = _load_module()
+        result = module.BenchmarkResult(
+            case_id="evals/professional-benchmarks/adversarial/example",
+            path="evals/professional-benchmarks/adversarial/example",
+            expected_stage="review",
+            expected_skills=["change-forge-router"],
+            expected_with_skill_status="fail",
+            adversarial_detection_status="detected",
+            schema_status="pass",
+            comparison_status="expected-fail",
+            benchmark_quality_status="pass",
+            baseline_defect_hits=["keyword-stuffed baseline"],
+            with_skill_obligation_coverage=["selected stage"],
+            delta_score=9,
+            remaining_gaps=["route relevance"],
+            missing_expected_items=["route relevance", "forbidden behaviors absent", "evidence limits"],
+            forbidden_behavior_hits=["residual risk without owner"],
+            professional_delta_summary=module.ProfessionalDeltaSummary(delta_score=9),
+        )
+        report = module.BenchmarkReport(
+            generated_at="2026-06-10T00:00:00+00:00",
+            cases_checked=1,
+            mode="auto",
+            errors=[],
+            results=[result],
+            comparison_cases_checked=1,
+        )
+
+        markdown = module._render_markdown(report)
+
+        self.assertIn("Expected Failure", markdown)
+        self.assertIn("Adversarial Detection: detected", markdown)
+        self.assertIn("Expected Failure: yes", markdown)
+        self.assertIn("missing expected items=3; forbidden hits=1", markdown)
+        self.assertIn("not applicable", markdown)
+        self.assertNotIn("delta_score: +9", markdown)
+        self.assertNotIn("| +9 |", markdown)
+
 
 if __name__ == "__main__":
     unittest.main()

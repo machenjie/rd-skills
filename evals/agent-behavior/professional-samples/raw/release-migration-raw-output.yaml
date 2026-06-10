@@ -57,9 +57,9 @@ actual:
 
     Boundaries inspected: migration, deploy order, consumers, rollback path.
     Validation evidence: old/new version compatibility matrix; rollback migration test.
-    Residual risk: production-sized lock timing unverified.
+    Residual risk: production-sized lock timing unverified; owner: release engineering.
     Next gate: release gate requires the rollback rehearsal artifact before ship.
 review:
   human_review_required: true
-  promotion_status: candidate
-  notes: Candidate raw-output release sample with prose before the manifest.
+  promotion_status: promoted
+  notes: Promoted raw-output release sample with prose before the manifest and residual risk owner.

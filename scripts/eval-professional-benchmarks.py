@@ -810,7 +810,7 @@ def _render_markdown(report: BenchmarkReport) -> str:
     ]
     for result in report.results:
         skills = ", ".join(result.expected_skills)
-        summary = _format_delta_summary(result.professional_delta_summary)
+        summary = _format_result_delta_summary(result)
         lines.append(
             f"| `{result.path}` | {result.schema_status} | {result.comparison_status} | "
             f"`{result.expected_stage}` | {skills} | {len(result.missing_expected_items)} | "
@@ -821,16 +821,19 @@ def _render_markdown(report: BenchmarkReport) -> str:
             "",
             "## Benchmark Quality Details",
             "",
-            "| Case | Benchmark Quality Status | Baseline Defect Hits | With-Skill Obligation Coverage | Delta Score | Remaining Gaps |",
-            "| --- | --- | ---: | --- | ---: | ---: |",
+            "| Case | Benchmark Quality Status | Expected Failure | Adversarial Detection | Observed Failure Reasons | Baseline Defect Hits | With-Skill Obligation Coverage | Delta Score | Remaining Gaps |",
+            "| --- | --- | --- | --- | --- | ---: | --- | --- | ---: |",
         ]
     )
     for result in report.results:
         lines.append(
             f"| `{result.path}` | {result.benchmark_quality_status} | "
+            f"{_expected_failure_label(result)} | "
+            f"{_adversarial_detection_label(result)} | "
+            f"{_observed_failure_reasons(result)} | "
             f"{len(result.baseline_defect_hits)} | "
             f"{', '.join(result.with_skill_obligation_coverage) or '-'} | "
-            f"{result.delta_score:+d} | {len(result.remaining_gaps)} |"
+            f"{_delta_score_display(result)} | {len(result.remaining_gaps)} |"
         )
     if report.errors:
         lines.extend(["", "## Errors", ""])
@@ -886,6 +889,47 @@ def _format_delta_summary(summary: ProfessionalDeltaSummary) -> str:
         f"forbidden_behavior_hits: {len(summary.forbidden_behavior_hits)}; "
         f"delta_score: {summary.delta_score:+d}"
     )
+
+
+def _format_result_delta_summary(result: BenchmarkResult) -> str:
+    if result.expected_with_skill_status == "fail":
+        return (
+            f"Adversarial Detection: {_adversarial_detection_label(result)}; "
+            f"Expected Failure: {_expected_failure_label(result)}; "
+            f"Observed Failure Reasons: {_observed_failure_reasons(result)}; "
+            f"Delta Score: {_delta_score_display(result)}"
+        )
+    return _format_delta_summary(result.professional_delta_summary)
+
+
+def _expected_failure_label(result: BenchmarkResult) -> str:
+    return "yes" if result.expected_with_skill_status == "fail" else "no"
+
+
+def _adversarial_detection_label(result: BenchmarkResult) -> str:
+    if result.expected_with_skill_status != "fail":
+        return "-"
+    return result.adversarial_detection_status or "not-run"
+
+
+def _observed_failure_reasons(result: BenchmarkResult) -> str:
+    if result.expected_with_skill_status != "fail":
+        return "-"
+    parts = []
+    if result.missing_expected_items:
+        parts.append(f"missing expected items={len(result.missing_expected_items)}")
+    if result.forbidden_behavior_hits:
+        parts.append(f"forbidden hits={len(result.forbidden_behavior_hits)}")
+    comparison_errors = result.comparison.errors if result.comparison else []
+    if comparison_errors and not parts:
+        parts.append(f"comparison errors={len(comparison_errors)}")
+    return "; ".join(parts) if parts else "none"
+
+
+def _delta_score_display(result: BenchmarkResult) -> str:
+    if result.expected_with_skill_status == "fail":
+        return "not applicable"
+    return f"{result.delta_score:+d}"
 
 
 def _contains_forbidden_scope(text: str) -> bool:

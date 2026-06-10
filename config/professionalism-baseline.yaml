@@ -1,5 +1,5 @@
 schema_version: 1
-generated_at: "2026-06-10T00:41:06.203715+00:00"
+generated_at: "2026-06-10T01:56:10.242319+00:00"
 source_reports:
   skill_professionalism: reports/skill-professionalism-eval.json
   professional_coverage_matrix: reports/professional-coverage-matrix.json
@@ -22,18 +22,10 @@ professional_skills:
   acceptance-criteria-builder:
     path: src/professional-skills/acceptance-criteria-builder/SKILL.md
     kind: professional-skill
-    total_score: 56
-    status: acceptable
-    known_warnings_count: 1
-    known_warnings:
-      -
-        message: "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence"
-        type: trigger_lacks_concrete_route_or_evidence
-        owner: changeforge-professional-skills-maintainers
-        accepted_reason: "Existing advisory finding retained only for regression visibility."
-        review_after: 2026-07-15
-        target_fix_phase: "P0 proactive-trigger-hardening"
-        is_release_blocking: true
+    total_score: 57
+    status: sample-grade
+    known_warnings_count: 0
+    known_warnings: []
     required_sections_present: true
     missing_required_sections: []
     benchmark_coverage_count: 0
@@ -70,26 +62,10 @@ professional_skills:
   architecture-impact-reviewer:
     path: src/professional-skills/architecture-impact-reviewer/SKILL.md
     kind: professional-skill
-    total_score: 55
-    status: acceptable
-    known_warnings_count: 2
-    known_warnings:
-      -
-        message: "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence"
-        type: trigger_lacks_concrete_route_or_evidence
-        owner: changeforge-professional-skills-maintainers
-        accepted_reason: "Existing advisory finding retained only for regression visibility."
-        review_after: 2026-07-15
-        target_fix_phase: "P0 proactive-trigger-hardening"
-        is_release_blocking: true
-      -
-        message: "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence"
-        type: trigger_lacks_concrete_route_or_evidence
-        owner: changeforge-professional-skills-maintainers
-        accepted_reason: "Existing advisory finding retained only for regression visibility."
-        review_after: 2026-07-15
-        target_fix_phase: "P0 proactive-trigger-hardening"
-        is_release_blocking: true
+    total_score: 56
+    status: sample-grade
+    known_warnings_count: 0
+    known_warnings: []
     required_sections_present: true
     missing_required_sections: []
     benchmark_coverage_count: 0
@@ -126,26 +102,10 @@ professional_skills:
   change-documentation-gate:
     path: src/professional-skills/change-documentation-gate/SKILL.md
     kind: professional-skill
-    total_score: 56
-    status: acceptable
-    known_warnings_count: 2
-    known_warnings:
-      -
-        message: "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence"
-        type: trigger_lacks_concrete_route_or_evidence
-        owner: changeforge-professional-skills-maintainers
-        accepted_reason: "Existing advisory finding retained only for regression visibility."
-        review_after: 2026-07-15
-        target_fix_phase: "P0 proactive-trigger-hardening"
-        is_release_blocking: true
-      -
-        message: "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence"
-        type: trigger_lacks_concrete_route_or_evidence
-        owner: changeforge-professional-skills-maintainers
-        accepted_reason: "Existing advisory finding retained only for regression visibility."
-        review_after: 2026-07-15
-        target_fix_phase: "P0 proactive-trigger-hardening"
-        is_release_blocking: true
+    total_score: 57
+    status: sample-grade
+    known_warnings_count: 0
+    known_warnings: []
     required_sections_present: true
     missing_required_sections: []
     benchmark_coverage_count: 0
@@ -162,18 +122,10 @@ professional_skills:
   change-forge-router:
     path: src/professional-skills/change-forge-router/SKILL.md
     kind: professional-skill
-    total_score: 57
-    status: acceptable
-    known_warnings_count: 1
-    known_warnings:
-      -
-        message: "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence"
-        type: trigger_lacks_concrete_route_or_evidence
-        owner: changeforge-professional-skills-maintainers
-        accepted_reason: "Existing advisory finding retained only for regression visibility."
-        review_after: 2026-07-15
-        target_fix_phase: "P0 proactive-trigger-hardening"
-        is_release_blocking: true
+    total_score: 58
+    status: sample-grade
+    known_warnings_count: 0
+    known_warnings: []
     required_sections_present: true
     missing_required_sections: []
     benchmark_coverage_count: 0
@@ -190,18 +142,10 @@ professional_skills:
   change-impact-analyzer:
     path: src/professional-skills/change-impact-analyzer/SKILL.md
     kind: professional-skill
-    total_score: 56
-    status: acceptable
-    known_warnings_count: 1
-    known_warnings:
-      -
-        message: "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence"
-        type: trigger_lacks_concrete_route_or_evidence
-        owner: changeforge-professional-skills-maintainers
-        accepted_reason: "Existing advisory finding retained only for regression visibility."
-        review_after: 2026-07-15
-        target_fix_phase: "P0 proactive-trigger-hardening"
-        is_release_blocking: true
+    total_score: 57
+    status: sample-grade
+    known_warnings_count: 0
+    known_warnings: []
     required_sections_present: true
     missing_required_sections: []
     benchmark_coverage_count: 0
@@ -218,18 +162,10 @@ professional_skills:
   change-intake-compiler:
     path: src/professional-skills/change-intake-compiler/SKILL.md
     kind: professional-skill
-    total_score: 55
-    status: acceptable
-    known_warnings_count: 1
-    known_warnings:
-      -
-        message: "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence"
-        type: trigger_lacks_concrete_route_or_evidence
-        owner: changeforge-professional-skills-maintainers
-        accepted_reason: "Existing advisory finding retained only for regression visibility."
-        review_after: 2026-07-15
-        target_fix_phase: "P0 proactive-trigger-hardening"
-        is_release_blocking: true
+    total_score: 56
+    status: sample-grade
+    known_warnings_count: 0
+    known_warnings: []
     required_sections_present: true
     missing_required_sections: []
     benchmark_coverage_count: 0
@@ -266,18 +202,10 @@ professional_skills:
   data-middleware-change-builder:
     path: src/professional-skills/data-middleware-change-builder/SKILL.md
     kind: professional-skill
-    total_score: 53
-    status: acceptable
-    known_warnings_count: 1
-    known_warnings:
-      -
-        message: "Evidence Contract is missing 'what evidence proves'"
-        type: evidence_contract_missing_what_proves
-        owner: changeforge-professional-skills-maintainers
-        accepted_reason: "Existing advisory finding retained only for regression visibility."
-        review_after: 2026-07-15
-        target_fix_phase: "P0 evidence-contract-hardening"
-        is_release_blocking: true
+    total_score: 55
+    status: sample-grade
+    known_warnings_count: 0
+    known_warnings: []
     required_sections_present: true
     missing_required_sections: []
     benchmark_coverage_count: 1
@@ -354,34 +282,10 @@ professional_skills:
   frontend-change-builder:
     path: src/professional-skills/frontend-change-builder/SKILL.md
     kind: professional-skill
-    total_score: 57
-    status: acceptable
-    known_warnings_count: 3
-    known_warnings:
-      -
-        message: "Evidence Contract is missing 'what evidence proves'"
-        type: evidence_contract_missing_what_proves
-        owner: changeforge-professional-skills-maintainers
-        accepted_reason: "Existing advisory finding retained only for regression visibility."
-        review_after: 2026-07-15
-        target_fix_phase: "P0 evidence-contract-hardening"
-        is_release_blocking: true
-      -
-        message: "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence"
-        type: trigger_lacks_concrete_route_or_evidence
-        owner: changeforge-professional-skills-maintainers
-        accepted_reason: "Existing advisory finding retained only for regression visibility."
-        review_after: 2026-07-15
-        target_fix_phase: "P0 proactive-trigger-hardening"
-        is_release_blocking: true
-      -
-        message: "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence"
-        type: trigger_lacks_concrete_route_or_evidence
-        owner: changeforge-professional-skills-maintainers
-        accepted_reason: "Existing advisory finding retained only for regression visibility."
-        review_after: 2026-07-15
-        target_fix_phase: "P0 proactive-trigger-hardening"
-        is_release_blocking: true
+    total_score: 58
+    status: sample-grade
+    known_warnings_count: 0
+    known_warnings: []
     required_sections_present: true
     missing_required_sections: []
     benchmark_coverage_count: 1
@@ -478,18 +382,10 @@ professional_skills:
   task-dag-planner:
     path: src/professional-skills/task-dag-planner/SKILL.md
     kind: professional-skill
-    total_score: 55
-    status: acceptable
-    known_warnings_count: 1
-    known_warnings:
-      -
-        message: "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence"
-        type: trigger_lacks_concrete_route_or_evidence
-        owner: changeforge-professional-skills-maintainers
-        accepted_reason: "Existing advisory finding retained only for regression visibility."
-        review_after: 2026-07-15
-        target_fix_phase: "P0 proactive-trigger-hardening"
-        is_release_blocking: true
+    total_score: 56
+    status: sample-grade
+    known_warnings_count: 0
+    known_warnings: []
     required_sections_present: true
     missing_required_sections: []
     benchmark_coverage_count: 0
@@ -1693,7 +1589,7 @@ routing:
       complexity: L3
       risk_level: high
       expected_skills_count: 4
-      expected_capabilities_count: 5
+      expected_capabilities_count: 6
       forbidden_counts:
         skills: 3
         capabilities: 2

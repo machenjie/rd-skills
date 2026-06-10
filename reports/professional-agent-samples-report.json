@@ -1,6 +1,6 @@
 {
   "failures": 0,
-  "generated_at": "2026-06-10T00:51:19.321733+00:00",
+  "generated_at": "2026-06-10T01:56:59.090507+00:00",
   "mode": "promoted-only",
   "results": [
     {
@@ -53,9 +53,43 @@
       "schema_errors": [],
       "selected_capabilities_missing": [],
       "selected_skills_missing": []
+    },
+    {
+      "findings": [],
+      "forbidden_behavior_hits": [],
+      "human_review_required": true,
+      "missing_actual_fields": [],
+      "notes": "Promoted raw-output release sample with prose before the manifest and residual risk owner.",
+      "ok": true,
+      "path": "evals/agent-behavior/professional-samples/raw/release-migration-raw-output.yaml",
+      "professional_obligations_missing": [],
+      "promotion_status": "promoted",
+      "required_quality_gates_missing": [],
+      "required_references_missing": [],
+      "sample_id": "release-migration-raw-output",
+      "schema_errors": [],
+      "selected_capabilities_missing": [],
+      "selected_skills_missing": []
+    },
+    {
+      "findings": [],
+      "forbidden_behavior_hits": [],
+      "human_review_required": true,
+      "missing_actual_fields": [],
+      "notes": "Promoted raw-output webhook sample with prose around the manifest and concrete evidence.",
+      "ok": true,
+      "path": "evals/agent-behavior/professional-samples/raw/webhook-signature-replay-raw-output.yaml",
+      "professional_obligations_missing": [],
+      "promotion_status": "promoted",
+      "required_quality_gates_missing": [],
+      "required_references_missing": [],
+      "sample_id": "webhook-signature-replay-raw-output",
+      "schema_errors": [],
+      "selected_capabilities_missing": [],
+      "selected_skills_missing": []
     }
   ],
-  "samples_checked": 3,
+  "samples_checked": 5,
   "strict": true,
   "warnings": 0
 }

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 import tempfile
 import unittest
@@ -332,6 +333,10 @@ class EvalSkillProfessionalismTests(unittest.TestCase):
             self.assertTrue((reports / "skill-professionalism-eval.json").is_file())
             self.assertTrue((reports / "professional-coverage-matrix.md").is_file())
             self.assertTrue((reports / "professional-coverage-matrix.json").is_file())
+            matrix = json.loads((reports / "professional-coverage-matrix.json").read_text(encoding="utf-8"))
+            router = next(row for row in matrix["rows"] if row["name"] == "change-forge-router")
+            self.assertTrue(router["routing_coverage"].startswith("n/a (router owns routing fixture corpus"))
+            self.assertTrue(router["benchmark_coverage"].startswith("n/a (covered by eval-routing"))
 
 
 if __name__ == "__main__":

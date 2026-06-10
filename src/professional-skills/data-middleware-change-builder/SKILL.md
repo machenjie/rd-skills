@@ -189,6 +189,7 @@ Close a data or middleware change only when all five canonical answers are concr
 - **Files and boundaries inspected**: schemas, queries, indexes, cache keys, invalidation paths, queue topics/consumer groups, search indexes, migrations/backfills, and downstream consumers read, and the invalidation or offset-commit boundary confirmed.
 - **Placement rationale**: why each index, cache key, queue, or migration step is shaped as it is, with the rejected alternative and its query-plan or throughput evidence.
 - **Validation commands**: the query-plan, cache-invalidation, DLQ/replay, TTL, migration-rollback, backfill, and freshness checks run, each with its outcome and what it proves/does not prove.
+- **What evidence proves / what it does not prove**: map every EXPLAIN plan, cache test, replay test, migration test, metric, or reconciliation report to the exact data correctness claim it proves and the scale, tenant, ordering, lag, or rollback claim it does not prove.
 - **Data judgment and handoff**: mode selected, source-of-truth/consistency judgment, behavior preservation, evidence limits, and next gate.
 - **Residual risk**: the stampede, hot-key, lag, ordering, stale read, data drift, cost, or partial-migration path that remains untested or assumed, and the named owner of the follow-up.
 

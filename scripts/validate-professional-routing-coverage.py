@@ -155,9 +155,13 @@ class CoverageReport:
     benchmark_cases_checked: int
     hidden_risks_checked: int
     hidden_risks_covered: int
+    hidden_risks_not_required: int
+    hidden_risks_weak_only: int
+    hidden_risks_uncovered: int
     strong_matches: int
     weak_matches: int
     matched_by_expected_route_only: int
+    expected_route_only_supplemental: int
     needs_manual_review: int
     hidden_risks_with_weak_matches: int
     hidden_risks_matched_by_expected_route_only: int
@@ -185,9 +189,13 @@ def main(argv: list[str] | None = None) -> int:
             benchmark_cases_checked=0,
             hidden_risks_checked=0,
             hidden_risks_covered=0,
+            hidden_risks_not_required=0,
+            hidden_risks_weak_only=0,
+            hidden_risks_uncovered=0,
             strong_matches=0,
             weak_matches=0,
             matched_by_expected_route_only=0,
+            expected_route_only_supplemental=0,
             needs_manual_review=0,
             hidden_risks_with_weak_matches=0,
             hidden_risks_matched_by_expected_route_only=0,
@@ -203,7 +211,8 @@ def main(argv: list[str] | None = None) -> int:
     print(
         "validate-professional-routing-coverage: "
         f"status={report.status}; routing_cases={report.routing_cases_checked}; "
-        f"benchmark_hidden_risks={report.hidden_risks_covered}/{report.hidden_risks_checked}; "
+        f"benchmark_hidden_risks_strong={report.hidden_risks_covered}/{report.hidden_risks_checked}; "
+        f"not_required={report.hidden_risks_not_required}; "
         f"findings={len(report.findings)}"
     )
     if report.findings:
@@ -245,6 +254,9 @@ def validate(*, routing_dir: Path, benchmarks_dir: Path, baseline_path: Path) ->
         routing_cases,
         findings,
     )
+    not_required_count = sum(1 for row in coverage_rows if row.get("coverage_status") == "not-required")
+    weak_only_count = sum(1 for row in coverage_rows if row.get("coverage_status") == "weak-only")
+    uncovered_count = sum(1 for row in coverage_rows if row.get("coverage_status") == "uncovered")
     weak_count = sum(1 for row in coverage_rows if row.get("weak_matches"))
     route_only_count = sum(1 for row in coverage_rows if row.get("matched_by_expected_route_only"))
     manual_review_count = sum(1 for row in coverage_rows if row.get("needs_manual_review"))
@@ -257,9 +269,13 @@ def validate(*, routing_dir: Path, benchmarks_dir: Path, baseline_path: Path) ->
         benchmark_cases_checked=len(benchmark_cases),
         hidden_risks_checked=checked,
         hidden_risks_covered=covered,
+        hidden_risks_not_required=not_required_count,
+        hidden_risks_weak_only=weak_only_count,
+        hidden_risks_uncovered=uncovered_count,
         strong_matches=strong_count,
         weak_matches=weak_count,
         matched_by_expected_route_only=route_only_count,
+        expected_route_only_supplemental=route_only_count,
         needs_manual_review=manual_review_count,
         hidden_risks_with_weak_matches=weak_count,
         hidden_risks_matched_by_expected_route_only=route_only_count,
@@ -454,7 +470,7 @@ def _check_benchmark_hidden_risk_coverage(
 ) -> tuple[list[dict[str, Any]], int, int]:
     coverage_rows: list[dict[str, Any]] = []
     checked = 0
-    covered = 0
+    strongly_covered = 0
     for path, expected in benchmark_cases:
         skip_reason = _string(expected.get("routing_not_required_reason"))
         hidden_risks = _string_list(expected.get("expected_hidden_risks"))
@@ -478,23 +494,30 @@ def _check_benchmark_hidden_risk_coverage(
                     case,
                 ) and strength != "strong":
                     expected_route_only_matches.append(case.case_id)
-            is_covered = bool(strong_matches) or bool(skip_reason)
-            needs_manual_review = not is_covered
-            if is_covered:
-                covered += 1
-            else:
+            coverage_status = _coverage_status(
+                strong_matches=strong_matches,
+                weak_matches=weak_matches,
+                expected_route_only_matches=expected_route_only_matches,
+                skip_reason=skip_reason,
+            )
+            is_strongly_covered = coverage_status == "covered"
+            needs_manual_review = coverage_status == "manual-review"
+            if is_strongly_covered:
+                strongly_covered += 1
+            elif coverage_status != "not-required":
                 findings.append(
                     Finding(
                         "benchmark-hidden-risk-uncovered",
                         str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path),
-                        f"expected_hidden_risk has no routing coverage: {risk}",
+                        f"expected_hidden_risk has {coverage_status} routing coverage: {risk}",
                     )
                 )
             coverage_rows.append(
                 {
                     "benchmark": str(path.parent.relative_to(ROOT)) if path.parent.is_relative_to(ROOT) else str(path.parent),
                     "hidden_risk": risk,
-                    "covered": is_covered,
+                    "coverage_status": coverage_status,
+                    "covered": is_strongly_covered,
                     "strong_matches": strong_matches,
                     "weak_matches": weak_matches,
                     "matched_by_expected_route_only": expected_route_only_matches,
@@ -503,7 +526,25 @@ def _check_benchmark_hidden_risk_coverage(
                     "routing_not_required_reason": skip_reason,
                 }
             )
-    return coverage_rows, checked, covered
+    return coverage_rows, checked, strongly_covered
+
+
+def _coverage_status(
+    *,
+    strong_matches: list[str],
+    weak_matches: list[str],
+    expected_route_only_matches: list[str],
+    skip_reason: str,
+) -> str:
+    if strong_matches:
+        return "covered"
+    if skip_reason:
+        return "not-required"
+    if weak_matches:
+        return "weak-only"
+    if expected_route_only_matches:
+        return "manual-review"
+    return "uncovered"
 
 
 def _benchmark_route_matches_expected(
@@ -729,31 +770,48 @@ def _render_markdown(report: CoverageReport) -> str:
         f"- Status: {report.status}",
         f"- Routing cases checked: {report.routing_cases_checked}",
         f"- Benchmark cases checked: {report.benchmark_cases_checked}",
-        f"- Hidden risks covered: {report.hidden_risks_covered}/{report.hidden_risks_checked}",
-        f"- Strong matches: {report.strong_matches}",
-        f"- Weak matches: {report.weak_matches}",
-        f"- Matched by expected route only: {report.matched_by_expected_route_only}",
-        f"- Needs manual review: {report.needs_manual_review}",
-        f"- Hidden risks with weak matches: {report.hidden_risks_with_weak_matches}",
-        f"- Hidden risks matched by expected route only: {report.hidden_risks_matched_by_expected_route_only}",
-        f"- Hidden risks needing manual review: {report.hidden_risks_needing_manual_review}",
+        f"- Hidden risks checked: {report.hidden_risks_checked}",
+        f"- Strongly covered: {report.hidden_risks_covered}",
+        f"- Not required: {report.hidden_risks_not_required}",
+        f"- Weak-only: {report.hidden_risks_weak_only}",
+        f"- Expected-route-only supplemental: {report.expected_route_only_supplemental}",
+        f"- Uncovered: {report.hidden_risks_uncovered}",
+        f"- Manual review: {report.needs_manual_review}",
         f"- L1 anti-over-routing cases: {report.l1_anti_over_routing_count}",
         f"- Findings: {len(report.findings)}",
         "",
         "## Benchmark Hidden Risk Coverage",
         "",
-        "| Benchmark | Covered | Hidden Risk | Strong Matches | Weak Matches | Expected-Route-Only | Manual Review |",
-        "| --- | --- | --- | --- | --- | --- | --- |",
+        "| Benchmark | Coverage Status | Hidden Risk | Strong Matches |",
+        "| --- | --- | --- | --- |",
     ]
     for row in report.benchmark_risk_coverage:
         lines.append(
-            f"| `{row['benchmark']}` | {str(row['covered']).lower()} | "
+            f"| `{row['benchmark']}` | {row['coverage_status']} | "
             f"{row['hidden_risk']} | "
-            f"{', '.join(row['strong_matches']) or '-'} | "
-            f"{', '.join(row['weak_matches']) or '-'} | "
-            f"{', '.join(row['matched_by_expected_route_only']) or '-'} | "
-            f"{str(row['needs_manual_review']).lower()} |"
+            f"{', '.join(row['strong_matches']) or '-'} |"
         )
+    debug_rows = [
+        row for row in report.benchmark_risk_coverage
+        if row.get("weak_matches") or row.get("matched_by_expected_route_only")
+    ]
+    lines.extend(["", "<details>", "<summary>Supplemental debug matches</summary>", ""])
+    if debug_rows:
+        lines.extend(
+            [
+                "| Benchmark | Hidden Risk | Weak Matches | Expected-Route-Only |",
+                "| --- | --- | --- | --- |",
+            ]
+        )
+        for row in debug_rows:
+            lines.append(
+                f"| `{row['benchmark']}` | {row['hidden_risk']} | "
+                f"{', '.join(row['weak_matches']) or '-'} | "
+                f"{', '.join(row['matched_by_expected_route_only']) or '-'} |"
+            )
+    else:
+        lines.append("- None")
+    lines.extend(["", "</details>"])
     lines.extend(["", "## Findings", ""])
     if report.findings:
         for finding in report.findings:

@@ -1,6 +1,6 @@
 # Professional Coverage Matrix
 
-- Generated: 2026-06-10T00:50:11.119891+00:00
+- Generated: 2026-06-10T01:56:58.352839+00:00
 - Rows checked: 48
 
 | Item | Kind | Mode Matrix | Proactive Triggers | Evidence Contract | Output Contract | Failure Modes | Quality Gate | Reference Loading Hint | Routing Coverage | Benchmark Coverage | Anti-bloat Status | Status |
@@ -34,25 +34,25 @@
 | `transaction-consistency` | foundation-capability | n/a | n/a | partial | yes | yes | yes | yes | yes (7) | yes (1) | ok | acceptable |
 | `typescript-professional-usage` | foundation-capability | n/a | n/a | partial | yes | yes | yes | partial | no | no | ok | needs-review |
 | `unit-testing` | foundation-capability | n/a | n/a | partial | yes | yes | yes | partial | yes (12) | no | ok | needs-review |
-| `acceptance-criteria-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (3) | no | ok | acceptable |
+| `acceptance-criteria-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (3) | no | ok | sample-grade |
 | `ai-code-review-refactor` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (14) | yes (3) | ok | sample-grade |
-| `architecture-impact-reviewer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (15) | no | ok | acceptable |
+| `architecture-impact-reviewer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (15) | no | ok | sample-grade |
 | `backend-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (40) | yes (3) | ok | sample-grade |
-| `change-documentation-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (31) | no | ok | acceptable |
-| `change-forge-router` | professional-skill | yes | yes | yes | yes | yes | yes | yes | no | no | ok | acceptable |
-| `change-impact-analyzer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (14) | no | ok | acceptable |
-| `change-intake-compiler` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (14) | no | ok | acceptable |
+| `change-documentation-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (31) | no | ok | sample-grade |
+| `change-forge-router` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a (router owns routing fixture corpus; eval-routing cases=81) | n/a (covered by eval-routing and agent-behavior) | ok | sample-grade |
+| `change-impact-analyzer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (14) | no | ok | sample-grade |
+| `change-intake-compiler` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (14) | no | ok | sample-grade |
 | `data-api-contract-changer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (14) | no | ok | sample-grade |
-| `data-middleware-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (12) | yes (1) | ok | acceptable |
+| `data-middleware-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (12) | yes (1) | ok | sample-grade |
 | `delivery-release-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (25) | yes (2) | ok | sample-grade |
 | `domain-impact-modeler` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (6) | no | ok | sample-grade |
 | `experience-impact-modeler` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (6) | no | ok | acceptable |
-| `frontend-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (11) | yes (1) | ok | acceptable |
+| `frontend-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (11) | yes (1) | ok | sample-grade |
 | `integration-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (12) | yes (1) | ok | sample-grade |
 | `quality-test-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (71) | no | ok | sample-grade |
 | `reliability-observability-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (29) | no | ok | sample-grade |
 | `security-privacy-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (22) | no | ok | sample-grade |
-| `task-dag-planner` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (1) | no | ok | acceptable |
+| `task-dag-planner` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (1) | no | ok | sample-grade |
 
 ## Weak Spots
 

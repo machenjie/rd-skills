@@ -1,7 +1,7 @@
 {
-  "average_score": 39.75,
+  "average_score": 39.83,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-10T00:50:10.283241+00:00",
+  "generated_at": "2026-06-10T01:56:57.540925+00:00",
   "items": [
     {
       "body_lines": 216,
@@ -12,7 +12,7 @@
         "failure_mode_coverage": 5,
         "mode_coverage": 5,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 3,
         "stage_fit": 5,
@@ -23,14 +23,10 @@
       "likely_missing_sections": [],
       "name": "acceptance-criteria-builder",
       "path": "src/professional-skills/acceptance-criteria-builder/SKILL.md",
-      "recommended_fixes": [
-        "Review listed warnings and add concrete evidence, owner, or skip rationale."
-      ],
-      "status": "acceptable",
-      "total": 56,
-      "warnings": [
-        "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "recommended_fixes": [],
+      "status": "sample-grade",
+      "total": 57,
+      "warnings": []
     },
     {
       "body_lines": 319,
@@ -66,7 +62,7 @@
         "failure_mode_coverage": 5,
         "mode_coverage": 5,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
         "stage_fit": 4,
@@ -77,15 +73,10 @@
       "likely_missing_sections": [],
       "name": "architecture-impact-reviewer",
       "path": "src/professional-skills/architecture-impact-reviewer/SKILL.md",
-      "recommended_fixes": [
-        "Review listed warnings and add concrete evidence, owner, or skip rationale."
-      ],
-      "status": "acceptable",
-      "total": 55,
-      "warnings": [
-        "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
-        "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "recommended_fixes": [],
+      "status": "sample-grade",
+      "total": 56,
+      "warnings": []
     },
     {
       "body_lines": 238,
@@ -121,7 +112,7 @@
         "failure_mode_coverage": 5,
         "mode_coverage": 5,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 3,
         "stage_fit": 5,
@@ -132,15 +123,10 @@
       "likely_missing_sections": [],
       "name": "change-documentation-gate",
       "path": "src/professional-skills/change-documentation-gate/SKILL.md",
-      "recommended_fixes": [
-        "Review listed warnings and add concrete evidence, owner, or skip rationale."
-      ],
-      "status": "acceptable",
-      "total": 56,
-      "warnings": [
-        "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
-        "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "recommended_fixes": [],
+      "status": "sample-grade",
+      "total": 57,
+      "warnings": []
     },
     {
       "body_lines": 263,
@@ -151,7 +137,7 @@
         "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 5,
         "stage_fit": 5,
@@ -162,14 +148,10 @@
       "likely_missing_sections": [],
       "name": "change-forge-router",
       "path": "src/professional-skills/change-forge-router/SKILL.md",
-      "recommended_fixes": [
-        "Review listed warnings and add concrete evidence, owner, or skip rationale."
-      ],
-      "status": "acceptable",
-      "total": 57,
-      "warnings": [
-        "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "recommended_fixes": [],
+      "status": "sample-grade",
+      "total": 58,
+      "warnings": []
     },
     {
       "body_lines": 214,
@@ -180,7 +162,7 @@
         "failure_mode_coverage": 5,
         "mode_coverage": 5,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
         "stage_fit": 4,
@@ -191,14 +173,10 @@
       "likely_missing_sections": [],
       "name": "change-impact-analyzer",
       "path": "src/professional-skills/change-impact-analyzer/SKILL.md",
-      "recommended_fixes": [
-        "Review listed warnings and add concrete evidence, owner, or skip rationale."
-      ],
-      "status": "acceptable",
-      "total": 56,
-      "warnings": [
-        "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "recommended_fixes": [],
+      "status": "sample-grade",
+      "total": 57,
+      "warnings": []
     },
     {
       "body_lines": 199,
@@ -209,7 +187,7 @@
         "failure_mode_coverage": 5,
         "mode_coverage": 4,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 4,
         "stage_fit": 3,
@@ -220,14 +198,10 @@
       "likely_missing_sections": [],
       "name": "change-intake-compiler",
       "path": "src/professional-skills/change-intake-compiler/SKILL.md",
-      "recommended_fixes": [
-        "Review listed warnings and add concrete evidence, owner, or skip rationale."
-      ],
-      "status": "acceptable",
-      "total": 55,
-      "warnings": [
-        "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "recommended_fixes": [],
+      "status": "sample-grade",
+      "total": 56,
+      "warnings": []
     },
     {
       "body_lines": 213,
@@ -255,11 +229,11 @@
       "warnings": []
     },
     {
-      "body_lines": 209,
+      "body_lines": 210,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
+        "evidence_contract_strength": 5,
         "failure_mode_coverage": 5,
         "mode_coverage": 5,
         "output_actionability": 5,
@@ -268,20 +242,16 @@
         "reference_precision": 3,
         "stage_fit": 3,
         "trigger_accuracy": 5,
-        "validation_obligation": 3
+        "validation_obligation": 4
       },
       "kind": "professional-skill",
       "likely_missing_sections": [],
       "name": "data-middleware-change-builder",
       "path": "src/professional-skills/data-middleware-change-builder/SKILL.md",
-      "recommended_fixes": [
-        "Review listed warnings and add concrete evidence, owner, or skip rationale."
-      ],
-      "status": "acceptable",
-      "total": 53,
-      "warnings": [
-        "Evidence Contract is missing 'what evidence proves'"
-      ]
+      "recommended_fixes": [],
+      "status": "sample-grade",
+      "total": 55,
+      "warnings": []
     },
     {
       "body_lines": 245,
@@ -359,11 +329,11 @@
       "warnings": []
     },
     {
-      "body_lines": 222,
+      "body_lines": 223,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
-        "evidence_contract_strength": 4,
+        "evidence_contract_strength": 5,
         "failure_mode_coverage": 4,
         "mode_coverage": 5,
         "output_actionability": 5,
@@ -378,16 +348,10 @@
       "likely_missing_sections": [],
       "name": "frontend-change-builder",
       "path": "src/professional-skills/frontend-change-builder/SKILL.md",
-      "recommended_fixes": [
-        "Review listed warnings and add concrete evidence, owner, or skip rationale."
-      ],
-      "status": "acceptable",
-      "total": 57,
-      "warnings": [
-        "Evidence Contract is missing 'what evidence proves'",
-        "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
-        "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "recommended_fixes": [],
+      "status": "sample-grade",
+      "total": 58,
+      "warnings": []
     },
     {
       "body_lines": 211,
@@ -498,7 +462,7 @@
         "failure_mode_coverage": 4,
         "mode_coverage": 5,
         "output_actionability": 5,
-        "proactive_trigger_quality": 4,
+        "proactive_trigger_quality": 5,
         "professional_depth": 5,
         "reference_precision": 3,
         "stage_fit": 4,
@@ -509,14 +473,10 @@
       "likely_missing_sections": [],
       "name": "task-dag-planner",
       "path": "src/professional-skills/task-dag-planner/SKILL.md",
-      "recommended_fixes": [
-        "Review listed warnings and add concrete evidence, owner, or skip rationale."
-      ],
-      "status": "acceptable",
-      "total": 55,
-      "warnings": [
-        "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "recommended_fixes": [],
+      "status": "sample-grade",
+      "total": 56,
+      "warnings": []
     },
     {
       "body_lines": 137,
@@ -4048,5 +4008,5 @@
     }
   ],
   "skills_checked": 124,
-  "warning_count": 21
+  "warning_count": 8
 }

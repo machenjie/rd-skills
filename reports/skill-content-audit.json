@@ -257,7 +257,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 2958
+      "word_count": 2967
     },
     {
       "anti_example_section_length": 14,
@@ -331,7 +331,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3405
+      "word_count": 3419
     },
     {
       "anti_example_section_length": 10,
@@ -403,7 +403,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3249
+      "word_count": 3259
     },
     {
       "anti_example_section_length": 0,
@@ -441,7 +441,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 1,
       "used_by_count": 0,
-      "word_count": 4663
+      "word_count": 4668
     },
     {
       "anti_example_section_length": 10,
@@ -477,7 +477,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3312
+      "word_count": 3316
     },
     {
       "anti_example_section_length": 9,
@@ -513,7 +513,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 3228
+      "word_count": 3230
     },
     {
       "anti_example_section_length": 10,
@@ -554,7 +554,7 @@
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 23,
-      "bullet_count": 116,
+      "bullet_count": 117,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 84,
@@ -568,7 +568,7 @@
       "largest_section_lines": 25,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 209,
+      "line_count": 210,
       "name": "data-middleware-change-builder",
       "optimality_section_length": 0,
       "output_contract_length": 20,
@@ -585,7 +585,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3418
+      "word_count": 3463
     },
     {
       "anti_example_section_length": 10,
@@ -698,7 +698,7 @@
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 20,
-      "bullet_count": 123,
+      "bullet_count": 124,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 84,
@@ -712,7 +712,7 @@
       "largest_section_lines": 25,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 8,
-      "line_count": 222,
+      "line_count": 223,
       "name": "frontend-change-builder",
       "optimality_section_length": 5,
       "output_contract_length": 20,
@@ -729,7 +729,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3713
+      "word_count": 3768
     },
     {
       "anti_example_section_length": 10,
@@ -915,7 +915,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3805
+      "word_count": 3807
     },
     {
       "anti_example_section_length": 0,

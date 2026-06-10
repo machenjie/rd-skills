@@ -83,6 +83,66 @@ class ValidateProfessionalRoutingCoverageTests(unittest.TestCase):
             "strong",
         )
 
+    def test_routing_not_required_is_not_counted_as_covered(self) -> None:
+        module = _load_module()
+
+        rows, checked, covered = module._check_benchmark_hidden_risk_coverage(
+            [
+                (
+                    ROOT / "evals/professional-benchmarks/adversarial/example/expected.yaml",
+                    {
+                        "routing_not_required_reason": "Adversarial negative fixture.",
+                        "expected_hidden_risks": ["route to nonexistent capability"],
+                        "expected_professional_skill": ["backend-change-builder"],
+                        "expected_capabilities": ["regression-testing"],
+                    },
+                )
+            ],
+            [],
+            [],
+        )
+
+        self.assertEqual(checked, 1)
+        self.assertEqual(covered, 0)
+        self.assertEqual(rows[0]["coverage_status"], "not-required")
+        self.assertFalse(rows[0]["covered"])
+        self.assertFalse(rows[0]["needs_manual_review"])
+
+    def test_expected_route_only_requires_manual_review(self) -> None:
+        module = _load_module()
+        case = module.RoutingCase(
+            case_id="generic-backend-fixture",
+            path="evals/routing/generic-backend-fixture.yaml",
+            text="Backend charge ledger retry replay issue uses backend-change-builder and cache-design.",
+            risk_text="Backend charge ledger retry replay issue.",
+            skills=["backend-change-builder"],
+            capabilities=["cache-design"],
+            risk_triggers=["charge ledger retry replay"],
+        )
+        findings = []
+
+        rows, checked, covered = module._check_benchmark_hidden_risk_coverage(
+            [
+                (
+                    ROOT / "evals/professional-benchmarks/backend/example/expected.yaml",
+                    {
+                        "expected_hidden_risks": ["billing replay double charge"],
+                        "expected_professional_skill": ["backend-change-builder"],
+                        "expected_capabilities": ["cache-design"],
+                    },
+                )
+            ],
+            [case],
+            findings,
+        )
+
+        self.assertEqual(checked, 1)
+        self.assertEqual(covered, 0)
+        self.assertEqual(rows[0]["coverage_status"], "manual-review")
+        self.assertTrue(rows[0]["needs_manual_review"])
+        self.assertTrue(rows[0]["matched_by_expected_route_only"])
+        self.assertTrue(findings)
+
 
 if __name__ == "__main__":
     unittest.main()
