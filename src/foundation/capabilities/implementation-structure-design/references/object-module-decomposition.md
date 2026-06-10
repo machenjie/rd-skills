@@ -34,6 +34,112 @@ Use this reference when a change adds or modifies a file, object, function, sign
    - Split when two or more peer owners, lifecycles, state sets, collaborator sets, method clusters, or public responsibilities exist.
    - Reject a new file when the existing file already owns the responsibility and stays cohesive after the change.
 
+## File Granularity Decision Tree
+
+Use this before creating a new file, accepting an extracted helper file, merging
+a small file, or rejecting a proposed merge.
+
+1. Identify owner.
+   - Name the primary owner for the behavior or small file.
+   - If a small file cannot name an independent owner, prefer merge into the unique owner or private co-location.
+   - If the only available name repeats the owner plus `predicate`, `mapper`, `options`, `helper`, or `glue`, treat that as weak owner evidence.
+
+2. Compare lifecycle, invariant, collaborator, and change reason.
+   - Same owner, same lifecycle, same invariant set, same collaborator family, and same reason to change: keep together or merge.
+   - Two or more real differences across those dimensions: split or keep separate.
+   - One weak difference needs stronger evidence from public contract, side-effect boundary, test boundary, or change rhythm before creating or preserving a file.
+
+3. Check public contract.
+   - Public API/export exists: keep separate or explicitly define the public surface and compatibility impact.
+   - No public API/export and only one owner consumes it: prefer private co-location.
+   - Do not export a private helper only so a test can import it.
+
+4. Check side-effect boundary.
+   - Adapter/client/repository/gateway/protocol/generated-code boundary: keep separate even if the file is small.
+   - Pure owner-internal judgment, mapping, constant grouping, or local predicate: merge or keep private in the owner file.
+   - Do not merge side-effect boundaries into pure policy or service code when that hides dependency direction or resource ownership.
+
+5. Check navigation cost.
+   - If reading one business decision requires jumping through multiple vague tiny files, merge, inline, or regroup by owner.
+   - If merging would make the main owner read as mixed responsibility or hide side effects, keep separate.
+   - The chosen shape must make the next related change location more obvious or at least no less obvious.
+
+6. Decide.
+   - Keep together when one owner and one reason to change remain clear.
+   - Split when a real boundary is named and the keep-in-existing-file alternative is rejected with evidence.
+   - Merge into owner when a small file has no independent boundary and only serves one owner.
+   - Keep separate with boundary when a small file protects public contract, side effect, value-object invariant, lifecycle, strategy/policy variant, generated code, or dependency direction.
+   - Collapse/inline when an extracted function or class adds no name, invariant, test, or navigation value.
+   - Reject both split and merge when neither target has a clear owner; require a better owner or module boundary first.
+
+### Good Co-Location Example: Main Owner Plus Private Helpers
+
+```python
+# orders/cancellation_service.py
+
+PREMIUM_GRACE_MINUTES = 30
+
+
+class CancellationService:
+    def cancel(self, order, actor, requested_at):
+        if not _actor_can_cancel(order, actor):
+            return CancellationResult.denied("not_authorized")
+        if _inside_premium_grace(order, requested_at):
+            return CancellationResult.allowed(refund_hold=False)
+        if _has_disputed_payment(order):
+            return CancellationResult.allowed(refund_hold=True)
+        return self._standard_cancellation_result(order, requested_at)
+
+
+def _inside_premium_grace(order, requested_at):
+    return order.customer_tier == "premium" and requested_at <= order.cancel_by
+
+
+def _has_disputed_payment(order):
+    return order.payment_status == "disputed"
+```
+
+This is acceptable when the predicates and constants are private to `CancellationService`, share its owner and lifecycle, and do not need a public policy contract. The file remains one main owner plus private helpers.
+
+### Good Separation Example: Policy With Boundary
+
+```python
+# orders/cancellation_policy.py
+
+class CancellationPolicy:
+    def decide(self, order, actor, requested_at):
+        ...
+```
+
+This split is justified when cancellation rules have their own owner, invariants, tests through a policy contract, current policy variants, or change rhythm separate from orchestration. It is not justified only because the service file is long.
+
+### Good Separation Example: Small Adapter Kept Separate
+
+```python
+# orders/payment_gateway_client.py
+
+class PaymentGatewayClient:
+    def place_refund_hold(self, payment_id, reason):
+        ...
+```
+
+This file should remain separate even if small because it owns an external protocol, credentials, retries, error translation, and side effects. Merging it into `CancellationService` would hide the adapter/client boundary and break dependency-direction clarity.
+
+### Anti-Examples: Do Not Split
+
+- `order_cancellation_predicate.py` contains one private boolean used only by `CancellationService`.
+- `refund_flag_mapper.py` contains one owner-internal mapper with no public contract and no independent lifecycle.
+- `policy_options.py` contains two fields and is imported by only one file.
+- `premium_grace.py`, `disputed_refund.py`, `refund_mapper.py`, `cancellation_constants.py`, and `policy_options.py` turn one cancellation use case into eight file jumps.
+- `order_cancellation_adapter.py` only passes arguments from the service to the policy and adds no external protocol or side-effect boundary.
+
+### Anti-Examples: Do Not Merge
+
+- `payment_gateway_client.py` is merged into `cancellation_service.py` because it has one method, hiding external side effects inside orchestration.
+- `CancellationWindow` value object is merged into a service method, scattering its invariant across procedural branches.
+- `CancellationPolicy` with independent public behavior tests is folded into `CancellationService.cancel`, making the service both orchestrator and policy owner.
+- Several files are collapsed only to reduce file count, leaving one owner file with adapter, value object, policy, repository, and orchestration responsibilities.
+
 ## Object Split Decision Tree
 
 1. Sibling objects.
@@ -161,6 +267,8 @@ For every non-trivial new or changed file/object/function/signature, record:
 - Main file owner and rejected alternate owners.
 - Oversized file/object/function assessment.
 - Split decision: none, sibling, parent-child, strategy/policy, adapter/port, value object, state machine, collaborator object, collapse/inline.
+- File granularity decision: keep together, split, merge into owner, keep separate with boundary, collapse/inline, or reject both split and merge.
+- Split/merge decision evidence: owner/lifecycle/invariant/collaborator/change-reason comparison, public contract, side-effect boundary, import/export before/after, navigation cost before/after, test boundary before/after, and rejected alternative.
 - Signature decision: parameters, boolean traps, weak types, return contract, error model.
 - Side-effect boundary decision.
 - Collaborator count and lifecycle owner.

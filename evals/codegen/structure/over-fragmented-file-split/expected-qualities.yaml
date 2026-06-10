@@ -1,0 +1,49 @@
+id: over-fragmented-file-split
+category: structure
+complexity: L3
+focus:
+  - file granularity
+  - anti-fragmentation
+  - private helper co-location
+  - navigation cost
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - refactoring
+    - unit-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - AI review gate
+    - test gate
+expected_outcomes:
+  - The small cancellation rule is added to the existing cohesive owner file when ownership, lifecycle, invariants, collaborators, and change reason remain the same.
+  - Private helper predicates, local constants, and owner-internal mappers stay co-located with the service or use-case when cohesive.
+  - A new policy or value object is created only when it has a real boundary such as independent invariants, public/module contract, side-effect boundary, or change rhythm.
+  - Public behavior tests prove the new rule without exporting private helpers.
+required_qualities:
+  - Rejects one-function file.
+  - Keeps private helper with owning file when cohesive.
+  - Documents keep-in-existing-file alternative and keep in existing file rejection rationale.
+  - Avoids navigation cost regression.
+  - Only creates new file when boundary is real.
+  - Does not export private helper only for tests.
+forbidden_shortcuts:
+  - Creating one-function file without boundary.
+  - Splitting tiny predicates, options, constants, mappers, and pass-through glue into separate files.
+  - Extracting a private helper only so a test can import it.
+  - Adding public exports only to make private helpers testable.
+  - Making one cancellation decision require several file jumps.
+  - Claiming file count reduction or line-count reduction as the boundary reason.
+evidence:
+  - File Granularity Decision with keep-in-existing-file alternative and rejected micro-file split rationale.
+  - Navigation cost before/after assessment for the cancellation path.
+  - Implementation Structure Plan naming any real new-file boundary or documenting co-location.
+  - Code Clarity Maintainability Review showing the next-change location remains obvious.
+  - Passing public behavior tests for standard, premium grace, disputed refund hold, and denied cancellation cases.

@@ -69,7 +69,9 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "test-failure-no-env-blame",
     ),
     "structure": (
+        "over-fragmented-file-split",
         "oversized-service-object-split",
+        "reckless-small-file-merge",
         "side-effect-boundary",
     ),
     "finops": (

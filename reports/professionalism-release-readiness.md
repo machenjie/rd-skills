@@ -1,6 +1,6 @@
 # Professionalism Release Readiness
 
-- Generated: 2026-06-10T06:55:01.657682+00:00
+- Generated: 2026-06-10T07:57:58.653861+00:00
 - Status: strict-release-ready
 - Authoring ready: ready
 - Release ready: ready
@@ -31,7 +31,7 @@
 | professional benchmarks | pass | `reports/professional-benchmarks-report.json` | true | errors=0; quality_failures=0; empty_baseline_cases=0 |
 | routing coverage | pass | `reports/professional-routing-coverage.json` | true | needs_manual_review=0 |
 | promoted agent samples strict | pass | `reports/professional-agent-samples-report.json from python3 scripts/eval-professional-agent-samples.py --promoted-only --strict` | true | returncode=0; failures=0 |
-| content bloat exceptions | pass | `config/skill-content-exceptions.yaml and reports/skill-content-audit.json` | true | - classifications: {'KEEP_AS_IS': 126, 'TIGHTEN_BODY': 5}; - domain_extensions: 7; - foundation_capabilities: 105; - heavy_domain: 0; - heavy_foundation: 0; - heavy_professional: 0; - low_professionalism: 0; - move_to_reference: 0; - professional_skills: 19; - split_candidates: 0 |
+| content bloat exceptions | pass | `config/skill-content-exceptions.yaml and reports/skill-content-audit.json` | true | - classifications: {'KEEP_AS_IS': 125, 'TIGHTEN_BODY': 6}; - domain_extensions: 7; - foundation_capabilities: 105; - heavy_domain: 0; - heavy_foundation: 1; - heavy_professional: 0; - low_professionalism: 0; - move_to_reference: 0; - professional_skills: 19; - split_candidates: 0 |
 | known warnings budget | pass | `config/professionalism-baseline.yaml global_thresholds.max_known_warnings` | true | budget_blockers=0 |
 | baseline update drift | pass | `reports/professionalism-regression-report.json baseline_changes` | false | baseline_changes=0 |
 
@@ -44,7 +44,7 @@
 
 ## Routing Coverage Summary
 
-- cases_checked: 94
+- cases_checked: 96
 - cases_without_forbidden: 0
 - hidden_risks_checked: 91
 - hidden_risks_needing_manual_review: 0
@@ -94,7 +94,7 @@
 ## Content Bloat Status
 
 - heavy_domain: 0
-- heavy_foundation: 0
+- heavy_foundation: 1
 - heavy_professional: 0
 - low_professionalism: 0
 - split_candidates: 0

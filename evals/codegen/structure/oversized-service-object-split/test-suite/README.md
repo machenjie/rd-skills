@@ -12,8 +12,7 @@ Order fixtures must live under the orders test boundary and state the behavior t
 
 ## Expected Commands
 
-- `npm test -- orders`
-- `npm run lint`
+- `bash ../test-suite/run.sh`
 
 ## Regression Cases
 

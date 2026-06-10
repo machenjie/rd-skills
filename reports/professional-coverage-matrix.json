@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-10T06:54:51.825816+00:00",
+  "generated_at": "2026-06-10T07:57:47.075769+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -68,7 +68,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (8)",
+      "routing_coverage": "yes (9)",
       "score": 44,
       "status": "acceptable",
       "warnings": []
@@ -338,8 +338,8 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (7)",
-      "score": 48,
+      "routing_coverage": "yes (9)",
+      "score": 49,
       "status": "acceptable",
       "warnings": []
     },
@@ -356,7 +356,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (27)",
+      "routing_coverage": "yes (29)",
       "score": 49,
       "status": "acceptable",
       "warnings": []
@@ -518,7 +518,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (13)",
+      "routing_coverage": "yes (15)",
       "score": 44,
       "status": "acceptable",
       "warnings": []
@@ -554,7 +554,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (15)",
+      "routing_coverage": "yes (17)",
       "score": 59,
       "status": "sample-grade",
       "warnings": []
@@ -590,7 +590,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (44)",
+      "routing_coverage": "yes (46)",
       "score": 60,
       "status": "sample-grade",
       "warnings": []
@@ -626,7 +626,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "n/a (router owns routing fixture corpus; eval-routing cases=94)",
+      "routing_coverage": "n/a (router owns routing fixture corpus; eval-routing cases=96)",
       "score": 58,
       "status": "sample-grade",
       "warnings": []
@@ -806,7 +806,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (81)",
+      "routing_coverage": "yes (83)",
       "score": 59,
       "status": "sample-grade",
       "warnings": []

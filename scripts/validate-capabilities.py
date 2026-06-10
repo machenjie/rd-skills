@@ -80,6 +80,24 @@ REQUIRED_SECTIONS = (
     "Handoff",
     "Completion Criteria",
 )
+ANTI_FRAGMENTATION_KEYWORDS = (
+    "anti-fragmentation",
+    "file granularity",
+    "micro-file sprawl",
+    "one-function file",
+    "tiny helper file",
+    "navigation cost",
+    "keep in existing file",
+    "small file merge",
+    "merge restraint",
+    "reckless file merge",
+    "lost small-file boundary",
+    "split merge decision",
+)
+CAPABILITY_KEYWORD_REQUIREMENTS = {
+    "implementation-structure-design": ANTI_FRAGMENTATION_KEYWORDS,
+    "code-clarity-maintainability": ANTI_FRAGMENTATION_KEYWORDS,
+}
 
 
 def _is_nonempty_string_list(value: object) -> bool:
@@ -206,6 +224,27 @@ def _validate_capability_template(errors: list[str]) -> None:
     validate_required_sections(body, REQUIRED_SECTIONS, file_context, errors)
     validate_no_beginner_sections(body, file_context, errors)
     validate_no_personal_references(raw_frontmatter + "\n" + body, file_context, errors)
+
+
+def _validate_targeted_content_keywords(
+    name: str | None,
+    body: str,
+    context: str,
+    errors: list[str],
+) -> None:
+    if name not in CAPABILITY_KEYWORD_REQUIREMENTS:
+        return
+    folded = body.casefold()
+    missing = [
+        keyword
+        for keyword in CAPABILITY_KEYWORD_REQUIREMENTS[name]
+        if keyword.casefold() not in folded
+    ]
+    if missing:
+        errors.append(
+            f"{context}: missing required anti-fragmentation keyword(s): "
+            + ", ".join(missing)
+        )
 
 
 def main() -> int:
@@ -393,6 +432,12 @@ def main() -> int:
         validate_required_sections(body, REQUIRED_SECTIONS, file_context, errors)
         validate_no_beginner_sections(body, file_context, errors)
         validate_no_personal_references(raw_frontmatter + "\n" + body, file_context, errors)
+        _validate_targeted_content_keywords(
+            name if isinstance(name, str) else None,
+            body,
+            file_context,
+            errors,
+        )
 
     for context, capability_id, name, capability_path in implemented_capabilities:
         refs = {ref for ref in (capability_id, name) if ref}

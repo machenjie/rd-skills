@@ -25,6 +25,8 @@ Use when code is written, reviewed, generated, or refactored and any readability
 - Comments restate what the code does instead of explaining why a branch, fallback, invariant, or tradeoff exists.
 - Maintenance would require changing multiple unrelated places for a small requirement.
 - AI-generated code creates a readable-looking wrapper around unclear flow, invented abstractions, or excessive branching.
+- Excessive file splitting, one-function files, tiny helper file patterns, trivial helper files, or micro-file sprawl make one cohesive behavior harder to read or change.
+- Reckless file merge, over-merged owner files, or file count reduction without boundary evidence hide responsibility, side effects, or public behavior.
 
 # Do Not Use When
 
@@ -44,6 +46,11 @@ Do not use this as the primary placement or ownership designer. Use `implementat
 - If comments are needed to explain confusing structure, first consider renaming, extraction, parameter object, or simpler control flow.
 - Cognitive complexity is a maintenance risk. Functions above the local tool threshold, or obviously hard to trace without a tool, require decomposition or documented justification.
 - Readability must preserve change locality: a small rule change should have one owning location unless the product behavior truly crosses boundaries.
+- Excessive file splitting is a readability and maintainability defect when it creates one-function file, trivial helper file, pass-through glue, or navigation cost regression without a real boundary. Use anti-fragmentation evidence from file granularity review when deciding whether to keep in existing file, merge back, or split by a real boundary.
+- File count reduction is not automatically a clarity improvement; excessive splitting, excessive merging, reckless file merge, and small file merge without boundary evidence are maintainability defects.
+- Clarity review must assess navigation cost, next-change location, and main-flow readability before and after a file split or merge.
+- If understanding one business decision requires jumping through multiple vague tiny helpers or files, the structure has a clarity defect.
+- If reducing file count mixes responsibilities, hides side effects, erases a public boundary, or creates a lost small-file boundary, the merge has a clarity defect.
 
 # Industry Benchmarks
 
@@ -93,6 +100,8 @@ Read the code once as a future maintainer would. The normal path should be visib
 
 Reject flow that requires a reader to jump through several vague helpers to understand the one business decision being made.
 
+Check file navigation cost as part of the main-flow read. A split is a clarity improvement only when the entry point still tells the story and helpers have names, ownership, and boundaries that reduce cognitive load. A merge is a clarity improvement only when the owner stays cohesive and side effects, public contracts, and test boundaries remain visible. Reject split/merge changes that make the main behavior require more file jumps, create a larger mixed-responsibility file, or obscure the next-change location.
+
 ## Control-Flow Review
 
 Nested conditions, repeated boolean expressions, long switch/case blocks, and `mode` or `kind` branches are clarity signals. Decide whether they are local readability issues, missing policy/strategy objects, missing state-machine modeling, or missing domain names.
@@ -106,6 +115,8 @@ Names should make the code mostly self-explanatory. Comments are still required 
 For non-trivial changes, identify where the next related change would go and how obsolete code would be deleted. If the answer is "several unrelated modules" or "search for all callers and guess," clarity and change locality are not acceptable.
 
 Next-change location and deletion path are mandatory professional evidence, not optional commentary. A compatibility branch without an expiry owner, a feature flag without cleanup path, or a fallback without removal condition is maintainability debt.
+
+Assess navigation cost before and after file splits and merges. The next-change location must remain obvious after decomposition or consolidation. If a maintainer must inspect multiple tiny policy/helper/adapter files to place a small cohesive rule, the split is a maintainability regression unless those files represent real independent boundaries. If a maintainer must inspect one broad owner file that now hides adapter, policy, value-object, and orchestration responsibilities, the merge is a maintainability regression even though file count decreased.
 
 ## Test Clarity Risks
 
@@ -123,6 +134,11 @@ Tests are unclear when they over-mock private internals, assert helper call orde
 - A fixture factory is shared across unrelated modules without an owner, causing hidden coupling and broad test churn.
 - Comments narrate assignments and loops while missing the compatibility or security reason for a branch.
 - A small requirement changes shared utilities, feature modules, tests, and adapters because no owner is clear.
+- Excessive file split turns a cohesive flow into micro-file sprawl.
+- Reckless file merge turns clear small-boundary files into one mixed-responsibility owner.
+- A one-function file, trivial helper file, or pass-through glue file makes the reader jump without improving ownership, testing, or public contract clarity.
+- Navigation cost regression hides the next-change location after a split.
+- File count reduction hides side effects, public behavior boundaries, or dependency direction.
 
 # Output Contract
 
@@ -135,9 +151,14 @@ Return a Code Clarity Maintainability Review with:
 - **Signature readability assessment**: boolean traps, weakly typed bags, vague modes, and parameter object needs.
 - **Comment quality assessment**: comments required, comments rejected, and places where naming/extraction should replace comments.
 - **Change navigation assessment**: owning location for the next related change and deletion path for obsolete behavior.
+- **File navigation cost assessment**: files a maintainer must open before/after the change, and whether the split or merge improves or regresses readability.
+- **Split/merge readability decision**: keep together, keep in existing file, merge back, split by real boundary, or leave split as-is; include file granularity, small file merge, merge restraint, anti-fragmentation rationale, and the split merge decision evidence.
+- **Next-change location before/after**: whether the next adjacent requirement has a clearer owner file/function/module after decomposition or consolidation.
+- **Main-flow readability before/after**: whether the primary behavior became easier to read, stayed no worse, or regressed.
 - **Next-change location**: the exact owner file/function/module where the next adjacent requirement should land.
 - **Deletion path**: removal condition, owner, and validation for obsolete compatibility branches, flags, fallbacks, or temporary code.
 - **Test clarity assessment**: whether tests express public behavior, fixture ownership, regression purpose, and what is over-mocked or private-internal.
+- **Rejected split/merge simplification**: split or merge shortcuts considered, why file count reduction/increase alone was rejected, and why the accepted structure is clearer.
 - **Rejected simplifications**: simpler structures considered and why they were not appropriate.
 - **Validation evidence**: formatter/linter/tests/static-analysis or review evidence used to support the judgment.
 
@@ -164,6 +185,11 @@ next gate or handoff.
 10. Any clarity refactor preserves behavior with appropriate test evidence.
 11. Fixture ownership and regression purpose are explicit for non-trivial tests.
 12. Private internals are not over-mocked unless no public boundary can expose the behavior and that limitation is stated.
+13. File splits do not make the main flow harder to read than before the split.
+14. One-function file, trivial helper file, pass-through glue, and micro-file sprawl are rejected when they increase navigation cost without a real boundary.
+15. File merges do not make the owner file mix responsibilities, hide side effects, or erase public/test boundaries.
+16. The next related change has an obvious owner after every split or merge.
+17. File count changes produce owner clarity or navigation clarity, not cosmetic neatness.
 
 # Used By
 
@@ -179,4 +205,4 @@ Hand off to `implementation-structure-design` for file, function, object, signat
 
 # Completion Criteria
 
-The capability is complete when a maintainer can read the main flow, locate the owning responsibility, understand exceptional paths and comments, see how tests prove behavior, and identify where the next change or deletion belongs without relying on private implementation knowledge or broad codebase search.
+The capability is complete when a maintainer can read the main flow, locate the owning responsibility, understand exceptional paths and comments, see how tests prove behavior, identify where the next change or deletion belongs, and see that any file split or merge improved owner clarity or navigation clarity without hiding responsibilities, side effects, public contracts, or test boundaries.

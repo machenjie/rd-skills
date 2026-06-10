@@ -164,6 +164,18 @@ BOUNDARY_TERMS = (
     "public/private",
     "rollback",
     "contract",
+    "anti-fragmentation",
+    "file granularity",
+    "micro-file sprawl",
+    "one-function file",
+    "tiny helper file",
+    "navigation cost",
+    "keep in existing file",
+    "small file merge",
+    "merge restraint",
+    "reckless file merge",
+    "lost small-file boundary",
+    "split merge decision",
 )
 
 VALIDATION_TERMS = (

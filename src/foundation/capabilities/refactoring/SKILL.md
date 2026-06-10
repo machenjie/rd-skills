@@ -13,7 +13,7 @@ changeforge_version: 0.1.0
 
 # When To Use
 
-Use this capability when: simplifying a method, class, or module that has accumulated mixed responsibilities over time; extracting a reusable abstraction from duplicated logic; renaming concepts to align with the current domain model; reducing coupling between modules to enable independent testing or deployment; removing dead code or obsolete abstractions; preparing a codebase section for a future behavior change by isolating dependencies first; or when a code review flags "this is hard to read" or "this is fragile" without requiring behavior change.
+Use this capability when: simplifying a method, class, file, or module that has accumulated mixed responsibilities over time; extracting a reusable abstraction from duplicated logic; merging small files that lack independent boundaries back into their owner; splitting behavior by real owner, lifecycle, invariant, side effect, public contract, or test boundary; renaming concepts to align with the current domain model; reducing coupling between modules to enable independent testing or deployment; removing dead code or obsolete abstractions; preparing a codebase section for a future behavior change by isolating dependencies first; or when a code review flags "this is hard to read" or "this is fragile" without requiring behavior change.
 
 # Do Not Use When
 
@@ -37,6 +37,9 @@ Owns refactoring; also supports structural change during bug-fix. Per-stage focu
 - **Refactoring must not be used to smuggle performance optimizations without measurement.** "I refactored this to be more efficient" while changing an O(n²) algorithm to O(n log n) is a behavior-change-adjacent optimization, not a pure structural change. Optimization requires baseline measurement and validation. Refactor and optimize in separate changes.
 - **Authorization, financial calculations, and data integrity logic must have behavior-equivalence tests before any structural change.** These are the highest-risk code categories. A refactoring mistake in an authorization check can introduce a privilege escalation. A refactoring mistake in a financial calculation can produce incorrect totals. Extract characterization tests that cover all branches before touching these areas.
 - **Large object, large file, and large module refactors need an explicit split target.** Splitting is not complete until the new object, file, or module ownership and relationship type are named.
+- **File split and file merge refactors must preserve observable behavior.** Moving code between files, merging helper files into an owner, or splitting a large file cannot change return values, emitted events, persistence effects, ordering, errors, logs that consumers rely on, public exports, or side effects unless that behavior change is separately approved.
+- **Merge and split steps must preserve public contracts and dependency direction.** Import/export changes are allowed only when callers, public APIs, test boundaries, generated references, and layer rules are inspected and updated without hiding side effects.
+- **Do not change behavior while moving or merging files.** File movement, import cleanup, visibility changes, private helper inlining, and public behavior edits must be separate reviewable steps.
 - **Cleanup is part of refactoring, not optional polish.** Dead code, deprecated APIs, stale compatibility branches, and expired feature flags require owner, expiry, removal sequence, and behavior preservation evidence.
 - **A refactor must prove complexity decreased or explain why it did not.** Before/after evidence can be cognitive complexity, branch count, dependency count, public API surface, collaborator count, directory density, or test readability.
 
@@ -63,7 +66,7 @@ Before starting any refactoring:
    Document: "This refactoring preserves X; does NOT preserve Y (intentional change)"
 
 2. Define Target Structure Decision
-   Which functions should stay private? Which classes should be split, collapsed, or composed? Which files should own the extracted behavior? Which module boundaries or public APIs must stay unchanged?
+   Which functions should stay private? Which classes should be split, collapsed, or composed? Which files should split, merge into an owner, or stay separate with a boundary? Which files should own the extracted behavior? Which module boundaries or public APIs must stay unchanged?
    Reject new shared/common/utils placement unless the extracted code is a pure technical utility with no business terminology.
 
 3. Check Test Coverage
@@ -121,7 +124,7 @@ Escalate when: the refactoring touches authorization, financial calculation, or 
 - **Characterization tests are written to capture current behavior, not ideal behavior.** If the current code has a bug, the characterization test captures the buggy behavior. The goal is not to fix behavior — it is to detect if the structural change accidentally also changes behavior. Fix bugs in separate commits after the refactoring is complete and the structure is stable.
 - **Authorization and financial code is the highest-risk category.** A sign flip in a conditional during an Extract Method, a wrong variable name during a Move Method, a missing `await` during an async extraction — any of these in authorization or financial code cause security incidents or financial loss. These sections require 100% branch coverage via characterization tests before any structural change, and a separate reviewer for the refactoring PR.
 - **"Parallel change" (expand-contract) is the safe pattern for public contract refactoring.** (1) Expand: add the new interface alongside the old one — both exist, consumers use the old one. (2) Migrate: update all consumers to use the new interface. (3) Contract: remove the old interface. Each phase is a separate PR. This pattern allows rollback at each stage and avoids a big-bang migration that cannot be unwound.
-- **Object, file, and module split refactors follow the selected structure plan.** Use `implementation-structure-design` for file/object/function targets and `module-boundary-design` for module relationship type and dependency direction before moving code.
+- **Object, file, and module split or merge refactors follow the selected structure plan.** Use `implementation-structure-design` for file/object/function targets, small-file merge, and merge restraint; use `module-boundary-design` for module relationship type and dependency direction before moving code.
 - **Compatibility branches must have an exit.** Deprecated APIs, feature flags, legacy switches, and fallback behavior need a named owner, expiry condition or date, removal trigger, and tests proving both old and new behavior until removal.
 
 # Failure Modes
@@ -133,6 +136,9 @@ Escalate when: the refactoring touches authorization, financial calculation, or 
 - `calculateTotal()` refactored without characterization tests — floating-point rounding behavior changes from `Math.round` to `Math.floor` during extraction — invoice totals off by $0.01; discovered in monthly reconciliation.
 - Authorization check refactored: `if (user.role !== 'guest')` extracted to `isAuthorized(user)` — during extraction, condition inverted: `if (user.role === 'guest')` — all non-guest users lose access; prod incident.
 - Large service split into five files but every change still edits all five because the split followed method names instead of responsibility boundaries.
+- Small files merged into one service to reduce file count, hiding adapter side effects, value-object invariants, policy contracts, and dependency direction.
+- File split changes public exports and tests still pass only because callers use private internals or stale imports.
+- File merge removes a behavior test boundary, so a policy or adapter can regress while the orchestration tests remain green.
 - Deprecated API retained forever with no sunset, so new behavior keeps carrying legacy branches and tests can no longer show which path matters.
 - Feature flag cleanup skipped after rollout, leaving old and new behavior active in the same function for months.
 
@@ -146,7 +152,7 @@ Return a refactoring plan with:
 
 - `target_smell` (what structural problem the refactoring addresses; named refactoring from Fowler catalog if applicable)
 - `observable_behavior_boundary` (explicit list of outputs / side effects that must remain identical; any intentional non-behavioral changes listed separately with approval reference)
-- `target_structure_decision` (where refactored functions belong; whether classes should split, collapse, or compose; whether files should split; whether module boundaries change; which helpers stay private; which public APIs remain stable)
+- `target_structure_decision` (where refactored functions belong; whether classes should split, collapse, or compose; whether files should split, merge, or stay separate with boundary; whether module boundaries change; which helpers stay private; which public APIs remain stable)
 - `risk_classification` (Low / Medium / High / Critical per classification matrix)
 - `characterization_test_plan` (per untested branch: test name, input fixture, expected output to capture; must be added before structural changes)
 - `step_sequence` (ordered steps; each step is independently green; formatted as separate commits)
@@ -159,6 +165,14 @@ Return a refactoring plan with:
 - `excluded_changes` (changes explicitly out of scope that were identified during refactoring; tracked as separate work items)
 - `object_split_refactor_plan` (large object or method-cluster split target, new owners, public behavior tests, and rejected splits)
 - `file_split_refactor_plan` (large file split target, main responsibility per resulting file, private/public impact, and import changes)
+- `file_merge_refactor_plan` (small or scattered file merge target, target owner, keep-separate alternatives, private/public impact, import/export before/after, and rollback step)
+- `small_file_merge_plan` (merge candidates lacking independent owner/lifecycle/invariant/collaborator/public contract/side-effect/test/change-rhythm boundaries, target owner, tests, and rejected merges)
+- `merge_restraint_decision` (small files kept separate because they protect adapter/client/gateway/repository/protocol/generated-code boundaries, value-object invariants, lifecycle/state machine, public behavior tests, current strategy/policy variants, dependency direction, side effects, or public contracts)
+- `split_merge_behavior_preservation_evidence` (behavior tests before/after, characterization tests, contract tests, snapshots, import/export diff, public contract preserved, dependency direction preserved, and side-effect visibility preserved)
+- `import_export_before_after` (imports and exports added, removed, renamed, or kept stable across the refactor)
+- `public_contract_preserved` (API shapes, public exports, schemas, config keys, events, metrics, and caller-visible errors preserved or explicitly marked non-refactor)
+- `dependency_direction_preserved` (layer/module import rules, cycles, adapter direction, and generated references remain valid)
+- `behavior_test_before_after` (commands run before and after each split or merge step, including characterization tests for risky code)
 - `module_split_refactor_plan` (module relationship type, dependency direction, public API impact, and migration steps)
 - `cleanup_deprecation_plan` (dead code, deprecated API, legacy branch, or compatibility cleanup owner, expiry, and removal sequence)
 - `feature_flag_removal_plan` (flag owner, rollout state, old/new behavior tests, removal trigger, and cleanup validation)
@@ -175,6 +189,7 @@ A refactor is complete only when the output includes:
 - **Move/extract rationale**: why the new function, class, module, adapter, or value object owns the behavior.
 - **Compatibility statement**: public contract, error semantics, data shape, ordering, timing, and side effects preserved or intentionally changed.
 - **Dependency direction**: imports/layers remain valid or the boundary shift is explicitly routed to architecture review.
+- **Split/merge preservation evidence**: import/export before/after, public contract preserved, dependency direction preserved, behavior test before/after, and side-effect boundary visibility for each file split or file merge.
 - **Deletion path**: what old code becomes removable, when, and what proves removal is safe.
 - **What evidence proves**: behavior equivalence for covered paths.
 - **What evidence does not prove**: untested consumers, dynamic reflection paths, runtime-only config, performance side effects, or hidden integration dependencies.
@@ -196,8 +211,12 @@ The refactoring plan is complete only when:
 10. All behavior changes discovered during refactoring planning are extracted to separate work items.
 11. Authorization, financial, and data-integrity code is covered by characterization tests before any structural change.
 12. Large object, file, and module splits name the target owner, relationship type, and behavior-preservation tests.
-13. Dead code, deprecated APIs, feature flags, and compatibility branches have removal owner, expiry, and cleanup validation.
-14. Before/after complexity evidence is recorded or the lack of reduction is justified.
+13. File merge and file split steps preserve observable behavior, public contracts, dependency direction, side-effect boundaries, and behavior tests before/after.
+14. High-risk file merge or split refactors add or confirm characterization tests before moving code.
+15. Each merge or split step is independently reviewable, revertable, and testable.
+16. File movement, merge, split, import/export cleanup, and behavior change are not mixed in the same step.
+17. Dead code, deprecated APIs, feature flags, and compatibility branches have removal owner, expiry, and cleanup validation.
+18. Before/after complexity evidence is recorded or the lack of reduction is justified.
 
 # Used By
 
@@ -210,4 +229,4 @@ Hand off to `code-review` for diff assessment against the step sequence plan; `t
 
 # Completion Criteria
 
-The capability is complete when **every structural change is independently reviewable, behavior preservation is proven by characterization tests passing before and after each step, all public contract impacts are resolved, and every behavior change discovered during the refactoring is tracked as an explicit separate work item**.
+The capability is complete when **every structural change is independently reviewable, behavior preservation is proven by characterization or public behavior tests passing before and after each step, file split and file merge plans preserve import/export surfaces, public contracts, dependency direction, and side-effect boundaries, all public contract impacts are resolved, and every behavior change discovered during the refactoring is tracked as an explicit separate work item**.

@@ -1,7 +1,7 @@
 {
   "average_score": 41.41,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-10T06:54:51.695632+00:00",
+  "generated_at": "2026-06-10T07:57:41.655973+00:00",
   "items": [
     {
       "body_lines": 216,
@@ -816,7 +816,7 @@
       "warnings": []
     },
     {
-      "body_lines": 174,
+      "body_lines": 200,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1607,9 +1607,9 @@
       "warnings": []
     },
     {
-      "body_lines": 250,
+      "body_lines": 281,
       "dimensions": {
-        "anti_bloat_control": 5,
+        "anti_bloat_control": 4,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
         "failure_mode_coverage": 4,
@@ -1628,7 +1628,7 @@
       "path": "src/foundation/capabilities/implementation-structure-design/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 49,
+      "total": 48,
       "warnings": []
     },
     {
@@ -2307,7 +2307,7 @@
       "warnings": []
     },
     {
-      "body_lines": 205,
+      "body_lines": 224,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -2319,7 +2319,7 @@
         "professional_depth": 5,
         "reference_precision": 3,
         "stage_fit": 5,
-        "trigger_accuracy": 1,
+        "trigger_accuracy": 2,
         "validation_obligation": 5
       },
       "kind": "foundation-capability",
@@ -2328,7 +2328,7 @@
       "path": "src/foundation/capabilities/refactoring/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 48,
+      "total": 49,
       "warnings": []
     },
     {

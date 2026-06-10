@@ -12,8 +12,7 @@ Order fixtures belong under the orders test boundary and should state which canc
 
 ## Expected Commands
 
-- `pytest tests/orders`
-- `ruff check .`
+- `bash ../test-suite/run.sh`
 
 ## Regression Cases
 

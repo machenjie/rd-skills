@@ -106,6 +106,17 @@ risk_escalation_triggers:
   - business logic in shared utils
   - unreadable main flow
   - oversized function class or file
+  - over-fragmented file structure
+  - micro-file sprawl
+  - excessive file split
+  - one-function file without boundary
+  - trivial helper file
+  - navigation cost regression
+  - reckless file merge
+  - over-merged owner file
+  - lost small-file boundary
+  - file count reduction without boundary analysis
+  - merge hides side-effect boundary
   - change locality violation
   - hallucinated API risk
   - dependency surface
@@ -216,6 +227,39 @@ risk_trigger_rules:
   - trigger: oversized function class or file
     required_capabilities: [implementation-structure-design, code-clarity-maintainability]
     required_quality_gates: [implementation gate]
+  - trigger: over-fragmented file structure
+    required_capabilities: [implementation-structure-design, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: micro-file sprawl
+    required_capabilities: [implementation-structure-design, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: excessive file split
+    required_capabilities: [implementation-structure-design, module-boundary-design, code-clarity-maintainability]
+    required_quality_gates: [architecture gate, implementation gate]
+  - trigger: one-function file without boundary
+    required_capabilities: [implementation-structure-design, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: trivial helper file
+    required_capabilities: [implementation-structure-design, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: navigation cost regression
+    required_capabilities: [code-clarity-maintainability, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: reckless file merge
+    required_capabilities: [implementation-structure-design, refactoring, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: over-merged owner file
+    required_capabilities: [implementation-structure-design, refactoring, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: lost small-file boundary
+    required_capabilities: [implementation-structure-design, module-boundary-design, refactoring]
+    required_quality_gates: [architecture gate, implementation gate]
+  - trigger: file count reduction without boundary analysis
+    required_capabilities: [implementation-structure-design, refactoring, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: merge hides side-effect boundary
+    required_capabilities: [implementation-structure-design, module-boundary-design, code-clarity-maintainability]
+    required_quality_gates: [architecture gate, implementation gate]
   - trigger: change locality violation
     required_capabilities: [module-boundary-design, code-clarity-maintainability]
     required_quality_gates: [architecture gate, implementation gate]
@@ -237,6 +281,18 @@ failure_routing:
   - condition: implementation structure or placement unclear
     route_to: implementation-structure-design
   - condition: code is hard to read or maintain
+    route_to: code-clarity-maintainability
+  - condition: over-fragmented file structure or micro-file sprawl
+    route_to: implementation-structure-design
+  - condition: file structure is over-fragmented
+    route_to: implementation-structure-design
+  - condition: small files may need merge
+    route_to: implementation-structure-design
+  - condition: file merge may hide boundaries
+    route_to: implementation-structure-design
+  - condition: navigation cost regression
+    route_to: code-clarity-maintainability
+  - condition: split or merge makes code harder to navigate
     route_to: code-clarity-maintainability
   - condition: agent claims completion without evidence
     route_to: agent-execution-discipline
@@ -574,6 +630,7 @@ routing_rules:
       - design module boundaries business capability ownership dependency direction interfaces coupling circular dependencies
       - prevent arbitrary folder driven architecture and cross module internal access
       - directory too large module split sibling parent child producer consumer orchestrator adapter port public API expansion change locality shared common ownership
+      - over-fragmented directory module boundary micro-file sprawl across modules navigation cost regression across module boundary lost small-file boundary merge hides side-effect boundary
     priority: 60
   - route_to: layered-architecture-design
     triggers:
@@ -887,6 +944,7 @@ routing_rules:
     triggers:
       - refactor while preserving behavior characterization tests boundaries contracts compatibility cleanup feature flag removal deprecated API dead code rollback notes
       - separate structural cleanup from behavior change and protect risky refactors with tests before after complexity evidence
+      - behavior preserving file merge behavior preserving file split small file merge refactor merge split import export preservation public contract preserved dependency direction preserved
     priority: 60
   - route_to: implementation-structure-design
     triggers:
@@ -897,12 +955,14 @@ routing_rules:
       - cohesion coupling shared utils common utils helper function service method domain service component placement hook placement repository method
       - decide reuse extend compose adapter private internal public export file ownership directory boundary dependency direction circular dependency test placement
       - file main object main responsibility oversized file oversized class large function object split function signature boolean trap weak type bag side effect boundary collaborator dependency injection lifecycle invariant state machine
+      - file granularity anti-fragmentation keep in existing file one-function file without boundary tiny helper file trivial helper file excessive file split micro-file sprawl private helper co-location small file merge merge restraint split merge decision lost small-file boundary reckless file merge merge hides side-effect boundary
     priority: 60
   - route_to: code-clarity-maintainability
     triggers:
       - code clarity readability maintainability main flow happy path guard clause nested control flow cognitive complexity
       - oversized function class file unreadable flow complex condition magic value boolean flag mode kind weakly typed parameter bag comments explain why
       - change locality deletion path extension point cleanup deprecation feature flag compatibility branch future maintainer navigation
+      - navigation cost regression excessive file split micro-file sprawl one-function file trivial helper file pass-through glue reckless file merge over-merged owner file file count reduction without boundary analysis split merge readability
     priority: 60
   - route_to: agent-execution-discipline
     triggers:

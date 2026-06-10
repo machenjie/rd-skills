@@ -1,6 +1,6 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-10T06:54:51.695632+00:00
+- Generated: 2026-06-10T07:57:41.655973+00:00
 - Skills/capabilities checked: 124
 - Warning count: 3
 - Average score: 41.41/60
@@ -98,11 +98,11 @@
 | `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md` | foundation-capability | 47/60 | needs-review | 1 | 1 |
 | `src/foundation/capabilities/test-strategy/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/agent-execution-discipline/SKILL.md` | foundation-capability | 48/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/refactoring/SKILL.md` | foundation-capability | 48/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/implementation-structure-design/SKILL.md` | foundation-capability | 48/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cpp-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/go-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/implementation-structure-design/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/java-jvm-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/refactoring/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/regression-testing/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/rust-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/sql-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |

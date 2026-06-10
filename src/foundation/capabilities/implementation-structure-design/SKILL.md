@@ -8,7 +8,6 @@ changeforge_version: 0.1.1
 ---
 
 # Mission
-
 Design the internal implementation structure of every code change before writing or modifying code: decide how variables, functions, methods, classes, files, and directories should be named; whether to reuse an existing function, class, module, service, repository, hook, or component; extend an existing abstraction; compose it; wrap it with an adapter; model behavior as an object with identity, value semantics, encapsulated state, invariants, lifecycle, and collaborators; place behavior on a class, service, module function, adapter, or local helper; create a new function; create a new class; create a new file; or create a new directory while preserving local architecture conventions, dependency direction, cohesion, testability, and long-term maintainability.
 
 The goal is to make every implementation look like it belongs in the codebase, not like an isolated AI-generated patch.
@@ -70,6 +69,14 @@ Owns implementation-planning; also informs coding, code-review, and refactoring.
 - Class names must identify a real role. Generic `Manager`, `Processor`, `Handler`, `Helper`, or `Util` names require explicit rejection or justification.
 - Constructor and collaborator count is responsibility evidence; too many collaborators require object split, orchestration justification, or dependency-boundary cleanup.
 - New files require a cohesive owner. A file should group closely related behavior. Do not create one-file-per-function unless the local codebase already follows that pattern.
+- File granularity is decided by boundaries, not line count. A large file is not a defect by itself; mixed responsibility is the defect. A small file is not a defect by itself; fragmentation without a boundary is the defect.
+- Default to keep in existing file when private helpers, local constants, local types, narrow value objects, owner-internal predicates, and local mappers share the main owner, lifecycle, invariant, collaborator family, and reason to change.
+- Every proposed new file must prove at least one true boundary: different primary owner, lifecycle, invariant or state set, collaborator family, side-effect boundary, public contract, change rhythm, test boundary, generated/handwritten boundary, adapter/protocol/repository/client/gateway boundary, or current strategy/policy variants with contract tests.
+- Reject anti-fragmentation failures: splitting only to reduce line count, only to test a private helper, one-function file drift, trivial class file drift, pass-through glue files, and any split that makes a business decision require multiple file jumps without an independent owner, lifecycle, public contract, or change reason.
+- Do not create a tiny file because it looks more modular, gives a convenient name, shortens a function, lowers file length, makes testing a private helper easier, or avoids deciding the real owner.
+- Do not export or publicize a private helper only so tests can import it; test through the owning public behavior unless the helper has a production public or module-internal contract.
+- Small files without an independent owner, lifecycle, invariant, collaborator family, public contract, side-effect boundary, test boundary, or change rhythm must be considered for merge back into the unique owner.
+- Small files with real boundaries must not be merged merely to reduce file count.
 - File names must match cohesive ownership.
 - New directories require a boundary. A directory must represent a business capability, layer, adapter, feature, or generated-code boundary, not a dumping ground.
 - Directory names must represent boundaries.
@@ -154,6 +161,26 @@ Every file needs one main owner, one primary lifecycle or responsibility, and on
 
 A file or directory split is justified by mixed owners, lifecycles, collaborators, reasons to change, layers, adapter protocols, generated/handwritten code, or tests that cannot find their owning behavior; line count alone is only a signal.
 
+## File Granularity And Anti-Fragmentation
+
+Apply anti-fragmentation before accepting any new file. File granularity is determined by owner and boundary, not by line count. Large files are not automatically a problem; mixed responsibility is the problem. Small files are not automatically a problem; fragmentation without a real boundary is the problem.
+
+The default is co-location: keep tightly related private helpers, local constants, local types, narrow value objects, predicates, and owner-internal mappers in the main owner file when they serve one owner, lifecycle, invariant set, collaborator family, and reason to change. A main owner file plus private helpers is a valid structure.
+
+Create a new file only when the split names a real boundary: different primary owner, different lifecycle, different invariant or state set, different collaborator family, different side-effect boundary, different public contract, different change rhythm, different test boundary, generated versus handwritten code, adapter/protocol/repository/client/gateway boundary, or current strategy/policy variants with contract tests. The boundary must explain why the keep in existing file alternative was rejected.
+
+Reject these splits: "looks more modular"; reducing line count alone; lowering function length alone; naming convenience alone; avoiding owner analysis; exposing or extracting private helpers only to test them; one tiny function per file; one trivial class per file; pass-through policy/helper/adapter glue; splitting constants or options used only by one owner; and any micro-file sprawl that makes a reader jump across several files to understand one business decision.
+
+File granularity must improve or preserve navigation cost. If the next maintainer must open more files to understand the same cohesive rule, the split is a navigation cost regression unless a real boundary offsets that cost and the tradeoff is recorded.
+
+## Small File Merge And Merge Restraint
+
+Consider small file merge back into the unique owner when a file contains only one tiny private function, trivial class, local predicate, local mapper, constant group, or pass-through glue; is used by only one owner file; has no independent owner, lifecycle, invariant, collaborator family, public contract, side-effect boundary, test boundary, or change rhythm; repeats the owner concept in its filename; makes one business decision require multiple file jumps; exists only so tests can target private helper logic; and merging would reduce import/export surface, lower navigation cost, and make the next-change location clearer.
+
+Reject merging a small file when it has a public API/export, adapter/client/gateway/repository/protocol/generated-code boundary, independent value-object invariant, independent lifecycle or state machine, multiple legitimate current consumers, current strategy/policy variants with contract tests, independent public behavior test boundary, dependency-direction protection, visible side effects, or a separate owner that would make the target file mixed-responsibility if combined.
+
+Merge restraint is as important as anti-fragmentation. Do not collapse adapter code into services, value-object invariants into procedural owners, policy variants into orchestration methods, or side-effect boundaries into pure decision files just to reduce file count. A split merge decision is accepted only when the resulting owner is clearer, dependency direction is preserved, public contracts remain intact, side effects stay visible, and main-flow readability improves or stays no worse.
+
 ## Placement Boundaries
 
 A new file needs a cohesive owner and a convention-compliant name; add to an existing file when it already owns the responsibility, and reject a filename that introduces a new suffix, prefix, pluralization, or layer word the surrounding directory does not use. A new directory must represent a business capability, layer, adapter, feature, or generated-code boundary — never a convenience folder. Keep private code private and do not export "just in case." New imports must respect module-boundary and layered-architecture dependency direction and introduce no cycles. Frontend placement decides feature-local versus shared for components, hooks, validators, state, API clients, and routes; feature-local state does not move to a global store without real cross-feature ownership. Backend placement decides controller, service, domain, repository, adapter, validator, mapper, DTO, and job ownership; business rules never live in transport handlers, generic utilities, or persistence adapters. Source/dev-only deep reference for skill authors: `references/placement-boundaries.md`.
@@ -172,6 +199,18 @@ Shared, common, and utils packages may hold pure technical, domain-free utilitie
 - A hierarchy forces callers to branch on concrete subclasses, making polymorphism cosmetic and coupling worse.
 - A class exists only to group stateless helper functions.
 - A new file has no cohesive owner and becomes one-file-per-function drift.
+- Excessive file split creates micro-file sprawl: one-function file, trivial helper file, owner-internal mapper/options file, or pass-through policy/helper/adapter file without independent owner, lifecycle, public contract, or change reason.
+- Navigation cost regresses because understanding one business decision requires several file jumps with no real boundary payoff.
+- A one-function file exists without a boundary beyond naming convenience.
+- A trivial class file has no state, invariant, lifecycle, protocol role, or current variant contract.
+- A private helper is exported only so tests can import it.
+- A small owner-internal file remains separate even though it should merge back into the unique owner.
+- A reckless file merge hides a real boundary to reduce file count.
+- A lost small-file boundary removes a valid public contract, side-effect boundary, value-object invariant, policy test boundary, or dependency-direction protection.
+- An adapter/client/gateway/repository file is merged into a service and hides side effects.
+- A value object invariant is merged into a procedural owner and loses explicit protection.
+- A policy with contract tests is merged into an orchestration method.
+- Fewer files produce a worse main flow, less obvious next-change location, or mixed responsibility.
 - A new directory is created because the model needed somewhere to put code, not because a real boundary exists.
 - A public export is added for code used by only one module.
 - A helper is placed in `common` to avoid choosing the owning module.
@@ -187,18 +226,17 @@ Return an Implementation Structure Plan for every non-trivial code addition, mov
 - **Existing structure inspected**: files searched; existing functions, classes, modules, services, repositories, hooks, and components considered; reuse candidates; decision.
 - **Same-pattern structure scan**: same file, same module, adjacent modules, shared/common/utils, tests, docs, and generated files checked; equivalent patterns listed or explicitly marked absent.
 - **Reuse decision**: reuse existing; extend existing; compose existing; adapter needed; new code required; why reuse is insufficient.
-- **Reuse ladder evidence for the selected professional skill**: how the substantive skill will cite reuse, extension, composition, adapter, extraction, or new-code decisions in its Evidence Contract.
-- **Vocabulary and naming decisions**: variable, parameter, field, function, method, class, file, directory, package, namespace, component, hook, service, repository, adapter, utility, and helper naming decisions; repository convention followed; rejected names and why.
-- **Responsibility taxonomy**: classify each new or moved item as business/domain, feature, component, module, service, domain object, repository, adapter/client, utility, helper, common/shared, test, generated, or configuration; explain owner and boundary.
+- **Reuse ladder and professional-skill evidence**: how the substantive skill will cite reuse, extension, composition, adapter, extraction, or new-code decisions in its Evidence Contract.
+- **Vocabulary, naming, and responsibility taxonomy**: variable, parameter, field, function, method, class, file, directory, package, namespace, component, hook, service, repository, adapter, utility, helper, common/shared, test, generated, and configuration decisions; repository convention followed; owner and boundary explained.
 - **Function and method decisions**: new/modified/moved functions and methods; private/public choice; responsibility; file or owning-class rationale; state/invariant/lifecycle/collaborator usage; rejected service/function alternatives; tests.
 - **Object-oriented decisions**: object candidates; object versus function, module operation, or record; identity or value semantics; encapsulated state and invariants; lifecycle; collaborators; composition, delegation, strategy, or inheritance decision; substitutability and contract-test evidence for inheritance; rejected hierarchy or object alternatives.
 - **Main object / oversized / split decisions**: primary owner, lifecycle, invariant set, collaborator set, method clusters, mixed-role assessment, oversized signal, split type, rejected split rationale, and private helper justification.
+- **File Granularity Decision**: proposed new file; keep-in-existing-file alternative; real boundary evidence; owner, lifecycle, invariant, collaborator, and change-reason comparison; import/export before/after; navigation cost before/after; test boundary before/after; private helper co-location decision; rejected micro-file split rationale.
+- **Small File Merge Decision**: merge candidate; target owner; keep-separate alternative; real boundary check; public API/export impact; side-effect boundary impact; dependency direction impact; import/export before/after; navigation cost before/after; test boundary before/after; why merge is accepted or rejected.
 - **Signature / side-effect / collaborator decisions**: parameter object need, boolean flags, weakly typed bags, mode/kind switches, return and error model, side-effect classification, dependency injection, lifecycle ownership, resource cleanup, state-machine escalation, and dependency direction.
 - **Class decisions**: new/reused/extended classes; why a class is needed instead of a function; state, invariant, lifecycle, dependency injection, polymorphism, protocol, visibility, and tests.
-- **File, directory, and module decisions**: files/directories modified or added; owner, public API impact, boundary represented, dependency direction, import rules, and split/no-split rationale by responsibility, lifecycle, collaborator, and change reason.
-- **Shared, common, and utils audit**: any shared utility added; why it is a pure technical utility; confirmation that business logic is absent.
-- **Dependency direction**: new imports; allowed by boundary rule; cycles introduced yes or no.
-- **Test placement**: unit tests; integration tests; contract tests; confirmation that test location follows project convention.
+- **File, directory, module, shared utility, and dependency decisions**: files/directories modified or added; owner, public API impact, boundary represented, import rules, cycles yes/no, split/no-split rationale, and confirmation that shared/common/utils contain no business logic.
+- **Test placement**: unit, integration, and contract tests; confirmation that test location follows project convention and exercises observable behavior.
 - **Rejected alternatives**: alternatives considered and why each was rejected for non-trivial structure decisions.
 - **Execution linkage**: evidence inventory or handoff reference showing when the structure plan was produced and which validation proves the selected placement works.
 - **Comment decisions**: exported/public doc comments, complex internal comments, test scenario/regression comments, critical inline comments, intentional omissions, redundant comments removed, and language/repository style.
@@ -208,34 +246,27 @@ Close a structure decision only when it states the **mode selected**, boundaries
 
 # Quality Gate
 
-1. Existing variables, functions, classes, modules, services, repositories, hooks, and components were searched before new code was added.
-2. Every new or changed non-trivial variable, parameter, field, function, method, class, file, and directory name follows repository vocabulary, language convention, and semantic responsibility.
-3. Every new function has single responsibility, natural name, private or public decision, and file location rationale.
-4. Every new method has owning-class rationale and uses or protects object state, lifecycle, invariants, collaborators, or protocol role.
-5. Every object-oriented structure decision justifies object versus function, module operation, or record.
-6. Every new class has a reason that a function is insufficient and avoids vague manager/processor/helper/util naming unless explicitly justified.
-7. Encapsulation choices protect invariants, lifecycle, or collaborator boundaries rather than hiding arbitrary procedural code.
-8. Inheritance is avoided unless substitutability, base-contract compatibility, initialization safety, and tests are documented; inheritance for code sharing alone is rejected.
-9. Every new file has a cohesive owner, a convention-compliant name, and is not a dumping ground.
-10. Every new directory represents a real module, layer, adapter, generated boundary, feature, or business capability.
-11. Business/domain logic is classified and kept out of shared, common, and utils.
-12. Public API exports are minimal and intentional.
-13. New imports respect dependency direction and do not introduce cycles.
-14. Tests are placed according to project convention and exercise public behavior.
-15. Rejected alternatives are documented for non-trivial structure decisions.
-16. Agent-assisted structure additions are tied to execution evidence and handoff boundary.
-17. Same-pattern structure scan and local naming evidence are documented before adding, renaming, or moving variables, functions, methods, classes, files, or directories.
-18. A new file is rejected when the same responsibility belongs in an existing cohesive file or its name violates same-directory and parent-module convention.
-19. Every new function/class/file/directory includes a Reuse Ladder Record; every extension includes an Extension Safety Record; every advanced refactor includes an Advanced Refactoring Decision.
-20. Public/exported APIs have language-standard comments; non-trivial business, compatibility, concurrency, retry, transaction, idempotency, external API, performance, security, and test logic has concise comments where needed.
-21. Comments do not restate obvious code; confusing code is first considered for renaming, extraction, or simplification.
-22. Every changed file has one primary owner; oversized files, objects, and functions carry a split assessment based on responsibility, state, collaborators, branches, and testability.
-23. Function signatures avoid unjustified boolean traps, weakly typed bags, and vague mode/kind switches; public returns express failure, empty, partial, and retry states.
-24. Pure decision logic is separated from persistence, external APIs, events, cache mutation, logging side effects, and framework dependencies unless local convention justifies the boundary.
-25. Collaborator bloat, multi-state logic, and new objects are reviewed for split, state-machine modeling, lifecycle ownership, and public-behavior tests.
-26. Object, value object, domain object, service, adapter, strategy, module function, and local helper choices are explicitly distinguished before adding classes.
-27. Reflection or metadata dispatch is justified by a framework/schema boundary and carries typed fallback behavior plus invalid-metadata tests.
-28. File and directory splits are based on ownership, lifecycle, collaborators, and reasons to change, not line count alone.
+1. Existing and same-pattern variables, functions, classes, modules, services, repositories, hooks, components, tests, docs, shared/common/utils, and generated files were searched before new structure was added.
+2. Every non-trivial name follows repository vocabulary, language convention, semantic responsibility, and local file/directory convention.
+3. Every new function or method has single responsibility, natural name, visibility choice, location rationale, and owning-class rationale when placed on an object.
+4. Every object/class decision distinguishes object, value object, domain object, service, adapter, strategy, module function, and local helper before adding a class.
+5. Encapsulation, inheritance, polymorphism, and reflection protect real invariants, substitutability, protocol, or framework/schema boundaries and are tested through observable behavior.
+6. Every changed file has one primary owner; oversized files, objects, functions, collaborator bloat, and multi-state logic carry split assessment based on responsibility, state, collaborators, branches, testability, and change reason.
+7. Every new file has a cohesive owner, convention-compliant name, and real boundary; every new directory represents a module, layer, adapter, generated boundary, feature, or business capability.
+8. Anti-fragmentation check rejects one-function file, trivial class file, tiny helper file, pass-through glue, and micro-file sprawl when no real boundary exists.
+9. Every new file records the keep in existing file alternative, proposed new file, real boundary evidence, owner/lifecycle/invariant/collaborator/change-reason comparison, import/export before/after, navigation cost before/after, test boundary before/after, and rejected micro-file split rationale.
+10. Small files without a real owner, lifecycle, invariant, collaborator, public contract, side-effect boundary, test boundary, or change rhythm must be considered for merge back into the unique owner.
+11. Small files with a real boundary must not be merged merely to reduce file count.
+12. Splitting cannot increase navigation cost unless the real boundary benefit is larger and recorded.
+13. Merging cannot create mixed responsibility, hide side effects, break dependency direction, break public contract, or erase a valid test boundary.
+14. Every split or merge records the rejected alternative.
+15. Business/domain logic is classified and kept out of shared, common, and utils; public API exports are minimal and intentional.
+16. New imports respect dependency direction and do not introduce cycles.
+17. Tests are placed by project convention and exercise public behavior, not private helper structure.
+18. Function signatures avoid unjustified boolean traps, weakly typed bags, and vague mode/kind switches; public returns express failure, empty, partial, and retry states.
+19. Pure decision logic is separated from persistence, external APIs, events, cache mutation, logging side effects, and framework dependencies unless local convention justifies the boundary.
+20. Reuse Ladder, Extension Safety, Advanced Refactoring, rejected alternatives, and agent-assisted evidence records are documented for non-trivial structure decisions.
+21. Public/exported APIs have language-standard comments; non-trivial business, compatibility, concurrency, retry, transaction, idempotency, external API, performance, security, and test logic has concise comments where needed.
 
 # Used By
 
@@ -255,4 +286,4 @@ Hand off to `agent-execution-discipline` when reuse search, placement rationale,
 
 # Completion Criteria
 
-The capability is complete when the implementation has an explicit structure decision before code is written or accepted, all reuse candidates and rejected alternatives are documented, same-pattern structure scan is recorded, names follow repository vocabulary and language convention, each new or moved item is classified by responsibility taxonomy, object-oriented decisions justify object versus function/module/record, method placement is justified by state/invariant/lifecycle/collaborator usage, encapsulation and inheritance choices are tested through observable behavior, new functions/classes/files/directories have ownership and placement rationale, shared utility pollution is ruled out, dependency direction is preserved, and tests are placed at the observable behavior boundary.
+The capability is complete when the implementation has an explicit structure decision before code is written or accepted, all reuse candidates and rejected alternatives are documented, same-pattern structure scan is recorded, names follow repository vocabulary and language convention, each new or moved item is classified by responsibility taxonomy, object-oriented decisions justify object versus function/module/record, method placement is justified by state/invariant/lifecycle/collaborator usage, encapsulation and inheritance choices are tested through observable behavior, new functions/classes/files/directories have ownership and placement rationale, file granularity rejects excessive file split and micro-file sprawl without real boundaries, small file merge is considered when a file lacks an independent boundary, merge restraint protects small files with real boundaries, shared utility pollution is ruled out, dependency direction is preserved, and tests are placed at the observable behavior boundary.

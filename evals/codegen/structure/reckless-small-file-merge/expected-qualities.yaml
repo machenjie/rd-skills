@@ -1,0 +1,54 @@
+id: reckless-small-file-merge
+category: structure
+complexity: L3
+focus:
+  - small file merge
+  - merge restraint
+  - file granularity
+  - dependency direction
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - refactoring
+    - module-boundary-design
+    - unit-testing
+    - regression-testing
+    - contract-testing
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - AI review gate
+    - test gate
+expected_outcomes:
+  - Only the tiny private helper with no independent boundary is merged into the owning service.
+  - The external adapter/client file remains separate because it owns a side-effect and protocol boundary.
+  - The value object remains separate because it owns an invariant and public construction behavior.
+  - The policy remains separate because it has an independent public behavior test boundary.
+  - Merge and rejected-merge rationale is recorded for every small file.
+required_qualities:
+  - Merges only the small helper that lacks a real boundary.
+  - Preserves adapter/client side-effect boundary.
+  - Preserves value object invariant boundary.
+  - Preserves policy public behavior test boundary.
+  - Documents each merge and rejected-merge rationale.
+  - Preserves import/export surface, public contract, dependency direction, and behavior tests.
+forbidden_shortcuts:
+  - Merging adapter into service.
+  - Merging value object invariant into procedural owner.
+  - Merging independent policy with tests into orchestration.
+  - Reducing file count while increasing mixed responsibility.
+  - Breaking dependency direction.
+  - Breaking public contract clarity.
+  - Hiding side-effect boundary.
+evidence:
+  - Small File Merge Decision for helper, adapter/client, value object, and policy.
+  - Merge restraint decision explaining why real boundary files stay separate.
+  - Import/export before/after evidence.
+  - Public contract preserved and dependency direction preserved evidence.
+  - Behavior test before/after evidence for service, policy, value object, and adapter boundaries.

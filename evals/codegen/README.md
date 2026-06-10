@@ -38,6 +38,7 @@ evals/codegen/
   iot/
   low-level/
   devex/
+  structure/
   finops/
 ```
 

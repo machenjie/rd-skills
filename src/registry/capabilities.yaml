@@ -721,9 +721,9 @@ capabilities:
     path: src/foundation/capabilities/refactoring
     status: implemented
     used_by: [ai-code-review-refactor, architecture-impact-reviewer]
-    triggers: [reshape code while preserving behavior tests contracts ownership boundaries large object split large file split module split dead code deprecated API feature flag cleanup compatibility branch complexity evidence]
-    risk_notes: [Refactors without safety checks or cleanup exits cause unintended behavior changes permanent compatibility debt and unreadable split structures]
-    expected_outputs: [refactor plan with preserved behavior tests boundaries rollback notes split plans cleanup plan and before after complexity evidence]
+    triggers: [reshape code while preserving behavior tests contracts ownership boundaries large object split large file split behavior preserving file merge behavior preserving file split small file merge refactor merge/split import export preservation module split dead code deprecated API feature flag cleanup compatibility branch complexity evidence]
+    risk_notes: [Refactors without safety checks or cleanup exits cause unintended behavior changes permanent compatibility debt unreadable split structures reckless file merges hidden side effects and broken public contracts]
+    expected_outputs: [refactor plan with preserved behavior tests boundaries rollback notes split plans file merge refactor plan split merge behavior preservation evidence import export before after public contract preserved dependency direction preserved cleanup plan and before after complexity evidence]
   - id: "80"
     name: documentation-generation
     group: engineering-workflow
@@ -925,10 +925,11 @@ capabilities:
       - function placement method placement class placement file placement directory placement component placement hook placement service method repository method public private internal
       - object modeling object-oriented design object responsibility encapsulation invariant protection inheritance polymorphism class hierarchy value object domain object service object interface abstract class subclassing traits protocols substitutability object collaboration
       - file main object main responsibility long file oversized object large function method clusters function signature boolean trap weak typed bag side effect boundary collaborator dependency injection state lifecycle invariant
+      - file granularity anti-fragmentation micro-file sprawl one-function file tiny helper file small file merge merge restraint navigation cost keep in existing file split merge decision one-function file without boundary excessive file split private helper co-location
       - shared utils common utils helper utility business logic in utils dependency direction cohesion coupling shared common pollution
       - doc comments exported comments public API comments test comments redundant comments stale comments comment quality
-    risk_notes: [Poor naming and placement create duplicated logic shared utility pollution accidental public APIs circular dependencies architecture drift and unmaintainable AI generated patches]
-    expected_outputs: [implementation structure plan with reuse candidates vocabulary naming decisions responsibility taxonomy main object per file oversized assessment object split decision function signature decision side effect boundary collaborator lifecycle decisions placement rationale dependency direction shared utility audit and test placement]
+    risk_notes: [Poor naming and placement create duplicated logic shared utility pollution accidental public APIs circular dependencies architecture drift micro-file sprawl navigation cost regression and unmaintainable AI generated patches. Poor file granularity causes either big-ball-of-mud files or scattered tiny files that increase navigation cost and AI maintenance drift.]
+    expected_outputs: [implementation structure plan with reuse candidates vocabulary naming decisions responsibility taxonomy main object per file oversized assessment anti-fragmentation assessment file granularity decision keep-in-existing-file alternative small-file merge decision merge-restraint rationale navigation cost before/after object split decision function signature decision side effect boundary collaborator lifecycle decisions placement rationale dependency direction shared utility audit and test placement]
 
   - id: "102"
     name: agent-execution-discipline
@@ -971,5 +972,6 @@ capabilities:
       - code clarity readability maintainability main flow happy path guard clause nesting function size cognitive complexity
       - complex condition boolean trap mode kind fallback compatibility magic number magic string comment quality readable tests
       - change locality deletion path extension point over abstraction under abstraction future maintainer navigation
-    risk_notes: [Working code that is hard to read change test or delete increases regression risk review cost and AI generated maintenance drift]
-    expected_outputs: [code clarity maintainability review with main flow control flow function purpose condition naming signature readability comment quality change navigation test clarity rejected simplifications and validation evidence]
+      - excessive file split reckless file merge navigation cost regression next-change location unclear after split or merge one-function file trivial helper file micro-file sprawl split merge readability
+    risk_notes: [Working code that is hard to read change test or delete increases regression risk review cost excessive file split navigation cost regression and AI generated maintenance drift. Reducing file count or increasing file count without boundary evidence can make the main flow harder to maintain.]
+    expected_outputs: [code clarity maintainability review with main flow control flow function purpose condition naming signature readability comment quality change navigation file navigation cost assessment split/merge readability review split merge readability decision next-change location before/after test clarity rejected split/merge simplification rejected simplifications and validation evidence]
