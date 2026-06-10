@@ -69,6 +69,46 @@ KNOWN_WARNING_METADATA_FIELDS = (
     "is_release_blocking",
 )
 
+ENHANCED_FOUNDATION_CAPABILITIES = {
+    "engineering-stage-professionalism",
+    "agent-execution-discipline",
+    "implementation-structure-design",
+    "code-clarity-maintainability",
+    "skill-authoring-expert",
+}
+
+KEY_FOUNDATION_CAPABILITIES = {
+    "failure-diagnosis",
+    "refactoring",
+    "code-review",
+    "test-strategy",
+    "unit-testing",
+    "integration-testing",
+    "contract-testing",
+    "e2e-testing",
+    "regression-testing",
+    "logging-error-handling",
+    "idempotency-retry-design",
+    "async-job-design",
+    "transaction-consistency",
+    "cache-design",
+    "message-queue-design",
+    "relational-database",
+    "observability",
+    "release-rollback",
+    "language-idiom-enforcement",
+    "language-testing-strategy",
+    "language-performance-safety",
+    "go-professional-usage",
+    "python-professional-usage",
+    "typescript-professional-usage",
+    "java-jvm-professional-usage",
+    "rust-professional-usage",
+    "cpp-professional-usage",
+    "sql-professional-usage",
+    "shell-cli-professional-usage",
+}
+
 
 @dataclass
 class Finding:
@@ -332,7 +372,7 @@ def _mapping_list(report: dict[str, Any], key: str, context: str) -> list[dict[s
 
 
 def _skill_baseline_entry(item: dict[str, Any], row: dict[str, Any]) -> dict[str, Any]:
-    warnings = _warning_messages(item.get("warnings")) or _warning_messages(row.get("warnings"))
+    warning_records = _warning_record_list(item.get("warnings")) or _warning_record_list(row.get("warnings"))
     likely_missing = _string_list(item.get("likely_missing_sections"))
     coverage = {
         "mode_matrix": _string(row.get("mode_matrix")),
@@ -349,10 +389,10 @@ def _skill_baseline_entry(item: dict[str, Any], row: dict[str, Any]) -> dict[str
         "kind": _string(row.get("kind") or item.get("kind")),
         "total_score": int(item.get("total") if item.get("total") is not None else row.get("score") or 0),
         "status": _string(item.get("status") or row.get("status")),
-        "known_warnings_count": len(warnings),
+        "known_warnings_count": len(warning_records),
         "known_warnings": [
-            _known_warning_record(warning, _string(row.get("path") or item.get("path")))
-            for warning in warnings
+            _known_warning_record(record, _string(row.get("path") or item.get("path")))
+            for record in warning_records
         ],
         "required_sections_present": not bool(likely_missing),
         "missing_required_sections": likely_missing,
@@ -390,15 +430,25 @@ def _benchmark_case_baselines(results: list[dict[str, Any]]) -> dict[str, Any]:
     return cases
 
 
-def _known_warning_record(warning: str, path: str) -> dict[str, Any]:
-    warning_type = _warning_type(warning)
-    release_blocking = warning_type in {
+def _known_warning_record(warning: Any, path: str) -> dict[str, Any]:
+    source = _dict(warning)
+    message = _warning_message(warning)
+    warning_type = _string(source.get("type")) or _warning_type(message)
+    release_relevance = _string(source.get("release_relevance")) or _inferred_release_relevance(
+        path,
+        warning_type,
+        message,
+    )
+    release_blocking = release_relevance == "release-blocking" or warning_type in {
         "evidence_contract_missing_what_proves",
         "trigger_lacks_concrete_route_or_evidence",
     }
     return {
-        "message": warning,
+        "message": message,
         "type": warning_type,
+        "scope": _string(source.get("scope")) or _inferred_warning_scope(path),
+        "release_relevance": release_relevance,
+        "reason": _string(source.get("reason")) or _inferred_warning_reason(release_relevance),
         "owner": _warning_owner(path),
         "accepted_reason": "Existing advisory finding retained only for regression visibility.",
         "review_after": "2026-07-15",
@@ -923,7 +973,7 @@ def _release_readiness_payload(
         content_summary=content_summary,
         agent_samples_strict=agent_samples_strict,
     )
-    skill_eval_warning_scope = _skill_eval_warning_scope(reports["skill_eval"], result)
+    warning_reconciliation = _skill_professionalism_warning_reconciliation(reports["skill_eval"], result)
     release_blockers = list(result.blockers)
     if strict_blockers and not result.strict:
         release_blockers.extend(
@@ -1007,9 +1057,11 @@ def _release_readiness_payload(
         "default_regression_status": default_result.status if default_result else "not-run",
         "strict_regression_status": strict_result.status if strict_result else "not-run",
         "promoted_agent_samples_strict_status": _agent_strict_status(agent_samples_strict),
+        "release_blocking_professionalism_warnings": warning_reconciliation["release_blocking_warnings"],
         "checklist": checklist,
         "known_accepted_warnings": [asdict(item) for item in result.known_warnings],
-        "out_of_scope_non_key_skill_eval_warnings": skill_eval_warning_scope,
+        "warning_reconciliation": warning_reconciliation,
+        "out_of_scope_non_key_skill_eval_warnings": _legacy_warning_scope(warning_reconciliation),
         "content_bloat_status": {
             "heavy_professional": content_summary.get("heavy_professional", "unknown"),
             "heavy_foundation": content_summary.get("heavy_foundation", "unknown"),
@@ -1029,6 +1081,7 @@ def _release_readiness_payload(
         ],
         "latest_results_available": {
             "skill_professionalism_warnings": reports["skill_eval"].get("warning_count"),
+            "release_blocking_professionalism_warnings": warning_reconciliation["release_blocking_warnings"],
             "skill_professionalism_average_score": reports["skill_eval"].get("average_score"),
             "coverage_rows_checked": reports["coverage_matrix"].get("rows_checked"),
             "benchmark_errors": len(_string_list(reports["benchmarks"].get("errors"))),
@@ -1051,6 +1104,7 @@ def _render_readiness_markdown(payload: dict[str, Any]) -> str:
         f"- Authoring ready: {payload['authoring_ready']}",
         f"- Release ready: {payload['release_ready']}",
         f"- Strict release ready: {payload['strict_release_ready']}",
+        f"- Release-blocking professionalism warnings: {payload['release_blocking_professionalism_warnings']}",
         f"- Regression status: {payload['regression_status']}",
         f"- Default regression status: {payload['default_regression_status']}",
         f"- Strict regression status: {payload['strict_regression_status']}",
@@ -1094,33 +1148,36 @@ def _render_readiness_markdown(payload: dict[str, Any]) -> str:
             lines.append(f"- `{item['target']}`: {item['message']}")
     else:
         lines.append("- None")
-    warning_scope = _dict(payload.get("out_of_scope_non_key_skill_eval_warnings"))
-    warning_scope_summary = {
+    warning_reconciliation = _dict(payload.get("warning_reconciliation"))
+    warning_reconciliation_summary = {
         key: value
-        for key, value in warning_scope.items()
+        for key, value in warning_reconciliation.items()
         if key != "warnings"
     }
     lines.extend(
         [
             "",
-            "## Out-of-Scope / Non-Key Skill Eval Warnings",
+            "## Skill Professionalism Warning Reconciliation",
             "",
-            _mapping_lines(warning_scope_summary),
+            _mapping_lines(warning_reconciliation_summary),
             "",
+            "| Warning | Scope | Release Relevance | Reason | Follow-up |",
+            "| --- | --- | --- | --- | --- |",
         ]
     )
     scoped_warnings = [
-        item for item in warning_scope.get("warnings", [])
+        item for item in warning_reconciliation.get("warnings", [])
         if isinstance(item, dict)
     ]
     if scoped_warnings:
         for item in scoped_warnings:
             lines.append(
-                f"- `{item.get('target', '')}` ({item.get('warning_type', 'other')}): "
-                f"{item.get('message', '')}"
+                f"| `{item.get('target', '')}`: {item.get('message', '')} | "
+                f"{item.get('scope', '')} | {item.get('release_relevance', '')} | "
+                f"{item.get('reason', '')} | {item.get('follow_up', '')} |"
             )
     else:
-        lines.append("- None")
+        lines.append("| None | - | - | - | - |")
     lines.extend(
         [
             "",
@@ -1257,36 +1314,87 @@ def _checklist_row(
     }
 
 
-def _skill_eval_warning_scope(skill_eval: dict[str, Any], result: RegressionResult) -> dict[str, Any]:
+def _skill_professionalism_warning_reconciliation(
+    skill_eval: dict[str, Any],
+    result: RegressionResult,
+) -> dict[str, Any]:
     all_records = _skill_eval_warning_records(skill_eval)
-    tracked_keys = {
-        (item.target, item.message)
-        for item in [*result.known_warnings, *result.warnings]
+    accepted_records = {
+        (item.target, item.message): _dict(item.baseline_value)
+        for item in result.known_warnings
     }
-    untracked_records = [
-        record for record in all_records
-        if (record["target"], record["message"]) not in tracked_keys
-    ]
-    non_key_capability_records = [
-        record for record in untracked_records
-        if record.get("kind") == "foundation-capability"
-    ]
+    new_records = {
+        (item.target, item.message)
+        for item in result.warnings
+    }
+    reconciled: list[dict[str, Any]] = []
+    for record in all_records:
+        key = (record["target"], record["message"])
+        payload = dict(record)
+        accepted = accepted_records.get(key)
+        if accepted and accepted.get("is_release_blocking") is not True:
+            payload["release_relevance"] = "accepted-known-warning"
+            payload["reason"] = (
+                _string(accepted.get("accepted_reason"))
+                or "Accepted known warning is tracked in the professionalism baseline."
+            )
+            payload["accepted_warning"] = True
+            payload["accepted_warning_metadata"] = accepted
+        else:
+            payload["accepted_warning"] = False
+        payload["tracked_release_warning"] = bool(accepted or key in new_records)
+        payload["follow_up"] = _warning_follow_up(payload)
+        reconciled.append(payload)
+
     source_warning_count = skill_eval.get("warning_count")
     total_warning_count = (
         int(source_warning_count)
         if isinstance(source_warning_count, int)
         else len(all_records)
     )
+    release_blocking = [
+        record for record in reconciled
+        if record.get("release_relevance") == "release-blocking"
+    ]
+    accepted_known = [
+        record for record in reconciled
+        if record.get("release_relevance") == "accepted-known-warning"
+    ]
+    release_review_required = [
+        record for record in reconciled
+        if record.get("release_relevance") == "release-review-required"
+    ]
+    key_follow_up = [
+        record for record in reconciled
+        if record.get("scope") == "key-foundation-capability"
+        and record.get("release_relevance") == "non-blocking-follow-up"
+    ]
+    non_key_advisory = [
+        record for record in reconciled
+        if record.get("scope") == "non-key-foundation-capability"
+        and record.get("release_relevance") == "advisory-only"
+    ]
+    enhanced_review = [
+        record for record in reconciled
+        if record.get("scope") == "enhanced-foundation-capability"
+        and record.get("release_relevance") == "release-review-required"
+    ]
     return {
         "total_skill_professionalism_warnings": total_warning_count,
+        "release_blocking_warnings": len(release_blocking),
+        "accepted_known_warnings": len(accepted_known),
+        "release_review_required_warnings": len(release_review_required),
+        "enhanced_foundation_review_warnings": len(enhanced_review),
+        "key_foundation_follow_up_warnings": len(key_follow_up),
+        "non_key_foundation_advisory_warnings": len(non_key_advisory),
         "tracked_release_warnings": len(result.known_warnings) + len(result.warnings),
-        "non_key_capability_advisory_warnings": len(non_key_capability_records),
-        "other_untracked_skill_eval_warnings": len(untracked_records) - len(non_key_capability_records),
+        "new_unaccepted_release_warnings": len(result.warnings),
         "policy": (
-            "Non-key foundation capability advisory warnings are report-only unless "
-            "promoted into the key coverage matrix or baseline release budget."
+            "Professional skill warnings block release. Enhanced foundation warnings require release review. "
+            "Key foundation warnings are follow-up unless evidence or reference precision is weak. "
+            "Non-key foundation warnings are advisory-only."
         ),
-        "warnings": untracked_records,
+        "warnings": reconciled,
     }
 
 
@@ -1295,19 +1403,56 @@ def _skill_eval_warning_records(skill_eval: dict[str, Any]) -> list[dict[str, An
     for item in _mapping_list(skill_eval, "items", "skill professionalism report"):
         path = _string(item.get("path"))
         target = path or _string(item.get("name"))
-        for warning in _warning_messages(item.get("warnings")):
+        name = _string(item.get("name"))
+        kind = _string(item.get("kind"))
+        for warning in _warning_record_list(item.get("warnings")):
+            message = _string(warning.get("message"))
+            warning_type = _string(warning.get("type")) or _warning_type(message)
+            scope = _string(warning.get("scope")) or _inferred_warning_scope(path)
+            release_relevance = _string(warning.get("release_relevance")) or _inferred_release_relevance(
+                path,
+                warning_type,
+                message,
+            )
             records.append(
                 {
-                    "name": _string(item.get("name")),
+                    "name": name,
                     "target": target,
                     "path": path,
-                    "kind": _string(item.get("kind")),
-                    "message": warning,
-                    "warning_type": _warning_type(warning),
-                    "release_blocking": False,
+                    "kind": kind,
+                    "message": message,
+                    "type": warning_type,
+                    "warning_type": warning_type,
+                    "item": _string(warning.get("item")) or name,
+                    "item_kind": _string(warning.get("item_kind")) or kind,
+                    "scope": scope,
+                    "release_relevance": release_relevance,
+                    "reason": _string(warning.get("reason")) or _inferred_warning_reason(release_relevance),
+                    "release_blocking": release_relevance == "release-blocking",
                 }
             )
     return records
+
+
+def _legacy_warning_scope(reconciliation: dict[str, Any]) -> dict[str, Any]:
+    warnings = [
+        record for record in reconciliation.get("warnings", [])
+        if isinstance(record, dict)
+        and record.get("release_relevance") not in {"accepted-known-warning", "release-blocking"}
+    ]
+    non_key_count = sum(
+        1
+        for record in warnings
+        if record.get("scope") == "non-key-foundation-capability"
+    )
+    return {
+        "total_skill_professionalism_warnings": reconciliation.get("total_skill_professionalism_warnings", 0),
+        "tracked_release_warnings": reconciliation.get("tracked_release_warnings", 0),
+        "non_key_capability_advisory_warnings": non_key_count,
+        "other_untracked_skill_eval_warnings": len(warnings) - non_key_count,
+        "policy": reconciliation.get("policy", ""),
+        "warnings": warnings,
+    }
 
 
 def _readiness_followups(result: RegressionResult, foundation: dict[str, Any]) -> list[dict[str, Any]]:
@@ -1454,6 +1599,25 @@ def _known_warning_type_counts(findings: list[Finding]) -> dict[str, int]:
     return counts
 
 
+def _warning_record_list(value: Any) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    if isinstance(value, list):
+        for item in value:
+            if isinstance(item, dict):
+                message = _string(item.get("message"))
+                if message:
+                    record = dict(item)
+                    record["message"] = message
+                    records.append(record)
+            elif isinstance(item, str) and item.strip():
+                message = item.strip()
+                records.append({"message": message, "type": _warning_type(message)})
+    elif isinstance(value, str) and value.strip():
+        message = value.strip()
+        records.append({"message": message, "type": _warning_type(message)})
+    return records
+
+
 def _warning_record_map(value: Any) -> dict[str, dict[str, Any]]:
     records: dict[str, dict[str, Any]] = {}
     if isinstance(value, list):
@@ -1476,6 +1640,12 @@ def _warning_record_map(value: Any) -> dict[str, dict[str, Any]]:
     return records
 
 
+def _warning_message(value: Any) -> str:
+    if isinstance(value, dict):
+        return _string(value.get("message"))
+    return _string(value)
+
+
 def _warning_messages(value: Any) -> list[str]:
     if isinstance(value, list):
         messages: list[str] = []
@@ -1490,12 +1660,86 @@ def _warning_messages(value: Any) -> list[str]:
     return _string_list(value)
 
 
+def _inferred_warning_scope(path: str) -> str:
+    if "/professional-skills/" in path:
+        return "professional-skill"
+    name = Path(path).parent.name
+    if name in ENHANCED_FOUNDATION_CAPABILITIES:
+        return "enhanced-foundation-capability"
+    if name in KEY_FOUNDATION_CAPABILITIES:
+        return "key-foundation-capability"
+    if "/foundation/capabilities/" in path:
+        return "non-key-foundation-capability"
+    return "authoring-template"
+
+
+def _inferred_release_relevance(path: str, warning_type: str, warning: str) -> str:
+    scope = _inferred_warning_scope(path)
+    if scope == "professional-skill":
+        return "release-blocking"
+    if scope == "enhanced-foundation-capability":
+        if warning_type in {"missing_failure_modes", "missing_quality_gate"}:
+            return "release-blocking"
+        return "release-review-required"
+    if scope == "key-foundation-capability":
+        if warning_type in {
+            "weak_evidence_contract_strength",
+            "weak_reference_precision",
+            "evidence_contract_missing_term",
+            "reference_loading_hint",
+            "evidence_contract_missing_what_proves",
+        }:
+            return "release-review-required"
+        folded = warning.casefold()
+        if "evidence_contract_strength score" in folded or "reference_precision score" in folded:
+            return "release-review-required"
+        return "non-blocking-follow-up"
+    return "advisory-only"
+
+
+def _inferred_warning_reason(release_relevance: str) -> str:
+    if release_relevance == "release-blocking":
+        return "Release policy treats this professionalism warning as blocking for the affected top-level or required gate surface."
+    if release_relevance == "release-review-required":
+        return "Warning requires explicit release review because it affects an enhanced or key foundation capability surface."
+    if release_relevance == "non-blocking-follow-up":
+        return "Warning is tracked for key foundation follow-up and does not block release under current policy."
+    return "Warning is advisory-only for this scope and does not block release under current policy."
+
+
+def _warning_follow_up(record: dict[str, Any]) -> str:
+    relevance = _string(record.get("release_relevance"))
+    if relevance == "release-blocking":
+        return "Fix before release."
+    if relevance == "accepted-known-warning":
+        return "Keep accepted-warning metadata and review on the recorded schedule."
+    if relevance == "release-review-required":
+        return "Review during release readiness; promote to blocker only if evidence/reference weakness affects the selected release surface."
+    if relevance == "non-blocking-follow-up":
+        return "Track as key foundation hardening follow-up."
+    return "Track as advisory cleanup; no release action required."
+
+
 def _warning_type(warning: str) -> str:
     folded = warning.casefold()
     if "evidence contract is missing 'what evidence proves'" in folded:
         return "evidence_contract_missing_what_proves"
     if "lacks concrete hidden risk, action, route, or evidence" in folded:
         return "trigger_lacks_concrete_route_or_evidence"
+    if " weak: " in folded and " score " in folded:
+        if "evidence_contract_strength" in folded:
+            return "weak_evidence_contract_strength"
+        if "reference_precision" in folded:
+            return "weak_reference_precision"
+        return "weak_dimension_score"
+    if "evidence contract is missing" in folded:
+        return "evidence_contract_missing_term"
+    if "reference" in folded and ("hint" in folded or "linked" in folded or "governed" in folded):
+        return "reference_loading_hint"
+    if "missing failure modes" in folded:
+        return "missing_failure_modes"
+    if "missing quality gate" in folded:
+        return "missing_quality_gate"
     if _is_anti_bloat_warning(warning):
         return "body_bloat_exception"
     return "other"

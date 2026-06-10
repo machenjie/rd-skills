@@ -1,10 +1,11 @@
 # Professionalism Release Readiness
 
-- Generated: 2026-06-10T02:20:13.671077+00:00
+- Generated: 2026-06-10T02:40:58.099725+00:00
 - Status: strict-release-ready
 - Authoring ready: ready
 - Release ready: ready
 - Strict release ready: ready
+- Release-blocking professionalism warnings: 0
 - Regression status: pass
 - Default regression status: pass
 - Strict regression status: pass
@@ -51,21 +52,29 @@
 
 - `src/foundation/capabilities/code-review/SKILL.md`: long Markdown table in SKILL.md body (16 rows); consider moving deep table to references
 
-## Out-of-Scope / Non-Key Skill Eval Warnings
+## Skill Professionalism Warning Reconciliation
 
-- non_key_capability_advisory_warnings: 7
-- other_untracked_skill_eval_warnings: 0
-- policy: Non-key foundation capability advisory warnings are report-only unless promoted into the key coverage matrix or baseline release budget.
+- accepted_known_warnings: 1
+- enhanced_foundation_review_warnings: 2
+- key_foundation_follow_up_warnings: 0
+- new_unaccepted_release_warnings: 0
+- non_key_foundation_advisory_warnings: 5
+- policy: Professional skill warnings block release. Enhanced foundation warnings require release review. Key foundation warnings are follow-up unless evidence or reference precision is weak. Non-key foundation warnings are advisory-only.
+- release_blocking_warnings: 0
+- release_review_required_warnings: 2
 - total_skill_professionalism_warnings: 8
 - tracked_release_warnings: 1
 
-- `src/foundation/capabilities/api-contract-design/SKILL.md` (body_bloat_exception): long Markdown table in SKILL.md body (16 rows); consider moving deep table to references
-- `src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md` (body_bloat_exception): long Markdown table in SKILL.md body (18 rows); consider moving deep table to references
-- `src/foundation/capabilities/context-packaging/SKILL.md` (body_bloat_exception): long Markdown table in SKILL.md body (17 rows); consider moving deep table to references
-- `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md` (other): Evidence Contract weak: evidence_contract_strength score 2/5 needs review
-- `src/foundation/capabilities/error-code-design/SKILL.md` (body_bloat_exception): long Markdown table in SKILL.md body (17 rows); consider moving deep table to references
-- `src/foundation/capabilities/skill-authoring-expert/SKILL.md` (other): Evidence Contract weak: evidence_contract_strength score 2/5 needs review
-- `src/foundation/capabilities/version-compatibility/SKILL.md` (body_bloat_exception): long Markdown table in SKILL.md body (17 rows); consider moving deep table to references
+| Warning | Scope | Release Relevance | Reason | Follow-up |
+| --- | --- | --- | --- | --- |
+| `src/foundation/capabilities/api-contract-design/SKILL.md`: long Markdown table in SKILL.md body (16 rows); consider moving deep table to references | non-key-foundation-capability | advisory-only | Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release. | Track as advisory cleanup; no release action required. |
+| `src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md`: long Markdown table in SKILL.md body (18 rows); consider moving deep table to references | non-key-foundation-capability | advisory-only | Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release. | Track as advisory cleanup; no release action required. |
+| `src/foundation/capabilities/code-review/SKILL.md`: long Markdown table in SKILL.md body (16 rows); consider moving deep table to references | key-foundation-capability | accepted-known-warning | Existing advisory finding retained only for regression visibility. | Keep accepted-warning metadata and review on the recorded schedule. |
+| `src/foundation/capabilities/context-packaging/SKILL.md`: long Markdown table in SKILL.md body (17 rows); consider moving deep table to references | non-key-foundation-capability | advisory-only | Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release. | Track as advisory cleanup; no release action required. |
+| `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md`: Evidence Contract weak: evidence_contract_strength score 2/5 needs review | enhanced-foundation-capability | release-review-required | Enhanced foundation capabilities amplify into multiple professional skills; the warning needs release review but is not automatically blocking unless a required gate is missing. | Review during release readiness; promote to blocker only if evidence/reference weakness affects the selected release surface. |
+| `src/foundation/capabilities/error-code-design/SKILL.md`: long Markdown table in SKILL.md body (17 rows); consider moving deep table to references | non-key-foundation-capability | advisory-only | Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release. | Track as advisory cleanup; no release action required. |
+| `src/foundation/capabilities/skill-authoring-expert/SKILL.md`: Evidence Contract weak: evidence_contract_strength score 2/5 needs review | enhanced-foundation-capability | release-review-required | Enhanced foundation capabilities amplify into multiple professional skills; the warning needs release review but is not automatically blocking unless a required gate is missing. | Review during release readiness; promote to blocker only if evidence/reference weakness affects the selected release surface. |
+| `src/foundation/capabilities/version-compatibility/SKILL.md`: long Markdown table in SKILL.md body (17 rows); consider moving deep table to references | non-key-foundation-capability | advisory-only | Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release. | Track as advisory cleanup; no release action required. |
 
 ## Content Bloat Status
 
@@ -94,6 +103,7 @@
 - professional_agent_samples_checked: 5
 - promoted_agent_sample_strict_warnings: 0
 - promoted_agent_samples_strict_checked: 5
+- release_blocking_professionalism_warnings: 0
 - skill_professionalism_average_score: 39.83
 - skill_professionalism_warnings: 8
 

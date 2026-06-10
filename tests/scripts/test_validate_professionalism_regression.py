@@ -76,7 +76,32 @@ def _coverage_row(
     }
 
 
-def _base_coverage(**overrides: str) -> dict:
+def _foundation_coverage_row(
+    name: str = "agent-execution-discipline",
+    path: str = "src/foundation/capabilities/agent-execution-discipline/SKILL.md",
+    warnings: list[str] | None = None,
+) -> dict:
+    return {
+        "name": name,
+        "path": path,
+        "kind": "foundation-capability",
+        "score": 40,
+        "status": "acceptable",
+        "mode_matrix": "n/a",
+        "proactive_triggers": "n/a",
+        "evidence_contract": "yes",
+        "output_contract": "yes",
+        "failure_modes": "yes",
+        "quality_gate": "yes",
+        "reference_loading_hint": "yes",
+        "routing_coverage": "yes (1)",
+        "benchmark_coverage": "yes (1)",
+        "anti_bloat_status": "ok",
+        "warnings": warnings or [],
+    }
+
+
+def _base_coverage(*, extra_rows: list[dict] | None = None, **overrides: str) -> dict:
     foundation = {
         "name": "agent-execution-discipline",
         "path": "src/foundation/capabilities/agent-execution-discipline/SKILL.md",
@@ -95,10 +120,11 @@ def _base_coverage(**overrides: str) -> dict:
         "anti_bloat_status": "ok",
         "warnings": [],
     }
+    rows = [_coverage_row(**overrides), foundation, *(extra_rows or [])]
     return {
         "generated_at": "2026-01-01T00:00:00+00:00",
-        "rows_checked": 2,
-        "rows": [_coverage_row(**overrides), foundation],
+        "rows_checked": len(rows),
+        "rows": rows,
     }
 
 
@@ -276,10 +302,20 @@ class ValidateProfessionalismRegressionTests(unittest.TestCase):
             reports_dir = tmp / "reports"
             routing_dir = tmp / "routing"
             baseline = tmp / "config" / "professionalism-baseline.yaml"
+            accepted_warning = "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references"
             non_key_warning = "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references"
             skill_eval = _base_skill_eval(
-                warnings=["known warning"],
+                warnings=[],
                 extra_items=[
+                    {
+                        "name": "code-review",
+                        "path": "src/foundation/capabilities/code-review/SKILL.md",
+                        "kind": "foundation-capability",
+                        "total": 48,
+                        "status": "acceptable",
+                        "warnings": [accepted_warning],
+                        "likely_missing_sections": [],
+                    },
                     {
                         "name": "api-contract-design",
                         "path": "src/foundation/capabilities/api-contract-design/SKILL.md",
@@ -291,23 +327,43 @@ class ValidateProfessionalismRegressionTests(unittest.TestCase):
                     }
                 ],
             )
-            _write_reports(reports_dir, skill_eval=skill_eval)
+            coverage = _base_coverage(
+                extra_rows=[
+                    _foundation_coverage_row(
+                        "code-review",
+                        "src/foundation/capabilities/code-review/SKILL.md",
+                    )
+                ]
+            )
+            _write_reports(reports_dir, skill_eval=skill_eval, coverage=coverage)
             _write_routing_case(routing_dir, forbidden=True)
             self.assertEqual(_run(reports_dir, baseline, routing_dir, "--update-baseline").returncode, 0)
-            _write_reports(reports_dir, skill_eval=skill_eval)
+            _write_reports(reports_dir, skill_eval=skill_eval, coverage=coverage)
             result = _run(reports_dir, baseline, routing_dir)
             self.assertEqual(result.returncode, 0, result.stderr)
             readiness = json.loads((reports_dir / "professionalism-release-readiness.json").read_text())
-            scope = readiness["out_of_scope_non_key_skill_eval_warnings"]
-            self.assertEqual(scope["total_skill_professionalism_warnings"], 2)
-            self.assertEqual(scope["tracked_release_warnings"], 1)
-            self.assertEqual(scope["non_key_capability_advisory_warnings"], 1)
-            self.assertEqual(scope["other_untracked_skill_eval_warnings"], 0)
-            self.assertEqual(scope["warnings"][0]["target"], "src/foundation/capabilities/api-contract-design/SKILL.md")
-            self.assertEqual(scope["warnings"][0]["message"], non_key_warning)
+            reconciliation = readiness["warning_reconciliation"]
+            self.assertEqual(readiness["release_blocking_professionalism_warnings"], 0)
+            self.assertEqual(reconciliation["total_skill_professionalism_warnings"], 2)
+            self.assertEqual(reconciliation["tracked_release_warnings"], 1)
+            self.assertEqual(reconciliation["accepted_known_warnings"], 1)
+            self.assertEqual(reconciliation["release_blocking_warnings"], 0)
+            self.assertEqual(reconciliation["non_key_foundation_advisory_warnings"], 1)
+            api_warning = next(
+                item for item in reconciliation["warnings"]
+                if item["target"] == "src/foundation/capabilities/api-contract-design/SKILL.md"
+            )
+            self.assertEqual(api_warning["message"], non_key_warning)
+            self.assertEqual(api_warning["release_relevance"], "advisory-only")
+            accepted = next(
+                item for item in reconciliation["warnings"]
+                if item["target"] == "src/foundation/capabilities/code-review/SKILL.md"
+            )
+            self.assertEqual(accepted["release_relevance"], "accepted-known-warning")
             markdown = (reports_dir / "professionalism-release-readiness.md").read_text(encoding="utf-8")
-            self.assertIn("## Out-of-Scope / Non-Key Skill Eval Warnings", markdown)
-            self.assertIn("non_key_capability_advisory_warnings: 1", markdown)
+            self.assertIn("## Skill Professionalism Warning Reconciliation", markdown)
+            self.assertIn("non_key_foundation_advisory_warnings: 1", markdown)
+            self.assertIn("accepted-known-warning", markdown)
 
     def test_new_warning_over_budget_fails(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

@@ -1,7 +1,7 @@
 {
   "average_score": 39.83,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-10T02:20:12.424816+00:00",
+  "generated_at": "2026-06-10T02:40:57.030476+00:00",
   "items": [
     {
       "body_lines": 216,
@@ -495,19 +495,10 @@
         "validation_obligation": 3
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "acceptance-standard-definition",
       "path": "src/foundation/capabilities/acceptance-standard-definition/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 37,
       "warnings": []
@@ -529,15 +520,10 @@
         "validation_obligation": 5
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers"
-      ],
+      "likely_missing_sections": [],
       "name": "agent-execution-discipline",
       "path": "src/foundation/capabilities/agent-execution-discipline/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 48,
       "warnings": []
@@ -559,23 +545,24 @@
         "validation_obligation": 4
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "api-contract-design",
       "path": "src/foundation/capabilities/api-contract-design/SKILL.md",
       "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
+        "Move low-frequency tables/examples into owned references and remove duplicated template prose."
       ],
       "status": "acceptable",
       "total": 36,
       "warnings": [
-        "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references"
+        {
+          "item": "api-contract-design",
+          "item_kind": "foundation-capability",
+          "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "body_bloat_exception"
+        }
       ]
     },
     {
@@ -595,19 +582,10 @@
         "validation_obligation": 0
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "architecture-style-selection",
       "path": "src/foundation/capabilities/architecture-style-selection/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -629,23 +607,24 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "architecture-tradeoff-analysis",
       "path": "src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md",
       "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
+        "Move low-frequency tables/examples into owned references and remove duplicated template prose."
       ],
       "status": "acceptable",
       "total": 36,
       "warnings": [
-        "long Markdown table in SKILL.md body (18 rows); consider moving deep table to references"
+        {
+          "item": "architecture-tradeoff-analysis",
+          "item_kind": "foundation-capability",
+          "message": "long Markdown table in SKILL.md body (18 rows); consider moving deep table to references",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "body_bloat_exception"
+        }
       ]
     },
     {
@@ -666,16 +645,11 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Reference Loading Policy"
       ],
       "name": "async-job-design",
       "path": "src/foundation/capabilities/async-job-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 40,
       "warnings": []
@@ -697,19 +671,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "authentication-authorization",
       "path": "src/foundation/capabilities/authentication-authorization/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 36,
       "warnings": []
@@ -731,19 +696,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "authentication-security",
       "path": "src/foundation/capabilities/authentication-security/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 33,
       "warnings": []
@@ -765,19 +721,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "backup-recovery",
       "path": "src/foundation/capabilities/backup-recovery/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 35,
       "warnings": []
@@ -799,19 +746,10 @@
         "validation_obligation": 3
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "business-rule-extraction",
       "path": "src/foundation/capabilities/business-rule-extraction/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 37,
       "warnings": []
@@ -834,16 +772,11 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Reference Loading Policy"
       ],
       "name": "cache-design",
       "path": "src/foundation/capabilities/cache-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 40,
       "warnings": []
@@ -865,19 +798,10 @@
         "validation_obligation": 4
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "ci-cd",
       "path": "src/foundation/capabilities/ci-cd/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 45,
       "warnings": []
@@ -899,19 +823,10 @@
         "validation_obligation": 3
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "cli-daemon-interface-design",
       "path": "src/foundation/capabilities/cli-daemon-interface-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -934,16 +849,11 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Reference Loading Policy"
+        "Stage Fit"
       ],
       "name": "code-clarity-maintainability",
       "path": "src/foundation/capabilities/code-clarity-maintainability/SKILL.md",
-      "recommended_fixes": [
-        "Add or tighten a domain-specific Mode Matrix with evidence and skip guidance.",
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 46,
       "warnings": []
@@ -965,20 +875,24 @@
         "validation_obligation": 5
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers"
-      ],
+      "likely_missing_sections": [],
       "name": "code-review",
       "path": "src/foundation/capabilities/code-review/SKILL.md",
       "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Add targeted reference loading hints or link unreferenced skill references."
+        "Move low-frequency tables/examples into owned references and remove duplicated template prose."
       ],
       "status": "acceptable",
       "total": 48,
       "warnings": [
-        "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references"
+        {
+          "item": "code-review",
+          "item_kind": "foundation-capability",
+          "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
+          "reason": "Key foundation capability advisory warning is tracked for follow-up because it does not weaken evidence or reference precision.",
+          "release_relevance": "non-blocking-follow-up",
+          "scope": "key-foundation-capability",
+          "type": "body_bloat_exception"
+        }
       ]
     },
     {
@@ -998,19 +912,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "concurrency-control",
       "path": "src/foundation/capabilities/concurrency-control/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -1032,19 +937,10 @@
         "validation_obligation": 4
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "containerization",
       "path": "src/foundation/capabilities/containerization/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 36,
       "warnings": []
@@ -1066,23 +962,24 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "context-packaging",
       "path": "src/foundation/capabilities/context-packaging/SKILL.md",
       "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
+        "Move low-frequency tables/examples into owned references and remove duplicated template prose."
       ],
       "status": "acceptable",
       "total": 38,
       "warnings": [
-        "long Markdown table in SKILL.md body (17 rows); consider moving deep table to references"
+        {
+          "item": "context-packaging",
+          "item_kind": "foundation-capability",
+          "message": "long Markdown table in SKILL.md body (17 rows); consider moving deep table to references",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "body_bloat_exception"
+        }
       ]
     },
     {
@@ -1103,18 +1000,11 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "contract-testing",
       "path": "src/foundation/capabilities/contract-testing/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 34,
       "warnings": []
@@ -1136,19 +1026,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "controller-api-implementation",
       "path": "src/foundation/capabilities/controller-api-implementation/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 39,
       "warnings": []
@@ -1171,18 +1052,12 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "cpp-professional-usage",
       "path": "src/foundation/capabilities/cpp-professional-usage/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 38,
       "warnings": []
@@ -1204,19 +1079,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "data-migration-design",
       "path": "src/foundation/capabilities/data-migration-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -1238,19 +1104,10 @@
         "validation_obligation": 0
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "data-model-design",
       "path": "src/foundation/capabilities/data-model-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 33,
       "warnings": []
@@ -1272,19 +1129,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "degradation-circuit-breaking",
       "path": "src/foundation/capabilities/degradation-circuit-breaking/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -1306,19 +1154,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "dependency-vulnerability-scanning",
       "path": "src/foundation/capabilities/dependency-vulnerability-scanning/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 32,
       "warnings": []
@@ -1340,19 +1179,10 @@
         "validation_obligation": 3
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "design-system-rules",
       "path": "src/foundation/capabilities/design-system-rules/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -1374,19 +1204,10 @@
         "validation_obligation": 4
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "documentation-generation",
       "path": "src/foundation/capabilities/documentation-generation/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 32,
       "warnings": []
@@ -1408,19 +1229,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "domain-event-modeling",
       "path": "src/foundation/capabilities/domain-event-modeling/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 35,
       "warnings": []
@@ -1442,19 +1254,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "domain-logic-implementation",
       "path": "src/foundation/capabilities/domain-logic-implementation/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "weak",
       "total": 27,
       "warnings": []
@@ -1476,19 +1279,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "domain-object-identification",
       "path": "src/foundation/capabilities/domain-object-identification/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "weak",
       "total": 25,
       "warnings": []
@@ -1510,19 +1304,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "dto-schema-design",
       "path": "src/foundation/capabilities/dto-schema-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 35,
       "warnings": []
@@ -1545,18 +1330,12 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "e2e-testing",
       "path": "src/foundation/capabilities/e2e-testing/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 40,
       "warnings": []
@@ -1579,20 +1358,25 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Reference Loading Policy"
+        "Stage Fit"
       ],
       "name": "engineering-stage-professionalism",
       "path": "src/foundation/capabilities/engineering-stage-professionalism/SKILL.md",
       "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
         "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate."
       ],
       "status": "needs-review",
       "total": 47,
       "warnings": [
-        "Evidence Contract weak: evidence_contract_strength score 2/5 needs review"
+        {
+          "item": "engineering-stage-professionalism",
+          "item_kind": "foundation-capability",
+          "message": "Evidence Contract weak: evidence_contract_strength score 2/5 needs review",
+          "reason": "Enhanced foundation capabilities amplify into multiple professional skills; the warning needs release review but is not automatically blocking unless a required gate is missing.",
+          "release_relevance": "release-review-required",
+          "scope": "enhanced-foundation-capability",
+          "type": "weak_evidence_contract_strength"
+        }
       ]
     },
     {
@@ -1612,23 +1396,24 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "error-code-design",
       "path": "src/foundation/capabilities/error-code-design/SKILL.md",
       "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
+        "Move low-frequency tables/examples into owned references and remove duplicated template prose."
       ],
       "status": "acceptable",
       "total": 32,
       "warnings": [
-        "long Markdown table in SKILL.md body (17 rows); consider moving deep table to references"
+        {
+          "item": "error-code-design",
+          "item_kind": "foundation-capability",
+          "message": "long Markdown table in SKILL.md body (17 rows); consider moving deep table to references",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "body_bloat_exception"
+        }
       ]
     },
     {
@@ -1648,19 +1433,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "event-driven-architecture",
       "path": "src/foundation/capabilities/event-driven-architecture/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 33,
       "warnings": []
@@ -1682,19 +1458,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "extensibility-design",
       "path": "src/foundation/capabilities/extensibility-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 37,
       "warnings": []
@@ -1716,15 +1483,10 @@
         "validation_obligation": 5
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers"
-      ],
+      "likely_missing_sections": [],
       "name": "failure-diagnosis",
       "path": "src/foundation/capabilities/failure-diagnosis/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 50,
       "warnings": []
@@ -1746,19 +1508,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "file-storage-processing",
       "path": "src/foundation/capabilities/file-storage-processing/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -1780,19 +1533,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "form-validation-design",
       "path": "src/foundation/capabilities/form-validation-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -1814,19 +1558,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "frontend-api-integration",
       "path": "src/foundation/capabilities/frontend-api-integration/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -1848,19 +1583,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "frontend-testing",
       "path": "src/foundation/capabilities/frontend-testing/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 31,
       "warnings": []
@@ -1883,18 +1609,12 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "go-professional-usage",
       "path": "src/foundation/capabilities/go-professional-usage/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 37,
       "warnings": []
@@ -1916,19 +1636,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "i18n-timezone-money-safety",
       "path": "src/foundation/capabilities/i18n-timezone-money-safety/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -1951,16 +1662,11 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Reference Loading Policy"
       ],
       "name": "idempotency-retry-design",
       "path": "src/foundation/capabilities/idempotency-retry-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 39,
       "warnings": []
@@ -1982,17 +1688,10 @@
         "validation_obligation": 5
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "implementation-structure-design",
       "path": "src/foundation/capabilities/implementation-structure-design/SKILL.md",
-      "recommended_fixes": [
-        "Add or tighten a domain-specific Mode Matrix with evidence and skip guidance.",
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 49,
       "warnings": []
@@ -2014,19 +1713,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "indexing-query-optimization",
       "path": "src/foundation/capabilities/indexing-query-optimization/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 31,
       "warnings": []
@@ -2048,19 +1738,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "information-architecture",
       "path": "src/foundation/capabilities/information-architecture/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -2082,19 +1763,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "input-validation",
       "path": "src/foundation/capabilities/input-validation/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 35,
       "warnings": []
@@ -2117,16 +1789,11 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Reference Loading Policy"
       ],
       "name": "integration-testing",
       "path": "src/foundation/capabilities/integration-testing/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 41,
       "warnings": []
@@ -2148,19 +1815,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "interaction-state-modeling",
       "path": "src/foundation/capabilities/interaction-state-modeling/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "weak",
       "total": 29,
       "warnings": []
@@ -2183,18 +1841,12 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "java-jvm-professional-usage",
       "path": "src/foundation/capabilities/java-jvm-professional-usage/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 37,
       "warnings": []
@@ -2216,19 +1868,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "kubernetes-gateway",
       "path": "src/foundation/capabilities/kubernetes-gateway/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 35,
       "warnings": []
@@ -2251,18 +1894,12 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "language-idiom-enforcement",
       "path": "src/foundation/capabilities/language-idiom-enforcement/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 41,
       "warnings": []
@@ -2285,18 +1922,11 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "language-performance-safety",
       "path": "src/foundation/capabilities/language-performance-safety/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 39,
       "warnings": []
@@ -2318,19 +1948,10 @@
         "validation_obligation": 0
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "language-runtime-selection",
       "path": "src/foundation/capabilities/language-runtime-selection/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 37,
       "warnings": []
@@ -2353,18 +1974,11 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "language-testing-strategy",
       "path": "src/foundation/capabilities/language-testing-strategy/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 43,
       "warnings": []
@@ -2386,19 +2000,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "layered-architecture-design",
       "path": "src/foundation/capabilities/layered-architecture-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -2420,15 +2025,10 @@
         "validation_obligation": 4
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers"
-      ],
+      "likely_missing_sections": [],
       "name": "logging-error-handling",
       "path": "src/foundation/capabilities/logging-error-handling/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 44,
       "warnings": []
@@ -2450,15 +2050,10 @@
         "validation_obligation": 3
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers"
-      ],
+      "likely_missing_sections": [],
       "name": "message-queue-design",
       "path": "src/foundation/capabilities/message-queue-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 43,
       "warnings": []
@@ -2480,19 +2075,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "microservice-splitting",
       "path": "src/foundation/capabilities/microservice-splitting/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 35,
       "warnings": []
@@ -2514,19 +2100,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "module-boundary-design",
       "path": "src/foundation/capabilities/module-boundary-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 40,
       "warnings": []
@@ -2548,19 +2125,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "non-goal-boundary-definition",
       "path": "src/foundation/capabilities/non-goal-boundary-definition/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -2582,19 +2150,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "nosql-database",
       "path": "src/foundation/capabilities/nosql-database/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 32,
       "warnings": []
@@ -2616,16 +2175,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers"
-      ],
+      "likely_missing_sections": [],
       "name": "observability",
       "path": "src/foundation/capabilities/observability/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 40,
       "warnings": []
@@ -2647,19 +2200,10 @@
         "validation_obligation": 3
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "package-dependency-management",
       "path": "src/foundation/capabilities/package-dependency-management/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 39,
       "warnings": []
@@ -2681,19 +2225,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "page-component-decomposition",
       "path": "src/foundation/capabilities/page-component-decomposition/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 32,
       "warnings": []
@@ -2715,19 +2250,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "performance-budgeting",
       "path": "src/foundation/capabilities/performance-budgeting/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 33,
       "warnings": []
@@ -2749,19 +2275,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "permission-boundary-modeling",
       "path": "src/foundation/capabilities/permission-boundary-modeling/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 33,
       "warnings": []
@@ -2783,19 +2300,10 @@
         "validation_obligation": 5
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "profiling",
       "path": "src/foundation/capabilities/profiling/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 38,
       "warnings": []
@@ -2817,19 +2325,10 @@
         "validation_obligation": 3
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "project-initialization",
       "path": "src/foundation/capabilities/project-initialization/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 38,
       "warnings": []
@@ -2851,19 +2350,10 @@
         "validation_obligation": 0
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "prototype-description",
       "path": "src/foundation/capabilities/prototype-description/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "weak",
       "total": 27,
       "warnings": []
@@ -2886,18 +2376,12 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "python-professional-usage",
       "path": "src/foundation/capabilities/python-professional-usage/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 42,
       "warnings": []
@@ -2919,16 +2403,10 @@
         "validation_obligation": 5
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers"
-      ],
+      "likely_missing_sections": [],
       "name": "refactoring",
       "path": "src/foundation/capabilities/refactoring/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 45,
       "warnings": []
@@ -2951,18 +2429,12 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "regression-testing",
       "path": "src/foundation/capabilities/regression-testing/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 39,
       "warnings": []
@@ -2985,16 +2457,11 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Reference Loading Policy"
       ],
       "name": "relational-database",
       "path": "src/foundation/capabilities/relational-database/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 40,
       "warnings": []
@@ -3016,15 +2483,10 @@
         "validation_obligation": 4
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers"
-      ],
+      "likely_missing_sections": [],
       "name": "release-rollback",
       "path": "src/foundation/capabilities/release-rollback/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 43,
       "warnings": []
@@ -3046,19 +2508,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "repository-persistence",
       "path": "src/foundation/capabilities/repository-persistence/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 31,
       "warnings": []
@@ -3080,19 +2533,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "requirement-clarification",
       "path": "src/foundation/capabilities/requirement-clarification/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 35,
       "warnings": []
@@ -3114,19 +2558,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "requirement-structuring",
       "path": "src/foundation/capabilities/requirement-structuring/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 36,
       "warnings": []
@@ -3148,19 +2583,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "routing-navigation-design",
       "path": "src/foundation/capabilities/routing-navigation-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 33,
       "warnings": []
@@ -3183,18 +2609,12 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "rust-professional-usage",
       "path": "src/foundation/capabilities/rust-professional-usage/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 37,
       "warnings": []
@@ -3216,19 +2636,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "scenario-decomposition",
       "path": "src/foundation/capabilities/scenario-decomposition/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 33,
       "warnings": []
@@ -3250,19 +2661,10 @@
         "validation_obligation": 4
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "sdk-library-contract-design",
       "path": "src/foundation/capabilities/sdk-library-contract-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 36,
       "warnings": []
@@ -3284,19 +2686,10 @@
         "validation_obligation": 0
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "search-analytics-design",
       "path": "src/foundation/capabilities/search-analytics-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 33,
       "warnings": []
@@ -3318,19 +2711,10 @@
         "validation_obligation": 3
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "secret-configuration-security",
       "path": "src/foundation/capabilities/secret-configuration-security/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 36,
       "warnings": []
@@ -3352,19 +2736,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "service-business-logic",
       "path": "src/foundation/capabilities/service-business-logic/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -3387,18 +2762,12 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "shell-cli-professional-usage",
       "path": "src/foundation/capabilities/shell-cli-professional-usage/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 42,
       "warnings": []
@@ -3421,20 +2790,25 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers"
+        "Stage Fit"
       ],
       "name": "skill-authoring-expert",
       "path": "src/foundation/capabilities/skill-authoring-expert/SKILL.md",
       "recommended_fixes": [
-        "Add or tighten a domain-specific Mode Matrix with evidence and skip guidance.",
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
         "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate."
       ],
       "status": "needs-review",
       "total": 43,
       "warnings": [
-        "Evidence Contract weak: evidence_contract_strength score 2/5 needs review"
+        {
+          "item": "skill-authoring-expert",
+          "item_kind": "foundation-capability",
+          "message": "Evidence Contract weak: evidence_contract_strength score 2/5 needs review",
+          "reason": "Enhanced foundation capabilities amplify into multiple professional skills; the warning needs release review but is not automatically blocking unless a required gate is missing.",
+          "release_relevance": "release-review-required",
+          "scope": "enhanced-foundation-capability",
+          "type": "weak_evidence_contract_strength"
+        }
       ]
     },
     {
@@ -3454,18 +2828,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "solution-optimality-evaluation",
       "path": "src/foundation/capabilities/solution-optimality-evaluation/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 43,
       "warnings": []
@@ -3488,18 +2854,12 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "sql-professional-usage",
       "path": "src/foundation/capabilities/sql-professional-usage/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 37,
       "warnings": []
@@ -3521,19 +2881,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "state-machine-modeling",
       "path": "src/foundation/capabilities/state-machine-modeling/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 32,
       "warnings": []
@@ -3555,19 +2906,10 @@
         "validation_obligation": 0
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "state-management-design",
       "path": "src/foundation/capabilities/state-management-design/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -3589,19 +2931,10 @@
         "validation_obligation": 3
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "task-dag-decomposition",
       "path": "src/foundation/capabilities/task-dag-decomposition/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 35,
       "warnings": []
@@ -3623,19 +2956,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "technology-stack-selection",
       "path": "src/foundation/capabilities/technology-stack-selection/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 40,
       "warnings": []
@@ -3657,19 +2981,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "test-data-management",
       "path": "src/foundation/capabilities/test-data-management/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 33,
       "warnings": []
@@ -3691,15 +3006,10 @@
         "validation_obligation": 5
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers"
-      ],
+      "likely_missing_sections": [],
       "name": "test-strategy",
       "path": "src/foundation/capabilities/test-strategy/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 47,
       "warnings": []
@@ -3721,18 +3031,10 @@
         "validation_obligation": 2
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "threat-modeling",
       "path": "src/foundation/capabilities/threat-modeling/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 36,
       "warnings": []
@@ -3754,15 +3056,10 @@
         "validation_obligation": 4
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers"
-      ],
+      "likely_missing_sections": [],
       "name": "transaction-consistency",
       "path": "src/foundation/capabilities/transaction-consistency/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 44,
       "warnings": []
@@ -3785,18 +3082,12 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
         "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "typescript-professional-usage",
       "path": "src/foundation/capabilities/typescript-professional-usage/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 39,
       "warnings": []
@@ -3819,18 +3110,11 @@
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
         "Reference Loading Policy"
       ],
       "name": "unit-testing",
       "path": "src/foundation/capabilities/unit-testing/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "needs-review",
       "total": 37,
       "warnings": []
@@ -3852,19 +3136,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "use-case-modeling",
       "path": "src/foundation/capabilities/use-case-modeling/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "weak",
       "total": 29,
       "warnings": []
@@ -3886,19 +3161,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "user-flow-modeling",
       "path": "src/foundation/capabilities/user-flow-modeling/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 31,
       "warnings": []
@@ -3920,19 +3186,10 @@
         "validation_obligation": 1
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "user-role-identification",
       "path": "src/foundation/capabilities/user-role-identification/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 34,
       "warnings": []
@@ -3954,23 +3211,24 @@
         "validation_obligation": 0
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "version-compatibility",
       "path": "src/foundation/capabilities/version-compatibility/SKILL.md",
       "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.",
-        "Add targeted reference loading hints or link unreferenced skill references."
+        "Move low-frequency tables/examples into owned references and remove duplicated template prose."
       ],
       "status": "acceptable",
       "total": 30,
       "warnings": [
-        "long Markdown table in SKILL.md body (17 rows); consider moving deep table to references"
+        {
+          "item": "version-compatibility",
+          "item_kind": "foundation-capability",
+          "message": "long Markdown table in SKILL.md body (17 rows); consider moving deep table to references",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "body_bloat_exception"
+        }
       ]
     },
     {
@@ -3990,18 +3248,10 @@
         "validation_obligation": 3
       },
       "kind": "foundation-capability",
-      "likely_missing_sections": [
-        "Mode Matrix",
-        "Proactive Professional Triggers",
-        "Evidence Contract",
-        "Reference Loading Policy"
-      ],
+      "likely_missing_sections": [],
       "name": "web-security",
       "path": "src/foundation/capabilities/web-security/SKILL.md",
-      "recommended_fixes": [
-        "Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.",
-        "Add targeted reference loading hints or link unreferenced skill references."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
       "total": 40,
       "warnings": []

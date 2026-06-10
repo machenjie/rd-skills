@@ -89,6 +89,40 @@ class EvalSkillProfessionalismTests(unittest.TestCase):
             item = module._evaluate_skill(path, "professional-skill", set())
         self.assertIn("Mode Matrix", item.likely_missing_sections)
         self.assertTrue(any("missing Mode Matrix" in warning for warning in item.warnings))
+        warning = next(warning for warning in item.warnings if "missing Mode Matrix" in warning.message)
+        self.assertEqual(warning.scope, "professional-skill")
+        self.assertEqual(warning.release_relevance, "release-blocking")
+        self.assertEqual(warning.item_kind, "professional-skill")
+
+    def test_non_key_foundation_capability_does_not_require_professional_skill_sections(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write_skill(
+                Path(tmp),
+                "\n".join(
+                    [
+                        "## Mission",
+                        "Guide a focused support capability.",
+                        "## When To Use",
+                        "Use when a concrete support signal appears.",
+                        "## Do Not Use When",
+                        "Do not use for top-level routing behavior.",
+                        "## Output Contract",
+                        "Return decision scope, output evidence, and handoff notes.",
+                        "## Failure Modes",
+                        "- Missing the support boundary.",
+                        "- Treating a support capability as a runtime professional skill.",
+                        "- Handing off without evidence.",
+                        "## Quality Gate",
+                        "Passes when the output evidence and handoff are explicit.",
+                    ]
+                ),
+            )
+            item = module._evaluate_skill(path, "foundation-capability", set())
+        self.assertNotIn("Mode Matrix", item.likely_missing_sections)
+        self.assertNotIn("Proactive Professional Triggers", item.likely_missing_sections)
+        self.assertNotIn("Evidence Contract", item.likely_missing_sections)
+        self.assertNotIn("Reference Loading Policy", item.likely_missing_sections)
 
     def test_mode_matrix_without_evidence_warns(self) -> None:
         module = _load_module()

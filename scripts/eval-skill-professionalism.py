@@ -272,13 +272,30 @@ DUPLICATE_IGNORE_FRAGMENTS = (
 
 
 @dataclass
+class WarningRecord:
+    message: str
+    type: str
+    item: str
+    item_kind: str
+    scope: str
+    release_relevance: str
+    reason: str
+
+    def __contains__(self, text: object) -> bool:
+        return str(text) in self.message
+
+    def __str__(self) -> str:
+        return self.message
+
+
+@dataclass
 class SkillScore:
     path: str
     name: str
     kind: str
     total: int
     dimensions: dict[str, int]
-    warnings: list[str] = field(default_factory=list)
+    warnings: list[WarningRecord] = field(default_factory=list)
     likely_missing_sections: list[str] = field(default_factory=list)
     recommended_fixes: list[str] = field(default_factory=list)
     status: str = "weak"
@@ -312,7 +329,7 @@ class CoverageRow:
     anti_bloat_status: str
     status: str
     score: int
-    warnings: list[str] = field(default_factory=list)
+    warnings: list[WarningRecord] = field(default_factory=list)
 
 
 @dataclass
@@ -332,7 +349,13 @@ def main(argv: list[str] | None = None) -> int:
         matched_duplicate_warnings = [
             warning for warning in duplicate_warnings if warning.startswith(item.path + ":")
         ]
-        item.warnings.extend(matched_duplicate_warnings)
+        item.warnings.extend(
+            _warning_records(
+                matched_duplicate_warnings,
+                item.kind,
+                ROOT / item.path,
+            )
+        )
         if matched_duplicate_warnings:
             item.dimensions["anti_bloat_control"] = max(
                 0,
@@ -343,7 +366,12 @@ def main(argv: list[str] | None = None) -> int:
                 item.dimensions.get("professional_depth", 0) - 1,
             )
             item.total = sum(item.dimensions.values())
-            item.recommended_fixes = _recommended_fixes(item.warnings, item.dimensions)
+            item.recommended_fixes = _recommended_fixes(
+                item.warnings,
+                item.dimensions,
+                item.kind,
+                item.name,
+            )
             item.status = _status(item.total, item.warnings, item.dimensions, item.kind, item.name)
 
     report = EvalReport(
@@ -420,7 +448,7 @@ def _evaluate_skill(path: Path, kind: str, registry_names: set[str]) -> SkillSco
     try:
         metadata, _raw, body = parse_frontmatter(path)
     except ValidationProblem as exc:
-        warnings = [f"frontmatter parse failed: {exc}"]
+        warnings = _warning_records([f"frontmatter parse failed: {exc}"], kind, path)
         dimensions = {name: 0 for name in DIMENSIONS}
         return SkillScore(_rel(path), path.parent.name, kind, 0, dimensions, warnings)
 
@@ -447,12 +475,12 @@ def _evaluate_skill(path: Path, kind: str, registry_names: set[str]) -> SkillSco
             "Completion Criteria",
         )
     }
-    likely_missing_sections = _likely_missing_sections(sections)
+    likely_missing_sections = _likely_missing_sections(sections, kind, path)
     dimensions = _score_dimensions(body, sections, kind, path)
     warnings = _warnings(body, sections, kind, path, dimensions, registry_names)
     total = sum(dimensions.values())
     body_lines = len(body.splitlines())
-    recommended_fixes = _recommended_fixes(warnings, dimensions)
+    recommended_fixes = _recommended_fixes(warnings, dimensions, kind, name)
     status = _status(total, warnings, dimensions, kind, name)
     return SkillScore(
         _rel(path),
@@ -727,7 +755,7 @@ def _warnings(
     path: Path,
     dimensions: dict[str, int],
     registry_names: set[str],
-) -> list[str]:
+) -> list[WarningRecord]:
     warnings: list[str] = []
     name = path.parent.name
     total = sum(dimensions.values())
@@ -793,7 +821,131 @@ def _warnings(
     if generic_warning:
         warnings.append(generic_warning)
     warnings.extend(_reference_warnings(body, sections, path, kind))
-    return warnings
+    return _warning_records(warnings, kind, path)
+
+
+def _warning_records(messages: list[str], kind: str, path: Path) -> list[WarningRecord]:
+    return [_warning_record(message, kind, path) for message in messages if message.strip()]
+
+
+def _warning_record(message: str, kind: str, path: Path) -> WarningRecord:
+    warning_type = _warning_type(message)
+    scope = _warning_scope(kind, path)
+    release_relevance = _release_relevance(warning_type, message, scope)
+    return WarningRecord(
+        message=message,
+        type=warning_type,
+        item=path.parent.name,
+        item_kind=kind,
+        scope=scope,
+        release_relevance=release_relevance,
+        reason=_release_reason(scope, release_relevance, warning_type),
+    )
+
+
+def _warning_scope(kind: str, path: Path) -> str:
+    if _is_authoring_template_path(path):
+        return "authoring-template"
+    if kind == "professional-skill":
+        return "professional-skill"
+    name = path.parent.name
+    if name in ENHANCED_FOUNDATION_CAPABILITIES:
+        return "enhanced-foundation-capability"
+    if name in KEY_FOUNDATION_CAPABILITIES:
+        return "key-foundation-capability"
+    return "non-key-foundation-capability"
+
+
+def _release_relevance(warning_type: str, message: str, scope: str) -> str:
+    if scope == "professional-skill":
+        return "release-blocking"
+    if scope == "enhanced-foundation-capability":
+        if warning_type in {"missing_failure_modes", "missing_quality_gate"}:
+            return "release-blocking"
+        return "release-review-required"
+    if scope == "key-foundation-capability":
+        if _is_evidence_or_reference_precision_warning(message, warning_type):
+            return "release-review-required"
+        return "non-blocking-follow-up"
+    return "advisory-only"
+
+
+def _release_reason(scope: str, release_relevance: str, warning_type: str) -> str:
+    if release_relevance == "release-blocking":
+        if scope == "professional-skill":
+            return "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior."
+        return "This foundation capability warning removes a required quality or failure-mode guard from a reused release surface."
+    if release_relevance == "release-review-required":
+        if scope == "enhanced-foundation-capability":
+            return "Enhanced foundation capabilities amplify into multiple professional skills; the warning needs release review but is not automatically blocking unless a required gate is missing."
+        return "Key foundation evidence or reference precision affects downstream quality and needs explicit release review."
+    if release_relevance == "non-blocking-follow-up":
+        return "Key foundation capability advisory warning is tracked for follow-up because it does not weaken evidence or reference precision."
+    return "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release."
+
+
+def _warning_type(message: str) -> str:
+    folded = message.casefold()
+    if "frontmatter parse failed" in folded:
+        return "frontmatter_parse_failed"
+    if "total score" in folded and "below warning threshold" in folded:
+        return "total_score_below_threshold"
+    if "enhanced capability score" in folded and "below warning threshold" in folded:
+        return "enhanced_capability_score_below_threshold"
+    if " weak: " in folded and " score " in folded:
+        if "evidence_contract_strength" in folded:
+            return "weak_evidence_contract_strength"
+        if "reference_precision" in folded:
+            return "weak_reference_precision"
+        return "weak_dimension_score"
+    if "missing mode matrix" in folded:
+        return "missing_mode_matrix"
+    if "mode matrix" in folded:
+        return "mode_matrix_quality"
+    if "missing proactive professional triggers" in folded:
+        return "missing_proactive_professional_triggers"
+    if "proactive professional trigger" in folded:
+        return "proactive_trigger_quality"
+    if "evidence contract is missing" in folded:
+        return "evidence_contract_missing_term"
+    if "missing failure modes" in folded:
+        return "missing_failure_modes"
+    if "missing quality gate" in folded:
+        return "missing_quality_gate"
+    if _is_body_bloat_warning(message):
+        return "body_bloat_exception"
+    if "reference" in folded and ("hint" in folded or "linked" in folded or "governed" in folded):
+        return "reference_loading_hint"
+    if "generic best-practices" in folded:
+        return "generic_best_practices"
+    return "other"
+
+
+def _is_body_bloat_warning(message: str) -> bool:
+    folded = message.casefold()
+    return any(
+        token in folded
+        for token in (
+            "governance review limit",
+            "long markdown table",
+            "long section",
+            "repeated template",
+            "duplicate",
+            "moving deep table",
+        )
+    )
+
+
+def _is_evidence_or_reference_precision_warning(message: str, warning_type: str) -> bool:
+    if warning_type in {
+        "weak_evidence_contract_strength",
+        "weak_reference_precision",
+        "evidence_contract_missing_term",
+        "reference_loading_hint",
+    }:
+        return True
+    folded = message.casefold()
+    return "evidence_contract_strength score" in folded or "reference_precision score" in folded
 
 
 def _status(
@@ -826,18 +978,45 @@ def _status(
     return "weak"
 
 
-def _recommended_fixes(warnings: list[str], dimensions: dict[str, int]) -> list[str]:
+def _recommended_fixes(
+    warnings: list[WarningRecord],
+    dimensions: dict[str, int],
+    kind: str,
+    name: str,
+) -> list[str]:
     fixes: list[str] = []
-    joined = "\n".join(warnings).casefold()
-    if "mode matrix" in joined or dimensions.get("mode_coverage", 0) <= 2:
+    joined = "\n".join(warning.message for warning in warnings).casefold()
+    warning_types = {warning.type for warning in warnings}
+    applicable_dimensions = _applicable_warning_dimensions(kind, name)
+    if "mode matrix" in joined or (
+        "mode_coverage" in applicable_dimensions
+        and dimensions.get("mode_coverage", 0) <= 2
+    ):
         fixes.append("Add or tighten a domain-specific Mode Matrix with evidence and skip guidance.")
-    if "proactive professional triggers" in joined or dimensions.get("proactive_trigger_quality", 0) <= 2:
+    if "proactive professional triggers" in joined or (
+        "proactive_trigger_quality" in applicable_dimensions
+        and dimensions.get("proactive_trigger_quality", 0) <= 2
+    ):
         fixes.append("Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.")
-    if "output/evidence contract" in joined or dimensions.get("evidence_contract_strength", 0) <= 2:
+    if "output/evidence contract" in joined or (
+        "evidence_contract_strength" in applicable_dimensions
+        and dimensions.get("evidence_contract_strength", 0) <= 2
+    ):
         fixes.append("Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.")
-    if "reference" in joined or dimensions.get("reference_precision", 0) <= 2:
+    if "reference_loading_hint" in warning_types or (
+        "body_bloat_exception" not in warning_types
+        and "reference" in joined
+    ) or (
+        "reference_precision" in applicable_dimensions
+        and dimensions.get("reference_precision", 0) <= 2
+    ):
         fixes.append("Add targeted reference loading hints or link unreferenced skill references.")
-    if "bloat" in joined or "duplicated" in joined or dimensions.get("anti_bloat_control", 0) <= 2:
+    if (
+        "body_bloat_exception" in warning_types
+        or "bloat" in joined
+        or "duplicated" in joined
+        or dimensions.get("anti_bloat_control", 0) <= 2
+    ):
         fixes.append("Move low-frequency tables/examples into owned references and remove duplicated template prose.")
     if not fixes and warnings:
         fixes.append("Review listed warnings and add concrete evidence, owner, or skip rationale.")
@@ -1359,8 +1538,34 @@ def _extract_section(body: str, title: str) -> str:
     return ""
 
 
-def _likely_missing_sections(sections: dict[str, str]) -> list[str]:
-    return [section for section in REQUIRED_SECTIONS if not sections.get(section)]
+def _likely_missing_sections(sections: dict[str, str], kind: str, path: Path) -> list[str]:
+    return [section for section in _required_sections_for_item(kind, path, sections) if not sections.get(section)]
+
+
+def _required_sections_for_item(kind: str, path: Path, sections: dict[str, str]) -> tuple[str, ...]:
+    if kind == "professional-skill":
+        return REQUIRED_SECTIONS
+    name = path.parent.name
+    if name in ENHANCED_FOUNDATION_CAPABILITIES:
+        return (
+            "Mission",
+            "When To Use",
+            "Do Not Use When",
+            "Stage Fit",
+            "Selection Rules",
+            "Evidence Contract",
+            "Output Contract",
+            "Failure Modes",
+            "Quality Gate",
+            "Handoff",
+        )
+    required = ["Mission", "When To Use", "Do Not Use When", "Output Contract", "Failure Modes", "Quality Gate"]
+    combined_output = f"{sections.get('Output Contract', '')}\n{sections.get('Quality Gate', '')}".casefold()
+    if name in KEY_FOUNDATION_CAPABILITIES and not sections.get("Evidence Contract") and "evidence" not in combined_output:
+        required.append("Evidence Contract")
+    if name in KEY_FOUNDATION_CAPABILITIES and _reference_files(path) and not sections.get("Reference Loading Policy"):
+        required.append("Reference Loading Policy")
+    return tuple(required)
 
 
 def _load_registry_names() -> set[str]:
@@ -1635,7 +1840,11 @@ def _render_markdown(report: EvalReport) -> str:
         if item.likely_missing_sections:
             lines.append("- likely missing sections: " + ", ".join(item.likely_missing_sections))
         for warning in item.warnings:
-            lines.append(f"- {warning}")
+            lines.append(
+                f"- message: {warning.message} | type: {warning.type} | "
+                f"scope: {warning.scope} | release_relevance: {warning.release_relevance} | "
+                f"reason: {warning.reason}"
+            )
         if item.recommended_fixes:
             lines.append("")
             lines.append("Recommended fixes:")
