@@ -65,6 +65,9 @@ addition to the human-readable routing result. The manifest is what hooks,
 `selected_skills`, `selected_capabilities`, `selected_domain_extensions`,
 `required_references`, `required_quality_gates`, `skipped_quality_gates` (each
 with a reason), `blocking_questions`, `assumptions`, and `handoff_target`.
+The Stop Closure Gate counts a route manifest as present only when it can parse
+non-empty `selected_skills`, `selected_capabilities`, `required_references`, and
+`required_quality_gates`; a bare `changeforge_route` string is not evidence.
 
 The manifest does not replace the human-readable explanation and does not
 authorize any tool to mutate skill rules. It exists so closure completeness can
@@ -74,8 +77,9 @@ be checked mechanically.
 
 The Post-Edit Structure Gate, Risk Surface Gate, and Stop Closure Gate write
 telemetry in addition to their warning-only reminders. The Stop Closure Gate
-records completeness facts only: whether a `changeforge_route` manifest, changed
-files, validation evidence, residual risk, and required references were present.
+records completeness facts only: whether a complete parseable
+`changeforge_route` manifest, changed files, validation evidence, residual risk,
+and required references were present.
 
 Hooks still cannot replace `change-forge-router`. They never call a model, never
 reach the network, never modify project source, and never load every compiled

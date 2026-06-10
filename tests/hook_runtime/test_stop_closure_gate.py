@@ -264,7 +264,18 @@ class StopClosureGateTests(unittest.TestCase):
             "last_assistant_message": (
                 "I used the ChangeForge skill path. Changed files are listed. "
                 "Validation: ran pytest -q, 12 passed, exit 0. Residual risk is none. "
-                "Next steps: deploy."
+                "Next steps: deploy.\n\n"
+                "```yaml\n"
+                "changeforge_route:\n"
+                "  selected_skills:\n"
+                "    - backend-change-builder\n"
+                "  selected_capabilities:\n"
+                "    - implementation-structure-design\n"
+                "  required_references:\n"
+                "    - references/routing-rules.md\n"
+                "  required_quality_gates:\n"
+                "    - implementation gate\n"
+                "```\n"
             ),
         }
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
@@ -275,6 +286,26 @@ class StopClosureGateTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertNotEqual(payload.get("decision"), "block")
         self.assertIn("systemMessage", payload)
+
+    def test_block_mode_blocks_when_route_manifest_missing_despite_keywords(self) -> None:
+        event = {
+            "hook_event_name": "Stop",
+            "runtime": "codex",
+            "stop_hook_active": False,
+            "last_assistant_message": (
+                "I used the ChangeForge skill path. Changed files are listed. "
+                "Validation: ran pytest -q, 12 passed, exit 0. Residual risk is none. "
+                "Next steps: deploy. The string changeforge_route appears in prose."
+            ),
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, runtime="codex", changed_paths=["a.go"])
+            result = run_stop(event, cwd, cache, mode="block", agent="codex")
+        self.assertEqual(result.returncode, 0)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["decision"], "block")
+        self.assertIn("route_manifest", payload["reason"])
 
     def test_block_mode_preserves_state_when_blocking(self) -> None:
         # When block mode fires (evidence missing), state must NOT be cleared so
@@ -354,11 +385,36 @@ class StopClosureGateTests(unittest.TestCase):
             result = run_stop(event, cwd, cache)
         self.assertEqual(result.returncode, 0)
         self.assertIn("MISSING", result.stdout)
-        self.assertIn("no changeforge_route manifest", result.stdout)
+        self.assertIn("no complete changeforge_route manifest", result.stdout)
 
     def test_closure_reminder_omits_missing_flag_when_manifest_present(self) -> None:
         manifest_text = (
             "Change prepared. Tests run: pytest -q passed.\n\n"
+            "```yaml\n"
+            "changeforge_route:\n"
+            "  selected_skills:\n"
+            "    - backend-change-builder\n"
+            "  selected_capabilities:\n"
+            "    - implementation-structure-design\n"
+            "  required_references:\n"
+            "    - references/routing-rules.md\n"
+            "  required_quality_gates:\n"
+            "    - implementation gate\n"
+            "```\n"
+        )
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": manifest_text}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, changed_paths=["a.py"])
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("no changeforge_route manifest", result.stdout)
+        self.assertNotIn("completion language but shows no validation", result.stdout)
+
+    def test_closure_reminder_flags_incomplete_route_manifest(self) -> None:
+        manifest_text = (
+            "Change prepared. Changed files and risk are noted. "
+            "Validation: ran pytest -q, 12 passed. Next steps listed.\n\n"
             "```yaml\n"
             "changeforge_route:\n"
             "  selected_skills:\n"
@@ -371,8 +427,8 @@ class StopClosureGateTests(unittest.TestCase):
             seed_state(cwd, cache, changed_paths=["a.py"])
             result = run_stop(event, cwd, cache)
         self.assertEqual(result.returncode, 0)
-        self.assertNotIn("no changeforge_route manifest", result.stdout)
-        self.assertNotIn("completion language but shows no validation", result.stdout)
+        self.assertIn("no complete changeforge_route manifest", result.stdout)
+        self.assertIn("route_manifest", result.stdout)
 
     def test_completion_language_without_validation_is_flagged(self) -> None:
         # "Done." with a route manifest but no validation evidence is an

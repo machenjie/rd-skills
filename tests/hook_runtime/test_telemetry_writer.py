@@ -229,6 +229,27 @@ class TelemetryWriterTests(unittest.TestCase):
         self.assertEqual(result["selected_capabilities"], [])
         self.assertEqual(result["current_stage"], "")
 
+    def test_extract_manifest_fields_route_token_is_not_manifest(self) -> None:
+        common = load_common()
+        result = common.extract_manifest_fields(
+            "The handoff mentions changeforge_route but emits no YAML block."
+        )
+        self.assertFalse(result["route_present"])
+
+    def test_extract_manifest_fields_requires_route_contract_fields(self) -> None:
+        common = load_common()
+        text = (
+            "```yaml\n"
+            "changeforge_route:\n"
+            "  selected_skills:\n"
+            "    - backend-change-builder\n"
+            "```\n"
+        )
+        result = common.extract_manifest_fields(text)
+        self.assertFalse(result["route_present"])
+        self.assertEqual(result["selected_skills"], ["backend-change-builder"])
+        self.assertEqual(result["selected_capabilities"], [])
+
     def test_extract_manifest_fields_route_not_triggered_by_stage_only(self) -> None:
         common = load_common()
         text = "```yaml\nchangeforge_stage_route:\n  current_stage: testing\n```\n"

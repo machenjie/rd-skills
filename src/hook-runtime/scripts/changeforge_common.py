@@ -666,6 +666,12 @@ _MANIFEST_LIST_KEYS = (
     "required_references",
     "required_quality_gates",
 )
+_REQUIRED_ROUTE_MANIFEST_FIELDS = (
+    "selected_skills",
+    "selected_capabilities",
+    "required_references",
+    "required_quality_gates",
+)
 
 
 def extract_manifest_fields(text: str) -> dict:
@@ -689,7 +695,6 @@ def extract_manifest_fields(text: str) -> dict:
     if not isinstance(text, str) or not text:
         return result
     try:
-        result["route_present"] = ROUTE_MANIFEST_KEY in text
         result["stage_present"] = STAGE_MANIFEST_KEY in text
         route_block = _manifest_block(text, ROUTE_MANIFEST_KEY)
         stage_at = route_block.find(f"{STAGE_MANIFEST_KEY}:")
@@ -701,6 +706,9 @@ def extract_manifest_fields(text: str) -> dict:
             for key in _MANIFEST_LIST_KEYS:
                 result[key] = _manifest_list_field(route_block, key)
             result["skipped_quality_gates"] = _manifest_skipped_gates(route_block)
+            result["route_present"] = all(
+                result.get(key) for key in _REQUIRED_ROUTE_MANIFEST_FIELDS
+            )
         stage_block = _manifest_block(text, STAGE_MANIFEST_KEY)
         if stage_block:
             result["current_stage"] = _manifest_scalar_field(stage_block, "current_stage")

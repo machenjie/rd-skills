@@ -45,9 +45,12 @@ In addition to their reminders, all three gates append a small telemetry record
 to the user cache after each watched event. Telemetry is a runtime fact log used
 for offline review; it is never written into project source or `dist/`, and it
 records no prompts, environment variables, secrets, or full command output. The
-Stop Closure Gate records closure-completeness facts only: whether a
-`changeforge_route` manifest, changed files, validation evidence, residual risk,
-and required references were present.
+Stop Closure Gate records closure-completeness facts only: whether a complete
+parseable `changeforge_route` manifest, changed files, validation evidence,
+residual risk, and required references were present. A prose mention of
+`changeforge_route`, or a YAML block missing `selected_skills`,
+`selected_capabilities`, `required_references`, or `required_quality_gates`, is
+not counted as route-manifest evidence.
 
 Telemetry is enabled by default and can be disabled with `CHANGEFORGE_TELEMETRY=off`.
 See [TELEMETRY.md](TELEMETRY.md) for the data model, the offline review tool, and

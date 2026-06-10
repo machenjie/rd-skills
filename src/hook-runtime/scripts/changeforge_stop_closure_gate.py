@@ -204,7 +204,7 @@ def main() -> int:
         if mode == "monitor":
             clear_state(repo, runtime)
             return 0
-        missing = _missing_keyword_groups(final_text, state) if final_text else []
+        missing = _missing_keyword_groups(final_text, state, manifest) if final_text else []
         stop_hook_active = bool(event.get("stop_hook_active") or event.get("stopHookActive"))
         should_block = mode == "block" and bool(missing) and not stop_hook_active
         message = _closure_message(state, final_text, manifest)
@@ -254,7 +254,7 @@ def _closure_signals(final_text: str, state: dict, manifest: dict) -> dict[str, 
         return any(keyword.casefold() in lowered for keyword in CLOSURE_KEYWORDS[group])
 
     return {
-        "route_manifest": bool(manifest.get("route_present")) or "changeforge_route" in lowered,
+        "route_manifest": bool(manifest.get("route_present")),
         "validation": _has_validation_evidence(final_text, state),
         "risk": has("risk"),
         "references": bool(manifest.get("required_references")) or "reference" in lowered,
@@ -281,10 +281,8 @@ def _stop_findings(state: dict) -> dict[str, list[str]]:
 
 
 def _closure_message(state: dict, final_text: str, manifest: dict | None = None) -> str:
-    missing = _missing_keyword_groups(final_text, state) if final_text else []
-    route_present = bool(manifest and manifest.get("route_present")) or (
-        "changeforge_route" in final_text.casefold() if final_text else False
-    )
+    missing = _missing_keyword_groups(final_text, state, manifest) if final_text else []
+    route_present = bool(manifest and manifest.get("route_present"))
     details: list[str] = []
     if state.get("structure_findings"):
         details.append("- structure gate fired")
@@ -320,8 +318,10 @@ def _closure_message(state: dict, final_text: str, manifest: dict | None = None)
     headline = "ChangeForge Closure Gate reminder."
     if not route_present:
         headline += (
-            " MISSING: this handoff has no changeforge_route manifest. Real changes"
-            " were observed but the route was not emitted in machine-readable form."
+            " MISSING: this handoff has no complete changeforge_route manifest."
+            " Real changes were observed but the route was not emitted in"
+            " machine-readable form with selected_skills, selected_capabilities,"
+            " required_references, and required_quality_gates."
             " Emit the changeforge_route manifest (and changeforge_stage_route for"
             " non-trivial engineering work) so the route is reviewable, not only"
             " described in prose."
@@ -423,9 +423,16 @@ def _final_text(event: dict) -> str:
     return ""
 
 
-def _missing_keyword_groups(text: str, state: dict) -> list[str]:
+def _missing_keyword_groups(
+    text: str,
+    state: dict,
+    manifest: dict | None = None,
+) -> list[str]:
     lowered = text.casefold()
     missing: list[str] = []
+    parsed_manifest = manifest if manifest is not None else extract_manifest_fields(text)
+    if not parsed_manifest.get("route_present"):
+        missing.append("route_manifest")
     for group, keywords in CLOSURE_KEYWORDS.items():
         if group == "validation":
             if not _has_validation_evidence(text, state):

@@ -164,7 +164,7 @@ Suggested-action distribution:
 | `degradation-circuit-breaking` | 210 | 2909 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
 | `domain-event-modeling` | 208 | 2713 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
 | `performance-budgeting` | 208 | 3069 | 100 | 82 | 100 | 14 | KEEP_AS_IS | - | low |
-| `engineering-stage-professionalism` | 207 | 2024 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `engineering-stage-professionalism` | 207 | 2027 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `containerization` | 205 | 2889 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `data-migration-design` | 205 | 2873 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `e2e-testing` | 205 | 2565 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
@@ -286,18 +286,18 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 
 | Files | Excerpt |
 | --- | --- |
-| 19 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
-| 19 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
 | 19 | do not load every reference by default. treat references as targeted support selected by t |
-| 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
+| 19 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
 | 19 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 18 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 19 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
+| 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
 | 18 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
+| 18 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 9 | these triggers are hidden-risk escalators, not ordinary checklist items. |
-| 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
 | 8 | **accepted exceptions** with owner / scope / expiration |
+| 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
 | 7 | **residual risk**: untested runtime behavior, owner, and next gate. |
 | 7 | **block/pass decision** with required conditions for approval. |
 

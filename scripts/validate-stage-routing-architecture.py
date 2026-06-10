@@ -659,6 +659,108 @@ def _check_routing_rules(errors: list[str]) -> None:
             )
 
 
+def _check_risk_trigger_rules(errors: list[str]) -> None:
+    try:
+        data = load_yaml_file(ROUTING_RULES_REGISTRY)
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+        return
+    if not isinstance(data, dict):
+        errors.append(f"{relpath(ROOT, ROUTING_RULES_REGISTRY)}: registry must be a mapping")
+        return
+
+    rel = relpath(ROOT, ROUTING_RULES_REGISTRY)
+    triggers = data.get("risk_escalation_triggers")
+    rules = data.get("risk_trigger_rules")
+    if not isinstance(triggers, list) or not triggers:
+        errors.append(f"{rel}: missing non-empty risk_escalation_triggers list")
+        return
+    if not isinstance(rules, list) or not rules:
+        errors.append(f"{rel}: missing non-empty risk_trigger_rules list")
+        return
+
+    trigger_names = {
+        trigger.strip().casefold(): trigger.strip()
+        for trigger in triggers
+        if isinstance(trigger, str) and trigger.strip()
+    }
+    rule_names: dict[str, str] = {}
+    duplicate_rules: set[str] = set()
+    for entry in rules:
+        if not isinstance(entry, dict):
+            errors.append(f"{rel}: risk_trigger_rules entries must be mappings")
+            continue
+        trigger = entry.get("trigger")
+        if not isinstance(trigger, str) or not trigger.strip():
+            errors.append(f"{rel}: risk_trigger_rules entries must include trigger")
+            continue
+        normalized = trigger.strip().casefold()
+        if normalized in rule_names:
+            duplicate_rules.add(trigger.strip())
+        rule_names[normalized] = trigger.strip()
+
+    for trigger in trigger_names:
+        if trigger not in rule_names:
+            errors.append(
+                f"{rel}: risk_escalation_triggers entry "
+                f"'{trigger_names[trigger]}' has no matching risk_trigger_rules entry"
+            )
+    for trigger in rule_names:
+        if trigger not in trigger_names:
+            errors.append(
+                f"{rel}: risk_trigger_rules trigger "
+                f"'{rule_names[trigger]}' is not declared in risk_escalation_triggers"
+            )
+    for trigger in sorted(duplicate_rules):
+        errors.append(f"{rel}: duplicate risk_trigger_rules trigger '{trigger}'")
+
+    skill_names = _registry_names(SKILLS_REGISTRY, "skills", ("name", "skill", "id"))
+    capability_names = _registry_names(
+        CAPABILITIES_REGISTRY,
+        "capabilities",
+        ("name", "changeforge_capability_id", "id"),
+    )
+    extension_names = _registry_names(
+        DOMAIN_EXTENSIONS_REGISTRY,
+        "domain_extensions",
+        ("name", "domain_extension", "id"),
+    )
+    quality_gates = {
+        item.strip().casefold()
+        for item in data.get("quality_gates", []) or []
+        if isinstance(item, str) and item.strip()
+    }
+    reference_fields = (
+        ("required_skills", skill_names, "skill"),
+        ("required_capabilities", capability_names, "capability"),
+        ("required_domain_extensions", extension_names, "domain extension"),
+        ("required_quality_gates", quality_gates, "quality gate"),
+    )
+    for entry in rules:
+        if not isinstance(entry, dict):
+            continue
+        trigger = entry.get("trigger")
+        if not isinstance(trigger, str) or not trigger.strip():
+            continue
+        for field, allowed, label in reference_fields:
+            value = entry.get(field)
+            if value is None:
+                continue
+            if not isinstance(value, list):
+                errors.append(
+                    f"{rel}: risk_trigger_rules trigger '{trigger}' field "
+                    f"{field} must be a list"
+                )
+                continue
+            for item in _string_list(value):
+                lookup = item.casefold() if field == "required_quality_gates" else item
+                if lookup not in allowed:
+                    errors.append(
+                        f"{rel}: risk_trigger_rules trigger '{trigger}' references "
+                        f"unknown {label} '{item}' in {field}"
+                    )
+
+
 def _check_no_language_deep_copy(errors: list[str]) -> None:
     targets = (
         ROUTER_SKILL,
@@ -776,6 +878,7 @@ def main() -> int:
     _check_capability_registered(STAGE_CAPABILITY, errors)
     _check_router_stage_contract(errors)
     _check_routing_rules(errors)
+    _check_risk_trigger_rules(errors)
     _check_no_language_deep_copy(errors)
     _check_matrix_not_duplicated(errors)
     _check_profile_count_logic(errors)
