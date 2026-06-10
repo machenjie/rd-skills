@@ -1,0 +1,71 @@
+id: queue-idempotency-raw-output
+description: Raw output for queue idempotency review with natural language evidence.
+prompt: |
+  Review a fulfillment queue consumer with redelivery and missing DLQ handling.
+expected:
+  selected_skills:
+    - backend-change-builder
+    - data-middleware-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  selected_capabilities:
+    - idempotency-retry-design
+    - message-queue-design
+    - async-job-design
+    - observability
+    - agent-execution-discipline
+    - regression-testing
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/42-idempotency-retry-design.md
+  required_quality_gates:
+    - reliability gate
+    - test gate
+  required_professional_obligations:
+    - idempotency key and durable write boundary
+    - duplicate delivery regression test
+    - DLQ and replay path inspected
+    - "residual risk: broker ordering not simulated"
+  forbidden_behaviors:
+    - assume queue delivery is once only
+    - skip replay path
+actual:
+  raw_output: |
+    Quick note: the provider SDK is not the main risk here; redelivery is.
+
+    ```yaml
+    changeforge_route:
+      selected_skills:
+        - backend-change-builder
+        - data-middleware-change-builder
+        - reliability-observability-gate
+        - quality-test-gate
+      selected_capabilities:
+        - idempotency-retry-design
+        - message-queue-design
+        - async-job-design
+        - observability
+        - agent-execution-discipline
+        - regression-testing
+      required_references:
+        - references/routing-rules.md
+        - references/skill-registry.md
+        - references/capability-index.md
+        - references/domain-extension-index.md
+        - references/capabilities/42-idempotency-retry-design.md
+      required_quality_gates:
+        - reliability gate
+        - test gate
+    ```
+
+    Boundaries inspected: consumer handler, durable write boundary, ack/offset boundary, DLQ and replay path inspected.
+    Validation evidence: idempotency key and durable write boundary; duplicate delivery regression test.
+    Residual risk: broker ordering not simulated.
+    Next gate: reliability gate verifies queue lag and replay runbook.
+review:
+  human_review_required: true
+  promotion_status: candidate
+  notes: Candidate raw-output sample for queue behavior.

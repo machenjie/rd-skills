@@ -16,6 +16,10 @@ expected:
     - shared utility pollution risk
     - business logic in shared utils
     - change locality violation
+  hidden_risk_phrases:
+    - business logic pollution in shared/common/utils
+    - unclear owner for tenant and invoice rules
+    - hidden behavior change during refactor
   skills:
     - architecture-impact-reviewer
     - quality-test-gate
@@ -49,3 +53,5 @@ forbidden:
     - delivery gate
 notes: |
   The hidden risk is boundary pollution and behavior preservation, not release.
+  Benchmark risks covered: business logic pollution in shared/common/utils;
+  unclear owner for tenant and invoice rules; hidden behavior change during refactor.

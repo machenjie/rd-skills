@@ -43,6 +43,7 @@ L1_OVER_ROUTING_SKILLS = {
 STOPWORDS = {
     "about",
     "after",
+    "auth",
     "before",
     "behavior",
     "builder",
@@ -73,6 +74,48 @@ STOPWORDS = {
     "with",
     "without",
 }
+
+GENERIC_MATCH_TOKENS = STOPWORDS | {
+    "action",
+    "agent",
+    "capability",
+    "capabilities",
+    "design",
+    "fix",
+    "gate",
+    "review",
+    "route",
+    "skill",
+    "skills",
+}
+
+RISK_TOKENS = {
+    "backlog",
+    "break",
+    "breakage",
+    "collision",
+    "corruption",
+    "crash",
+    "deadlock",
+    "duplicate",
+    "exfiltration",
+    "forged",
+    "idor",
+    "inconsistent",
+    "leak",
+    "missing",
+    "outage",
+    "poison",
+    "replay",
+    "rollback",
+    "stale",
+    "storm",
+    "unbounded",
+    "unrecoverable",
+    "unverified",
+}
+
+ACRONYM_RISK_TOKENS = {"csrf", "cve", "dlq", "idor", "pii", "rce", "sqli", "slo", "ssrf", "xss"}
 
 
 @dataclass
@@ -112,6 +155,13 @@ class CoverageReport:
     benchmark_cases_checked: int
     hidden_risks_checked: int
     hidden_risks_covered: int
+    strong_matches: int
+    weak_matches: int
+    matched_by_expected_route_only: int
+    needs_manual_review: int
+    hidden_risks_with_weak_matches: int
+    hidden_risks_matched_by_expected_route_only: int
+    hidden_risks_needing_manual_review: int
     l1_anti_over_routing_count: int
     findings: list[Finding]
     benchmark_risk_coverage: list[dict[str, Any]]
@@ -135,6 +185,13 @@ def main(argv: list[str] | None = None) -> int:
             benchmark_cases_checked=0,
             hidden_risks_checked=0,
             hidden_risks_covered=0,
+            strong_matches=0,
+            weak_matches=0,
+            matched_by_expected_route_only=0,
+            needs_manual_review=0,
+            hidden_risks_with_weak_matches=0,
+            hidden_risks_matched_by_expected_route_only=0,
+            hidden_risks_needing_manual_review=0,
             l1_anti_over_routing_count=0,
             findings=[finding],
             benchmark_risk_coverage=[],
@@ -188,6 +245,10 @@ def validate(*, routing_dir: Path, benchmarks_dir: Path, baseline_path: Path) ->
         routing_cases,
         findings,
     )
+    weak_count = sum(1 for row in coverage_rows if row.get("weak_matches"))
+    route_only_count = sum(1 for row in coverage_rows if row.get("matched_by_expected_route_only"))
+    manual_review_count = sum(1 for row in coverage_rows if row.get("needs_manual_review"))
+    strong_count = sum(1 for row in coverage_rows if row.get("strong_matches"))
     status = "fail" if findings else "pass"
     return CoverageReport(
         generated_at=_now(),
@@ -196,6 +257,13 @@ def validate(*, routing_dir: Path, benchmarks_dir: Path, baseline_path: Path) ->
         benchmark_cases_checked=len(benchmark_cases),
         hidden_risks_checked=checked,
         hidden_risks_covered=covered,
+        strong_matches=strong_count,
+        weak_matches=weak_count,
+        matched_by_expected_route_only=route_only_count,
+        needs_manual_review=manual_review_count,
+        hidden_risks_with_weak_matches=weak_count,
+        hidden_risks_matched_by_expected_route_only=route_only_count,
+        hidden_risks_needing_manual_review=manual_review_count,
         l1_anti_over_routing_count=l1_count,
         findings=findings,
         benchmark_risk_coverage=coverage_rows,
@@ -254,7 +322,8 @@ def _load_routing_cases(routing_dir: Path) -> list[RoutingCase]:
             forbidden = {}
         case_id = _string(data.get("id") or path.stem)
         text = _case_text(data)
-        risk_text = _top_case_text(data, expected)
+        hidden_risk_phrases = _string_list(expected.get("hidden_risk_phrases"))
+        risk_text = f"{_top_case_text(data, expected)} {' '.join(hidden_risk_phrases)}"
         cases.append(
             RoutingCase(
                 case_id=case_id,
@@ -355,12 +424,12 @@ def _check_high_risk_gates(case: RoutingCase, findings: list[Finding]) -> None:
     skill_set = set(case.skills)
     required: list[tuple[str, str, str, tuple[str, ...]]] = [
         ("security", "security-privacy-gate", "security gate", ("auth", "authorization", "permission", "pii", "user data", "webhook", "secret", "public exposure", "security", "saml", "wallet", "private key")),
-        ("reliability", "reliability-observability-gate", "reliability gate", ("incident", "outage", "latency", "lag", "retry", "queue", "cache stampede", "slo", "production writes")),
+        ("reliability", "reliability-observability-gate", "reliability gate", ("incident", "outage", "latency", "lag", "retry storm", "queue", "cache stampede", "slo", "production writes")),
         ("delivery", "delivery-release-gate", "delivery gate", ("deploy", "release", "migration", "rollback", "production deployment", "kubernetes", "terraform")),
-        ("documentation", "change-documentation-gate", "documentation gate", ("compliance", "audit", "postmortem", "customer update", "release note", "documentation")),
+        ("documentation", "change-documentation-gate", "documentation gate", ("compliance", "audit evidence", "postmortem", "customer update", "release note", "documentation")),
     ]
     for label, skill, gate, keywords in required:
-        if any(keyword in text for keyword in keywords):
+        if any(_contains_keyword_phrase(text, keyword) for keyword in keywords):
             if skill not in skill_set and gate not in gate_text:
                 findings.append(
                     Finding(
@@ -369,6 +438,13 @@ def _check_high_risk_gates(case: RoutingCase, findings: list[Finding]) -> None:
                         f"high-risk routing case mentions {label} risk but lacks {skill} or {gate}",
                     )
                 )
+
+
+def _contains_keyword_phrase(text: str, keyword: str) -> bool:
+    folded_keyword = keyword.casefold()
+    if " " in folded_keyword:
+        return folded_keyword in text
+    return bool(re.search(rf"(?<![a-z0-9]){re.escape(folded_keyword)}(?![a-z0-9])", text))
 
 
 def _check_benchmark_hidden_risk_coverage(
@@ -386,13 +462,24 @@ def _check_benchmark_hidden_risk_coverage(
         expected_capabilities = _string_list(expected.get("expected_capabilities"))
         for risk in hidden_risks:
             checked += 1
-            matches = [
-                case.case_id
-                for case in routing_cases
-                if _risk_matches_case(risk, case)
-                or _benchmark_route_matches_expected(expected_skills, expected_capabilities, case)
-            ]
-            is_covered = bool(matches) or bool(skip_reason)
+            strong_matches: list[str] = []
+            weak_matches: list[str] = []
+            expected_route_only_matches: list[str] = []
+            for case in routing_cases:
+                strength = _risk_match_strength(risk, case)
+                if strength == "strong":
+                    strong_matches.append(case.case_id)
+                elif strength == "weak":
+                    weak_matches.append(case.case_id)
+                if _benchmark_route_matches_expected(
+                    risk,
+                    expected_skills,
+                    expected_capabilities,
+                    case,
+                ) and strength != "strong":
+                    expected_route_only_matches.append(case.case_id)
+            is_covered = bool(strong_matches) or bool(skip_reason)
+            needs_manual_review = not is_covered
             if is_covered:
                 covered += 1
             else:
@@ -408,7 +495,11 @@ def _check_benchmark_hidden_risk_coverage(
                     "benchmark": str(path.parent.relative_to(ROOT)) if path.parent.is_relative_to(ROOT) else str(path.parent),
                     "hidden_risk": risk,
                     "covered": is_covered,
-                    "routing_cases": matches,
+                    "strong_matches": strong_matches,
+                    "weak_matches": weak_matches,
+                    "matched_by_expected_route_only": expected_route_only_matches,
+                    "needs_manual_review": needs_manual_review,
+                    "routing_cases": strong_matches,
                     "routing_not_required_reason": skip_reason,
                 }
             )
@@ -416,6 +507,7 @@ def _check_benchmark_hidden_risk_coverage(
 
 
 def _benchmark_route_matches_expected(
+    risk: str,
     expected_skills: list[str],
     expected_capabilities: list[str],
     case: RoutingCase,
@@ -424,20 +516,91 @@ def _benchmark_route_matches_expected(
         return False
     if expected_capabilities and not set(expected_capabilities).intersection(case.capabilities):
         return False
-    return True
+    return _has_route_relevant_risk_signal(risk, case)
 
 
 def _risk_matches_case(risk: str, case: RoutingCase) -> bool:
+    return _risk_match_strength(risk, case) == "strong"
+
+
+def _risk_match_strength(risk: str, case: RoutingCase) -> str:
     folded_risk = _fold(risk)
-    folded_case = _fold(case.text)
-    if folded_risk and folded_risk in folded_case:
+    folded_case = _fold_for_phrase(case.text)
+    if folded_risk and _fold_for_phrase(folded_risk) in folded_case:
+        return "strong"
+
+    risk_tokens = _signal_tokens(risk)
+    if not risk_tokens:
+        return "none"
+    case_tokens = set(_signal_tokens(case.text))
+    top_case_tokens = set(_signal_tokens(case.risk_text))
+    if _strong_phrase_match(risk, case):
+        return "strong"
+
+    risk_token_hits = set(risk_tokens).intersection(RISK_TOKENS | ACRONYM_RISK_TOKENS)
+    domain_tokens = [token for token in risk_tokens if token not in RISK_TOKENS | ACRONYM_RISK_TOKENS]
+    domain_hits = set(domain_tokens).intersection(case_tokens)
+    top_domain_hits = set(domain_tokens).intersection(top_case_tokens)
+    if risk_token_hits.intersection(case_tokens) and len(top_domain_hits) >= min(2, len(domain_tokens)):
+        return "weak"
+    if risk_token_hits.intersection(case_tokens) and len(domain_hits) >= min(3, len(domain_tokens)):
+        return "weak"
+    return "none"
+
+
+def _strong_phrase_match(risk: str, case: RoutingCase) -> bool:
+    haystacks = [
+        _fold_for_phrase(case.case_id),
+        _fold_for_phrase(case.risk_text),
+        _fold_for_phrase(" ".join(case.risk_triggers)),
+        _fold_for_phrase(" ".join(case.capabilities)),
+    ]
+    phrases = _normalized_risk_phrases(risk)
+    if any(phrase in haystack for phrase in phrases for haystack in haystacks):
         return True
-    risk_tokens = _tokens(risk)
+    tokens = _signal_tokens(risk)
+    acronym_hits = [token for token in tokens if token in ACRONYM_RISK_TOKENS]
+    if acronym_hits:
+        top_tokens = set(_signal_tokens(f"{case.case_id} {case.risk_text} {' '.join(case.risk_triggers)}"))
+        domain_tokens = [
+            token for token in tokens
+            if token not in ACRONYM_RISK_TOKENS and token not in RISK_TOKENS
+        ]
+        if set(acronym_hits).intersection(top_tokens) and set(domain_tokens).intersection(top_tokens):
+            return True
+    return False
+
+
+def _normalized_risk_phrases(risk: str) -> list[str]:
+    folded = _fold_for_phrase(risk)
+    tokens = _signal_tokens(risk)
+    phrases = [folded] if len(folded.split()) >= 2 else []
+    if len(tokens) >= 2:
+        phrases.append(" ".join(tokens))
+    risk_hits = [token for token in tokens if token in RISK_TOKENS | ACRONYM_RISK_TOKENS]
+    domain_hits = [token for token in tokens if token not in RISK_TOKENS | ACRONYM_RISK_TOKENS]
+    for risk_token in risk_hits:
+        for domain_token in domain_hits:
+            phrases.append(f"{domain_token} {risk_token}")
+            phrases.append(f"{risk_token} {domain_token}")
+    chunks = re.split(r"\b(?:from|without|with|and|or|after|before)\b", folded)
+    for chunk in chunks:
+        phrase = " ".join(_signal_tokens(chunk))
+        if len(phrase.split()) >= 2:
+            phrases.append(phrase)
+    return sorted(set(phrase for phrase in phrases if len(phrase.split()) >= 2), key=len, reverse=True)
+
+
+def _has_route_relevant_risk_signal(risk: str, case: RoutingCase) -> bool:
+    risk_tokens = set(_signal_tokens(risk))
     if not risk_tokens:
         return False
-    case_tokens = set(_tokens(case.text))
-    required = max(1, min(2, len(risk_tokens)))
-    return len([token for token in risk_tokens if token in case_tokens]) >= required
+    route_text = f"{case.case_id} {case.risk_text} {' '.join(case.risk_triggers)} {' '.join(case.capabilities)}"
+    route_tokens = set(_signal_tokens(route_text))
+    domain_tokens = risk_tokens - RISK_TOKENS - ACRONYM_RISK_TOKENS
+    risk_hits = risk_tokens.intersection(RISK_TOKENS | ACRONYM_RISK_TOKENS).intersection(route_tokens)
+    domain_hits = domain_tokens.intersection(route_tokens)
+    return bool(risk_hits) and len(domain_hits) >= min(1, len(domain_tokens))
 
 
 def _baseline_l1_count(path: Path) -> int | None:
@@ -488,7 +651,7 @@ def _case_text(data: dict[str, Any]) -> str:
 
 def _top_case_text(data: dict[str, Any], expected: dict[str, Any]) -> str:
     parts: list[str] = []
-    for key in ("id", "description", "prompt", "notes"):
+    for key in ("id", "description", "prompt"):
         value = data.get(key)
         if isinstance(value, str):
             parts.append(value)
@@ -517,8 +680,20 @@ def _tokens(text: str) -> list[str]:
     ]
 
 
+def _signal_tokens(text: str) -> list[str]:
+    return [
+        token
+        for token in re.findall(r"[a-z0-9]+", _fold_for_phrase(text))
+        if len(token) >= 3 and token not in GENERIC_MATCH_TOKENS
+    ]
+
+
 def _fold(text: str) -> str:
     return re.sub(r"[^a-z0-9_-]+", " ", text.casefold()).strip()
+
+
+def _fold_for_phrase(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", text.casefold()).strip()
 
 
 def _string(value: Any) -> str:
@@ -555,18 +730,29 @@ def _render_markdown(report: CoverageReport) -> str:
         f"- Routing cases checked: {report.routing_cases_checked}",
         f"- Benchmark cases checked: {report.benchmark_cases_checked}",
         f"- Hidden risks covered: {report.hidden_risks_covered}/{report.hidden_risks_checked}",
+        f"- Strong matches: {report.strong_matches}",
+        f"- Weak matches: {report.weak_matches}",
+        f"- Matched by expected route only: {report.matched_by_expected_route_only}",
+        f"- Needs manual review: {report.needs_manual_review}",
+        f"- Hidden risks with weak matches: {report.hidden_risks_with_weak_matches}",
+        f"- Hidden risks matched by expected route only: {report.hidden_risks_matched_by_expected_route_only}",
+        f"- Hidden risks needing manual review: {report.hidden_risks_needing_manual_review}",
         f"- L1 anti-over-routing cases: {report.l1_anti_over_routing_count}",
         f"- Findings: {len(report.findings)}",
         "",
         "## Benchmark Hidden Risk Coverage",
         "",
-        "| Benchmark | Covered | Hidden Risk | Routing Cases |",
-        "| --- | --- | --- | --- |",
+        "| Benchmark | Covered | Hidden Risk | Strong Matches | Weak Matches | Expected-Route-Only | Manual Review |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
     ]
     for row in report.benchmark_risk_coverage:
         lines.append(
             f"| `{row['benchmark']}` | {str(row['covered']).lower()} | "
-            f"{row['hidden_risk']} | {', '.join(row['routing_cases']) or '-'} |"
+            f"{row['hidden_risk']} | "
+            f"{', '.join(row['strong_matches']) or '-'} | "
+            f"{', '.join(row['weak_matches']) or '-'} | "
+            f"{', '.join(row['matched_by_expected_route_only']) or '-'} | "
+            f"{str(row['needs_manual_review']).lower()} |"
         )
     lines.extend(["", "## Findings", ""])
     if report.findings:

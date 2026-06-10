@@ -1,15 +1,14 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-09T22:18:48.548479+00:00
-- Skills/capabilities checked: 125
-- Warning count: 45
-- Average score: 39.54/60
+- Generated: 2026-06-10T00:50:10.283241+00:00
+- Skills/capabilities checked: 124
+- Warning count: 21
+- Average score: 39.75/60
 
 ## Scores
 
 | Item | Kind | Score | Status | Missing Sections | Warnings |
 | --- | --- | ---: | --- | ---: | ---: |
-| `src/foundation/capabilities/_template/SKILL.md` | foundation-capability | 22/60 | weak | 4 | 0 |
 | `src/foundation/capabilities/domain-object-identification/SKILL.md` | foundation-capability | 25/60 | weak | 4 | 0 |
 | `src/foundation/capabilities/domain-logic-implementation/SKILL.md` | foundation-capability | 27/60 | weak | 4 | 0 |
 | `src/foundation/capabilities/prototype-description/SKILL.md` | foundation-capability | 27/60 | weak | 4 | 0 |
@@ -117,22 +116,22 @@
 | `src/foundation/capabilities/failure-diagnosis/SKILL.md` | foundation-capability | 50/60 | acceptable | 2 | 0 |
 | `src/professional-skills/data-middleware-change-builder/SKILL.md` | professional-skill | 53/60 | acceptable | 0 | 1 |
 | `src/professional-skills/experience-impact-modeler/SKILL.md` | professional-skill | 53/60 | acceptable | 0 | 0 |
-| `src/professional-skills/delivery-release-gate/SKILL.md` | professional-skill | 54/60 | acceptable | 0 | 4 |
 | `src/professional-skills/architecture-impact-reviewer/SKILL.md` | professional-skill | 55/60 | acceptable | 0 | 2 |
 | `src/professional-skills/change-intake-compiler/SKILL.md` | professional-skill | 55/60 | acceptable | 0 | 1 |
+| `src/professional-skills/delivery-release-gate/SKILL.md` | professional-skill | 55/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/domain-impact-modeler/SKILL.md` | professional-skill | 55/60 | sample-grade | 0 | 0 |
-| `src/professional-skills/security-privacy-gate/SKILL.md` | professional-skill | 55/60 | acceptable | 0 | 5 |
 | `src/professional-skills/task-dag-planner/SKILL.md` | professional-skill | 55/60 | acceptable | 0 | 1 |
 | `src/professional-skills/acceptance-criteria-builder/SKILL.md` | professional-skill | 56/60 | acceptable | 0 | 1 |
 | `src/professional-skills/change-documentation-gate/SKILL.md` | professional-skill | 56/60 | acceptable | 0 | 2 |
 | `src/professional-skills/change-impact-analyzer/SKILL.md` | professional-skill | 56/60 | acceptable | 0 | 1 |
-| `src/professional-skills/integration-change-builder/SKILL.md` | professional-skill | 56/60 | acceptable | 0 | 3 |
-| `src/professional-skills/reliability-observability-gate/SKILL.md` | professional-skill | 56/60 | acceptable | 0 | 3 |
 | `src/professional-skills/change-forge-router/SKILL.md` | professional-skill | 57/60 | acceptable | 0 | 1 |
-| `src/professional-skills/data-api-contract-changer/SKILL.md` | professional-skill | 57/60 | acceptable | 0 | 2 |
 | `src/professional-skills/frontend-change-builder/SKILL.md` | professional-skill | 57/60 | acceptable | 0 | 3 |
-| `src/professional-skills/ai-code-review-refactor/SKILL.md` | professional-skill | 58/60 | acceptable | 0 | 3 |
-| `src/professional-skills/quality-test-gate/SKILL.md` | professional-skill | 58/60 | acceptable | 0 | 4 |
+| `src/professional-skills/integration-change-builder/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/reliability-observability-gate/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/security-privacy-gate/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/data-api-contract-changer/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/ai-code-review-refactor/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/quality-test-gate/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/backend-change-builder/SKILL.md` | professional-skill | 60/60 | sample-grade | 0 | 0 |
 
 ## Warnings
@@ -213,14 +212,6 @@ Recommended fixes:
 Recommended fixes:
 - Review listed warnings and add concrete evidence, owner, or skip rationale.
 
-### `src/professional-skills/ai-code-review-refactor/SKILL.md`
-- Evidence Contract is missing 'what evidence proves'
-- Proactive Professional Trigger 2 lacks concrete hidden risk, action, route, or evidence
-- Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence
-
-Recommended fixes:
-- Review listed warnings and add concrete evidence, owner, or skip rationale.
-
 ### `src/professional-skills/architecture-impact-reviewer/SKILL.md`
 - Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence
 - Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence
@@ -253,24 +244,8 @@ Recommended fixes:
 Recommended fixes:
 - Review listed warnings and add concrete evidence, owner, or skip rationale.
 
-### `src/professional-skills/data-api-contract-changer/SKILL.md`
-- Evidence Contract is missing 'what evidence proves'
-- Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence
-
-Recommended fixes:
-- Review listed warnings and add concrete evidence, owner, or skip rationale.
-
 ### `src/professional-skills/data-middleware-change-builder/SKILL.md`
 - Evidence Contract is missing 'what evidence proves'
-
-Recommended fixes:
-- Review listed warnings and add concrete evidence, owner, or skip rationale.
-
-### `src/professional-skills/delivery-release-gate/SKILL.md`
-- Evidence Contract is missing 'what evidence proves'
-- Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence
-- Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence
-- Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence
 
 Recommended fixes:
 - Review listed warnings and add concrete evidence, owner, or skip rationale.
@@ -279,41 +254,6 @@ Recommended fixes:
 - Evidence Contract is missing 'what evidence proves'
 - Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence
 - Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence
-
-Recommended fixes:
-- Review listed warnings and add concrete evidence, owner, or skip rationale.
-
-### `src/professional-skills/integration-change-builder/SKILL.md`
-- Evidence Contract is missing 'what evidence proves'
-- Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence
-- Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence
-
-Recommended fixes:
-- Review listed warnings and add concrete evidence, owner, or skip rationale.
-
-### `src/professional-skills/quality-test-gate/SKILL.md`
-- Evidence Contract is missing 'what evidence proves'
-- Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence
-- Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence
-- Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence
-
-Recommended fixes:
-- Review listed warnings and add concrete evidence, owner, or skip rationale.
-
-### `src/professional-skills/reliability-observability-gate/SKILL.md`
-- Evidence Contract is missing 'what evidence proves'
-- Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence
-- Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence
-
-Recommended fixes:
-- Review listed warnings and add concrete evidence, owner, or skip rationale.
-
-### `src/professional-skills/security-privacy-gate/SKILL.md`
-- Evidence Contract is missing 'what evidence proves'
-- Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence
-- Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence
-- Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence
-- Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence
 
 Recommended fixes:
 - Review listed warnings and add concrete evidence, owner, or skip rationale.

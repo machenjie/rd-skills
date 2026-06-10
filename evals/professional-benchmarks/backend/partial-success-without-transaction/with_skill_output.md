@@ -10,5 +10,5 @@ Output obligations: transaction and partial-success analysis; behavior preservat
 Validation command: not verified; fixture describes expected agent output only.
 What evidence proves: failure path and recovery contract are explicit.
 What evidence does not prove: production billing provider behavior.
-Residual risk: compensation replay owner is still needed.
+Residual risk: compensation replay owner is still needed from the backend team.
 Next gate: quality-test-gate.

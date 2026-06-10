@@ -14,6 +14,10 @@ expected:
   expected_context_budget_mode: staged-plan
   risk_triggers:
     - user data
+  hidden_risk_phrases:
+    - stale entitlement state
+    - cross-tenant cache collision
+    - unbounded Redis memory growth or hot key
   skills:
     - data-middleware-change-builder
     - reliability-observability-gate

@@ -10,5 +10,5 @@ Output obligations: route repair decision and new hypothesis; validation evidenc
 Validation command: not verified; fixture describes expected agent output only.
 What evidence proves: the same failed path is stopped and a new diagnosis path is required.
 What evidence does not prove: the lock holder has been found in a real database.
-Residual risk: production lock duration remains unknown.
+Residual risk: production lock duration remains unknown; owner: delivery-release-gate.
 Next gate: delivery-release-gate with quality-test-gate evidence.

@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
@@ -32,6 +33,7 @@ COVERAGE_MATRIX_JSON = "professional-coverage-matrix.json"
 BENCHMARKS_JSON = "professional-benchmarks-report.json"
 CONTENT_AUDIT_JSON = "skill-content-audit.json"
 AGENT_SAMPLES_JSON = "professional-agent-samples-report.json"
+ROUTING_COVERAGE_JSON = "professional-routing-coverage.json"
 
 REGRESSION_MD = "professionalism-regression-report.md"
 REGRESSION_JSON = "professionalism-regression-report.json"
@@ -46,7 +48,11 @@ DEFAULT_GLOBAL_THRESHOLDS = {
     "no_new_weak_professional_skill": True,
     "no_score_regression_more_than": 1.0,
     "max_new_warnings_count": 0,
-    "max_known_warnings_count": None,
+    "max_known_warnings": {
+        "evidence_contract_missing_what_proves": 0,
+        "trigger_lacks_concrete_route_or_evidence": 0,
+        "body_bloat_exception": None,
+    },
     "no_new_missing_mode_matrix_for_professional_skill": True,
     "no_new_missing_proactive_triggers_for_core_skill": True,
     "no_new_missing_evidence_contract_for_core_skill": True,
@@ -54,6 +60,14 @@ DEFAULT_GLOBAL_THRESHOLDS = {
     "no_new_empty_benchmark_case": True,
     "no_new_routing_case_without_forbidden": True,
 }
+
+KNOWN_WARNING_METADATA_FIELDS = (
+    "owner",
+    "accepted_reason",
+    "review_after",
+    "target_fix_phase",
+    "is_release_blocking",
+)
 
 
 @dataclass
@@ -118,7 +132,18 @@ def main(argv: list[str] | None = None) -> int:
                 baseline_changes=changes,
             )
             result.summary = _summary(result)
-            _write_reports(result, current, reports, reports_dir)
+            agent_strict = _run_promoted_agent_samples_strict(reports_dir)
+            reports["agent_samples_strict"] = agent_strict.get("report", {})
+            reports["routing_coverage"] = _load_optional_json_mapping(reports_dir / ROUTING_COVERAGE_JSON)
+            _write_reports(
+                result,
+                current,
+                reports,
+                reports_dir,
+                default_result=None,
+                strict_result=None,
+                agent_samples_strict=agent_strict,
+            )
             _print_summary(result)
             return 0
 
@@ -129,7 +154,30 @@ def main(argv: list[str] | None = None) -> int:
             strict=args.strict,
             report_only=args.report_only,
         )
-        _write_reports(result, current, reports, reports_dir)
+        default_result = result if not args.strict else compare_against_baseline(
+            baseline,
+            current,
+            strict=False,
+            report_only=args.report_only,
+        )
+        strict_result = result if args.strict else compare_against_baseline(
+            baseline,
+            current,
+            strict=True,
+            report_only=False,
+        )
+        agent_strict = _run_promoted_agent_samples_strict(reports_dir)
+        reports["agent_samples_strict"] = agent_strict.get("report", {})
+        reports["routing_coverage"] = _load_optional_json_mapping(reports_dir / ROUTING_COVERAGE_JSON)
+        _write_reports(
+            result,
+            current,
+            reports,
+            reports_dir,
+            default_result=default_result,
+            strict_result=strict_result,
+            agent_samples_strict=agent_strict,
+        )
         _print_summary(result)
         if result.blockers and not args.report_only:
             return 1
@@ -176,6 +224,33 @@ def _load_optional_json_mapping(path: Path) -> dict[str, Any]:
     if not path.is_file():
         return {}
     return _load_json_mapping(path)
+
+
+def _run_promoted_agent_samples_strict(reports_dir: Path) -> dict[str, Any]:
+    command = [
+        sys.executable,
+        str(ROOT / "scripts" / "eval-professional-agent-samples.py"),
+        "--promoted-only",
+        "--strict",
+        "--reports-dir",
+        str(reports_dir),
+    ]
+    completed = subprocess.run(
+        command,
+        cwd=str(ROOT),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    report = _load_optional_json_mapping(reports_dir / AGENT_SAMPLES_JSON)
+    return {
+        "ran": True,
+        "command": "python3 scripts/eval-professional-agent-samples.py --promoted-only --strict",
+        "returncode": completed.returncode,
+        "stdout": completed.stdout,
+        "stderr": completed.stderr,
+        "report": report,
+    }
 
 
 def _load_baseline(path: Path) -> dict[str, Any]:
@@ -243,7 +318,7 @@ def build_baseline_snapshot(
             "recorded_exceptions": _content_exception_paths(content_exceptions_path),
         },
     }
-    snapshot["global_thresholds"]["max_known_warnings_count"] = _known_warning_total(snapshot)
+    snapshot["global_thresholds"]["max_known_warnings"] = _known_warning_type_budget(snapshot)
     return snapshot
 
 
@@ -257,7 +332,7 @@ def _mapping_list(report: dict[str, Any], key: str, context: str) -> list[dict[s
 
 
 def _skill_baseline_entry(item: dict[str, Any], row: dict[str, Any]) -> dict[str, Any]:
-    warnings = _string_list(item.get("warnings")) or _string_list(row.get("warnings"))
+    warnings = _warning_messages(item.get("warnings")) or _warning_messages(row.get("warnings"))
     likely_missing = _string_list(item.get("likely_missing_sections"))
     coverage = {
         "mode_matrix": _string(row.get("mode_matrix")),
@@ -275,7 +350,10 @@ def _skill_baseline_entry(item: dict[str, Any], row: dict[str, Any]) -> dict[str
         "total_score": int(item.get("total") if item.get("total") is not None else row.get("score") or 0),
         "status": _string(item.get("status") or row.get("status")),
         "known_warnings_count": len(warnings),
-        "known_warnings": warnings,
+        "known_warnings": [
+            _known_warning_record(warning, _string(row.get("path") or item.get("path")))
+            for warning in warnings
+        ],
         "required_sections_present": not bool(likely_missing),
         "missing_required_sections": likely_missing,
         "benchmark_coverage_count": _coverage_count(row.get("benchmark_coverage")),
@@ -310,6 +388,39 @@ def _benchmark_case_baselines(results: list[dict[str, Any]]) -> dict[str, Any]:
             "errors": _string_list(result.get("errors")),
         }
     return cases
+
+
+def _known_warning_record(warning: str, path: str) -> dict[str, Any]:
+    warning_type = _warning_type(warning)
+    release_blocking = warning_type in {
+        "evidence_contract_missing_what_proves",
+        "trigger_lacks_concrete_route_or_evidence",
+    }
+    return {
+        "message": warning,
+        "type": warning_type,
+        "owner": _warning_owner(path),
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "review_after": "2026-07-15",
+        "target_fix_phase": _warning_fix_phase(warning_type),
+        "is_release_blocking": release_blocking,
+    }
+
+
+def _warning_owner(path: str) -> str:
+    if "/professional-skills/" in path:
+        return "changeforge-professional-skills-maintainers"
+    if "/foundation/capabilities/" in path:
+        return "changeforge-foundation-capability-maintainers"
+    return "changeforge-maintainers"
+
+
+def _warning_fix_phase(warning_type: str) -> str:
+    return {
+        "evidence_contract_missing_what_proves": "P0 evidence-contract-hardening",
+        "trigger_lacks_concrete_route_or_evidence": "P0 proactive-trigger-hardening",
+        "body_bloat_exception": "P2 content-bloat-review",
+    }.get(warning_type, "P1 professionalism-warning-review")
 
 
 def _routing_baseline(routing_dir: Path) -> dict[str, Any]:
@@ -389,7 +500,7 @@ def compare_against_baseline(
     )
     _compare_benchmarks(baseline, current, blockers, warnings, thresholds)
     _compare_routing(baseline, current, blockers, thresholds)
-    _compare_warning_budget(blockers, warnings, known_warnings, thresholds)
+    _compare_warning_budget(blockers, warnings, known_warnings, thresholds, strict=strict)
 
     status = "fail" if blockers else "pass"
     if report_only and blockers:
@@ -457,15 +568,43 @@ def _compare_warning_sets(
     known_warnings: list[Finding],
     recorded_exceptions: set[str],
 ) -> None:
-    base_warnings = set(_string_list(baseline_entry.get("known_warnings")))
-    current_warnings = set(_string_list(current_entry.get("known_warnings")))
-    for warning in sorted(current_warnings & base_warnings):
-        known_warnings.append(Finding("known-warning", target, warning, warning, warning, "info"))
-    for warning in sorted(current_warnings - base_warnings):
+    base_warning_records = _warning_record_map(baseline_entry.get("known_warnings"))
+    current_warnings = set(_warning_messages(current_entry.get("known_warnings")))
+    for warning in sorted(current_warnings & set(base_warning_records)):
+        record = base_warning_records[warning]
+        _validate_known_warning_metadata(record, target, warning, blockers)
+        severity = "error" if record.get("is_release_blocking") is True else "info"
+        known_warnings.append(Finding("known-warning", target, warning, record, warning, severity))
+    for warning in sorted(current_warnings - set(base_warning_records)):
         finding = Finding("new-warning", target, warning, None, warning, "warning")
         warnings.append(finding)
         if _is_anti_bloat_warning(warning) and _string(current_entry.get("path")) not in recorded_exceptions:
             blockers.append(Finding("anti-bloat-regression", target, "new anti-bloat warning without recorded exception", None, warning))
+
+
+def _validate_known_warning_metadata(
+    record: dict[str, Any],
+    target: str,
+    warning: str,
+    blockers: list[Finding],
+) -> None:
+    missing = [
+        field_name
+        for field_name in KNOWN_WARNING_METADATA_FIELDS
+        if field_name not in record
+        or (field_name != "is_release_blocking" and not _string(record.get(field_name)))
+        or (field_name == "is_release_blocking" and not isinstance(record.get(field_name), bool))
+    ]
+    if missing:
+        blockers.append(
+            Finding(
+                "known-warning-metadata-missing",
+                target,
+                f"known warning lacks required metadata fields: {', '.join(missing)}",
+                warning,
+                record,
+            )
+        )
 
 
 def _compare_warning_budget(
@@ -473,6 +612,8 @@ def _compare_warning_budget(
     warnings: list[Finding],
     known_warnings: list[Finding],
     thresholds: dict[str, Any],
+    *,
+    strict: bool,
 ) -> None:
     max_new = thresholds.get("max_new_warnings_count")
     if max_new is not None and len(warnings) > int(max_new):
@@ -485,17 +626,35 @@ def _compare_warning_budget(
                 len(warnings),
             )
         )
-    max_known = thresholds.get("max_known_warnings_count")
-    if max_known is not None and len(known_warnings) > int(max_known):
-        blockers.append(
-            Finding(
-                "known-warning-budget",
-                "professionalism-baseline",
-                f"known warning count exceeds max_known_warnings_count={int(max_known)}",
-                int(max_known),
-                len(known_warnings),
-            )
-        )
+    if strict:
+        for known in known_warnings:
+            if known.severity == "error":
+                blockers.append(
+                    Finding(
+                        "known-warning-release-blocking",
+                        known.target,
+                        "strict mode rejects release-blocking accepted warning",
+                        known.baseline_value,
+                        known.current_value,
+                    )
+                )
+        max_by_type = thresholds.get("max_known_warnings")
+        if isinstance(max_by_type, dict):
+            counts = _known_warning_type_counts(known_warnings)
+            for warning_type, maximum in sorted(max_by_type.items()):
+                if maximum is None:
+                    continue
+                current_count = counts.get(str(warning_type), 0)
+                if current_count > int(maximum):
+                    blockers.append(
+                        Finding(
+                            "known-warning-type-budget",
+                            f"professionalism-baseline.{warning_type}",
+                            f"known warning type exceeds max_known_warnings.{warning_type}={int(maximum)}",
+                            int(maximum),
+                            current_count,
+                        )
+                    )
 
 
 def _compare_coverage(
@@ -636,6 +795,10 @@ def _write_reports(
     current: dict[str, Any],
     reports: dict[str, dict[str, Any]],
     reports_dir: Path,
+    *,
+    default_result: RegressionResult | None,
+    strict_result: RegressionResult | None,
+    agent_samples_strict: dict[str, Any],
 ) -> None:
     reports_dir.mkdir(parents=True, exist_ok=True)
     payload = _result_payload(result)
@@ -644,7 +807,14 @@ def _write_reports(
         encoding="utf-8",
     )
     (reports_dir / REGRESSION_MD).write_text(_render_regression_markdown(result), encoding="utf-8")
-    readiness = _release_readiness_payload(result, current, reports)
+    readiness = _release_readiness_payload(
+        result,
+        current,
+        reports,
+        default_result=default_result,
+        strict_result=strict_result,
+        agent_samples_strict=agent_samples_strict,
+    )
     (reports_dir / READINESS_JSON).write_text(
         json.dumps(readiness, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -712,19 +882,112 @@ def _release_readiness_payload(
     result: RegressionResult,
     current: dict[str, Any],
     reports: dict[str, dict[str, Any]],
+    *,
+    default_result: RegressionResult | None,
+    strict_result: RegressionResult | None,
+    agent_samples_strict: dict[str, Any],
 ) -> dict[str, Any]:
     professional = _dict(current.get("professional_skills"))
     foundation = _dict(current.get("foundation_capabilities"))
     benchmarks = _dict(current.get("benchmarks"))
     routing = _dict(current.get("routing"))
+    routing_coverage = _dict(reports.get("routing_coverage"))
     content_audit = _dict(reports.get("content_audit"))
     content_summary = _dict(content_audit.get("summary"))
     benchmark_cases = _dict(benchmarks.get("cases"))
+    default_result = default_result or (result if not result.strict else None)
+    strict_run_available = strict_result is not None
+    strict_blockers = strict_result.blockers if strict_result else []
+    agent_strict_report = _dict(agent_samples_strict.get("report"))
+    agent_strict_returncode = agent_samples_strict.get("returncode")
+    agent_strict_ran = bool(agent_samples_strict.get("ran"))
+    agent_strict_failures = int(agent_strict_report.get("failures") or 0)
+    benchmark_errors = len(_string_list(reports["benchmarks"].get("errors")))
+    benchmark_quality_failures = sum(
+        1 for case in benchmark_cases.values()
+        if _dict(case).get("benchmark_quality_status") == "fail"
+    )
+    routing_uncovered = int(routing_coverage.get("hidden_risks_needing_manual_review") or 0)
+    default_blocked = bool(default_result and default_result.blockers)
+    strict_blocked = bool(strict_blockers)
+    agent_strict_blocked = (
+        (agent_strict_ran and int(agent_strict_returncode or 0) != 0)
+        or agent_strict_failures > 0
+    )
+    checklist = _readiness_checklist(
+        default_result=default_result,
+        strict_result=strict_result,
+        benchmarks=benchmarks,
+        reports=reports,
+        routing_coverage=routing_coverage,
+        content_summary=content_summary,
+        agent_samples_strict=agent_samples_strict,
+    )
+    release_blockers = list(result.blockers)
+    if strict_blockers and not result.strict:
+        release_blockers.extend(
+            Finding(
+                "strict-release-regression",
+                item.target,
+                item.message,
+                item.baseline_value,
+                item.current_value,
+                item.severity,
+            )
+            for item in strict_blockers
+        )
+    if agent_strict_blocked:
+        release_blockers.append(
+            Finding(
+                "promoted-agent-samples-strict",
+                "professional-agent-samples",
+                "promoted professional agent samples failed under --strict",
+                0,
+                agent_strict_failures or agent_strict_returncode,
+            )
+        )
+    if benchmark_errors or benchmark_quality_failures:
+        release_blockers.append(
+            Finding(
+                "professional-benchmarks",
+                "reports/professional-benchmarks-report.json",
+                "professional benchmark schema, comparison, or quality status failed",
+                0,
+                {"errors": benchmark_errors, "quality_failures": benchmark_quality_failures},
+            )
+        )
+    if routing_uncovered:
+        release_blockers.append(
+            Finding(
+                "routing-hidden-risk-coverage",
+                "reports/professional-routing-coverage.json",
+                "professional routing coverage has hidden risks needing manual review",
+                0,
+                routing_uncovered,
+            )
+        )
+    authoring_ready_status = "blocked" if default_blocked else "ready"
+    if not strict_run_available or not agent_strict_ran:
+        release_ready_status = "not-release-certified"
+        strict_release_ready_status = "not-run"
+        status = "ready-for-authoring / not-release-certified" if not default_blocked else "blocked"
+    elif release_blockers or strict_blocked or agent_strict_blocked:
+        release_ready_status = "blocked"
+        strict_release_ready_status = "blocked"
+        status = "blocked" if default_blocked else "ready-for-authoring / not-release-certified"
+    else:
+        release_ready_status = "ready"
+        strict_release_ready_status = "ready"
+        status = "strict-release-ready"
+    followups = _readiness_followups(result, foundation)
     return {
         "generated_at": _now(),
-        "status": "blocked" if result.blockers else "ready",
+        "status": status,
+        "authoring_ready": authoring_ready_status,
+        "release_ready": release_ready_status,
+        "strict_release_ready": strict_release_ready_status,
         "professional_skill_coverage_summary": _status_summary(professional),
-        "foundation_capability_coverage_summary": _status_summary(foundation),
+        "key_foundation_capability_coverage_summary": _status_summary(foundation),
         "benchmark_coverage_summary": {
             "cases_checked": benchmarks.get("cases_checked", 0),
             "comparison_cases_checked": benchmarks.get("comparison_cases_checked", 0),
@@ -735,8 +998,15 @@ def _release_readiness_payload(
             "cases_checked": len(_dict(routing.get("cases"))),
             "l1_anti_over_routing_count": routing.get("l1_anti_over_routing_count", 0),
             "cases_without_forbidden": sum(1 for case in _dict(routing.get("cases")).values() if not _dict(case).get("forbidden_present")),
+            "hidden_risks_strongly_covered": routing_coverage.get("hidden_risks_covered", "not-run"),
+            "hidden_risks_checked": routing_coverage.get("hidden_risks_checked", "not-run"),
+            "hidden_risks_needing_manual_review": routing_coverage.get("hidden_risks_needing_manual_review", "not-run"),
         },
         "regression_status": result.status,
+        "default_regression_status": default_result.status if default_result else "not-run",
+        "strict_regression_status": strict_result.status if strict_result else "not-run",
+        "promoted_agent_samples_strict_status": _agent_strict_status(agent_samples_strict),
+        "checklist": checklist,
         "known_accepted_warnings": [asdict(item) for item in result.known_warnings],
         "content_bloat_status": {
             "heavy_professional": content_summary.get("heavy_professional", "unknown"),
@@ -750,8 +1020,10 @@ def _release_readiness_payload(
             "python3 scripts/eval-skill-professionalism.py --coverage-matrix",
             "python3 scripts/eval-professional-benchmarks.py",
             "python3 scripts/validate-professionalism-regression.py",
+            "python3 scripts/validate-professionalism-regression.py --strict",
             "python3 scripts/validate-professional-routing-coverage.py",
             "python3 scripts/eval-professional-agent-samples.py",
+            "python3 scripts/eval-professional-agent-samples.py --promoted-only --strict",
         ],
         "latest_results_available": {
             "skill_professionalism_warnings": reports["skill_eval"].get("warning_count"),
@@ -760,9 +1032,11 @@ def _release_readiness_payload(
             "benchmark_errors": len(_string_list(reports["benchmarks"].get("errors"))),
             "professional_agent_sample_warnings": reports["agent_samples"].get("warnings", "not-run"),
             "professional_agent_samples_checked": reports["agent_samples"].get("samples_checked", "not-run"),
+            "promoted_agent_sample_strict_warnings": agent_strict_report.get("warnings", "not-run"),
+            "promoted_agent_samples_strict_checked": agent_strict_report.get("samples_checked", "not-run"),
         },
-        "release_blockers": [asdict(item) for item in result.blockers],
-        "non_blocking_followups": [asdict(item) for item in result.warnings],
+        "release_blockers": [asdict(item) for item in release_blockers],
+        "non_blocking_followups": followups,
     }
 
 
@@ -772,15 +1046,34 @@ def _render_readiness_markdown(payload: dict[str, Any]) -> str:
         "",
         f"- Generated: {payload['generated_at']}",
         f"- Status: {payload['status']}",
+        f"- Authoring ready: {payload['authoring_ready']}",
+        f"- Release ready: {payload['release_ready']}",
+        f"- Strict release ready: {payload['strict_release_ready']}",
         f"- Regression status: {payload['regression_status']}",
+        f"- Default regression status: {payload['default_regression_status']}",
+        f"- Strict regression status: {payload['strict_regression_status']}",
+        f"- Promoted agent samples strict status: {payload['promoted_agent_samples_strict_status']}",
         "",
         "## Professional Skill Coverage Summary",
         "",
         _summary_line(payload["professional_skill_coverage_summary"]),
         "",
-        "## Foundation Capability Coverage Summary",
+        "## Key Foundation Capability Coverage Summary",
         "",
-        _summary_line(payload["foundation_capability_coverage_summary"]),
+        _summary_line(payload["key_foundation_capability_coverage_summary"]),
+        "",
+        "## Release Checklist",
+        "",
+        "| Checklist Item | Status | Evidence Source | Blocking? | Notes |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for row in payload["checklist"]:
+        lines.append(
+            f"| {row['item']} | {row['status']} | `{row['evidence_source']}` | "
+            f"{str(row['blocking']).lower()} | {row['notes']} |"
+        )
+    lines.extend(
+        [
         "",
         "## Benchmark Coverage Summary",
         "",
@@ -792,7 +1085,8 @@ def _render_readiness_markdown(payload: dict[str, Any]) -> str:
         "",
         "## Known Accepted Warnings",
         "",
-    ]
+        ]
+    )
     if payload["known_accepted_warnings"]:
         for item in payload["known_accepted_warnings"]:
             lines.append(f"- `{item['target']}`: {item['message']}")
@@ -824,6 +1118,147 @@ def _render_readiness_markdown(payload: dict[str, Any]) -> str:
     else:
         lines.append("- None")
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _readiness_checklist(
+    *,
+    default_result: RegressionResult | None,
+    strict_result: RegressionResult | None,
+    benchmarks: dict[str, Any],
+    reports: dict[str, dict[str, Any]],
+    routing_coverage: dict[str, Any],
+    content_summary: dict[str, Any],
+    agent_samples_strict: dict[str, Any],
+) -> list[dict[str, Any]]:
+    benchmark_cases = _dict(benchmarks.get("cases"))
+    benchmark_errors = len(_string_list(reports["benchmarks"].get("errors")))
+    benchmark_quality_failures = sum(
+        1 for case in benchmark_cases.values()
+        if _dict(case).get("benchmark_quality_status") == "fail"
+    )
+    empty_baseline_cases = sum(
+        1 for case in benchmark_cases.values()
+        if int(_dict(case).get("baseline_defect_hits_count") or 0) < 1
+    )
+    routing_manual = int(routing_coverage.get("hidden_risks_needing_manual_review") or 0)
+    agent_report = _dict(agent_samples_strict.get("report"))
+    agent_returncode = int(agent_samples_strict.get("returncode") or 0)
+    known_budget_blockers = [
+        item for item in (strict_result.blockers if strict_result else [])
+        if item.category in {"known-warning-type-budget", "known-warning-release-blocking", "known-warning-budget"}
+    ]
+    content_blockers = [
+        item for item in (default_result.blockers if default_result else [])
+        if item.category == "anti-bloat-regression"
+    ]
+    rows = [
+        _checklist_row(
+            "default regression",
+            "pass" if default_result and not default_result.blockers else "fail",
+            "reports/professionalism-regression-report.json",
+            True,
+            f"status={default_result.status if default_result else 'not-run'}",
+        ),
+        _checklist_row(
+            "strict regression",
+            "pass" if strict_result and not strict_result.blockers else ("not-run" if not strict_result else "fail"),
+            "internal strict comparison equivalent to python3 scripts/validate-professionalism-regression.py --strict",
+            True,
+            f"blockers={len(strict_result.blockers) if strict_result else 'not-run'}",
+        ),
+        _checklist_row(
+            "professional benchmarks",
+            "pass" if benchmark_errors == 0 and benchmark_quality_failures == 0 and empty_baseline_cases == 0 else "fail",
+            "reports/professional-benchmarks-report.json",
+            True,
+            f"errors={benchmark_errors}; quality_failures={benchmark_quality_failures}; empty_baseline_cases={empty_baseline_cases}",
+        ),
+        _checklist_row(
+            "routing coverage",
+            "pass" if routing_coverage and routing_manual == 0 and routing_coverage.get("status") == "pass" else ("not-run" if not routing_coverage else "fail"),
+            "reports/professional-routing-coverage.json",
+            True,
+            f"needs_manual_review={routing_manual if routing_coverage else 'not-run'}",
+        ),
+        _checklist_row(
+            "promoted agent samples strict",
+            "pass" if agent_samples_strict.get("ran") and agent_returncode == 0 and int(agent_report.get("failures") or 0) == 0 else "fail",
+            "reports/professional-agent-samples-report.json from python3 scripts/eval-professional-agent-samples.py --promoted-only --strict",
+            True,
+            f"returncode={agent_returncode}; failures={agent_report.get('failures', 'not-run')}",
+        ),
+        _checklist_row(
+            "content bloat exceptions",
+            "pass" if not content_blockers else "fail",
+            "config/skill-content-exceptions.yaml and reports/skill-content-audit.json",
+            True,
+            _mapping_lines(content_summary).replace("\n", "; ") if content_summary else "not-run",
+        ),
+        _checklist_row(
+            "known warnings budget",
+            "pass" if strict_result and not known_budget_blockers else ("not-run" if not strict_result else "fail"),
+            "config/professionalism-baseline.yaml global_thresholds.max_known_warnings",
+            True,
+            f"budget_blockers={len(known_budget_blockers) if strict_result else 'not-run'}",
+        ),
+        _checklist_row(
+            "baseline update drift",
+            "pass" if default_result and not default_result.baseline_changes else "not-run",
+            "reports/professionalism-regression-report.json baseline_changes",
+            False,
+            f"baseline_changes={len(default_result.baseline_changes) if default_result else 'not-run'}",
+        ),
+    ]
+    return rows
+
+
+def _checklist_row(
+    item: str,
+    status: str,
+    evidence_source: str,
+    blocking: bool,
+    notes: str,
+) -> dict[str, Any]:
+    return {
+        "item": item,
+        "status": status,
+        "evidence_source": evidence_source,
+        "blocking": blocking,
+        "notes": notes,
+    }
+
+
+def _readiness_followups(result: RegressionResult, foundation: dict[str, Any]) -> list[dict[str, Any]]:
+    followups: list[dict[str, Any]] = [asdict(item) for item in result.warnings]
+    for item in result.known_warnings:
+        payload = asdict(item)
+        payload["followup_kind"] = "known accepted warning"
+        followups.append(payload)
+    for name, entry in sorted(foundation.items()):
+        data = _dict(entry)
+        if _string(data.get("status")) == "needs-review":
+            followups.append(
+                asdict(
+                    Finding(
+                        "key-foundation-capability-needs-review",
+                        _string(data.get("path")) or name,
+                        "key foundation capability remains needs-review",
+                        "acceptable",
+                        data.get("status"),
+                        "info",
+                    )
+                )
+            )
+    return followups
+
+
+def _agent_strict_status(agent_samples_strict: dict[str, Any]) -> str:
+    if not agent_samples_strict.get("ran"):
+        return "not-run"
+    report = _dict(agent_samples_strict.get("report"))
+    if int(agent_samples_strict.get("returncode") or 0) == 0 and int(report.get("failures") or 0) == 0:
+        return "pass"
+    return "fail"
 
 
 def _summary(result: RegressionResult) -> dict[str, Any]:
@@ -912,6 +1347,76 @@ def _known_warning_total(snapshot: dict[str, Any]) -> int:
         for entry in _dict(snapshot.get(group)).values():
             total += int(_dict(entry).get("known_warnings_count") or 0)
     return total
+
+
+def _known_warning_type_budget(snapshot: dict[str, Any]) -> dict[str, int | None]:
+    counts: dict[str, int] = {}
+    for group in ("professional_skills", "foundation_capabilities"):
+        for entry in _dict(snapshot.get(group)).values():
+            for record in _warning_record_map(_dict(entry).get("known_warnings")).values():
+                warning_type = _string(record.get("type")) or _warning_type(_string(record.get("message")))
+                counts[warning_type] = counts.get(warning_type, 0) + 1
+    return {
+        "evidence_contract_missing_what_proves": 0,
+        "trigger_lacks_concrete_route_or_evidence": 0,
+        "body_bloat_exception": counts.get("body_bloat_exception", 0),
+    }
+
+
+def _known_warning_type_counts(findings: list[Finding]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for finding in findings:
+        record = _dict(finding.baseline_value)
+        warning_type = _string(record.get("type")) or _warning_type(finding.message)
+        counts[warning_type] = counts.get(warning_type, 0) + 1
+    return counts
+
+
+def _warning_record_map(value: Any) -> dict[str, dict[str, Any]]:
+    records: dict[str, dict[str, Any]] = {}
+    if isinstance(value, list):
+        for item in value:
+            if isinstance(item, dict):
+                message = _string(item.get("message"))
+                if message:
+                    records[message] = dict(item)
+            elif isinstance(item, str) and item.strip():
+                message = item.strip()
+                records[message] = {
+                    "message": message,
+                    "type": _warning_type(message),
+                }
+    elif isinstance(value, str) and value.strip():
+        records[value.strip()] = {
+            "message": value.strip(),
+            "type": _warning_type(value),
+        }
+    return records
+
+
+def _warning_messages(value: Any) -> list[str]:
+    if isinstance(value, list):
+        messages: list[str] = []
+        for item in value:
+            if isinstance(item, dict):
+                message = _string(item.get("message"))
+                if message:
+                    messages.append(message)
+            elif isinstance(item, str) and item.strip():
+                messages.append(item.strip())
+        return messages
+    return _string_list(value)
+
+
+def _warning_type(warning: str) -> str:
+    folded = warning.casefold()
+    if "evidence contract is missing 'what evidence proves'" in folded:
+        return "evidence_contract_missing_what_proves"
+    if "lacks concrete hidden risk, action, route, or evidence" in folded:
+        return "trigger_lacks_concrete_route_or_evidence"
+    if _is_anti_bloat_warning(warning):
+        return "body_bloat_exception"
+    return "other"
 
 
 def _is_l1_anti_over_routing(expected: dict[str, Any], forbidden: dict[str, Any]) -> bool:

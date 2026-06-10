@@ -1,10 +1,69 @@
 {
+  "authoring_ready": "ready",
   "benchmark_coverage_summary": {
-    "cases_checked": 10,
-    "comparison_cases_checked": 10,
+    "cases_checked": 11,
+    "comparison_cases_checked": 11,
     "empty_baseline_cases": 0,
     "quality_failures": 0
   },
+  "checklist": [
+    {
+      "blocking": true,
+      "evidence_source": "reports/professionalism-regression-report.json",
+      "item": "default regression",
+      "notes": "status=pass",
+      "status": "pass"
+    },
+    {
+      "blocking": true,
+      "evidence_source": "internal strict comparison equivalent to python3 scripts/validate-professionalism-regression.py --strict",
+      "item": "strict regression",
+      "notes": "blockers=15",
+      "status": "fail"
+    },
+    {
+      "blocking": true,
+      "evidence_source": "reports/professional-benchmarks-report.json",
+      "item": "professional benchmarks",
+      "notes": "errors=0; quality_failures=0; empty_baseline_cases=0",
+      "status": "pass"
+    },
+    {
+      "blocking": true,
+      "evidence_source": "reports/professional-routing-coverage.json",
+      "item": "routing coverage",
+      "notes": "needs_manual_review=0",
+      "status": "pass"
+    },
+    {
+      "blocking": true,
+      "evidence_source": "reports/professional-agent-samples-report.json from python3 scripts/eval-professional-agent-samples.py --promoted-only --strict",
+      "item": "promoted agent samples strict",
+      "notes": "returncode=0; failures=0",
+      "status": "pass"
+    },
+    {
+      "blocking": true,
+      "evidence_source": "config/skill-content-exceptions.yaml and reports/skill-content-audit.json",
+      "item": "content bloat exceptions",
+      "notes": "- classifications: {'KEEP_AS_IS': 126, 'TIGHTEN_BODY': 5}; - domain_extensions: 7; - foundation_capabilities: 105; - heavy_domain: 0; - heavy_foundation: 0; - heavy_professional: 0; - low_professionalism: 0; - move_to_reference: 0; - professional_skills: 19; - split_candidates: 0",
+      "status": "pass"
+    },
+    {
+      "blocking": true,
+      "evidence_source": "config/professionalism-baseline.yaml global_thresholds.max_known_warnings",
+      "item": "known warnings budget",
+      "notes": "budget_blockers=15",
+      "status": "fail"
+    },
+    {
+      "blocking": false,
+      "evidence_source": "reports/professionalism-regression-report.json baseline_changes",
+      "item": "baseline update drift",
+      "notes": "baseline_changes=0",
+      "status": "pass"
+    }
+  ],
   "content_bloat_status": {
     "heavy_domain": 0,
     "heavy_foundation": 0,
@@ -12,313 +71,234 @@
     "low_professionalism": 0,
     "split_candidates": 0
   },
-  "foundation_capability_coverage_summary": {
+  "default_regression_status": "pass",
+  "generated_at": "2026-06-10T00:51:19.327780+00:00",
+  "key_foundation_capability_coverage_summary": {
     "count": 29,
     "statuses": {
       "acceptable": 7,
       "needs-review": 22
     }
   },
-  "generated_at": "2026-06-09T22:20:27.390226+00:00",
   "known_accepted_warnings": [
     {
-      "baseline_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
       "category": "known-warning",
       "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
       "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
+      "severity": "error",
       "target": "src/professional-skills/acceptance-criteria-builder/SKILL.md"
     },
     {
-      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
-      "category": "known-warning",
-      "current_value": "Evidence Contract is missing 'what evidence proves'",
-      "message": "Evidence Contract is missing 'what evidence proves'",
-      "severity": "info",
-      "target": "src/professional-skills/ai-code-review-refactor/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 2 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 2 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 2 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/ai-code-review-refactor/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/ai-code-review-refactor/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
       "category": "known-warning",
       "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
       "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
+      "severity": "error",
       "target": "src/professional-skills/architecture-impact-reviewer/SKILL.md"
     },
     {
-      "baseline_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
       "category": "known-warning",
       "current_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
       "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
+      "severity": "error",
       "target": "src/professional-skills/architecture-impact-reviewer/SKILL.md"
     },
     {
-      "baseline_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
       "category": "known-warning",
       "current_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
       "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
+      "severity": "error",
       "target": "src/professional-skills/change-documentation-gate/SKILL.md"
     },
     {
-      "baseline_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
       "category": "known-warning",
       "current_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
       "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
+      "severity": "error",
       "target": "src/professional-skills/change-documentation-gate/SKILL.md"
     },
     {
-      "baseline_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
       "category": "known-warning",
       "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
       "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
+      "severity": "error",
       "target": "src/professional-skills/change-forge-router/SKILL.md"
     },
     {
-      "baseline_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
       "category": "known-warning",
       "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
       "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
+      "severity": "error",
       "target": "src/professional-skills/change-impact-analyzer/SKILL.md"
     },
     {
-      "baseline_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
       "category": "known-warning",
       "current_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
       "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
+      "severity": "error",
       "target": "src/professional-skills/change-intake-compiler/SKILL.md"
     },
     {
-      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Evidence Contract is missing 'what evidence proves'",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 evidence-contract-hardening",
+        "type": "evidence_contract_missing_what_proves"
+      },
       "category": "known-warning",
       "current_value": "Evidence Contract is missing 'what evidence proves'",
       "message": "Evidence Contract is missing 'what evidence proves'",
-      "severity": "info",
-      "target": "src/professional-skills/data-api-contract-changer/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/data-api-contract-changer/SKILL.md"
-    },
-    {
-      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
-      "category": "known-warning",
-      "current_value": "Evidence Contract is missing 'what evidence proves'",
-      "message": "Evidence Contract is missing 'what evidence proves'",
-      "severity": "info",
+      "severity": "error",
       "target": "src/professional-skills/data-middleware-change-builder/SKILL.md"
     },
     {
-      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Evidence Contract is missing 'what evidence proves'",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 evidence-contract-hardening",
+        "type": "evidence_contract_missing_what_proves"
+      },
       "category": "known-warning",
       "current_value": "Evidence Contract is missing 'what evidence proves'",
       "message": "Evidence Contract is missing 'what evidence proves'",
-      "severity": "info",
-      "target": "src/professional-skills/delivery-release-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/delivery-release-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/delivery-release-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/delivery-release-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
-      "category": "known-warning",
-      "current_value": "Evidence Contract is missing 'what evidence proves'",
-      "message": "Evidence Contract is missing 'what evidence proves'",
-      "severity": "info",
+      "severity": "error",
       "target": "src/professional-skills/frontend-change-builder/SKILL.md"
     },
     {
-      "baseline_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
       "category": "known-warning",
       "current_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
       "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
+      "severity": "error",
       "target": "src/professional-skills/frontend-change-builder/SKILL.md"
     },
     {
-      "baseline_value": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
       "category": "known-warning",
       "current_value": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
       "message": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
+      "severity": "error",
       "target": "src/professional-skills/frontend-change-builder/SKILL.md"
     },
     {
-      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
-      "category": "known-warning",
-      "current_value": "Evidence Contract is missing 'what evidence proves'",
-      "message": "Evidence Contract is missing 'what evidence proves'",
-      "severity": "info",
-      "target": "src/professional-skills/integration-change-builder/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/integration-change-builder/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/integration-change-builder/SKILL.md"
-    },
-    {
-      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
-      "category": "known-warning",
-      "current_value": "Evidence Contract is missing 'what evidence proves'",
-      "message": "Evidence Contract is missing 'what evidence proves'",
-      "severity": "info",
-      "target": "src/professional-skills/quality-test-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/quality-test-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
       "category": "known-warning",
       "current_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
       "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/quality-test-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/quality-test-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
-      "category": "known-warning",
-      "current_value": "Evidence Contract is missing 'what evidence proves'",
-      "message": "Evidence Contract is missing 'what evidence proves'",
-      "severity": "info",
-      "target": "src/professional-skills/reliability-observability-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/reliability-observability-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/reliability-observability-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
-      "category": "known-warning",
-      "current_value": "Evidence Contract is missing 'what evidence proves'",
-      "message": "Evidence Contract is missing 'what evidence proves'",
-      "severity": "info",
-      "target": "src/professional-skills/security-privacy-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/security-privacy-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/security-privacy-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/security-privacy-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
-      "target": "src/professional-skills/security-privacy-gate/SKILL.md"
-    },
-    {
-      "baseline_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
-      "category": "known-warning",
-      "current_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
-      "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
-      "severity": "info",
+      "severity": "error",
       "target": "src/professional-skills/task-dag-planner/SKILL.md"
     },
     {
-      "baseline_value": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": false,
+        "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
+        "owner": "changeforge-foundation-capability-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P2 content-bloat-review",
+        "type": "body_bloat_exception"
+      },
       "category": "known-warning",
       "current_value": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
       "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
@@ -330,32 +310,683 @@
     "benchmark_errors": 0,
     "coverage_rows_checked": 48,
     "professional_agent_sample_warnings": 0,
-    "professional_agent_samples_checked": 6,
-    "skill_professionalism_average_score": 39.54,
-    "skill_professionalism_warnings": 45
+    "professional_agent_samples_checked": 3,
+    "promoted_agent_sample_strict_warnings": 0,
+    "promoted_agent_samples_strict_checked": 3,
+    "skill_professionalism_average_score": 39.75,
+    "skill_professionalism_warnings": 21
   },
-  "non_blocking_followups": [],
+  "non_blocking_followups": [
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "followup_kind": "known accepted warning",
+      "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "error",
+      "target": "src/professional-skills/acceptance-criteria-builder/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "followup_kind": "known accepted warning",
+      "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "error",
+      "target": "src/professional-skills/architecture-impact-reviewer/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "followup_kind": "known accepted warning",
+      "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "error",
+      "target": "src/professional-skills/architecture-impact-reviewer/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "followup_kind": "known accepted warning",
+      "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "error",
+      "target": "src/professional-skills/change-documentation-gate/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "followup_kind": "known accepted warning",
+      "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "error",
+      "target": "src/professional-skills/change-documentation-gate/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "followup_kind": "known accepted warning",
+      "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "error",
+      "target": "src/professional-skills/change-forge-router/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "followup_kind": "known accepted warning",
+      "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "error",
+      "target": "src/professional-skills/change-impact-analyzer/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "followup_kind": "known accepted warning",
+      "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "error",
+      "target": "src/professional-skills/change-intake-compiler/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Evidence Contract is missing 'what evidence proves'",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 evidence-contract-hardening",
+        "type": "evidence_contract_missing_what_proves"
+      },
+      "category": "known-warning",
+      "current_value": "Evidence Contract is missing 'what evidence proves'",
+      "followup_kind": "known accepted warning",
+      "message": "Evidence Contract is missing 'what evidence proves'",
+      "severity": "error",
+      "target": "src/professional-skills/data-middleware-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Evidence Contract is missing 'what evidence proves'",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 evidence-contract-hardening",
+        "type": "evidence_contract_missing_what_proves"
+      },
+      "category": "known-warning",
+      "current_value": "Evidence Contract is missing 'what evidence proves'",
+      "followup_kind": "known accepted warning",
+      "message": "Evidence Contract is missing 'what evidence proves'",
+      "severity": "error",
+      "target": "src/professional-skills/frontend-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "followup_kind": "known accepted warning",
+      "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "error",
+      "target": "src/professional-skills/frontend-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
+      "followup_kind": "known accepted warning",
+      "message": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "error",
+      "target": "src/professional-skills/frontend-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "followup_kind": "known accepted warning",
+      "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "error",
+      "target": "src/professional-skills/task-dag-planner/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": false,
+        "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
+        "owner": "changeforge-foundation-capability-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P2 content-bloat-review",
+        "type": "body_bloat_exception"
+      },
+      "category": "known-warning",
+      "current_value": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
+      "followup_kind": "known accepted warning",
+      "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
+      "severity": "info",
+      "target": "src/foundation/capabilities/code-review/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/async-job-design/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/cache-design/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/contract-testing/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/cpp-professional-usage/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/e2e-testing/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/go-professional-usage/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/idempotency-retry-design/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/integration-testing/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/java-jvm-professional-usage/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/language-idiom-enforcement/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/language-performance-safety/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/language-testing-strategy/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/observability/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/python-professional-usage/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/refactoring/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/regression-testing/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/relational-database/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/rust-professional-usage/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/shell-cli-professional-usage/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/sql-professional-usage/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/typescript-professional-usage/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/unit-testing/SKILL.md"
+    }
+  ],
   "professional_skill_coverage_summary": {
     "count": 19,
     "statuses": {
-      "acceptable": 17,
-      "sample-grade": 2
+      "acceptable": 10,
+      "sample-grade": 9
     }
   },
-  "regression_status": "pass",
-  "release_blockers": [],
+  "promoted_agent_samples_strict_status": "pass",
+  "regression_status": "fail",
+  "release_blockers": [
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning-release-blocking",
+      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "message": "strict mode rejects release-blocking accepted warning",
+      "severity": "error",
+      "target": "src/professional-skills/acceptance-criteria-builder/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning-release-blocking",
+      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "message": "strict mode rejects release-blocking accepted warning",
+      "severity": "error",
+      "target": "src/professional-skills/architecture-impact-reviewer/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning-release-blocking",
+      "current_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "message": "strict mode rejects release-blocking accepted warning",
+      "severity": "error",
+      "target": "src/professional-skills/architecture-impact-reviewer/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning-release-blocking",
+      "current_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "message": "strict mode rejects release-blocking accepted warning",
+      "severity": "error",
+      "target": "src/professional-skills/change-documentation-gate/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning-release-blocking",
+      "current_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "message": "strict mode rejects release-blocking accepted warning",
+      "severity": "error",
+      "target": "src/professional-skills/change-documentation-gate/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning-release-blocking",
+      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "message": "strict mode rejects release-blocking accepted warning",
+      "severity": "error",
+      "target": "src/professional-skills/change-forge-router/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning-release-blocking",
+      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "message": "strict mode rejects release-blocking accepted warning",
+      "severity": "error",
+      "target": "src/professional-skills/change-impact-analyzer/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning-release-blocking",
+      "current_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "message": "strict mode rejects release-blocking accepted warning",
+      "severity": "error",
+      "target": "src/professional-skills/change-intake-compiler/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Evidence Contract is missing 'what evidence proves'",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 evidence-contract-hardening",
+        "type": "evidence_contract_missing_what_proves"
+      },
+      "category": "known-warning-release-blocking",
+      "current_value": "Evidence Contract is missing 'what evidence proves'",
+      "message": "strict mode rejects release-blocking accepted warning",
+      "severity": "error",
+      "target": "src/professional-skills/data-middleware-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Evidence Contract is missing 'what evidence proves'",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 evidence-contract-hardening",
+        "type": "evidence_contract_missing_what_proves"
+      },
+      "category": "known-warning-release-blocking",
+      "current_value": "Evidence Contract is missing 'what evidence proves'",
+      "message": "strict mode rejects release-blocking accepted warning",
+      "severity": "error",
+      "target": "src/professional-skills/frontend-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning-release-blocking",
+      "current_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "message": "strict mode rejects release-blocking accepted warning",
+      "severity": "error",
+      "target": "src/professional-skills/frontend-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning-release-blocking",
+      "current_value": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
+      "message": "strict mode rejects release-blocking accepted warning",
+      "severity": "error",
+      "target": "src/professional-skills/frontend-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": {
+        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
+        "is_release_blocking": true,
+        "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+        "owner": "changeforge-professional-skills-maintainers",
+        "review_after": "2026-07-15",
+        "target_fix_phase": "P0 proactive-trigger-hardening",
+        "type": "trigger_lacks_concrete_route_or_evidence"
+      },
+      "category": "known-warning-release-blocking",
+      "current_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "message": "strict mode rejects release-blocking accepted warning",
+      "severity": "error",
+      "target": "src/professional-skills/task-dag-planner/SKILL.md"
+    },
+    {
+      "baseline_value": 0,
+      "category": "known-warning-type-budget",
+      "current_value": 2,
+      "message": "known warning type exceeds max_known_warnings.evidence_contract_missing_what_proves=0",
+      "severity": "error",
+      "target": "professionalism-baseline.evidence_contract_missing_what_proves"
+    },
+    {
+      "baseline_value": 0,
+      "category": "known-warning-type-budget",
+      "current_value": 11,
+      "message": "known warning type exceeds max_known_warnings.trigger_lacks_concrete_route_or_evidence=0",
+      "severity": "error",
+      "target": "professionalism-baseline.trigger_lacks_concrete_route_or_evidence"
+    }
+  ],
+  "release_ready": "blocked",
   "required_validation_commands": [
     "python3 scripts/eval-skill-professionalism.py",
     "python3 scripts/eval-skill-professionalism.py --coverage-matrix",
     "python3 scripts/eval-professional-benchmarks.py",
     "python3 scripts/validate-professionalism-regression.py",
+    "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
-    "python3 scripts/eval-professional-agent-samples.py"
+    "python3 scripts/eval-professional-agent-samples.py",
+    "python3 scripts/eval-professional-agent-samples.py --promoted-only --strict"
   ],
   "routing_coverage_summary": {
-    "cases_checked": 80,
+    "cases_checked": 81,
     "cases_without_forbidden": 0,
+    "hidden_risks_checked": 34,
+    "hidden_risks_needing_manual_review": 0,
+    "hidden_risks_strongly_covered": 34,
     "l1_anti_over_routing_count": 9
   },
-  "status": "ready"
+  "status": "ready-for-authoring / not-release-certified",
+  "strict_regression_status": "fail",
+  "strict_release_ready": "blocked"
 }

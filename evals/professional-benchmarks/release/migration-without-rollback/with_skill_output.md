@@ -10,5 +10,5 @@ Output obligations: migration-sensitive release mode selected; validation eviden
 Validation command: not verified; fixture describes expected agent output only.
 What evidence proves: rollback and version skew are treated as release obligations.
 What evidence does not prove: rollback has been rehearsed on a production-sized copy.
-Residual risk: large-table lock timing remains unverified.
+Residual risk: large-table lock timing remains unverified; owner: delivery-release-gate.
 Next gate: data-api-contract-changer and quality-test-gate.

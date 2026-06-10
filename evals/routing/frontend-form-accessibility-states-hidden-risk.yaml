@@ -13,6 +13,10 @@ expected:
   expected_stage: implementation-planning
   expected_context_budget_mode: staged-plan
   risk_triggers: []
+  hidden_risk_phrases:
+    - inaccessible validation feedback
+    - lossy form state after API failure
+    - test coverage only verifies visual red text
   skills:
     - experience-impact-modeler
     - frontend-change-builder
@@ -44,3 +48,5 @@ forbidden:
     - delivery gate
 notes: |
   The route should stay UX/frontend/test focused.
+  Benchmark risks covered: inaccessible validation feedback; lossy form state
+  after API failure; test coverage only verifies visual red text.

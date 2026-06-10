@@ -14,6 +14,10 @@ expected:
   risk_triggers:
     - database migration
     - production deployment
+  hidden_risk_phrases:
+    - rollback fails because schema moved forward
+    - rolling deploy version skew breaks old pods or consumers
+    - contract phase removal before migration evidence
   skills:
     - change-impact-analyzer
     - data-api-contract-changer
@@ -46,3 +50,6 @@ forbidden:
     - AI review gate
 notes: |
   Code redeploy is not sufficient rollback for stateful migration.
+  Benchmark risks covered: rollback fails because schema moved forward; rolling
+  deploy version skew breaks old pods or consumers; contract phase removal before
+  migration evidence.

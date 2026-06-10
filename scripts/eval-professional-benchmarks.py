@@ -87,6 +87,8 @@ class BenchmarkResult:
     expected_stage: str = ""
     expected_skills: list[str] = field(default_factory=list)
     expected_capabilities: list[str] = field(default_factory=list)
+    expected_with_skill_status: str = "pass"
+    adversarial_detection_status: str = "not-applicable"
     schema_status: str = "not-run"
     comparison_status: str = "schema-only"
     benchmark_quality_status: str = "not-run"
@@ -128,9 +130,14 @@ class OutputCoverage:
     forbidden_behaviors_absent: bool = False
     expected_evidence: bool = False
     expected_output_obligations: bool = False
+    inspected_boundaries: bool = False
+    evidence_limits: bool = False
     residual_risk: bool = False
+    residual_risk_owner: bool = False
     next_gate: bool = False
     validation_or_not_verified: bool = False
+    validation_outcome: bool = False
+    route_relevance: bool = False
     score: int = 0
     matched_hidden_risks: list[str] = field(default_factory=list)
     matched_evidence: list[str] = field(default_factory=list)
@@ -269,6 +276,9 @@ def _evaluate_case(
     result.expected_stage = _string(data.get("expected_stage"))
     result.expected_skills = _string_list(data.get("expected_professional_skill"))
     result.expected_capabilities = _string_list(data.get("expected_capabilities"))
+    result.expected_with_skill_status = _string(data.get("expected_with_skill_status")) or "pass"
+    if result.expected_with_skill_status not in {"pass", "fail"}:
+        result.errors.append("expected_with_skill_status must be pass or fail")
 
     if not result.expected_stage:
         result.errors.append("expected_stage must be non-empty")
@@ -310,7 +320,7 @@ def _evaluate_case(
 
     schema_errors = list(result.errors)
     result.schema_status = "pass" if not schema_errors else "fail"
-    result.comparison = _evaluate_comparison(case_dir, data, result, mode)
+    result.comparison = _evaluate_comparison(case_dir, data, result, mode, registry)
     result.comparison_status = _comparison_status(result.comparison)
     result.missing_expected_items = _missing_expected_items(data, result, schema_errors)
     result.forbidden_behavior_hits = _forbidden_behavior_hits(result.comparison)
@@ -319,7 +329,21 @@ def _evaluate_case(
         result.missing_expected_items,
         result.forbidden_behavior_hits,
     )
-    result.errors.extend(result.comparison.errors)
+    comparison_errors = list(result.comparison.errors)
+    if result.expected_with_skill_status == "fail" and result.comparison.mode == "comparison":
+        if comparison_errors:
+            result.adversarial_detection_status = "detected"
+            result.comparison_status = "expected-fail"
+            comparison_errors = []
+        else:
+            result.adversarial_detection_status = "missed"
+            comparison_errors.append("adversarial with_skill_output.md unexpectedly passed")
+    elif result.expected_with_skill_status == "fail":
+        result.adversarial_detection_status = "missing-comparison"
+        comparison_errors.append("adversarial benchmark requires paired baseline_output.md and with_skill_output.md")
+    else:
+        result.adversarial_detection_status = "not-applicable"
+    result.errors.extend(comparison_errors)
     result.baseline_defect_hits = _baseline_defect_hits(result.comparison)
     result.with_skill_obligation_coverage = _with_skill_obligation_coverage(result.comparison)
     result.delta_score = result.professional_delta_summary.delta_score
@@ -334,6 +358,7 @@ def _evaluate_comparison(
     expected: dict[str, Any],
     schema_result: BenchmarkResult,
     mode: str,
+    registry: dict[str, set[str]],
 ) -> ComparisonResult:
     baseline_path = case_dir / "baseline_output.md"
     with_skill_path = case_dir / "with_skill_output.md"
@@ -359,13 +384,14 @@ def _evaluate_comparison(
     if len(with_skill_text.strip()) < 80:
         comparison.errors.append("with_skill_output.md must contain a concrete simulated output")
 
-    baseline = _coverage_for_output(baseline_text, expected, schema_result)
-    with_skill = _coverage_for_output(with_skill_text, expected, schema_result)
+    baseline = _coverage_for_output(baseline_text, expected, schema_result, registry)
+    with_skill = _coverage_for_output(with_skill_text, expected, schema_result, registry)
     comparison.baseline_coverage = baseline
     comparison.with_skill_coverage = with_skill
     comparison.baseline_score = baseline.score
     comparison.with_skill_score = with_skill.score
     comparison.improvement = with_skill.score - baseline.score
+    max_score = _coverage_dimension_count(with_skill)
     comparison.baseline_defect_hits = [
         item for item in _string_list(expected.get("forbidden_behaviors"))
         if _meaning_present(_fold(baseline_text), item)
@@ -378,11 +404,11 @@ def _evaluate_comparison(
         )
     if baseline.score > 3:
         comparison.errors.append(
-            f"baseline_output.md is too professional for a negative fixture ({baseline.score}/10 > 3/10)"
+            f"baseline_output.md is too professional for a negative fixture ({baseline.score}/{max_score} > 3/{max_score})"
         )
     if with_skill.score < 8:
         comparison.errors.append(
-            f"with_skill_output.md must cover core professional obligations ({with_skill.score}/10 < 8/10)"
+            f"with_skill_output.md must cover core professional obligations ({with_skill.score}/{max_score} < 8/{max_score})"
         )
     if comparison.improvement < 4:
         comparison.errors.append(
@@ -404,10 +430,26 @@ def _evaluate_comparison(
     return comparison
 
 
+def _coverage_dimension_count(coverage: OutputCoverage) -> int:
+    return sum(
+        1
+        for key in asdict(coverage)
+        if key
+        not in {
+            "score",
+            "matched_hidden_risks",
+            "matched_evidence",
+            "matched_obligations",
+            "forbidden_hits",
+        }
+    )
+
+
 def _coverage_for_output(
     text: str,
     expected: dict[str, Any],
     schema_result: BenchmarkResult,
+    registry: dict[str, set[str]],
 ) -> OutputCoverage:
     folded = _fold(text)
     hidden_risks = _string_list(expected.get("expected_hidden_risks"))
@@ -436,6 +478,8 @@ def _coverage_for_output(
     validation_or_not_verified = bool(
         re.search(r"\b(pytest|npm test|go test|mvn test|cargo test|python3|unittest|validate-|eval-|not[- ]verified|not verified|validation command)\b", folded)
     )
+    validation_outcome = _validation_has_outcome(text)
+    route_relevance = _route_relevance(text, schema_result, registry)
     coverage = OutputCoverage(
         selected_stage=selected_stage,
         selected_professional_skill=selected_professional_skill,
@@ -445,9 +489,18 @@ def _coverage_for_output(
         expected_evidence=bool(evidence) and len(matched_evidence) == len(evidence),
         expected_output_obligations=bool(obligations)
         and len(matched_obligations) == len(obligations),
+        inspected_boundaries=bool(
+            re.search(r"\b(inspected boundaries|boundaries inspected|boundary scan|files and boundaries inspected)\b", folded)
+        ),
+        evidence_limits=bool(
+            re.search(r"\b(what evidence does not prove|what it does not prove|evidence limits|does not prove)\b", folded)
+        ),
         residual_risk="residual risk" in folded or "residual-risk" in folded,
+        residual_risk_owner=_residual_risk_has_owner(text),
         next_gate="next gate" in folded or "handoff" in folded or "next professional gate" in folded,
         validation_or_not_verified=validation_or_not_verified,
+        validation_outcome=validation_outcome,
+        route_relevance=route_relevance,
         matched_hidden_risks=matched_hidden,
         matched_evidence=matched_evidence,
         matched_obligations=matched_obligations,
@@ -467,6 +520,86 @@ def _coverage_for_output(
         and bool(value)
     )
     return coverage
+
+
+def _validation_has_outcome(text: str) -> bool:
+    folded = _fold(text)
+    if "validation command" not in folded and not re.search(
+        r"\b(pytest|npm test|go test|mvn test|cargo test|python3|unittest|validate-|eval-)\b",
+        folded,
+    ):
+        return False
+    validation_chunks = [
+        line
+        for line in text.splitlines()
+        if "validation" in line.casefold()
+        or re.search(
+            r"\b(pytest|npm test|go test|mvn test|cargo test|python3|unittest|validate-|eval-)\b",
+            line.casefold(),
+        )
+    ]
+    outcome_terms = (
+        "exit code",
+        "failed",
+        "failure",
+        "not run",
+        "not verified",
+        "output",
+        "outcome",
+        "pass",
+        "passed",
+        "warning",
+    )
+    return any(any(term in line.casefold() for term in outcome_terms) for line in validation_chunks)
+
+
+def _residual_risk_has_owner(text: str) -> bool:
+    for line in text.splitlines():
+        folded = line.casefold()
+        if "residual risk" not in folded:
+            continue
+        if any(
+            token in folded
+            for token in (
+                "maintainer",
+                "on-call",
+                "owned by",
+                "owner",
+                "platform",
+                "qa",
+                "release",
+                "security",
+                "sre",
+                "team",
+            )
+        ):
+            return True
+    return False
+
+
+def _route_relevance(
+    text: str,
+    schema_result: BenchmarkResult,
+    registry: dict[str, set[str]],
+) -> bool:
+    route_lines = [line for line in text.splitlines() if "route to" in line.casefold()]
+    if not route_lines:
+        return True
+    known_names = set(registry.get("skills", set())) | set(registry.get("capabilities", set()))
+    expected_names = set(schema_result.expected_skills) | set(schema_result.expected_capabilities)
+    routed_names: set[str] = set()
+    unknown_names: set[str] = set()
+    for line in route_lines:
+        for name in re.findall(r"`([^`]+)`", line):
+            if name in known_names:
+                routed_names.add(name)
+            elif re.fullmatch(r"[a-z0-9][a-z0-9_-]+", name):
+                unknown_names.add(name)
+    if unknown_names:
+        return False
+    if routed_names and not routed_names.intersection(expected_names):
+        return False
+    return True
 
 
 def _comparison_status(comparison: ComparisonResult | None) -> str:
@@ -554,12 +687,22 @@ def _coverage_missing_items(
     for item in _string_list(expected.get("expected_output_obligations")):
         if item not in coverage.matched_obligations:
             missing.append(f"output obligation: {item}")
+    if not coverage.inspected_boundaries:
+        missing.append("inspected boundaries")
+    if not coverage.evidence_limits:
+        missing.append("what evidence does not prove")
     if not coverage.residual_risk:
         missing.append("residual risk")
+    if not coverage.residual_risk_owner:
+        missing.append("residual risk owner")
     if not coverage.next_gate:
         missing.append("next gate")
     if not coverage.validation_or_not_verified:
         missing.append("validation command or not-verified disclosure")
+    if not coverage.validation_outcome:
+        missing.append("validation command outcome")
+    if not coverage.route_relevance:
+        missing.append("route relevance")
     if not coverage.forbidden_behaviors_absent:
         missing.append("forbidden behaviors absent")
     return missing
@@ -574,9 +717,14 @@ def _coverage_missing_items_for_result(coverage: OutputCoverage) -> list[str]:
         "forbidden_behaviors_absent": "forbidden behaviors absent",
         "expected_evidence": "expected evidence",
         "expected_output_obligations": "expected output obligations",
+        "inspected_boundaries": "inspected boundaries",
+        "evidence_limits": "what evidence does not prove",
         "residual_risk": "residual risk",
+        "residual_risk_owner": "residual risk owner",
         "next_gate": "next gate",
         "validation_or_not_verified": "validation command or not-verified disclosure",
+        "validation_outcome": "validation command outcome",
+        "route_relevance": "route relevance",
     }
     return [label for key, label in labels.items() if not bool(getattr(coverage, key))]
 
@@ -590,9 +738,14 @@ def _coverage_present_items_for_result(coverage: OutputCoverage) -> list[str]:
         "forbidden_behaviors_absent": "forbidden behaviors avoided",
         "expected_evidence": "expected evidence",
         "expected_output_obligations": "expected output obligations",
+        "inspected_boundaries": "inspected boundaries",
+        "evidence_limits": "what evidence does not prove",
         "residual_risk": "residual risk",
+        "residual_risk_owner": "residual risk owner",
         "next_gate": "next gate",
         "validation_or_not_verified": "validation command or not-verified disclosure",
+        "validation_outcome": "validation command outcome",
+        "route_relevance": "route relevance",
     }
     return [label for key, label in labels.items() if bool(getattr(coverage, key))]
 

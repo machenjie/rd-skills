@@ -82,6 +82,54 @@ class EvalProfessionalAgentSamplesTests(unittest.TestCase):
             self.assertTrue(result.ok, module._result_findings(result))
             self.assertEqual(result.promotion_status, "candidate")
 
+    def test_raw_output_sample_passes_rule_checks(self) -> None:
+        module = _load_module()
+        sample = (
+            "id: raw-output-sample\n"
+            "description: Raw output sample.\n"
+            "prompt: Fix a backend IDOR with evidence.\n"
+            "expected:\n"
+            "  selected_skills:\n"
+            "    - backend-change-builder\n"
+            "  selected_capabilities:\n"
+            "    - regression-testing\n"
+            "  required_references:\n"
+            "    - references/routing-rules.md\n"
+            "  required_quality_gates:\n"
+            "    - test gate\n"
+            "  required_professional_obligations:\n"
+            "    - denied-case regression\n"
+            "  forbidden_behaviors:\n"
+            "    - completion claim without evidence\n"
+            "actual:\n"
+            "  raw_output: |\n"
+            "    ```yaml\n"
+            "    changeforge_route:\n"
+            "      selected_skills:\n"
+            "        - backend-change-builder\n"
+            "      selected_capabilities:\n"
+            "        - regression-testing\n"
+            "      required_references:\n"
+            "        - references/routing-rules.md\n"
+            "      required_quality_gates:\n"
+            "        - test gate\n"
+            "    ```\n"
+            "    Boundaries inspected: controller and repository.\n"
+            "    Validation evidence: denied-case regression command output.\n"
+            "    Residual risk: historic access logs not audited.\n"
+            "    Next gate: test gate.\n"
+            "review:\n"
+            "  human_review_required: true\n"
+            "  promotion_status: candidate\n"
+            "  notes: Raw sample.\n"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "sample.yaml"
+            path.write_text(sample, encoding="utf-8")
+            data = module.load_yaml_file(path)
+            result = module._evaluate_sample(path, data)
+            self.assertTrue(result.ok, module._result_findings(result))
+
     def test_forbidden_behavior_is_warning_and_strict_failure(self) -> None:
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:

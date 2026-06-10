@@ -355,7 +355,9 @@ def main(argv: list[str] | None = None) -> int:
         duplicate_template_warnings=duplicate_warnings,
     )
     coverage_matrix = _build_coverage_matrix(items)
-    written = _write_reports(report, reports_dir, args.format)
+    written: list[Path] = []
+    if not args.coverage_matrix:
+        written.extend(_write_reports(report, reports_dir, args.format))
     written.extend(_write_coverage_matrix(coverage_matrix, reports_dir, args.format))
     print(
         f"eval-skill-professionalism: checked {report.skills_checked} item(s); "
@@ -383,7 +385,10 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--coverage-matrix",
         action="store_true",
-        help="compatibility flag; coverage matrix reports are generated in addition to the main eval report",
+        help=(
+            "write only coverage matrix reports; default writes both the main eval "
+            "and coverage matrix reports"
+        ),
     )
     return parser.parse_args(argv)
 
@@ -396,8 +401,19 @@ def _evaluate_all(registry_names: set[str]) -> list[SkillScore]:
     )
     for root, kind in roots:
         for skill_path in sorted(root.glob("*/SKILL.md")):
+            if _is_authoring_template_path(skill_path):
+                continue
             items.append(_evaluate_skill(skill_path, kind, registry_names))
     return items
+
+
+def _is_authoring_template_path(path: Path) -> bool:
+    """Exclude authoring templates and fixtures from runtime professionalism scores."""
+    try:
+        relative = path.relative_to(ROOT)
+    except ValueError:
+        relative = path
+    return any(part.startswith("_") for part in relative.parts)
 
 
 def _evaluate_skill(path: Path, kind: str, registry_names: set[str]) -> SkillScore:

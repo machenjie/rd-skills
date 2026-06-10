@@ -8,7 +8,7 @@ Inspected boundaries: producer event ID, consumer handler, durable write boundar
 
 Evidence required: idempotency key scope and dedupe storage; ack or offset commit boundary; retry, DLQ, replay, and queue-depth metric evidence.
 
-Validation command: `python3 -m pytest tests/workers/test_fulfillment_consumer.py`.
+Validation command: `python3 -m pytest tests/workers/test_fulfillment_consumer.py` (not run in fixture; expected outcome is duplicate-delivery and DLQ test output).
 What evidence proves: duplicate delivery is deduped, poison messages route to DLQ, and replay is observable.
 What evidence does not prove: broker regional outage recovery.
 

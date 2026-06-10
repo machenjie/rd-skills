@@ -50,6 +50,19 @@ class EvalSkillProfessionalismTests(unittest.TestCase):
         )
         return path
 
+    def test_authoring_template_paths_are_excluded_from_runtime_eval(self) -> None:
+        module = _load_module()
+        self.assertTrue(
+            module._is_authoring_template_path(
+                ROOT / "src" / "foundation" / "capabilities" / "_template" / "SKILL.md"
+            )
+        )
+        self.assertFalse(
+            module._is_authoring_template_path(
+                ROOT / "src" / "foundation" / "capabilities" / "cache-design" / "SKILL.md"
+            )
+        )
+
     def test_missing_mode_matrix_professional_skill_warns(self) -> None:
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:

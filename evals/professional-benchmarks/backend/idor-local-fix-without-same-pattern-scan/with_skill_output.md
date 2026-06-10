@@ -8,11 +8,11 @@ Inspected boundaries: controller route, service method, repository invoice/resou
 
 Evidence required: same-pattern scan for invoice/resource ID queries; denied-case regression test with another user or tenant; authorization and tenant filter path inspected.
 
-Validation command: `python3 -m pytest tests/backend/test_invoice_authz.py`.
+Validation command: `python3 -m pytest tests/backend/test_invoice_authz.py` (not run in fixture; expected outcome is denied cross-tenant test output).
 What evidence proves: denied cross-tenant access and sibling-query scan coverage.
 What evidence does not prove: production data contains no historic leak.
 
 Output obligations covered: boundaries inspected for controller, service, repository, and permission policy; validation evidence for denied-case regression; residual risk and next gate stated.
 
-Residual risk: historic access logs were not audited.
+Residual risk: historic access logs were not audited; owner: security-privacy-gate.
 Next gate: security-privacy-gate if audit or breach assessment is required.

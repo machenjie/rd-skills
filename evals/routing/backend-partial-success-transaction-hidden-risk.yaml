@@ -1,0 +1,54 @@
+---
+id: backend-partial-success-transaction-hidden-risk
+description: |
+  Backend write plus external side effect must route transaction consistency,
+  compensation, logging, and regression evidence.
+prompt: |
+  Fix an account upgrade endpoint. It writes account state, calls a billing
+  provider, and emits an event. The current code can update the account but
+  fail billing or event emission, leaving inconsistent account and billing state.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - external integration
+  hidden_risk_phrases:
+    - inconsistent account and billing state
+    - event emitted without durable state or compensation
+    - silent partial success with no recovery contract
+  skills:
+    - backend-change-builder
+    - data-api-contract-changer
+    - integration-change-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - transaction-consistency
+    - service-business-logic
+    - logging-error-handling
+    - data-migration-design
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - API/data gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - experience-impact-modeler
+    - delivery-release-gate
+  capabilities:
+    - form-validation-design
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Benchmark risks covered: inconsistent account and billing state; event emitted
+  without durable state or compensation; silent partial success with no recovery
+  contract.

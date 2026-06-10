@@ -14,6 +14,10 @@ expected:
   expected_context_budget_mode: staged-plan
   risk_triggers:
     - missing test evidence
+  hidden_risk_phrases:
+    - duplicate fulfillment from retry or redelivery
+    - poison message retry loop
+    - lost replay path and invisible failure
   skills:
     - backend-change-builder
     - data-middleware-change-builder
@@ -47,3 +51,4 @@ forbidden:
     - documentation gate
 notes: |
   Queue correctness should not over-route to product UX or payment domains.
+  Benchmark risk covered: duplicate fulfillment from retry or redelivery.

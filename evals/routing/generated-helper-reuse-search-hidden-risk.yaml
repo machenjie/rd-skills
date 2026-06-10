@@ -16,6 +16,9 @@ expected:
     - hallucinated API risk
     - new structure without reuse and placement rationale
     - shared utility pollution risk
+  hidden_risk_phrases:
+    - wrong placement and business vocabulary in shared code
+    - AI-generated comments claiming unsupported universality
   skills:
     - ai-code-review-refactor
     - architecture-impact-reviewer
@@ -47,3 +50,5 @@ forbidden:
     - delivery gate
 notes: |
   Generated comments are not evidence and shared utility placement needs proof.
+  Benchmark risks covered: wrong placement and business vocabulary in shared code;
+  AI-generated comments claiming unsupported universality.

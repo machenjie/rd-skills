@@ -159,9 +159,11 @@ class EvalProfessionalBenchmarksTests(unittest.TestCase):
                         "Hidden risks: local fix without same-pattern scan.",
                         "Hidden risks: unverified authorization regression.",
                         "Evidence: regression validation evidence; same-pattern scan output.",
+                        "Inspected boundaries: controller, service, repository, permission policy.",
                         "Output obligations: validation evidence for backend regression and residual risk; inspected backend boundaries; next gate named.",
-                        "Validation command: python3 -m pytest tests/test_backend.py.",
-                        "Residual risk: concurrency path not verified.",
+                        "Validation command: python3 -m pytest tests/test_backend.py; outcome: not run in fixture.",
+                        "What evidence does not prove: production history is free of leaked reads.",
+                        "Residual risk: concurrency path not verified; owner: backend team.",
                         "Next gate: quality-test-gate.",
                     ]
                 ),

@@ -10,5 +10,5 @@ Output obligations: accessibility obligations and focus management; validation e
 Validation command: not verified; fixture describes expected agent output only.
 What evidence proves: visible, keyboard, and assistive-tech paths are covered by the expected output.
 What evidence does not prove: real browser/screen reader behavior until run.
-Residual risk: product copy for recoverable API errors still needs review.
+Residual risk: product copy for recoverable API errors still needs review; owner: frontend-change-builder.
 Next gate: quality-test-gate.

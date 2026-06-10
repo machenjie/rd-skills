@@ -151,11 +151,10 @@ def _yaml_significant_lines(text: str) -> list[tuple[int, str]]:
 def _simple_yaml_load(text: str) -> dict[str, Any]:
     """Parse the indentation-based YAML subset used by ChangeForge assets.
 
-    Supports nested mappings, lists of scalars, and lists of mappings (whose
-    items may carry nested mapping values) to any depth. Block scalars retain
-    only their indicator, matching the historical fallback. PyYAML is still
-    preferred when available; this keeps the validation, routing, and telemetry
-    tooling free of a hard YAML dependency.
+    Supports nested mappings, lists of scalars, lists of mappings (whose items
+    may carry nested mapping values), and simple block scalars to any depth.
+    PyYAML is still preferred when available; this keeps the validation,
+    routing, and telemetry tooling free of a hard YAML dependency.
     """
     value, _ = _parse_yaml_block(_yaml_significant_lines(text), 0, 0)
     return value if isinstance(value, dict) else {}
@@ -187,11 +186,19 @@ def _parse_yaml_map(
         key = key.strip()
         value = raw_value.strip()
         if value:
-            result[key] = _parse_scalar(value)
             index += 1
             if _is_block_scalar(value):
+                block_entries: list[tuple[int, str]] = []
                 while index < len(lines) and lines[index][0] > indent:
+                    block_entries.append(lines[index])
                     index += 1
+                min_indent = min((line_indent for line_indent, _ in block_entries), default=indent + 2)
+                result[key] = "\n".join(
+                    (" " * max(0, line_indent - min_indent)) + content
+                    for line_indent, content in block_entries
+                )
+            else:
+                result[key] = _parse_scalar(value)
             continue
         index += 1
         if index < len(lines) and lines[index][0] > indent:

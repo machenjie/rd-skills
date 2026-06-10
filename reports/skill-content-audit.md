@@ -105,7 +105,7 @@ Suggested-action distribution:
 
 | Skill | Lines | Words | Prof | Ctx | Route | Split | Classification | Phase | Risk |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `delivery-release-gate` | 245 | 3922 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
+| `delivery-release-gate` | 245 | 3966 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
 | `architecture-impact-reviewer` | 238 | 3405 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `backend-change-builder` | 238 | 3842 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
 | `task-dag-planner` | 236 | 3805 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -114,16 +114,16 @@ Suggested-action distribution:
 | `change-documentation-gate` | 217 | 3249 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `acceptance-criteria-builder` | 216 | 2958 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-impact-analyzer` | 214 | 3312 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `data-api-contract-changer` | 213 | 3331 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
-| `integration-change-builder` | 211 | 3559 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
+| `data-api-contract-changer` | 213 | 3348 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
+| `integration-change-builder` | 211 | 3591 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
 | `data-middleware-change-builder` | 209 | 3418 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
 | `domain-impact-modeler` | 201 | 3227 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-intake-compiler` | 199 | 3228 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `ai-code-review-refactor` | 319 | 4469 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `quality-test-gate` | 275 | 4454 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `ai-code-review-refactor` | 319 | 4497 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `quality-test-gate` | 275 | 4480 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `change-forge-router` | 263 | 4663 | 100 | 71 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `security-privacy-gate` | 258 | 4166 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `reliability-observability-gate` | 253 | 4202 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `security-privacy-gate` | 258 | 4226 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `reliability-observability-gate` | 253 | 4237 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 
 #### Detailed findings — Professional Skills
 
@@ -286,14 +286,14 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 
 | Files | Excerpt |
 | --- | --- |
+| 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
+| 19 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 19 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
 | 19 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 19 | do not load every reference by default. treat references as targeted support selected by t |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 19 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 18 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 18 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 18 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 9 | these triggers are hidden-risk escalators, not ordinary checklist items. |
 | 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |

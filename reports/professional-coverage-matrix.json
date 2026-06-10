@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-09T22:18:48.614085+00:00",
+  "generated_at": "2026-06-10T00:50:11.119891+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -268,7 +268,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (6)",
+      "routing_coverage": "yes (7)",
       "score": 44,
       "status": "acceptable",
       "warnings": []
@@ -347,7 +347,7 @@
     },
     {
       "anti_bloat_status": "ok",
-      "benchmark_coverage": "yes (1)",
+      "benchmark_coverage": "yes (2)",
       "evidence_contract": "partial",
       "failure_modes": "yes",
       "kind": "foundation-capability",
@@ -358,7 +358,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "partial",
-      "routing_coverage": "yes (24)",
+      "routing_coverage": "yes (25)",
       "score": 39,
       "status": "needs-review",
       "warnings": []
@@ -484,7 +484,7 @@
       "proactive_triggers": "n/a",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (6)",
+      "routing_coverage": "yes (7)",
       "score": 44,
       "status": "acceptable",
       "warnings": []
@@ -547,7 +547,7 @@
     },
     {
       "anti_bloat_status": "ok",
-      "benchmark_coverage": "yes (2)",
+      "benchmark_coverage": "yes (3)",
       "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "professional-skill",
@@ -559,13 +559,9 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (14)",
-      "score": 58,
-      "status": "acceptable",
-      "warnings": [
-        "Evidence Contract is missing 'what evidence proves'",
-        "Proactive Professional Trigger 2 lacks concrete hidden risk, action, route, or evidence",
-        "Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "score": 59,
+      "status": "sample-grade",
+      "warnings": []
     },
     {
       "anti_bloat_status": "ok",
@@ -601,7 +597,7 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (39)",
+      "routing_coverage": "yes (40)",
       "score": 60,
       "status": "sample-grade",
       "warnings": []
@@ -700,13 +696,10 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (13)",
-      "score": 57,
-      "status": "acceptable",
-      "warnings": [
-        "Evidence Contract is missing 'what evidence proves'",
-        "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "routing_coverage": "yes (14)",
+      "score": 58,
+      "status": "sample-grade",
+      "warnings": []
     },
     {
       "anti_bloat_status": "ok",
@@ -742,14 +735,9 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (25)",
-      "score": 54,
-      "status": "acceptable",
-      "warnings": [
-        "Evidence Contract is missing 'what evidence proves'",
-        "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
-        "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
-        "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "score": 55,
+      "status": "sample-grade",
+      "warnings": []
     },
     {
       "anti_bloat_status": "ok",
@@ -822,14 +810,10 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (11)",
-      "score": 56,
-      "status": "acceptable",
-      "warnings": [
-        "Evidence Contract is missing 'what evidence proves'",
-        "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
-        "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "routing_coverage": "yes (12)",
+      "score": 57,
+      "status": "sample-grade",
+      "warnings": []
     },
     {
       "anti_bloat_status": "ok",
@@ -844,15 +828,10 @@
       "proactive_triggers": "yes",
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
-      "routing_coverage": "yes (70)",
-      "score": 58,
-      "status": "acceptable",
-      "warnings": [
-        "Evidence Contract is missing 'what evidence proves'",
-        "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
-        "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
-        "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "routing_coverage": "yes (71)",
+      "score": 59,
+      "status": "sample-grade",
+      "warnings": []
     },
     {
       "anti_bloat_status": "ok",
@@ -868,13 +847,9 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (29)",
-      "score": 56,
-      "status": "acceptable",
-      "warnings": [
-        "Evidence Contract is missing 'what evidence proves'",
-        "Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence",
-        "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "score": 57,
+      "status": "sample-grade",
+      "warnings": []
     },
     {
       "anti_bloat_status": "ok",
@@ -890,15 +865,9 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (22)",
-      "score": 55,
-      "status": "acceptable",
-      "warnings": [
-        "Evidence Contract is missing 'what evidence proves'",
-        "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
-        "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
-        "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
-        "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence"
-      ]
+      "score": 57,
+      "status": "sample-grade",
+      "warnings": []
     },
     {
       "anti_bloat_status": "ok",

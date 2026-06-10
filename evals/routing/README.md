@@ -54,6 +54,8 @@ expected:
   stage_route_skip_reason: <why no stage route applies>
   risk_triggers:
     - <one or more values from routing-rules.yaml:risk_escalation_triggers>
+  hidden_risk_phrases:
+    - <optional benchmark hidden-risk phrase used by validate-professional-routing-coverage.py>
   skills:
     - <professional skill names from src/registry/skills.yaml>
   capabilities:
@@ -100,6 +102,9 @@ does not warrant them.
 - All `expected.*` and `forbidden.*` names exist in their respective
   registries.
 - `risk_triggers` are drawn from `routing-rules.yaml:risk_escalation_triggers`.
+- `hidden_risk_phrases`, when present, are not router triggers. They are evaluator-only phrases used
+  by `validate-professional-routing-coverage.py` to prove a benchmark hidden risk is covered by a
+  specific routing case without polluting the routing trigger enum.
 - `quality_gates` are drawn from `routing-rules.yaml:quality_gates`.
 - `expected.*` and `forbidden.*` are disjoint per field, with no
   duplicates inside a field.

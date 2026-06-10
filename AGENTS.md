@@ -34,10 +34,12 @@ python3 scripts/eval-skill-professionalism.py
 python3 scripts/eval-skill-professionalism.py --coverage-matrix
 python3 scripts/eval-professional-benchmarks.py
 python3 scripts/validate-professionalism-regression.py
+python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/validate-stage-routing-architecture.py
 python3 scripts/validate-hooks.py
 python3 scripts/eval-agent-behavior.py
+python3 scripts/eval-professional-agent-samples.py --promoted-only --strict
 python3 scripts/eval-pressure-behavior.py
 python3 -m unittest discover -s tests
 python3 scripts/validate-codegen-benchmarks.py
@@ -48,6 +50,9 @@ python3 scripts/build.py --profile dev
 python3 scripts/validate-runtime-reference-links.py
 python3 scripts/validate-installation.py
 ```
+
+`eval-skill-professionalism.py` writes both the main eval and key foundation coverage matrix;
+`--coverage-matrix` writes only the coverage matrix reports for release checklist compatibility.
 
 Run extended routing fixture comparison when updating or verifying captured actual router outputs:
 

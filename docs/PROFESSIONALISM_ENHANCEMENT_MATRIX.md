@@ -13,20 +13,20 @@ references.
 
 ## Stage Coverage Matrix
 
-| Stage | Owner capability(s) | Current coverage | Enhancement applied | Body or reference | Validation |
+| Stage | Owner capability(s) | Current coverage status | Enhancement / follow-up | Body or reference | Validation |
 | --- | --- | --- | --- | --- | --- |
-| requirement-intake | `requirement-clarification`, `acceptance-standard-definition`, `non-goal-boundary-definition` | Strong (intake suite implemented) | None needed; stage launch wired via stage launcher | body | `validate-capabilities`, `eval-routing` |
-| architecture-design | `architecture-style-selection`, `module-boundary-design`, `architecture-tradeoff-analysis`, `extensibility-design`, `solution-optimality-evaluation` | Strong | None needed; ADR rejected-alternatives and reversibility already present | body + per-skill `references/solution-optimality.md` | `validate-skill-body-links` |
-| implementation-planning | `implementation-structure-design`, `module-boundary-design`, `language-idiom-enforcement` | Strong (547-line structure capability) | None needed; reuse-priority and placement taxonomy already present | body (size exception tracked) | `validate-skill-content-size` |
-| coding | language professional usage (`go`, `java-jvm`, `typescript`, `python`, `rust`, `cpp`, `shell-cli`, `sql`), `language-idiom-enforcement`, `input-validation` | Strong per language | Added compact stage-differentiated `Stage Fit` block to all 8 language capabilities | body (compact) + capability body deep details | `validate-capabilities`, `validate-stage-routing-architecture` |
-| debugging-diagnosis | `failure-diagnosis`, `agent-execution-discipline`, `observability` | Strong (verified-cause, route-repair, same-pattern scan present) | None needed; language `Stage Fit` adds per-language debugging focus | body | `eval-routing` |
-| bug-fix | `agent-execution-discipline`, `regression-testing`, `code-review` | Strong (same-pattern scan + regression required) | None needed | body | `eval-routing` |
-| code-review | `code-review`, `ai-code-review-refactor`, `implementation-structure-design`, `language-idiom-enforcement` | Strong (severity/evidence/required-fix contract present) | None needed; language `Stage Fit` adds per-language review focus | body | `validate-skill-body-links` |
-| refactoring | `refactoring`, `implementation-structure-design`, `regression-testing` | Strong (behavior preservation, characterization tests present) | None needed; language `Stage Fit` adds per-language refactoring focus | body | `eval-routing` |
-| testing | `test-strategy`, `language-testing-strategy`, `unit-testing`, `integration-testing`, `contract-testing`, `e2e-testing`, `regression-testing`, `test-data-management` | Strong | None needed; language `Stage Fit` adds per-language testing focus | body | `validate-capabilities` |
-| release-delivery | `delivery-release-gate`, `ci-cd`, `release-rollback`, `containerization`, `kubernetes-gateway`, `observability`, `backup-recovery` | Strong (rollout/rollback/expand-contract present) | None needed; depth stays in owning capability bodies/references | body (ci-cd size exception tracked) | `validate-skill-content-size` |
-| documentation-handoff | `documentation-generation`, `change-documentation-gate`, `agent-execution-discipline` | Strong | None needed | body | `validate-skill-body-links` |
-| skill-authoring | `skill-authoring-expert` | Strong (already implemented, id 103) | Not recreated; referenced by stage model and router routing | body | `validate-stage-routing-architecture` |
+| requirement-intake | `requirement-clarification`, `acceptance-standard-definition`, `non-goal-boundary-definition` | implemented-with-known-warnings; needs-benchmark-coverage | Stage launch is wired via stage launcher; professional trigger hardening remains tracked in baseline/readiness. | body | `validate-capabilities`, `eval-routing`, `eval-skill-professionalism` |
+| architecture-design | `architecture-style-selection`, `module-boundary-design`, `architecture-tradeoff-analysis`, `extensibility-design`, `solution-optimality-evaluation` | implemented-with-known-warnings; needs-benchmark-coverage | ADR rejected-alternatives and reversibility exist; architecture professional trigger hardening remains tracked. | body + per-skill `references/solution-optimality.md` | `validate-skill-body-links`, `eval-skill-professionalism` |
+| implementation-planning | `implementation-structure-design`, `module-boundary-design`, `language-idiom-enforcement` | implemented-with-known-warnings | Reuse-priority and placement taxonomy exist; body-size exception remains tracked rather than hidden. | body (size exception tracked) | `validate-skill-content-size`, `audit-skill-content` |
+| coding | language professional usage (`go`, `java-jvm`, `typescript`, `python`, `rust`, `cpp`, `shell-cli`, `sql`), `language-idiom-enforcement`, `input-validation` | needs-evidence-contract-hardening | Compact stage-differentiated `Stage Fit` block exists for all 8 language capabilities; key language capabilities remain `needs-review` in the coverage matrix. | body (compact) + capability body deep details | `validate-capabilities`, `validate-stage-routing-architecture`, `eval-skill-professionalism --coverage-matrix` |
+| debugging-diagnosis | `failure-diagnosis`, `agent-execution-discipline`, `observability` | implemented-with-known-warnings; needs-evidence-contract-hardening | Verified-cause and route-repair rules exist; `observability` remains `needs-review` in key foundation coverage. | body | `eval-routing`, `validate-professional-routing-coverage`, `eval-skill-professionalism --coverage-matrix` |
+| bug-fix | `agent-execution-discipline`, `regression-testing`, `code-review` | implemented-with-known-warnings; needs-evidence-contract-hardening | Same-pattern scan and regression obligations exist; `regression-testing` remains `needs-review` in key foundation coverage. | body | `eval-routing`, `eval-skill-professionalism --coverage-matrix` |
+| code-review | `code-review`, `ai-code-review-refactor`, `implementation-structure-design`, `language-idiom-enforcement` | implemented-with-known-warnings | AI review/refactor is sample-grade; `code-review` keeps a tracked body-table warning. | body | `validate-skill-body-links`, `eval-skill-professionalism` |
+| refactoring | `refactoring`, `implementation-structure-design`, `regression-testing` | needs-evidence-contract-hardening | Behavior-preservation and characterization-test rules exist; `refactoring` and `regression-testing` remain `needs-review`. | body | `eval-routing`, `eval-skill-professionalism --coverage-matrix` |
+| testing | `test-strategy`, `language-testing-strategy`, `unit-testing`, `integration-testing`, `contract-testing`, `e2e-testing`, `regression-testing`, `test-data-management` | needs-evidence-contract-hardening; needs-benchmark-coverage | Test-depth routing exists; multiple key testing capabilities remain `needs-review` pending evidence-contract hardening. | body | `validate-capabilities`, `eval-skill-professionalism --coverage-matrix` |
+| release-delivery | `delivery-release-gate`, `ci-cd`, `release-rollback`, `containerization`, `kubernetes-gateway`, `observability`, `backup-recovery` | implemented-with-known-warnings; needs-evidence-contract-hardening | Rollout/rollback/expand-contract rules exist; release readiness now blocks strict release while release-blocking accepted warnings remain. | body (ci-cd size exception tracked) | `validate-skill-content-size`, `validate-professionalism-regression --strict` |
+| documentation-handoff | `documentation-generation`, `change-documentation-gate`, `agent-execution-discipline` | implemented-with-known-warnings; needs-benchmark-coverage | Documentation gate exists; proactive trigger hardening remains tracked in baseline/readiness. | body | `validate-skill-body-links`, `eval-skill-professionalism` |
+| skill-authoring | `skill-authoring-expert` | needs-evidence-contract-hardening | Capability exists (id 103) and is referenced by the stage model and router stage routing; evidence contract remains `needs-review`. | body | `validate-stage-routing-architecture`, `eval-skill-professionalism --coverage-matrix` |
 
 ## Product Surface Ownership
 
@@ -45,8 +45,9 @@ router, the stage launcher, or other capabilities.
 ## What Was Not Changed And Why
 
 - Foundation capabilities for intake, architecture, implementation-planning, debugging, bug-fix,
-  review, refactoring, testing, release, and documentation were already professionally complete;
-  they were not expanded to avoid body bloat and duplication.
+  review, refactoring, testing, release, and documentation were not broadly expanded in this rollout;
+  remaining hardening is tracked through `reports/professional-coverage-matrix.*` and
+  `reports/professionalism-release-readiness.*` instead of being hidden behind broad status labels.
 - `skill-authoring-expert` was not recreated; it already exists (id 103) and is now referenced by
   the stage model and the router stage routing.
 - The router and stage launcher were not given language-deep checklists; they reference the
@@ -56,25 +57,20 @@ router, the stage launcher, or other capabilities.
 
 ## Known Open Findings
 
-The "Strong / None needed" assessments above describe professional depth, not the absence of all
-advisory findings. `scripts/audit-professionalism-coverage.py` is report-only and currently reports
-**15 low-severity findings** (see [reports/professionalism-coverage.md](../reports/professionalism-coverage.md)).
-They are accepted or deferred, not regressions:
+The statuses above are intentionally conservative and must be read with the generated reports:
 
-- **body-size (3):** `change-forge-router` (396 lines), `ci-cd` (261), and `implementation-structure-design`
-  (555) exceed the advisory body-line budget. Tracked in
-  [config/skill-content-exceptions.yaml](../config/skill-content-exceptions.yaml); a capability split is
-  documented as plan-only P3 in
-  [reports/skill-content-optimization-plan.md](../reports/skill-content-optimization-plan.md). The
-  compact `Stage Fit` blocks added to key capabilities add a few lines each but stay well inside the
-  per-skill budget except for the already-tracked `implementation-structure-design`.
-- **rule-duplication (11):** shared professional rule lines repeat across professional, capability, and
-  domain-extension bodies. They are kept in-body deliberately so each skill stays self-contained when
-  only its `SKILL.md` is loaded; consolidating into a shared reference is a deferred context-efficiency
-  option, not a correctness fix.
-- **trigger-breadth (1):** the `implementation-structure-design` routing trigger is one long string
-  (107 words). It is deferred with the P3 split above; narrowing it without the split risks
-  under-routing the structure capability.
+- `reports/professional-coverage-matrix.*` currently reports 29 key foundation capabilities, with
+  22 still `needs-review`.
+- `reports/skill-professionalism-eval.*` currently reports 21 professionalism warnings after the
+  high-risk release-gate skills were hardened.
+- `reports/professionalism-release-readiness.*` lists remaining known warnings and key foundation
+  `needs-review` items as follow-ups, and blocks strict release while release-blocking accepted
+  warnings remain in the baseline.
+
+Body-size, duplication, and trigger-breadth findings remain governed by
+[config/skill-content-exceptions.yaml](../config/skill-content-exceptions.yaml),
+[reports/skill-content-optimization-plan.md](../reports/skill-content-optimization-plan.md), and
+the release readiness checklist. They are not represented here as "none needed."
 
 The `skill-stage-declaration` findings previously reported here are resolved: every top-level
 professional skill is now referenced in

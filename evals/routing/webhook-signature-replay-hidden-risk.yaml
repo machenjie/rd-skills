@@ -15,6 +15,10 @@ expected:
   risk_triggers:
     - webhook
     - external integration
+  hidden_risk_phrases:
+    - forged webhook event mutates subscription state
+    - replayed event duplicates side effects
+    - parsed body invalidates HMAC verification
   skills:
     - integration-change-builder
     - security-privacy-gate
@@ -43,3 +47,5 @@ forbidden:
     - delivery gate
 notes: |
   Provider retry is not exactly-once proof and should not skip replay protection.
+  Benchmark risks covered: forged webhook event mutates subscription state;
+  replayed event duplicates side effects; parsed body invalidates HMAC verification.

@@ -1,684 +1,550 @@
 {
-  "benchmark_cases_checked": 10,
+  "benchmark_cases_checked": 11,
   "benchmark_risk_coverage": [
+    {
+      "benchmark": "evals/professional-benchmarks/adversarial/keyword-stuffed-with-skill-gaps",
+      "covered": true,
+      "hidden_risk": "route to nonexistent or unrelated capability",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [],
+      "routing_not_required_reason": "Adversarial evaluator negative fixture; it validates benchmark scoring, not route coverage.",
+      "strong_matches": [],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/adversarial/keyword-stuffed-with-skill-gaps",
+      "covered": true,
+      "hidden_risk": "validation command without outcome",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [],
+      "routing_not_required_reason": "Adversarial evaluator negative fixture; it validates benchmark scoring, not route coverage.",
+      "strong_matches": [],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/adversarial/keyword-stuffed-with-skill-gaps",
+      "covered": true,
+      "hidden_risk": "residual risk without owner",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [],
+      "routing_not_required_reason": "Adversarial evaluator negative fixture; it validates benchmark scoring, not route coverage.",
+      "strong_matches": [],
+      "weak_matches": []
+    },
+    {
+      "benchmark": "evals/professional-benchmarks/adversarial/keyword-stuffed-with-skill-gaps",
+      "covered": true,
+      "hidden_risk": "hidden risk keywords without inspected boundaries",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
+      "routing_cases": [],
+      "routing_not_required_reason": "Adversarial evaluator negative fixture; it validates benchmark scoring, not route coverage.",
+      "strong_matches": [],
+      "weak_matches": []
+    },
     {
       "benchmark": "evals/professional-benchmarks/ai-review/generated-code-invented-helper-without-reuse-search",
       "covered": true,
       "hidden_risk": "invented shared helper without reuse search",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "abstraction-maturity-overengineering",
-        "agent-repeated-failure-route-repair",
-        "agent-unverified-completion",
-        "ai-generated-api-unverified",
-        "bugfix-missing-same-pattern-scan",
-        "generated-helper-reuse-search-hidden-risk",
-        "guessed-environment-diagnosis",
-        "helper-added-to-utils-without-rationale",
-        "implementation-structure-class-vs-function",
-        "l2-backend-refactor",
-        "l5-web3-payment-ai-subscription",
-        "oversized-object-file-split",
-        "rag-permission-leak",
-        "refactor-shared-utility-pollution-hidden-risk"
+        "generated-helper-reuse-search-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "generated-helper-reuse-search-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/ai-review/generated-code-invented-helper-without-reuse-search",
       "covered": true,
       "hidden_risk": "wrong placement and business vocabulary in shared code",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "abstraction-maturity-overengineering",
-        "agent-repeated-failure-route-repair",
-        "agent-unverified-completion",
-        "ai-generated-api-unverified",
-        "bugfix-missing-same-pattern-scan",
-        "generated-helper-reuse-search-hidden-risk",
-        "guessed-environment-diagnosis",
-        "helper-added-to-utils-without-rationale",
-        "implementation-structure-class-vs-function",
-        "l2-backend-refactor",
-        "l5-web3-payment-ai-subscription",
-        "oversized-object-file-split",
-        "rag-permission-leak",
-        "refactor-shared-utility-pollution-hidden-risk"
+        "generated-helper-reuse-search-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "generated-helper-reuse-search-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/ai-review/generated-code-invented-helper-without-reuse-search",
       "covered": true,
       "hidden_risk": "AI-generated comments claiming unsupported universality",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "abstraction-maturity-overengineering",
-        "agent-repeated-failure-route-repair",
-        "agent-unverified-completion",
-        "ai-generated-api-unverified",
-        "bugfix-missing-same-pattern-scan",
-        "generated-helper-reuse-search-hidden-risk",
-        "guessed-environment-diagnosis",
-        "helper-added-to-utils-without-rationale",
-        "implementation-structure-class-vs-function",
-        "l2-backend-refactor",
-        "l5-web3-payment-ai-subscription",
-        "oversized-object-file-split",
-        "rag-permission-leak",
-        "refactor-shared-utility-pollution-hidden-risk"
+        "generated-helper-reuse-search-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "generated-helper-reuse-search-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/backend/idor-local-fix-without-same-pattern-scan",
       "covered": true,
       "hidden_risk": "IDOR from missing object ownership check",
-      "routing_cases": [
-        "agent-unverified-completion",
-        "ai-generated-api-unverified",
-        "backend-auth-idor",
-        "backend-idor-tenant-leak-hidden-risk",
+      "matched_by_expected_route_only": [
         "bugfix-missing-same-pattern-scan",
-        "change-locality-violation",
-        "completion-evidence-unverified-fix",
-        "go-backend-goroutine-leak-bugfix",
-        "helper-added-to-utils-without-rationale",
-        "implementation-structure-function-placement",
-        "l2-backend-refactor",
-        "l3-api-field-add",
-        "l4-sso-saml-auth",
-        "l5-web3-payment-ai-subscription",
-        "low-level-abi-break",
-        "low-level-rust-ffi-memory-safety",
-        "oversized-directory-module-split",
-        "oversized-object-file-split",
-        "queue-consumer-idempotency-hidden-risk",
-        "rag-permission-leak",
-        "web3-eip712-replay"
+        "go-backend-goroutine-leak-bugfix"
       ],
-      "routing_not_required_reason": ""
+      "needs_manual_review": false,
+      "routing_cases": [
+        "backend-auth-idor",
+        "backend-idor-tenant-leak-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-auth-idor",
+        "backend-idor-tenant-leak-hidden-risk"
+      ],
+      "weak_matches": [
+        "bugfix-missing-same-pattern-scan"
+      ]
     },
     {
       "benchmark": "evals/professional-benchmarks/backend/idor-local-fix-without-same-pattern-scan",
       "covered": true,
       "hidden_risk": "tenant data leak from identifier-only query",
-      "routing_cases": [
-        "agent-unverified-completion",
-        "ai-generated-api-unverified",
-        "backend-auth-idor",
-        "backend-idor-tenant-leak-hidden-risk",
-        "bugfix-missing-same-pattern-scan",
-        "change-locality-violation",
-        "completion-evidence-unverified-fix",
+      "matched_by_expected_route_only": [
         "go-backend-goroutine-leak-bugfix",
-        "helper-added-to-utils-without-rationale",
-        "implementation-structure-function-placement",
-        "l2-backend-refactor",
-        "l3-api-field-add",
-        "l4-sso-saml-auth",
-        "l5-web3-payment-ai-subscription",
-        "low-level-abi-break",
-        "low-level-rust-ffi-memory-safety",
-        "oversized-directory-module-split",
-        "oversized-object-file-split",
-        "queue-consumer-idempotency-hidden-risk",
-        "rag-permission-leak",
-        "web3-eip712-replay"
+        "rag-permission-leak"
       ],
-      "routing_not_required_reason": ""
+      "needs_manual_review": false,
+      "routing_cases": [
+        "backend-idor-tenant-leak-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-idor-tenant-leak-hidden-risk"
+      ],
+      "weak_matches": [
+        "rag-permission-leak"
+      ]
     },
     {
       "benchmark": "evals/professional-benchmarks/backend/idor-local-fix-without-same-pattern-scan",
       "covered": true,
       "hidden_risk": "local fix without same-pattern scan",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "agent-unverified-completion",
-        "ai-generated-api-unverified",
-        "backend-auth-idor",
         "backend-idor-tenant-leak-hidden-risk",
         "bugfix-missing-same-pattern-scan",
-        "change-locality-violation",
-        "completion-evidence-unverified-fix",
-        "go-backend-goroutine-leak-bugfix",
-        "helper-added-to-utils-without-rationale",
-        "implementation-structure-function-placement",
-        "l2-backend-refactor",
-        "l3-api-field-add",
-        "l4-sso-saml-auth",
-        "l5-web3-payment-ai-subscription",
-        "low-level-abi-break",
-        "low-level-rust-ffi-memory-safety",
-        "oversized-directory-module-split",
-        "oversized-object-file-split",
-        "queue-consumer-idempotency-hidden-risk",
-        "rag-permission-leak",
-        "web3-eip712-replay"
+        "go-backend-goroutine-leak-bugfix"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-idor-tenant-leak-hidden-risk",
+        "bugfix-missing-same-pattern-scan",
+        "go-backend-goroutine-leak-bugfix"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/backend/partial-success-without-transaction",
       "covered": true,
       "hidden_risk": "inconsistent account and billing state",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "backend-auth-idor",
-        "implementation-naming-taxonomy",
-        "implementation-structure-backend-service-placement",
-        "implementation-structure-function-placement",
-        "l1-log-message-text",
-        "l3-cache-invalidation",
-        "l3-webhook-signature-verification",
-        "l4-db-migration-api-compat",
-        "l4-sso-saml-auth",
-        "l5-web3-payment-ai-subscription",
-        "large-table-migration",
-        "payment-idempotency",
-        "sev1-payment-outage",
-        "webhook-signature-replay"
+        "backend-partial-success-transaction-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/backend/partial-success-without-transaction",
       "covered": true,
       "hidden_risk": "event emitted without durable state or compensation",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "backend-auth-idor",
-        "implementation-naming-taxonomy",
-        "implementation-structure-backend-service-placement",
-        "implementation-structure-function-placement",
-        "l1-log-message-text",
-        "l3-cache-invalidation",
-        "l3-webhook-signature-verification",
-        "l4-db-migration-api-compat",
-        "l4-sso-saml-auth",
-        "l5-web3-payment-ai-subscription",
-        "large-table-migration",
-        "payment-idempotency",
-        "sev1-payment-outage",
-        "webhook-signature-replay"
+        "backend-partial-success-transaction-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/backend/partial-success-without-transaction",
       "covered": true,
       "hidden_risk": "silent partial success with no recovery contract",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "backend-auth-idor",
-        "implementation-naming-taxonomy",
-        "implementation-structure-backend-service-placement",
-        "implementation-structure-function-placement",
-        "l1-log-message-text",
-        "l3-cache-invalidation",
-        "l3-webhook-signature-verification",
-        "l4-db-migration-api-compat",
-        "l4-sso-saml-auth",
-        "l5-web3-payment-ai-subscription",
-        "large-table-migration",
-        "payment-idempotency",
-        "sev1-payment-outage",
-        "webhook-signature-replay"
+        "backend-partial-success-transaction-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "backend-partial-success-transaction-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/backend/queue-consumer-missing-idempotency",
       "covered": true,
       "hidden_risk": "duplicate fulfillment from retry or redelivery",
-      "routing_cases": [
-        "iot-ota-rollback",
-        "l3-cache-invalidation",
-        "l3-webhook-signature-verification",
-        "l4-db-migration-api-compat",
-        "l4-sso-saml-auth",
-        "l5-web3-payment-ai-subscription",
-        "large-table-migration",
-        "mobile-offline-sync-conflict",
+      "matched_by_expected_route_only": [
         "payment-idempotency",
-        "queue-consumer-idempotency-hidden-risk",
-        "rag-permission-leak",
-        "sev1-payment-outage",
-        "web3-eip712-replay",
-        "webhook-signature-replay"
+        "sev1-payment-outage"
       ],
-      "routing_not_required_reason": ""
+      "needs_manual_review": false,
+      "routing_cases": [
+        "queue-consumer-idempotency-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "queue-consumer-idempotency-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/backend/queue-consumer-missing-idempotency",
       "covered": true,
       "hidden_risk": "poison message retry loop",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "iot-ota-rollback",
-        "l3-cache-invalidation",
-        "l3-webhook-signature-verification",
-        "l4-db-migration-api-compat",
-        "l4-sso-saml-auth",
-        "l5-web3-payment-ai-subscription",
-        "large-table-migration",
-        "mobile-offline-sync-conflict",
-        "payment-idempotency",
-        "queue-consumer-idempotency-hidden-risk",
-        "rag-permission-leak",
-        "sev1-payment-outage",
-        "web3-eip712-replay",
-        "webhook-signature-replay"
+        "kafka-consumer-lag-dlq",
+        "queue-consumer-idempotency-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "kafka-consumer-lag-dlq",
+        "queue-consumer-idempotency-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/backend/queue-consumer-missing-idempotency",
       "covered": true,
       "hidden_risk": "lost replay path and invisible failure",
-      "routing_cases": [
-        "iot-ota-rollback",
-        "l3-cache-invalidation",
-        "l3-webhook-signature-verification",
-        "l4-db-migration-api-compat",
-        "l4-sso-saml-auth",
-        "l5-web3-payment-ai-subscription",
-        "large-table-migration",
-        "mobile-offline-sync-conflict",
-        "payment-idempotency",
-        "queue-consumer-idempotency-hidden-risk",
-        "rag-permission-leak",
-        "sev1-payment-outage",
+      "matched_by_expected_route_only": [
         "web3-eip712-replay",
         "webhook-signature-replay"
       ],
-      "routing_not_required_reason": ""
+      "needs_manual_review": false,
+      "routing_cases": [
+        "iot-device-telemetry-buffer",
+        "l3-webhook-signature-verification",
+        "queue-consumer-idempotency-hidden-risk",
+        "webhook-signature-replay-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "iot-device-telemetry-buffer",
+        "l3-webhook-signature-verification",
+        "queue-consumer-idempotency-hidden-risk",
+        "webhook-signature-replay-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/data/redis-cache-without-ttl-or-invalidation",
       "covered": true,
       "hidden_risk": "stale entitlement state",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "bigdata-schema-evolution",
-        "iot-device-telemetry-buffer",
-        "kafka-consumer-lag-dlq",
-        "l3-cache-invalidation",
-        "l4-db-migration-api-compat",
-        "large-table-migration",
-        "queue-consumer-idempotency-hidden-risk",
-        "rag-permission-leak",
-        "redis-cache-stampede",
-        "redis-cache-ttl-invalidation-hidden-risk",
-        "spark-skew-shuffle"
+        "redis-cache-ttl-invalidation-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "redis-cache-ttl-invalidation-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/data/redis-cache-without-ttl-or-invalidation",
       "covered": true,
       "hidden_risk": "cross-tenant cache collision",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "bigdata-schema-evolution",
-        "iot-device-telemetry-buffer",
-        "kafka-consumer-lag-dlq",
-        "l3-cache-invalidation",
-        "l4-db-migration-api-compat",
-        "large-table-migration",
-        "queue-consumer-idempotency-hidden-risk",
-        "rag-permission-leak",
-        "redis-cache-stampede",
-        "redis-cache-ttl-invalidation-hidden-risk",
-        "spark-skew-shuffle"
+        "redis-cache-ttl-invalidation-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "redis-cache-ttl-invalidation-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/data/redis-cache-without-ttl-or-invalidation",
       "covered": true,
       "hidden_risk": "unbounded Redis memory growth or hot key",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "bigdata-schema-evolution",
-        "iot-device-telemetry-buffer",
-        "kafka-consumer-lag-dlq",
-        "l3-cache-invalidation",
-        "l4-db-migration-api-compat",
-        "large-table-migration",
-        "queue-consumer-idempotency-hidden-risk",
-        "rag-permission-leak",
         "redis-cache-stampede",
-        "redis-cache-ttl-invalidation-hidden-risk",
-        "spark-skew-shuffle"
+        "redis-cache-ttl-invalidation-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "redis-cache-stampede",
+        "redis-cache-ttl-invalidation-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/debugging/retry-same-failed-approach",
       "covered": true,
       "hidden_risk": "repeated same-path retry without route repair",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "agent-repeated-failure-route-repair",
-        "api-breaking-field-rename",
-        "bigdata-schema-evolution",
-        "deploy-repeated-retry-no-new-evidence",
-        "helm-chart-secret-values",
-        "iot-ota-rollback",
-        "k8s-probe-rbac-networkpolicy",
-        "l4-db-migration-api-compat",
-        "l4-sev1-incident-response",
-        "l5-web3-payment-ai-subscription",
-        "large-table-migration",
-        "low-level-rust-ffi-memory-safety",
-        "migration-without-rollback-hidden-risk",
-        "mlops-training-serving-skew",
-        "mobile-offline-sync-conflict",
-        "payment-idempotency",
-        "sev1-payment-outage",
-        "soc2-audit-evidence",
-        "terraform-public-bucket"
+        "agent-repeated-failure-route-repair"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "agent-repeated-failure-route-repair"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/debugging/retry-same-failed-approach",
       "covered": true,
       "hidden_risk": "migration lock impact on production writes",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "api-breaking-field-rename",
-        "bigdata-schema-evolution",
-        "deploy-repeated-retry-no-new-evidence",
-        "helm-chart-secret-values",
-        "iot-ota-rollback",
-        "k8s-probe-rbac-networkpolicy",
-        "l4-db-migration-api-compat",
-        "l4-sev1-incident-response",
-        "l5-web3-payment-ai-subscription",
-        "large-table-migration",
-        "low-level-abi-break",
-        "low-level-rust-ffi-memory-safety",
-        "migration-without-rollback-hidden-risk",
-        "mlops-training-serving-skew",
-        "mobile-offline-sync-conflict",
-        "payment-idempotency",
-        "sev1-payment-outage",
-        "soc2-audit-evidence",
-        "terraform-public-bucket"
+        "deploy-repeated-retry-no-new-evidence"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "deploy-repeated-retry-no-new-evidence"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/debugging/retry-same-failed-approach",
       "covered": true,
       "hidden_risk": "diagnosis claim without verified cause",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "api-breaking-field-rename",
-        "bigdata-schema-evolution",
-        "deploy-repeated-retry-no-new-evidence",
-        "guessed-environment-diagnosis",
-        "helm-chart-secret-values",
-        "iot-ota-rollback",
-        "k8s-probe-rbac-networkpolicy",
-        "l4-db-migration-api-compat",
-        "l4-sev1-incident-response",
-        "l5-web3-payment-ai-subscription",
-        "large-table-migration",
-        "low-level-rust-ffi-memory-safety",
-        "migration-without-rollback-hidden-risk",
-        "mlops-training-serving-skew",
-        "mobile-offline-sync-conflict",
-        "payment-idempotency",
-        "sev1-payment-outage",
-        "soc2-audit-evidence",
-        "terraform-public-bucket"
+        "guessed-environment-diagnosis"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "guessed-environment-diagnosis"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/frontend/form-validation-without-accessibility-states",
       "covered": true,
       "hidden_risk": "inaccessible validation feedback",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "frontend-form-accessibility-states-hidden-risk",
-        "implementation-structure-frontend-hook-placement",
-        "l1-copy-change",
-        "l1-css-spacing-fix",
-        "l1-frontend-local-state",
-        "l1-ui-label-fix",
-        "l2-frontend-form-validation",
-        "mobile-offline-sync-conflict",
-        "mobile-push-permission-regression"
+        "frontend-form-accessibility-states-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "frontend-form-accessibility-states-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/frontend/form-validation-without-accessibility-states",
       "covered": true,
       "hidden_risk": "lossy form state after API failure",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "frontend-form-accessibility-states-hidden-risk",
-        "implementation-structure-frontend-hook-placement",
-        "l1-copy-change",
-        "l1-css-spacing-fix",
-        "l1-frontend-local-state",
-        "l1-ui-label-fix",
-        "l2-frontend-form-validation",
-        "mobile-offline-sync-conflict",
-        "mobile-push-permission-regression"
+        "frontend-form-accessibility-states-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "frontend-form-accessibility-states-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/frontend/form-validation-without-accessibility-states",
       "covered": true,
       "hidden_risk": "test coverage only verifies visual red text",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "frontend-form-accessibility-states-hidden-risk",
-        "implementation-structure-frontend-hook-placement",
-        "l1-copy-change",
-        "l1-css-spacing-fix",
-        "l1-frontend-local-state",
-        "l1-ui-label-fix",
-        "l2-frontend-form-validation",
-        "mobile-offline-sync-conflict",
-        "mobile-push-permission-regression"
+        "frontend-form-accessibility-states-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "frontend-form-accessibility-states-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/integration/webhook-without-signature-or-replay-protection",
       "covered": true,
       "hidden_risk": "forged webhook event mutates subscription state",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "iot-device-telemetry-buffer",
-        "kafka-consumer-lag-dlq",
-        "l3-webhook-signature-verification",
-        "l5-web3-payment-ai-subscription",
-        "payment-idempotency",
-        "sev1-payment-outage",
-        "web3-eip712-replay",
-        "webhook-signature-replay-hidden-risk",
-        "webhook-signature-replay"
+        "webhook-signature-replay-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "webhook-signature-replay-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/integration/webhook-without-signature-or-replay-protection",
       "covered": true,
       "hidden_risk": "replayed event duplicates side effects",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "iot-device-telemetry-buffer",
-        "kafka-consumer-lag-dlq",
-        "l3-webhook-signature-verification",
-        "l5-web3-payment-ai-subscription",
-        "payment-idempotency",
-        "sev1-payment-outage",
-        "web3-eip712-replay",
-        "webhook-signature-replay-hidden-risk",
-        "webhook-signature-replay"
+        "webhook-signature-replay-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "webhook-signature-replay-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/integration/webhook-without-signature-or-replay-protection",
       "covered": true,
       "hidden_risk": "parsed body invalidates HMAC verification",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "iot-device-telemetry-buffer",
-        "kafka-consumer-lag-dlq",
-        "l3-webhook-signature-verification",
-        "l5-web3-payment-ai-subscription",
-        "payment-idempotency",
-        "sev1-payment-outage",
-        "web3-eip712-replay",
-        "webhook-signature-replay-hidden-risk",
-        "webhook-signature-replay"
+        "webhook-signature-replay-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "webhook-signature-replay-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/refactoring/shared-utils-business-logic-pollution",
       "covered": true,
       "hidden_risk": "business logic pollution in shared/common/utils",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "abstraction-maturity-overengineering",
-        "agent-repeated-failure-route-repair",
-        "agent-unverified-completion",
-        "ai-generated-api-unverified",
-        "bugfix-missing-same-pattern-scan",
-        "generated-helper-reuse-search-hidden-risk",
-        "guessed-environment-diagnosis",
-        "helper-added-to-utils-without-rationale",
-        "implementation-structure-class-vs-function",
-        "l2-backend-refactor",
-        "l5-web3-payment-ai-subscription",
-        "oversized-object-file-split",
-        "rag-permission-leak",
         "refactor-shared-utility-pollution-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "refactor-shared-utility-pollution-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/refactoring/shared-utils-business-logic-pollution",
       "covered": true,
       "hidden_risk": "unclear owner for tenant and invoice rules",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "abstraction-maturity-overengineering",
-        "agent-repeated-failure-route-repair",
-        "agent-unverified-completion",
-        "ai-generated-api-unverified",
-        "bugfix-missing-same-pattern-scan",
-        "generated-helper-reuse-search-hidden-risk",
-        "guessed-environment-diagnosis",
-        "helper-added-to-utils-without-rationale",
-        "implementation-structure-class-vs-function",
-        "l2-backend-refactor",
-        "l5-web3-payment-ai-subscription",
-        "oversized-object-file-split",
-        "rag-permission-leak",
         "refactor-shared-utility-pollution-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "refactor-shared-utility-pollution-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/refactoring/shared-utils-business-logic-pollution",
       "covered": true,
       "hidden_risk": "hidden behavior change during refactor",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "abstraction-maturity-overengineering",
-        "agent-repeated-failure-route-repair",
-        "agent-unverified-completion",
-        "ai-generated-api-unverified",
-        "bugfix-missing-same-pattern-scan",
-        "generated-helper-reuse-search-hidden-risk",
-        "guessed-environment-diagnosis",
-        "helper-added-to-utils-without-rationale",
-        "implementation-structure-class-vs-function",
-        "l2-backend-refactor",
-        "l5-web3-payment-ai-subscription",
-        "oversized-object-file-split",
-        "rag-permission-leak",
         "refactor-shared-utility-pollution-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "refactor-shared-utility-pollution-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/release/migration-without-rollback",
       "covered": true,
       "hidden_risk": "rollback fails because schema moved forward",
-      "routing_cases": [
+      "matched_by_expected_route_only": [
         "api-breaking-field-rename",
         "bigdata-schema-evolution",
-        "deploy-repeated-retry-no-new-evidence",
         "helm-chart-secret-values",
-        "iot-ota-rollback",
-        "k8s-probe-rbac-networkpolicy",
-        "l4-db-migration-api-compat",
-        "l4-sev1-incident-response",
-        "l5-web3-payment-ai-subscription",
-        "large-table-migration",
-        "low-level-abi-break",
-        "low-level-rust-ffi-memory-safety",
-        "migration-without-rollback-hidden-risk",
-        "mlops-training-serving-skew",
-        "mobile-offline-sync-conflict",
-        "payment-idempotency",
-        "sev1-payment-outage",
-        "soc2-audit-evidence",
-        "terraform-public-bucket"
+        "mobile-offline-sync-conflict"
       ],
-      "routing_not_required_reason": ""
+      "needs_manual_review": false,
+      "routing_cases": [
+        "migration-without-rollback-hidden-risk"
+      ],
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "migration-without-rollback-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/release/migration-without-rollback",
       "covered": true,
       "hidden_risk": "rolling deploy version skew breaks old pods or consumers",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "api-breaking-field-rename",
-        "bigdata-schema-evolution",
-        "deploy-repeated-retry-no-new-evidence",
-        "helm-chart-secret-values",
-        "iot-ota-rollback",
-        "k8s-probe-rbac-networkpolicy",
-        "l4-db-migration-api-compat",
-        "l4-sev1-incident-response",
-        "l5-web3-payment-ai-subscription",
-        "large-table-migration",
-        "low-level-abi-break",
-        "low-level-rust-ffi-memory-safety",
-        "migration-without-rollback-hidden-risk",
-        "mlops-training-serving-skew",
-        "mobile-offline-sync-conflict",
-        "payment-idempotency",
-        "sev1-payment-outage",
-        "soc2-audit-evidence",
-        "terraform-public-bucket"
+        "migration-without-rollback-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "migration-without-rollback-hidden-risk"
+      ],
+      "weak_matches": []
     },
     {
       "benchmark": "evals/professional-benchmarks/release/migration-without-rollback",
       "covered": true,
       "hidden_risk": "contract phase removal before migration evidence",
+      "matched_by_expected_route_only": [],
+      "needs_manual_review": false,
       "routing_cases": [
-        "api-breaking-field-rename",
-        "bigdata-schema-evolution",
-        "deploy-repeated-retry-no-new-evidence",
-        "helm-chart-secret-values",
-        "iot-ota-rollback",
-        "k8s-probe-rbac-networkpolicy",
-        "l4-db-migration-api-compat",
-        "l4-sev1-incident-response",
-        "l5-web3-payment-ai-subscription",
-        "large-table-migration",
-        "low-level-abi-break",
-        "low-level-rust-ffi-memory-safety",
-        "migration-without-rollback-hidden-risk",
-        "mlops-training-serving-skew",
-        "mobile-offline-sync-conflict",
-        "payment-idempotency",
-        "sev1-payment-outage",
-        "soc2-audit-evidence",
-        "terraform-public-bucket"
+        "migration-without-rollback-hidden-risk"
       ],
-      "routing_not_required_reason": ""
+      "routing_not_required_reason": "",
+      "strong_matches": [
+        "migration-without-rollback-hidden-risk"
+      ],
+      "weak_matches": []
     }
   ],
   "findings": [],
-  "generated_at": "2026-06-09T22:18:55.774890+00:00",
-  "hidden_risks_checked": 30,
-  "hidden_risks_covered": 30,
+  "generated_at": "2026-06-10T00:50:11.708950+00:00",
+  "hidden_risks_checked": 34,
+  "hidden_risks_covered": 34,
+  "hidden_risks_matched_by_expected_route_only": 5,
+  "hidden_risks_needing_manual_review": 0,
+  "hidden_risks_with_weak_matches": 2,
   "l1_anti_over_routing_count": 9,
-  "routing_cases_checked": 80,
-  "status": "pass"
+  "matched_by_expected_route_only": 5,
+  "needs_manual_review": 0,
+  "routing_cases_checked": 81,
+  "status": "pass",
+  "strong_matches": 30,
+  "weak_matches": 2
 }

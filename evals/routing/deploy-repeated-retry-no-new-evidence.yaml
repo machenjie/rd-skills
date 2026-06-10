@@ -17,8 +17,11 @@ expected:
   expected_context_budget_mode: staged-plan
   risk_triggers:
     - same agent approach failed twice
+    - database migration
     - irreversible data operation
     - route repair required
+  hidden_risk_phrases:
+    - migration lock impact on production writes
   skills:
     - data-api-contract-changer
     - data-middleware-change-builder
@@ -48,3 +51,4 @@ notes: |
   Two failed deploys on the same step force a route change. A third
   identical retry is a discipline violation; the migration and the data
   state must be inspected before another attempt.
+  Benchmark risk covered: migration lock impact on production writes.

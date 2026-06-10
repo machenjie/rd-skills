@@ -9,10 +9,15 @@ python3 scripts/eval-skill-professionalism.py
 python3 scripts/eval-skill-professionalism.py --coverage-matrix
 python3 scripts/eval-professional-benchmarks.py
 python3 scripts/validate-professionalism-regression.py
+python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/eval-professional-agent-samples.py
 python3 scripts/eval-professional-agent-samples.py --promoted-only --strict
 ```
+
+`eval-skill-professionalism.py` writes the main professionalism eval and the key foundation
+coverage matrix by default. `eval-skill-professionalism.py --coverage-matrix` writes only the
+coverage matrix reports for compatibility with release checklists that call it separately.
 
 Also run the repository validation/build suite listed in `AGENTS.md`.
 
@@ -24,7 +29,9 @@ Also run the repository validation/build suite listed in `AGENTS.md`.
 - professional routing coverage reports uncovered hidden risks.
 - promoted professional agent samples fail under `--strict`.
 - new content bloat warning appears without a recorded exception.
-- a release readiness report status is `blocked`.
+- `reports/professionalism-release-readiness.json` has `release_ready: blocked`,
+  `strict_release_ready: blocked`, or `status: ready-for-authoring / not-release-certified` for a
+  release decision.
 
 ## Non-Blocking Warnings
 
@@ -37,7 +44,11 @@ Also run the repository validation/build suite listed in `AGENTS.md`.
 - Update the baseline only after refreshing reports from the required commands.
 - Baseline updates must show added, removed, or changed items in the regression report.
 - Do not update the baseline to hide unexplained weak status, new warnings, or content bloat.
-- `max_known_warnings_count` must not grow without a named review reason.
+- Every known warning entry must include `owner`, `accepted_reason`, `review_after`,
+  `target_fix_phase`, and `is_release_blocking`.
+- `global_thresholds.max_known_warnings` is typed by warning class. Professional skill warnings for
+  missing `what evidence proves` and vague proactive trigger route/evidence are release-blocking by
+  default and have budget `0` for strict release.
 
 ## Benchmark Promotion Rules
 
@@ -65,9 +76,25 @@ Also run the repository validation/build suite listed in `AGENTS.md`.
 
 ## Release Readiness Interpretation
 
-- `ready` means current reports have no blocking regression findings.
-- `ready` does not mean every warning is fixed.
-- `blocked` means release stops until the listed blockers are fixed or explicitly removed by a reviewed baseline update.
+- `authoring_ready: ready` means the default regression check passed for authoring work.
+- `release_ready: ready` requires the strict regression result and promoted-agent-sample strict
+  result to be present and passing.
+- `strict_release_ready: ready` means the strict release gates passed with no release blockers.
+- `ready-for-authoring / not-release-certified` means authoring may continue, but release is not
+  certified.
+- `blocked` means release stops until the listed blockers are fixed or explicitly removed by a
+  reviewed baseline update.
+
+`reports/professionalism-release-readiness.{md,json}` must include a checklist table with:
+
+- default regression
+- strict regression
+- professional benchmarks
+- routing coverage
+- promoted agent samples strict
+- content bloat exceptions
+- known warnings budget
+- baseline update drift
 
 ## What Not To Do
 

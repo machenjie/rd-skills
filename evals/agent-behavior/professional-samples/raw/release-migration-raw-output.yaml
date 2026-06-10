@@ -1,0 +1,65 @@
+id: release-migration-raw-output
+description: Raw output for migration release readiness review with strict evidence fields.
+prompt: |
+  Review a release that includes a schema migration and rollback concern.
+expected:
+  selected_skills:
+    - delivery-release-gate
+    - data-api-contract-changer
+    - quality-test-gate
+  selected_capabilities:
+    - release-rollback
+    - data-migration-design
+    - version-compatibility
+    - agent-execution-discipline
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/75-release-rollback.md
+  required_quality_gates:
+    - release gate
+    - test gate
+  required_professional_obligations:
+    - old/new version compatibility matrix
+    - rollback migration test
+    - "boundaries inspected: migration, deploy order, consumers"
+    - "residual risk: production-sized lock timing unverified"
+  forbidden_behaviors:
+    - rollback is just redeploy
+    - release approval without evidence
+actual:
+  raw_output: |
+    This is release analysis only; it does not approve the deployment window.
+
+    ```yaml
+    changeforge_route:
+      selected_skills:
+        - delivery-release-gate
+        - data-api-contract-changer
+        - quality-test-gate
+      selected_capabilities:
+        - release-rollback
+        - data-migration-design
+        - version-compatibility
+        - agent-execution-discipline
+      required_references:
+        - references/routing-rules.md
+        - references/skill-registry.md
+        - references/capability-index.md
+        - references/domain-extension-index.md
+        - references/capabilities/75-release-rollback.md
+      required_quality_gates:
+        - release gate
+        - test gate
+    ```
+
+    Boundaries inspected: migration, deploy order, consumers, rollback path.
+    Validation evidence: old/new version compatibility matrix; rollback migration test.
+    Residual risk: production-sized lock timing unverified.
+    Next gate: release gate requires the rollback rehearsal artifact before ship.
+review:
+  human_review_required: true
+  promotion_status: candidate
+  notes: Candidate raw-output release sample with prose before the manifest.

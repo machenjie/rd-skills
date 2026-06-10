@@ -10,5 +10,5 @@ Output obligations: severity-classified structure finding; reuse and placement r
 Validation command: not verified; fixture describes expected agent output only.
 What evidence proves: placement is justified and behavior preservation is required.
 What evidence does not prove: all callers have been scanned in a real repository.
-Residual risk: one indirect caller may still need an integration test.
+Residual risk: one indirect caller may still need an integration test; owner: ai-code-review-refactor.
 Next gate: quality-test-gate.
