@@ -74,6 +74,29 @@ Evaluate every data or middleware change against:
 - **Replication lag tolerance**: Are there read operations that must see the latest write? Are they using the primary or a replica?
 - **Migration rollback**: Is there a tested rollback migration? Can the old application code function with the new schema?
 
+## Mode Matrix
+Select the data/middleware mode before changing storage, cache, queue, search, backfill, or query behavior.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| New store or access path | New table, collection, cache key, queue topic, search index, object path, or query. | Source of truth, consistency, access pattern, index/cache/queue/search design, observability. | Owner store, access patterns, query plan or capacity estimate, test/rollback plan. | `relational-database`, `cache-design`, `message-queue-design`, `search-analytics-design` | Multi-store sync unless required. |
+| Modify existing query/index/cache | Query, index, TTL, invalidation, key namespace, or read path changes. | Preserve correctness while proving plan, staleness, tenant isolation, and write overhead. | EXPLAIN/plan, cache invalidation path, affected callers, before/after latency. | `indexing-query-optimization`, `cache-design`, `quality-test-gate` | Speculative indexes or TTL-only mutable cache. |
+| Bug fix / data inconsistency | Drift, stale cache, duplicate messages, missed events, search gap, bad migration. | Verify source of truth, repair pattern, same-pattern scan, regression proof. | Data sample, root cause, impacted scope, repair/backfill plan, tests. | `failure-diagnosis`, `agent-execution-discipline`, `regression-testing` | Manual data repair without owner/rollback. |
+| Queue/stream reliability | Kafka/queue offset, retry, ordering, DLQ, replay, lag, or idempotency changes. | Delivery semantics, idempotent consumer, offset commit boundary, replay and observability. | ack/commit point, retry/DLQ config, replay test, lag metrics. | `message-queue-design`, `idempotency-retry-design`, `reliability-observability-gate` | Exactly-once claims without proof. |
+| Migration/backfill/freshness | Migration, backfill, reindex, replay, data freshness, retention, or source-of-truth shift. | Online safety, rollback, throttling, freshness SLA, reconciliation. | Forward/rollback test, batch size, progress metric, cutover/reconcile plan. | `data-migration-design`, `delivery-release-gate`, `bigdata-product-extension` when analytics pipelines are involved | Contract/delete phase before reconciliation. |
+| Performance/reliability | Hot key, stampede, full scan, pool saturation, query p99, memory, retention, or cost risk. | Bound resource use and degradation before rollout. | Baseline, capacity/cost estimate, alert, backpressure or fallback. | `performance-budgeting`, `profiling`, `reliability-observability-gate` | Optimization without measured bottleneck. |
+
+## Proactive Professional Triggers
+
+- **Signal:** Redis/cache write has no TTL, invalidation, namespace owner, or tenant-safe key. **Hidden risk:** stale or cross-tenant state, memory growth, hot key. **Required professional action:** define key lifecycle and invalidation before merge. **Route to:** `cache-design`, `reliability-observability-gate`. **Evidence required:** key schema, TTL/invalidation path, memory/hit-rate metric, stale read test.
+- **Signal:** SQL query changes without EXPLAIN/plan or realistic cardinality. **Hidden risk:** full scan, bad composite index, lock or pool saturation. **Required professional action:** validate plan and write overhead. **Route to:** `indexing-query-optimization`, `performance-budgeting`. **Evidence required:** EXPLAIN output, data volume, index rationale.
+- **Signal:** queue consumer commits offset/ACK before side effect is durable or idempotent. **Hidden risk:** lost work or duplicate side effects. **Required professional action:** redesign commit boundary and idempotency. **Route to:** `message-queue-design`, `idempotency-retry-design`. **Evidence required:** commit/ack point, duplicate-delivery test, replay plan.
+- **Signal:** Kafka topic, consumer group, or partition key changes without ordering, DLQ, replay, retention, or idempotency semantics. **Hidden risk:** poison-message loops, out-of-order side effects, and unrecoverable replay gaps. **Required professional action:** define delivery contract before accepting the stream change. **Route to:** `message-queue-design`, `reliability-observability-gate`. **Evidence required:** partition key, ordering guarantee, DLQ/replay procedure, lag and poison-message test.
+- **Signal:** search index mapping/reindex changes without dual index, alias cutover, or backfill progress. **Hidden risk:** missing/incorrect search results. **Required professional action:** plan reindex and consistency window. **Route to:** `search-analytics-design`, `delivery-release-gate`. **Evidence required:** index version, backfill/reconcile metrics, rollback alias.
+- **Signal:** source-of-truth is unclear between DB/cache/search/warehouse/service. **Hidden risk:** permanent drift and conflicting writes. **Required professional action:** declare authoritative owner and derived-store refresh. **Route to:** `architecture-impact-reviewer`, `data-api-contract-changer`. **Evidence required:** owner, write path, reconciliation, consumer impact.
+- **Signal:** backfill/replay job has no throttle, checkpoint, freshness SLA, or rollback. **Hidden risk:** production saturation, partial migration, unbounded cost. **Required professional action:** add checkpointed rollout and observability. **Route to:** `data-migration-design`, `reliability-observability-gate`. **Evidence required:** batch size, checkpoint, progress/lag metric, rollback procedure.
+- **Signal:** write path updates database, cache, search, or queue state in separate steps without transaction, outbox, or reconciliation. **Hidden risk:** durable data and derived stores diverge after partial success. **Required professional action:** choose a consistency boundary and recovery path before implementation. **Route to:** `transaction-consistency`, `backend-change-builder`. **Evidence required:** transaction/outbox decision, reconciliation job, partial-failure test.
+
 ### Decision Tree: Index Design Required?
 
 ```
@@ -142,6 +165,9 @@ Examples:
 
 ## Output Contract
 Return a data and middleware change plan with:
+- **Mode selected**: new store/access path, modify existing, bug fix, queue/stream reliability, migration/backfill, or performance/reliability, with trigger signal.
+- **Boundaries inspected**: schemas, queries, indexes, cache keys, invalidation paths, queue topics/consumer groups, search indexes, object storage paths, migrations, backfills, and downstream consumers inspected or skipped with reason.
+- **Professional judgment**: source-of-truth, consistency, delivery, freshness, capacity, or recovery decision made, and data risks ruled out or retained.
 - **Source-of-truth declaration**: Authoritative store for each entity and derived store relationships.
 - **Consistency model**: Strong/eventual/causal per operation, with replication lag tolerance analysis.
 - **Access pattern inventory**: Queries driving the design, with frequency and cardinality estimates.
@@ -150,16 +176,21 @@ Return a data and middleware change plan with:
 - **Queue design**: Delivery semantics, DLQ routing, poison message handling, retry policy.
 - **Migration plan**: Forward migration steps; rollback migration; online vs. offline strategy; execution window.
 - **Failure mode analysis**: Named failure scenarios with prevention or recovery strategy.
+- **Reuse and placement rationale**: why each index, cache key, queue topic, migration, backfill, or derived-store update belongs at this storage/middleware boundary.
+- **Behavior preservation**: read/write semantics, freshness, ordering, rollback, and old application compatibility preserved or intentionally changed.
 - **Test obligations**: Query plan tests, cache invalidation tests, DLQ tests, migration tests.
 - **Observability**: Metrics (query latency, cache hit rate, queue depth, DLQ depth) and alert thresholds.
+- **Validation evidence**: EXPLAIN/plan, cache, queue, migration/backfill, replay, and observability checks run, with residual risk and next gate.
+- **Evidence limits**: what each plan/test/metric proves and what it does not prove about production cardinality, replay scale, tenant isolation, stale reads, or downstream consumers.
 
 ## Evidence Contract
 Close a data or middleware change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
-- **Basis**: the source-of-truth declaration, consistency model, or delivery semantic the change rests on, and the access pattern that justifies it.
-- **Files and boundaries inspected**: the schemas, queries, cache keys, and consumer groups read, and the invalidation or offset-commit boundary confirmed.
+- **Basis**: the selected mode, source-of-truth declaration, consistency model, delivery semantic, freshness target, or access pattern the change rests on.
+- **Files and boundaries inspected**: schemas, queries, indexes, cache keys, invalidation paths, queue topics/consumer groups, search indexes, migrations/backfills, and downstream consumers read, and the invalidation or offset-commit boundary confirmed.
 - **Placement rationale**: why each index, cache key, queue, or migration step is shaped as it is, with the rejected alternative and its query-plan or throughput evidence.
-- **Validation commands**: the query-plan, cache-invalidation, DLQ/replay, TTL, and migration-rollback checks run, each with its outcome.
-- **Residual risk**: the stampede, hot-key, lag, ordering, or partial-migration path that remains untested or assumed, and the named owner of the follow-up.
+- **Validation commands**: the query-plan, cache-invalidation, DLQ/replay, TTL, migration-rollback, backfill, and freshness checks run, each with its outcome and what it proves/does not prove.
+- **Data judgment and handoff**: mode selected, source-of-truth/consistency judgment, behavior preservation, evidence limits, and next gate.
+- **Residual risk**: the stampede, hot-key, lag, ordering, stale read, data drift, cost, or partial-migration path that remains untested or assumed, and the named owner of the follow-up.
 
 ## Quality Gate
 1. Source of truth is declared for every entity affected by the change.

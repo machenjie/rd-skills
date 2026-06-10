@@ -28,7 +28,13 @@ python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
 python3 scripts/validate-skill-content-size.py
+python3 scripts/audit-skill-content.py
 python3 scripts/eval-routing.py
+python3 scripts/eval-skill-professionalism.py
+python3 scripts/eval-skill-professionalism.py --coverage-matrix
+python3 scripts/eval-professional-benchmarks.py
+python3 scripts/validate-professionalism-regression.py
+python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/validate-stage-routing-architecture.py
 python3 scripts/validate-hooks.py
 python3 scripts/eval-agent-behavior.py

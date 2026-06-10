@@ -139,6 +139,10 @@ Escalate when: a change affects a user flow covered by an SLO and the SLI metric
 - Dashboard shows infrastructure is healthy (CPU 30%, memory 40%) while 15% of user requests are failing — no user-facing SLI panel; engineers spend 30 minutes diagnosing infrastructure before checking application error rate.
 - Log volume triples after adding debug-level request body logging — log storage costs exceed monthly budget; ops disables all logging for the service; production goes dark.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when the change affects a production-facing path, SLO, alert, job, queue, external dependency, or post-release validation. Do not load it for local-only instrumentation in non-production code with no operator surface.
+
 # Output Contract
 
 Return an observability plan with:
@@ -154,6 +158,10 @@ Return an observability plan with:
 - `privacy_review` (fields audited for PII/PAN/PHI; confirmed excluded from logs and traces; encryption in transit for telemetry)
 - `cardinality_review` (metric labels audited for bounded cardinality; high-cardinality fields moved to traces/logs)
 - `investigation_paths` (for each failure mode: which metrics/logs/traces reveal it; runbook reference)
+
+# Evidence Contract
+
+Close observability design only when the output names the user-impact signal, logs/metrics/traces/alerts added or intentionally omitted, cardinality/privacy review, runbook owner, validation command or dashboard query, what the signal proves, what it does not prove during an incident, residual blind spots, and next gate.
 
 # Quality Gate
 
@@ -182,7 +190,3 @@ Hand off to `logging-error-handling` for error taxonomy, exception mapping, and 
 # Completion Criteria
 
 The capability is complete when **operators can detect user impact within minutes using defined SLI/SLO alerts, diagnose root cause by correlating logs/metrics/traces via propagated correlation IDs, validate that a change is behaving correctly by comparing against baselines on the North Star dashboard, and roll back with confidence using the defined observability evidence — without exposing sensitive data or generating false-positive alert noise**.
-
-# Completion Criteria
-
-The capability is complete when production-facing behavior has actionable, correlated, privacy-safe observability from release through incident response.

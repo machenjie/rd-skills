@@ -89,6 +89,29 @@ Evaluate the release plan against these dimensions:
 - **Compliance evidence**: Which approval, artifact digest, SBOM, vulnerability scan, change ticket, and deploy audit event must be retained?
 - **Incident mitigation**: If this release is part of a SEV response, which action is mitigation, which action is resolution, and who owns customer-facing updates?
 
+## Mode Matrix
+Select the release mode before approving deployment, migration, config, IaC, rollback, or incident hotfix work.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| Standard rollout | App deploy, config, feature flag, artifact, or pipeline release. | Immutable artifact, config compatibility, watch owner, rollback signal. | Pipeline output, env audit, flag state, monitoring window. | `ci-cd`, `release-rollback`, `reliability-observability-gate` | Canary unless blast radius requires it. |
+| Migration-sensitive release | DB/schema/backfill/contract/migration or old/new version coexistence. | Expand/migrate/contract, rollback, version skew, data safety. | Forward/rollback migration test, compatibility matrix, sequence. | `data-migration-design`, `data-api-contract-changer` | Contract/delete phase until consumers migrate. |
+| Progressive delivery | Canary, blue-green, traffic split, feature flag rollout. | Metrics thresholds, promotion/abort decision, statistical signal. | Canary plan, request volume, SLO burn, rollback action. | `reliability-observability-gate`, `performance-budgeting` | 100% rollout before signal threshold. |
+| IaC/K8s/Helm/GitOps | Terraform/Pulumi/Helm/K8s/Gateway/IAM/DNS/CDN/WAF/KMS. | Plan diff, blast radius, policy/security, state lock, rollback. | Rendered diff, plan/apply output, drift check, rollback note. | `kubernetes-gateway`, `secret-configuration-security`, `security-privacy-gate` | Manual apply without reviewed plan. |
+| Incident hotfix | SEV mitigation, emergency config, rollback, traffic shift. | Separate mitigation from resolution, preserve evidence, communicate. | Incident roles, validation signal, rollback decision, comms owner. | `failure-diagnosis`, `reliability-observability-gate`, `change-documentation-gate` | Cleanup/refactor during mitigation. |
+| Regulated/compliance release | SOC2/ISO/PCI/HIPAA/SOX, artifact signing, approval, audit retention. | Audit-ready evidence, exception owner, retention, approval trail. | Approval, artifact digest, SBOM/scan, deploy event, retention owner. | `security-privacy-gate`, `change-documentation-gate` | Release approval without evidence packet. |
+
+## Proactive Professional Triggers
+
+- **Signal:** rollback plan says only "revert/redeploy" while migration, config, feature flag, or external state changes. **Hidden risk:** rollback fails after state moves forward. **Required professional action:** define state-aware rollback. **Route to:** `release-rollback`, `data-api-contract-changer`. **Evidence required:** rollback command/test, data compatibility.
+- **Signal:** migration adds NOT NULL, drop/rename, backfill, or contract phase without old/new version matrix. **Hidden risk:** rolling deploy crashes old or new pods. **Required professional action:** enforce expand/migrate/contract. **Route to:** `data-migration-design`, `backend-change-builder`. **Evidence required:** compatibility matrix and migration tests.
+- **Signal:** feature flag cannot be disabled without deploy or lacks cleanup owner. **Hidden risk:** incident mitigation fails or permanent flag debt. **Required professional action:** require remote disable and cleanup task. **Route to:** `task-dag-planner`, `code-clarity-maintainability`. **Evidence required:** flag config, disable test, removal owner.
+- **Signal:** config/secret/env var changes are not validated in target environment. **Hidden risk:** startup crash or secret exposure. **Required professional action:** run config audit before deploy. **Route to:** `secret-configuration-security`, `security-privacy-gate`. **Evidence required:** env diff, secret source, rotation impact.
+- **Signal:** canary has too little traffic or no SLO burn/error/latency threshold. **Hidden risk:** false confidence before full rollout. **Required professional action:** set promotion/abort criteria. **Route to:** `reliability-observability-gate`. **Evidence required:** request volume, dashboard, threshold.
+- **Signal:** Helm/K8s/GitOps/IaC plan changes IAM, ingress, DNS, CDN, WAF, KMS, namespace, probes, or CRDs without rendered diff/rollback. **Hidden risk:** infrastructure outage or public exposure. **Required professional action:** require plan review and rollback. **Route to:** `kubernetes-gateway`, `security-privacy-gate`. **Evidence required:** plan/rendered diff, policy impact, rollback note.
+- **Signal:** release lacks post-release owner, watch window, or dashboard. **Hidden risk:** regression discovered by users. **Required professional action:** assign operational watch. **Route to:** `reliability-observability-gate`. **Evidence required:** owner, duration, metrics, rollback trigger.
+- **Signal:** regulated release lacks approval, artifact digest, SBOM/scan, deploy audit event, or retention metadata. **Hidden risk:** audit failure. **Required professional action:** block until evidence chain exists. **Route to:** `change-documentation-gate`, `security-privacy-gate`. **Evidence required:** audit packet.
+
 ### Decision Tree: What Deployment Strategy Is Needed?
 
 ```
@@ -168,6 +191,9 @@ Examples:
 
 ## Output Contract
 Return a structured release plan with:
+- **Mode selected**: standard rollout, migration-sensitive, progressive delivery, IaC/K8s/Helm/GitOps, incident hotfix, or regulated release, with trigger signal.
+- **Boundaries inspected**: pipeline, artifact, config, secrets, migrations, flags, Helm/K8s/IaC, DNS/CDN/WAF/gateway, cloud IAM/KMS, dashboards, runbooks, consumers, and audit boundaries inspected or skipped with reason.
+- **Professional judgment**: rollout, rollback, migration/config compatibility, canary, incident, or compliance decision and risks ruled out or retained.
 - **Deployment strategy**: Rolling / canary / blue-green with configuration (percentages, replica counts, traffic routing).
 - **Pre-deployment checklist**: Environment config validation, secrets audit, staging parity confirmation, migration compatibility check.
 - **Cloud governance checklist**: IaC plan review, account/project boundary, namespace boundary, IAM diff, DNS/CDN/WAF/gateway rollback, KMS/key rotation impact, resource tagging, and audit trail.
@@ -180,16 +206,22 @@ Return a structured release plan with:
 - **Compliance evidence**: Change approval, deploy audit event, artifact digest, SBOM/vulnerability scan evidence, evidence owner, and retention period.
 - **Post-release monitoring plan**: Named owner, dashboards, metrics, SLO burn rate, duration of watch window.
 - **Execution discipline evidence**: Deployment commands or pipeline links, exit status, failed-attempt ledger when applicable, route repair decision, and closure package.
+- **Validation evidence**: pipeline, staging, rollback, Helm/IaC, config, canary, post-release, or audit checks run, with outcomes tied to the release obligation.
+- **Reuse and placement rationale**: why migration, config, flag, Helm/IaC, pipeline, watch, and rollback responsibilities sit in the selected release boundary.
+- **Behavior preservation**: old/new version compatibility, config defaults, feature flag off-state, public contract, and rollback behavior preserved or intentionally changed.
 - **Release notes**: Human-readable changelog entries (Keep a Changelog format) for affected audiences.
+- **Evidence limits**: what pipeline, staging, rollback, Helm/IaC, config, canary, and post-release evidence proves and what production, consumer, or data risks remain unproven.
 - **Residual risks**: Known risks with mitigation or acceptance rationale.
+- **Next gate/handoff**: reliability, security, data/API, docs, incident, or no-next-gate rationale.
 
 ## Evidence Contract
 Close a release plan only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
-- **Basis**: the rollout topology (flag/canary/blue-green) and schema/config compatibility rule the plan rests on.
-- **Files and boundaries inspected**: the environment config, migration scripts, IaC/Helm values, and secret references read, and the staging-parity boundary confirmed.
+- **Basis**: the selected mode, rollout topology (flag/canary/blue-green), schema/config compatibility rule, incident mitigation goal, or compliance control the plan rests on.
+- **Files and boundaries inspected**: environment config, migration scripts, IaC/Helm values, secret references, pipeline, artifact digest, flags, dashboards, runbooks, consumers, and staging/prod parity boundary confirmed.
 - **Placement rationale**: why the migration sequences before or after the code deploy, and why the rollback boundary is drawn where it is.
-- **Validation commands**: the staging deploy, rollback rehearsal, `helm diff`/IaC plan, and pipeline run, each with its outcome.
-- **Residual risk**: the rollback trigger, post-release watch signal, and the unverified compatibility path that remains, with the named owner.
+- **Validation commands**: staging deploy, rollback rehearsal, `helm diff`/IaC plan, rendered manifest diff, pipeline run, config audit, and post-release query run, each with its outcome and what it proves/does not prove.
+- **Release judgment and handoff**: mode selected, rollout/rollback judgment, behavior preservation, evidence limits, and next gate.
+- **Residual risk**: rollback trigger, post-release watch signal, config parity, migration compatibility, IaC rollback, or unverified consumer path that remains, with the named owner.
 
 ## Quality Gate
 1. Every deployment artifact is immutably tagged — no `latest` tags in production.

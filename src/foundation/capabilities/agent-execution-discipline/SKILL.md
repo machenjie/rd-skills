@@ -78,6 +78,10 @@ Select this capability when:
 
 Prefer companion capabilities for the substantive content: `implementation-structure-design` for placement detail, `failure-diagnosis` for root-cause workflow, `solution-optimality-evaluation` for algorithmic-choice review.
 
+# With-Skill Vs Without-Skill Behavior
+
+This capability changes agent behavior from plausible completion to evidenced execution: completion must name boundary, fresh command output, residual risk, and handoff; diagnosis must name symptom, tested hypothesis, method, verified cause, and counter-evidence; local fixes require same-pattern scan; new helpers/classes/files require reuse and placement rationale; two same-path failures force route repair; validation states what it proves and does not prove.
+
 # Risk Escalation Rules
 
 - Escalate when the agent has produced two failed attempts at the same approach — the next step must be a route change or human escalation, not a third retry.
@@ -90,12 +94,7 @@ Prefer companion capabilities for the substantive content: `implementation-struc
 
 ## Evidence Inventory
 
-Every completion claim must list the evidence in a structured inventory:
-
-- **Command run** (literal command line, working directory).
-- **Output captured** (exit code, head/tail of stdout/stderr, or attached fixture).
-- **Artifact produced** (file path, diff, screenshot, log excerpt).
-- **Outcome** (pass/fail/inconclusive), what it proves, and what it does not prove (paths, branches, environments, datasets, or risks the run did not cover).
+Every completion claim must list the evidence in a structured inventory: **command run** (literal command line, working directory), **output captured** (exit code, head/tail, or fixture), **artifact produced** (file path, diff, screenshot, log excerpt), and **outcome** (pass/fail/inconclusive, what it proves, what it does not prove).
 
 Speculative evidence — "this should work", "based on the docs", "the linter probably passes" — is not evidence.
 
@@ -117,24 +116,13 @@ Forbidden patterns: "must be environment", "probably the user's setup", "some ba
 
 ## Route Repair Ledger
 
-When two attempts of the same approach fail, log:
-
-- **Attempt 1**: hypothesis, change, result.
-- **Attempt 2**: hypothesis, change, result.
-- **Failure signature** shared by both attempts.
-- **Route change** chosen: re-read failing output / inspect call site / shrink scope / escalate.
-- **New hypothesis** that the route change produces.
+When two attempts of the same approach fail, log attempt 1, attempt 2, shared failure signature, route change chosen (re-read failing output / inspect call site / shrink scope / escalate), and the new hypothesis.
 
 A third attempt of the same approach without a route change is a discipline violation.
 
 ## Same-Pattern Scan Record
 
-Before any local code fix:
-
-- **Pattern signature**: regex, symbol, or call-shape that captures the defect.
-- **Scope scanned**: directories, languages, file globs.
-- **Other occurrences found**: list with file:line, or "none found".
-- **Decision**: cover all / cover subset with explicit rationale / local-only with explicit rationale.
+Before any local code fix, record pattern signature, scope scanned, other occurrences found, and decision: cover all / cover subset with rationale / local-only with rationale.
 
 ## Reuse and Placement Rationale (delegated)
 
@@ -142,12 +130,7 @@ Delegate the schema to `implementation-structure-design`; this capability requir
 
 ## Proactive Closure Package
 
-Every handoff must include:
-
-- **Boundary**: what changed and what did not.
-- **Validation results**: which validators or tests actually ran, with exit codes.
-- **Residual risk**: what remains untested, unmigrated, unrolled-back, or unmonitored.
-- **Handoff target**: next skill or human, with the specific question or action required.
+Every handoff must include boundary, validation results with exit codes, residual risk, and handoff target with the specific question or action required.
 
 ## Evidence Contract Answer Set
 
@@ -158,6 +141,10 @@ The five questions every professional skill's own Evidence Contract must answer;
 3. **Placement rationale** — why each new or changed element lives where it does: reuse-vs-new decision, owner, and dependency direction (schema from `implementation-structure-design`).
 4. **Validation commands** — the literal commands or checks run to prove the change works, with outcomes (schema from the Evidence Inventory above).
 5. **Residual risk** — what remains untested, unmigrated, unmonitored, or assumed, and who owns the follow-up.
+
+## AI Generated Code Discipline Failures
+
+Treat these as execution defects until corrected with evidence: local fix without same-pattern scan; invented helper without reuse search; completion claim without command output; diagnosis without verified cause; retrying the same failed approach; business logic in common/utils; scope expansion without boundary statement; validation overclaim such as presenting lint, typecheck, one unit test, or manual inspection as full build, full regression, or production readiness.
 
 # Reference Loading Policy
 
@@ -188,19 +175,12 @@ Return an Execution Discipline Report alongside any non-trivial agent-assisted c
 - **Route repair ledger** (when applicable): attempt 1, attempt 2, failure signature, route change, new hypothesis.
 - **Same-pattern scan record** (when a local fix is applied): pattern signature, scope, other occurrences, decision.
 - **Proactive closure package**: boundary, validation results, residual risk, handoff target.
+- **Professional evidence contract answer set**: basis; files and boundaries inspected; reuse/placement rationale; behavior preservation when applicable; validation commands; residual risk; next gate.
 - **Discipline violations**: any rule violation that was accepted with justification, or "none".
-- **Local convention scan record**:
-  same file, same directory, parent module, sibling module, tests, selected convention.
-- **Reuse ladder record**:
-  direct reuse, extension reuse, composition, adapter/wrapper, extraction, new code decision.
-- **Extension safety record**:
-  old behavior preserved, compatibility risk, tests covering old and new behavior.
-- **Comment quality record**:
-  exported/public comments added;
-  complex internal logic comments added;
-  test scenario/regression comments added;
-  redundant comments removed;
-  comments intentionally omitted with reason.
+- **Local convention scan record**: same file, same directory, parent module, sibling module, tests, selected convention.
+- **Reuse ladder record**: direct reuse, extension reuse, composition, adapter/wrapper, extraction, new code decision.
+- **Extension safety record**: old behavior preserved, compatibility risk, tests covering old and new behavior.
+- **Comment quality record**: exported/public comments, complex internal comments, test scenario/regression comments, redundant comments removed, and intentional omissions.
 
 # Quality Gate
 
@@ -221,6 +201,8 @@ Return an Execution Discipline Report alongside any non-trivial agent-assisted c
 15. Partial verification is reported as partial, never generalized to a full pass; "all tests pass" is not claimed from a lint-only or single-test run.
 16. When verification could not run, a not-verified disclosure — status, why not run, residual risk, exact command — replaces any completion claim.
 17. When the change is a review, spec compliance (requirement, acceptance criteria, non-goals, plan, compatibility, old-behavior preservation) is confirmed before code-quality judgement, and implementer self-review does not replace independent review.
+18. AI-generated code is rejected or repaired when it shows local-only fixing, invented helpers, missing reuse search, wrong shared/common placement, hidden scope expansion, or validation overclaim.
+19. Every professional skill closure answers the full evidence contract set: inspected boundaries, judgment, reuse/placement rationale, behavior preservation, validation evidence, residual risk, and next gate.
 
 # Used By
 

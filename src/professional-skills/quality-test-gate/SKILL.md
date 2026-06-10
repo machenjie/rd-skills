@@ -79,6 +79,29 @@ Select the appropriate evidence level for each risk category in the change:
 - **Model risk**: Does the change affect a trained model, feature store, model registry, drift monitor, or fairness metric? Requires offline evaluation, online shadow/canary evidence, drift threshold, bias/fairness audit, and rollback model test.
 - **Monorepo build risk**: Does affected-test selection or cache reuse decide what runs? Requires module graph validation, cache key review, generated-file policy checks, and periodic full-suite comparison.
 
+## Mode Matrix
+Select the testing mode by risk. Do not request tests generically; name the failure the test must catch.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| New behavior test strategy | New feature, endpoint, flow, schema, integration, job, or model. | Map material risks to unit/integration/contract/E2E/migration/load/security tests. | Risk-to-test map, fixture owner, what each test proves/does not prove. | `test-strategy`, matching implementation skill | Full E2E matrix for local logic. |
+| Bug-fix regression | Defect, incident, failing test, same-pattern fix. | Prove the historical failure cannot recur and scan related cases. | Reproduction, regression test, same-pattern scope, old behavior preserved. | `regression-testing`, `agent-execution-discipline` | Snapshot-only regression proof. |
+| Contract/API/migration test | Schema, DTO, event, migration, rollback, generated client. | Consumer compatibility, forward/rollback, version skew, data integrity. | Contract/migration commands, fixture data, consumer list. | `contract-testing`, `data-api-contract-changer` | Unit-only proof. |
+| Integration/external dependency | DB/cache/queue/search/provider/webhook/file storage. | Mock-vs-real boundary, sandbox parity, retries, DLQ, reconciliation. | Real dependency or contract test, mock assumptions, failure simulation. | `integration-testing`, `integration-change-builder`, `data-middleware-change-builder` | Mock-only confidence. |
+| Frontend/user behavior/a11y | UI form, route, component, focus, validation, disabled/error states. | User behavior, accessibility semantics, state coverage. | Accessibility-query assertions, axe/keyboard evidence, state matrix. | `frontend-testing`, `frontend-change-builder` | CSS selector/internal hook assertions. |
+| Flaky/performance/security | Flaky CI, load/latency, auth, permission, calculation, race/idempotency. | Stabilize signal, cover negative cases, avoid false confidence. | Flake triage, property/negative cases, load/security evidence. | `security-privacy-gate`, `reliability-observability-gate` | Blind retries as a fix. |
+
+## Proactive Professional Triggers
+
+- **Signal:** bug fix has no test that fails before the fix or no stated historical failure. **Hidden risk:** regression test does not protect the bug. **Required professional action:** require reproduction or explain non-automatable proof. **Route to:** `regression-testing`, `agent-execution-discipline`. **Evidence required:** failing/passing test or manual proof.
+- **Signal:** API/schema/event change has only unit tests. **Hidden risk:** consumers or generated clients break. **Required professional action:** add contract or generated-client validation. **Route to:** `contract-testing`, `data-api-contract-changer`. **Evidence required:** contract test, schema diff, consumer impact.
+- **Signal:** migration/backfill has no rollback and data-integrity assertion. **Hidden risk:** unrecoverable production state. **Required professional action:** test forward/rollback with representative data. **Route to:** `data-migration-design`, `delivery-release-gate`. **Evidence required:** migration test output and rollback proof.
+- **Signal:** mocks replace real DB/cache/queue/provider behavior without contract validation. **Hidden risk:** tests validate impossible behavior. **Required professional action:** validate mock assumptions or use integration/sandbox test. **Route to:** `integration-testing`, `data-middleware-change-builder`, `integration-change-builder`. **Evidence required:** mock contract and failure cases.
+- **Signal:** UI tests assert CSS/private internals instead of accessible user behavior. **Hidden risk:** user flow regresses while tests pass. **Required professional action:** rewrite using accessibility queries and state assertions. **Route to:** `frontend-testing`, `code-clarity-maintainability`. **Evidence required:** behavior assertion and a11y proof.
+- **Signal:** flaky test is retried, skipped, or quarantined without owner/root cause. **Hidden risk:** real failure hidden by CI noise. **Required professional action:** triage flake before gate acceptance. **Route to:** `failure-diagnosis`, `agent-execution-discipline`. **Evidence required:** flake signature, owner, remediation.
+- **Signal:** fixture/factory/golden file is shared across modules with business data and no owner. **Hidden risk:** hidden coupling and broad churn. **Required professional action:** assign fixture ownership or localize. **Route to:** `implementation-structure-design`, `code-clarity-maintainability`. **Evidence required:** owner, boundary, deletion/update path.
+- **Signal:** test plan lacks negative case for permission, idempotency, concurrency, invalid input, or partial failure. **Hidden risk:** happy-path confidence only. **Required professional action:** add mutation-like negative case for the risk. **Route to:** `backend-change-builder`, `security-privacy-gate`, `data-middleware-change-builder`. **Evidence required:** negative test and what it proves.
+
 ### Decision Tree: Test Depth Required
 
 ```
@@ -184,10 +207,15 @@ Examples:
 
 ## Output Contract
 Return a test strategy with:
+- **Mode selected**: new behavior, bug-fix regression, contract/migration, integration, frontend/a11y, or flaky/performance/security, with trigger signal.
+- **Boundaries inspected**: changed code paths, branches, public contracts, fixtures, mocks, generated files, DB/cache/queue/provider seams, UI states, CI selection, and release boundaries inspected or skipped with reason.
+- **Professional judgment**: test depth decision, risk accepted or ruled out, and why cheaper or heavier evidence is insufficient or unnecessary.
 - **Risk-to-test mapping**: Each identified risk paired with its required test type, depth, and pass criteria.
+- **Proof statement**: for every proposed or executed test, what this test proves and what it does not prove.
 - **Test level breakdown**: Unit / integration / contract / E2E / migration count and rationale.
 - **Fixture strategy**: Data setup, isolation approach, and test data generation method.
 - **Test structure strategy**: test file placement, fixture/factory/mock/golden ownership, public-behavior boundary, and shared helper audit.
+- **Reuse and placement rationale**: why tests, fixtures, factories, mocks, golden files, and helpers live at their selected owner boundary.
 - **Mock boundaries**: Which dependencies are mocked vs. real, and how mock assumptions are validated.
 - **Migration test plan**: Forward execution, rollback execution, and data integrity assertion approach.
 - **Coverage obligations**: Specific logical branches or code paths that must be covered (not aggregate percentage).
@@ -196,16 +224,19 @@ Return a test strategy with:
 - **Experiment test obligations**: exposure event assertion, assignment stability, sample ratio mismatch detection, primary/guardrail metric query validation, and rollback-on-guardrail regression evidence.
 - **MLOps test obligations**: model version registry check, feature store point-in-time correctness, training-serving skew test, drift metric threshold, fairness/bias evaluation, shadow/canary plan, and rollback model verification.
 - **Monorepo test obligations**: module graph, affected tests, cache key inputs, generated file policy, and full-test fallback cadence.
-- **Execution evidence**: Commands run, exit codes, relevant output, artifacts produced, and any unrun test obligations with rationale.
+- **Validation evidence**: Commands run, exit codes, relevant output, artifacts produced, and any unrun test obligations with rationale.
+- **Evidence limits**: what each test proves and what it does not prove about integration seams, scale, browsers, production data, flake risk, or release readiness.
 - **Residual risks**: Accepted gaps with explicit business justification and mitigating controls.
+- **Next gate/handoff**: implementation, contract, security, reliability, release, or no-next-gate rationale.
 
 ## Evidence Contract
 Close a test strategy only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
-- **Basis**: the risk-to-test mapping each test layer rests on, and why that layer is the right depth for the risk.
-- **Files and boundaries inspected**: the code paths, branches, and integration seams the strategy covers, and the mock-versus-real boundary chosen for each dependency.
+- **Basis**: the selected mode, risk-to-test mapping each test layer rests on, and why that layer is the right depth for the risk.
+- **Files and boundaries inspected**: code paths, branches, public contracts, fixtures, mocks, generated files, integration seams, UI states, CI selection, and release boundaries the strategy covers, and the mock-versus-real boundary chosen for each dependency.
 - **Placement rationale**: why each test sits at its level (unit/integration/contract/E2E/migration) instead of a cheaper or more expensive one.
-- **Validation commands**: the literal test suites and validators run, each with its exit code and the obligation it satisfies.
-- **Residual risk**: the accepted coverage gap or non-automatable obligation with its compensating manual evidence, and the named owner of the follow-up.
+- **Validation commands**: the literal test suites and validators run, each with its exit code, the obligation it satisfies, and what it proves/does not prove.
+- **Testing judgment and handoff**: mode selected, risk-to-test judgment, behavior preservation when applicable, evidence limits, and next gate.
+- **Residual risk**: the accepted coverage gap, flaky signal, mock limitation, untested negative case, or non-automatable obligation with its compensating manual evidence, and the named owner of the follow-up.
 
 ## Quality Gate
 1. Every material risk has an identified test with pass/fail criteria.
@@ -233,6 +264,8 @@ Close a test strategy only when all five canonical answers are concrete (answer 
 23. Test pass claims map to the actual command and suite that ran; a lint or type-check pass is never reported as a test pass, and a single passing test is never reported as full-suite or full-coverage success.
 24. Reused test results are fresh: if code or inputs changed after a run, the suite is re-run before the pass is claimed.
 25. Test acceptance maps to the acceptance criteria and non-goals (spec compliance) before test-quality sign-off; a clean test suite does not substitute for a missing required behavior.
+26. Every proposed or reported test states what it proves and what it does not prove.
+27. Bug fixes include regression evidence for the verified defect or a documented reason the regression is non-automatable.
 
 ## Handoff
 - **backend-change-builder** — with test obligations for service, repository, and API layers.

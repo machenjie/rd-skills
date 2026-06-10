@@ -1,0 +1,49 @@
+---
+id: queue-consumer-idempotency-hidden-risk
+description: |
+  Queue consumer review must route duplicate delivery, poison message, replay,
+  and observability obligations.
+prompt: |
+  Review a fulfillment queue consumer. It updates order status and sends a
+  shipment request, but there is no idempotency key, retry budget, replay
+  command, DLQ handling, or queue lag metric.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: code-review
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - missing test evidence
+  skills:
+    - backend-change-builder
+    - data-middleware-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - idempotency-retry-design
+    - message-queue-design
+    - async-job-design
+    - observability
+    - agent-execution-discipline
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - experience-impact-modeler
+    - delivery-release-gate
+  capabilities:
+    - form-validation-design
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - documentation gate
+notes: |
+  Queue correctness should not over-route to product UX or payment domains.

@@ -77,6 +77,34 @@ Select the product surface and language surface for the change, and launch only 
 matching professional skill and capabilities. Pair with `change-forge-router` for the overall
 path and `agent-execution-discipline` for evidence and handoff discipline.
 
+# Professional Evidence By Stage
+
+Each stage has a minimum evidence obligation before handoff:
+
+| Stage | Professional evidence required |
+| --- | --- |
+| requirement-intake | current behavior, desired behavior, non-goals, assumptions, open questions, and completion signal. |
+| architecture-design | affected boundaries, dependency direction, ownership, simpler alternative, tradeoff, and rollback implication. |
+| implementation-planning | reuse ladder, placement rationale, touched files, validation commands, and split/sequence decision. |
+| coding | inspected local convention, selected capabilities, changed boundary, tests or validators run, and residual risk. |
+| debugging-diagnosis | symptom, hypothesis tested, method, verified cause, counter-evidence, and no same-path third retry. |
+| bug-fix | verified cause, same-pattern scan, regression proof, old behavior preservation, and local/broad fix rationale. |
+| code-review | severity-classified findings, boundary inspected, missing evidence, behavior-change risk, and required fix owner. |
+| refactoring | before/after behavior preservation, affected callers, deletion path, placement decision, and regression evidence. |
+| testing | risk-based test level, fixture/data owner, what the test proves, what it does not prove, and flaky-risk note. |
+| release-delivery | rollout plan, rollback path, config/migration compatibility, monitoring signal, and owner acceptance. |
+| documentation-handoff | affected artifacts, no-change rationales, validation/link checks, residual doc risk, and owner. |
+| skill-authoring | source body/reference boundary, registry impact, validators/evals run, and no runtime architecture drift. |
+
+# Stage Transition Rules
+
+- Move from diagnosis to bug-fix only after a verified cause exists or the next action is a reversible instrumentation change.
+- Move from implementation-planning to coding only after reuse, placement, validation, and skipped heavy capabilities are named.
+- Move from coding to testing only after the changed behavior and residual risk are explicit; tests are then selected by risk, not by habit.
+- Move from code-review to refactoring only when findings require behavior-preserving movement and old behavior proof is available.
+- Move from testing to release-delivery only when the test result states what it proves, what it does not prove, and which release risk remains.
+- Move from release-delivery to documentation-handoff when rollout, rollback, migration, config, or operational behavior changes reader obligations.
+
 # Risk Escalation Rules
 
 - Escalate to `security-privacy-gate` when the stage touches auth, secrets, input trust boundary, or data exposure.
@@ -92,6 +120,18 @@ path and `agent-execution-discipline` for evidence and handoff discipline.
 - Skip rationale is part of the output, not a silent omission. "Skipped: release gate (no rollout in this change)" is valid; dropping the gate silently is not.
 - The context budget decision is explicit: `minimal` for L1, `single-stage` for L2, `staged-plan` for L3+ where planning spans stages but execution stays staged.
 - This capability keeps a compact launch matrix in its own body; it does not copy or depend on an external matrix file. Per-language deep checklists stay in the language professional usage capability bodies.
+- Mode Matrix sections in professional skills refine the active stage: for example, backend `bug-fix` selects bug-fix stage evidence, while backend `performance/reliability fix` stays in coding, debugging, or release depending on whether the work is implementation, diagnosis, or rollout.
+- Anti-pattern examples that must be rejected: loading architecture, coding, testing, and release gates for one local patch; running release-delivery during review because a deployment might happen later; loading all language capabilities for a config-only release; keeping debugging references loaded after root cause has been handed to bug-fix.
+
+# Stage-Specific Hidden Risks
+
+- **Implementation-planning:** missing reuse/placement evidence creates new helpers, public exports, or directories before ownership is known.
+- **Coding:** local code success can hide contract, tenant, transaction, retry, or release-skew risks selected by the active professional skill.
+- **Debugging-diagnosis:** symptom patching and same-path retry can produce a plausible diff without a verified cause.
+- **Bug-fix:** one local fix can leave the same defect pattern in sibling modules unless the same-pattern scan is recorded.
+- **Code-review:** review can drift into implementation or release planning before severity-classified findings and evidence gaps are named.
+- **Testing:** adding tests by habit can miss the risk that matters, such as contract compatibility, regression proof, fixture ownership, or negative cases.
+- **Release-delivery:** deploy rollback can be invalid when migrations, feature flags, old/new versions, or config defaults changed state.
 
 # Failure Modes
 
@@ -123,7 +163,17 @@ Return a **Stage Professional Launch Plan**:
 
 Each selected capability must cite its stage, product surface, language surface, or risk
 trigger. Each skipped heavy capability must cite a skip rationale. The context budget decision
-must be one of `minimal`, `single-stage`, or `staged-plan`.
+must be one of `minimal`, `single-stage`, or `staged-plan`. The plan must include the
+professional evidence required for the active stage and the transition condition for the next
+stage.
+
+# Evidence Contract
+
+Close a stage launch only when the plan states the **mode selected** as current
+engineering stage, the product/language/risk boundaries inspected, the professional judgment
+behind selected versus skipped capabilities, the validation evidence required for this stage,
+validation commands or review artifacts with exit code when available, what that evidence proves
+and does not prove, residual risk, and the next gate or handoff.
 
 # Quality Gate
 
@@ -134,6 +184,7 @@ must be one of `minimal`, `single-stage`, or `staged-plan`.
 5. Required evidence and required quality gates are listed for the active stage.
 6. The handoff target names the next stage or a blocking owner.
 7. No stage, product, or language matrix is copied into this plan; it is referenced.
+8. Stage transition conditions are explicit; no cross-stage bundle is used as a substitute for handoff.
 
 # Used By
 

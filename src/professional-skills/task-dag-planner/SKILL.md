@@ -71,6 +71,26 @@ Evaluate the task decomposition against:
 - **Owner assignment**: Does each task have an identified owner surface (backend, frontend, data, infrastructure, release)?
 - **Residual risk per task**: For each task, is the rollback or undo cost identified and acceptable?
 
+## Mode Matrix
+Select the planning mode before decomposing tasks.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| Small reviewable plan | L1/L2 task with few files but non-trivial validation or placement risk. | Keep plan minimal while naming boundary, validation, and stop condition. | Files to inspect/change, reuse candidate, validation command, residual risk. | `implementation-structure-design`, `quality-test-gate` | Full DAG when a Plan Handoff is enough. |
+| Multi-surface DAG | Change spans frontend/backend/API/data/docs/tests or multiple owners. | Make dependencies, owner surfaces, review units, and handoffs explicit. | Node list, edges, owner surface, artifact per node, critical path. | `change-impact-analyzer`, `task-dag-decomposition` | Implementation until graph is acyclic. |
+| Migration/release sequencing | Schema, config, rollout, feature flag, rollback, or version skew is involved. | Preserve deployability with expand/code/contract, rollback nodes, and verification gates. | Migration order, old/new coexistence, rollback command, release validation. | `data-migration-design`, `release-rollback`, `delivery-release-gate` | Cleanup/contract tasks before expand and compatibility are safe. |
+| Parallelization review | Team asks what can run concurrently or plan has shared files/resources. | Allow parallel work only when mutable resources and contracts do not collide. | Shared-resource scan, parallelism map, blocked edges, conflict rationale. | `architecture-impact-reviewer`, `ci-cd` | Parallelism by team preference without dependency evidence. |
+| Recovery/stop planning | High-risk task, repeated failure, unclear root cause, or unverified environment. | Define stop condition, route repair point, rollback owner, and evidence boundary. | Stop condition, maximum retry path, next diagnostic gate, rollback/revert note. | `agent-execution-discipline`, `failure-diagnosis` | Retrying same path after two failed attempts. |
+
+## Proactive Professional Triggers
+These triggers are hidden-risk escalators, not ordinary checklist items.
+
+- **Signal:** A task title bundles migration, API, auth, implementation, tests, and deployment in one node. **Hidden risk:** multiple risk domains are hidden from review and rollback. **Required professional action:** split by independently reviewable artifact and dependency edge. **Route to:** `task-dag-decomposition`, `quality-test-gate`. **Evidence required:** before/after node split, dependency edge, validation artifact per node.
+- **Signal:** Plan includes "write tests", "handle edge cases", "cleanup", or "similar to above" without named files or behavior. **Hidden risk:** placeholder task cannot be executed or reviewed. **Required professional action:** convert to agent-executable task contract or block. **Route to:** `agent-execution-discipline`, `test-strategy`. **Evidence required:** exact target files, cases, command, expected output, completion evidence.
+- **Signal:** A migration or rollout task has no rollback or old/new coexistence node. **Hidden risk:** deploy order creates unrecoverable state or version skew failure. **Required professional action:** add expand/contract or rollback task before implementation starts. **Route to:** `release-rollback`, `delivery-release-gate`. **Evidence required:** rollback command/procedure, compatibility window, verification gate.
+- **Signal:** Parallel tasks modify shared table, API contract, generated file, config, fixture, or common utility. **Hidden risk:** parallel work collides and corrupts boundary ownership. **Required professional action:** serialize or split ownership boundary before parallel execution. **Route to:** `architecture-impact-reviewer`, `implementation-structure-design`. **Evidence required:** shared-resource scan, owner, conflict edge, blocked/unblocked rationale.
+- **Signal:** Plan has no explicit stop condition after failed validation or uncertain diagnosis. **Hidden risk:** agent repeats the same path and mutates code without new evidence. **Required professional action:** add stop node and route-repair handoff. **Route to:** `failure-diagnosis`, `agent-execution-discipline`. **Evidence required:** failed command/output, alternate diagnostic route, max-retry rule, residual risk owner.
+
 ### Decision Tree: Task Sequencing for Data + Code + Deploy
 
 ```
@@ -166,6 +186,7 @@ Examples:
 
 ## Output Contract
 Return a task DAG with:
+- **Mode selected**: Planning mode and trigger signal that selected it.
 - **Task nodes**: Each with ID, title, goal, owner surface, files to inspect, files to modify/create/delete, reuse candidates, placement and visibility decision, dependencies (IDs), parallelism flag, validation command, expected output, rollback note, review gate, and completion evidence required (see Agent-Executable Task Contract).
 - **Plan handoff (L1/L2)**: for low-complexity work, the minimal handoff — files touched, validation command, residual risk — in place of a full DAG.
 - **Dependency graph**: Explicit directed edges showing which tasks must complete before which.
@@ -177,6 +198,13 @@ Return a task DAG with:
 - **Parallelism map**: Sets of tasks that can safely execute concurrently.
 - **Risk per task**: Rollback cost and reversibility for each high-risk task.
 - **Residual risk summary**: Accepted risks with justification and mitigating controls.
+- **Boundaries inspected**: files, modules, contracts, data stores, release artifacts, shared resources, owners, and task boundaries inspected.
+- **Professional judgment**: why each node is the smallest reviewable unit and why each edge exists.
+- **Reuse and placement rationale**: existing modules, helpers, fixtures, and task patterns reused before new structure is introduced.
+- **Behavior preservation statement**: old behavior preserved per node or intentionally changed with acceptance link.
+- **Validation evidence**: commands/checks per node, expected output, and not-verified disclosure where execution is deferred.
+- **Evidence limits**: what the DAG proves and does not prove about runtime scale, unknown owners, and rollback.
+- **Next gate / handoff**: first unblocked implementation/gate node or blocked owner question.
 
 ## Evidence Contract
 Close a task DAG only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
@@ -184,6 +212,7 @@ Close a task DAG only when all five canonical answers are concrete (answer schem
 - **Files and boundaries inspected**: the surfaces, owners, and shared artifacts each task touches, and the tasks that therefore cannot run concurrently because they would collide on the same file or resource.
 - **Placement rationale**: why each node is a single reviewable patch unit with a named input, output, owner, and dependency edge, and why the parallelism map is safe.
 - **Validation commands**: the verification node attached to each task — the literal command or check that must pass before downstream work unblocks — and the rollback procedure for each irreversible task.
+- **Planning judgment and evidence limits**: mode selected, behavior preservation, stop condition, what evidence proves, what it does not prove, residual risk, and next gate.
 - **Residual risk**: the sequencing or rollback assumption that remains unproven, with the named owner.
 
 ## Quality Gate

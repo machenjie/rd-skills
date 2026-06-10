@@ -120,6 +120,10 @@ Escalate when: any changed surface is classified as HIGH irreversibility (destru
 - Rollback trigger defined post-incident: "we should have rolled back when latency spiked" — 15-minute delay in rollback decision — 15 extra minutes of customer impact.
 - Background job was mid-execution during rollback — partially processed 50,000 records — old code reprocesses same records — duplicate transactions created.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` for any production/shared-environment release with migrations, config, feature flags, external provider state, cache format changes, jobs, or mixed-version windows. Do not load it for a local-only build artifact with no deployment or rollback surface.
+
 # Output Contract
 
 Return a release rollback plan with:
@@ -138,6 +142,10 @@ Return a release rollback plan with:
 - `post_rollback_validation` (smoke tests; manual verification steps; baseline metric confirmation)
 - `communication_plan` (internal channel; customer notification trigger; post-mortem schedule)
 - `residual_risk` (surfaces that cannot be fully rolled back; compensating controls)
+
+# Evidence Contract
+
+Close rollback planning only when the output names changed surfaces, release order, mixed-version compatibility, rollback triggers, decision owner, per-surface rollback or forward-fix action, validation command, what rollback evidence proves, what it does not prove for production data/external providers, residual irreversibility risk, and next gate.
 
 # Quality Gate
 

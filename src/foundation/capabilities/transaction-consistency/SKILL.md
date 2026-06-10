@@ -101,6 +101,10 @@ Escalate when: the invariant involves money movement, inventory, quota enforceme
 - Phantom booking: two users book the last seat concurrently; both pass the `seats > 0` check at Read Committed; both succeed; negative seat count.
 - Outbox relay not running: forward transaction succeeds; outbox event never published; downstream service never notified; silent inconsistency.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when the change touches multi-step writes, money/inventory/quota/account invariants, distributed consistency, saga/outbox behavior, or concurrent writers. Do not load it for a single-row write with no named invariant, no concurrency risk, and no cross-service side effect.
+
 # Output Contract
 
 Return a consistency design with:
@@ -115,6 +119,10 @@ Return a consistency design with:
 - `remote_call_placement` (confirmation that no remote calls are inside DB transactions)
 - `concurrency_tests` (concurrent write simulation; lost update test; deadlock stress test)
 - `reconciliation_job` (if eventual consistency: detection of inconsistencies; resolution process; SLA)
+
+# Evidence Contract
+
+Close consistency design only when the output names each invariant, transaction boundary, isolation level, lock/concurrency control, remote-call placement, compensation/outbox path, validation commands, what concurrency evidence proves, what it does not prove under production load, residual consistency risk, and next gate.
 
 # Quality Gate
 

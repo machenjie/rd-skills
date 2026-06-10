@@ -1,0 +1,51 @@
+---
+id: refactor-shared-utility-pollution-hidden-risk
+description: |
+  Refactor that moves business logic into shared utility must route structure,
+  boundary, refactoring, and review without release over-routing.
+prompt: |
+  Refactor duplicated order eligibility checks by moving them into
+  `shared/utils/order.ts`. The logic references order status, tenant plan, and
+  permission flags. No caller scan or behavior-preservation test is included.
+expected:
+  complexity: L3
+  risk_level: medium
+  expected_stage: refactoring
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - shared utility pollution risk
+    - business logic in shared utils
+    - change locality violation
+  skills:
+    - architecture-impact-reviewer
+    - quality-test-gate
+    - ai-code-review-refactor
+  capabilities:
+    - implementation-structure-design
+    - module-boundary-design
+    - code-clarity-maintainability
+    - refactoring
+    - code-review
+    - agent-execution-discipline
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - test gate
+    - AI review gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - delivery-release-gate
+    - integration-change-builder
+    - frontend-change-builder
+  capabilities:
+    - release-rollback
+    - message-queue-design
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  The hidden risk is boundary pollution and behavior preservation, not release.

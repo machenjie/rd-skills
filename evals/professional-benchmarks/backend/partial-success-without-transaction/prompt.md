@@ -1,0 +1,1 @@
+A backend change creates an account, writes a billing profile, emits an event, and then calls an external onboarding API. The implementation performs each step separately and catches the external API error by returning a partial success response.

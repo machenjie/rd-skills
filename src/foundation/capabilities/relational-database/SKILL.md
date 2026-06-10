@@ -150,6 +150,16 @@ Return a relational database design with:
 - `observability` (slow query monitoring: pg_stat_statements; lock monitoring; vacuum monitoring)
 - `tests` (integration tests: constraint enforcement, transaction isolation, not-found behavior, soft-delete filter)
 
+# Evidence Contract
+
+Close this capability only with relational-boundary evidence:
+
+- **Boundaries inspected:** tables, constraints, indexes, transaction scope, isolation level, migration phases, API mapping boundary, query plans, and PII/retention controls.
+- **Validation evidence:** migration dry-run or staging output, rollback or forward-fix proof, EXPLAIN ANALYZE for critical queries, constraint/isolation integration tests, and consumer scan for dropped/renamed columns.
+- **What evidence proves:** relational invariants are enforced at the database boundary, critical queries have a justified plan, and migration phases can be deployed without known lock or compatibility break.
+- **What evidence does not prove:** production cardinality, lock timing, replica lag, or ETL/reporting compatibility unless validated against representative data and consumers.
+- **Residual risk and handoff:** name any untested table size, long-running lock, consumer scan gap, or rollback limit; hand off to `data-migration-design`, `transaction-consistency`, or `indexing-query-optimization` when deeper review remains open.
+
 # Quality Gate
 
 The relational design is complete only when:

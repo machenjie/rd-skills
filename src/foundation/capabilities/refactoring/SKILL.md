@@ -136,6 +136,10 @@ Escalate when: the refactoring touches authorization, financial calculation, or 
 - Deprecated API retained forever with no sunset, so new behavior keeps carrying legacy branches and tests can no longer show which path matters.
 - Feature flag cleanup skipped after rollout, leaving old and new behavior active in the same function for months.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when the refactor is high or critical risk, crosses files/modules/contracts, touches auth/financial/data-integrity/concurrency behavior, or claims shared/common utility placement. Do not load it for an isolated private rename with passing local tests and no observable behavior surface.
+
 # Output Contract
 
 Return a refactoring plan with:
@@ -161,6 +165,10 @@ Return a refactoring plan with:
 - `dead_code_removal_assessment` (callers searched, generated/runtime references checked, and deletion safety)
 - `before_after_complexity_evidence` (cognitive complexity, branch count, collaborator count, dependency count, public API surface, directory density, or test clarity)
 - `compatibility_branch_owner_and_expiry` (owner, expiry condition, follow-up artifact, and tests proving safe coexistence)
+
+# Evidence Contract
+
+Close a refactor only when the output states the observable behavior boundary, inspected callers/contracts, reuse and placement rationale, characterization or regression commands, before/after complexity evidence, rollback unit, what tests prove, what they do not prove, residual behavior-change risk, and next review gate. "Tests pass" alone is not behavior-preservation evidence when contracts or side effects moved.
 
 # Quality Gate
 

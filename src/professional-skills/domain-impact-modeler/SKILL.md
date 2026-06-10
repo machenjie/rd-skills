@@ -67,6 +67,26 @@ Evaluate the domain impact against:
 - **State machine validity**: Does the change preserve all valid state transitions? Are illegal state transitions blocked at the domain model level?
 - **Permission and ownership model**: Does the change alter who can perform what action on which entity? Is authorization enforced at the domain boundary?
 
+## Mode Matrix
+Select the domain mode before modeling impact.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| Entity/value change | Entity, value object, aggregate, ownership, identity, or lifecycle term changes. | Identify system-of-record, aggregate boundary, invariant owner, and language impact. | Entity/value map, owning context, invariant list, persistence/API/event surfaces. | `domain-object-identification`, `business-rule-extraction` | Architecture split unless ownership or coupling is unclear. |
+| Business rule/invariant change | Rule relaxed/tightened, permission rule changes, money/status limit, or validation moves. | Locate authoritative rule enforcement and invalid historical state risk. | Rule source, allowed/denied cases, enforcement boundary, data cleanup implication. | `business-rule-extraction`, `permission-boundary-modeling` | UI-only validation as sufficient evidence. |
+| State machine change | Status, lifecycle transition, workflow gate, cancellation, approval, or compensation changes. | Preserve valid transitions and block illegal transitions across all entry points. | State diagram delta, transition table, forbidden transition tests, event side effects. | `state-machine-modeling`, `regression-testing` | Persistence schema work until transitions are approved. |
+| Domain event change | Event added, renamed, deprecated, shape changed, or consumer unknown. | Treat events as contracts with versioning, consumers, and delivery semantics. | Event schema, producer/consumer list, version plan, replay/upcaster/compatibility evidence. | `domain-event-modeling`, `data-api-contract-changer` | Consumer migration assumptions without owner. |
+| Cross-context ownership | Shared concept, service split, ACL, reporting projection, or team ownership boundary appears. | Keep one business rule authority and prevent model leakage between contexts. | Context map, relationship pattern, ACL/translation point, owner approval. | `architecture-impact-reviewer`, `integration-change-builder` | Direct database sharing or shared mutable aggregate. |
+
+## Proactive Professional Triggers
+These triggers are hidden-risk escalators, not ordinary checklist items.
+
+- **Signal:** A request renames or reuses a business term like account, order, customer, tenant, status, balance, or entitlement. **Hidden risk:** ubiquitous-language drift creates two meanings for one concept. **Required professional action:** audit affected contexts and define owning language. **Route to:** `domain-object-identification`, `change-documentation-gate`. **Evidence required:** term map, affected contexts, old/new name boundary, docs/API/event impact.
+- **Signal:** A rule is added in controller, UI, SQL, or validation layer without domain owner. **Hidden risk:** invariant bypass through batch jobs, APIs, admin tools, or events. **Required professional action:** move or route enforcement to aggregate/domain policy owner. **Route to:** `business-rule-extraction`, `backend-change-builder`. **Evidence required:** enforcement location, bypass paths scanned, allowed/forbidden tests.
+- **Signal:** A new status or lifecycle transition is added without a full transition table. **Hidden risk:** illegal state paths become reachable and downstream events misfire. **Required professional action:** model state machine before implementation. **Route to:** `state-machine-modeling`, `quality-test-gate`. **Evidence required:** transition delta, forbidden transitions, side effects, regression tests.
+- **Signal:** A domain event changes shape, required field, name, or meaning with unknown consumers. **Hidden risk:** event contract break or replay incompatibility. **Required professional action:** version event or enumerate consumers before merge. **Route to:** `domain-event-modeling`, `contract-testing`. **Evidence required:** consumer list, schema diff, version/migration plan, replay or upcaster note.
+- **Signal:** Two modules/services can write the same entity, permission, balance, status, or entitlement. **Hidden risk:** business rule authority is split and consistency depends on timing. **Required professional action:** assign one owner and mediate other writes through contract/event/ACL. **Route to:** `architecture-impact-reviewer`, `transaction-consistency`. **Evidence required:** writer scan, owner decision, dependency direction, compensation/consistency model.
+
 ### Decision Tree: Domain Model Change Depth
 
 ```
@@ -137,6 +157,7 @@ Examples:
 
 ## Output Contract
 Return a domain impact model with:
+- **Mode selected**: Domain mode and trigger signal that selected it.
 - **Bounded context map**: Which contexts are affected, with relationship patterns and coordination requirements.
 - **Aggregate impact**: Which aggregates are modified, with invariant list and enforcement location.
 - **Domain event impact**: Events added, changed, or deprecated — with consumer list, versioning strategy, and migration plan.
@@ -146,6 +167,13 @@ Return a domain impact model with:
 - **Cross-domain side effects**: Actions triggered in other contexts — with delivery guarantee, failure handling, and compensation.
 - **Risk classification**: Per-context risk level with escalation triggers identified.
 - **Team coordination required**: Named teams or owners that must review or approve before implementation proceeds.
+- **Boundaries inspected**: entities, value objects, aggregates, policies, state machines, events, permissions, repositories, APIs, and context maps inspected.
+- **Professional judgment**: authoritative business rule owner, invariant enforcement decision, hidden coupling ruled out, and domain risks still possible.
+- **Reuse and placement rationale**: existing aggregate, policy, domain service, event, or ACL reused; new concept placement justified.
+- **Behavior preservation statement**: old allowed/forbidden transitions, event semantics, permission rules, and invariants preserved or intentionally changed.
+- **Validation evidence**: domain tests, transition tests, consumer/schema checks, language audit, or not-verified disclosure.
+- **Evidence limits**: what the domain evidence proves and does not prove about downstream consumers, historical data, replay, or compliance.
+- **Residual risk and next gate**: unverified side effect, event migration, data cleanup, or owner approval with handoff.
 
 ## Evidence Contract
 Close a domain impact model only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
@@ -153,6 +181,7 @@ Close a domain impact model only when all five canonical answers are concrete (a
 - **Files and boundaries inspected**: the aggregates, value objects, domain services, policies, state machines, and domain events examined, and the bounded-context boundary each change sits within.
 - **Placement rationale**: why each rule and invariant has exactly one enforcement owner in the domain, and confirmation that no business rule leaks into a controller, SQL query, frontend validator, or test mock.
 - **Validation commands**: the tests proving both allowed and forbidden transitions, and the cross-context language audit, each with its outcome.
+- **Domain judgment and evidence limits**: mode selected, behavior preservation, authoritative owner, what evidence proves, what it does not prove, residual risk, and next gate.
 - **Residual risk**: the cross-domain side effect, event-versioning gap, or compensation path that remains unverified, with the named owner.
 
 ## Quality Gate

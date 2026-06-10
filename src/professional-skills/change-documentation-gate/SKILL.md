@@ -73,6 +73,26 @@ Evaluate documentation requirements across these dimensions:
 - **Incident documentation**: Is there an incident report, customer advisory, status page entry, postmortem summary, and corrective action tracker with owners?
 - **Compliance evidence chain**: Which control objective, evidence artifact, evidence owner, approval record, exception owner, and retention period must be documented?
 
+## Mode Matrix
+Select the documentation gate mode before deciding whether docs changed.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| No-docs decision | Internal refactor or cosmetic change claims no audience behavior changed. | Prove no user, operator, API, developer, auditor, or release behavior changed. | Affected audience scan and no-change rationale tied to files/contracts. | `change-impact-analyzer`, `code-review` | Changelog entry when no audience-facing behavior exists. |
+| User/API documentation | User behavior, API shape, error code, CLI, config, or integration contract changes. | Put update where the affected audience already looks and preserve migration clarity. | Artifact path, audience, before/after behavior, migration/consumer note. | `data-api-contract-changer`, `acceptance-criteria-builder` | Runbook/ADR unless operational or architecture behavior changes. |
+| Migration/release docs | Schema, data migration, deprecation, version skew, rollout, rollback, or release note. | Document operator action, rollback, compatibility, and consumer timing before release. | Migration note, rollback steps, changelog/release note, owner and deadline. | `delivery-release-gate`, `release-rollback` | User docs when only operator behavior changes. |
+| Operational/runbook docs | Alert, SLO, dashboard, incident response, support flow, or troubleshooting path changes. | Keep on-call and support procedures executable under pressure. | Runbook path, trigger, expected output, escalation, validation command. | `reliability-observability-gate`, `failure-diagnosis` | API migration docs unless contract changed. |
+| ADR/compliance evidence | Irreversible architecture, security posture, audit control, incident, or exception evidence. | Preserve decision/evidence integrity with owner, timestamp, retention, and residual risk. | ADR/control artifact, approval source, exception/retention owner, evidence freshness. | `architecture-impact-reviewer`, `security-privacy-gate` | Marketing or catalog copy. |
+
+## Proactive Professional Triggers
+These triggers are hidden-risk escalators, not ordinary checklist items.
+
+- **Signal:** A code or config change changes behavior but no docs are touched and no no-docs rationale is stated. **Hidden risk:** users/operators/API consumers learn behavior by failure. **Required professional action:** require documentation matrix or evidence-backed no-change decision. **Route to:** `change-impact-analyzer`, `quality-test-gate`. **Evidence required:** affected audience list, artifact scan, no-change rationale or update path.
+- **Signal:** API field, error code, CLI flag, env var, webhook, or event schema changes without docs. **Hidden risk:** consumer integration breaks or config is misapplied. **Required professional action:** update contract docs or block release. **Route to:** `data-api-contract-changer`, `contract-testing`. **Evidence required:** spec path, migration note, consumer notification status, validation command.
+- **Signal:** Migration or rollback requires operator action but docs say "run migration" or omit rollback. **Hidden risk:** release cannot be recovered safely during incident. **Required professional action:** require migration and rollback procedure with expected outputs. **Route to:** `delivery-release-gate`, `release-rollback`. **Evidence required:** forward/rollback steps, verification query/command, owner.
+- **Signal:** New alert, metric, SLO, dashboard, or operational dependency lacks runbook update. **Hidden risk:** on-call cannot triage a new production failure. **Required professional action:** write or update runbook before enabling alert/release. **Route to:** `reliability-observability-gate`, `observability`. **Evidence required:** alert trigger, triage steps, escalation path, validation output.
+- **Signal:** ADR, compliance, incident, or security evidence is requested after the decision or release. **Hidden risk:** audit trail lacks decision context, approval, or retention. **Required professional action:** capture evidence owner, timestamp, approval, exception, and residual risk before closure. **Route to:** `architecture-impact-reviewer`, `security-privacy-gate`. **Evidence required:** ADR/control/postmortem artifact, approval source, retention metadata.
+
 ### Decision Tree: Documentation Required?
 
 ```
@@ -150,6 +170,7 @@ Examples:
 
 ## Output Contract
 Return a documentation impact assessment with:
+- **Mode selected**: Documentation mode and trigger signal that selected it.
 - **Documentation matrix**: Each documentation artifact (README, API spec, runbook, ADR, changelog, migration guide, config reference) marked as: Updated / Not required (with rationale) / Outstanding (blocking).
 - **Audience map**: Each updated artifact with its target audience and review owner.
 - **Breaking change checklist**: Migration guide, deprecation notice, and consumer notification status.
@@ -158,6 +179,14 @@ Return a documentation impact assessment with:
 - **Compliance evidence package**: Control objective, evidence artifact, control owner, evidence owner, exception owner, evidence freshness, and retention period.
 - **Release notes draft**: Changelog entries for this change, categorized by Keep a Changelog standard.
 - **Open items**: Documentation debt that is accepted but deferred, with owner and due date.
+- **Boundary / no-docs rationale**: Docs explicitly not required only when no user, operator, integrator, developer, auditor, or release behavior changes.
+- **Boundaries inspected**: code/schema/config/API/docs/runbook/changelog/ADR/release artifacts inspected or skipped with reason.
+- **Professional judgment**: audience, artifact placement, not-required decisions, and blocking vs deferred doc debt.
+- **Reuse and placement rationale**: existing doc location, template, spec, runbook, or changelog category reused; new doc placement justified.
+- **Behavior preservation statement**: documented old behavior preserved or intentionally changed, with migration note when needed.
+- **Validation evidence**: docs link check, generated spec, example command, rendered artifact, or not-verified disclosure.
+- **Evidence limits**: what documentation evidence proves and does not prove about production behavior, consumer adoption, or audit sufficiency.
+- **Residual risk and next gate**: deferred doc item, owner, due date, release block status, and handoff.
 
 ## Evidence Contract
 Close a documentation gate only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`). Treat docs as handoff evidence, not optional commentary.
@@ -165,6 +194,7 @@ Close a documentation gate only when all five canonical answers are concrete (an
 - **Files and boundaries inspected**: every documentation artifact in scope — README, API docs, ADR, migration notes, runbook, changelog, operator notes — each marked Updated, Not-required-with-rationale, or Outstanding.
 - **Placement rationale**: why each update lands in the artifact and audience it does, and what changed, what did not, and how a reader verifies the change.
 - **Validation commands**: the checks that prove the docs match reality — example/command re-run, schema or API-doc regeneration, link check — each with its outcome.
+- **Documentation judgment and evidence limits**: mode selected, behavior preservation or no-docs decision, what evidence proves, what it does not prove, residual risk, and next gate.
 - **Residual risk**: the deferred doc, the next owner, and the rollback or follow-up note that remains.
 
 ## Quality Gate

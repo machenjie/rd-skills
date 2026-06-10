@@ -1,0 +1,23 @@
+expected_stage: implementation-planning
+expected_professional_skill: backend-change-builder
+expected_capabilities:
+  - transaction-consistency
+  - service-business-logic
+  - logging-error-handling
+  - data-migration-design
+expected_hidden_risks:
+  - inconsistent account and billing state
+  - event emitted without durable state or compensation
+  - silent partial success with no recovery contract
+expected_evidence:
+  - transaction boundary or compensation design
+  - partial-failure test and rollback behavior
+  - error/logging/correlation evidence for external API failure
+forbidden_behaviors:
+  - return partial success without explicit contract and recovery
+  - call external API inside an unbounded transaction without rationale
+  - omit compensation or saga discussion
+expected_output_obligations:
+  - transaction and partial-success analysis
+  - behavior preservation or intentional behavior-change statement
+  - validation evidence for failure path

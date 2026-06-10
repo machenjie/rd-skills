@@ -1,0 +1,52 @@
+---
+id: backend-idor-tenant-leak-hidden-risk
+description: |
+  Backend local authorization fix must route same-pattern tenant/object checks.
+prompt: |
+  Fix the invoice detail endpoint. It fetches by invoice id and sometimes returns
+  another tenant's invoice when ids collide. The proposed patch only adds a
+  filter in that repository method.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: bug-fix
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - auth
+    - authorization
+    - object-level permission
+    - user data
+    - local fix without same pattern scan
+  skills:
+    - change-impact-analyzer
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - permission-boundary-modeling
+    - authentication-authorization
+    - agent-execution-discipline
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - impact gate
+    - implementation gate
+    - security gate
+    - test gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - integration-change-builder
+    - delivery-release-gate
+  capabilities:
+    - cache-design
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  The hidden risk is local IDOR repair without sibling query scan.

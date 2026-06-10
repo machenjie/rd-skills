@@ -76,6 +76,17 @@ Escalate to `agent-execution-discipline` when an agent claims clarity is improve
 
 # Critical Details
 
+## Future Maintainer Review Steps
+
+Review as the next engineer who must change or delete this code:
+
+1. Read only the public entry point and ask whether the normal path is visible.
+2. Identify the single owner of the rule, state, side effect, fallback, and error behavior.
+3. Name the next related change and the file/function where it should land.
+4. Name the deletion path for compatibility branches, feature flags, dead code, old adapters, stale fixtures, or temporary fallbacks.
+5. Check that tests describe public behavior and fixture ownership rather than private helper structure.
+6. State what simpler naming, extraction, parameter object, or side-effect separation was rejected and why.
+
 ## Main Flow Review
 
 Read the code once as a future maintainer would. The normal path should be visible before exceptional paths. Push denial, validation, fallback, compatibility, retry, and cleanup branches to named guards or helpers when doing so improves local readability and does not hide side effects.
@@ -94,6 +105,12 @@ Names should make the code mostly self-explanatory. Comments are still required 
 
 For non-trivial changes, identify where the next related change would go and how obsolete code would be deleted. If the answer is "several unrelated modules" or "search for all callers and guess," clarity and change locality are not acceptable.
 
+Next-change location and deletion path are mandatory professional evidence, not optional commentary. A compatibility branch without an expiry owner, a feature flag without cleanup path, or a fallback without removal condition is maintainability debt.
+
+## Test Clarity Risks
+
+Tests are unclear when they over-mock private internals, assert helper call order instead of public behavior, hide fixture ownership in broad shared helpers, or update snapshots without explaining the protected behavior. A regression test must state the bug condition it proves; a fixture must have an owner and a reason to change; a mock must represent an external boundary, not private implementation trivia.
+
 # Failure Modes
 
 - A happy path is buried under nested validation, retries, metrics, mapping, and fallback code.
@@ -102,6 +119,8 @@ For non-trivial changes, identify where the next related change would go and how
 - A boolean flag silently changes behavior in a way callers cannot read at the call site.
 - A `mode` or `kind` switch becomes a hidden strategy system without explicit extension rules.
 - A shared test helper contains business fixture logic from one module and becomes a dumping ground.
+- Tests pass by over-mocking private helper calls, so the public behavior can regress while implementation-shaped assertions stay green.
+- A fixture factory is shared across unrelated modules without an owner, causing hidden coupling and broad test churn.
 - Comments narrate assignments and loops while missing the compatibility or security reason for a branch.
 - A small requirement changes shared utilities, feature modules, tests, and adapters because no owner is clear.
 
@@ -116,9 +135,20 @@ Return a Code Clarity Maintainability Review with:
 - **Signature readability assessment**: boolean traps, weakly typed bags, vague modes, and parameter object needs.
 - **Comment quality assessment**: comments required, comments rejected, and places where naming/extraction should replace comments.
 - **Change navigation assessment**: owning location for the next related change and deletion path for obsolete behavior.
-- **Test clarity assessment**: whether tests express public behavior, fixture ownership, and regression purpose.
+- **Next-change location**: the exact owner file/function/module where the next adjacent requirement should land.
+- **Deletion path**: removal condition, owner, and validation for obsolete compatibility branches, flags, fallbacks, or temporary code.
+- **Test clarity assessment**: whether tests express public behavior, fixture ownership, regression purpose, and what is over-mocked or private-internal.
 - **Rejected simplifications**: simpler structures considered and why they were not appropriate.
 - **Validation evidence**: formatter/linter/tests/static-analysis or review evidence used to support the judgment.
+
+# Evidence Contract
+
+Close a clarity review only when it states the **mode selected** for coding, review,
+refactoring, or testing, boundaries inspected, professional judgment on readability and
+change locality, reuse or placement rationale when structure is affected, behavior
+preservation for clarity refactors, validation evidence, what evidence proves and does not
+prove, command output or review artifact with exit code when available, residual risk, and the
+next gate or handoff.
 
 # Quality Gate
 
@@ -132,6 +162,8 @@ Return a Code Clarity Maintainability Review with:
 8. Obsolete behavior has a plausible deletion path when compatibility or feature flags are introduced.
 9. Test code reads as behavior evidence and does not depend on private helper structure.
 10. Any clarity refactor preserves behavior with appropriate test evidence.
+11. Fixture ownership and regression purpose are explicit for non-trivial tests.
+12. Private internals are not over-mocked unless no public boundary can expose the behavior and that limitation is stated.
 
 # Used By
 

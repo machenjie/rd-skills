@@ -1,0 +1,1 @@
+Refactor duplicate tenant invoice calculation code by moving it into `src/common/utils/invoiceHelpers.ts`. The helper uses tenant permissions, invoice status, and subscription entitlement rules. Make sure the new helper can be reused everywhere.

@@ -1,0 +1,47 @@
+---
+id: redis-cache-ttl-invalidation-hidden-risk
+description: |
+  Redis cache for mutable entitlements requires source-of-truth, TTL,
+  invalidation, tenant scoping, and observability.
+prompt: |
+  Add Redis caching to entitlement checks in a multi-tenant backend. The draft
+  key is `entitlement:{userId}` and there is no TTL, invalidation on grant
+  changes, hot-key analysis, or memory alert.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - user data
+  skills:
+    - data-middleware-change-builder
+    - reliability-observability-gate
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - cache-design
+    - performance-budgeting
+    - observability
+    - permission-boundary-modeling
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - security gate
+    - test gate
+forbidden:
+  skills:
+    - experience-impact-modeler
+    - delivery-release-gate
+    - integration-change-builder
+  capabilities:
+    - message-queue-design
+    - release-rollback
+  domain_extensions:
+    - ai-product-extension
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Cache hidden risk is stale entitlement and tenant collision, not UI impact.

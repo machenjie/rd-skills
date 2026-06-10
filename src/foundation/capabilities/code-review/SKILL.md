@@ -169,6 +169,10 @@ Review focuses on **behavior and risk before style**. Key refinements:
 - Self-review on security-sensitive path; conflict of interest unaddressed.
 - No stated non-findings on checked surfaces; review provides no evidence it was substantive.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when the diff is AI-generated, security-sensitive, cross-module, dependency-changing, migration/release-sensitive, or when review findings depend on a surface-specific checklist. Do not load it for a tiny local diff where spec compliance, changed behavior, and validation evidence are already obvious from the patch and tests.
+
 # Output Contract
 
 Return a code review report with, per finding:
@@ -193,6 +197,10 @@ Plus a review summary with:
 - `approval_scope` (what the approval covers and what it explicitly does not)
 - `overall_status` (Approved / Approved-with-conditions / Changes-required / Blocked)
 - `owner` (reviewer identity)
+
+# Evidence Contract
+
+Close a code review only when the output states the reviewed requirement/non-goal, diff boundaries, high-risk surfaces checked, severity rationale, reuse/placement issues, validation commands or not-verified disclosure, explicit non-findings, what evidence proves, what it does not prove, residual risk, and re-review or next gate. A "LGTM" or style-only pass is not review evidence.
 
 # Quality Gate
 

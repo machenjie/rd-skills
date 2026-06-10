@@ -12,7 +12,6 @@ expected:
   skills:
     - frontend-change-builder
   capabilities:
-    - regression-testing
     - frontend-testing
   domain_extensions: []
   quality_gates:
@@ -46,4 +45,3 @@ forbidden:
     - delivery gate
 notes: |
   The word "Billing" in the file name is not a payment workflow signal.
-

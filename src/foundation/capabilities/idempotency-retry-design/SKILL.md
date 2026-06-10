@@ -176,6 +176,16 @@ Return an idempotency and retry contract with:
 - `observability` (metrics: attempt count, retry rate, DLQ depth, duplicate detection rate, circuit state)
 - `tests` (duplicate key test, payload mismatch test, timeout recovery test, cross-caller replay test, DLQ routing test, circuit breaker test)
 
+# Evidence Contract
+
+Close this capability only with idempotency-specific evidence:
+
+- **Boundaries inspected:** mutation entry point, idempotency store, caller binding, payload hash check, retry loop, external side effect, DLQ/reconciliation path, and observability signals.
+- **Validation evidence:** duplicate-key, payload-mismatch, cross-caller replay, timeout recovery, retry exhaustion, and DLQ routing test output or a not-verified disclosure.
+- **What evidence proves:** retries and redelivery cannot silently create duplicate side effects inside the inspected operation and retry window.
+- **What evidence does not prove:** every downstream provider is globally exactly-once or that expired idempotency keys are safe beyond the declared retention window.
+- **Residual risk and handoff:** name any untested provider behavior, replay window, or reconciliation owner; hand off to `async-job-design`, `message-queue-design`, or `reliability-observability-gate` when runtime delivery or production alerting remains open.
+
 # Quality Gate
 
 The idempotency and retry design is complete only when:

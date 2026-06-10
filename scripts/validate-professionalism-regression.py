@@ -1,0 +1,1031 @@
+#!/usr/bin/env python3
+"""Gate professionalism regressions against a recorded authoring baseline.
+
+This script is intentionally separate from the warning-only professionalism
+evaluations. The evals keep producing advisory reports; this validator compares
+the latest reports with config/professionalism-baseline.yaml and fails only on
+new regressions or malformed inputs.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+from validation_utils import ValidationProblem, load_yaml_file
+
+
+ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_BASELINE = ROOT / "config" / "professionalism-baseline.yaml"
+DEFAULT_REPORTS_DIR = ROOT / "reports"
+DEFAULT_ROUTING_DIR = ROOT / "evals" / "routing"
+DEFAULT_CONTENT_EXCEPTIONS = ROOT / "config" / "skill-content-exceptions.yaml"
+
+SKILL_EVAL_JSON = "skill-professionalism-eval.json"
+COVERAGE_MATRIX_JSON = "professional-coverage-matrix.json"
+BENCHMARKS_JSON = "professional-benchmarks-report.json"
+CONTENT_AUDIT_JSON = "skill-content-audit.json"
+AGENT_SAMPLES_JSON = "professional-agent-samples-report.json"
+
+REGRESSION_MD = "professionalism-regression-report.md"
+REGRESSION_JSON = "professionalism-regression-report.json"
+READINESS_MD = "professionalism-release-readiness.md"
+READINESS_JSON = "professionalism-release-readiness.json"
+
+GOOD_STATUSES = {"acceptable", "sample-grade"}
+WEAK_STATUS = "weak"
+EXPECTED_ROUTING_FIELDS = ("skills", "capabilities", "domain_extensions", "quality_gates")
+
+DEFAULT_GLOBAL_THRESHOLDS = {
+    "no_new_weak_professional_skill": True,
+    "no_score_regression_more_than": 1.0,
+    "max_new_warnings_count": 0,
+    "max_known_warnings_count": None,
+    "no_new_missing_mode_matrix_for_professional_skill": True,
+    "no_new_missing_proactive_triggers_for_core_skill": True,
+    "no_new_missing_evidence_contract_for_core_skill": True,
+    "no_new_reference_without_loading_hint": True,
+    "no_new_empty_benchmark_case": True,
+    "no_new_routing_case_without_forbidden": True,
+}
+
+
+@dataclass
+class Finding:
+    category: str
+    target: str
+    message: str
+    baseline_value: Any = None
+    current_value: Any = None
+    severity: str = "error"
+
+
+@dataclass
+class RegressionResult:
+    generated_at: str
+    mode: str
+    status: str
+    strict: bool
+    report_only: bool
+    blockers: list[Finding] = field(default_factory=list)
+    warnings: list[Finding] = field(default_factory=list)
+    known_warnings: list[Finding] = field(default_factory=list)
+    baseline_changes: list[Finding] = field(default_factory=list)
+    summary: dict[str, Any] = field(default_factory=dict)
+
+
+class RegressionInputError(Exception):
+    """Raised when required reports or baseline data are malformed."""
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parse_args(sys.argv[1:] if argv is None else argv)
+    reports_dir = args.reports_dir
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        reports = _load_required_reports(reports_dir)
+        current = build_baseline_snapshot(
+            reports,
+            routing_dir=args.routing_dir,
+            content_exceptions_path=args.content_exceptions,
+        )
+        if args.update_baseline:
+            old = _load_optional_baseline(args.baseline)
+            changes = diff_snapshots(old, current) if old else [
+                Finding(
+                    "baseline-created",
+                    str(args.baseline),
+                    "created professionalism baseline from current reports",
+                    None,
+                    "created",
+                    "info",
+                )
+            ]
+            args.baseline.parent.mkdir(parents=True, exist_ok=True)
+            args.baseline.write_text(dump_yaml(current), encoding="utf-8")
+            result = RegressionResult(
+                generated_at=_now(),
+                mode="update-baseline",
+                status="updated",
+                strict=args.strict,
+                report_only=args.report_only,
+                baseline_changes=changes,
+            )
+            result.summary = _summary(result)
+            _write_reports(result, current, reports, reports_dir)
+            _print_summary(result)
+            return 0
+
+        baseline = _load_baseline(args.baseline)
+        result = compare_against_baseline(
+            baseline,
+            current,
+            strict=args.strict,
+            report_only=args.report_only,
+        )
+        _write_reports(result, current, reports, reports_dir)
+        _print_summary(result)
+        if result.blockers and not args.report_only:
+            return 1
+        return 0
+    except (RegressionInputError, OSError, json.JSONDecodeError, ValidationProblem) as exc:
+        message = f"validate-professionalism-regression: ERROR: {exc}"
+        print(message, file=sys.stderr)
+        _write_input_error_report(reports_dir, str(exc), args)
+        return 1
+
+
+def _parse_args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
+    parser.add_argument("--reports-dir", type=Path, default=DEFAULT_REPORTS_DIR)
+    parser.add_argument("--routing-dir", type=Path, default=DEFAULT_ROUTING_DIR)
+    parser.add_argument("--content-exceptions", type=Path, default=DEFAULT_CONTENT_EXCEPTIONS)
+    parser.add_argument("--update-baseline", action="store_true")
+    parser.add_argument("--strict", action="store_true")
+    parser.add_argument("--report-only", action="store_true")
+    return parser.parse_args(argv)
+
+
+def _load_required_reports(reports_dir: Path) -> dict[str, dict[str, Any]]:
+    return {
+        "skill_eval": _load_json_mapping(reports_dir / SKILL_EVAL_JSON),
+        "coverage_matrix": _load_json_mapping(reports_dir / COVERAGE_MATRIX_JSON),
+        "benchmarks": _load_json_mapping(reports_dir / BENCHMARKS_JSON),
+        "content_audit": _load_optional_json_mapping(reports_dir / CONTENT_AUDIT_JSON),
+        "agent_samples": _load_optional_json_mapping(reports_dir / AGENT_SAMPLES_JSON),
+    }
+
+
+def _load_json_mapping(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        raise RegressionInputError(f"missing required report: {path}")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise RegressionInputError(f"{path}: expected JSON object")
+    return data
+
+
+def _load_optional_json_mapping(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        return {}
+    return _load_json_mapping(path)
+
+
+def _load_baseline(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        raise RegressionInputError(
+            f"missing baseline: {path}; run with --update-baseline after refreshing reports"
+        )
+    data = load_yaml_file(path)
+    if not isinstance(data, dict):
+        raise RegressionInputError(f"{path}: expected YAML mapping")
+    return data
+
+
+def _load_optional_baseline(path: Path) -> dict[str, Any] | None:
+    if not path.is_file():
+        return None
+    return _load_baseline(path)
+
+
+def build_baseline_snapshot(
+    reports: dict[str, dict[str, Any]],
+    *,
+    routing_dir: Path,
+    content_exceptions_path: Path,
+) -> dict[str, Any]:
+    skill_eval = reports["skill_eval"]
+    coverage_matrix = reports["coverage_matrix"]
+    benchmarks = reports["benchmarks"]
+    items = _mapping_list(skill_eval, "items", "skill professionalism report")
+    rows = _mapping_list(coverage_matrix, "rows", "coverage matrix report")
+    benchmark_results = _mapping_list(benchmarks, "results", "professional benchmarks report")
+    items_by_name = {str(item.get("name")): item for item in items if item.get("name")}
+    rows_by_name = {str(row.get("name")): row for row in rows if row.get("name")}
+
+    professional_skills: dict[str, Any] = {}
+    foundation_capabilities: dict[str, Any] = {}
+    for name in sorted(rows_by_name):
+        row = rows_by_name[name]
+        item = items_by_name.get(name, {})
+        entry = _skill_baseline_entry(item, row)
+        if row.get("kind") == "professional-skill":
+            professional_skills[name] = entry
+        elif row.get("kind") == "foundation-capability":
+            foundation_capabilities[name] = entry
+
+    snapshot = {
+        "schema_version": 1,
+        "generated_at": _now(),
+        "source_reports": {
+            "skill_professionalism": f"reports/{SKILL_EVAL_JSON}",
+            "professional_coverage_matrix": f"reports/{COVERAGE_MATRIX_JSON}",
+            "professional_benchmarks": f"reports/{BENCHMARKS_JSON}",
+        },
+        "global_thresholds": dict(DEFAULT_GLOBAL_THRESHOLDS),
+        "professional_skills": professional_skills,
+        "foundation_capabilities": foundation_capabilities,
+        "benchmarks": {
+            "cases": _benchmark_case_baselines(benchmark_results),
+            "cases_checked": int(benchmarks.get("cases_checked") or 0),
+            "comparison_cases_checked": int(benchmarks.get("comparison_cases_checked") or 0),
+            "errors_count": len(_string_list(benchmarks.get("errors"))),
+        },
+        "routing": _routing_baseline(routing_dir),
+        "content_bloat": {
+            "recorded_exceptions": _content_exception_paths(content_exceptions_path),
+        },
+    }
+    snapshot["global_thresholds"]["max_known_warnings_count"] = _known_warning_total(snapshot)
+    return snapshot
+
+
+def _mapping_list(report: dict[str, Any], key: str, context: str) -> list[dict[str, Any]]:
+    value = report.get(key)
+    if not isinstance(value, list):
+        raise RegressionInputError(f"{context}: expected list field '{key}'")
+    if not all(isinstance(item, dict) for item in value):
+        raise RegressionInputError(f"{context}: field '{key}' must contain mappings")
+    return value
+
+
+def _skill_baseline_entry(item: dict[str, Any], row: dict[str, Any]) -> dict[str, Any]:
+    warnings = _string_list(item.get("warnings")) or _string_list(row.get("warnings"))
+    likely_missing = _string_list(item.get("likely_missing_sections"))
+    coverage = {
+        "mode_matrix": _string(row.get("mode_matrix")),
+        "proactive_triggers": _string(row.get("proactive_triggers")),
+        "evidence_contract": _string(row.get("evidence_contract")),
+        "output_contract": _string(row.get("output_contract")),
+        "failure_modes": _string(row.get("failure_modes")),
+        "quality_gate": _string(row.get("quality_gate")),
+        "reference_loading_hint": _string(row.get("reference_loading_hint")),
+        "anti_bloat_status": _string(row.get("anti_bloat_status")),
+    }
+    return {
+        "path": _string(row.get("path") or item.get("path")),
+        "kind": _string(row.get("kind") or item.get("kind")),
+        "total_score": int(item.get("total") if item.get("total") is not None else row.get("score") or 0),
+        "status": _string(item.get("status") or row.get("status")),
+        "known_warnings_count": len(warnings),
+        "known_warnings": warnings,
+        "required_sections_present": not bool(likely_missing),
+        "missing_required_sections": likely_missing,
+        "benchmark_coverage_count": _coverage_count(row.get("benchmark_coverage")),
+        "routing_coverage_count": _coverage_count(row.get("routing_coverage")),
+        "coverage": coverage,
+    }
+
+
+def _benchmark_case_baselines(results: list[dict[str, Any]]) -> dict[str, Any]:
+    cases: dict[str, Any] = {}
+    for result in sorted(results, key=lambda item: str(item.get("path") or item.get("case_id"))):
+        path = _string(result.get("path") or result.get("case_id"))
+        if not path:
+            continue
+        summary = result.get("professional_delta_summary")
+        if not isinstance(summary, dict):
+            summary = {}
+        cases[path] = {
+            "expected_stage": _string(result.get("expected_stage")),
+            "expected_skills": _string_list(result.get("expected_skills")),
+            "expected_capabilities": _string_list(result.get("expected_capabilities")),
+            "schema_status": _string(result.get("schema_status")),
+            "comparison_status": _string(result.get("comparison_status")),
+            "benchmark_quality_status": _string(result.get("benchmark_quality_status") or ("pass" if not result.get("errors") else "fail")),
+            "baseline_defect_hits_count": len(_string_list(result.get("baseline_defect_hits"))),
+            "with_skill_obligation_coverage_count": len(_string_list(result.get("with_skill_obligation_coverage"))),
+            "with_skill_obligation_coverage": _string_list(result.get("with_skill_obligation_coverage")),
+            "delta_score": int(result.get("delta_score") if result.get("delta_score") is not None else summary.get("delta_score") or 0),
+            "remaining_gaps_count": len(_string_list(result.get("remaining_gaps") or summary.get("remaining_gaps"))),
+            "remaining_gaps": _string_list(result.get("remaining_gaps") or summary.get("remaining_gaps")),
+            "errors_count": len(_string_list(result.get("errors"))),
+            "errors": _string_list(result.get("errors")),
+        }
+    return cases
+
+
+def _routing_baseline(routing_dir: Path) -> dict[str, Any]:
+    cases: dict[str, Any] = {}
+    if not routing_dir.is_dir():
+        return {"cases": cases, "l1_anti_over_routing_count": 0}
+    for path in sorted(routing_dir.glob("*.yaml")):
+        try:
+            data = load_yaml_file(path)
+        except ValidationProblem:
+            continue
+        if not isinstance(data, dict):
+            continue
+        case_id = _string(data.get("id") or path.stem)
+        expected = data.get("expected")
+        if not isinstance(expected, dict):
+            expected = {}
+        forbidden = data.get("forbidden")
+        if not isinstance(forbidden, dict):
+            forbidden = {}
+        forbidden_counts = {
+            field_name: len(_string_list(forbidden.get(field_name)))
+            for field_name in EXPECTED_ROUTING_FIELDS
+        }
+        cases[case_id] = {
+            "path": str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path),
+            "complexity": _string(expected.get("complexity")),
+            "risk_level": _string(expected.get("risk_level")),
+            "expected_skills_count": len(_string_list(expected.get("skills"))),
+            "expected_capabilities_count": len(_string_list(expected.get("capabilities"))),
+            "forbidden_counts": forbidden_counts,
+            "forbidden_present": any(count > 0 for count in forbidden_counts.values()),
+            "forbidden_complete": all(count > 0 for count in forbidden_counts.values()),
+            "l1_anti_over_routing": _is_l1_anti_over_routing(expected, forbidden),
+        }
+    return {
+        "cases": cases,
+        "l1_anti_over_routing_count": sum(1 for case in cases.values() if case["l1_anti_over_routing"]),
+    }
+
+
+def compare_against_baseline(
+    baseline: dict[str, Any],
+    current: dict[str, Any],
+    *,
+    strict: bool,
+    report_only: bool,
+) -> RegressionResult:
+    blockers: list[Finding] = []
+    warnings: list[Finding] = []
+    known_warnings: list[Finding] = []
+    thresholds = dict(DEFAULT_GLOBAL_THRESHOLDS)
+    thresholds.update(baseline.get("global_thresholds") or {})
+    score_threshold = float(thresholds.get("no_score_regression_more_than", 1.0))
+
+    _compare_skill_group(
+        "professional_skills",
+        baseline,
+        current,
+        blockers,
+        warnings,
+        known_warnings,
+        score_threshold,
+        strict=strict,
+        thresholds=thresholds,
+    )
+    _compare_skill_group(
+        "foundation_capabilities",
+        baseline,
+        current,
+        blockers,
+        warnings,
+        known_warnings,
+        score_threshold,
+        strict=strict,
+        thresholds=thresholds,
+    )
+    _compare_benchmarks(baseline, current, blockers, warnings, thresholds)
+    _compare_routing(baseline, current, blockers, thresholds)
+    _compare_warning_budget(blockers, warnings, known_warnings, thresholds)
+
+    status = "fail" if blockers else "pass"
+    if report_only and blockers:
+        status = "report-only"
+    result = RegressionResult(
+        generated_at=_now(),
+        mode="strict" if strict else "default",
+        status=status,
+        strict=strict,
+        report_only=report_only,
+        blockers=blockers,
+        warnings=warnings,
+        known_warnings=known_warnings,
+    )
+    result.summary = _summary(result)
+    return result
+
+
+def _compare_skill_group(
+    group: str,
+    baseline: dict[str, Any],
+    current: dict[str, Any],
+    blockers: list[Finding],
+    warnings: list[Finding],
+    known_warnings: list[Finding],
+    score_threshold: float,
+    *,
+    strict: bool,
+    thresholds: dict[str, Any],
+) -> None:
+    base_items = _dict(baseline.get(group))
+    current_items = _dict(current.get(group))
+    professional_group = group == "professional_skills"
+    recorded_exceptions = set(_string_list(_dict(current.get("content_bloat")).get("recorded_exceptions")))
+    for name in sorted(current_items):
+        current_entry = _dict(current_items[name])
+        base_entry = _dict(base_items.get(name))
+        target = current_entry.get("path") or name
+        current_status = _string(current_entry.get("status"))
+        base_status = _string(base_entry.get("status"))
+        if strict and current_status == WEAK_STATUS:
+            blockers.append(Finding("strict-weak-status", target, "strict mode rejects weak status", base_status, current_status))
+        if (
+            professional_group
+            and thresholds.get("no_new_weak_professional_skill", True)
+            and base_status in GOOD_STATUSES
+            and current_status == WEAK_STATUS
+        ):
+            blockers.append(Finding("professional-status-regression", target, "professional skill regressed from acceptable/sample-grade to weak", base_status, current_status))
+        if base_entry:
+            base_score = float(base_entry.get("total_score") or 0)
+            current_score = float(current_entry.get("total_score") or 0)
+            if base_score - current_score > score_threshold:
+                blockers.append(Finding("score-regression", target, f"score decreased by more than {score_threshold}", base_score, current_score))
+        _compare_warning_sets(base_entry, current_entry, target, blockers, warnings, known_warnings, recorded_exceptions)
+        _compare_coverage(base_entry, current_entry, target, blockers, thresholds, professional_group)
+
+
+def _compare_warning_sets(
+    baseline_entry: dict[str, Any],
+    current_entry: dict[str, Any],
+    target: str,
+    blockers: list[Finding],
+    warnings: list[Finding],
+    known_warnings: list[Finding],
+    recorded_exceptions: set[str],
+) -> None:
+    base_warnings = set(_string_list(baseline_entry.get("known_warnings")))
+    current_warnings = set(_string_list(current_entry.get("known_warnings")))
+    for warning in sorted(current_warnings & base_warnings):
+        known_warnings.append(Finding("known-warning", target, warning, warning, warning, "info"))
+    for warning in sorted(current_warnings - base_warnings):
+        finding = Finding("new-warning", target, warning, None, warning, "warning")
+        warnings.append(finding)
+        if _is_anti_bloat_warning(warning) and _string(current_entry.get("path")) not in recorded_exceptions:
+            blockers.append(Finding("anti-bloat-regression", target, "new anti-bloat warning without recorded exception", None, warning))
+
+
+def _compare_warning_budget(
+    blockers: list[Finding],
+    warnings: list[Finding],
+    known_warnings: list[Finding],
+    thresholds: dict[str, Any],
+) -> None:
+    max_new = thresholds.get("max_new_warnings_count")
+    if max_new is not None and len(warnings) > int(max_new):
+        blockers.append(
+            Finding(
+                "new-warning-budget",
+                "professionalism-baseline",
+                f"new warning count exceeds max_new_warnings_count={int(max_new)}",
+                int(max_new),
+                len(warnings),
+            )
+        )
+    max_known = thresholds.get("max_known_warnings_count")
+    if max_known is not None and len(known_warnings) > int(max_known):
+        blockers.append(
+            Finding(
+                "known-warning-budget",
+                "professionalism-baseline",
+                f"known warning count exceeds max_known_warnings_count={int(max_known)}",
+                int(max_known),
+                len(known_warnings),
+            )
+        )
+
+
+def _compare_coverage(
+    baseline_entry: dict[str, Any],
+    current_entry: dict[str, Any],
+    target: str,
+    blockers: list[Finding],
+    thresholds: dict[str, Any],
+    professional_group: bool,
+) -> None:
+    base_coverage = _dict(baseline_entry.get("coverage"))
+    current_coverage = _dict(current_entry.get("coverage"))
+    if (
+        professional_group
+        and thresholds.get("no_new_missing_mode_matrix_for_professional_skill", True)
+        and _is_missing(current_coverage.get("mode_matrix"))
+        and not _is_missing(base_coverage.get("mode_matrix"))
+    ):
+        blockers.append(Finding("missing-mode-matrix", target, "new missing Mode Matrix", base_coverage.get("mode_matrix"), current_coverage.get("mode_matrix")))
+    if (
+        thresholds.get("no_new_missing_proactive_triggers_for_core_skill", True)
+        and _is_missing(current_coverage.get("proactive_triggers"))
+        and not _is_missing(base_coverage.get("proactive_triggers"))
+    ):
+        blockers.append(Finding("missing-proactive-triggers", target, "new missing Proactive Professional Triggers", base_coverage.get("proactive_triggers"), current_coverage.get("proactive_triggers")))
+    if (
+        thresholds.get("no_new_missing_evidence_contract_for_core_skill", True)
+        and _is_weak_evidence(current_coverage.get("evidence_contract"))
+        and not _is_weak_evidence(base_coverage.get("evidence_contract"))
+    ):
+        blockers.append(Finding("weak-evidence-contract", target, "new weak Evidence Contract", base_coverage.get("evidence_contract"), current_coverage.get("evidence_contract")))
+    if (
+        thresholds.get("no_new_reference_without_loading_hint", True)
+        and _is_without_reference_hint(current_coverage.get("reference_loading_hint"))
+        and not _is_without_reference_hint(base_coverage.get("reference_loading_hint"))
+    ):
+        blockers.append(Finding("reference-loading-hint-regression", target, "new reference without loading hint", base_coverage.get("reference_loading_hint"), current_coverage.get("reference_loading_hint")))
+    if current_entry.get("required_sections_present") is False and baseline_entry.get("required_sections_present") is True:
+        blockers.append(Finding("required-section-regression", target, "new missing required section", True, current_entry.get("missing_required_sections")))
+
+
+def _compare_benchmarks(
+    baseline: dict[str, Any],
+    current: dict[str, Any],
+    blockers: list[Finding],
+    warnings: list[Finding],
+    thresholds: dict[str, Any],
+) -> None:
+    base_cases = _dict(_dict(baseline.get("benchmarks")).get("cases"))
+    current_cases = _dict(_dict(current.get("benchmarks")).get("cases"))
+    for case_id in sorted(current_cases):
+        current_case = _dict(current_cases[case_id])
+        base_case = _dict(base_cases.get(case_id))
+        current_errors = _string_list(current_case.get("errors"))
+        base_errors = set(_string_list(base_case.get("errors")))
+        new_errors = [error for error in current_errors if error not in base_errors]
+        if current_case.get("benchmark_quality_status") == "fail" and (
+            not base_case or base_case.get("benchmark_quality_status") != "fail" or new_errors
+        ):
+            blockers.append(Finding("benchmark-quality-regression", case_id, "benchmark quality failed or gained new errors", base_case.get("errors"), current_errors))
+        if (
+            thresholds.get("no_new_empty_benchmark_case", True)
+            and int(current_case.get("baseline_defect_hits_count") or 0) < 1
+            and int(base_case.get("baseline_defect_hits_count") or 0) >= 1
+        ):
+            blockers.append(Finding("empty-benchmark-regression", case_id, "baseline_output.md no longer demonstrates a forbidden behavior", base_case.get("baseline_defect_hits_count"), current_case.get("baseline_defect_hits_count")))
+        if not base_case and int(current_case.get("baseline_defect_hits_count") or 0) < 1:
+            blockers.append(Finding("empty-benchmark-case", case_id, "new benchmark baseline_output.md does not demonstrate a forbidden behavior", None, current_case.get("baseline_defect_hits_count")))
+        if base_case:
+            base_delta = int(base_case.get("delta_score") or 0)
+            current_delta = int(current_case.get("delta_score") or 0)
+            if current_delta < base_delta:
+                blockers.append(Finding("benchmark-delta-regression", case_id, "benchmark comparison delta decreased", base_delta, current_delta))
+        if current_errors and not new_errors:
+            warnings.append(Finding("known-benchmark-errors", case_id, "benchmark retains baseline errors", base_case.get("errors"), current_errors, "warning"))
+
+
+def _compare_routing(
+    baseline: dict[str, Any],
+    current: dict[str, Any],
+    blockers: list[Finding],
+    thresholds: dict[str, Any],
+) -> None:
+    base_routing = _dict(baseline.get("routing"))
+    current_routing = _dict(current.get("routing"))
+    base_cases = _dict(base_routing.get("cases"))
+    current_cases = _dict(current_routing.get("cases"))
+    for case_id in sorted(current_cases):
+        current_case = _dict(current_cases[case_id])
+        base_case = _dict(base_cases.get(case_id))
+        if not thresholds.get("no_new_routing_case_without_forbidden", True):
+            continue
+        if not current_case.get("forbidden_present") and not base_case:
+            blockers.append(Finding("routing-case-without-forbidden", case_id, "new routing case has no forbidden.* coverage", None, current_case.get("forbidden_counts")))
+        if base_case.get("forbidden_present") and not current_case.get("forbidden_present"):
+            blockers.append(Finding("routing-forbidden-regression", case_id, "routing case lost forbidden.* coverage", base_case.get("forbidden_counts"), current_case.get("forbidden_counts")))
+    base_l1 = int(base_routing.get("l1_anti_over_routing_count") or 0)
+    current_l1 = int(current_routing.get("l1_anti_over_routing_count") or 0)
+    if current_l1 < base_l1:
+        blockers.append(Finding("l1-anti-over-routing-regression", "evals/routing", "L1 anti-over-routing case count decreased", base_l1, current_l1))
+
+
+def diff_snapshots(old: dict[str, Any], new: dict[str, Any]) -> list[Finding]:
+    changes: list[Finding] = []
+    for group in ("professional_skills", "foundation_capabilities"):
+        old_items = _dict(old.get(group))
+        new_items = _dict(new.get(group))
+        for name in sorted(set(old_items) | set(new_items)):
+            if name not in old_items:
+                changes.append(Finding("baseline-added", f"{group}.{name}", "added to baseline", None, "added", "info"))
+                continue
+            if name not in new_items:
+                changes.append(Finding("baseline-removed", f"{group}.{name}", "removed from baseline", "present", None, "info"))
+                continue
+            for field_name in ("total_score", "status", "known_warnings_count", "required_sections_present", "benchmark_coverage_count", "routing_coverage_count"):
+                old_value = _dict(old_items[name]).get(field_name)
+                new_value = _dict(new_items[name]).get(field_name)
+                if old_value != new_value:
+                    changes.append(Finding("baseline-changed", f"{group}.{name}.{field_name}", "baseline value changed", old_value, new_value, "info"))
+    old_cases = _dict(_dict(old.get("benchmarks")).get("cases"))
+    new_cases = _dict(_dict(new.get("benchmarks")).get("cases"))
+    for case_id in sorted(set(old_cases) | set(new_cases)):
+        if case_id not in old_cases:
+            changes.append(Finding("baseline-added", f"benchmarks.{case_id}", "added benchmark case", None, "added", "info"))
+        elif case_id not in new_cases:
+            changes.append(Finding("baseline-removed", f"benchmarks.{case_id}", "removed benchmark case", "present", None, "info"))
+        else:
+            for field_name in ("benchmark_quality_status", "delta_score", "baseline_defect_hits_count", "remaining_gaps_count"):
+                old_value = _dict(old_cases[case_id]).get(field_name)
+                new_value = _dict(new_cases[case_id]).get(field_name)
+                if old_value != new_value:
+                    changes.append(Finding("baseline-changed", f"benchmarks.{case_id}.{field_name}", "baseline benchmark value changed", old_value, new_value, "info"))
+    return changes
+
+
+def _write_reports(
+    result: RegressionResult,
+    current: dict[str, Any],
+    reports: dict[str, dict[str, Any]],
+    reports_dir: Path,
+) -> None:
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    payload = _result_payload(result)
+    (reports_dir / REGRESSION_JSON).write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (reports_dir / REGRESSION_MD).write_text(_render_regression_markdown(result), encoding="utf-8")
+    readiness = _release_readiness_payload(result, current, reports)
+    (reports_dir / READINESS_JSON).write_text(
+        json.dumps(readiness, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (reports_dir / READINESS_MD).write_text(_render_readiness_markdown(readiness), encoding="utf-8")
+
+
+def _write_input_error_report(reports_dir: Path, error: str, args: argparse.Namespace) -> None:
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    result = RegressionResult(
+        generated_at=_now(),
+        mode="input-error",
+        status="fail",
+        strict=bool(args.strict),
+        report_only=bool(args.report_only),
+        blockers=[Finding("input-error", "reports", error)],
+    )
+    result.summary = _summary(result)
+    (reports_dir / REGRESSION_JSON).write_text(
+        json.dumps(_result_payload(result), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (reports_dir / REGRESSION_MD).write_text(_render_regression_markdown(result), encoding="utf-8")
+
+
+def _result_payload(result: RegressionResult) -> dict[str, Any]:
+    payload = asdict(result)
+    return payload
+
+
+def _render_regression_markdown(result: RegressionResult) -> str:
+    lines = [
+        "# Professionalism Regression Report",
+        "",
+        f"- Generated: {result.generated_at}",
+        f"- Mode: {result.mode}",
+        f"- Status: {result.status}",
+        f"- Strict: {str(result.strict).lower()}",
+        f"- Report only: {str(result.report_only).lower()}",
+        f"- Blockers: {len(result.blockers)}",
+        f"- Warnings: {len(result.warnings)}",
+        f"- Known accepted warnings: {len(result.known_warnings)}",
+        f"- Baseline changes: {len(result.baseline_changes)}",
+    ]
+    _append_findings(lines, "Blockers", result.blockers)
+    _append_findings(lines, "Warnings", result.warnings)
+    _append_findings(lines, "Known Accepted Warnings", result.known_warnings)
+    _append_findings(lines, "Baseline Changes", result.baseline_changes)
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _append_findings(lines: list[str], title: str, findings: list[Finding]) -> None:
+    lines.extend(["", f"## {title}", ""])
+    if not findings:
+        lines.append("- None")
+        return
+    for finding in findings:
+        lines.append(
+            f"- `{finding.category}` `{finding.target}`: {finding.message} "
+            f"(baseline: {_display(finding.baseline_value)}, current: {_display(finding.current_value)})"
+        )
+
+
+def _release_readiness_payload(
+    result: RegressionResult,
+    current: dict[str, Any],
+    reports: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    professional = _dict(current.get("professional_skills"))
+    foundation = _dict(current.get("foundation_capabilities"))
+    benchmarks = _dict(current.get("benchmarks"))
+    routing = _dict(current.get("routing"))
+    content_audit = _dict(reports.get("content_audit"))
+    content_summary = _dict(content_audit.get("summary"))
+    benchmark_cases = _dict(benchmarks.get("cases"))
+    return {
+        "generated_at": _now(),
+        "status": "blocked" if result.blockers else "ready",
+        "professional_skill_coverage_summary": _status_summary(professional),
+        "foundation_capability_coverage_summary": _status_summary(foundation),
+        "benchmark_coverage_summary": {
+            "cases_checked": benchmarks.get("cases_checked", 0),
+            "comparison_cases_checked": benchmarks.get("comparison_cases_checked", 0),
+            "quality_failures": sum(1 for case in benchmark_cases.values() if _dict(case).get("benchmark_quality_status") == "fail"),
+            "empty_baseline_cases": sum(1 for case in benchmark_cases.values() if int(_dict(case).get("baseline_defect_hits_count") or 0) < 1),
+        },
+        "routing_coverage_summary": {
+            "cases_checked": len(_dict(routing.get("cases"))),
+            "l1_anti_over_routing_count": routing.get("l1_anti_over_routing_count", 0),
+            "cases_without_forbidden": sum(1 for case in _dict(routing.get("cases")).values() if not _dict(case).get("forbidden_present")),
+        },
+        "regression_status": result.status,
+        "known_accepted_warnings": [asdict(item) for item in result.known_warnings],
+        "content_bloat_status": {
+            "heavy_professional": content_summary.get("heavy_professional", "unknown"),
+            "heavy_foundation": content_summary.get("heavy_foundation", "unknown"),
+            "heavy_domain": content_summary.get("heavy_domain", "unknown"),
+            "split_candidates": content_summary.get("split_candidates", "unknown"),
+            "low_professionalism": content_summary.get("low_professionalism", "unknown"),
+        },
+        "required_validation_commands": [
+            "python3 scripts/eval-skill-professionalism.py",
+            "python3 scripts/eval-skill-professionalism.py --coverage-matrix",
+            "python3 scripts/eval-professional-benchmarks.py",
+            "python3 scripts/validate-professionalism-regression.py",
+            "python3 scripts/validate-professional-routing-coverage.py",
+            "python3 scripts/eval-professional-agent-samples.py",
+        ],
+        "latest_results_available": {
+            "skill_professionalism_warnings": reports["skill_eval"].get("warning_count"),
+            "skill_professionalism_average_score": reports["skill_eval"].get("average_score"),
+            "coverage_rows_checked": reports["coverage_matrix"].get("rows_checked"),
+            "benchmark_errors": len(_string_list(reports["benchmarks"].get("errors"))),
+            "professional_agent_sample_warnings": reports["agent_samples"].get("warnings", "not-run"),
+            "professional_agent_samples_checked": reports["agent_samples"].get("samples_checked", "not-run"),
+        },
+        "release_blockers": [asdict(item) for item in result.blockers],
+        "non_blocking_followups": [asdict(item) for item in result.warnings],
+    }
+
+
+def _render_readiness_markdown(payload: dict[str, Any]) -> str:
+    lines = [
+        "# Professionalism Release Readiness",
+        "",
+        f"- Generated: {payload['generated_at']}",
+        f"- Status: {payload['status']}",
+        f"- Regression status: {payload['regression_status']}",
+        "",
+        "## Professional Skill Coverage Summary",
+        "",
+        _summary_line(payload["professional_skill_coverage_summary"]),
+        "",
+        "## Foundation Capability Coverage Summary",
+        "",
+        _summary_line(payload["foundation_capability_coverage_summary"]),
+        "",
+        "## Benchmark Coverage Summary",
+        "",
+        _mapping_lines(payload["benchmark_coverage_summary"]),
+        "",
+        "## Routing Coverage Summary",
+        "",
+        _mapping_lines(payload["routing_coverage_summary"]),
+        "",
+        "## Known Accepted Warnings",
+        "",
+    ]
+    if payload["known_accepted_warnings"]:
+        for item in payload["known_accepted_warnings"]:
+            lines.append(f"- `{item['target']}`: {item['message']}")
+    else:
+        lines.append("- None")
+    lines.extend(
+        [
+            "",
+            "## Content Bloat Status",
+            "",
+            _mapping_lines(payload["content_bloat_status"]),
+            "",
+            "## Required Validation Commands",
+            "",
+        ]
+    )
+    for command in payload["required_validation_commands"]:
+        lines.append(f"- `{command}`")
+    lines.extend(["", "## Latest Results Available", "", _mapping_lines(payload["latest_results_available"]), "", "## Release Blockers", ""])
+    if payload["release_blockers"]:
+        for item in payload["release_blockers"]:
+            lines.append(f"- `{item['category']}` `{item['target']}`: {item['message']}")
+    else:
+        lines.append("- None")
+    lines.extend(["", "## Non-Blocking Follow-Ups", ""])
+    if payload["non_blocking_followups"]:
+        for item in payload["non_blocking_followups"]:
+            lines.append(f"- `{item['category']}` `{item['target']}`: {item['message']}")
+    else:
+        lines.append("- None")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _summary(result: RegressionResult) -> dict[str, Any]:
+    return {
+        "blockers": len(result.blockers),
+        "warnings": len(result.warnings),
+        "known_warnings": len(result.known_warnings),
+        "baseline_changes": len(result.baseline_changes),
+    }
+
+
+def _status_summary(items: dict[str, Any]) -> dict[str, Any]:
+    summary: dict[str, Any] = {"count": len(items), "statuses": {}}
+    for entry in items.values():
+        status = _string(_dict(entry).get("status")) or "unknown"
+        summary["statuses"][status] = summary["statuses"].get(status, 0) + 1
+    return summary
+
+
+def _summary_line(summary: dict[str, Any]) -> str:
+    statuses = ", ".join(f"{key}: {value}" for key, value in sorted(_dict(summary.get("statuses")).items()))
+    return f"- Count: {summary.get('count', 0)}; Statuses: {statuses or '-'}"
+
+
+def _mapping_lines(mapping: dict[str, Any]) -> str:
+    if not mapping:
+        return "- No data"
+    return "\n".join(f"- {key}: {value}" for key, value in sorted(mapping.items()))
+
+
+def _print_summary(result: RegressionResult) -> None:
+    print(
+        "validate-professionalism-regression: "
+        f"status={result.status}; blockers={len(result.blockers)}; "
+        f"warnings={len(result.warnings)}; known_warnings={len(result.known_warnings)}"
+    )
+
+
+def _is_missing(value: Any) -> bool:
+    text = _string(value).casefold()
+    return text in {"", "no", "missing", "absent", "weak"}
+
+
+def _is_weak_evidence(value: Any) -> bool:
+    text = _string(value).casefold()
+    return text in {"", "no", "missing", "absent", "weak", "partial"}
+
+
+def _is_without_reference_hint(value: Any) -> bool:
+    text = _string(value).casefold()
+    return text in {"", "no", "missing", "absent", "weak"}
+
+
+def _is_anti_bloat_warning(warning: str) -> bool:
+    folded = warning.casefold()
+    return any(token in folded for token in ("bloat", "long markdown table", "body", "duplicate", "repeated", "move", "reference"))
+
+
+def _coverage_count(value: Any) -> int:
+    text = _string(value)
+    match = re.search(r"\((\d+)\)", text)
+    if match:
+        return int(match.group(1))
+    return 1 if text.casefold().startswith("yes") else 0
+
+
+def _content_exception_paths(path: Path) -> list[str]:
+    if not path.is_file():
+        return []
+    try:
+        data = load_yaml_file(path)
+    except ValidationProblem:
+        return []
+    if not isinstance(data, dict):
+        return []
+    paths: list[str] = []
+    for entry in data.get("exceptions", []) or []:
+        if isinstance(entry, dict) and isinstance(entry.get("path"), str):
+            paths.append(entry["path"].strip())
+    return sorted(paths)
+
+
+def _known_warning_total(snapshot: dict[str, Any]) -> int:
+    total = 0
+    for group in ("professional_skills", "foundation_capabilities"):
+        for entry in _dict(snapshot.get(group)).values():
+            total += int(_dict(entry).get("known_warnings_count") or 0)
+    return total
+
+
+def _is_l1_anti_over_routing(expected: dict[str, Any], forbidden: dict[str, Any]) -> bool:
+    if expected.get("complexity") != "L1":
+        return False
+    forbidden_text = " ".join(
+        item
+        for field_name in EXPECTED_ROUTING_FIELDS
+        for item in _string_list(forbidden.get(field_name))
+    ).casefold()
+    return any(
+        token in forbidden_text
+        for token in (
+            "change-impact-analyzer",
+            "architecture-impact-reviewer",
+            "security-privacy-gate",
+            "delivery-release-gate",
+            "payment-trading-extension",
+            "web3-product-extension",
+            "security gate",
+            "delivery gate",
+            "architecture gate",
+        )
+    )
+
+
+def _dict(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _string(value: Any) -> str:
+    return value.strip() if isinstance(value, str) else ""
+
+
+def _string_list(value: Any) -> list[str]:
+    if isinstance(value, str):
+        return [value.strip()] if value.strip() else []
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    return []
+
+
+def _display(value: Any) -> str:
+    if value is None:
+        return "-"
+    if isinstance(value, (list, dict)):
+        return json.dumps(value, sort_keys=True)
+    return str(value)
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def dump_yaml(data: dict[str, Any]) -> str:
+    lines: list[str] = []
+    _emit_yaml_value(data, 0, lines)
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _emit_yaml_value(value: Any, indent: int, lines: list[str]) -> None:
+    pad = " " * indent
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if isinstance(item, dict):
+                lines.append(f"{pad}{_yaml_key(key)}:")
+                _emit_yaml_value(item, indent + 2, lines)
+            elif isinstance(item, list):
+                if not item:
+                    lines.append(f"{pad}{_yaml_key(key)}: []")
+                else:
+                    lines.append(f"{pad}{_yaml_key(key)}:")
+                    _emit_yaml_value(item, indent + 2, lines)
+            else:
+                lines.append(f"{pad}{_yaml_key(key)}: {_yaml_scalar(item)}")
+        return
+    if isinstance(value, list):
+        for item in value:
+            if isinstance(item, dict):
+                lines.append(f"{pad}-")
+                _emit_yaml_value(item, indent + 2, lines)
+            elif isinstance(item, list):
+                lines.append(f"{pad}-")
+                _emit_yaml_value(item, indent + 2, lines)
+            else:
+                lines.append(f"{pad}- {_yaml_scalar(item)}")
+        return
+    lines.append(f"{pad}{_yaml_scalar(value)}")
+
+
+def _yaml_key(value: Any) -> str:
+    text = str(value)
+    if re.fullmatch(r"[A-Za-z0-9_.+/-]+", text):
+        return text
+    return _yaml_scalar(text)
+
+
+def _yaml_scalar(value: Any) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        return str(value)
+    if value is None:
+        return "null"
+    text = str(value)
+    if text == "":
+        return '""'
+    if re.fullmatch(r"[A-Za-z0-9_.+/@()-]+", text) and text.lower() not in {"true", "false", "null"}:
+        return text
+    escaped = text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
+    return f'"{escaped}"'
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

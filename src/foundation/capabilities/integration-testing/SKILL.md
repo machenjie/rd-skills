@@ -137,6 +137,16 @@ Return an integration test plan with:
 - `performance` (container reuse strategy; parallel test safety; estimated suite runtime)
 - `ci_requirements` (Docker-in-Docker / Docker socket; resource requirements; environment variables)
 
+# Evidence Contract
+
+Close this capability only with real-boundary test evidence:
+
+- **Boundaries inspected:** boundary under test, real infrastructure version, controlled external stub/fake, auth context, transaction or cleanup strategy, and side effects that unit tests cannot prove.
+- **Validation evidence:** command output for success and failure-path tests, including response, persistent state, event/message, rollback, timeout, and request-body assertions where relevant.
+- **What evidence proves:** the selected seam works against realistic infrastructure and failure injection without shared mutable test state.
+- **What evidence does not prove:** full user journey behavior, provider compatibility beyond the controlled stub, or production topology unless covered by E2E, contract, or staging evidence.
+- **Residual risk and handoff:** name any uncontrolled dependency, flaky shared environment, or untested rollback path; hand off to `contract-testing`, `e2e-testing`, or `test-data-management` when those risks remain.
+
 # Quality Gate
 
 The integration test plan is complete only when:

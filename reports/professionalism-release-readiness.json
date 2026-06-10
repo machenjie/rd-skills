@@ -1,0 +1,361 @@
+{
+  "benchmark_coverage_summary": {
+    "cases_checked": 10,
+    "comparison_cases_checked": 10,
+    "empty_baseline_cases": 0,
+    "quality_failures": 0
+  },
+  "content_bloat_status": {
+    "heavy_domain": 0,
+    "heavy_foundation": 0,
+    "heavy_professional": 0,
+    "low_professionalism": 0,
+    "split_candidates": 0
+  },
+  "foundation_capability_coverage_summary": {
+    "count": 29,
+    "statuses": {
+      "acceptable": 7,
+      "needs-review": 22
+    }
+  },
+  "generated_at": "2026-06-09T22:20:27.390226+00:00",
+  "known_accepted_warnings": [
+    {
+      "baseline_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/acceptance-criteria-builder/SKILL.md"
+    },
+    {
+      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
+      "category": "known-warning",
+      "current_value": "Evidence Contract is missing 'what evidence proves'",
+      "message": "Evidence Contract is missing 'what evidence proves'",
+      "severity": "info",
+      "target": "src/professional-skills/ai-code-review-refactor/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 2 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 2 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 2 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/ai-code-review-refactor/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/ai-code-review-refactor/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/architecture-impact-reviewer/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/architecture-impact-reviewer/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/change-documentation-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/change-documentation-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/change-forge-router/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/change-impact-analyzer/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/change-intake-compiler/SKILL.md"
+    },
+    {
+      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
+      "category": "known-warning",
+      "current_value": "Evidence Contract is missing 'what evidence proves'",
+      "message": "Evidence Contract is missing 'what evidence proves'",
+      "severity": "info",
+      "target": "src/professional-skills/data-api-contract-changer/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/data-api-contract-changer/SKILL.md"
+    },
+    {
+      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
+      "category": "known-warning",
+      "current_value": "Evidence Contract is missing 'what evidence proves'",
+      "message": "Evidence Contract is missing 'what evidence proves'",
+      "severity": "info",
+      "target": "src/professional-skills/data-middleware-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
+      "category": "known-warning",
+      "current_value": "Evidence Contract is missing 'what evidence proves'",
+      "message": "Evidence Contract is missing 'what evidence proves'",
+      "severity": "info",
+      "target": "src/professional-skills/delivery-release-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/delivery-release-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/delivery-release-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/delivery-release-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
+      "category": "known-warning",
+      "current_value": "Evidence Contract is missing 'what evidence proves'",
+      "message": "Evidence Contract is missing 'what evidence proves'",
+      "severity": "info",
+      "target": "src/professional-skills/frontend-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/frontend-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/frontend-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
+      "category": "known-warning",
+      "current_value": "Evidence Contract is missing 'what evidence proves'",
+      "message": "Evidence Contract is missing 'what evidence proves'",
+      "severity": "info",
+      "target": "src/professional-skills/integration-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/integration-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 6 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/integration-change-builder/SKILL.md"
+    },
+    {
+      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
+      "category": "known-warning",
+      "current_value": "Evidence Contract is missing 'what evidence proves'",
+      "message": "Evidence Contract is missing 'what evidence proves'",
+      "severity": "info",
+      "target": "src/professional-skills/quality-test-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 1 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/quality-test-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/quality-test-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/quality-test-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
+      "category": "known-warning",
+      "current_value": "Evidence Contract is missing 'what evidence proves'",
+      "message": "Evidence Contract is missing 'what evidence proves'",
+      "severity": "info",
+      "target": "src/professional-skills/reliability-observability-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 7 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/reliability-observability-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/reliability-observability-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Evidence Contract is missing 'what evidence proves'",
+      "category": "known-warning",
+      "current_value": "Evidence Contract is missing 'what evidence proves'",
+      "message": "Evidence Contract is missing 'what evidence proves'",
+      "severity": "info",
+      "target": "src/professional-skills/security-privacy-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 3 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/security-privacy-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 4 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/security-privacy-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/security-privacy-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 8 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/security-privacy-gate/SKILL.md"
+    },
+    {
+      "baseline_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "category": "known-warning",
+      "current_value": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "message": "Proactive Professional Trigger 5 lacks concrete hidden risk, action, route, or evidence",
+      "severity": "info",
+      "target": "src/professional-skills/task-dag-planner/SKILL.md"
+    },
+    {
+      "baseline_value": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
+      "category": "known-warning",
+      "current_value": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
+      "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
+      "severity": "info",
+      "target": "src/foundation/capabilities/code-review/SKILL.md"
+    }
+  ],
+  "latest_results_available": {
+    "benchmark_errors": 0,
+    "coverage_rows_checked": 48,
+    "professional_agent_sample_warnings": 0,
+    "professional_agent_samples_checked": 6,
+    "skill_professionalism_average_score": 39.54,
+    "skill_professionalism_warnings": 45
+  },
+  "non_blocking_followups": [],
+  "professional_skill_coverage_summary": {
+    "count": 19,
+    "statuses": {
+      "acceptable": 17,
+      "sample-grade": 2
+    }
+  },
+  "regression_status": "pass",
+  "release_blockers": [],
+  "required_validation_commands": [
+    "python3 scripts/eval-skill-professionalism.py",
+    "python3 scripts/eval-skill-professionalism.py --coverage-matrix",
+    "python3 scripts/eval-professional-benchmarks.py",
+    "python3 scripts/validate-professionalism-regression.py",
+    "python3 scripts/validate-professional-routing-coverage.py",
+    "python3 scripts/eval-professional-agent-samples.py"
+  ],
+  "routing_coverage_summary": {
+    "cases_checked": 80,
+    "cases_without_forbidden": 0,
+    "l1_anti_over_routing_count": 9
+  },
+  "status": "ready"
+}

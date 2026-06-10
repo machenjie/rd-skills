@@ -1,0 +1,46 @@
+---
+id: frontend-form-accessibility-states-hidden-risk
+description: |
+  Frontend form change must route accessibility and interaction states without
+  pulling backend/security gates.
+prompt: |
+  Add inline validation to the account settings form. The draft covers the
+  happy path but not loading, disabled submit, focus after errors, screen reader
+  announcements, empty state, or recoverable server error copy.
+expected:
+  complexity: L3
+  risk_level: medium
+  expected_stage: implementation-planning
+  expected_context_budget_mode: staged-plan
+  risk_triggers: []
+  skills:
+    - experience-impact-modeler
+    - frontend-change-builder
+    - acceptance-criteria-builder
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - form-validation-design
+    - interaction-state-modeling
+    - frontend-testing
+    - e2e-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - backend-change-builder
+    - security-privacy-gate
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - ai-product-extension
+  quality_gates:
+    - security gate
+    - delivery gate
+notes: |
+  The route should stay UX/frontend/test focused.

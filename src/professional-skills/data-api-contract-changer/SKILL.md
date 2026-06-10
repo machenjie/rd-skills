@@ -75,6 +75,27 @@ Evaluate every proposed data or API contract change against:
 - **Performance impact**: Does the schema change affect query plans for existing high-frequency queries? Are indexes required or affected?
 - **Deprecation timeline**: If this change deprecates an existing contract, what is the sunset date and how are consumers notified?
 
+## Mode Matrix
+Select the contract mode before changing schema, DTO, endpoint, error, migration, or generated client behavior.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| New contract | New endpoint, DTO, event, schema, pagination, error code, or generated client. | Define compatibility, validation, idempotency, error semantics, and test contract before implementation. | Schema/consumer conventions inspected; request identity and error taxonomy named. | `api-contract-design`, `dto-schema-design`, `error-code-design`, `contract-testing` | Migration/release gates unless state or consumers require them. |
+| Modify existing contract | Field, status, enum, validation, filter, sort, pagination, or error semantics changes. | Preserve backward compatibility or stage expand/migrate/contract. | Consumer list, old/new shape, generated client impact, compatibility class. | `version-compatibility`, `change-impact-analyzer`, `quality-test-gate` | Immediate contract removal. |
+| Bug fix / compatibility repair | Client break, migration failure, invalid error semantics, pagination drift. | Verify failing consumer behavior and add regression/contract proof. | Reproduction, affected consumers, same-pattern contract scan, regression test. | `agent-execution-discipline`, `regression-testing`, `contract-testing` | Schema cleanup beyond the compatibility fix. |
+| Refactor contract internals | DTO mapper/schema organization changes without public behavior change. | Preserve wire contract, validation, generated clients, and error codes. | Before/after generated schema or snapshots, caller impact, deletion path. | `refactoring`, `implementation-structure-design` | Public field or semantic changes. |
+| Migration/release sensitive | Schema migration, deprecation, rollback, old/new version coexistence, mobile/client skew. | Expand-contract sequencing, rollback, consumer notification, and release proof. | EMC plan, rollback script, migration test, consumer readiness, docs. | `data-migration-design`, `delivery-release-gate`, `change-documentation-gate` | Contract phase removal until migration evidence exists. |
+| Security/privacy-sensitive contract | PII field, tenant data, permission-sensitive response, webhook/event payload. | Data minimization, object authorization impact, tenant exposure, audit. | Field classification, auth boundary, denied case, privacy review. | `security-privacy-gate`, `permission-boundary-modeling` | Convenience field exposure without owner approval. |
+
+## Proactive Professional Triggers
+
+- **Signal:** new required field, enum value, validation rule, or status code appears without old-client behavior. **Hidden risk:** backward-incompatible client break. **Required professional action:** classify compatibility and design fallback/versioning. **Route to:** `version-compatibility`, `contract-testing`. **Evidence required:** consumer list, generated client impact, contract test.
+- **Signal:** cursor, filter, sort, page size, or ordering changes on an existing list endpoint. **Hidden risk:** pagination drift, duplicate/missing records, broken dashboards. **Required professional action:** prove stable ordering and migration behavior. **Route to:** `api-contract-design`, `quality-test-gate`. **Evidence required:** pagination contract, boundary tests, old/new examples.
+- **Signal:** error code or validation message changes without machine-readable taxonomy review. **Hidden risk:** clients mis-handle errors or retry unsafe operations. **Required professional action:** map error semantics before merge. **Route to:** `error-code-design`, `backend-change-builder`. **Evidence required:** error code table, retry/client behavior, negative tests.
+- **Signal:** mutating endpoint lacks idempotency key or request identity semantics. **Hidden risk:** duplicate side effects under retry. **Required professional action:** design idempotency as part of the contract. **Route to:** `idempotency-retry-design`, `backend-change-builder`. **Evidence required:** key scope, TTL, duplicate response behavior, retry test.
+- **Signal:** schema migration removes/renames fields or contracts before consumers migrate. **Hidden risk:** rollback failure and version skew breakage. **Required professional action:** enforce expand/migrate/contract. **Route to:** `data-migration-design`, `delivery-release-gate`. **Evidence required:** EMC phases, rollback script, consumer readiness.
+- **Signal:** generated clients, SDKs, OpenAPI/Protobuf/GraphQL artifacts are not regenerated or diffed. **Hidden risk:** source contract and runtime clients diverge. **Required professional action:** regenerate or explain no-op. **Route to:** `sdk-library-contract-design`, `contract-testing`. **Evidence required:** generated diff, client tests, release note.
+
 ### Decision Tree: Breaking Change Handling
 
 ```
@@ -148,6 +169,9 @@ Examples:
 
 ## Output Contract
 Return a structured contract change plan with:
+- **Mode selected**: new contract, modify existing, bug fix, refactor, migration/release-sensitive, or security/privacy-sensitive, with trigger signal.
+- **Boundaries inspected**: schemas, DTOs, generated clients, API docs, consumers, migrations, validation, error codes, auth/privacy boundaries, and release boundaries inspected or skipped with reason.
+- **Professional judgment**: compatibility decision, consumer risk ruled out or retained, and contract behavior intentionally preserved or changed.
 - **Compatibility declaration**: Breaking or non-breaking, with class from compatibility matrix.
 - **Consumer list**: Named consumers with version, dependency, and migration readiness.
 - **Migration plan**: Forward migration steps in deployment order; rollback migration steps; tested execution plan for large tables.
@@ -156,15 +180,21 @@ Return a structured contract change plan with:
 - **Validation and error model**: Validation rules, error code taxonomy, RFC 7807 compliance.
 - **Deprecation notice**: Sunset date, replacement, migration guide link (if applicable).
 - **Rollback safety**: Whether rollback is safe without data intervention; required rollback script.
+- **Reuse and placement rationale**: schema/DTO/generated-client/API-doc ownership, mapper placement, expand/contract phase placement, and rejected breaking shortcut.
+- **Behavior preservation**: old wire shape, field semantics, validation behavior, pagination order, error codes, and generated client compatibility preserved or intentionally changed.
 - **Test obligations**: Consumer contract tests, migration tests, rollback tests, idempotency tests.
+- **Validation evidence**: commands/reports for schema diff, generated client diff, contract tests, migration/rollback tests, and residual risk.
+- **Evidence limits**: what each schema, client, migration, or contract artifact proves and what it does not prove about all consumers, version skew, production data, or mobile/client lag.
+- **Next gate/handoff**: backend, data middleware, release, security, docs, or no-next-gate rationale.
 
 ## Evidence Contract
 Close a contract change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
-- **Basis**: the compatibility class, schema standard (OpenAPI/JSON Schema/Protobuf), and error-code stability rule the change rests on.
-- **Files and boundaries inspected**: the schema, DTOs, and named consumers read, and the DTO-vs-internal-model boundary confirmed for each changed field.
+- **Basis**: the selected mode, compatibility class, schema standard (OpenAPI/JSON Schema/Protobuf), and error-code stability rule the change rests on.
+- **Files and boundaries inspected**: schemas, DTOs, generated clients, API docs, named consumers, migrations, validation rules, error code taxonomy, and DTO-vs-internal-model boundary confirmed for each changed field.
 - **Placement rationale**: why the change is expand-contract phased as it is, with the pagination/sort stability decision and the rejected breaking alternative.
-- **Validation commands**: the consumer-driven contract tests, migration tests, and rollback tests run, each with its outcome.
-- **Residual risk**: the consumer not yet migrated, the irreversible migration step, or the unversioned field that remains, and the named owner of the follow-up.
+- **Validation commands**: schema/generator diff, consumer-driven contract tests, migration tests, rollback tests, and idempotency tests run, each with its outcome and what it proves/does not prove.
+- **Contract judgment and handoff**: mode selected, compatibility judgment, behavior preservation, evidence limits, and next gate or consumer handoff.
+- **Residual risk**: the consumer not yet migrated, irreversible migration step, unversioned field, generated client gap, or privacy exposure that remains, and the named owner of the follow-up.
 
 ## Quality Gate
 1. Compatibility class is explicitly declared for every contract change.

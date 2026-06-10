@@ -1,0 +1,23 @@
+expected_stage: refactoring
+expected_professional_skill: ai-code-review-refactor
+expected_capabilities:
+  - implementation-structure-design
+  - module-boundary-design
+  - code-clarity-maintainability
+  - refactoring
+expected_hidden_risks:
+  - business logic pollution in shared/common/utils
+  - unclear owner for tenant and invoice rules
+  - hidden behavior change during refactor
+expected_evidence:
+  - reuse ladder and rejected placement alternatives
+  - owning module or domain boundary decision
+  - behavior-preserving regression tests and deletion path
+forbidden_behaviors:
+  - place tenant invoice rules in generic utilities
+  - introduce shared helper without owner and current consumers
+  - claim refactor is safe without before/after behavior proof
+expected_output_obligations:
+  - severity-classified structure finding
+  - reuse and placement rationale evidence
+  - validation evidence for behavior preservation

@@ -70,6 +70,29 @@ Evaluate every integration change against:
 - **Sandbox parity**: Does the sandbox reproduce the provider's failure modes (rate limits, 5xx errors, timeout behavior) for testing?
 - **Reconciliation frequency**: How frequently is reconciliation run? What drift threshold triggers an alert? Who is paged when drift exceeds threshold?
 
+## Mode Matrix
+Select the integration mode before changing outbound clients, webhooks, credentials, provider config, or reconciliation.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| New external integration | New provider, client, webhook, credential, data exchange, or file transfer. | Contract, timeouts, retries, idempotency, auth, sandbox, observability, reconciliation. | Provider docs/version, sandbox test plan, credential owner, failure modes. | `idempotency-retry-design`, `secret-configuration-security`, `reliability-observability-gate` | Custom abstraction until provider boundary is proven. |
+| Modify existing integration | API version, endpoint, payload, rate limit, credential, or failure handling changes. | Preserve provider compatibility and old behavior during rollout. | Current config, call sites, provider changelog, sandbox/prod diff, regression tests. | `version-compatibility`, `quality-test-gate`, `delivery-release-gate` | Provider migration unless required. |
+| Webhook ingest | Signature, replay, event routing, dedupe, DLQ, or event schema changes. | Verify before processing, dedupe/replay, idempotent side effects, observability. | Raw-body HMAC path, event ID store, retry/DLQ, duplicate-event test. | `web-security`, `message-queue-design`, `backend-change-builder` | Processing payload before verification. |
+| Bug fix / incident | Timeout, 429, duplicate external charge/order, missed webhook, drift, credential expiry. | Verify cause, bound retry, reconcile drift, add regression/sandbox proof. | Logs/provider response, cause, same-pattern scan, reconciliation report. | `failure-diagnosis`, `agent-execution-discipline`, `reliability-observability-gate` | Retrying provider without idempotency evidence. |
+| Provider migration/release | Provider A->B, version cutover, sandbox/prod config, credential rotation, traffic split. | Parallel run, rollback, reconciliation, rate-limit/cost guardrails. | Shadow comparison, rollback plan, config diff, staged rollout, owner. | `delivery-release-gate`, `change-documentation-gate`, `security-privacy-gate` | Big-bang provider switch. |
+| Security/privacy-sensitive | IdP/payment/PII/PHI/financial data, OAuth, secrets, signed URLs, private files. | Data minimization, credential lifecycle, auth boundary, audit and compliance. | Secret store/rotation, DPA/compliance note, least privilege, audit event. | `security-privacy-gate`, `secret-configuration-security` | Plain env/log exposure of credentials. |
+
+## Proactive Professional Triggers
+
+- **Signal:** outbound HTTP call lacks connection/read/total timeout. **Hidden risk:** thread/worker exhaustion and cascading latency. **Required professional action:** set explicit timeouts and failure behavior. **Route to:** `reliability-observability-gate`, `backend-change-builder`. **Evidence required:** timeout config, timeout test, metric/log.
+- **Signal:** retry policy lacks exponential backoff, jitter, max attempts, or `Retry-After` handling. **Hidden risk:** retry storm and provider ban. **Required professional action:** bound retry budget and aggregate rate. **Route to:** `idempotency-retry-design`, `performance-budgeting`. **Evidence required:** retry matrix, 429/5xx tests, rate-limit metric.
+- **Signal:** retried external write has no idempotency key or duplicate response behavior. **Hidden risk:** duplicate payment/order/entitlement. **Required professional action:** require idempotent external call design. **Route to:** `idempotency-retry-design`, `payment-trading-extension` when money is involved. **Evidence required:** key scope, provider idempotency support, duplicate-request test.
+- **Signal:** provider write can return timeout, 202/accepted, unknown, or partial success while local state moves forward. **Hidden risk:** external side effect succeeds after the caller records failure or retries. **Required professional action:** model accepted/unknown/failed states and reconciliation before release. **Route to:** `data-api-contract-changer`, `reliability-observability-gate`. **Evidence required:** state table, compensation/reconciliation path, timeout/unknown-result test.
+- **Signal:** webhook handler parses or mutates before signature verification or lacks replay dedupe. **Hidden risk:** forged or replayed event. **Required professional action:** verify raw body before any processing and dedupe events. **Route to:** `web-security`, `security-privacy-gate`. **Evidence required:** raw-body HMAC test, constant-time compare, replay test.
+- **Signal:** sandbox config differs from production for auth, endpoints, rate limits, failures, or schema. **Hidden risk:** tests do not predict production behavior. **Required professional action:** document parity gaps and compensating validation. **Route to:** `delivery-release-gate`, `quality-test-gate`. **Evidence required:** sandbox/prod matrix and untestable residual risk.
+- **Signal:** state transfer integration has no reconciliation job or drift alert. **Hidden risk:** silent divergence after missed webhook or partial provider success. **Required professional action:** add reconciliation or accepted residual risk. **Route to:** `reliability-observability-gate`, `data-middleware-change-builder`. **Evidence required:** drift query, schedule, threshold, owner.
+- **Signal:** credentials have no rotation owner, expiry monitoring, or audit trail. **Hidden risk:** expired or leaked integration secret. **Required professional action:** define lifecycle before release. **Route to:** `secret-configuration-security`, `security-privacy-gate`. **Evidence required:** secret store path, rotation plan, expiry alert.
+
 ### Decision Tree: Retry Policy
 
 ```
@@ -145,6 +168,9 @@ Examples:
 
 ## Output Contract
 Return an integration design with:
+- **Mode selected**: new integration, modify existing, webhook ingest, bug/incident, provider migration, or security/privacy-sensitive, with trigger signal.
+- **Boundaries inspected**: provider docs/version, client code, retry/circuit config, webhook verifier, credential store, sandbox/prod config, reconciliation job, rate limits, and release boundaries inspected or skipped with reason.
+- **Professional judgment**: provider contract, timeout/retry/idempotency/webhook/security/reconciliation decision, and external failure risks ruled out or retained.
 - **Provider contract**: API version, deprecation status, rate limits, quota, and sandbox availability.
 - **Authentication design**: Credential type, storage location, rotation schedule, and rotation automation.
 - **Resilience configuration**: Timeout values, retry policy, backoff algorithm, circuit breaker thresholds.
@@ -152,16 +178,22 @@ Return an integration design with:
 - **Inbound webhook security**: Signature algorithm, verification implementation, replay protection mechanism.
 - **Reconciliation plan**: Job schedule, drift threshold, alert owners, and remediation procedure.
 - **Credential lifecycle plan**: Current storage, rotation schedule, expiry monitoring, and automated rotation if applicable.
+- **Partial external success analysis**: provider accepted/unknown/failed states, timeout ambiguity, reconciliation and compensation.
+- **Reuse and placement rationale**: integration client, webhook verifier, credential store, retry/circuit config, and reconciliation job ownership and placement.
+- **Behavior preservation**: old provider behavior, event semantics, retry behavior, and rollback/migration compatibility preserved or intentionally changed.
 - **Test obligations**: Sandbox tests (normal, timeout, rate-limit, signature-failure cases), idempotency tests, reconciliation tests.
 - **Observability**: Metrics (success rate, latency, retry rate, circuit state, reconciliation drift), alert thresholds, and on-call routing.
+- **Validation evidence**: sandbox/failure/security/reconciliation commands run, what they prove/do not prove, residual risk, and next gate.
+- **Evidence limits**: what each sandbox, webhook, retry, or reconciliation test proves and what it does not prove about production provider behavior, rate limits, or outage modes.
 
 ## Evidence Contract
 Close an integration change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
-- **Basis**: the provider contract, signature scheme, or idempotency rule the change rests on, treating third-party failure as the expected case.
-- **Files and boundaries inspected**: the client, retry/circuit-breaker config, webhook verifier, and credential store read, and the sandbox-vs-production boundary confirmed.
+- **Basis**: the selected mode, provider contract, signature scheme, idempotency rule, or reconciliation requirement the change rests on, treating third-party failure as the expected case.
+- **Files and boundaries inspected**: client, retry/circuit-breaker config, webhook verifier, credential store, sandbox/prod config, provider changelog, reconciliation job, and rate-limit boundary read.
 - **Placement rationale**: why the timeout, retry budget, idempotency key, and reconciliation job live where they do, with dependency direction (via `implementation-structure-design`).
-- **Validation commands**: the sandbox tests for normal, timeout, rate-limit, and signature-failure cases plus idempotency and reconciliation tests, each with its outcome.
-- **Residual risk**: the retry-storm, replay, drift, or credential-rotation path that remains untested or assumed, and the named owner of the follow-up.
+- **Validation commands**: sandbox tests for normal, timeout, rate-limit, partial success, and signature-failure cases plus idempotency and reconciliation tests, each with its outcome and what it proves/does not prove.
+- **Integration judgment and handoff**: mode selected, provider-failure judgment, behavior preservation, evidence limits, and next gate.
+- **Residual risk**: retry-storm, replay, drift, provider outage, sandbox parity, rate limit, or credential-rotation path that remains untested or assumed, and the named owner of the follow-up.
 
 ## Quality Gate
 1. All outbound HTTP calls have explicit connection timeout and read timeout configured.

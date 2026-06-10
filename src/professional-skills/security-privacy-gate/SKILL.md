@@ -91,6 +91,29 @@ Evaluate every change against:
 - **Cloud governance security**: Does the change introduce cloud IAM privilege escalation, public bucket exposure, network exposure via SG/NACL/WAF, DNS/CDN/gateway exposure, or KMS key policy risk?
 - **Compliance evidence**: Which control objective is affected? What evidence artifact proves the control? Who owns the control, evidence, exception, and retention period?
 
+## Mode Matrix
+Select the security/privacy mode before approving a change, review, fix, dependency update, cloud change, or AI/RAG path.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| New sensitive surface | New auth, permission, PII, secret, upload, admin, AI tool, public endpoint, or cloud exposure. | Threat model, trust boundary, least privilege, privacy minimization, audit evidence. | Data/classification, actor/object matrix, input/output controls, audit owner. | `threat-modeling`, `input-validation`, `permission-boundary-modeling` | Compliance packet unless regulated/audited. |
+| Modify existing security logic | Existing authn/authz, tenant filter, CSRF, token, secret, policy, or cloud IAM changes. | Preserve old protections while proving no broader access. | Before/after policy, denied tests, effective permissions, callers. | `authentication-security`, `web-security`, `regression-testing` | Broad redesign without threat model. |
+| Security bug fix | IDOR, XSS, SSRF, injection, secret leak, CVE, prompt injection, or privacy incident. | Verify exploitability/cause, same-pattern scan, fix all affected surfaces, add regression. | Repro/exploit path, scan scope, fix proof, rotation/notification if needed. | `failure-diagnosis`, `agent-execution-discipline`, `quality-test-gate` | Local-only patch without scan. |
+| Code review / AI review | Existing or AI-generated code touches security-sensitive path. | Severity-classified findings, hallucinated control checks, bypass analysis. | Files/boundaries audited, tests/scans run, false-positive rationale. | `ai-code-review-refactor`, `code-review`, `agent-execution-discipline` | Advice without blocking severity. |
+| Dependency/secret/config | Package upgrade, secret storage, CI env, IaC config, KMS, bucket, IAM, WAF/CDN/DNS. | CVE/license/provenance, secret lifecycle, effective policy, rollback/audit. | Scan output, policy diff, secret rotation, owner/retention. | `dependency-vulnerability-scanning`, `secret-configuration-security`, `delivery-release-gate` | Runtime release approval without evidence. |
+| AI/RAG privacy/security | Prompt, tool call, retrieval, embeddings, vector DB, model output, generated content. | Treat model output/retrieval as untrusted; prevent prompt injection and exfiltration. | Tool allowlist, permission-aware retrieval, output validation, red-team cases. | `ai-product-extension`, `input-validation`, `threat-modeling` | Assuming model obeys policy. |
+
+## Proactive Professional Triggers
+
+- **Signal:** endpoint or query accepts `user_id`, `tenant_id`, resource ID, role, or scope from request input. **Hidden risk:** IDOR, tenant leak, privilege escalation. **Required professional action:** verify caller-derived identity and object ownership. **Route to:** `permission-boundary-modeling`, `backend-change-builder`. **Evidence required:** denied-case test and same-pattern scan.
+- **Signal:** new field/API response/log/event contains email, IP, location, financial, health, token, or free-text user content. **Hidden risk:** privacy over-collection or log exposure. **Required professional action:** classify data and minimize exposure. **Route to:** `data-api-contract-changer`, `reliability-observability-gate`. **Evidence required:** data classification, retention/logging decision.
+- **Signal:** user-controlled URL/file/path/HTML/markdown/template/shell/prompt reaches parser, renderer, subprocess, or outbound request. **Hidden risk:** SSRF, XSS, command injection, prompt injection. **Required professional action:** require allowlist, encoding, sandbox, or output validation. **Route to:** `input-validation`, `web-security`. **Evidence required:** malicious-input tests.
+- **Signal:** secret, API key, token, or credential appears in config, CI, logs, container, generated code, or docs. **Hidden risk:** secret compromise. **Required professional action:** rotate if exposed and move to managed storage. **Route to:** `secret-configuration-security`, `delivery-release-gate`. **Evidence required:** secret scan, rotation plan, audit owner.
+- **Signal:** dependency/version changes without CVE, license, provenance, or transitive review. **Hidden risk:** supply-chain vulnerability. **Required professional action:** scan and classify severity before approval. **Route to:** `dependency-vulnerability-scanning`, `package-dependency-management`. **Evidence required:** scan output, accepted risk owner.
+- **Signal:** cloud IAM, bucket, KMS, gateway, DNS/CDN/WAF, ingress, or network policy broadens access. **Hidden risk:** public exposure or privilege escalation. **Required professional action:** review effective policy and rollback. **Route to:** `delivery-release-gate`, `kubernetes-gateway`. **Evidence required:** plan diff, effective permission, rollback.
+- **Signal:** LLM/RAG path retrieves user data or can call tools without permission-aware retrieval and output validation. **Hidden risk:** prompt injection or data exfiltration. **Required professional action:** threat model AI tool chain. **Route to:** `ai-product-extension`, `threat-modeling`. **Evidence required:** red-team prompt, allowlist, retrieval auth test.
+- **Signal:** regulated/audited change lacks control objective, evidence owner, exception, freshness, or retention. **Hidden risk:** audit failure despite code correctness. **Required professional action:** produce evidence chain before release. **Route to:** `change-documentation-gate`, `delivery-release-gate`. **Evidence required:** audit-ready packet metadata.
+
 ## Compliance Evidence
 
 For regulated, audited, or customer-assurance-sensitive changes, produce an audit-ready evidence chain:
@@ -185,6 +208,9 @@ Examples:
 
 ## Output Contract
 Return a security and privacy review with:
+- **Mode selected**: new sensitive surface, modify existing security logic, bug fix, review, dependency/secret/config, or AI/RAG security, with trigger signal.
+- **Boundaries inspected**: trust boundaries, object authorization points, tenant filters, input/output contexts, secrets, dependencies, cloud/IaC policies, AI/RAG tool and retrieval boundaries, and audit boundaries inspected or skipped with reason.
+- **Professional judgment**: abuse path, control sufficiency, severity, compensating control, and risks ruled out or retained.
 - **Risk inventory**: Identified vulnerabilities with CWE classification, severity (Critical/High/Medium/Low), and affected code locations.
 - **Authorization audit**: Object-level authorization analysis for every data access, with IDOR test requirement.
 - **Input/output analysis**: Trust boundary input validation coverage and output encoding context analysis.
@@ -194,17 +220,22 @@ Return a security and privacy review with:
 - **Privacy impact**: Personal data processed, legal basis, retention, and minimization assessment.
 - **Cloud governance review**: Cloud IAM escalation, public bucket exposure, SG/NACL/WAF/DNS/CDN/gateway exposure, KMS key policy, account/project boundary, and resource tagging risks.
 - **Compliance evidence**: Control objective, evidence artifact, control owner, evidence owner, exception owner, evidence freshness, retention period, and audit-ready packet status.
+- **Reuse and placement rationale**: why each authz, validation, encoding, secret, dependency, AI/RAG, or audit control belongs at the selected boundary.
+- **Behavior preservation**: existing permissions, tenant isolation, privacy promises, secret lifecycle, dependency posture, and audit controls preserved or intentionally changed.
 - **Required fixes**: All Critical and High findings are blocking — fixes are required before merge.
 - **Compensating controls**: For accepted residual Medium/Low risks, documented mitigating controls.
+- **Validation evidence**: SAST/dependency/secret/authz/IDOR/AI red-team or manual review evidence, what it proves/does not prove, residual risk, and next gate.
+- **Evidence limits**: what automated scans, negative tests, policy diffs, or manual reviews prove and what abuse paths, environments, or third-party assessments remain unproven.
 - **Gate decision**: Approved / Blocked / Conditionally approved with conditions specified.
 
 ## Evidence Contract
 Close a security and privacy review only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
-- **Basis**: the CWE/OWASP ASVS control or privacy obligation each finding is judged against, with its severity class.
-- **Files and boundaries inspected**: the trust boundaries, object-authorization points, secret stores, and dependency manifests actually audited, and what each revealed.
+- **Basis**: the selected mode, CWE/OWASP ASVS control, privacy obligation, cloud-governance policy, or audit control each finding is judged against, with its severity class.
+- **Files and boundaries inspected**: trust boundaries, object-authorization points, tenant filters, secret stores, dependency manifests, cloud/IaC policies, AI/RAG retrieval/tool boundaries, and audit evidence actually audited, and what each revealed.
 - **Placement rationale**: why each required control belongs at the boundary chosen (input validation, output encoding, authz check) rather than deeper or shallower.
-- **Validation commands**: the SAST, dependency-CVE scan, IDOR/authz test, and secret scan run, each with its outcome and the finding it confirms or clears.
-- **Residual risk**: the accepted Medium/Low finding with its compensating control, and the named owner of the follow-up.
+- **Validation commands**: SAST, dependency-CVE scan, IDOR/authz test, secret scan, IaC/policy check, prompt-injection/RAG test, and manual review artifacts run, each with its outcome and what it proves/does not prove.
+- **Security judgment and handoff**: mode selected, severity/control judgment, behavior preservation, evidence limits, and next gate.
+- **Residual risk**: accepted Medium/Low finding, untested abuse path, exception, or missing external assessment with its compensating control and named owner.
 
 ## Quality Gate
 1. Every data access endpoint has object-level authorization with a cross-user IDOR test.

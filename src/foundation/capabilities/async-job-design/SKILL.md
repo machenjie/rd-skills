@@ -178,6 +178,16 @@ Return an async job design containing:
 - `versioning`: payload schema evolution rules, in-flight workflow versioning, deploy/drain strategy
 - `cost_model`: cost per execution × projected volume; retry cost cap
 
+# Evidence Contract
+
+Close this capability only with async-lifecycle evidence:
+
+- **Boundaries inspected:** producer enqueue point, durable payload, idempotency key, worker lease/visibility timeout, retry policy, DLQ/quarantine, cancellation safe points, compensation, status model, and owner/runbook.
+- **Validation evidence:** duplicate delivery, timeout, retry exhaustion, poison message, cancellation, compensation, and backlog-drain test output or a not-verified disclosure.
+- **What evidence proves:** the job has bounded retries, visible terminal states, owned failure handling, and no silent loss under the inspected failure paths.
+- **What evidence does not prove:** every production replay, broker failover, or long-running workflow version interaction unless exercised with staging or production-like drills.
+- **Residual risk and handoff:** name any untested replay window, tenant fairness, downstream rate limit, or cost spike; hand off to `idempotency-retry-design`, `message-queue-design`, or `reliability-observability-gate` when delivery semantics or production SLOs remain open.
+
 # Quality Gate
 
 The job design passes only when:

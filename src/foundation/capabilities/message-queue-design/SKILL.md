@@ -143,6 +143,10 @@ On failure:
 - Transactional outbox not used: queue publish outside DB transaction — DB commit succeeds; queue publish fails; event permanently lost; downstream service never receives state change; data inconsistency.
 - Partition key set to constant value — all messages route to one partition; one consumer handles 100% of load; other consumers idle; throughput capped at single consumer capacity.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when designing a new producer/consumer, changing retry/DLQ/ack/offset behavior, processing irreversible side effects, or reviewing consumer lag/backpressure risk. Do not load it for a metadata-only topic rename with no delivery, schema, or consumer behavior change.
+
 # Output Contract
 
 Return a queue design with:
@@ -159,6 +163,10 @@ Return a queue design with:
 - `ordering_guarantee` (partition key, scope, tradeoffs, handling of out-of-order arrival)
 - `observability` (consumer lag metric + alert threshold, DLQ depth alert, consumer group health alert, processing latency P99 SLO)
 - `test_strategy` (assert: duplicate message → idempotent; poison message → DLQ after N attempts; consumer crash mid-processing → no message lost; lag alert fires when threshold exceeded)
+
+# Evidence Contract
+
+Close queue design only when the output states delivery guarantee, idempotency boundary, ack/commit point, retry/DLQ policy, ordering key, backpressure, observability, duplicate/poison/replay validation, what evidence proves, what it does not prove under broker outage or replay, residual risk, and next gate.
 
 # Quality Gate
 

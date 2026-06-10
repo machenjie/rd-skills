@@ -74,6 +74,29 @@ Evaluate every frontend change against:
 - **Code clarity**: Main render/user-action flow is readable; complex conditions are named; hooks avoid mixed side effects and decisions; shared UI/helper abstractions have current consumers.
 - **Test strategy**: Are tests written against behavior (user interactions, accessibility queries) rather than implementation details?
 
+## Mode Matrix
+Select the frontend mode before adding, changing, reviewing, or testing UI code. Use the Reference Loading Policy below to load only the companion capabilities for the selected mode.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| New UI capability | New page, route, component, form, interaction, or API-backed state. | Component placement, state owner, full state matrix, API error semantics, a11y, user-behavior tests. | Existing components/hooks/API clients inspected; loading/empty/error/success/disabled/focus states named. | `page-component-decomposition`, `state-management-design`, `frontend-api-integration`, `form-validation-design`, `quality-test-gate` | Global store/shared UI unless current cross-feature ownership exists. |
+| Modify existing UI | Existing component, hook, route, or form behavior changes. | Preserve old user flow while isolating the changed state or interaction. | Affected callers/routes/tests, before/after states, API contract, and focus behavior inspected. | `code-clarity-maintainability`, `regression-testing` | Broad redesign or unrelated design-system cleanup. |
+| Frontend bug fix | Broken state, validation, rendering, navigation, or API error path. | Verify cause, scan similar components, add regression by user behavior. | Reproduction, same-pattern scan, failing/passing test or screenshot, residual browser risk. | `agent-execution-discipline`, `failure-diagnosis`, `frontend-testing` | Refactor beyond the failing behavior unless needed for the fix. |
+| AI-generated frontend review | Generated component/hook/store/test or new UI helper. | Detect invented APIs, wrong placement, over-shared abstractions, missing states, implementation-detail tests. | Local pattern search, hook/component ownership, test output, severity findings. | `ai-code-review-refactor`, `implementation-structure-design`, `code-review` | Rewriting before findings are classified. |
+| Behavior-preserving refactor | Move/split/extract component, hook, validator, or store. | Preserve DOM behavior, accessibility, API calls, analytics, focus, and state transitions. | Before/after behavior tests, affected imports, deletion path, feature-local/shared decision. | `refactoring`, `code-clarity-maintainability` | New UX, new API contract, or release behavior. |
+| Accessibility/testing | Form validation, focus, keyboard, screen reader, or test coverage work. | Test by user-observable behavior and accessibility semantics, not private implementation. | axe/keyboard/user-flow test evidence; fixture and mock ownership; what tests prove/do not prove. | `quality-test-gate`, `frontend-testing`, `experience-impact-modeler` | Snapshot-only or CSS-class-only assertions. |
+| Security/performance-sensitive UI | Auth flow, sensitive data, third-party script, critical render path, bundle/CWV risk. | Prevent client-side permission illusions, XSS/token exposure, and performance regressions. | Server auth confirmation, sanitizer/token storage check, bundle/CWV or profiling evidence. | `security-privacy-gate`, `performance-budgeting`, `reliability-observability-gate` | Client-only guards as security controls. |
+
+## Proactive Professional Triggers
+
+- **Signal:** permission-restricted button, route guard, or hidden UI control without server-side authorization proof. **Hidden risk:** client-side permission illusion. **Required professional action:** route to backend/security check and document UI guard as UX-only. **Route to:** `security-privacy-gate`, `backend-change-builder`. **Evidence required:** denied API test or existing server policy path.
+- **Signal:** form adds validation without focus destination, field-level error copy, `aria-describedby`, disabled/submit state, or preserved input on failure. **Hidden risk:** inaccessible or lossy form. **Required professional action:** model all form states before code closure. **Route to:** `form-validation-design`, `experience-impact-modeler`, `quality-test-gate`. **Evidence required:** keyboard/a11y test and user-behavior assertion.
+- **Signal:** new shared component, hook, or UI helper has feature words, API assumptions, or only one consumer. **Hidden risk:** over-shared UI with hidden domain coupling. **Required professional action:** keep feature-local or prove shared ownership. **Route to:** `implementation-structure-design`, `page-component-decomposition`. **Evidence required:** reuse ladder, consumer list, public/private boundary.
+- **Signal:** API call handles all failures with one generic catch or blank state. **Hidden risk:** unrecoverable user flow and invisible API contract errors. **Required professional action:** classify 401/403/4xx/5xx/network/timeout states. **Route to:** `frontend-api-integration`, `data-api-contract-changer`. **Evidence required:** error-state tests and response/error mapping.
+- **Signal:** test uses CSS selectors, component internals, hook return internals, or mock call counts as the primary assertion. **Hidden risk:** tests pass while user behavior regresses. **Required professional action:** rewrite toward accessibility queries and public behavior. **Route to:** `quality-test-gate`, `code-clarity-maintainability`. **Evidence required:** what the test proves / does not prove.
+- **Signal:** `innerHTML`, `dangerouslySetInnerHTML`, `v-html`, raw markdown rendering, or third-party script touches API/user content. **Hidden risk:** XSS or secret/session exposure. **Required professional action:** require sanitizer/CSP/security review before merge. **Route to:** `security-privacy-gate`, `web-security`. **Evidence required:** sanitizer path, CSP impact, malicious-content test.
+- **Signal:** local state is promoted to global store or query cache without cross-feature consumer evidence. **Hidden risk:** state ownership drift and regressions across unrelated screens. **Required professional action:** re-evaluate state scope. **Route to:** `state-management-design`, `implementation-structure-design`. **Evidence required:** state owner, consumers, invalidation/reset behavior.
+
 ### Decision Tree: State Management Choice
 
 ```
@@ -149,25 +172,32 @@ Examples:
 
 ## Output Contract
 Return a frontend implementation plan or review with:
+- **Mode selected**: new UI, modify existing, bug fix, generated review, refactor, testing, or security/performance-sensitive, with trigger signal.
+- **Boundaries inspected**: routes, components, hooks, stores, API clients, form validators, design-system components, tests, browser/storage/security boundaries inspected or skipped with reason.
+- **Professional judgment**: selected UI/state/API/accessibility decision, user risks ruled out, and risks still possible.
 - **Component specification**: Component hierarchy, state ownership, props interface, and design system integration.
 - **State model**: State scope (local/shared/server), state machine (if applicable), and mutation patterns.
 - **API integration**: Endpoint, request/response types, loading/error/success handling, and cache invalidation strategy.
+- **Behavior preservation**: existing user flow, focus, accessibility semantics, analytics, state transitions, and API behavior preserved or intentionally changed.
 - **Accessibility obligations**: Accessible names, ARIA roles, focus management, keyboard interaction, and contrast requirements.
 - **Security review**: XSS prevention, token storage, CSP implications, third-party script review.
 - **Performance considerations**: Code splitting, lazy loading, rendering strategy, and Core Web Vitals impact.
 - **Frontend structure**: Component, hook, state, API client, route, form validator, and helper placement; feature-local vs. shared decision; reuse candidates; public/private boundary; test placement.
 - **Code clarity and maintainability**: main-flow readability, hook/component purpose, signature/props clarity, side-effect boundary, change locality, and cleanup/deprecation plan.
-- **Execution discipline evidence**: Test or screenshot artifacts, command outputs, same-pattern scan, placement rationale, residual risks, and closure boundary.
+- **Validation evidence**: component/user-flow/a11y/browser commands or screenshots, outputs, same-pattern scan, placement rationale, what was not tested, and residual risk.
+- **Evidence limits**: what each UI/a11y/API/browser check proves and what it does not prove about other viewports, assistive technology, backend auth, or cross-browser behavior.
+- **Next gate/handoff**: experience, API contract, security, reliability, test, or no-next-gate rationale.
 - **Test strategy**: Unit tests (component behavior), integration tests (user flow), accessibility tests (axe-core), and visual regression tests.
 - **Residual risks**: Known risks accepted with justification.
 
 ## Evidence Contract
 Close a frontend change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
-- **Basis**: the design-system rule, accessibility obligation, or API contract the change rests on, and the WCAG/Core Web Vitals benchmark it satisfies.
-- **Files and boundaries inspected**: the components, hooks, stores, and API clients read, and the server-state vs client-state vs form-state vs derived-state ownership confirmed.
+- **Basis**: the selected mode, design-system rule, accessibility obligation, or API contract the change rests on, and the WCAG/Core Web Vitals benchmark it satisfies.
+- **Files and boundaries inspected**: the routes, components, hooks, stores, API clients, validators, tests, and browser security/storage boundaries read, and the server-state vs client-state vs form-state vs derived-state ownership confirmed.
 - **Placement rationale**: why each component, hook, store slice, API client, or form validator is feature-local versus shared, with the reuse decision (via `implementation-structure-design`).
-- **Validation commands**: the component, user-flow, and a11y tests run (including axe-core), each with its outcome.
-- **Residual risk**: the interaction state, bundle-size, or cross-browser path that remains untested or assumed, and the named owner of the follow-up.
+- **Validation commands**: the component, user-flow, a11y, visual, and browser checks run (including axe-core), each with its outcome and what it proves/does not prove.
+- **Frontend judgment and handoff**: mode selected, behavior preservation for user flow/focus/state/API semantics, professional decision, evidence limits, and next gate.
+- **Residual risk**: the interaction state, API error, bundle-size, cross-browser, or client-auth path that remains untested or assumed, and the named owner of the follow-up.
 
 ## Quality Gate
 1. All required states (loading, empty, error, success, disabled, validation) are implemented for every interactive element.

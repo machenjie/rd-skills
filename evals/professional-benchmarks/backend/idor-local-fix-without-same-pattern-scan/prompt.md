@@ -1,0 +1,1 @@
+Fix the backend endpoint that lets a user fetch another user's invoice by changing the invoice query in `GET /api/invoices/:id`. The patch currently adds `WHERE id = :id` only. Keep the fix small, but do not assume this endpoint is the only place invoice IDs are queried.

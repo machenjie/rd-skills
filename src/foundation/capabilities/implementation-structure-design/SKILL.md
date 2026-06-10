@@ -128,6 +128,8 @@ Choose the first valid reuse-ladder level and reject new code when a lower-cost 
 
 Produce a Reuse Ladder Record naming the candidates at each level, the final decision, and why lower-cost levels were insufficient. Source/dev-only deep reference for skill authors: `references/reuse-and-placement.md`.
 
+Professional skills cite the Reuse Ladder Record as evidence, not prose intent: backend attaches service/repository/validator reuse; frontend attaches component/hook/state reuse; AI review marks missing reuse search; test gates verify fixture/helper reuse without private-internal coupling.
+
 ## Advanced Refactoring & Extension Reuse
 
 Prefer extending the existing owner over a parallel implementation only when responsibility stays single, existing callers keep their behavior, the change is backward compatible, new parameters are optional or a parameter object, no vague `type`/`kind`/`mode`/`flag`/`strategy` switch is added, and tests cover both old and new behavior. Reject extension when the owner would become ambiguous, the case belongs to a different owner, compatibility cannot be proven, the change requires cross-layer imports, or the name would have to become vague.
@@ -142,9 +144,15 @@ Names are architecture: a name must reveal owner, concept, role, and boundary, a
 
 Decide object responsibility before creating a class: identity, value semantics, lifecycle, state, invariant, policy, protocol role, or collaboration boundary. A class is justified only when a function or existing service method is insufficient — it must own state or lifecycle, enforce invariants across operations, implement a protocol with real variants today, or model a domain or value object. Place a method on a class only when it uses or protects that class's state, invariant, lifecycle, or collaborator; otherwise use a service, module function, adapter, or local helper, and never let the method force the object to import infrastructure or UI concerns. Encapsulation must protect invariants, not hide a data bag behind getters and setters. Inheritance is exceptional: use it only for a genuinely substitutable type hierarchy with a stable base contract and per-subtype tests, and never for code sharing alone — prefer composition, delegation, or strategy. Reject generic `Manager`, `Processor`, `Handler`, `Helper`, or `Util` class names unless explicitly justified. Source/dev-only deep reference for skill authors: `references/object-modeling.md`.
 
+Choose value object for value-owned equality/validation/normalization/unit safety; domain object for identity/lifecycle/invariants/state transitions; service for collaborator coordination; adapter for external protocol translation; strategy for multiple current algorithms behind a stable interface; module function or local helper for stateless local behavior. Do not create a class just to group functions, make testing easier, or imitate enterprise style.
+
+Reflection or metadata dispatch is allowed only when a framework, schema, plugin protocol, or generated mapping requires it, with typed boundary, malformed-metadata fallback, explicit default behavior, and invalid-metadata tests.
+
 ## Object, Signature, And Side-Effect Decomposition
 
 Every file needs one main owner, one primary lifecycle or responsibility, and one coherent collaborator set. Long files, large objects, unrelated method clusters, constructor bloat, and branch-heavy functions are evidence to inspect; line count alone is not the decision. Functions need one readable purpose, structured parameters, clear return contracts, and explicit failure/empty/partial states. Pure calculations, business decisions, state mutation, persistence, external calls, events, logging, metrics, and cache access must be classified so policy and domain code stay testable without infrastructure. Source/dev-only deep reference for skill authors: `references/object-module-decomposition.md`.
+
+A file or directory split is justified by mixed owners, lifecycles, collaborators, reasons to change, layers, adapter protocols, generated/handwritten code, or tests that cannot find their owning behavior; line count alone is only a signal.
 
 ## Placement Boundaries
 
@@ -179,22 +187,24 @@ Return an Implementation Structure Plan for every non-trivial code addition, mov
 - **Existing structure inspected**: files searched; existing functions, classes, modules, services, repositories, hooks, and components considered; reuse candidates; decision.
 - **Same-pattern structure scan**: same file, same module, adjacent modules, shared/common/utils, tests, docs, and generated files checked; equivalent patterns listed or explicitly marked absent.
 - **Reuse decision**: reuse existing; extend existing; compose existing; adapter needed; new code required; why reuse is insufficient.
+- **Reuse ladder evidence for the selected professional skill**: how the substantive skill will cite reuse, extension, composition, adapter, extraction, or new-code decisions in its Evidence Contract.
 - **Vocabulary and naming decisions**: variable, parameter, field, function, method, class, file, directory, package, namespace, component, hook, service, repository, adapter, utility, and helper naming decisions; repository convention followed; rejected names and why.
 - **Responsibility taxonomy**: classify each new or moved item as business/domain, feature, component, module, service, domain object, repository, adapter/client, utility, helper, common/shared, test, generated, or configuration; explain owner and boundary.
-- **Function decisions**: new functions; existing functions modified; private or public; responsibility; file location; tests.
-- **Method decisions**: new methods; existing methods modified or moved; owning class rationale; state/invariant/lifecycle/collaborator usage; rejected service/function alternatives.
+- **Function and method decisions**: new/modified/moved functions and methods; private/public choice; responsibility; file or owning-class rationale; state/invariant/lifecycle/collaborator usage; rejected service/function alternatives; tests.
 - **Object-oriented decisions**: object candidates; object versus function, module operation, or record; identity or value semantics; encapsulated state and invariants; lifecycle; collaborators; composition, delegation, strategy, or inheritance decision; substitutability and contract-test evidence for inheritance; rejected hierarchy or object alternatives.
 - **Main object / oversized / split decisions**: primary owner, lifecycle, invariant set, collaborator set, method clusters, mixed-role assessment, oversized signal, split type, rejected split rationale, and private helper justification.
 - **Signature / side-effect / collaborator decisions**: parameter object need, boolean flags, weakly typed bags, mode/kind switches, return and error model, side-effect classification, dependency injection, lifecycle ownership, resource cleanup, state-machine escalation, and dependency direction.
-- **Class decisions**: new classes; existing classes reused or extended; why a class is needed instead of a function; state, invariant, lifecycle, dependency injection, polymorphism, or protocol owned; public or private; tests.
-- **File decisions**: files modified; files added; why each new file is needed; owner; public API impact.
-- **Directory and module decisions**: directories added; boundary represented; owner; dependency direction; import rules.
+- **Class decisions**: new/reused/extended classes; why a class is needed instead of a function; state, invariant, lifecycle, dependency injection, polymorphism, protocol, visibility, and tests.
+- **File, directory, and module decisions**: files/directories modified or added; owner, public API impact, boundary represented, dependency direction, import rules, and split/no-split rationale by responsibility, lifecycle, collaborator, and change reason.
 - **Shared, common, and utils audit**: any shared utility added; why it is a pure technical utility; confirmation that business logic is absent.
 - **Dependency direction**: new imports; allowed by boundary rule; cycles introduced yes or no.
 - **Test placement**: unit tests; integration tests; contract tests; confirmation that test location follows project convention.
 - **Rejected alternatives**: alternatives considered and why each was rejected for non-trivial structure decisions.
 - **Execution linkage**: evidence inventory or handoff reference showing when the structure plan was produced and which validation proves the selected placement works.
 - **Comment decisions**: exported/public doc comments, complex internal comments, test scenario/regression comments, critical inline comments, intentional omissions, redundant comments removed, and language/repository style.
+
+# Evidence Contract
+Close a structure decision only when it states the **mode selected**, boundaries inspected, professional judgment, reuse and placement rationale, behavior preservation for moved or extended code, validation commands or review artifacts with exit code when available, what evidence proves and does not prove, residual risk, and the next gate or handoff.
 
 # Quality Gate
 
@@ -214,22 +224,18 @@ Return an Implementation Structure Plan for every non-trivial code addition, mov
 14. Tests are placed according to project convention and exercise public behavior.
 15. Rejected alternatives are documented for non-trivial structure decisions.
 16. Agent-assisted structure additions are tied to execution evidence and handoff boundary.
-17. Same-pattern structure scan is documented before adding, renaming, or moving variables, functions, methods, classes, files, or directories.
-18. Every added or renamed file includes same-directory and parent-module naming convention evidence.
-19. A new file is rejected when the same responsibility belongs in an existing cohesive file.
-20. A filename is rejected when it uses a new suffix, prefix, pluralization, layer word, or abbreviation not used by the surrounding directory without explicit justification.
-21. Every new function/class/file/directory includes a Reuse Ladder Record.
-22. Every extension of existing logic includes an Extension Safety Record.
-23. Every advanced refactor includes an Advanced Refactoring Decision.
-24. Every new exported/public function, method, class, interface, struct, component, hook, constant, variable, or module API has a language-standard doc comment.
-25. Every non-trivial class/function/method with business rules, state transitions, compatibility behavior, concurrency, retry, transaction, idempotency, external API quirks, performance tradeoff, or security-sensitive logic has concise comments where needed.
-26. Every non-trivial test explains the behavior, regression, edge case, fixture contract, or integration scenario being protected.
-27. No comment merely restates obvious code.
-28. If comments are needed to explain confusing code, the plan first considers renaming, extraction, or simplification.
-29. Every changed file has one primary owner; oversized files, objects, and functions carry a split assessment based on responsibility, state, collaborators, branches, and testability.
-30. Function signatures avoid unjustified boolean traps, weakly typed bags, and vague mode/kind switches; public returns express failure, empty, partial, and retry states.
-31. Pure decision logic is separated from persistence, external APIs, events, cache mutation, logging side effects, and framework dependencies unless local convention justifies the boundary.
-32. Collaborator bloat, multi-state logic, and new objects are reviewed for split, state-machine modeling, lifecycle ownership, and public-behavior tests.
+17. Same-pattern structure scan and local naming evidence are documented before adding, renaming, or moving variables, functions, methods, classes, files, or directories.
+18. A new file is rejected when the same responsibility belongs in an existing cohesive file or its name violates same-directory and parent-module convention.
+19. Every new function/class/file/directory includes a Reuse Ladder Record; every extension includes an Extension Safety Record; every advanced refactor includes an Advanced Refactoring Decision.
+20. Public/exported APIs have language-standard comments; non-trivial business, compatibility, concurrency, retry, transaction, idempotency, external API, performance, security, and test logic has concise comments where needed.
+21. Comments do not restate obvious code; confusing code is first considered for renaming, extraction, or simplification.
+22. Every changed file has one primary owner; oversized files, objects, and functions carry a split assessment based on responsibility, state, collaborators, branches, and testability.
+23. Function signatures avoid unjustified boolean traps, weakly typed bags, and vague mode/kind switches; public returns express failure, empty, partial, and retry states.
+24. Pure decision logic is separated from persistence, external APIs, events, cache mutation, logging side effects, and framework dependencies unless local convention justifies the boundary.
+25. Collaborator bloat, multi-state logic, and new objects are reviewed for split, state-machine modeling, lifecycle ownership, and public-behavior tests.
+26. Object, value object, domain object, service, adapter, strategy, module function, and local helper choices are explicitly distinguished before adding classes.
+27. Reflection or metadata dispatch is justified by a framework/schema boundary and carries typed fallback behavior plus invalid-metadata tests.
+28. File and directory splits are based on ownership, lifecycle, collaborators, and reasons to change, not line count alone.
 
 # Used By
 

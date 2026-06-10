@@ -72,6 +72,26 @@ Evaluate the experience impact against:
 - **Experimentation**: What is the assignment unit, exposure event, primary metric, guardrail metrics, conflict set, and rollback condition?
 - **Responsive behavior**: How does the layout adapt at breakpoints? Are touch and hover interactions differentiated?
 
+## Mode Matrix
+Select the experience mode before modeling the flow.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| New or changed journey | New screen, route, workflow, onboarding, checkout, settings, or repeated operator flow. | Map entry, step, decision, recovery, and exit without dead ends. | User flow map, actors, entry points, state matrix, acceptance link. | `user-flow-modeling`, `acceptance-criteria-builder` | Component implementation until flow states are specified. |
+| Form/state repair | Form, validation, loading, empty, error, disabled, focus, or success behavior changes. | Specify state-specific UX, accessibility, and preservation of user input. | Loading/empty/error/success/disabled/focus states, copy, keyboard path. | `interaction-state-modeling`, `form-validation-design`, `e2e-testing` | Visual polish unrelated to interaction state. |
+| Accessibility review | Keyboard, screen reader, color, focus, modal, route, or assistive tech risk appears. | Treat accessibility as acceptance, not optional audit. | WCAG criteria, focus destination, accessible names, contrast, manual/automated check. | `quality-test-gate`, `frontend-testing` | Analytics or release gates unless behavior requires them. |
+| Analytics/experiment impact | Exposure event, funnel, metric, dashboard, A/B test, cohort, assignment, or guardrail changes. | Keep user experience and measurement contract aligned. | Event taxonomy, exposure point, assignment unit, guardrails, SRM and rollback rule. | `bigdata-product-extension`, `acceptance-criteria-builder` | Code implementation before metric contract exists. |
+| Destructive/sensitive flow | Delete, revoke, payment, permission, account, compliance, or irreversible action. | Specify confirmation, denial, audit, recovery, and user intent preservation. | Consequence copy, undo/recovery path, permission-denied state, audit evidence. | `security-privacy-gate`, `delivery-release-gate` | Client-only guard as sufficient protection. |
+
+## Proactive Professional Triggers
+These triggers are hidden-risk escalators, not ordinary checklist items.
+
+- **Signal:** A UI change mentions only the changed component, button, modal, or form field. **Hidden risk:** upstream entry, downstream exit, empty/loading/error, or back-navigation state breaks. **Required professional action:** model the complete journey before handoff. **Route to:** `user-flow-modeling`, `acceptance-criteria-builder`. **Evidence required:** actor/entry/step/exit map and state matrix.
+- **Signal:** Form validation is described without focus destination, screen-reader announcement, disabled state, or input preservation. **Hidden risk:** accessible users get trapped or lose work on error. **Required professional action:** specify focus, live region, validation timing, and recovery behavior. **Route to:** `interaction-state-modeling`, `frontend-testing`. **Evidence required:** keyboard walkthrough, WCAG references, state-specific copy.
+- **Signal:** Loading or empty state is omitted for async data or zero records. **Hidden risk:** blank screen or layout shift is perceived as broken workflow. **Required professional action:** require loading/empty/error/success/disabled state coverage. **Route to:** `experience-impact-modeler`, `e2e-testing`. **Evidence required:** state table, skeleton/layout behavior, acceptance criterion.
+- **Signal:** Analytics event is renamed, added, or removed without assignment/exposure and dashboard impact. **Hidden risk:** funnels, experiments, or guardrails become invalid while UX appears fine. **Required professional action:** route measurement contract and dashboard migration. **Route to:** `bigdata-product-extension`, `acceptance-criteria-builder`. **Evidence required:** event schema, exposure point, dashboard owner, SRM/guardrail rule.
+- **Signal:** Destructive, payment, permission, or account flow has generic confirmation or denial copy. **Hidden risk:** users cannot make informed consent or recover from irreversible action. **Required professional action:** define consequence communication, denial path, audit/recovery state. **Route to:** `security-privacy-gate`, `quality-test-gate`. **Evidence required:** confirmation copy, undo/receipt/audit evidence, permission-denied state.
+
 ## Experimentation And Analytics Impact
 
 Model experiment and analytics impact whenever behavior, copy, targeting, or instrumentation changes:
@@ -154,6 +174,7 @@ Examples:
 
 ## Output Contract
 Return an experience impact model with:
+- **Mode selected**: Experience mode and trigger signal that selected it.
 - **User flow map**: All actors, entry points, steps, decision branches, and exit states.
 - **State specification**: Complete state coverage matrix for every interactive screen or component.
 - **Accessibility obligations**: WCAG criteria checklist, focus management design, ARIA requirements, color contrast targets.
@@ -163,6 +184,13 @@ Return an experience impact model with:
 - **Experimentation impact**: Exposure event, assignment unit, primary metric, guardrail metrics, sample ratio mismatch checks, A/B conflict rules, and rollback condition for guardrail regression.
 - **Responsive behavior**: Breakpoints and layout adaptation for affected screens.
 - **Risk classification**: Flows with payment, destruction, permission-denial, or onboarding that require escalation.
+- **Boundaries inspected**: screens, routes, components, state surfaces, content, analytics events, accessibility paths, permissions, and docs inspected or skipped with reason.
+- **Professional judgment**: user confusion/dead-end risks ruled out, states accepted/deferred, and why the flow is handoff-ready.
+- **Reuse and placement rationale**: existing design system, content pattern, event taxonomy, component ownership, and route placement considered.
+- **Behavior preservation statement**: existing navigation, input persistence, analytics, and accessibility behavior preserved or intentionally changed.
+- **Validation evidence**: keyboard walk, screen-reader check, visual/E2E plan, analytics assertion, or not-verified disclosure.
+- **Evidence limits**: what the experience evidence proves and does not prove about production data, assistive tech coverage, experiments, and breakpoints.
+- **Residual risk and next gate**: unresolved state, breakpoint, accessibility, analytics, or release risk with owner.
 
 ## Evidence Contract
 Close an experience impact model only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
@@ -170,6 +198,7 @@ Close an experience impact model only when all five canonical answers are concre
 - **Files and boundaries inspected**: every interactive screen's full state matrix — loading, empty, error, permission-denied, partial-success, timeout, retry, cancel, and back-navigation — with each state's content and behavior named or marked not-applicable.
 - **Placement rationale**: why each analytics event, A/B exposure, and guardrail metric binds to the UI behavior it does, with the naming taxonomy.
 - **Validation commands**: the accessibility checks, keyboard walkthrough, and exposure/guardrail assertions that will verify the flow, each with its expected signal.
+- **Experience judgment and evidence limits**: mode selected, user confusion/dead-end risk, behavior preservation, what evidence proves, what it does not prove, residual risk, and next gate.
 - **Residual risk**: the unhandled state, untested breakpoint, or guardrail-regression path that remains, with the named owner.
 
 ## Quality Gate

@@ -87,6 +87,29 @@ Evaluate AI-generated code across these dimensions:
 - **Test quality**: Tests assert real behavioral outcomes, not implementation structure — mock-only tests pass even when the production logic is broken.
 - **Clarity and cleanup**: Main flow remains readable; generated helpers are not stateless bags; I/O and decisions are separated; obsolete code, feature flags, and deprecated branches have a deletion path.
 
+## Mode Matrix
+Select the AI review/refactor mode before approving or changing generated code. Review findings must be severity-classified before remediation.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| AI generated code review | Generated diff, helper, class, dependency, tests, or broad patch. | Hallucinated APIs, hidden assumptions, reuse/placement, tests, validation evidence. | API existence search, local-pattern scan, command output, severity findings. | `code-review`, `agent-execution-discipline`, `implementation-structure-design` | Refactor before findings are classified. |
+| Behavior-preserving refactor | AI proposes move/extract/split/cleanup or reviewer requests cleanup. | Preserve behavior, public contract, errors, side effects, and tests. | Characterization/regression tests, before/after behavior, affected callers. | `refactoring`, `code-clarity-maintainability`, `quality-test-gate` | New behavior in same refactor. |
+| Bug-fix review | AI patch fixes one failure, lint error, test failure, or incident symptom. | Verify cause, same-pattern scan, local/broad fix boundary, regression proof. | Cause, pattern searched, related occurrences, failing/passing test. | `failure-diagnosis`, `regression-testing`, `agent-execution-discipline` | "Looks plausible" approval. |
+| Structure/reuse audit | New abstraction, helper, utility, shared component, file, directory, dependency. | Reject invented helpers, duplicate logic, wrong placement, speculative abstraction. | Reuse ladder, owner, dependency direction, deletion path. | `implementation-structure-design`, `architecture-impact-reviewer` when boundaries move | Shared/common placement without proof. |
+| Test/refactor quality review | Generated tests, fixtures, mocks, snapshots, golden files, or cleanup. | Behavior assertions, fixture ownership, no over-mocking private internals. | What tests prove/do not prove, mock contract, fixture owner. | `quality-test-gate`, `code-clarity-maintainability` | Mock-call-only approval. |
+| Security/performance-sensitive AI code | Generated auth, SQL, migration, secret, integration, retry, concurrency, or hot path. | Adversarial review, measured risk, no silent fallback or speculative optimization. | Security scan/tests, profile/benchmark, rollback/contract proof. | `security-privacy-gate`, `reliability-observability-gate`, `data-middleware-change-builder` | Trusting AI comments as proof. |
+
+## Proactive Professional Triggers
+
+- **Signal:** generated code calls an API, method, enum, parameter, import, CLI flag, or provider feature not found in local code/docs/version. **Hidden risk:** hallucinated API. **Required professional action:** verify symbol existence before quality approval. **Route to:** `code-review`, `language-runtime-selection`, `language-idiom-enforcement`. **Evidence required:** search/typecheck/build output.
+- **Signal:** AI adds helper/utility/common/shared abstraction before reuse search. **Hidden risk:** duplicated logic and wrong placement. **Required professional action:** require reuse ladder and owner. **Route to:** `implementation-structure-design`. **Evidence required:** reuse candidates, rejected alternatives, placement rationale.
+- **Signal:** generated refactor changes errors, edge cases, ordering, transactions, async timing, or public contract while claiming cleanup. **Hidden risk:** hidden behavior change. **Required professional action:** require characterization/regression evidence. **Route to:** `refactoring`, `quality-test-gate`. **Evidence required:** before/after tests and affected callers.
+- **Signal:** generated tests assert mock calls, CSS/classes, or private helpers without public behavior. **Hidden risk:** false confidence. **Required professional action:** rewrite tests by behavior and state what they prove. **Route to:** `quality-test-gate`, `code-clarity-maintainability`. **Evidence required:** behavior assertion, fixture/mocking boundary.
+- **Signal:** AI adds dependency for simple parsing, date, utility, crypto, HTTP, or formatting task without scan/license/CVE. **Hidden risk:** dependency pollution and supply-chain risk. **Required professional action:** evaluate stdlib/local alternative. **Route to:** `package-dependency-management`, `security-privacy-gate`. **Evidence required:** CVE/license/size and alternative.
+- **Signal:** generated code catches and suppresses errors or returns default/null fallback. **Hidden risk:** silent failure. **Required professional action:** require typed error/log/metric or safe fallback rationale. **Route to:** `logging-error-handling`, `reliability-observability-gate`. **Evidence required:** negative test and observability.
+- **Signal:** AI expands scope from local fix to broad refactor, new abstraction, dependency, or architecture change without boundary statement. **Hidden risk:** review cannot prove behavior. **Required professional action:** split or document scope and evidence. **Route to:** `agent-execution-discipline`, `change-impact-analyzer`. **Evidence required:** boundary, changed/unchanged list, validation.
+- **Signal:** completion claim lacks command output or uses stale validation from before generated changes. **Hidden risk:** unverified AI code. **Required professional action:** block approval until fresh evidence or not-verified disclosure. **Route to:** `agent-execution-discipline`. **Evidence required:** command, exit code, outcome, residual risk.
+
 ### Decision Tree: Accept or Return for Remediation
 
 ```
@@ -187,6 +210,10 @@ Examples:
 
 ## Output Contract
 Return a structured review with:
+- **Mode selected**: generated review, behavior-preserving refactor, bug-fix review, structure/reuse audit, test quality review, or security/performance-sensitive AI code, with trigger signal.
+- **Severity-classified findings**: Critical/High/Medium/Low findings first, each with file/line, impact, evidence, and required action; no generic suggestion list.
+- **Boundaries inspected**: requirements, acceptance criteria, non-goals, changed files, call sites, public contracts, reuse candidates, tests, dependencies, security/performance boundaries, and validation outputs inspected or skipped with reason.
+- **Professional judgment**: accept, return, split, or refactor decision; AI-specific risks ruled out; and risks still possible.
 - **Verified API inventory**: Each API call confirmed present / confirmed absent (hallucinated) / unverified.
 - **Hidden assumption list**: Every implicit assumption with proposed enforcement or documentation.
 - **Dependency audit**: Each new dependency with CVE status, license, transitive size, and standard-library alternative.
@@ -241,14 +268,17 @@ Return a structured review with:
   speculative interface/factory/strategy findings;
   cleanup/deprecation/feature-flag removal findings;
   change-locality findings.
+- **Validation evidence**: commands run, outputs, what they prove/do not prove, stale/unrun validations, residual risk, and next gate.
+- **Evidence limits**: what API searches, typechecks, tests, scans, and review evidence prove and what they do not prove about edge behavior, performance, security, or broad refactor equivalence.
 
 ## Evidence Contract
 Close an AI-code review or refactor only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`). Keep the two phases distinct: review only finds problems; refactor must prove behavior is preserved.
-- **Basis**: the standard, repository pattern, or real API the judgment rests on — every cited symbol or signature verified to exist, not assumed.
-- **Files and boundaries inspected**: the same-pattern scan across the codebase, the call sites read, and the duplication or boundary drift found.
+- **Basis**: the selected mode, standard, requirement, repository pattern, or real API the judgment rests on — every cited symbol or signature verified to exist, not assumed.
+- **Files and boundaries inspected**: requirements, acceptance criteria, non-goals, same-pattern scan across the codebase, call sites, public contracts, tests, dependencies, and security/performance boundaries read, and the duplication or boundary drift found.
 - **Placement rationale**: the reuse-versus-new and placement decision for each added or moved element (via `implementation-structure-design`), with the rejected alternative.
-- **Validation commands**: the hallucinated-API check plus the characterization or regression tests that prove a refactor preserved behavior, each with its outcome.
-- **Residual risk**: the unreviewed path, untested branch, or accepted finding that remains, and the named owner of the follow-up.
+- **Validation commands**: hallucinated-API check, typecheck/build, characterization/regression tests, security/performance checks, and generated-test review run, each with its outcome and what it proves/does not prove.
+- **AI review judgment and handoff**: mode selected, accept/return/refactor judgment, behavior preservation, evidence limits, and re-review or next gate.
+- **Residual risk**: unreviewed path, untested branch, accepted finding, stale validation, hidden behavior-change risk, or broad refactor boundary that remains, and the named owner of the follow-up.
 
 ## Quality Gate
 1. All external API calls verified to exist in the declared dependency version.
@@ -278,6 +308,8 @@ Close an AI-code review or refactor only when all five canonical answers are con
 25. Reject AI-generated stateless helper bags and speculative factories, strategies, interfaces, or registries without current variation and public behavior tests.
 26. Reject AI-generated functions that mix policy, validation, mutation, persistence, external API calls, events, logging, mapping, and fallback without an orchestration boundary.
 27. Reject AI-generated feature flags, deprecated API use, compatibility branches, dead code, and TODO cleanup without owner, expiry, and removal plan.
+28. Findings are severity-classified and ordered by impact; approvals without findings severity and validation evidence are rejected.
+29. AI-generated fixes include same-pattern scan and behavior-preservation evidence before approval.
 28. Reject AI-generated test helpers that place business fixtures in shared/common test utilities instead of the owning module boundary.
 29. Reject completion claims that use success-implying language ("done", "fixed", "should pass", "works") without a fresh command output, validator result, or artifact from the current change.
 30. Reject partial verification reported as full: a lint-only or single-test pass presented as "all tests pass" or "build is green" is returned for honest scoping with the gap named.

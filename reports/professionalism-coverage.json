@@ -4,8 +4,15 @@
     "stages_checked": 12,
     "product_surfaces_checked": 21,
     "language_surfaces_checked": 8,
-    "bodies_checked": 131,
-    "total_findings": 0
+    "bodies_checked": 132,
+    "total_findings": 1
   },
-  "findings": []
+  "findings": [
+    {
+      "check": "rule-duplication",
+      "severity": "low",
+      "target": "src/professional-skills/acceptance-criteria-builder/SKILL.md; src/professional-skills/architecture-impact-reviewer/SKILL.md; src/professional-skills/change-documentation-gate/SKILL.md; src/professional-skills/change-forge-router/SKILL.md",
+      "message": "a professional rule line is duplicated across 9 bodies; consider a shared capability reference"
+    }
+  ]
 }

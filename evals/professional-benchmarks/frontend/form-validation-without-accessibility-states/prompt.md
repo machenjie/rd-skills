@@ -1,0 +1,1 @@
+Add client-side validation to a signup form. The draft disables the submit button while invalid and shows red text after submit, but it does not set field-level accessible descriptions, move focus to the first invalid field, preserve input on API failure, or cover keyboard/screen reader behavior.

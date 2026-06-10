@@ -1,0 +1,45 @@
+---
+id: webhook-signature-replay-hidden-risk
+description: |
+  Webhook handler must route raw-body signature verification and replay
+  protection before state mutation.
+prompt: |
+  Review a subscription webhook handler. It parses JSON first, then updates
+  subscription state. Signature verification and event replay dedupe are not
+  implemented because the provider retries failed deliveries.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: code-review
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - webhook
+    - external integration
+  skills:
+    - integration-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - web-security
+    - idempotency-retry-design
+    - message-queue-design
+    - input-validation
+  domain_extensions: []
+  quality_gates:
+    - security gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-middleware-change-builder
+    - delivery-release-gate
+  capabilities:
+    - cache-design
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Provider retry is not exactly-once proof and should not skip replay protection.

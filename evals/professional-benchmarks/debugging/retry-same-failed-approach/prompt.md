@@ -1,0 +1,1 @@
+The agent tried the same failing migration command twice and both attempts failed with the same lock timeout. It proposes running the command a third time with the same arguments because the lock may clear eventually.

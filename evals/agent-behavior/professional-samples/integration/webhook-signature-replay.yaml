@@ -1,0 +1,72 @@
+id: webhook-signature-replay
+description: Webhook review requires signature, replay, raw-body, and idempotency evidence.
+prompt: |
+  Review a billing webhook handler. It parses JSON before verification, accepts
+  events without timestamp tolerance, and mutates subscription state on every
+  event id.
+expected:
+  selected_skills:
+    - integration-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+  selected_capabilities:
+    - idempotency-retry-design
+    - input-validation
+    - web-security
+    - logging-error-handling
+    - agent-execution-discipline
+    - regression-testing
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/42-idempotency-retry-design.md
+    - references/capabilities/54-web-security.md
+  required_quality_gates:
+    - integration gate
+    - security gate
+    - test gate
+  required_professional_obligations:
+    - raw body preservation for HMAC
+    - timestamp and nonce replay window
+    - duplicate event idempotency test
+    - residual risk: provider sandbox signature drift
+  forbidden_behaviors:
+    - parse JSON before HMAC verification
+    - accept unsigned event
+    - no replay protection
+actual:
+  route_manifest:
+    selected_skills:
+      - integration-change-builder
+      - backend-change-builder
+      - security-privacy-gate
+      - quality-test-gate
+    selected_capabilities:
+      - idempotency-retry-design
+      - input-validation
+      - web-security
+      - logging-error-handling
+      - agent-execution-discipline
+      - regression-testing
+    required_references:
+      - references/routing-rules.md
+      - references/skill-registry.md
+      - references/capability-index.md
+      - references/domain-extension-index.md
+      - references/capabilities/42-idempotency-retry-design.md
+      - references/capabilities/54-web-security.md
+    required_quality_gates:
+      - integration gate
+      - security gate
+      - test gate
+  validation_evidence: "raw body preservation for HMAC; timestamp and nonce replay window; duplicate event idempotency test"
+  inspected_boundaries: "boundaries inspected: HTTP raw body middleware, verifier, event store, subscription mutation"
+  residual_risk: "residual risk: provider sandbox signature drift"
+  next_gate: "next gate: integration gate verifies provider sandbox fixture"
+review:
+  human_review_required: false
+  promotion_status: promoted
+  notes: Promoted as a regression guard for webhook security review.

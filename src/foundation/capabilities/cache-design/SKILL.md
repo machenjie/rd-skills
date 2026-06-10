@@ -181,6 +181,16 @@ Return a cache strategy with, per cached value class:
 - `tests` (correctness under: stale, miss flood, stampede, cache-down, schema-version mixed deploy, permission revoke, invalidation race)
 - `rollout_plan` (warm-up, canary, kill-switch, rollback)
 
+# Evidence Contract
+
+Close this capability only with cache-correctness evidence:
+
+- **Boundaries inspected:** source of truth, cache key namespace, tenant/permission scope, TTL and jitter, invalidation write path, cache-down fallback, hot-key behavior, and HTTP/CDN cacheability if applicable.
+- **Validation evidence:** stale-read, permission revoke, invalidation race, stampede, miss flood, cache-down, and mixed schema-version test output or a not-verified disclosure.
+- **What evidence proves:** the cache accelerates reads within the declared staleness budget without becoming the only copy of data or crossing tenant/permission boundaries.
+- **What evidence does not prove:** production hot-key distribution, edge-cache behavior, or origin capacity unless measured with representative traffic.
+- **Residual risk and handoff:** name any unmeasured memory pressure, purge latency, warm-up, or erasure-path risk; hand off to `observability`, `web-security`, or `reliability-observability-gate` when production signals or shared-cache security remain open.
+
 # Quality Gate
 
 The strategy passes only when:

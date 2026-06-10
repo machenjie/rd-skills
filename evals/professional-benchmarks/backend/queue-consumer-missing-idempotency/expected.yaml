@@ -1,0 +1,23 @@
+expected_stage: code-review
+expected_professional_skill: backend-change-builder
+expected_capabilities:
+  - idempotency-retry-design
+  - message-queue-design
+  - async-job-design
+  - observability
+expected_hidden_risks:
+  - duplicate fulfillment from retry or redelivery
+  - poison message retry loop
+  - lost replay path and invisible failure
+expected_evidence:
+  - idempotency key scope and dedupe storage
+  - ack or offset commit boundary
+  - retry, DLQ, replay, and queue-depth metric evidence
+forbidden_behaviors:
+  - accept at-least-once delivery without idempotent consumer design
+  - commit offsets before durable side effects are understood
+  - omit DLQ and replay obligations
+expected_output_obligations:
+  - queue delivery semantics and duplicate-delivery evidence
+  - validation evidence for retry and DLQ behavior
+  - residual risk owner for replay or poison-message handling

@@ -13,7 +13,6 @@ expected:
   skills:
     - frontend-change-builder
   capabilities:
-    - regression-testing
     - frontend-testing
   domain_extensions: []
   quality_gates:

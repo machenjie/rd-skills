@@ -17,6 +17,7 @@ expected:
     - payment
     - external integration
   skills:
+    - backend-change-builder
     - integration-change-builder
     - security-privacy-gate
     - reliability-observability-gate
@@ -54,4 +55,3 @@ forbidden:
 notes: |
   Incident plus payment risk demands payment domain, reliability, delivery,
   documentation, and security handling.
-

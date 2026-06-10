@@ -58,6 +58,26 @@ Evaluate every field of the Change Request against:
 - **User value measurability**: Can the user value claim be validated with product analytics, user research, or user acceptance testing?
 - **Completion signal testability**: Can an automated test or structured manual verification be written for this completion signal today?
 
+## Mode Matrix
+Select the intake mode before compiling the Change Request.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| Ambiguity triage | Missing current behavior, desired behavior, non-goals, constraints, or completion signal. | Classify gaps as blocking questions vs non-blocking assumptions before downstream work. | Raw request excerpts mapped to fact, assumption, decision, or question; owner for each blocking question. | `requirement-clarification`, `requirement-structuring` | Impact, architecture, or implementation planning until blocking contract gaps are named. |
+| Bug or incident intake | Symptom-only report, "used to work", logs without desired behavior, or unclear regression window. | Separate observed current behavior from expected restored behavior and acceptance readiness. | Repro inputs, affected actor, observed output, desired output, regression signal, evidence source. | `failure-diagnosis`, `acceptance-standard-definition` | Root-cause diagnosis unless requested separately. |
+| Stakeholder conflict | Conflicting requests, multiple channels, scope pressure, or solution-first framing. | Preserve non-goals, constraints, authority, and assumption risk rather than choosing silently. | Conflict table with source, owner, decision needed, blocking status, and deadline. | `non-goal-boundary-definition`, `user-role-identification` | Design compromise or priority decision without authority. |
+| Acceptance readiness | Intake is mostly complete but done state, negative path, or evidence is weak. | Convert intent into criteria-ready behavior without implementation coupling. | Completion signal, acceptance inputs, explicit not-accepted cases, non-verifiable gaps. | `acceptance-standard-definition`, `acceptance-criteria-builder` | Full task DAG until criteria readiness is confirmed. |
+| Scope boundary repair | Request expands from local change into adjacent behavior, docs, migration, security, or release concerns. | Keep desired behavior narrow while surfacing downstream routing risks. | Affected surface list, non-goals, assumptions, residual unknowns, next gate. | `change-impact-analyzer`, `change-forge-router` | Loading specialist gates not implied by the intake evidence. |
+
+## Proactive Professional Triggers
+These triggers are hidden-risk escalators, not ordinary checklist items.
+
+- **Signal:** The request says "just add/fix X" but omits current behavior, desired behavior, or completion signal. **Hidden risk:** downstream implementation optimizes for the wrong contract. **Required professional action:** stop at intake and compile observable current/desired behavior plus acceptance readiness. **Route to:** `requirement-clarification`, `acceptance-standard-definition`. **Evidence required:** gap classification as blocking question or non-blocking assumption with owner.
+- **Signal:** A stakeholder names a solution such as cache, microservice, AI, or migration before naming the problem. **Hidden risk:** implementation locks into unnecessary architecture or data risk. **Required professional action:** rewrite as outcome-first desired behavior and preserve the proposed solution as a constraint or option. **Route to:** `requirement-structuring`, `architecture-impact-reviewer`. **Evidence required:** problem statement, non-goals, constraints, and rejected/accepted solution authority.
+- **Signal:** Two sources describe different behavior, priority, role, date, or rollout expectation. **Hidden risk:** silent assumption becomes a hidden requirement and invalidates acceptance criteria. **Required professional action:** mark the conflict blocking when the answer changes contract, data, security, or acceptance. **Route to:** `non-goal-boundary-definition`, `change-impact-analyzer`. **Evidence required:** source excerpts, conflict owner, decision deadline, and safe assumption if non-blocking.
+- **Signal:** A bug report contains only a symptom, screenshot, or failing output. **Hidden risk:** root cause work begins before the desired restored behavior is defined. **Required professional action:** capture reproducible current behavior and expected behavior before diagnosis. **Route to:** `failure-diagnosis`, `regression-testing`. **Evidence required:** repro condition, observed output, expected output, regression boundary, and not-yet-diagnosed disclosure.
+- **Signal:** The requested change touches permissions, money, migration, external consumers, or irreversible user action but authority is not explicit. **Hidden risk:** wrong owner approves a high-impact contract or compliance change. **Required professional action:** elevate to blocking question and route specialist impact before implementation. **Route to:** `security-privacy-gate`, `data-api-contract-changer`, `delivery-release-gate`. **Evidence required:** named authority, affected surface, decision needed, and residual assumption risk.
+
 ### Decision Tree: Is the Request Ready to Proceed?
 
 ```
@@ -134,6 +154,7 @@ Examples:
 
 ## Output Contract
 Return a structured Change Request containing:
+- **Mode selected**: Intake mode and signal that selected it.
 - **Summary**: Single-sentence behavioral statement (actor, action, motivation).
 - **Current Behavior**: Observable state today — reproducible by a reader with system access.
 - **Desired Behavior**: Observable state after the change — implementation-neutral, verifiable.
@@ -145,6 +166,22 @@ Return a structured Change Request containing:
 - **Affected Surfaces**: Product-level surface names (no implementation detail required yet).
 - **Completion Signal**: Verifiable observable condition, not a task checkbox.
 - **Risk Flags**: Early signals for downstream specialist routing.
+- **Boundaries inspected**: Source channels, stakeholder authority, product surfaces, non-goals, constraints, and explicit boundaries not inspected.
+- **Professional judgment**: Which gaps are blocking, which assumptions are safe, and why acceptance is or is not ready.
+- **Reuse and placement rationale**: Existing issue, PRD, template, glossary, or domain vocabulary reused; new intake artifact location and owner when one is created.
+- **Behavior preservation statement**: Existing behavior and non-goals that must not change while implementing the desired behavior.
+- **Validation evidence**: Source excerpts, reproduced behavior, stakeholder confirmation, or not-verified disclosure.
+- **Evidence limits**: What the intake evidence proves and what it does not prove about impact, implementation, rollout, or root cause.
+- **Residual risk**: Remaining assumption risk, owner, deadline, and blocked/unblocked status.
+- **Next gate / handoff**: Next professional skill or explicit no-next-gate rationale.
+
+## Evidence Contract
+Close an intake compile only when all canonical evidence answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: raw input source, selected mode, and the requirement-quality rule used to classify readiness.
+- **Files and boundaries inspected**: issue, PR, transcript, screenshot, logs, source docs, affected product surfaces, stakeholder authority, constraints, and non-goals inspected or explicitly unavailable.
+- **Placement rationale**: where the structured Change Request belongs, which existing artifact or vocabulary was reused, and why no implementation location is being decided yet.
+- **Validation commands**: source lookup, repro command, stakeholder confirmation, or structured manual check used to validate current behavior and completion signal.
+- **Intake judgment and evidence limits**: blocking vs non-blocking questions, assumptions accepted, what evidence proves, what it does not prove, residual risk, and next gate.
 
 ## Quality Gate
 1. Current behavior is described observably — a reader with system access can reproduce it.

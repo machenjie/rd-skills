@@ -140,6 +140,10 @@ Escalate when: any log statement may contain PII, PAN, password, token, or priva
 - Log sink is also used as audit log — log rotation policy deletes 30-day-old entries; regulatory requirement mandates 1-year audit retention; compliance gap discovered at audit.
 - `traceId` not included in error response body — user reports error with screenshot; support cannot find the log entry without full timestamp correlation.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when the change touches client-visible errors, audit events, third-party failure handling, async/queue correlation, or sensitive-data logging risk. Do not load it for a pure log-message copy change that preserves fields, levels, and correlation behavior.
+
 # Output Contract
 
 Return a logging and error handling design with:
@@ -155,6 +159,10 @@ Return a logging and error handling design with:
 - `log_level_policy` (DEBUG/INFO/WARN/ERROR criteria; expected error paths at INFO; only unexpected at ERROR)
 - `alert_relevance` (which log events trigger alerts; error rate thresholds; dependency failure signals)
 - `test_strategy` (assert: correlation ID present in all log statements; no sensitive fields in log output; RFC 7807 shape for error responses; audit events written to audit sink on security-relevant paths)
+
+# Evidence Contract
+
+Close logging/error design only when the output states the error taxonomy boundary, inspected log/error/audit paths, sensitive-field exclusion evidence, correlation propagation, client-visible behavior preservation, validation command or not-verified disclosure, what evidence proves, what it does not prove, residual privacy/diagnosis risk, and handoff to observability or security when needed.
 
 # Quality Gate
 

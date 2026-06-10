@@ -51,6 +51,22 @@ VALID_ALLOW = {
     "duplicate_block",
     "repeated_phrase",
 }
+REQUIRED_EXCEPTION_FIELDS = ("owner", "review_after", "mitigation")
+GENERIC_EXCEPTION_REASONS = {
+    "professionalism enhancement",
+    "professional enhancement",
+    "needed for professionalism",
+    "too long",
+    "known issue",
+}
+REFERENCE_IMMOVABLE_MARKERS = (
+    "cannot move to reference",
+    "cannot be moved to reference",
+    "must stay in skill.md",
+    "must stay in the body",
+    "always-loaded decision",
+    "body-only",
+)
 
 
 def _load_audit_module():
@@ -120,6 +136,20 @@ def load_exceptions(errors: list[str]) -> dict[str, set[str]]:
             continue
         if not isinstance(reason, str) or not reason.strip():
             errors.append(f"{context}: exception for '{path}' must record a 'reason'")
+        elif reason.strip().casefold() in GENERIC_EXCEPTION_REASONS:
+            errors.append(
+                f"{context}: exception for '{path}' has a generic reason; "
+                "state the concrete decision-critical content being retained"
+            )
+        elif not any(marker in reason.casefold() for marker in REFERENCE_IMMOVABLE_MARKERS):
+            errors.append(
+                f"{context}: exception for '{path}' must explain why the overage "
+                "cannot move to references"
+            )
+        for field_name in REQUIRED_EXCEPTION_FIELDS:
+            value = entry.get(field_name)
+            if not isinstance(value, str) or not value.strip():
+                errors.append(f"{context}: exception for '{path}' must record '{field_name}'")
         allow_set: set[str] = set()
         if not isinstance(allow, list) or not allow:
             errors.append(f"{context}: 'allow' must be a non-empty list")

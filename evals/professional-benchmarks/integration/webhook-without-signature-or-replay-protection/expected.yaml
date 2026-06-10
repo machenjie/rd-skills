@@ -1,0 +1,23 @@
+expected_stage: code-review
+expected_professional_skill: integration-change-builder
+expected_capabilities:
+  - web-security
+  - idempotency-retry-design
+  - message-queue-design
+  - input-validation
+expected_hidden_risks:
+  - forged webhook event mutates subscription state
+  - replayed event duplicates side effects
+  - parsed body invalidates HMAC verification
+expected_evidence:
+  - raw-body signature verification and constant-time compare
+  - event ID dedupe store and replay window
+  - duplicate-event and invalid-signature tests
+forbidden_behaviors:
+  - process webhook payload before signature verification
+  - treat provider retry as proof of exactly-once delivery
+  - omit replay protection for state-changing events
+expected_output_obligations:
+  - inbound webhook security analysis
+  - validation evidence for signature failure and replay
+  - residual provider delivery risk

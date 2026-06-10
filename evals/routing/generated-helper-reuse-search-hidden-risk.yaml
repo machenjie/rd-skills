@@ -1,0 +1,49 @@
+---
+id: generated-helper-reuse-search-hidden-risk
+description: |
+  AI-generated helper requires reuse search, placement rationale, validation,
+  and AI review.
+prompt: |
+  Review AI-generated TypeScript that adds a date formatter in `utils/common`.
+  It has a comment claiming it handles all locales, but no reuse search,
+  no timezone tests, and no validation output.
+expected:
+  complexity: L3
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - hallucinated API risk
+    - new structure without reuse and placement rationale
+    - shared utility pollution risk
+  skills:
+    - ai-code-review-refactor
+    - architecture-impact-reviewer
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - agent-execution-discipline
+    - code-review
+  domain_extensions: []
+  quality_gates:
+    - AI review gate
+    - architecture gate
+    - implementation gate
+    - test gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - backend-change-builder
+    - delivery-release-gate
+    - security-privacy-gate
+  capabilities:
+    - release-rollback
+    - data-migration-design
+  domain_extensions:
+    - web3-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Generated comments are not evidence and shared utility placement needs proof.

@@ -1,0 +1,23 @@
+expected_stage: bug-fix
+expected_professional_skill: backend-change-builder
+expected_capabilities:
+  - permission-boundary-modeling
+  - authentication-authorization
+  - agent-execution-discipline
+  - regression-testing
+expected_hidden_risks:
+  - IDOR from missing object ownership check
+  - tenant data leak from identifier-only query
+  - local fix without same-pattern scan
+expected_evidence:
+  - same-pattern scan for invoice/resource ID queries
+  - denied-case regression test with another user or tenant
+  - authorization and tenant filter path inspected
+forbidden_behaviors:
+  - patch only the visible query without searching sibling queries
+  - trust client-supplied user_id or tenant_id
+  - claim completion without test or scan output
+expected_output_obligations:
+  - boundaries inspected for controller, service, repository, and permission policy
+  - validation evidence for denied-case regression
+  - residual risk and next gate stated

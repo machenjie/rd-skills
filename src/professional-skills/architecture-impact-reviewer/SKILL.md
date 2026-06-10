@@ -75,6 +75,26 @@ Evaluate architecture proposals against:
 - **Team ownership**: Who owns each boundary, shared contract, and service for ongoing maintenance?
 - **Monorepo module graph**: Which packages/modules exist, who owns them, which dependencies are allowed, which generated files cross boundaries, and which affected tests prove the boundary?
 
+## Mode Matrix
+Select the architecture review mode before approving a design.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| Boundary review | New module, directory, shared package, public API, generated client, or ownership boundary. | Keep responsibilities, public surface, dependency direction, and owner explicit. | Module graph, owner, allowed imports, public/private surface, affected tests. | `module-boundary-design`, `implementation-structure-design` | Service split unless module boundary cannot serve the need. |
+| Complexity challenge | New abstraction, plugin system, generic handler, framework, queue, or service is proposed. | Compare over-engineering vs under-design and choose simplest sufficient option. | Alternatives, concrete constraints, rejected simpler option, reversibility. | `architecture-tradeoff-analysis`, `solution-optimality-evaluation` | Future-proofing without current use cases. |
+| Service/data ownership | New service, direct DB access, cross-service write, event stream, or system-of-record move. | Preserve one data owner, consistency model, failure handling, and migration path. | Owner map, contract/event boundary, rollback/migration, consistency tradeoff. | `domain-impact-modeler`, `data-api-contract-changer` | Direct database sharing as shortcut. |
+| Reliability/operability review | New synchronous dependency, external vendor, SLO path, or topology change. | Bound failure blast radius, availability chain, timeout, fallback, observability, and runbook. | Availability math, timeout/circuit/fallback, metrics/traces/alerts, runbook owner. | `reliability-observability-gate`, `integration-change-builder` | Release gate unless deployment topology changes. |
+| Refactor/monorepo governance | Package graph, affected tests, build cache, generated files, or shared utility pollution. | Prevent hidden coupling and test selection gaps during structural change. | Dependency graph, transitive dependents, cache key inputs, generated source owner. | `ci-cd`, `quality-test-gate`, `refactoring` | New architecture decision when behavior-preserving local refactor suffices. |
+
+## Proactive Professional Triggers
+These triggers are hidden-risk escalators, not ordinary checklist items.
+
+- **Signal:** A helper, common package, shared module, plugin point, or generic interface is proposed for one consumer. **Hidden risk:** speculative abstraction becomes unowned boundary debt. **Required professional action:** challenge reuse threshold and local placement first. **Route to:** `implementation-structure-design`, `architecture-tradeoff-analysis`. **Evidence required:** current consumers, owner, rejected local alternative, reversibility.
+- **Signal:** A new service or direct cross-service data access is proposed without data owner and contract. **Hidden risk:** split-brain ownership or distributed monolith. **Required professional action:** assign authoritative owner and mediated contract before approval. **Route to:** `domain-impact-modeler`, `data-api-contract-changer`. **Evidence required:** owner map, data flow, contract/event path, rollback/migration risk.
+- **Signal:** Synchronous dependency is added on a lower-SLO or unknown-SLO service. **Hidden risk:** caller availability is silently reduced and p99 latency compounds. **Required professional action:** require timeout, fallback, circuit, availability math, and observability. **Route to:** `reliability-observability-gate`, `integration-change-builder`. **Evidence required:** SLO comparison, timeout budget, fallback behavior, alert/runbook.
+- **Signal:** Monorepo or generated-code change updates one package but not affected-test selection or source-of-truth policy. **Hidden risk:** transitive consumers and generated clients drift unnoticed. **Required professional action:** inspect graph and generated-file ownership before merge. **Route to:** `ci-cd`, `quality-test-gate`. **Evidence required:** dependency graph, generated source, affected tests, cache key inputs.
+- **Signal:** Design says "we can refactor later" for irreversible data, API, service, or public abstraction choice. **Hidden risk:** reversibility is assumed but no escape hatch exists. **Required professional action:** record ADR/rollback path or reduce scope to reversible step. **Route to:** `release-rollback`, `change-documentation-gate`. **Evidence required:** reversibility classification, ADR need, rollback/migration path, residual owner.
+
 ### Monorepo Architecture Review
 
 For monorepo or workspace changes, require:
@@ -168,6 +188,7 @@ Examples:
 
 ## Output Contract
 Return a structured architecture review with:
+- **Mode selected**: Architecture mode and trigger signal that selected it.
 - **Decision**: Approved / Approved with conditions / Returned for redesign.
 - **Alternatives considered**: At least one simpler alternative with explicit reason for rejection.
 - **Boundary impact**: New or changed module and service boundaries with ownership declarations.
@@ -180,6 +201,13 @@ Return a structured architecture review with:
 - **Build and test impact**: Affected tests, incremental build approach, build cache key inputs, generated file policy, and full-suite fallback when applicable.
 - **ADR requirement**: Yes/No — whether a written ADR is required before implementation.
 - **Open risks**: Unresolved design risks with proposed owners and review dates.
+- **Boundaries inspected**: modules, packages, services, public APIs, data owners, generated files, dependency edges, release topology, and tests inspected.
+- **Professional judgment**: over-engineering vs under-design decision, reversibility, hidden coupling ruled out, and owner accountability.
+- **Reuse and placement rationale**: existing module/service/API/contract reused or new boundary justified, with public/private decision.
+- **Behavior preservation statement**: existing contract, dependency direction, ownership, rollout, and operational behavior preserved or intentionally changed.
+- **Validation evidence**: dependency-graph, affected-test, build-cache, ADR, or not-verified disclosure with outcome.
+- **Evidence limits**: what architecture evidence proves and does not prove about scale, org ownership, production traffic, and future requirements.
+- **Residual risk and next gate**: accepted tradeoff, deferred ADR, rollout/reliability/docs handoff, and owner.
 
 ## Evidence Contract
 Close an architecture review only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
@@ -187,6 +215,7 @@ Close an architecture review only when all five canonical answers are concrete (
 - **Files and boundaries inspected**: the existing modules, public interfaces, shared functions, and dependency edges read, and where the change would alter them.
 - **Placement rationale**: why any new directory, class, interface, or service is justified over reusing existing structure, with at least one simpler alternative and the explicit reason it is rejected.
 - **Validation commands**: the dependency-graph, affected-test, or build-cache checks run to confirm no cycle or boundary violation, each with its outcome.
+- **Architecture judgment and evidence limits**: mode selected, behavior preservation, reversibility, what evidence proves, what it does not prove, residual risk, and next gate.
 - **Residual risk**: the accepted tradeoff, failure blast radius, or deferred ADR that remains, with the named owner and review date.
 
 ## Quality Gate

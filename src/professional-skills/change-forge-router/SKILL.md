@@ -103,6 +103,26 @@ Domain extension routing:
 
 Runtime profile awareness: recommended has 19 professional skills; full has 19 professional skills plus 7 domain extensions; dev has 19 professional skills, 105 foundation capabilities, and 7 domain extensions. Foundation capabilities compile into professional references in every profile.
 
+## Mode Matrix
+Select the routing mode before naming a professional path.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| Initial classification | Request lacks complete stage, risk, skill, capability, and gate selection. | Choose the minimum sufficient route and preserve unknowns as questions or assumptions. | Change type, complexity, risk level, execution mode, selected skills/capabilities, skipped gates with reasons. | `engineering-stage-professionalism`, `context-packaging` | Listing every available skill or capability. |
+| Route repair | Same path failed twice, diagnosis is weak, local fix lacks scan, or completion lacks evidence. | Change route based on new evidence instead of repeating the same action. | Failed command/output, route-repair reason, verified-cause gap, next diagnostic skill. | `agent-execution-discipline`, `failure-diagnosis` | Third same-path retry. |
+| Hidden-risk escalation | Request hints at IDOR, queue duplicate, cache invalidation, webhook replay, migration rollback, accessibility, generated code, or shared utility pollution. | Upgrade only the risk-relevant path and record over-routing guard. | Trigger signal, hidden risk, routed skill/capability, evidence required, forbidden over-route. | `change-impact-analyzer`, `quality-test-gate` | Broad L4/L5 routing when a targeted L2/L3 route suffices. |
+| Runtime profile selection | recommended/full/dev behavior, foundation reference loading, build/install, or skill authoring is in scope. | Keep runtime profile boundaries and source/dist separation correct. | Profile selected, source vs dist boundary, required references, validation commands. | `skill-authoring-expert`, `delivery-release-gate` | Installing source directories or runtime content from `src/`. |
+| Handoff closure | Routing result is final or an agent hands off after routed work. | Preserve route manifest, evidence limits, residual risk, and next gate. | `changeforge_route`, optional `changeforge_stage_route`, validation/not-verified disclosure, residual risk. | `agent-execution-discipline`, `change-documentation-gate` | Completion claims without closure evidence. |
+
+## Proactive Professional Triggers
+These triggers are hidden-risk escalators, not ordinary checklist items.
+
+- **Signal:** A local bug fix touches one permission, tenant, query, cache, retry, or validation path. **Hidden risk:** same-pattern defect remains in sibling paths. **Required professional action:** route same-pattern scan and regression evidence before implementation closure. **Route to:** `change-impact-analyzer`, `agent-execution-discipline`, `regression-testing`. **Evidence required:** pattern searched, scope, related occurrences, local/broad fix rationale.
+- **Signal:** Queue consumer, webhook, retry, cron, or background job is mentioned without idempotency, replay, DLQ, or terminal failure behavior. **Hidden risk:** duplicate side effects or lost work under at-least-once delivery. **Required professional action:** select idempotency/queue/integration/reliability route. **Route to:** `idempotency-retry-design`, `message-queue-design`, `integration-change-builder`, `reliability-observability-gate`. **Evidence required:** key scope, retry/DLQ, replay protection, duplicate-delivery test.
+- **Signal:** Cache, Redis, CDN, or memoization is added for performance without TTL, invalidation, scope, or source-of-truth statement. **Hidden risk:** stale data, tenant leak, stampede, or cache-as-source-of-truth drift. **Required professional action:** route cache design and observability gate when production-facing. **Route to:** `cache-design`, `data-middleware-change-builder`, `observability`. **Evidence required:** key schema, TTL/invalidation, tenant/permission scope, cache-loss behavior.
+- **Signal:** Migration, schema change, feature flag, rollout, or config change lacks rollback and old/new compatibility. **Hidden risk:** revert deploy cannot recover mutated state. **Required professional action:** route release/rollback and data contract checks. **Route to:** `delivery-release-gate`, `release-rollback`, `data-api-contract-changer`. **Evidence required:** expand/contract plan, rollback command, compatibility window, validation output.
+- **Signal:** AI-generated code introduces helpers, abstractions, public exports, dependencies, or API calls without reuse search. **Hidden risk:** hallucinated API, duplicate logic, or shared utility pollution. **Required professional action:** route AI code review plus implementation structure and code review. **Route to:** `ai-code-review-refactor`, `implementation-structure-design`, `code-review`. **Evidence required:** symbol/dependency verification, reuse search, placement rationale, tests or not-verified disclosure.
+
 ## Risk Escalation Rules
 Escalate one level for any risk trigger that affects user data, money, permissions, external systems, production state, or irreversible operations. Escalate to high or critical when more than one high-impact trigger is present or when rollback is unclear.
 
@@ -171,7 +191,14 @@ Route by evidence in the request:
 - If high-risk code generation occurs in any language, select `solution-optimality-evaluation` and the matching language professional usage capability.
 
 ## Failure Modes
-Over-routing creates process drag and hides the next best action. Under-routing misses security, data, release, and user-impact risk. Treating every request as greenfield wastes time. Treating local fixes as risk-free can miss permissions, migrations, external integrations, and regression evidence. Listing every capability without selection rationale makes the route unusable.
+- **Over-routing** creates process drag and hides the next best action.
+- **Under-routing** misses security, data, release, and user-impact risk.
+- **Treating every request as greenfield** wastes time and ignores existing module ownership.
+- **Treating local fixes as risk-free** can miss permissions, migrations, external integrations, same-pattern defects, and regression evidence.
+- **Listing every capability without selection rationale** makes the route unusable.
+- **Dropping route manifests at handoff** loses selected stage, evidence obligations, residual risk, and next gate.
+- **Ignoring runtime profile boundaries** can install source authoring directories or assume undeclared runtime content.
+- **Confusing hidden-risk triggers with checklists** inflates routes without improving professional evidence.
 
 ## Reference Loading Policy
 Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
@@ -187,6 +214,16 @@ Return the Markdown Routing Result using `references/route-result-template.md` a
 
 Use `None` when a domain extension is not selected. Use `Skipped: reason` for quality gates that are not needed. Use concrete assumptions rather than silent gaps.
 
+The routing result must also state:
+- **Mode selected**: routing mode and trigger signal that selected it.
+- **Boundaries inspected**: request scope, product/code/data/security/release/docs surfaces, source-vs-dist boundary when authoring skills, and skipped surfaces with reasons.
+- **Professional judgment**: why the route is minimum sufficient, which hidden risks were escalated or ruled out, and why skipped gates are safe.
+- **Reuse and placement rationale**: existing professional skill, capability, reference, or registry path reused instead of inventing a new path.
+- **Behavior preservation statement**: existing runtime profile, skill registry, source/dist separation, and routed behavior preserved or intentionally changed.
+- **Validation evidence**: eval, validator, build, or not-verified disclosure expected before closure.
+- **Evidence limits**: what routing evidence proves and does not prove about code correctness, production behavior, or downstream consumer adoption.
+- **Residual risk and next gate**: unresolved assumption, owner, handoff target, and next skill/gate.
+
 Populate Required References for router self-use and for every selected support reference:
 
 - Always include router self-use references: `references/routing-rules.md`, `references/skill-registry.md`, `references/capability-index.md`, and `references/domain-extension-index.md`.
@@ -201,6 +238,14 @@ After the Markdown Routing Result, also emit two fenced YAML blocks that hooks, 
 - `changeforge_stage_route`: the stage projection of `## 12. Stage Professionalism` — `current_stage`, `next_stage`, `product_surface`, `language_surface`, the `selected_*` lists, `skipped_capabilities` (each with a `reason`), `context_budget_mode` (`minimal` for L1, `single-stage` for L2, `staged-plan` for L3+), `required_evidence`, `required_quality_gates`, and `handoff_target`. Emit it only for non-trivial engineering tasks, name exactly one `current_stage`, and keep it consistent with `changeforge_route`.
 
 Full manifest schemas, field templates, and rules: `references/route-manifest.md`.
+
+## Evidence Contract
+Close routing only when all canonical evidence answers are concrete (answer schema: `agent-execution-discipline`):
+- **Basis**: selected routing mode, request classification, risk triggers, and runtime profile awareness.
+- **Files and boundaries inspected**: request text, registry/routing rules, source-vs-dist boundary, product/code/data/security/release/docs surfaces, and skipped gates with reasons.
+- **Placement rationale**: why each selected professional skill and capability is the owner, why omitted skills are not needed, and why no new runtime structure is introduced.
+- **Validation commands**: routing eval, agent-behavior eval, skill validator, build/install validator, or not-verified disclosure required for the route.
+- **Routing judgment and evidence limits**: minimum sufficient path, behavior preservation, what evidence proves, what it does not prove, residual risk, and next gate.
 
 ## Quality Gate
 The route passes only when:

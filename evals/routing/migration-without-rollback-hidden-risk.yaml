@@ -1,0 +1,48 @@
+---
+id: migration-without-rollback-hidden-risk
+description: |
+  Database migration with no rollback requires data/API and release gates.
+prompt: |
+  Add a non-null `plan_id` column to a large subscriptions table and deploy code
+  that assumes it exists. The plan says rollback is just redeploying the old
+  image; no down migration or forward-fix branch is prepared.
+expected:
+  complexity: L4
+  risk_level: high
+  expected_stage: release-delivery
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - database migration
+    - production deployment
+  skills:
+    - change-impact-analyzer
+    - data-api-contract-changer
+    - delivery-release-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - data-migration-design
+    - version-compatibility
+    - release-rollback
+    - contract-testing
+  domain_extensions: []
+  quality_gates:
+    - impact gate
+    - API/data gate
+    - delivery gate
+    - test gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - ai-code-review-refactor
+  capabilities:
+    - form-validation-design
+    - cache-design
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - AI review gate
+notes: |
+  Code redeploy is not sufficient rollback for stateful migration.

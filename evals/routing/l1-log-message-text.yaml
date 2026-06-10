@@ -13,7 +13,6 @@ expected:
     - backend-change-builder
   capabilities:
     - logging-error-handling
-    - regression-testing
   domain_extensions: []
   quality_gates:
     - implementation gate
@@ -47,4 +46,3 @@ forbidden:
     - delivery gate
 notes: |
   The router should not infer cache architecture work from copy-only log text.
-

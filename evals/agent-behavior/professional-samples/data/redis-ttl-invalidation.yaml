@@ -1,0 +1,65 @@
+id: redis-ttl-invalidation
+description: Redis cache fix requires TTL, invalidation, tenant key, and reliability evidence.
+prompt: |
+  Fix an entitlement cache that stores user access in Redis forever. Some
+  account changes remain stale and the key is only user_id.
+expected:
+  selected_skills:
+    - data-middleware-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  selected_capabilities:
+    - cache-design
+    - observability
+    - agent-execution-discipline
+    - regression-testing
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/49-cache-design.md
+    - references/capabilities/69-observability.md
+  required_quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+  required_professional_obligations:
+    - TTL and invalidation policy inspected
+    - tenant-scoped cache key boundary
+    - stale entitlement regression test
+    - residual risk: production hot key distribution not measured
+  forbidden_behaviors:
+    - leave cache without TTL
+    - use global cache key
+    - skip invalidation test
+actual:
+  route_manifest:
+    selected_skills:
+      - data-middleware-change-builder
+      - reliability-observability-gate
+      - quality-test-gate
+    selected_capabilities:
+      - cache-design
+      - observability
+      - agent-execution-discipline
+      - regression-testing
+    required_references:
+      - references/routing-rules.md
+      - references/skill-registry.md
+      - references/capability-index.md
+      - references/domain-extension-index.md
+      - references/capabilities/49-cache-design.md
+      - references/capabilities/69-observability.md
+    required_quality_gates:
+      - implementation gate
+      - reliability gate
+      - test gate
+  validation_evidence: "stale entitlement regression test; TTL and invalidation policy inspected"
+  inspected_boundaries: "tenant-scoped cache key boundary; entitlement writer, invalidation event, read-through fallback"
+  residual_risk: "residual risk: production hot key distribution not measured"
+  next_gate: "next gate: reliability gate checks memory and eviction telemetry"
+review:
+  human_review_required: true
+  promotion_status: candidate
+  notes: Candidate until paired with a production-like Redis fixture.

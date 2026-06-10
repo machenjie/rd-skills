@@ -8,6 +8,7 @@ reaches the network.
 ```
 evals/agent-behavior/
   README.md
+  professional-samples/ # professional behavior samples grouped by area
   samples/    # human-authored or human-approved candidate samples
   outputs/    # generated eval reports (git-ignored working area)
   promoted/   # human-approved samples locked in as regression guards
@@ -78,6 +79,27 @@ python3 scripts/eval-agent-behavior.py --samples-dir evals/agent-behavior/sample
 ```
 
 With no samples the eval prints `no samples found` and exits 0.
+
+## Professional Samples
+
+`professional-samples/` stores real or realistic agent outputs for professional
+behavior regression. These are not showcase examples. They check whether the
+captured output selected the expected skills/capabilities/references/gates,
+named inspected boundaries, supplied validation evidence or a not-verified
+disclosure, stated residual risk, named the next gate, and avoided forbidden
+behaviors.
+
+Run:
+
+```bash
+python3 scripts/eval-professional-agent-samples.py
+python3 scripts/eval-professional-agent-samples.py --promoted-only --strict
+python3 scripts/eval-professional-agent-samples.py --candidates-only --format json
+```
+
+Reports are written to `reports/professional-agent-samples-report.md` and
+`reports/professional-agent-samples-report.json`. Default mode is warning-only;
+`--strict` is for release checks.
 
 ## Promotion
 

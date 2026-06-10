@@ -72,6 +72,26 @@ Systematically assess each surface below — declare impact level (Direct / Indi
 - **Compatibility**: Are there backward compatibility obligations to existing consumers, mobile clients, or versioned APIs?
 - **Documentation**: Do user guides, API docs, runbooks, ADRs, or changelogs need updating?
 
+## Mode Matrix
+Select the impact-analysis mode before declaring blast radius.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| Local fix impact | Bug fix claims one file, one endpoint, or one component is enough. | Verify same-pattern scope, upstream callers, downstream users, and regression surface. | Pattern searched, directories scanned, related occurrences, local-only or broad-fix rationale. | `agent-execution-discipline`, `failure-diagnosis`, `regression-testing` | Full architecture review unless the scan finds boundary drift. |
+| Contract/data impact | API field, DTO, schema, migration, event, cache key, or consumer behavior changes. | Enumerate consumers, migration/rollback impact, version skew, and test fixtures. | Contract diff, consumer list, migration path, rollback limits, fixture/test impact. | `data-api-contract-changer`, `contract-testing`, `release-rollback` | UX modeling unless user-visible behavior changes. |
+| Cross-module impact | Multiple packages, services, jobs, topics, configs, docs, or ownership areas are plausible. | Classify direct, indirect, downstream, none-with-rationale, and unknown surfaces. | File/module/API/data/security/release/docs inventory with owner or unknown-owner flag. | `architecture-impact-reviewer`, `task-dag-planner` | Implementation detail design until affected boundaries are known. |
+| Security/release impact | Permission, tenant, PII, external system, deployment, rollback, or production state is plausible. | Escalate hidden coupling before code; ensure rollback and evidence gates are named. | Auth/data flow, release surface, observability, rollback feasibility, residual risk owner. | `security-privacy-gate`, `delivery-release-gate`, `reliability-observability-gate` | Cosmetic docs unless behavior/operation changes. |
+| Documentation/test impact | Behavior changed but docs, tests, fixtures, or runbooks are assumed unaffected. | Treat docs/tests as first-class surfaces; identify stale evidence risk. | Affected tests, fixtures, docs, runbooks, changelog, API docs, and validation commands. | `quality-test-gate`, `change-documentation-gate` | New code task DAG until proof obligations are mapped. |
+
+## Proactive Professional Triggers
+These triggers are hidden-risk escalators, not ordinary checklist items.
+
+- **Signal:** A local fix changes one permission, tenant, status, cache, query, or validation rule. **Hidden risk:** same defect pattern exists in sibling paths. **Required professional action:** run same-pattern scan before calling the fix local. **Route to:** `agent-execution-discipline`, `regression-testing`. **Evidence required:** pattern signature, searched paths, related occurrences, and broad/local decision.
+- **Signal:** A response field, enum, error code, event payload, migration, or fixture changes without named consumers. **Hidden risk:** downstream caller or test fixture breaks outside the touched module. **Required professional action:** enumerate upstream/downstream consumers and compatibility window. **Route to:** `data-api-contract-changer`, `contract-testing`. **Evidence required:** consumer list, compatibility status, fixture/test impact, migration note.
+- **Signal:** A stateful change says rollback is "revert deploy" while data, cache, queue, or external side effect changes. **Hidden risk:** rollback is asymmetric and old code cannot read new state. **Required professional action:** analyze rollback and migration impact before implementation. **Route to:** `delivery-release-gate`, `release-rollback`. **Evidence required:** state mutation inventory, rollback command/procedure, unrolled-back data risk.
+- **Signal:** A shared module, generated client, common util, or config changes with no module graph or owner check. **Hidden risk:** hidden coupling changes callers not visible in the diff. **Required professional action:** trace imports, dependents, generated outputs, and owners. **Route to:** `architecture-impact-reviewer`, `implementation-structure-design`. **Evidence required:** dependency/caller scan, owner map, affected tests.
+- **Signal:** Security, observability, docs, or tests are marked "not impacted" without rationale. **Hidden risk:** quiet surfaces become release or incident gaps. **Required professional action:** require none-with-rationale or unknown-with-owner for each surface. **Route to:** `security-privacy-gate`, `reliability-observability-gate`, `change-documentation-gate`. **Evidence required:** per-surface rationale, validation command or not-verified disclosure, residual risk.
+
 ### Decision Tree: How Deep to Analyze?
 
 ```
@@ -148,6 +168,7 @@ Examples:
 
 ## Output Contract
 Return a structured impact analysis with:
+- **Mode selected**: Impact mode and trigger signal that selected it.
 - **Surface inventory**: Every assessed surface with impact level (Direct / Indirect / Downstream / None + rationale / Unknown + proposed owner).
 - **Compatibility assessment**: Backward compatibility status for API and data model changes; consumer list and migration readiness.
 - **Rollback analysis**: Whether rollback is safe without data intervention; required rollback migration scripts if schema has changed.
@@ -155,6 +176,13 @@ Return a structured impact analysis with:
 - **Release concerns**: Feature flag dependencies, deployment sequencing, staged rollout requirements.
 - **Open questions**: Unknown surfaces, undetermined owners, or impact dimensions requiring further investigation — each with proposed owner and urgency.
 - **Same-pattern scan record**: Pattern signature, directories or globs searched, other occurrences found, and local-only or broad-fix rationale when a bug fix is proposed.
+- **Boundaries inspected**: Files, modules, APIs, data stores, configs, tests, security boundaries, release artifacts, docs, and upstream/downstream callers inspected or explicitly skipped.
+- **Professional judgment**: Why each surface is Direct / Indirect / Downstream / None / Unknown and which hidden coupling was ruled out.
+- **Reuse and placement rationale**: Existing owner, module, API, fixture, or documentation location reused; new ownership or placement questions routed.
+- **Behavior preservation statement**: Existing user, API, data, permission, and release behavior preserved or intentionally changed.
+- **Validation evidence**: Greps, dependency graph, schema lookup, consumer lookup, tests, or not-verified disclosure with outcome.
+- **Evidence limits**: What the scan proves and does not prove about runtime traffic, unknown consumers, production data, and rollback.
+- **Next gate / handoff**: Required specialist skill or explicit no-next-gate rationale.
 - **Risk summary**: Overall blast radius classification (Low / Medium / High / Critical) with key risk factors listed.
 
 ## Evidence Contract
@@ -163,6 +191,7 @@ Close an impact analysis only when all five canonical answers are concrete (answ
 - **Files and boundaries inspected**: the hard blast-radius scan actually run — call chain and callers, configuration and environment variables, database tables and migrations, message topics, cache keys, API consumers, test directories, documentation, CI/CD pipelines, and deployment resources — with what each surface revealed or "none found".
 - **Placement rationale**: why each surface is classified Direct, Indirect, Downstream, or None, and why each specialist routing is required.
 - **Validation commands**: the greps, call-graph queries, schema or consumer lookups run to confirm each impact, each with its outcome.
+- **Impact judgment and evidence limits**: mode selected, hidden coupling ruled out, behavior preserved or intentionally changed, what evidence proves, what it does not prove, residual risk, and next gate.
 - **Residual risk**: the Unknown surface or unverified downstream effect that remains, with its proposed owner and urgency.
 
 ## Quality Gate

@@ -59,6 +59,7 @@ Use this capability when:
 16. **Discipline rules are pressure-tested.** A skill that enforces discipline must hold under a plausible excuse to skip it, not only on the cooperative path.
 17. **Name the rationalizations.** A skill change names the rationalizations an agent may use to skip the rule, and the rule and its eval must reject each one.
 18. **Trigger changes carry an over-routing guard.** A new or widened routing trigger ships with a guard case proving a trivial change does not pull it in.
+19. **Professionalism gates are evidence gates.** Use the professionalism baseline, benchmark eval, agent-sample eval, and regression validator to prove behavior; do not add keywords, copied Evidence Contracts, or section-only prose to raise scores.
 
 # Industry Benchmarks
 
@@ -104,6 +105,32 @@ Use this capability when:
 9. **Adjacency and handoff.** Every capability states its adjacent capabilities and its handoff targets.
 10. **Slimming preserves rigor.** No slimming action may reduce professional rigor; detail moves to references instead.
 11. **Description is a trigger, not a workflow.** The frontmatter description states when to use the skill and its scope; the workflow, gates, and output contract live in the body, and deep detail in references. A description that summarizes the workflow lets an agent act from the description without reading the body, and an over-broad description causes catch-all routing.
+12. **Release professionalism artifacts.** `config/professionalism-baseline.yaml`, `eval-skill-professionalism.py`, `eval-professional-benchmarks.py`, `eval-professional-agent-samples.py`, `validate-professionalism-regression.py`, and `docs/PROFESSIONALISM_RELEASE_CHECKLIST.md` define the current pre-release quality loop.
+
+# Professional Skill Authoring Requirements
+
+- Include a Mode Matrix with trigger signals, professional focus, required evidence, companion capabilities/gates, and skip guidance.
+- Include Proactive Professional Triggers that name signal, hidden risk, required action, route, and evidence; ordinary checklist items do not qualify.
+- Include an Evidence Contract, Failure Modes, Quality Gate, Reference Loading Policy, Benchmark Coverage expectation, and Routing Coverage expectation.
+- Keep SKILL.md decision-critical. Move long examples, benchmark catalogs, anti-examples, and tables to references with a loading hint.
+- Benchmark or agent-sample promotion requires concrete hidden risks, forbidden behaviors, validation evidence or not-verified disclosure, residual risk, and next gate.
+
+# Capability Authoring Requirements
+
+- Keep the body compact, decision-critical, and non-tutorial; do not write beginner explanations or language primers.
+- Include concrete failure modes, a quality gate, adjacent handoff targets, and output evidence.
+- Keep `used_by` correct so selected capabilities compile into the professional skills that can own them.
+- Do not dump nested references or deep checklists into capability bodies; references must be targeted and loadable.
+
+# Anti-Patterns
+
+- Section-only fake professionalism: adding headings without decision rules, hidden risks, evidence, or failure modes.
+- Checklist-only triggers: ordinary "run tests" or "check security" bullets presented as proactive hidden-risk triggers.
+- Copied Evidence Contract: repeated generic evidence language without domain-specific proof and limits.
+- Body bloat: keeping low-frequency detail in SKILL.md instead of references with loading hints.
+- Benchmark empty shell: fixtures without concrete hidden risks, evidence, forbidden behaviors, and negative baseline output.
+- Route without `forbidden.*`: routing cases that only say what to select and never guard against over-routing.
+- Professionalism score gaming: adding keywords, copied Evidence Contract text, or empty sections instead of behavior evidence.
 
 # Failure Modes
 
@@ -146,6 +173,11 @@ Return a Skill Authoring Review:
 - Eval/fixture impact:
 - Before/after behavior evidence:
 - Reference loading impact:
+- Boundaries inspected:
+- Validation evidence:
+- Evidence limits:
+- Residual risk:
+- Next gate:
 - Handoff:
 
 Also return a Skill Behavior Test Decision:
@@ -163,6 +195,10 @@ When slimming or restructuring, also return a Skill Slimming Decision:
 - Merge duplicate:
 - Defer:
 - Rationale:
+
+# Evidence Contract
+
+Close a skill-authoring change only when the output names the selected authoring mode, skill/capability/reference/registry boundaries inspected, body-vs-reference placement rationale, reuse of existing skill patterns, routing impact, runtime profile impact, validation commands run, what those commands prove, what they do not prove, residual weak spots, and the next gate. A skill prose diff without fixture/eval or explicit not-verified disclosure is not sufficient evidence.
 
 # Quality Gate
 
@@ -203,6 +239,7 @@ The body carries the decision-critical authoring rules and is the part compiled 
 - Validation, eval, fixture, build, and install strategy questions: hand to `quality-test-gate`.
 - File, directory, reference, and registry placement questions: hand to `implementation-structure-design`.
 - Execution evidence, same-pattern scan, and validation handoff: hand to `agent-execution-discipline`.
+- Professionalism regression handoff: run `eval-skill-professionalism.py`, `eval-professional-benchmarks.py`, `eval-professional-agent-samples.py`, `validate-professionalism-regression.py`, and `eval-routing.py`; use `docs/PROFESSIONALISM_RELEASE_CHECKLIST.md` before release.
 
 # Completion Criteria
 

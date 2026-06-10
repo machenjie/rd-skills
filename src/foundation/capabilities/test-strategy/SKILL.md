@@ -115,6 +115,10 @@ Escalate when: the change affects authentication, payments, multi-tenant isolati
 - High-risk change released with undocumented test omissions: post-incident review reveals coverage gap was known.
 - Contract breaking change silently deployed: consumer service starts returning 500; no contract test caught it.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when the change is high-risk, cross-layer, security-sensitive, migration/release-sensitive, or when any test level is omitted. Do not load it for a trivial behavior-preserving edit whose single validation command is already dictated by local project convention.
+
 # Output Contract
 
 Return a test strategy with:
@@ -128,6 +132,10 @@ Return a test strategy with:
 - `test_data_requirements` (fixtures, factories, isolation mechanism — delegate to `test-data-management`)
 - `release_blocking_criteria` (which test results must be green before release is approved)
 - `evidence_artifacts` (test report locations, coverage reports, contract verification results)
+
+# Evidence Contract
+
+Close a test strategy only when the output names the changed behavior and risk, maps each selected test level to what it proves, records omitted levels with technical reason and residual risk, names negative/permission/rollback/regression paths, gives validation commands or not-verified disclosure, and states the next gate. Coverage percentage without behavior trace is not evidence.
 
 # Quality Gate
 

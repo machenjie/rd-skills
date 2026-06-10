@@ -72,6 +72,26 @@ Assess every criterion candidate against:
 - **Independence**: Can the criterion be verified in isolation?
 - **Experiment validity**: Does the criterion specify exposure logging, assignment stability, sample ratio mismatch rejection, primary metric threshold, and guardrail rollback?
 
+## Mode Matrix
+Select the acceptance mode before writing criteria.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| New behavior criteria | New feature, workflow, endpoint, state, or capability with no accepted done state. | Make success measurable and independent without prescribing implementation. | Actor, precondition, action, expected result, verification method, source requirement. | `acceptance-standard-definition`, `scenario-decomposition` | Task DAG until acceptance readiness is met. |
+| Bug-fix regression criteria | Defect, incident, failing case, or same-pattern repair. | State the old failure, fixed behavior, regression path, and not-accepted recurrence. | Repro case, negative path, regression test target, behavior preservation. | `regression-testing`, `failure-diagnosis` | Broad feature criteria unrelated to the defect boundary. |
+| Permission/security criteria | Role, tenant, object ownership, sensitive action, or audit behavior changes. | Specify allowed and denied paths, audit evidence, and explicit non-acceptance. | Access matrix row, denied-case behavior, audit/log evidence, abuse case. | `permission-boundary-modeling`, `security-privacy-gate` | UX-only acceptance without server-side denial proof. |
+| Operational/non-functional criteria | Latency, availability, data migration, async, observability, or release evidence is required. | Make thresholds, environment, rollback, and operator evidence measurable. | SLO/threshold, load level, migration before/after state, command or dashboard evidence. | `quality-test-gate`, `reliability-observability-gate`, `delivery-release-gate` | Marketing wording or subjective quality adjectives. |
+| Experiment/analytics criteria | A/B test, exposure event, funnel, metric guardrail, dashboard, or assignment behavior changes. | Define validity, rejection, and rollback criteria before launch. | Primary metric, guardrails, assignment unit, exposure event, SRM check, owner. | `experience-impact-modeler`, `bigdata-product-extension` | Implementation tasks before metric contract is accepted. |
+
+## Proactive Professional Triggers
+These triggers are hidden-risk escalators, not ordinary checklist items.
+
+- **Signal:** Criteria only describe the happy path or use words like "works", "correct", or "fast". **Hidden risk:** subjective acceptance hides negative, edge, and regression paths. **Required professional action:** split into measurable success and rejection conditions. **Route to:** `acceptance-standard-definition`, `test-strategy`. **Evidence required:** criterion IDs covering happy, negative, edge, and regression paths.
+- **Signal:** A sensitive operation has "only admins/users can" wording without an unauthorized path. **Hidden risk:** permission acceptance passes without proving denial or audit behavior. **Required professional action:** add explicit allowed/denied criteria and verification method. **Route to:** `permission-boundary-modeling`, `security-privacy-gate`. **Evidence required:** access matrix, denied-case assertion, audit/log expectation.
+- **Signal:** A UI criterion mentions form, loading, empty, disabled, or error behavior as a single generic line. **Hidden risk:** incomplete interaction states produce dead-end or inaccessible flows. **Required professional action:** require state-by-state acceptance and accessibility evidence. **Route to:** `experience-impact-modeler`, `e2e-testing`. **Evidence required:** state matrix, WCAG/focus criterion, E2E/manual check.
+- **Signal:** A migration, async job, cache, queue, or integration criterion lacks rollback, timeout, or terminal failure behavior. **Hidden risk:** acceptance ignores partial success or operational recovery. **Required professional action:** add operational evidence and not-accepted failure states. **Route to:** `quality-test-gate`, `delivery-release-gate`, `reliability-observability-gate`. **Evidence required:** command, dashboard, DLQ/rollback condition, residual risk owner.
+- **Signal:** Experiment acceptance lacks exposure event, assignment unit, guardrail, or SRM rejection. **Hidden risk:** rollout decision is statistically invalid even if implementation works. **Required professional action:** block launch criteria until metric contract is complete. **Route to:** `experience-impact-modeler`, `bigdata-product-extension`. **Evidence required:** metric contract, event schema, SRM check, rollback threshold.
+
 ## Experiment Acceptance Criteria
 
 Experiment criteria must be written before implementation or launch:
@@ -152,6 +172,7 @@ Examples:
 
 ## Output Contract
 Return a structured acceptance criteria document with:
+- **Mode selected**: Acceptance mode and trigger signal that selected it.
 - **Criteria set**: Each criterion assigned an ID, actor, precondition, action, expected outcome, and verification method (unit / integration / E2E / manual / audit).
 - **Rejection criteria**: Observable failure condition for each behavioral criterion.
 - **Non-functional criteria table**: Latency, availability, accessibility, security — each with measurable threshold and test reference.
@@ -159,6 +180,14 @@ Return a structured acceptance criteria document with:
 - **Open questions list**: Unanswered scope questions that block finalization, with proposed owner and deadline.
 - **Traceability map**: Each criterion ID → source requirement ID or change request section.
 - **Coverage summary**: Happy path, edge cases, error states, non-functional — confirmed covered or explicitly deferred with rationale.
+- **Boundary / non-acceptance statement**: What is explicitly not accepted, out of scope, or deferred.
+- **Boundaries inspected**: actors, roles, permissions, states, data boundaries, operational surfaces, and regression paths inspected.
+- **Professional judgment**: Why the criteria are measurable, independent, and sufficient for the change risk.
+- **Reuse and placement rationale**: Existing criteria, test layers, fixtures, or specification format reused; new acceptance artifact owner.
+- **Behavior preservation statement**: old behavior and non-goals preserved or intentionally changed.
+- **Validation evidence**: planned or executed command/manual/audit evidence per criterion, with not-verified disclosure where needed.
+- **Evidence limits**: What criteria prove and do not prove about implementation, scale, production data, or release readiness.
+- **Residual risk and next gate**: deferred criteria, owner, due date, and handoff to test/release/security/experience gate.
 
 ## Evidence Contract
 Close an acceptance criteria set only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
@@ -166,6 +195,7 @@ Close an acceptance criteria set only when all five canonical answers are concre
 - **Files and boundaries inspected**: the behaviors and states enumerated — happy, negative, edge, permission, and regression cases — and any case explicitly out of scope.
 - **Placement rationale**: the verification layer each criterion maps to (unit / integration / contract / E2E / manual / not-automatable-with-rationale), keyed to the change type (bug fix, refactor, API, migration, UI, infra).
 - **Validation commands**: for each criterion, the concrete test or structured manual procedure that will prove it, and the observable pass and reject conditions.
+- **Acceptance judgment and evidence limits**: mode selected, measurable success, explicit non-acceptance, behavior preservation, what evidence proves, what it does not prove, residual risk, and next gate.
 - **Residual risk**: the deferred or non-verifiable criterion with its compensating evidence and the named owner.
 
 ## Quality Gate

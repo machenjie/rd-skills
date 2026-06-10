@@ -166,6 +166,10 @@ Most incorrect diagnoses come from stopping at the trigger rather than the root 
 - Stopped at trigger (deploy); root cause (query without index) left in place; next non-related deploy triggers same pattern; second outage on different date.
 - Evidence gathered only after hypothesis formed; confirming logs extracted; disconfirming signals ignored; post-mortem report contains technically accurate but logically incomplete diagnosis.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when the diagnosis is production-impacting, repeated after a failed hypothesis, customer/security/data relevant, or being used to justify a code change. Do not load it for a single local test failure when the evidence chain, reproduction, and regression test are already obvious.
+
 # Output Contract
 
 Return a failure diagnosis report with:
@@ -189,6 +193,10 @@ Return a failure diagnosis report with:
 - `open_questions` (unresolved aspects; owner; investigation timeline)
 - `false_hypotheses` (hypotheses considered and rejected; reason rejected)
 - `execution_discipline` (commands or artifacts inspected, route repair after repeated failure, validation result, residual risk, and handoff boundary)
+
+# Evidence Contract
+
+Close diagnosis only when the output states the evidence boundary: observed symptom, timeline, hypotheses tested, counter-evidence, verified cause, minimal fix target, behavior preservation expectation, validation command, what that validation proves, what it does not prove, residual recurrence risk, and next gate. A diagnosis without counter-evidence or without a not-reproducible rationale is not strong enough to drive a fix.
 
 # Quality Gate
 

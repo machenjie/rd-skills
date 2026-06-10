@@ -77,6 +77,32 @@ Evaluate backend changes across these dimensions:
 - **Code clarity**: Main service/use-case flow is readable; complex conditions are named; boolean or mode switches are justified; pure policy is separated from side effects; cleanup and compatibility branches have owner and expiry.
 - **Test coverage**: Unit tests for auth logic, validation logic, error paths; integration tests for transaction and idempotency behavior.
 
+## Mode Matrix
+Select one backend mode before implementation or review. Load [references/professional-modes.md](references/professional-modes.md) when the change is L3+, touches auth/data/async/release behavior, or the mode boundary is unclear.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities | Skip by default |
+|---|---|---|---|---|---|
+| New backend capability | New endpoint, command handler, service, worker, repository, policy, or adapter. | Define trust boundary, ownership, transaction, idempotency, placement, and tests before code shape. | Existing controller/service/repository patterns inspected; validation/auth/transaction/test plan named. | `controller-api-implementation`, `service-business-logic`, `repository-persistence`, `implementation-structure-design`, `quality-test-gate` | Release/deep reliability gate unless the path is production-critical or async. |
+| Modify existing backend logic | Existing service, repository, validator, job, or policy changes behavior. | Preserve compatible behavior while isolating the changed invariant. | Callers, tests, configs, error paths, and old behavior assertions inspected. | `code-clarity-maintainability`, `regression-testing`, `change-impact-analyzer` | New architecture review unless boundaries or dependencies move. |
+| Bug fix | Defect, failing test, incident symptom, or local backend patch. | Verify cause, scan same pattern, add regression proof, avoid local-only patch. | Root cause evidence, pattern searched, related occurrences, regression test or rationale. | `failure-diagnosis`, `agent-execution-discipline`, `regression-testing` | Refactor beyond the defect boundary unless behavior preservation evidence exists. |
+| Debugging diagnosis | Unknown root cause, flaky backend behavior, queue loss, inconsistent state, unexplained errors. | Diagnose before mutation; separate observed facts from hypotheses. | Logs/traces/tests/reproduction inspected; ruled-out hypotheses recorded. | `failure-diagnosis`, `observability`, `logging-error-handling` | Code mutation until cause is verified or a safe instrumentation change is justified. |
+| AI generated backend code review | Generated service/helper/DTO/repository/job code or broad backend patch. | Find hallucinated APIs, missed reuse, wrong placement, hidden behavior changes, missing evidence. | Existing API/helper search, same-pattern scan, compile/test output, severity-classified findings. | `ai-code-review-refactor`, `implementation-structure-design`, `code-review` | Rewrite or expansion before review findings are classified. |
+| Behavior-preserving refactor | Move/extract/split/rename backend code without intended behavior change. | Preserve public contract, transaction semantics, auth checks, errors, and side effects. | Before/after behavior, affected callers, tests, and deletion path. | `refactoring`, `code-clarity-maintainability`, `implementation-structure-design` | New behavior, new shared abstractions, or contract changes. |
+| Performance/reliability fix | Latency, saturation, retry, queue, concurrency, N+1, pool, or job reliability risk. | Bound load, retries, concurrency, resource use, and observability. | Baseline, bottleneck, retry/idempotency/DLQ/metric evidence. | `idempotency-retry-design`, `async-job-design`, `reliability-observability-gate`, `profiling` | Cosmetic cleanup unrelated to measured risk. |
+| Release/migration-sensitive backend change | Migration, config, feature flag, compatibility window, rollback, or irreversible mutation. | Ensure old/new version coexistence, rollback, audit, and operational readiness. | Expand/contract or rollout plan, config compatibility, rollback validation, owner. | `delivery-release-gate`, `data-migration-design`, `version-compatibility` | Contract cleanup until consumers and rollback are safe. |
+
+## Proactive Professional Triggers
+These triggers are hidden-risk escalators, not ordinary checklists. Load [references/proactive-triggers.md](references/proactive-triggers.md) for the full signal/risk/action/route/evidence contract.
+
+- **Signal:** `resource_id`, `user_id`, `tenant_id`, account, order, invoice, or asset query lacks ownership or tenant filtering. **Hidden risk:** IDOR or tenant data leak. **Required professional action:** block local fix until object ownership and tenant boundary are traced. **Route to:** `permission-boundary-modeling`, `security-privacy-gate`. **Evidence required:** query/filter, policy check, denied-case test, same-pattern scan.
+- **Signal:** retry, queue redelivery, cron, consumer, or webhook ingest lacks idempotency key, dedupe store, DLQ, or replay policy. **Hidden risk:** duplicate side effects, poison message, retry storm. **Required professional action:** design idempotent handling before accepting retry behavior. **Route to:** `idempotency-retry-design`, `message-queue-design`, `reliability-observability-gate`. **Evidence required:** key scope, dedupe storage, retry/DLQ policy, duplicate-delivery test.
+- **Signal:** multi-step write crosses tables/services/events without transaction, compensation, saga, or partial-success handling. **Hidden risk:** inconsistent state. **Required professional action:** define atomic boundary or compensating recovery before code merge. **Route to:** `transaction-consistency`, `data-api-contract-changer`. **Evidence required:** transaction scope, rollback/compensation path, partial-failure test.
+- **Signal:** catch block returns null/default/silent fallback without typed error, structured log, or correlation ID. **Hidden risk:** silent failure and invisible incident. **Required professional action:** replace with typed error/logging/metric behavior or justify safe fallback. **Route to:** `logging-error-handling`, `observability`. **Evidence required:** error taxonomy, correlated log field, metric/trace, negative test.
+- **Signal:** new common/helper/utils file contains business words such as user, order, payment, tenant, invoice, permission, balance, or subscription. **Hidden risk:** shared utility pollution and boundary drift. **Required professional action:** prove reuse/placement or move logic to owned module. **Route to:** `implementation-structure-design`, `module-boundary-design`. **Evidence required:** reuse ladder, owner, dependency direction, deletion path.
+- **Signal:** new public DTO, response field, or API error code appears without compatibility, deprecation, or client behavior analysis. **Hidden risk:** client contract break. **Required professional action:** run contract compatibility review before implementation closure. **Route to:** `data-api-contract-changer`, `version-compatibility`. **Evidence required:** consumer list, schema/error docs, contract tests, migration note.
+- **Signal:** background task or async chain lacks ack/nack, retry, DLQ, replay, progress, or observability semantics. **Hidden risk:** lost work or invisible failure. **Required professional action:** require worker failure model before release. **Route to:** `async-job-design`, `reliability-observability-gate`. **Evidence required:** ack boundary, retry/DLQ metrics, replay procedure, failure test.
+- **Signal:** permission, balance, ledger, subscription, asset, or irreversible operation lacks audit, re-authentication, approval, or rollback. **Hidden risk:** irreversible sensitive mutation. **Required professional action:** escalate to security and release gates before merge. **Route to:** `security-privacy-gate`, `delivery-release-gate`. **Evidence required:** audit record, re-auth/approval path, rollback or explicit irreversibility acceptance.
+
 ### Decision Tree: Authorization Check Required?
 
 ```
@@ -154,26 +180,39 @@ Examples:
 
 ## Output Contract
 Return a backend implementation plan or review with:
+- **Mode selected**: New-build / modify-existing / bug-fix / debugging-diagnosis / code-review / refactoring / performance-reliability / release-delivery, with the trigger signal that selected it.
+- **Professional judgment**: backend decision made, plausible auth/consistency/idempotency/contract risks ruled out, and risks still possible.
 - **Validation model**: Inputs, types, constraints, injection prevention — at trust boundary.
 - **Authentication mechanism**: Token type, expiry, verification method.
 - **Authorization model**: Role/permission check, object-level check per operation.
+- **Trust boundary analysis**: HTTP/message/webhook/CLI boundary, caller identity source, tenant boundary, and untrusted fields rejected.
+- **Authorization/tenant/object ownership analysis**: resource access path, ownership filter or policy check, denied cases, and same-pattern scan result.
 - **Transaction boundaries**: Explicit commit/rollback scope, isolation level, compensating actions.
+- **Transaction/partial-success analysis**: atomicity requirement, partial failure point, compensation or saga path, and rollback limitation.
 - **Idempotency design**: Key source, scope, deduplication window, expired-key behavior.
+- **Idempotency/retry analysis**: retry source, duplicate-delivery behavior, dedupe storage, backoff, DLQ/replay plan when async.
 - **Error model**: Error code taxonomy, HTTP status mapping, client-visible vs. server-log distinction.
+- **Error/logging/observability analysis**: typed errors, structured logs, correlation ID, metric/trace signal, and alert/runbook implication.
 - **Observability plan**: Log fields with correlation ID, metrics emitted, alert thresholds.
 - **Concurrency analysis**: Race condition risk, locking strategy, ordering assumptions.
-- **Implementation structure**: Existing services/repositories/helpers inspected; reuse vs. new decision; function/class/file placement; public/private boundary; ownership; new imports and dependency direction.
-- **Code clarity and maintainability**: main-flow readability, side-effect boundary, signature clarity, change locality, and cleanup/deprecation plan.
-- **Execution discipline evidence**: Commands run, outputs, same-pattern scan, reuse-and-placement rationale, residual risks, and validation results.
+- **Boundaries inspected**: controllers, services, repositories, validators, jobs, mappers, configs, callers, API contracts, data boundaries, permission boundaries, and release boundaries inspected or explicitly skipped with reason.
+- **Reuse and placement rationale**: Existing services/repositories/helpers inspected; reuse vs. new decision; function/class/file placement; public/private boundary; ownership; new imports and dependency direction.
+- **Behavior preservation statement**: old behavior, public contract, error semantics, auth semantics, transaction semantics, and side effects preserved or intentionally changed.
+- **Code clarity and maintainability**: main-flow readability, side-effect boundary, signature clarity, next-change location, and cleanup/deprecation plan.
+- **Validation evidence**: commands run, outputs, same-pattern scan, regression/contract/integration coverage, and manual checks when tests are not possible.
+- **Evidence limits**: what each backend check proves and what it does not prove about tenants, concurrency, async replay, rollback, load, or consumers.
+- **Residual risk**: unverified concurrency, partial-write, DLQ, rollback, load, or consumer risk with owner.
+- **Next gate/handoff**: next professional skill, capability, release gate, or explicit no-next-gate rationale.
 - **Test obligations**: Unit tests for auth, validation, error paths; integration tests for transactions.
 
 ## Evidence Contract
 Close a backend change only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
-- **Basis**: the authorization, consistency, or idempotency rule the change rests on, and the OWASP API/RFC 7807 benchmark it satisfies.
-- **Files and boundaries inspected**: the controllers, services, repositories, and validators read, and the exact object-level authorization point confirmed for each resource operation.
-- **Placement rationale**: why each new service method, repository call, validator, mapper, or helper lives where it does, with dependency direction and the shared/utils audit (via `implementation-structure-design`).
-- **Validation commands**: the literal unit and integration tests and validators run for the auth, transaction, idempotency, and error paths, each with its outcome.
-- **Residual risk**: the concurrency, partial-write, DLQ, or rollback path that remains untested or assumed, and the named owner of the follow-up.
+- **Basis**: the selected mode, the authorization, consistency, idempotency, compatibility, or reliability rule the change rests on, and the OWASP API/RFC 7807/SRE benchmark it satisfies.
+- **Files and boundaries inspected**: controllers, services, repositories, validators, jobs, mappers, configs, callers, API contracts, data boundaries, permission boundaries, trust boundaries, and release boundaries inspected or explicitly ruled out.
+- **Placement rationale**: why each new service method, repository call, validator, mapper, job, adapter, or helper lives where it does, with dependency direction, ownership, shared/utils audit, and reuse ladder result (via `implementation-structure-design`).
+- **Validation commands**: the literal unit, integration, regression, contract, migration, or validator commands run for auth, transaction, idempotency, error, retry, async, compatibility, and behavior-preservation paths, each with its outcome.
+- **Backend judgment and evidence limits**: mode selected, professional decision, old behavior preserved or intentionally changed, what evidence proves, what it does not prove, and next gate/handoff.
+- **Residual risk**: the concurrency, partial-write, DLQ, rollback, load, contract, or tenant-boundary path that remains untested or assumed, the owner, and the next gate or explicit acceptance.
 
 ## Quality Gate
 1. Every trust boundary has explicit input validation covering type, range, presence, and injection prevention.
