@@ -1,13 +1,13 @@
 # Professionalism Regression Report
 
-- Generated: 2026-06-10T03:28:39.658123+00:00
+- Generated: 2026-06-10T05:01:04.436575+00:00
 - Mode: strict
 - Status: pass
 - Strict: true
 - Report only: false
 - Blockers: 0
 - Warnings: 0
-- Known accepted warnings: 1
+- Known accepted warnings: 0
 - Baseline changes: 0
 
 ## Blockers
@@ -20,7 +20,7 @@
 
 ## Known Accepted Warnings
 
-- `known-warning` `src/foundation/capabilities/code-review/SKILL.md`: long Markdown table in SKILL.md body (16 rows); consider moving deep table to references (baseline: {"accepted_reason": "Existing advisory finding retained only for regression visibility.", "is_release_blocking": false, "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references", "owner": "changeforge-foundation-capability-maintainers", "review_after": "2026-07-15", "target_fix_phase": "P2 content-bloat-review", "type": "body_bloat_exception"}, current: long Markdown table in SKILL.md body (16 rows); consider moving deep table to references)
+- None
 
 ## Baseline Changes
 

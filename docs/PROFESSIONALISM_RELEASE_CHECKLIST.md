@@ -42,6 +42,14 @@ Also run the repository validation/build suite listed in `AGENTS.md`.
 - Candidate professional samples may warn while under human review.
 - Daily development may use `--report-only`; release may not rely on report-only status.
 
+## Release Review Decision Rules
+
+- `release-review-required` warnings must have a matching entry in `config/professionalism-release-review.yaml`.
+- Missing or stale release review decisions block strict release.
+- `accepted_for_current_release` must include reason, follow-up phase, and review_after.
+- Review decisions must not delete or hide the underlying warning.
+- Do not update the baseline to silence release-review-required warnings without a release review decision.
+
 ## Baseline Update Rules
 
 - Update the baseline only after refreshing reports from the required commands.

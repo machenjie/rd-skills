@@ -480,8 +480,11 @@ def _write_capability_references(destination: Path, capabilities: list[Capabilit
     references_dir = destination / "references" / "capabilities"
     references_dir.mkdir(parents=True, exist_ok=True)
 
-    for stale_file in references_dir.glob("*.md"):
-        stale_file.unlink()
+    for stale_path in references_dir.iterdir():
+        if stale_path.is_file() and stale_path.suffix == ".md":
+            stale_path.unlink()
+        elif stale_path.is_dir():
+            shutil.rmtree(stale_path)
 
     index_lines = [
         GENERATED_MARKER,
@@ -499,20 +502,32 @@ def _write_capability_references(destination: Path, capabilities: list[Capabilit
         )
     else:
         for capability in capabilities:
-            file_name = f"{capability.capability_id}-{capability.name}.md"
+            capability_reference_stem = f"{capability.capability_id}-{capability.name}"
+            file_name = f"{capability_reference_stem}.md"
             index_lines.append(
                 f"- [{capability.capability_id} {capability.name}]({file_name})"
             )
             (references_dir / file_name).write_text(
-                _render_capability_reference(capability),
+                _render_capability_reference(
+                    capability,
+                    runtime_reference_stem=capability_reference_stem,
+                ),
                 encoding="utf-8",
+            )
+            _copy_capability_owned_references(
+                capability,
+                references_dir / capability_reference_stem / "references",
             )
         index_lines.append("")
 
     (references_dir / "index.md").write_text("\n".join(index_lines), encoding="utf-8")
 
 
-def _render_capability_reference(capability: Capability) -> str:
+def _render_capability_reference(
+    capability: Capability,
+    *,
+    runtime_reference_stem: str,
+) -> str:
     sections = _extract_sections(
         capability.body,
         (
@@ -548,9 +563,40 @@ def _render_capability_reference(capability: Capability) -> str:
     ]
 
     for title, content in sections.items():
-        lines.extend([f"## {title}", "", content.strip(), ""])
+        lines.extend(
+            [
+                f"## {title}",
+                "",
+                _rewrite_capability_runtime_links(content.strip(), runtime_reference_stem),
+                "",
+            ]
+        )
 
     return "\n".join(lines)
+
+
+def _rewrite_capability_runtime_links(content: str, runtime_reference_stem: str) -> str:
+    return re.sub(
+        r"(?P<prefix>\]\()(?P<target>(?:\./)?references/[^)\s]+)(?P<suffix>\))",
+        lambda match: (
+            f"{match.group('prefix')}{runtime_reference_stem}/"
+            f"{match.group('target').removeprefix('./')}{match.group('suffix')}"
+        ),
+        content,
+    )
+
+
+def _copy_capability_owned_references(capability: Capability, destination: Path) -> None:
+    source_references = capability.path / "references"
+    if not source_references.is_dir():
+        return
+    for source in sorted(source_references.rglob("*")):
+        if not source.is_file():
+            continue
+        relative = source.relative_to(source_references)
+        target = destination / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
 
 
 def _extract_sections(body: str, wanted_titles: tuple[str, ...]) -> dict[str, str]:

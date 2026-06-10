@@ -27,6 +27,7 @@ DEFAULT_BASELINE = ROOT / "config" / "professionalism-baseline.yaml"
 DEFAULT_REPORTS_DIR = ROOT / "reports"
 DEFAULT_ROUTING_DIR = ROOT / "evals" / "routing"
 DEFAULT_CONTENT_EXCEPTIONS = ROOT / "config" / "skill-content-exceptions.yaml"
+DEFAULT_RELEASE_REVIEW_CONFIG = ROOT / "config" / "professionalism-release-review.yaml"
 
 SKILL_EVAL_JSON = "skill-professionalism-eval.json"
 COVERAGE_MATRIX_JSON = "professional-coverage-matrix.json"
@@ -68,6 +69,12 @@ KNOWN_WARNING_METADATA_FIELDS = (
     "target_fix_phase",
     "is_release_blocking",
 )
+
+RELEASE_REVIEW_DECISIONS = {
+    "accepted_for_current_release",
+    "blocks_release",
+    "defer_to_followup",
+}
 
 ENHANCED_FOUNDATION_CAPABILITIES = {
     "engineering-stage-professionalism",
@@ -183,6 +190,7 @@ def main(argv: list[str] | None = None) -> int:
                 default_result=None,
                 strict_result=None,
                 agent_samples_strict=agent_strict,
+                release_review_config_path=args.release_review_config,
             )
             _print_summary(result)
             return 0
@@ -217,6 +225,7 @@ def main(argv: list[str] | None = None) -> int:
             default_result=default_result,
             strict_result=strict_result,
             agent_samples_strict=agent_strict,
+            release_review_config_path=args.release_review_config,
         )
         _print_summary(result)
         if result.blockers and not args.report_only:
@@ -235,6 +244,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--reports-dir", type=Path, default=DEFAULT_REPORTS_DIR)
     parser.add_argument("--routing-dir", type=Path, default=DEFAULT_ROUTING_DIR)
     parser.add_argument("--content-exceptions", type=Path, default=DEFAULT_CONTENT_EXCEPTIONS)
+    parser.add_argument("--release-review-config", type=Path, default=DEFAULT_RELEASE_REVIEW_CONFIG)
     parser.add_argument("--update-baseline", action="store_true")
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--report-only", action="store_true")
@@ -849,6 +859,7 @@ def _write_reports(
     default_result: RegressionResult | None,
     strict_result: RegressionResult | None,
     agent_samples_strict: dict[str, Any],
+    release_review_config_path: Path,
 ) -> None:
     reports_dir.mkdir(parents=True, exist_ok=True)
     payload = _result_payload(result)
@@ -864,6 +875,7 @@ def _write_reports(
         default_result=default_result,
         strict_result=strict_result,
         agent_samples_strict=agent_samples_strict,
+        release_review_config_path=release_review_config_path,
     )
     (reports_dir / READINESS_JSON).write_text(
         json.dumps(readiness, indent=2, sort_keys=True) + "\n",
@@ -936,6 +948,7 @@ def _release_readiness_payload(
     default_result: RegressionResult | None,
     strict_result: RegressionResult | None,
     agent_samples_strict: dict[str, Any],
+    release_review_config_path: Path,
 ) -> dict[str, Any]:
     professional = _dict(current.get("professional_skills"))
     foundation = _dict(current.get("foundation_capabilities"))
@@ -974,6 +987,10 @@ def _release_readiness_payload(
         agent_samples_strict=agent_samples_strict,
     )
     warning_reconciliation = _skill_professionalism_warning_reconciliation(reports["skill_eval"], result)
+    release_review = _release_review_reconciliation(
+        warning_reconciliation,
+        release_review_config_path,
+    )
     release_blockers = list(result.blockers)
     if strict_blockers and not result.strict:
         release_blockers.extend(
@@ -1017,6 +1034,16 @@ def _release_readiness_payload(
                 routing_uncovered,
             )
         )
+    for blocker in release_review["blockers"]:
+        release_blockers.append(
+            Finding(
+                blocker["category"],
+                blocker["target"],
+                blocker["message"],
+                blocker.get("baseline_value"),
+                blocker.get("current_value"),
+            )
+        )
     authoring_ready_status = "blocked" if default_blocked else "ready"
     if not strict_run_available or not agent_strict_ran:
         release_ready_status = "not-release-certified"
@@ -1058,6 +1085,12 @@ def _release_readiness_payload(
         "strict_regression_status": strict_result.status if strict_result else "not-run",
         "promoted_agent_samples_strict_status": _agent_strict_status(agent_samples_strict),
         "release_blocking_professionalism_warnings": warning_reconciliation["release_blocking_warnings"],
+        "release_review_required_warnings": release_review["release_review_required_warnings"],
+        "release_review_decisions": release_review["summary"],
+        "release_review_decision": release_review["decision"],
+        "release_review_reason": release_review["reason"],
+        "release_review_decision_records": release_review["records"],
+        "release_review_config": str(release_review_config_path.relative_to(ROOT)) if release_review_config_path.is_relative_to(ROOT) else str(release_review_config_path),
         "checklist": checklist,
         "known_accepted_warnings": [asdict(item) for item in result.known_warnings],
         "warning_reconciliation": warning_reconciliation,
@@ -1105,6 +1138,9 @@ def _render_readiness_markdown(payload: dict[str, Any]) -> str:
         f"- Release ready: {payload['release_ready']}",
         f"- Strict release ready: {payload['strict_release_ready']}",
         f"- Release-blocking professionalism warnings: {payload['release_blocking_professionalism_warnings']}",
+        f"- Release review required warnings: {payload['release_review_required_warnings']}",
+        f"- Release review decision: {payload['release_review_decision']}",
+        f"- Release review reason: {payload['release_review_reason']}",
         f"- Regression status: {payload['regression_status']}",
         f"- Default regression status: {payload['default_regression_status']}",
         f"- Strict regression status: {payload['strict_regression_status']}",
@@ -1178,6 +1214,34 @@ def _render_readiness_markdown(payload: dict[str, Any]) -> str:
             )
     else:
         lines.append("| None | - | - | - | - |")
+    lines.extend(
+        [
+            "",
+            "## Release Review Decisions",
+            "",
+            _mapping_lines(payload["release_review_decisions"]),
+            "",
+            f"- Decision: {payload['release_review_decision']}",
+            f"- Reason: {payload['release_review_reason']}",
+            f"- Config: `{payload['release_review_config']}`",
+            "",
+            "| Target | Warning | Decision | Reason | Follow-up | Review After |",
+            "| --- | --- | --- | --- | --- | --- |",
+        ]
+    )
+    release_review_records = [
+        item for item in payload.get("release_review_decision_records", [])
+        if isinstance(item, dict)
+    ]
+    if release_review_records:
+        for item in release_review_records:
+            lines.append(
+                f"| `{item.get('target', '')}` | {item.get('warning_message', '')} | "
+                f"{item.get('decision', '')} | {item.get('reason', '')} | "
+                f"{item.get('follow_up_phase', '')} | {item.get('review_after', '')} |"
+            )
+    else:
+        lines.append("| None | - | - | - | - | - |")
     lines.extend(
         [
             "",
@@ -1395,6 +1459,218 @@ def _skill_professionalism_warning_reconciliation(
             "Non-key foundation warnings are advisory-only."
         ),
         "warnings": reconciled,
+    }
+
+
+def _release_review_reconciliation(
+    warning_reconciliation: dict[str, Any],
+    release_review_config_path: Path,
+) -> dict[str, Any]:
+    required_warnings = [
+        dict(record)
+        for record in warning_reconciliation.get("warnings", [])
+        if isinstance(record, dict)
+        and record.get("release_relevance") == "release-review-required"
+    ]
+    required_keys = {
+        (_string(record.get("target")), _string(record.get("message")))
+        for record in required_warnings
+    }
+    config = _load_release_review_config(release_review_config_path)
+    decisions = _release_review_decision_records(config)
+    decisions_by_key: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    records: list[dict[str, Any]] = []
+    blockers: list[dict[str, Any]] = []
+    summary = {
+        "accepted_for_current_release": 0,
+        "blocks_release": 0,
+        "defer_to_followup": 0,
+        "missing": 0,
+        "stale": 0,
+    }
+
+    for decision in decisions:
+        key = (_string(decision.get("target")), _string(decision.get("warning_message")))
+        if key in required_keys:
+            decisions_by_key.setdefault(key, []).append(decision)
+            continue
+        summary["stale"] += 1
+        stale_record = _release_review_record(
+            decision,
+            None,
+            "stale",
+            "Decision target and warning_message do not match a current release-review-required warning.",
+        )
+        records.append(stale_record)
+        blockers.append(_release_review_blocker("release-review-decision-stale", stale_record))
+
+    for warning in required_warnings:
+        key = (_string(warning.get("target")), _string(warning.get("message")))
+        matching_decisions = decisions_by_key.get(key, [])
+        if not matching_decisions:
+            summary["missing"] += 1
+            missing_record = _release_review_record(
+                {},
+                warning,
+                "missing",
+                "No matching release review decision exists for this release-review-required warning.",
+            )
+            records.append(missing_record)
+            blockers.append(_release_review_blocker("release-review-decision-missing", missing_record))
+            continue
+
+        decision = matching_decisions[0]
+        value = _string(decision.get("decision"))
+        invalid_reason = _invalid_release_review_decision_reason(decision, warning)
+        if invalid_reason:
+            summary["stale"] += 1
+            invalid_record = _release_review_record(decision, warning, "stale", invalid_reason)
+            records.append(invalid_record)
+            blockers.append(_release_review_blocker("release-review-decision-stale", invalid_record))
+            continue
+        if value == "accepted_for_current_release":
+            summary["accepted_for_current_release"] += 1
+            records.append(_release_review_record(decision, warning, value, _string(decision.get("reason"))))
+        elif value == "blocks_release":
+            summary["blocks_release"] += 1
+            blocked_record = _release_review_record(decision, warning, value, _string(decision.get("reason")))
+            records.append(blocked_record)
+            blockers.append(_release_review_blocker("release-review-decision-blocks-release", blocked_record))
+        elif value == "defer_to_followup":
+            summary["defer_to_followup"] += 1
+            deferred_record = _release_review_record(decision, warning, value, _string(decision.get("reason")))
+            records.append(deferred_record)
+            blockers.append(_release_review_blocker("release-review-decision-deferred", deferred_record))
+
+        for duplicate in matching_decisions[1:]:
+            summary["stale"] += 1
+            duplicate_record = _release_review_record(
+                duplicate,
+                warning,
+                "stale",
+                "Duplicate release review decision for the same target and warning_message.",
+            )
+            records.append(duplicate_record)
+            blockers.append(_release_review_blocker("release-review-decision-stale", duplicate_record))
+
+    if summary["missing"]:
+        decision_status = "missing"
+        reason = (
+            f"{summary['missing']} release-review-required warning(s) lack a matching release review decision."
+        )
+    elif summary["blocks_release"] or summary["defer_to_followup"] or summary["stale"]:
+        decision_status = "blocked"
+        reason = (
+            "Release review decisions contain blocking, deferred, stale, or invalid entries; "
+            "strict release is not certified."
+        )
+    elif required_warnings:
+        decision_status = "accepted"
+        reason = (
+            f"All {len(required_warnings)} release-review-required warning(s) have "
+            "accepted_for_current_release decisions."
+        )
+    else:
+        decision_status = "accepted"
+        reason = "No release-review-required warnings are present."
+
+    return {
+        "release_review_required_warnings": len(required_warnings),
+        "summary": summary,
+        "decision": decision_status,
+        "reason": reason,
+        "records": records,
+        "blockers": blockers,
+    }
+
+
+def _load_release_review_config(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        return {}
+    data = load_yaml_file(path)
+    if not isinstance(data, dict):
+        raise RegressionInputError(f"{path}: expected YAML mapping")
+    return data
+
+
+def _release_review_decision_records(config: dict[str, Any]) -> list[dict[str, Any]]:
+    decisions = config.get("decisions")
+    if decisions is None:
+        return []
+    if not isinstance(decisions, list) or not all(isinstance(item, dict) for item in decisions):
+        raise RegressionInputError("release review config: decisions must be a list of mappings")
+    records: list[dict[str, Any]] = []
+    review_owner = _string(config.get("review_owner"))
+    reviewed_at = _string(config.get("reviewed_at"))
+    for item in decisions:
+        record = dict(item)
+        if "warning_message" not in record and "message" in record:
+            record["warning_message"] = record.get("message")
+        record["warning_message"] = _string(record.get("warning_message"))
+        record["target"] = _string(record.get("target"))
+        record["decision"] = _string(record.get("decision"))
+        record["review_owner"] = _string(record.get("review_owner")) or review_owner
+        record["reviewed_at"] = _string(record.get("reviewed_at")) or reviewed_at
+        records.append(record)
+    return records
+
+
+def _invalid_release_review_decision_reason(
+    decision: dict[str, Any],
+    warning: dict[str, Any],
+) -> str:
+    value = _string(decision.get("decision"))
+    if value not in RELEASE_REVIEW_DECISIONS:
+        return f"Decision value must be one of {', '.join(sorted(RELEASE_REVIEW_DECISIONS))}."
+    if _string(decision.get("scope")) and _string(decision.get("scope")) != _string(warning.get("scope")):
+        return "Decision scope does not match the current warning scope."
+    if (
+        _string(decision.get("release_relevance"))
+        and _string(decision.get("release_relevance")) != _string(warning.get("release_relevance"))
+    ):
+        return "Decision release_relevance does not match the current warning release_relevance."
+    if value == "accepted_for_current_release":
+        missing = [
+            field_name
+            for field_name in ("reason", "follow_up_phase", "review_after")
+            if not _string(decision.get(field_name))
+        ]
+        if missing:
+            return "accepted_for_current_release decision is missing required field(s): " + ", ".join(missing)
+    return ""
+
+
+def _release_review_record(
+    decision: dict[str, Any],
+    warning: dict[str, Any] | None,
+    status: str,
+    reason: str,
+) -> dict[str, Any]:
+    warning_data = warning or {}
+    target = _string(warning_data.get("target")) or _string(decision.get("target"))
+    message = _string(warning_data.get("message")) or _string(decision.get("warning_message"))
+    return {
+        "target": target,
+        "warning_message": message,
+        "warning_type": _string(warning_data.get("warning_type") or warning_data.get("type") or decision.get("warning_type")),
+        "scope": _string(warning_data.get("scope") or decision.get("scope")),
+        "release_relevance": _string(warning_data.get("release_relevance") or decision.get("release_relevance")),
+        "decision": status,
+        "reason": reason,
+        "follow_up_phase": _string(decision.get("follow_up_phase")),
+        "review_after": _string(decision.get("review_after")),
+        "review_owner": _string(decision.get("review_owner")),
+        "reviewed_at": _string(decision.get("reviewed_at")),
+    }
+
+
+def _release_review_blocker(category: str, record: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "category": category,
+        "target": record.get("target", ""),
+        "message": _string(record.get("warning_message")) or _string(record.get("reason")),
+        "baseline_value": record.get("decision"),
+        "current_value": record,
     }
 
 

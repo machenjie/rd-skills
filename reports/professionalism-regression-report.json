@@ -1,25 +1,8 @@
 {
   "baseline_changes": [],
   "blockers": [],
-  "generated_at": "2026-06-10T03:28:39.658123+00:00",
-  "known_warnings": [
-    {
-      "baseline_value": {
-        "accepted_reason": "Existing advisory finding retained only for regression visibility.",
-        "is_release_blocking": false,
-        "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
-        "owner": "changeforge-foundation-capability-maintainers",
-        "review_after": "2026-07-15",
-        "target_fix_phase": "P2 content-bloat-review",
-        "type": "body_bloat_exception"
-      },
-      "category": "known-warning",
-      "current_value": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
-      "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
-      "severity": "info",
-      "target": "src/foundation/capabilities/code-review/SKILL.md"
-    }
-  ],
+  "generated_at": "2026-06-10T05:01:04.436575+00:00",
+  "known_warnings": [],
   "mode": "strict",
   "report_only": false,
   "status": "pass",
@@ -27,7 +10,7 @@
   "summary": {
     "baseline_changes": 0,
     "blockers": 0,
-    "known_warnings": 1,
+    "known_warnings": 0,
     "warnings": 0
   },
   "warnings": []

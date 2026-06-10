@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import subprocess
 import sys
@@ -10,6 +11,23 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "validate-professionalism-regression.py"
+sys.path.insert(0, str(ROOT / "scripts"))
+SPEC = importlib.util.spec_from_file_location("validate_professionalism_regression", SCRIPT)
+assert SPEC and SPEC.loader
+REGRESSION = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = REGRESSION
+SPEC.loader.exec_module(REGRESSION)
+
+
+RELEASE_REVIEW_WARNING = {
+    "target": "src/foundation/capabilities/engineering-stage-professionalism/SKILL.md",
+    "path": "src/foundation/capabilities/engineering-stage-professionalism/SKILL.md",
+    "message": "Evidence Contract weak: evidence_contract_strength score 2/5 needs review",
+    "warning_type": "weak_evidence_contract_strength",
+    "type": "weak_evidence_contract_strength",
+    "scope": "enhanced-foundation-capability",
+    "release_relevance": "release-review-required",
+}
 
 
 def _base_skill_eval(
@@ -252,6 +270,8 @@ def _run(
             str(baseline),
             "--routing-dir",
             str(routing_dir),
+            "--release-review-config",
+            str(baseline.parent / "professionalism-release-review.yaml"),
             *extra,
         ],
         cwd=str(ROOT),
@@ -259,6 +279,38 @@ def _run(
         capture_output=True,
         check=False,
     )
+
+
+def _release_review_config(
+    path: Path,
+    *,
+    decision: str = "accepted_for_current_release",
+    target: str = "src/foundation/capabilities/engineering-stage-professionalism/SKILL.md",
+    warning_message: str = "Evidence Contract weak: evidence_contract_strength score 2/5 needs review",
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        (
+            "schema_version: 1\n"
+            "review_owner: changeforge-maintainers\n"
+            "reviewed_at: \"2026-06-10\"\n"
+            "decisions:\n"
+            f"  - target: {target}\n"
+            "    warning_type: weak_evidence_contract_strength\n"
+            f"    warning_message: \"{warning_message}\"\n"
+            "    scope: enhanced-foundation-capability\n"
+            "    release_relevance: release-review-required\n"
+            f"    decision: {decision}\n"
+            "    reason: \"Reviewed for test release.\"\n"
+            "    follow_up_phase: \"P2 enhanced-foundation-hardening\"\n"
+            "    review_after: \"2026-07-15\"\n"
+        ),
+        encoding="utf-8",
+    )
+
+
+def _release_review_result(config: Path, warnings: list[dict]) -> dict:
+    return REGRESSION._release_review_reconciliation({"warnings": warnings}, config)
 
 
 class ValidateProfessionalismRegressionTests(unittest.TestCase):
@@ -364,6 +416,65 @@ class ValidateProfessionalismRegressionTests(unittest.TestCase):
             self.assertIn("## Skill Professionalism Warning Reconciliation", markdown)
             self.assertIn("non_key_foundation_advisory_warnings: 1", markdown)
             self.assertIn("accepted-known-warning", markdown)
+            self.assertIn("## Release Review Decisions", markdown)
+            self.assertEqual(readiness["release_review_decision"], "accepted")
+            self.assertEqual(readiness["release_review_required_warnings"], 0)
+            self.assertEqual(readiness["release_review_decisions"]["missing"], 0)
+
+    def test_release_review_required_warning_without_decision_blocks_readiness(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            result = _release_review_result(Path(raw) / "missing.yaml", [RELEASE_REVIEW_WARNING])
+            self.assertEqual(result["decision"], "missing")
+            self.assertEqual(result["summary"]["missing"], 1)
+            self.assertTrue(
+                any(item["category"] == "release-review-decision-missing" for item in result["blockers"])
+            )
+
+    def test_release_review_accepted_decision_allows_readiness(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            config = Path(raw) / "release-review.yaml"
+            _release_review_config(config)
+            result = _release_review_result(config, [RELEASE_REVIEW_WARNING])
+            self.assertEqual(result["decision"], "accepted")
+            self.assertEqual(result["summary"]["accepted_for_current_release"], 1)
+            self.assertEqual(result["blockers"], [])
+
+    def test_release_review_blocks_release_decision_blocks_readiness(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            config = Path(raw) / "release-review.yaml"
+            _release_review_config(config, decision="blocks_release")
+            result = _release_review_result(config, [RELEASE_REVIEW_WARNING])
+            self.assertEqual(result["decision"], "blocked")
+            self.assertEqual(result["summary"]["blocks_release"], 1)
+            self.assertTrue(
+                any(item["category"] == "release-review-decision-blocks-release" for item in result["blockers"])
+            )
+
+    def test_release_review_stale_decision_blocks_readiness(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            config = Path(raw) / "release-review.yaml"
+            _release_review_config(
+                config,
+                target="src/foundation/capabilities/skill-authoring-expert/SKILL.md",
+            )
+            result = _release_review_result(config, [RELEASE_REVIEW_WARNING])
+            self.assertNotEqual(result["decision"], "accepted")
+            self.assertEqual(result["summary"]["stale"], 1)
+            self.assertTrue(
+                any(item["category"] == "release-review-decision-stale" for item in result["blockers"])
+            )
+
+    def test_advisory_warning_does_not_need_release_review_decision(self) -> None:
+        advisory = {
+            **RELEASE_REVIEW_WARNING,
+            "release_relevance": "advisory-only",
+            "scope": "non-key-foundation-capability",
+        }
+        with tempfile.TemporaryDirectory() as raw:
+            result = _release_review_result(Path(raw) / "missing.yaml", [advisory])
+            self.assertEqual(result["decision"], "accepted")
+            self.assertEqual(result["release_review_required_warnings"], 0)
+            self.assertEqual(result["blockers"], [])
 
     def test_new_warning_over_budget_fails(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

@@ -43,9 +43,9 @@ Suggested-action distribution:
 | `change-forge-router` | professional-skill | 263 | 71 | body 263 lines exceeds review threshold 250 |
 | `architecture-impact-reviewer` | professional-skill | 238 | 82 | - |
 | `task-dag-planner` | professional-skill | 236 | 82 | - |
-| `error-code-design` | foundation-capability | 227 | 82 | section 'Industry Benchmarks' is 103 lines (> 80) — reference candidate |
-| `idempotency-retry-design` | foundation-capability | 221 | 82 | section 'Industry Benchmarks' is 83 lines (> 80) — reference candidate |
 | `experience-impact-modeler` | professional-skill | 219 | 82 | - |
+| `change-documentation-gate` | professional-skill | 217 | 82 | - |
+| `acceptance-criteria-builder` | professional-skill | 216 | 82 | - |
 
 ### 2.2 Lowest Professionalism
 
@@ -54,13 +54,13 @@ Suggested-action distribution:
 | `documentation-generation` | foundation-capability | 100 | - |
 | `domain-logic-implementation` | foundation-capability | 100 | - |
 | `domain-object-identification` | foundation-capability | 100 | - |
+| `version-compatibility` | foundation-capability | 100 | - |
+| `context-packaging` | foundation-capability | 100 | - |
+| `error-code-design` | foundation-capability | 100 | - |
 | `scenario-decomposition` | foundation-capability | 100 | - |
 | `state-management-design` | foundation-capability | 100 | - |
 | `test-data-management` | foundation-capability | 100 | - |
 | `routing-navigation-design` | foundation-capability | 100 | - |
-| `acceptance-standard-definition` | foundation-capability | 100 | - |
-| `page-component-decomposition` | foundation-capability | 100 | Industry Benchmarks is 51 lines (> 40) — summarize and move the deep list to a reference |
-| `search-analytics-design` | foundation-capability | 100 | - |
 
 ### 2.3 Weakest Routing Boundaries
 
@@ -69,20 +69,18 @@ Suggested-action distribution:
 | `documentation-generation` | foundation-capability | 100 | - |
 | `domain-logic-implementation` | foundation-capability | 100 | - |
 | `domain-object-identification` | foundation-capability | 100 | - |
+| `version-compatibility` | foundation-capability | 100 | - |
+| `context-packaging` | foundation-capability | 100 | - |
+| `error-code-design` | foundation-capability | 100 | - |
 | `scenario-decomposition` | foundation-capability | 100 | - |
 | `state-management-design` | foundation-capability | 100 | - |
 | `test-data-management` | foundation-capability | 100 | - |
 | `routing-navigation-design` | foundation-capability | 100 | - |
-| `acceptance-standard-definition` | foundation-capability | 100 | - |
-| `page-component-decomposition` | foundation-capability | 100 | - |
-| `search-analytics-design` | foundation-capability | 100 | - |
 
 ### 2.4 Strongest Split Candidates
 
 | Skill | Kind | Lines | Split score | Oversized sections |
 | --- | --- | --- | --- | --- |
-| `error-code-design` | foundation-capability | 227 | 26 | Industry Benchmarks (103) |
-| `idempotency-retry-design` | foundation-capability | 221 | 26 | Industry Benchmarks (83) |
 | `concurrency-control` | foundation-capability | 210 | 26 | Industry Benchmarks (81) |
 | `degradation-circuit-breaking` | foundation-capability | 210 | 26 | Industry Benchmarks (101) |
 | `domain-event-modeling` | foundation-capability | 208 | 26 | Industry Benchmarks (86) |
@@ -91,6 +89,8 @@ Suggested-action distribution:
 | `quality-test-gate` | professional-skill | 275 | 18 | - |
 | `change-forge-router` | professional-skill | 263 | 18 | - |
 | `security-privacy-gate` | professional-skill | 258 | 18 | - |
+| `reliability-observability-gate` | professional-skill | 253 | 18 | - |
+| `performance-budgeting` | foundation-capability | 208 | 14 | Industry Benchmarks (100) |
 
 ### 2.5 Description Risk (frontmatter triggers)
 
@@ -156,12 +156,9 @@ Suggested-action distribution:
 | `ci-cd` | 241 | 3227 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `skill-authoring-expert` | 238 | 2207 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `agent-execution-discipline` | 232 | 2856 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
-| `error-code-design` | 227 | 2997 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
-| `code-review` | 226 | 3515 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `cache-design` | 225 | 3312 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `failure-diagnosis` | 224 | 3097 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `async-job-design` | 222 | 2987 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
-| `idempotency-retry-design` | 221 | 2718 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
 | `authentication-security` | 210 | 2779 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `concurrency-control` | 210 | 2872 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
 | `degradation-circuit-breaking` | 210 | 2909 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
@@ -181,7 +178,6 @@ Suggested-action distribution:
 | `backup-recovery` | 197 | 2941 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `contract-testing` | 197 | 2651 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `data-model-design` | 197 | 2982 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
-| `context-packaging` | 195 | 2833 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `module-boundary-design` | 195 | 2684 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `event-driven-architecture` | 193 | 2631 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `dto-schema-design` | 191 | 2706 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
@@ -193,11 +189,11 @@ Suggested-action distribution:
 | `non-goal-boundary-definition` | 189 | 2695 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `business-rule-extraction` | 188 | 2801 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `frontend-testing` | 188 | 2274 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
-| `architecture-tradeoff-analysis` | 186 | 2188 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `authentication-authorization` | 186 | 2483 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `logging-error-handling` | 186 | 2675 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `dependency-vulnerability-scanning` | 185 | 2721 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `layered-architecture-design` | 185 | 2245 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `code-review` | 181 | 2783 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `use-case-modeling` | 181 | 2418 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `extensibility-design` | 178 | 2527 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `shell-cli-professional-usage` | 178 | 2411 | 100 | 92 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -237,7 +233,6 @@ Suggested-action distribution:
 | `file-storage-processing` | 155 | 1865 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `threat-modeling` | 154 | 2471 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `task-dag-decomposition` | 152 | 2491 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `version-compatibility` | 151 | 2473 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `cli-daemon-interface-design` | 148 | 1667 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `language-runtime-selection` | 148 | 1903 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `language-testing-strategy` | 147 | 1902 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -247,13 +242,18 @@ Suggested-action distribution:
 | `technology-stack-selection` | 145 | 2134 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `transaction-consistency` | 145 | 2531 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `web-security` | 144 | 2506 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `idempotency-retry-design` | 142 | 1972 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `page-component-decomposition` | 140 | 2480 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `search-analytics-design` | 140 | 2277 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `architecture-tradeoff-analysis` | 138 | 1627 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `acceptance-standard-definition` | 137 | 1599 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `routing-navigation-design` | 136 | 2080 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `state-management-design` | 134 | 2356 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `test-data-management` | 134 | 2359 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `scenario-decomposition` | 132 | 2205 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `error-code-design` | 128 | 1991 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `context-packaging` | 126 | 1914 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `version-compatibility` | 107 | 1866 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `domain-logic-implementation` | 73 | 578 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `domain-object-identification` | 73 | 540 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `documentation-generation` | 72 | 573 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -287,13 +287,13 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | Files | Excerpt |
 | --- | --- |
 | 19 | do not load every reference by default. treat references as targeted support selected by t |
-| 19 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
-| 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 19 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 19 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 18 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
+| 19 | l1 changes: do not read references unless the task touches security, data, auth, external  |
+| 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
+| 19 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 18 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 18 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 9 | these triggers are hidden-risk escalators, not ordinary checklist items. |
 | 8 | **accepted exceptions** with owner / scope / expiration |

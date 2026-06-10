@@ -1,0 +1,22 @@
+schema_version: 1
+review_owner: changeforge-maintainers
+reviewed_at: "2026-06-10"
+decisions:
+  - target: src/foundation/capabilities/engineering-stage-professionalism/SKILL.md
+    warning_type: weak_evidence_contract_strength
+    warning_message: "Evidence Contract weak: evidence_contract_strength score 2/5 needs review"
+    scope: enhanced-foundation-capability
+    release_relevance: release-review-required
+    decision: accepted_for_current_release
+    reason: "Reviewed for this release. The warning is advisory hardening for the stage launcher and does not affect the selected release surface because professional skill routing, key foundation coverage, strict regression, benchmarks, and routing coverage are passing."
+    follow_up_phase: "P2 enhanced-foundation-hardening"
+    review_after: "2026-07-15"
+  - target: src/foundation/capabilities/skill-authoring-expert/SKILL.md
+    warning_type: weak_evidence_contract_strength
+    warning_message: "Evidence Contract weak: evidence_contract_strength score 2/5 needs review"
+    scope: enhanced-foundation-capability
+    release_relevance: release-review-required
+    decision: accepted_for_current_release
+    reason: "Reviewed for this release. The warning is advisory hardening for skill-authoring review depth and does not affect runtime skill execution or selected release gates."
+    follow_up_phase: "P2 enhanced-foundation-hardening"
+    review_after: "2026-07-15"

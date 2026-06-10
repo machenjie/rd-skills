@@ -11,7 +11,7 @@ global_thresholds:
   max_known_warnings:
     evidence_contract_missing_what_proves: 0
     trigger_lacks_concrete_route_or_evidence: 0
-    body_bloat_exception: 1
+    body_bloat_exception: 0
   no_new_missing_mode_matrix_for_professional_skill: true
   no_new_missing_proactive_triggers_for_core_skill: true
   no_new_missing_evidence_contract_for_core_skill: true
@@ -449,18 +449,10 @@ foundation_capabilities:
   code-review:
     path: src/foundation/capabilities/code-review/SKILL.md
     kind: foundation-capability
-    total_score: 48
+    total_score: 50
     status: acceptable
-    known_warnings_count: 1
-    known_warnings:
-      -
-        message: "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references"
-        type: body_bloat_exception
-        owner: changeforge-foundation-capability-maintainers
-        accepted_reason: "Existing advisory finding retained only for regression visibility."
-        review_after: 2026-07-15
-        target_fix_phase: "P2 content-bloat-review"
-        is_release_blocking: false
+    known_warnings_count: 0
+    known_warnings: []
     required_sections_present: false
     missing_required_sections:
       - "Mode Matrix"

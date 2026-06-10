@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-10T03:28:39.423855+00:00",
+  "generated_at": "2026-06-10T04:57:58.009599+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -51,19 +51,9 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (4)",
-      "score": 48,
+      "score": 50,
       "status": "acceptable",
-      "warnings": [
-        {
-          "item": "code-review",
-          "item_kind": "foundation-capability",
-          "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
-          "reason": "Key foundation capability advisory warning is tracked for follow-up because it does not weaken evidence or reference precision.",
-          "release_relevance": "non-blocking-follow-up",
-          "scope": "key-foundation-capability",
-          "type": "body_bloat_exception"
-        }
-      ]
+      "warnings": []
     },
     {
       "anti_bloat_status": "ok",
@@ -169,7 +159,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (10)",
-      "score": 43,
+      "score": 45,
       "status": "acceptable",
       "warnings": []
     },

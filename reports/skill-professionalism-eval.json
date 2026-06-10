@@ -1,7 +1,7 @@
 {
-  "average_score": 41.26,
+  "average_score": 41.41,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-10T03:28:38.562322+00:00",
+  "generated_at": "2026-06-10T04:57:57.931026+00:00",
   "items": [
     {
       "body_lines": 216,
@@ -591,9 +591,9 @@
       "warnings": []
     },
     {
-      "body_lines": 186,
+      "body_lines": 138,
       "dimensions": {
-        "anti_bloat_control": 3,
+        "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 1,
         "failure_mode_coverage": 4,
@@ -601,8 +601,8 @@
         "output_actionability": 5,
         "proactive_trigger_quality": 1,
         "professional_depth": 5,
-        "reference_precision": 0,
-        "stage_fit": 4,
+        "reference_precision": 2,
+        "stage_fit": 3,
         "trigger_accuracy": 3,
         "validation_obligation": 1
       },
@@ -610,22 +610,10 @@
       "likely_missing_sections": [],
       "name": "architecture-tradeoff-analysis",
       "path": "src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md",
-      "recommended_fixes": [
-        "Move low-frequency tables/examples into owned references and remove duplicated template prose."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
-      "total": 36,
-      "warnings": [
-        {
-          "item": "architecture-tradeoff-analysis",
-          "item_kind": "foundation-capability",
-          "message": "long Markdown table in SKILL.md body (18 rows); consider moving deep table to references",
-          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
-          "release_relevance": "advisory-only",
-          "scope": "non-key-foundation-capability",
-          "type": "body_bloat_exception"
-        }
-      ]
+      "total": 39,
+      "warnings": []
     },
     {
       "body_lines": 222,
@@ -855,9 +843,9 @@
       "warnings": []
     },
     {
-      "body_lines": 226,
+      "body_lines": 181,
       "dimensions": {
-        "anti_bloat_control": 4,
+        "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
         "failure_mode_coverage": 4,
@@ -865,7 +853,7 @@
         "output_actionability": 5,
         "proactive_trigger_quality": 1,
         "professional_depth": 5,
-        "reference_precision": 3,
+        "reference_precision": 4,
         "stage_fit": 5,
         "trigger_accuracy": 2,
         "validation_obligation": 5
@@ -874,22 +862,10 @@
       "likely_missing_sections": [],
       "name": "code-review",
       "path": "src/foundation/capabilities/code-review/SKILL.md",
-      "recommended_fixes": [
-        "Move low-frequency tables/examples into owned references and remove duplicated template prose."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
-      "total": 48,
-      "warnings": [
-        {
-          "item": "code-review",
-          "item_kind": "foundation-capability",
-          "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
-          "reason": "Key foundation capability advisory warning is tracked for follow-up because it does not weaken evidence or reference precision.",
-          "release_relevance": "non-blocking-follow-up",
-          "scope": "key-foundation-capability",
-          "type": "body_bloat_exception"
-        }
-      ]
+      "total": 50,
+      "warnings": []
     },
     {
       "body_lines": 210,
@@ -942,9 +918,9 @@
       "warnings": []
     },
     {
-      "body_lines": 195,
+      "body_lines": 126,
       "dimensions": {
-        "anti_bloat_control": 3,
+        "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 1,
         "failure_mode_coverage": 4,
@@ -952,7 +928,7 @@
         "output_actionability": 5,
         "proactive_trigger_quality": 1,
         "professional_depth": 5,
-        "reference_precision": 0,
+        "reference_precision": 3,
         "stage_fit": 4,
         "trigger_accuracy": 4,
         "validation_obligation": 2
@@ -961,22 +937,10 @@
       "likely_missing_sections": [],
       "name": "context-packaging",
       "path": "src/foundation/capabilities/context-packaging/SKILL.md",
-      "recommended_fixes": [
-        "Move low-frequency tables/examples into owned references and remove duplicated template prose."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
-      "total": 38,
-      "warnings": [
-        {
-          "item": "context-packaging",
-          "item_kind": "foundation-capability",
-          "message": "long Markdown table in SKILL.md body (17 rows); consider moving deep table to references",
-          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
-          "release_relevance": "advisory-only",
-          "scope": "non-key-foundation-capability",
-          "type": "body_bloat_exception"
-        }
-      ]
+      "total": 43,
+      "warnings": []
     },
     {
       "body_lines": 197,
@@ -1368,17 +1332,17 @@
       ]
     },
     {
-      "body_lines": 227,
+      "body_lines": 128,
       "dimensions": {
-        "anti_bloat_control": 3,
-        "boundary_clarity": 4,
+        "anti_bloat_control": 5,
+        "boundary_clarity": 3,
         "evidence_contract_strength": 1,
         "failure_mode_coverage": 4,
         "mode_coverage": 4,
         "output_actionability": 5,
         "proactive_trigger_quality": 1,
         "professional_depth": 5,
-        "reference_precision": 0,
+        "reference_precision": 2,
         "stage_fit": 2,
         "trigger_accuracy": 2,
         "validation_obligation": 1
@@ -1387,22 +1351,10 @@
       "likely_missing_sections": [],
       "name": "error-code-design",
       "path": "src/foundation/capabilities/error-code-design/SKILL.md",
-      "recommended_fixes": [
-        "Move low-frequency tables/examples into owned references and remove duplicated template prose."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
-      "total": 32,
-      "warnings": [
-        {
-          "item": "error-code-design",
-          "item_kind": "foundation-capability",
-          "message": "long Markdown table in SKILL.md body (17 rows); consider moving deep table to references",
-          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
-          "release_relevance": "advisory-only",
-          "scope": "non-key-foundation-capability",
-          "type": "body_bloat_exception"
-        }
-      ]
+      "total": 35,
+      "warnings": []
     },
     {
       "body_lines": 193,
@@ -1630,7 +1582,7 @@
       "warnings": []
     },
     {
-      "body_lines": 221,
+      "body_lines": 142,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1640,8 +1592,8 @@
         "output_actionability": 5,
         "proactive_trigger_quality": 1,
         "professional_depth": 5,
-        "reference_precision": 3,
-        "stage_fit": 1,
+        "reference_precision": 4,
+        "stage_fit": 2,
         "trigger_accuracy": 2,
         "validation_obligation": 3
       },
@@ -1651,7 +1603,7 @@
       "path": "src/foundation/capabilities/idempotency-retry-design/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 43,
+      "total": 45,
       "warnings": []
     },
     {
@@ -3144,9 +3096,9 @@
       "warnings": []
     },
     {
-      "body_lines": 151,
+      "body_lines": 107,
       "dimensions": {
-        "anti_bloat_control": 3,
+        "anti_bloat_control": 5,
         "boundary_clarity": 2,
         "evidence_contract_strength": 1,
         "failure_mode_coverage": 3,
@@ -3154,7 +3106,7 @@
         "output_actionability": 5,
         "proactive_trigger_quality": 1,
         "professional_depth": 5,
-        "reference_precision": 0,
+        "reference_precision": 2,
         "stage_fit": 3,
         "trigger_accuracy": 3,
         "validation_obligation": 0
@@ -3163,22 +3115,10 @@
       "likely_missing_sections": [],
       "name": "version-compatibility",
       "path": "src/foundation/capabilities/version-compatibility/SKILL.md",
-      "recommended_fixes": [
-        "Move low-frequency tables/examples into owned references and remove duplicated template prose."
-      ],
+      "recommended_fixes": [],
       "status": "acceptable",
-      "total": 30,
-      "warnings": [
-        {
-          "item": "version-compatibility",
-          "item_kind": "foundation-capability",
-          "message": "long Markdown table in SKILL.md body (17 rows); consider moving deep table to references",
-          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
-          "release_relevance": "advisory-only",
-          "scope": "non-key-foundation-capability",
-          "type": "body_bloat_exception"
-        }
-      ]
+      "total": 34,
+      "warnings": []
     },
     {
       "body_lines": 144,
@@ -3207,5 +3147,5 @@
     }
   ],
   "skills_checked": 124,
-  "warning_count": 8
+  "warning_count": 3
 }

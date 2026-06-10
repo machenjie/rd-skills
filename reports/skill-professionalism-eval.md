@@ -1,9 +1,9 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-10T03:28:38.562322+00:00
+- Generated: 2026-06-10T04:57:57.931026+00:00
 - Skills/capabilities checked: 124
-- Warning count: 8
-- Average score: 41.26/60
+- Warning count: 3
+- Average score: 41.41/60
 
 ## Scores
 
@@ -14,14 +14,12 @@
 | `src/foundation/capabilities/prototype-description/SKILL.md` | foundation-capability | 27/60 | weak | 0 | 0 |
 | `src/foundation/capabilities/interaction-state-modeling/SKILL.md` | foundation-capability | 29/60 | weak | 0 | 0 |
 | `src/foundation/capabilities/use-case-modeling/SKILL.md` | foundation-capability | 29/60 | weak | 0 | 0 |
-| `src/foundation/capabilities/version-compatibility/SKILL.md` | foundation-capability | 30/60 | acceptable | 0 | 1 |
 | `src/foundation/capabilities/frontend-testing/SKILL.md` | foundation-capability | 31/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/indexing-query-optimization/SKILL.md` | foundation-capability | 31/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/repository-persistence/SKILL.md` | foundation-capability | 31/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/user-flow-modeling/SKILL.md` | foundation-capability | 31/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/dependency-vulnerability-scanning/SKILL.md` | foundation-capability | 32/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/documentation-generation/SKILL.md` | foundation-capability | 32/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/error-code-design/SKILL.md` | foundation-capability | 32/60 | acceptable | 0 | 1 |
 | `src/foundation/capabilities/nosql-database/SKILL.md` | foundation-capability | 32/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/page-component-decomposition/SKILL.md` | foundation-capability | 32/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/state-machine-modeling/SKILL.md` | foundation-capability | 32/60 | acceptable | 0 | 0 |
@@ -50,16 +48,17 @@
 | `src/foundation/capabilities/service-business-logic/SKILL.md` | foundation-capability | 34/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/state-management-design/SKILL.md` | foundation-capability | 34/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/user-role-identification/SKILL.md` | foundation-capability | 34/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/version-compatibility/SKILL.md` | foundation-capability | 34/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/backup-recovery/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/domain-event-modeling/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/dto-schema-design/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/error-code-design/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/input-validation/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/kubernetes-gateway/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/microservice-splitting/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/requirement-clarification/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/task-dag-decomposition/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/api-contract-design/SKILL.md` | foundation-capability | 36/60 | acceptable | 0 | 1 |
-| `src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md` | foundation-capability | 36/60 | acceptable | 0 | 1 |
 | `src/foundation/capabilities/authentication-authorization/SKILL.md` | foundation-capability | 36/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/containerization/SKILL.md` | foundation-capability | 36/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/requirement-structuring/SKILL.md` | foundation-capability | 36/60 | acceptable | 0 | 0 |
@@ -70,15 +69,15 @@
 | `src/foundation/capabilities/business-rule-extraction/SKILL.md` | foundation-capability | 37/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/extensibility-design/SKILL.md` | foundation-capability | 37/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/language-runtime-selection/SKILL.md` | foundation-capability | 37/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/context-packaging/SKILL.md` | foundation-capability | 38/60 | acceptable | 0 | 1 |
 | `src/foundation/capabilities/profiling/SKILL.md` | foundation-capability | 38/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/project-initialization/SKILL.md` | foundation-capability | 38/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md` | foundation-capability | 39/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/controller-api-implementation/SKILL.md` | foundation-capability | 39/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/package-dependency-management/SKILL.md` | foundation-capability | 39/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/module-boundary-design/SKILL.md` | foundation-capability | 40/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/technology-stack-selection/SKILL.md` | foundation-capability | 40/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/web-security/SKILL.md` | foundation-capability | 40/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/idempotency-retry-design/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/context-packaging/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/message-queue-design/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/observability/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/relational-database/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
@@ -93,12 +92,12 @@
 | `src/foundation/capabilities/unit-testing/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cache-design/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/ci-cd/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/idempotency-retry-design/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/code-clarity-maintainability/SKILL.md` | foundation-capability | 46/60 | acceptable | 1 | 0 |
 | `src/foundation/capabilities/language-performance-safety/SKILL.md` | foundation-capability | 46/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md` | foundation-capability | 47/60 | needs-review | 1 | 1 |
 | `src/foundation/capabilities/test-strategy/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/agent-execution-discipline/SKILL.md` | foundation-capability | 48/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/code-review/SKILL.md` | foundation-capability | 48/60 | acceptable | 0 | 1 |
 | `src/foundation/capabilities/refactoring/SKILL.md` | foundation-capability | 48/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cpp-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/go-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
@@ -107,6 +106,7 @@
 | `src/foundation/capabilities/regression-testing/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/rust-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/sql-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/code-review/SKILL.md` | foundation-capability | 50/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/e2e-testing/SKILL.md` | foundation-capability | 50/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/failure-diagnosis/SKILL.md` | foundation-capability | 50/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/typescript-professional-usage/SKILL.md` | foundation-capability | 50/60 | acceptable | 0 | 0 |
@@ -142,24 +142,6 @@
 Recommended fixes:
 - Move low-frequency tables/examples into owned references and remove duplicated template prose.
 
-### `src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md`
-- message: long Markdown table in SKILL.md body (18 rows); consider moving deep table to references | type: body_bloat_exception | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-
-Recommended fixes:
-- Move low-frequency tables/examples into owned references and remove duplicated template prose.
-
-### `src/foundation/capabilities/code-review/SKILL.md`
-- message: long Markdown table in SKILL.md body (16 rows); consider moving deep table to references | type: body_bloat_exception | scope: key-foundation-capability | release_relevance: non-blocking-follow-up | reason: Key foundation capability advisory warning is tracked for follow-up because it does not weaken evidence or reference precision.
-
-Recommended fixes:
-- Move low-frequency tables/examples into owned references and remove duplicated template prose.
-
-### `src/foundation/capabilities/context-packaging/SKILL.md`
-- message: long Markdown table in SKILL.md body (17 rows); consider moving deep table to references | type: body_bloat_exception | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-
-Recommended fixes:
-- Move low-frequency tables/examples into owned references and remove duplicated template prose.
-
 ### `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md`
 - likely missing sections: Stage Fit
 - message: Evidence Contract weak: evidence_contract_strength score 2/5 needs review | type: weak_evidence_contract_strength | scope: enhanced-foundation-capability | release_relevance: release-review-required | reason: Enhanced foundation capabilities amplify into multiple professional skills; the warning needs release review but is not automatically blocking unless a required gate is missing.
@@ -167,21 +149,9 @@ Recommended fixes:
 Recommended fixes:
 - Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.
 
-### `src/foundation/capabilities/error-code-design/SKILL.md`
-- message: long Markdown table in SKILL.md body (17 rows); consider moving deep table to references | type: body_bloat_exception | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-
-Recommended fixes:
-- Move low-frequency tables/examples into owned references and remove duplicated template prose.
-
 ### `src/foundation/capabilities/skill-authoring-expert/SKILL.md`
 - likely missing sections: Stage Fit
 - message: Evidence Contract weak: evidence_contract_strength score 2/5 needs review | type: weak_evidence_contract_strength | scope: enhanced-foundation-capability | release_relevance: release-review-required | reason: Enhanced foundation capabilities amplify into multiple professional skills; the warning needs release review but is not automatically blocking unless a required gate is missing.
 
 Recommended fixes:
 - Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.
-
-### `src/foundation/capabilities/version-compatibility/SKILL.md`
-- message: long Markdown table in SKILL.md body (17 rows); consider moving deep table to references | type: body_bloat_exception | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
-
-Recommended fixes:
-- Move low-frequency tables/examples into owned references and remove duplicated template prose.
