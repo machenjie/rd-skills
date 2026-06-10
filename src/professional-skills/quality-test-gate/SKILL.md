@@ -100,6 +100,10 @@ Select the testing mode by risk. Do not request tests generically; name the fail
 - **Signal:** UI tests assert CSS/private internals instead of accessible user behavior. **Hidden risk:** accessibility failure or silent user-flow regression while tests pass. **Required professional action:** rewrite using accessibility queries and state assertions. **Route to:** `frontend-testing`, `code-clarity-maintainability`. **Evidence required:** accessible behavior assertion, axe/keyboard output, and state-coverage proof.
 - **Signal:** flaky test is retried, skipped, or quarantined without owner/root cause. **Hidden risk:** real failure hidden by CI noise. **Required professional action:** triage flake before gate acceptance. **Route to:** `failure-diagnosis`, `agent-execution-discipline`. **Evidence required:** flake signature, owner, remediation.
 - **Signal:** fixture/factory/golden file is shared across modules with business data and no owner. **Hidden risk:** hidden coupling and broad churn. **Required professional action:** assign fixture ownership or localize. **Route to:** `implementation-structure-design`, `code-clarity-maintainability`. **Evidence required:** owner, boundary, deletion/update path.
+- **Signal:** tests require exporting private helpers, mocking internal call order, or reaching through module internals. **Hidden risk:** hidden implementation coupling and missing encapsulation boundary. **Required professional action:** require a public behavior boundary and explicit test seam. **Route to:** `testability-seam-design`, `implementation-structure-design`. **Evidence required:** seam map, private-helper non-export decision, and public-behavior test output.
+- **Signal:** clock, randomness, UUIDs, concurrency, database, HTTP, queue, cache, file, or environment behavior is uncontrolled in tests. **Hidden risk:** missing reproducibility, stale test signal, or wrong failure diagnosis. **Required professional action:** require deterministic seams and classify fake/stub/contract/integration evidence. **Route to:** `testability-seam-design`, `dependency-wiring-lifecycle`. **Evidence required:** deterministic input map, external seam contract, fixture owner, and flake mitigation test output.
+- **Signal:** negative-path tests cannot distinguish validation, permission, conflict, timeout, retryable, terminal, or partial failure states. **Hidden risk:** tests pass while boundary failure semantics remain ambiguous. **Required professional action:** test the failure contract at the right boundary. **Route to:** `failure-contract-design`, `backend-change-builder`. **Evidence required:** error taxonomy, translation map, and negative test output.
+- **Signal:** tests cover a mapper/DTO/persistence model path where null/default/optional semantics can drift. **Hidden risk:** model boundary bugs are hidden behind happy-path fixtures. **Required professional action:** add mapping tests at the model boundary. **Route to:** `model-boundary-mapping`, `data-api-contract-changer`. **Evidence required:** mapping owner, null/default semantics, and compatibility cases.
 - **Signal:** test plan lacks negative case for permission, idempotency, concurrency, invalid input, or partial failure. **Hidden risk:** missing negative-path regression leaves happy-path confidence only. **Required professional action:** add a mutation-like negative case for the named risk. **Route to:** `backend-change-builder`, `security-privacy-gate`, `data-middleware-change-builder`. **Evidence required:** denied/invalid/retry/partial-failure test output and what evidence proves.
 
 ### Decision Tree: Test Depth Required
@@ -217,6 +221,10 @@ Return a test strategy with:
 - **Test structure strategy**: test file placement, fixture/factory/mock/golden ownership, public-behavior boundary, and shared helper audit.
 - **Reuse and placement rationale**: why tests, fixtures, factories, mocks, golden files, and helpers live at their selected owner boundary.
 - **Mock boundaries**: Which dependencies are mocked vs. real, and how mock assumptions are validated.
+- **Testability seam plan**: public behavior boundary, dependency seam map, fake/stub/mock/spy decision, fixture ownership, deterministic time/randomness strategy, private-helper non-export decision, and rejected testability shortcuts.
+- **Failure contract test split**: unit, contract, integration, and negative-path tests that prove retryable, terminal, validation, permission, conflict, timeout, cancellation, and partial-failure states.
+- **Model mapping test obligations**: DTO/domain/persistence/event/view-model mapping cases, null/default/optional semantics, generated boundary cases, and compatibility fixtures.
+- **Algorithm and scale test obligations**: input size, worst-case complexity, memory bound, streaming/chunking, benchmark/profile requirement, and scale-risk test evidence when the implementation is performance-sensitive.
 - **Migration test plan**: Forward execution, rollback execution, and data integrity assertion approach.
 - **Coverage obligations**: Specific logical branches or code paths that must be covered (not aggregate percentage).
 - **Performance test obligations**: Query plan validation, load test threshold, or latency budget if applicable.
@@ -266,6 +274,9 @@ Close a test strategy only when all five canonical answers are concrete (answer 
 25. Test acceptance maps to the acceptance criteria and non-goals (spec compliance) before test-quality sign-off; a clean test suite does not substitute for a missing required behavior.
 26. Every proposed or reported test states what it proves and what it does not prove.
 27. Bug fixes include regression evidence for the verified defect or a documented reason the regression is non-automatable.
+28. Private helpers are not exported only for tests; tests exercise public behavior or explicit seams.
+29. Time, randomness, UUIDs, concurrency, and external I/O are deterministic or explicitly isolated in tests.
+30. Failure contracts and model mappings have negative-path and compatibility coverage when they cross boundaries.
 
 ## Handoff
 - **backend-change-builder** — with test obligations for service, repository, and API layers.
@@ -277,6 +288,10 @@ Close a test strategy only when all five canonical answers are concrete (answer 
 - **ai-product-extension** — with ML evaluation, drift, fairness, model registry, and rollback obligations.
 - **bigdata-product-extension** — with analytics event, feature store, data quality, and warehouse validation obligations.
 - **agent-execution-discipline** — when test evidence, route repair, or closure package is missing from an agent-assisted change.
+- **testability-seam-design** — when public behavior boundary, deterministic seam, test double, fixture ownership, or private-helper non-export decisions are unresolved.
+- **failure-contract-design** — when negative tests need typed boundary failure semantics.
+- **model-boundary-mapping** — when DTO, domain, persistence, event, or view model mapping tests are required.
+- **algorithm-data-structure-selection** — when scale-sensitive tests require complexity, memory, streaming, or benchmark evidence.
 
 ## Completion Criteria
 The change has a proportional, executable verification plan where every material risk maps to test evidence or an explicitly accepted residual risk with justification — and the complete test strategy can be handed to a builder without ambiguity about what must pass before release.

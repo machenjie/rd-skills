@@ -1,0 +1,43 @@
+id: testability-seam-design
+category: structure
+complexity: L3
+focus:
+  - public behavior test boundary
+  - explicit test seam
+  - deterministic external dependency tests
+  - fixture ownership
+route_hints:
+  skills:
+    - quality-test-gate
+    - backend-change-builder
+    - ai-code-review-refactor
+  capabilities:
+    - testability-seam-design
+    - implementation-structure-design
+    - unit-testing
+    - contract-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+expected_outcomes:
+  - Private helpers remain private and behavior is tested through public APIs or module contracts.
+  - External dependencies use explicit fake, stub, mock, spy, contract, or integration seams.
+  - Time, randomness, UUIDs, and external I/O are deterministic in tests.
+  - Fixtures have an owning module and reason to change.
+required_qualities:
+  - Testability Seam Plan names the public behavior boundary and dependency seam map.
+  - Mock/fake/stub/spy selection is justified by dependency boundary.
+  - Characterization tests precede risky refactors.
+  - Flaky test risk and deterministic clock/randomness strategy are documented.
+forbidden_shortcuts:
+  - Exporting private helper code only for tests.
+  - Mocking private call order instead of behavior.
+  - Using uncontrolled clock, randomness, UUID, or external I/O in tests.
+  - Sharing business fixtures without owner.
+evidence:
+  - Testability seam plan.
+  - Public behavior test output.
+  - Fixture ownership note.
+  - Contract or integration evidence for external seams.

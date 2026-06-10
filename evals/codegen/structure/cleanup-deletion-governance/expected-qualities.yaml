@@ -1,0 +1,43 @@
+id: cleanup-deletion-governance
+category: structure
+complexity: L3
+focus:
+  - deletion path
+  - stale flag and fallback cleanup
+  - caller and runtime reference search
+  - telemetry and rollback
+route_hints:
+  skills:
+    - ai-code-review-refactor
+    - backend-change-builder
+    - change-documentation-gate
+  capabilities:
+    - cleanup-deletion-governance
+    - refactoring
+    - configuration-runtime-policy
+    - code-clarity-maintainability
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - documentation gate
+    - test gate
+expected_outcomes:
+  - Dead code, stale feature flags, fallback branches, compatibility code, and deprecated APIs have owner and removal condition.
+  - Caller search includes static, runtime, generated, reflection, and package references.
+  - Telemetry proves unused behavior or names accepted deletion risk.
+  - Rollback after deletion and cleanup issue tracking are explicit.
+required_qualities:
+  - Cleanup/Deletion Plan names target artifact, owner, removal condition, callers searched, telemetry, tests, rollback, and residual risk.
+  - Feature flag removal includes config and docs cleanup.
+  - Compatibility branch and deprecated API owner are clear.
+  - Expand-contract cleanup has staged deletion evidence.
+forbidden_shortcuts:
+  - Leaving feature flags, fallbacks, compatibility branches, or deprecated APIs permanently.
+  - Deleting code without caller search.
+  - Ignoring runtime, generated, or reflection references.
+  - Removing behavior without telemetry or rollback path.
+evidence:
+  - Cleanup deletion plan.
+  - Caller search output.
+  - Telemetry evidence.
+  - Tests and rollback path.

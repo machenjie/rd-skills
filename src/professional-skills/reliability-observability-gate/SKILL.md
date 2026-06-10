@@ -101,6 +101,10 @@ Select the reliability mode before approving production behavior, performance wo
 - **Signal:** alert fires on fixed count or low-level symptom with no user impact/runbook. **Hidden risk:** noisy or silent alert. **Required professional action:** convert to SLO burn or actionable symptom. **Route to:** `observability`, `change-documentation-gate`. **Evidence required:** alert query, threshold rationale, runbook action.
 - **Signal:** queue/async path lacks DLQ depth, lag, retry, or poison-message alert. **Hidden risk:** invisible backlog or lost work. **Required professional action:** instrument worker failure modes. **Route to:** `message-queue-design`, `data-middleware-change-builder`. **Evidence required:** lag/DLQ metrics and failure test.
 - **Signal:** fallback returns empty/default data without user/metric distinction. **Hidden risk:** degraded mode looks like correctness. **Required professional action:** design explicit degradation semantics and observability. **Route to:** `degradation-circuit-breaking`, `frontend-change-builder` when UI affected. **Evidence required:** fallback contract, log/metric, UX state.
+- **Signal:** HTTP, DB, Redis, Kafka, SDK, pool, timer, subscription, file, or socket lifecycle is unclear. **Hidden risk:** per-operation clients, leaked handles, pool exhaustion, or shutdown failures degrade production. **Required professional action:** define dependency wiring, lifecycle scope, startup validation, and cleanup owner. **Route to:** `dependency-wiring-lifecycle`, `backend-change-builder`. **Evidence required:** dependency graph, lifecycle scope, construction owner, shutdown owner, and pool/client metrics.
+- **Signal:** retry, fallback, timeout, cancellation, or partial failure is observable only as a generic error. **Hidden risk:** incidents cannot distinguish dependency failure, validation error, conflict, degraded response, or terminal failure. **Required professional action:** define the failure contract and telemetry fields. **Route to:** `failure-contract-design`, `observability`. **Evidence required:** error taxonomy, retryability, fallback/degradation, log/metric/trace fields, and cause preservation.
+- **Signal:** hot path processes unbounded inputs, nested scans, top-K, grouping, sorting, or load-all batches with no scale budget. **Hidden risk:** latency, memory, queue lag, or cost regression under real input distribution. **Required professional action:** require an algorithm/data-structure decision and performance evidence. **Route to:** `algorithm-data-structure-selection`, `performance-budgeting`. **Evidence required:** input size, worst case, memory budget, streaming/chunking decision, benchmark/profile output.
+- **Signal:** mapper/getter/policy/domain logic writes DB/cache/events/external I/O or publishes events before commit. **Hidden risk:** hidden side effects bypass telemetry, transaction ordering, idempotency, and compensation. **Required professional action:** trace side-effect flow and attach observability at the visible boundary. **Route to:** `data-side-effect-flow-tracing`, `data-middleware-change-builder`. **Evidence required:** ordering, transaction boundary, publish-after-commit decision, idempotency/compensation, and metrics/logs.
 - **Signal:** incident closure lacks verified cause, false hypotheses, customer impact, or corrective action owner. **Hidden risk:** missing verified cause repeats the incident and weakens the postmortem. **Required professional action:** keep the incident open or route diagnosis/docs until cause and owner are proven. **Route to:** `failure-diagnosis`, `change-documentation-gate`. **Evidence required:** incident timeline, metric/log proof, false-hypothesis notes, and corrective-action owner.
 - **Signal:** autoscaling, storage, egress, full scan, or batch retry can exceed budget without anomaly alert. **Hidden risk:** unbounded spend, cost leak, or budget incident as a reliability failure. **Required professional action:** add cost/capacity guardrail with alertable threshold and owner. **Route to:** `performance-budgeting`, `delivery-release-gate`. **Evidence required:** unit-cost report, capacity forecast, anomaly alert query, and alert owner.
 
@@ -205,6 +209,10 @@ Return a reliability and observability plan with:
 - **SLI/SLO impact assessment**: affected SLIs, SLO target confirmation, error budget headroom.
 - **Performance budget**: expected p50/p95/p99 latency, throughput, resource utilization bounds.
 - **Resilience controls**: circuit breaker configuration, rate limits, timeouts, retry policy, fallback behavior.
+- **Dependency lifecycle controls**: composition root, lifecycle scope, client/pool ownership, startup validation, shutdown cleanup, and leak-sensitive resources.
+- **Failure contract telemetry**: retryability, terminal/validation/permission/conflict/cancellation states, degraded response, partial failure, safe user message, and diagnostic cause correlation.
+- **Algorithmic scale guardrail**: expected input distribution, worst-case complexity, memory budget, streaming/chunking choice, and benchmark/profile evidence for hot paths.
+- **Side-effect flow observability**: transaction, persistence, cache, event, external I/O, publish-after-commit, idempotency, compensation, and ordering evidence.
 - **Telemetry plan**: structured log schema, metric names with label cardinality analysis, trace propagation strategy.
 - **Alerting design**: burn-rate alert thresholds, paging urgency levels, on-call routing.
 - **Capacity analysis**: current headroom, expected growth, scaling triggers.
@@ -244,6 +252,10 @@ Close a reliability and observability plan only when all five canonical answers 
 11. Cost and capacity guardrails are defined for material resource changes, including unit costs, egress/storage exposure, capacity forecast, and anomaly alert owner.
 12. Incident roles, severity, customer communication cadence, and postmortem ownership are defined for production-critical paths.
 13. Agent-assisted reliability closure includes verified cause, evidence, residual risks, and no third same-path retry.
+14. Reusable clients and pools are long-lived at the narrowest correct lifecycle and have startup validation, saturation metrics, and shutdown cleanup.
+15. Retry, fallback, timeout, cancellation, and partial-failure states are distinguishable in logs, metrics, traces, alerts, and user-safe responses.
+16. Hot paths with unbounded or high-volume inputs have explicit complexity, memory, streaming/chunking, and benchmark/profile evidence.
+17. Side effects are visible at service, adapter, repository, job, or message-consumer boundaries and preserve transaction/event ordering.
 
 ## Handoff
 - **delivery-release-gate** — for canary traffic thresholds, rollout monitoring windows, and rollback decision signals.
@@ -255,6 +267,10 @@ Close a reliability and observability plan only when all five canonical answers 
 - **failure-diagnosis** — for SEV incident evidence collection, timeline reconstruction, root cause analysis, and postmortem action items.
 - **change-documentation-gate** — for customer advisories, status page entries, runbook updates, incident reports, and postmortem summaries.
 - **agent-execution-discipline** — when incident or reliability closure lacks evidence, verified cause, route repair, or handoff boundary.
+- **dependency-wiring-lifecycle** — when client, pool, subscription, timer, file, socket, or shutdown lifecycle ownership is unclear.
+- **failure-contract-design** — when retryability, fallback, degradation, partial failure, or cause-preserving error translation is unclear.
+- **algorithm-data-structure-selection** — when scale-sensitive code needs complexity, memory, streaming/chunking, or benchmark evidence.
+- **data-side-effect-flow-tracing** — when transaction, cache, event, external I/O, or hidden side-effect ordering affects reliability.
 
 ## Completion Criteria
 The change is production-ready from a reliability and observability perspective when every user-facing path has an SLI, error budget headroom is confirmed, multi-burn-rate alerts are configured, structured logging with trace propagation is implemented, cardinality of new metrics is bounded, circuit breakers have tested fallback behavior, queue consumers have DLQ and depth alerts, cost and capacity guardrails are owned and alertable, incident handoff is defined, a tested recovery runbook exists, and rollback decision criteria are explicit.

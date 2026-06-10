@@ -1,0 +1,43 @@
+id: data-side-effect-flow-tracing
+category: structure
+complexity: L3
+focus:
+  - data and side-effect flow map
+  - transaction and event ordering
+  - cache source of truth
+  - idempotency and compensation
+route_hints:
+  skills:
+    - backend-change-builder
+    - data-middleware-change-builder
+    - reliability-observability-gate
+  capabilities:
+    - data-side-effect-flow-tracing
+    - transaction-consistency
+    - idempotency-retry-design
+    - cache-design
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - Input, validation, mapping, policy, mutation, transaction, persistence, event, cache, external I/O, and response order are explicit.
+  - Mappers, getters, policies, and domain objects do not hide external side effects.
+  - Events publish after commit unless explicitly safe.
+  - Cache mutation names source of truth and invalidation behavior.
+required_qualities:
+  - Data and Side-Effect Flow Map classifies persistence, cache, event, external API, logging, metrics, file, clock, random, and environment effects.
+  - Pure decision logic is separated from side effects unless local convention justifies otherwise.
+  - Outbox, publish-after-commit, idempotency, and compensation are considered.
+  - Tests cover ordering and hidden side-effect rejection.
+forbidden_shortcuts:
+  - Writing database, cache, event, or external API calls inside mapper or getter code.
+  - Publishing events before commit without explicit safety.
+  - Mutating cache without naming source of truth and invalidation.
+  - Letting logging or metrics alter behavior.
+evidence:
+  - Data and side-effect flow map.
+  - Transaction and event ordering tests.
+  - Cache invalidation decision.
+  - Residual side-effect risk note.

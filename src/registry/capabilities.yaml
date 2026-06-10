@@ -1003,3 +1003,103 @@ capabilities:
       - design pattern pattern selection factory builder singleton adapter facade decorator proxy composite bridge strategy state command observer pubsub mediator chain of responsibility template method visitor specification repository unit of work dependency injection object pool producer consumer worker pool pipeline reactor proactor pattern misuse overengineering pattern performance risk
     risk_notes: [Wrong patterns create speculative abstraction hidden global state side-effect opacity lifecycle leaks performance regressions and brittle object relationships]
     expected_outputs: [Design Pattern Decision Record with selected/rejected patterns simpler alternative object relationship method placement performance/concurrency/IO impact tests and residual risk]
+  - id: "107"
+    name: testability-seam-design
+    group: engineering-workflow
+    path: src/foundation/capabilities/testability-seam-design
+    status: implemented
+    used_by: [quality-test-gate, backend-change-builder, frontend-change-builder, integration-change-builder, data-middleware-change-builder, ai-code-review-refactor]
+    triggers:
+      - testability seam public behavior boundary test seam dependency injection fake stub mock spy characterization test fixture ownership test data builder private helper not exported deterministic clock randomness UUID external IO
+    risk_notes: [Poor seams force private-helper tests over-mock internals create flaky tests and make external dependencies uncontrollable]
+    expected_outputs: [Testability Seam Plan with public behavior boundary seam map test double decision fixture ownership deterministic controls private-helper non-export test split flaky mitigation and rejected shortcuts]
+  - id: "108"
+    name: dependency-wiring-lifecycle
+    group: engineering-workflow
+    path: src/foundation/capabilities/dependency-wiring-lifecycle
+    status: implemented
+    used_by: [backend-change-builder, integration-change-builder, data-middleware-change-builder, reliability-observability-gate, architecture-impact-reviewer, ai-code-review-refactor, quality-test-gate]
+    triggers:
+      - dependency wiring lifecycle composition root constructor injection factory provider service locator lifecycle scope singleton reusable client pool startup validation shutdown cleanup test override circular dependency configuration driven wiring
+    risk_notes: [Unclear dependency ownership causes per-operation clients service locators global mutable state circular graphs resource leaks and untestable wiring]
+    expected_outputs: [Dependency Wiring Plan with composition root dependency graph lifecycle scope owners shutdown test override cycle check service locator decision client pool lifecycle config binding and residual risk]
+  - id: "109"
+    name: algorithm-data-structure-selection
+    group: technology-selection
+    path: src/foundation/capabilities/algorithm-data-structure-selection
+    status: implemented
+    used_by: [backend-change-builder, frontend-change-builder, data-middleware-change-builder, reliability-observability-gate, ai-code-review-refactor, quality-test-gate, architecture-impact-reviewer]
+    triggers:
+      - algorithm data structure Big O input size worst case memory budget map set list heap queue deque tree trie graph bloom filter LRU LFU interval tree segment tree top K dedupe grouping sorting streaming chunking pagination nested scan load all hot key skew
+    risk_notes: [Working code can still fail at production scale through O(n squared) nested scans unbounded memory full sorting load-all processing and mismatched data structures]
+    expected_outputs: [Algorithm Data Structure Decision with problem shape input scale candidates selected structure time space worst case memory budget streaming chunking rejected alternatives benchmark evidence and scale risk]
+  - id: "110"
+    name: failure-contract-design
+    group: backend-engineering
+    path: src/foundation/capabilities/failure-contract-design
+    status: implemented
+    used_by: [backend-change-builder, data-api-contract-changer, data-middleware-change-builder, integration-change-builder, reliability-observability-gate, quality-test-gate, ai-code-review-refactor, frontend-change-builder]
+    triggers:
+      - failure contract error taxonomy retryable terminal validation permission conflict timeout cancellation dependency failure partial failure degraded response compensation DLQ user visible internal safe diagnostics cause preservation adapter repository translation silent fallback
+    risk_notes: [Unclear failure semantics swallow errors leak raw internals confuse retry behavior hide partial failures and break async recovery]
+    expected_outputs: [Failure Contract with error taxonomy boundary translation retryability fallback degradation compensation DLQ user message log metric trace fields cause preservation negative tests and residual risk]
+  - id: "111"
+    name: configuration-runtime-policy
+    group: delivery-platform
+    path: src/foundation/capabilities/configuration-runtime-policy
+    status: implemented
+    used_by: [delivery-release-gate, backend-change-builder, frontend-change-builder, integration-change-builder, reliability-observability-gate, change-documentation-gate, ai-code-review-refactor]
+    triggers:
+      - configuration runtime policy typed config default validation fail fast hot reload feature flag owner expiry cleanup kill switch stale flag mode kind switch tenant user experiment rollout rollback config observability
+    risk_notes: [Untyped config stale flags and vague mode switches bypass invariants create hidden strategy systems and make rollout rollback unsafe]
+    expected_outputs: [Configuration Policy with scope schema defaults validation fail fast flag lifecycle kill switch runtime switch rationale test matrix cleanup owner rollout rollback and residual config risk]
+  - id: "112"
+    name: model-boundary-mapping
+    group: data-api-contracts
+    path: src/foundation/capabilities/model-boundary-mapping
+    status: implemented
+    used_by: [data-api-contract-changer, backend-change-builder, frontend-change-builder, integration-change-builder, ai-code-review-refactor, quality-test-gate, change-documentation-gate]
+    triggers:
+      - model boundary mapping API DTO command query domain object value object persistence model ORM event payload view model mapper assembler null default optional schema version serialization validation generated handwritten leakage
+    risk_notes: [Model leakage couples API persistence domain and generated boundaries causing semantic drift validation ambiguity and consumer breakage]
+    expected_outputs: [Model Boundary Map with source target mapping owner validation owner null default semantics version compatibility generated handwritten boundary mapping tests and rejected leakage alternatives]
+  - id: "113"
+    name: data-side-effect-flow-tracing
+    group: engineering-workflow
+    path: src/foundation/capabilities/data-side-effect-flow-tracing
+    status: implemented
+    used_by: [backend-change-builder, data-middleware-change-builder, integration-change-builder, reliability-observability-gate, ai-code-review-refactor, quality-test-gate, architecture-impact-reviewer]
+    triggers:
+      - data side effect flow input validation mapping policy mutation transaction persistence cache event external IO logging metrics file IO clock random env outbox publish after commit idempotency compensation hidden side effect mapper getter
+    risk_notes: [Hidden side effects in mappers getters policies or domain objects break transaction ordering cache consistency idempotency and testability]
+    expected_outputs: [Data and Side Effect Flow Map with input validation mapping policy mutation transaction persistence cache event external IO ordering idempotency compensation observability tests and residual risk]
+  - id: "114"
+    name: architecture-enforcement-tooling
+    group: architecture-design
+    path: src/foundation/capabilities/architecture-enforcement-tooling
+    status: implemented
+    used_by: [architecture-impact-reviewer, backend-change-builder, frontend-change-builder, delivery-release-gate, ai-code-review-refactor, quality-test-gate]
+    triggers:
+      - architecture enforcement tooling import boundary check cycle detection public private export forbidden dependency lint type strictness dead code complexity threshold generated code exclusion CI ArchUnit Dependency Cruiser import linter eslint boundaries go vet staticcheck
+    risk_notes: [Architecture rules that live only in documents drift because imports exports cycles and forbidden dependencies are not blocked by CI]
+    expected_outputs: [Architecture Enforcement Plan with rule list tool choice CI command failure examples generated code exceptions migration path ownership and residual unenforced rule]
+  - id: "115"
+    name: consumer-impact-analysis
+    group: data-api-contracts
+    path: src/foundation/capabilities/consumer-impact-analysis
+    status: implemented
+    used_by: [data-api-contract-changer, integration-change-builder, frontend-change-builder, backend-change-builder, architecture-impact-reviewer, change-documentation-gate, quality-test-gate, ai-code-review-refactor]
+    triggers:
+      - consumer impact analysis API SDK schema event public export generated client mobile web backend consumer compatibility migration deprecation telemetry rollout rollback unknown consumer risk
+    risk_notes: [Contract changes can break known and unknown consumers even when local tests pass and server behavior looks correct]
+    expected_outputs: [Consumer Impact Report with changed contract consumers compatibility migration deprecation telemetry rollout rollback tests documentation updates and residual consumer risk]
+  - id: "116"
+    name: cleanup-deletion-governance
+    group: engineering-workflow
+    path: src/foundation/capabilities/cleanup-deletion-governance
+    status: implemented
+    used_by: [ai-code-review-refactor, refactoring, backend-change-builder, frontend-change-builder, data-api-contract-changer, architecture-impact-reviewer, delivery-release-gate, change-documentation-gate, quality-test-gate]
+    triggers:
+      - cleanup deletion governance deletion path dead code caller search runtime generated reflection references feature flag removal fallback expiry compatibility branch deprecated API expand contract cleanup telemetry unused rollback cleanup issue
+    risk_notes: [AI assisted work tends to add flags fallbacks compatibility branches and dead code without deletion path telemetry or rollback evidence]
+    expected_outputs: [Cleanup Deletion Plan with target artifact owner removal condition callers searched telemetry evidence tests rollback path cleanup issue tracking and residual deletion risk]

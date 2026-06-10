@@ -33,14 +33,14 @@ supported_change_types:
 runtime_profiles:
   - name: recommended
     top_level: 19 professional skills
-    foundation_mode: 106 foundation capabilities compiled into professional references
+    foundation_mode: 116 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 19 professional skills and 7 domain extensions
-    foundation_mode: 106 foundation capabilities compiled into professional references
+    foundation_mode: 116 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 19 professional skills, 106 foundation capabilities, and 7 domain extensions
+    top_level: 19 professional skills, 116 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -102,6 +102,38 @@ risk_escalation_triggers:
   - environment-blame without inspection
   - route repair required
   - bug may exist in multiple modules
+  - test seam unclear
+  - private helper exported for tests
+  - over-mocked private internals
+  - fixture ownership unclear
+  - dependency wiring unclear
+  - service locator risk
+  - lifecycle scope unclear
+  - shutdown cleanup missing
+  - circular dependency graph
+  - algorithm complexity unclear
+  - data structure mismatch
+  - unbounded load-all processing
+  - nested scan risk
+  - failure contract unclear
+  - silent fallback
+  - retryability unclear
+  - partial failure unhandled
+  - runtime config policy unclear
+  - stale feature flag
+  - mode switch strategy drift
+  - model boundary leak
+  - DTO used as domain object
+  - persistence model leaked to API
+  - mapper owns business logic
+  - side effect hidden in mapper
+  - event published before commit
+  - cache mutation source of truth unclear
+  - architecture rule unenforced
+  - public contract consumer impact unknown
+  - consumer impact unknown
+  - cleanup deletion path missing
+  - stale compatibility branch
   - shared utility pollution risk
   - business logic in shared utils
   - unreadable main flow
@@ -278,6 +310,110 @@ risk_trigger_rules:
     required_capabilities: [agent-execution-discipline]
   - trigger: bug may exist in multiple modules
     required_capabilities: [agent-execution-discipline]
+  - trigger: test seam unclear
+    required_skills: [quality-test-gate]
+    required_capabilities: [testability-seam-design]
+    required_quality_gates: [test gate]
+  - trigger: private helper exported for tests
+    required_skills: [quality-test-gate]
+    required_capabilities: [testability-seam-design, implementation-structure-design]
+    required_quality_gates: [implementation gate, test gate]
+  - trigger: over-mocked private internals
+    required_skills: [quality-test-gate]
+    required_capabilities: [testability-seam-design, code-clarity-maintainability]
+    required_quality_gates: [test gate]
+  - trigger: fixture ownership unclear
+    required_skills: [quality-test-gate]
+    required_capabilities: [testability-seam-design]
+    required_quality_gates: [test gate]
+  - trigger: dependency wiring unclear
+    required_capabilities: [dependency-wiring-lifecycle, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: service locator risk
+    required_capabilities: [dependency-wiring-lifecycle, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: lifecycle scope unclear
+    required_capabilities: [dependency-wiring-lifecycle, language-performance-safety]
+    required_quality_gates: [implementation gate]
+  - trigger: shutdown cleanup missing
+    required_skills: [reliability-observability-gate]
+    required_capabilities: [dependency-wiring-lifecycle, language-performance-safety]
+    required_quality_gates: [reliability gate]
+  - trigger: circular dependency graph
+    required_skills: [architecture-impact-reviewer]
+    required_capabilities: [dependency-wiring-lifecycle, module-boundary-design]
+    required_quality_gates: [architecture gate, implementation gate]
+  - trigger: algorithm complexity unclear
+    required_capabilities: [algorithm-data-structure-selection, solution-optimality-evaluation]
+    required_quality_gates: [implementation gate]
+  - trigger: data structure mismatch
+    required_capabilities: [algorithm-data-structure-selection]
+    required_quality_gates: [implementation gate]
+  - trigger: unbounded load-all processing
+    required_capabilities: [algorithm-data-structure-selection, language-performance-safety]
+    required_quality_gates: [implementation gate, reliability gate]
+  - trigger: nested scan risk
+    required_capabilities: [algorithm-data-structure-selection, solution-optimality-evaluation]
+    required_quality_gates: [implementation gate]
+  - trigger: failure contract unclear
+    required_capabilities: [failure-contract-design, logging-error-handling]
+    required_quality_gates: [implementation gate]
+  - trigger: silent fallback
+    required_capabilities: [failure-contract-design, observability]
+    required_quality_gates: [implementation gate, reliability gate]
+  - trigger: retryability unclear
+    required_capabilities: [failure-contract-design, idempotency-retry-design]
+    required_quality_gates: [implementation gate]
+  - trigger: partial failure unhandled
+    required_capabilities: [failure-contract-design, transaction-consistency, idempotency-retry-design]
+    required_quality_gates: [implementation gate, reliability gate]
+  - trigger: runtime config policy unclear
+    required_capabilities: [configuration-runtime-policy]
+    required_quality_gates: [delivery gate]
+  - trigger: stale feature flag
+    required_capabilities: [configuration-runtime-policy, cleanup-deletion-governance]
+    required_quality_gates: [implementation gate, delivery gate]
+  - trigger: mode switch strategy drift
+    required_capabilities: [configuration-runtime-policy, design-pattern-selection, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: model boundary leak
+    required_skills: [data-api-contract-changer]
+    required_capabilities: [model-boundary-mapping]
+    required_quality_gates: [API/data gate]
+  - trigger: DTO used as domain object
+    required_capabilities: [model-boundary-mapping, implementation-structure-design]
+    required_quality_gates: [API/data gate, implementation gate]
+  - trigger: persistence model leaked to API
+    required_skills: [data-api-contract-changer]
+    required_capabilities: [model-boundary-mapping]
+    required_quality_gates: [API/data gate]
+  - trigger: mapper owns business logic
+    required_capabilities: [model-boundary-mapping, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: side effect hidden in mapper
+    required_capabilities: [data-side-effect-flow-tracing, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: event published before commit
+    required_capabilities: [data-side-effect-flow-tracing, transaction-consistency]
+    required_quality_gates: [implementation gate]
+  - trigger: cache mutation source of truth unclear
+    required_capabilities: [data-side-effect-flow-tracing, cache-design]
+    required_quality_gates: [implementation gate]
+  - trigger: architecture rule unenforced
+    required_capabilities: [architecture-enforcement-tooling, module-boundary-design]
+    required_quality_gates: [architecture gate, implementation gate]
+  - trigger: public contract consumer impact unknown
+    required_capabilities: [consumer-impact-analysis, version-compatibility]
+    required_quality_gates: [API/data gate]
+  - trigger: consumer impact unknown
+    required_capabilities: [consumer-impact-analysis, version-compatibility]
+    required_quality_gates: [API/data gate]
+  - trigger: cleanup deletion path missing
+    required_capabilities: [cleanup-deletion-governance, refactoring]
+    required_quality_gates: [implementation gate]
+  - trigger: stale compatibility branch
+    required_capabilities: [cleanup-deletion-governance, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
   - trigger: shared utility pollution risk
     required_capabilities: [implementation-structure-design, agent-execution-discipline]
   - trigger: business logic in shared utils
@@ -548,6 +684,70 @@ failure_routing:
     route_to: design-pattern-selection
   - condition: pattern hides side effects or lifecycle
     route_to: design-pattern-selection
+  - condition: test seam unclear
+    route_to: testability-seam-design
+  - condition: private helper exported for tests
+    route_to: testability-seam-design
+  - condition: over-mocked private internals
+    route_to: testability-seam-design
+  - condition: fixture ownership unclear
+    route_to: testability-seam-design
+  - condition: dependency wiring unclear
+    route_to: dependency-wiring-lifecycle
+  - condition: service locator risk
+    route_to: dependency-wiring-lifecycle
+  - condition: lifecycle scope unclear
+    route_to: dependency-wiring-lifecycle
+  - condition: shutdown cleanup missing
+    route_to: dependency-wiring-lifecycle
+  - condition: circular dependency graph
+    route_to: dependency-wiring-lifecycle
+  - condition: algorithm complexity unclear
+    route_to: algorithm-data-structure-selection
+  - condition: data structure mismatch
+    route_to: algorithm-data-structure-selection
+  - condition: unbounded load-all processing
+    route_to: algorithm-data-structure-selection
+  - condition: nested scan risk
+    route_to: algorithm-data-structure-selection
+  - condition: failure contract unclear
+    route_to: failure-contract-design
+  - condition: silent fallback
+    route_to: failure-contract-design
+  - condition: retryability unclear
+    route_to: failure-contract-design
+  - condition: partial failure unhandled
+    route_to: failure-contract-design
+  - condition: runtime config policy unclear
+    route_to: configuration-runtime-policy
+  - condition: stale feature flag
+    route_to: configuration-runtime-policy
+  - condition: mode switch strategy drift
+    route_to: configuration-runtime-policy
+  - condition: model boundary leak
+    route_to: model-boundary-mapping
+  - condition: DTO used as domain object
+    route_to: model-boundary-mapping
+  - condition: persistence model leaked to API
+    route_to: model-boundary-mapping
+  - condition: mapper owns business logic
+    route_to: model-boundary-mapping
+  - condition: side effect hidden in mapper
+    route_to: data-side-effect-flow-tracing
+  - condition: event published before commit
+    route_to: data-side-effect-flow-tracing
+  - condition: cache mutation source of truth unclear
+    route_to: data-side-effect-flow-tracing
+  - condition: architecture rule unenforced
+    route_to: architecture-enforcement-tooling
+  - condition: public contract consumer impact unknown
+    route_to: consumer-impact-analysis
+  - condition: consumer impact unknown
+    route_to: consumer-impact-analysis
+  - condition: cleanup deletion path missing
+    route_to: cleanup-deletion-governance
+  - condition: stale compatibility branch
+    route_to: cleanup-deletion-governance
   - condition: performance or async runtime risk unclear
     route_to: language-performance-safety
   - condition: concurrency or lock design unclear
@@ -939,6 +1139,56 @@ routing_rules:
       - design pattern selection pattern candidates selected pattern rejected pattern simpler alternative direct code decision factory builder singleton adapter facade decorator proxy composite bridge strategy state command observer pubsub mediator chain of responsibility template method visitor specification repository unit of work dependency injection object pool
       - pattern misuse pattern overengineering speculative abstraction pattern strategy with one implementation abstract base class for code reuse singleton global state risk factory hides simple construction builder for trivial DTO observer lifecycle leak decorator hides side effects proxy hides network IO facade god object risk mediator god object risk object pool without profile evidence command without idempotency state pattern without state machine visitor breaks encapsulation
       - producer consumer worker pool pipeline reactor proactor async task fan-out bounded concurrency backpressure circuit breaker bulkhead pattern performance risk pattern hides IO pattern hides side effects
+    priority: 60
+  - route_to: testability-seam-design
+    triggers:
+      - testability seam public behavior boundary dependency injection fake stub mock spy contract unit integration characterization fixture ownership test data builder private helper non export deterministic time randomness UUID clock env external IO flaky test
+      - private helper exported for tests over mocked private internals mock internal call order fixture ownership unclear public behavior tests missing
+    priority: 60
+  - route_to: dependency-wiring-lifecycle
+    triggers:
+      - dependency wiring lifecycle composition root constructor injection factory injection provider injection service locator lifecycle scope singleton reusable client pool owner lazy eager startup validation shutdown cleanup test override circular dependency configuration driven wiring
+      - service locator risk dependency graph circular dependency shutdown cleanup missing per operation client construction lifecycle scope unclear global mutable state timer subscription file socket client pool leak
+    priority: 60
+  - route_to: algorithm-data-structure-selection
+    triggers:
+      - algorithm data structure selection Big O time space input size distribution average worst case map set list heap queue deque tree trie graph bloom filter LRU LFU interval tree segment tree
+      - top K dedupe grouping sorting streaming load all pagination chunking batch size memory budget hot key skew graph traversal prefix range query stable ordering approximate exact online offline nested scan risk
+    priority: 60
+  - route_to: failure-contract-design
+    triggers:
+      - failure contract error taxonomy retryable terminal validation permission conflict concurrency timeout cancellation dependency failure partial failure degraded response compensation DLQ fallback cause preservation user visible internal safe diagnostic
+      - adapter error translation repository error translation controller service job message consumer error contract silent fallback retryability unclear raw SDK database error leak panic exception boundary
+    priority: 60
+  - route_to: configuration-runtime-policy
+    triggers:
+      - configuration runtime policy build time deploy time runtime tenant user experiment typed config default validation fail fast hot reload feature flag owner expiry removal kill switch stale flag cleanup mode kind switch governance
+      - runtime config policy unclear stale feature flag permanent flag mode switch strategy drift config test matrix config secrets boundary rollout rollback config observability
+    priority: 60
+  - route_to: model-boundary-mapping
+    triggers:
+      - model boundary mapping API DTO command query domain object value object persistence model ORM event payload view model mapper assembler null default optional schema version serialization validation generated handwritten boundary
+      - model boundary leak DTO used as domain object persistence model leaked to API mapper owns business logic generated model leaking domain null default semantics drift
+    priority: 60
+  - route_to: data-side-effect-flow-tracing
+    triggers:
+      - data side effect flow tracing input validation mapping policy mutation transaction persistence event cache external IO response outbox publish after commit idempotency compensation observability
+      - side effect hidden in mapper getter policy domain object event published before commit cache mutation source of truth unclear logging metrics file IO clock random env
+    priority: 60
+  - route_to: architecture-enforcement-tooling
+    triggers:
+      - architecture enforcement tooling import boundary check cycle detection public private export check forbidden dependency lint type check strictness dead code detection complexity threshold generated code exclusion CI
+      - ArchUnit Dependency Cruiser import linter eslint boundaries go vet staticcheck architecture rule unenforced documented only no CI gate
+    priority: 60
+  - route_to: consumer-impact-analysis
+    triggers:
+      - consumer impact analysis changed API SDK schema event public export generated client mobile web backend consumer unknown consumer risk compatibility migration deprecation telemetry rollout rollback
+      - field rename breaking change schema evolution event payload compatibility deprecation window old new usage public contract consumer impact unknown
+    priority: 60
+  - route_to: cleanup-deletion-governance
+    triggers:
+      - cleanup deletion governance deletion path dead code removal caller search runtime generated reflection references feature flag removal fallback expiry compatibility branch deprecated API owner expand contract cleanup
+      - telemetry proving unused rollback after deletion cleanup issue stale compatibility branch cleanup deletion path missing permanent flag fallback deprecated API
     priority: 60
   - route_to: data-model-design
     triggers:

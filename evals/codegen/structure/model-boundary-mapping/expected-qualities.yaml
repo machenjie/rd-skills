@@ -1,0 +1,43 @@
+id: model-boundary-mapping
+category: structure
+complexity: L3
+focus:
+  - DTO domain persistence separation
+  - mapper ownership
+  - null default optional semantics
+  - version compatibility
+route_hints:
+  skills:
+    - data-api-contract-changer
+    - backend-change-builder
+    - quality-test-gate
+  capabilities:
+    - model-boundary-mapping
+    - data-model-design
+    - version-compatibility
+    - contract-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - API/data gate
+    - test gate
+expected_outcomes:
+  - API DTO, command, query, domain object, value object, persistence model, event payload, and view model boundaries are explicit.
+  - Persistence models do not leak to API responses and DTOs are not used as domain objects.
+  - Mappers preserve null, default, optional, serialization, validation, and version semantics.
+  - Generated models remain at generated boundaries.
+required_qualities:
+  - Model Boundary Map names source, target, mapping owner, and validation owner.
+  - Mapper or assembler does not own business rules unless explicitly a policy.
+  - Event payloads are versioned contracts.
+  - Mapping tests cover compatibility and semantic drift.
+forbidden_shortcuts:
+  - Using API DTO as domain object.
+  - Returning ORM or persistence model directly from API.
+  - Putting business rules in mapper code.
+  - Losing null, default, or optional semantics during mapping.
+evidence:
+  - Model boundary map.
+  - Mapping tests.
+  - Compatibility decision.
+  - Rejected leakage alternatives.

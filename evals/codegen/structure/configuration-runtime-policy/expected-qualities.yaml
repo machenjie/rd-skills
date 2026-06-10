@@ -1,0 +1,43 @@
+id: configuration-runtime-policy
+category: structure
+complexity: L3
+focus:
+  - typed runtime configuration
+  - feature flag lifecycle
+  - mode switch governance
+  - rollout and rollback safety
+route_hints:
+  skills:
+    - backend-change-builder
+    - delivery-release-gate
+    - change-documentation-gate
+  capabilities:
+    - configuration-runtime-policy
+    - cleanup-deletion-governance
+    - code-clarity-maintainability
+    - design-pattern-selection
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - delivery gate
+    - test gate
+expected_outcomes:
+  - Config is typed, validated, and fails fast unless safe degradation is designed.
+  - Feature flags have owner, type, expiry, cleanup path, rollout, and rollback behavior.
+  - Runtime mode and kind switches do not bypass domain or security invariants.
+  - Config test matrix covers build-time, deploy-time, runtime, tenant, user, and experiment scopes when relevant.
+required_qualities:
+  - Configuration Policy names scope, schema, defaults, validation, kill switch, and cleanup owner/date.
+  - Stale feature flags and permanent compatibility switches have deletion governance.
+  - Secrets boundaries and observability are explicit.
+  - Mode switch strategy drift is rejected or converted into explicit strategy design.
+forbidden_shortcuts:
+  - Adding permanent feature flags with no owner or expiry.
+  - Letting mode or kind switches become hidden strategy systems.
+  - Allowing configuration to bypass domain or security invariants.
+  - Accepting invalid config without fail-fast or safe degradation behavior.
+evidence:
+  - Configuration policy decision.
+  - Typed schema and validation tests.
+  - Feature flag lifecycle and cleanup note.
+  - Rollout, rollback, and kill-switch evidence.

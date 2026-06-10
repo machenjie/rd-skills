@@ -92,8 +92,12 @@ Select the contract mode before changing schema, DTO, endpoint, error, migration
 - **Signal:** new required field, enum value, validation rule, or status code appears without old-client behavior. **Hidden risk:** backward-incompatible client break. **Required professional action:** classify compatibility and design fallback/versioning. **Route to:** `version-compatibility`, `contract-testing`. **Evidence required:** consumer list, generated client impact, contract test.
 - **Signal:** cursor, filter, sort, page size, or ordering changes on an existing list endpoint. **Hidden risk:** pagination drift, duplicate/missing records, broken dashboards. **Required professional action:** prove stable ordering and migration behavior. **Route to:** `api-contract-design`, `quality-test-gate`. **Evidence required:** pagination contract, boundary tests, old/new examples.
 - **Signal:** error code or validation message changes without machine-readable taxonomy review. **Hidden risk:** clients classify errors incorrectly, retry unsafe operations, or silently break tenant/API compatibility. **Required professional action:** document and verify error semantics and retry behavior before merge. **Route to:** `error-code-design`, `backend-change-builder`. **Evidence required:** error code table, retry/client behavior matrix, negative-test output, and affected-consumer owner.
+- **Signal:** DTO, command/query, domain object, persistence model, event payload, or generated model crosses a boundary directly. **Hidden risk:** model leakage and semantic drift. **Required professional action:** map source/target models before schema or mapper changes. **Route to:** `model-boundary-mapping`, `implementation-structure-design`. **Evidence required:** mapping owner, validation owner, null/default semantics, generated boundary, and mapping tests.
+- **Signal:** API, SDK, schema, event, or public export field is renamed, removed, or changes type. **Hidden risk:** known or unknown consumer breakage. **Required professional action:** run consumer impact analysis before compatibility decision. **Route to:** `consumer-impact-analysis`, `version-compatibility`. **Evidence required:** consumer inventory, generated client impact, migration/deprecation plan, telemetry, and rollback.
+- **Signal:** repository, adapter, service, or controller errors collapse into one generic response. **Hidden risk:** retryability, validation, permission, conflict, and timeout semantics become indistinguishable. **Required professional action:** define the failure contract with safe public mapping. **Route to:** `failure-contract-design`, `error-code-design`. **Evidence required:** failure taxonomy, boundary translation map, negative tests, and safe user-visible messages.
 - **Signal:** mutating endpoint lacks idempotency key or request identity semantics. **Hidden risk:** duplicate side effects under retry. **Required professional action:** design idempotency as part of the contract. **Route to:** `idempotency-retry-design`, `backend-change-builder`. **Evidence required:** key scope, TTL, duplicate response behavior, retry test.
 - **Signal:** schema migration removes/renames fields or contracts before consumers migrate. **Hidden risk:** rollback failure and version skew breakage. **Required professional action:** enforce expand/migrate/contract. **Route to:** `data-migration-design`, `delivery-release-gate`. **Evidence required:** EMC phases, rollback script, consumer readiness.
+- **Signal:** compatibility branch, deprecated field, old endpoint, or temporary expand/contract code has no removal condition. **Hidden risk:** stale contract surface and permanent dual behavior. **Required professional action:** create a cleanup/deletion plan. **Route to:** `cleanup-deletion-governance`, `change-documentation-gate`. **Evidence required:** removal condition, consumer telemetry, caller search, cleanup owner, and rollback path.
 - **Signal:** generated clients, SDKs, OpenAPI/Protobuf/GraphQL artifacts are not regenerated or diffed. **Hidden risk:** source contract and runtime clients diverge. **Required professional action:** regenerate or explain no-op. **Route to:** `sdk-library-contract-design`, `contract-testing`. **Evidence required:** generated diff, client tests, release note.
 
 ### Decision Tree: Breaking Change Handling
@@ -174,11 +178,15 @@ Return a structured contract change plan with:
 - **Professional judgment**: compatibility decision, consumer risk ruled out or retained, and contract behavior intentionally preserved or changed.
 - **Compatibility declaration**: Breaking or non-breaking, with class from compatibility matrix.
 - **Consumer list**: Named consumers with version, dependency, and migration readiness.
+- **Model boundary map**: API DTO, command/query, domain, persistence, event, view, and generated model mapping owner; validation owner; null/default/optional semantics.
+- **Failure contract**: validation, permission, conflict, timeout, cancellation, dependency, partial, retryable, and terminal error mapping across controller/service/repository/adapter boundaries.
+- **Consumer impact report**: known/unknown consumers, generated client impact, telemetry for old/new usage, migration guide, deprecation window, and rollout/rollback.
 - **Migration plan**: Forward migration steps in deployment order; rollback migration steps; tested execution plan for large tables.
 - **EMC schedule**: Expand / Migrate / Contract phases with deployment sequence and consumer coordination timeline.
 - **Idempotency design**: Key source, scope, storage, TTL, and expired-key behavior.
 - **Validation and error model**: Validation rules, error code taxonomy, RFC 7807 compliance.
 - **Deprecation notice**: Sunset date, replacement, migration guide link (if applicable).
+- **Cleanup/deletion governance**: removal condition, owner, telemetry proving old path unused, caller search, cleanup issue, and rollback after deletion.
 - **Rollback safety**: Whether rollback is safe without data intervention; required rollback script.
 - **Reuse and placement rationale**: schema/DTO/generated-client/API-doc ownership, mapper placement, expand/contract phase placement, and rejected breaking shortcut.
 - **Behavior preservation**: old wire shape, field semantics, validation behavior, pagination order, error codes, and generated client compatibility preserved or intentionally changed.
@@ -215,6 +223,10 @@ Close a contract change only when all five canonical answers are concrete (answe
 - **reliability-observability-gate** — when schema or API changes affect SLO-critical paths.
 - **quality-test-gate** — for consumer contract test obligations and migration test design.
 - **delivery-release-gate** — for deployment sequencing, migration rollout windows, and rollback procedure.
+- **model-boundary-mapping** — when DTO/domain/persistence/event/generated models risk leakage or semantic drift.
+- **consumer-impact-analysis** — when changed public contracts may affect known or unknown consumers.
+- **failure-contract-design** — when error states, retryability, fallback, or partial failure become part of the contract.
+- **cleanup-deletion-governance** — when deprecated fields, compatibility branches, feature flags, or expand/contract remnants need removal.
 
 ## Completion Criteria
 Data and API changes are implementable with an explicit compatibility declaration, a consumer enumeration with migration readiness, a tested rollback migration, a zero-downtime strategy for large table changes, idempotency design for all retry-safe operations, RFC 7807 error responses, and an EMC deployment sequence that prevents consumer breakage during rollout.

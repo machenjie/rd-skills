@@ -1,0 +1,43 @@
+id: dependency-wiring-lifecycle
+category: structure
+complexity: L3
+focus:
+  - composition root
+  - dependency graph lifecycle
+  - reusable client ownership
+  - shutdown cleanup
+route_hints:
+  skills:
+    - backend-change-builder
+    - reliability-observability-gate
+    - ai-code-review-refactor
+  capabilities:
+    - dependency-wiring-lifecycle
+    - implementation-structure-design
+    - language-performance-safety
+    - code-clarity-maintainability
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - HTTP, DB, Redis, Kafka, SDK clients, and pools are constructed at the narrowest correct lifecycle scope.
+  - Composition root owns construction and shutdown.
+  - Service locator and global mutable state are rejected or justified by framework convention.
+  - Test overrides do not change production wiring semantics.
+required_qualities:
+  - Dependency Wiring Plan includes graph, owner, lifecycle, configuration binding, and shutdown owner.
+  - Reusable external clients are not constructed per operation.
+  - Circular dependency checks are explicit.
+  - Startup validation and cleanup cover long-lived dependencies.
+forbidden_shortcuts:
+  - Constructing HTTP or DB clients per request.
+  - Hiding dependencies behind a service locator.
+  - Introducing a circular dependency graph.
+  - Omitting shutdown cleanup for pools, timers, subscriptions, files, or sockets.
+evidence:
+  - Dependency graph and lifecycle table.
+  - Composition root diff or design note.
+  - Shutdown cleanup test or validation command.
+  - Test override strategy.

@@ -1,0 +1,43 @@
+id: consumer-impact-analysis
+category: structure
+complexity: L3
+focus:
+  - public contract consumer impact
+  - compatibility and migration
+  - telemetry for old and new usage
+  - rollout and rollback
+route_hints:
+  skills:
+    - data-api-contract-changer
+    - integration-change-builder
+    - change-documentation-gate
+  capabilities:
+    - consumer-impact-analysis
+    - version-compatibility
+    - contract-testing
+    - data-model-design
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - API/data gate
+    - test gate
+expected_outcomes:
+  - Changed API, SDK, schema, event, or public export contract has known and unknown consumer risk analysis.
+  - Generated clients, mobile, web, backend, SDK, and package consumers are considered.
+  - Compatibility, deprecation window, migration guide, telemetry, rollout, and rollback are explicit.
+  - Tests cover old and new contract behavior.
+required_qualities:
+  - Consumer Impact Report names changed contract, consumers, compatibility, migration plan, and residual risk.
+  - Breaking field rename is avoided or staged through compatible expand-contract behavior.
+  - Telemetry identifies old/new usage before deletion.
+  - Rollback preserves consumer compatibility.
+forbidden_shortcuts:
+  - Renaming API, SDK, schema, event, or public export fields directly with no compatibility path.
+  - Ignoring unknown consumer risk.
+  - Shipping generated-client breaking changes without migration guide.
+  - Removing old contract behavior without telemetry.
+evidence:
+  - Consumer impact report.
+  - Contract or compatibility tests.
+  - Migration and deprecation documentation.
+  - Telemetry and rollout/rollback plan.

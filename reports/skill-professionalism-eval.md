@@ -1,9 +1,9 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-10T09:08:24.172611+00:00
-- Skills/capabilities checked: 125
+- Generated: 2026-06-10T09:49:31.832357+00:00
+- Skills/capabilities checked: 135
 - Warning count: 4
-- Average score: 41.44/60
+- Average score: 41.26/60
 
 ## Scores
 
@@ -58,7 +58,9 @@
 | `src/foundation/capabilities/microservice-splitting/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/requirement-clarification/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/task-dag-decomposition/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/algorithm-data-structure-selection/SKILL.md` | foundation-capability | 36/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/api-contract-design/SKILL.md` | foundation-capability | 36/60 | acceptable | 0 | 1 |
+| `src/foundation/capabilities/architecture-enforcement-tooling/SKILL.md` | foundation-capability | 36/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/authentication-authorization/SKILL.md` | foundation-capability | 36/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/containerization/SKILL.md` | foundation-capability | 36/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/requirement-structuring/SKILL.md` | foundation-capability | 36/60 | acceptable | 0 | 0 |
@@ -67,15 +69,22 @@
 | `src/foundation/capabilities/threat-modeling/SKILL.md` | foundation-capability | 36/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/acceptance-standard-definition/SKILL.md` | foundation-capability | 37/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/business-rule-extraction/SKILL.md` | foundation-capability | 37/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/data-side-effect-flow-tracing/SKILL.md` | foundation-capability | 37/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/extensibility-design/SKILL.md` | foundation-capability | 37/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/language-runtime-selection/SKILL.md` | foundation-capability | 37/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/model-boundary-mapping/SKILL.md` | foundation-capability | 37/60 | needs-review | 0 | 0 |
+| `src/foundation/capabilities/cleanup-deletion-governance/SKILL.md` | foundation-capability | 38/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/profiling/SKILL.md` | foundation-capability | 38/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/project-initialization/SKILL.md` | foundation-capability | 38/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md` | foundation-capability | 39/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/controller-api-implementation/SKILL.md` | foundation-capability | 39/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/failure-contract-design/SKILL.md` | foundation-capability | 39/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/package-dependency-management/SKILL.md` | foundation-capability | 39/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/consumer-impact-analysis/SKILL.md` | foundation-capability | 40/60 | needs-review | 0 | 0 |
+| `src/foundation/capabilities/dependency-wiring-lifecycle/SKILL.md` | foundation-capability | 40/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/technology-stack-selection/SKILL.md` | foundation-capability | 40/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/web-security/SKILL.md` | foundation-capability | 40/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/configuration-runtime-policy/SKILL.md` | foundation-capability | 41/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/module-boundary-design/SKILL.md` | foundation-capability | 41/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/design-pattern-selection/SKILL.md` | foundation-capability | 42/60 | acceptable | 0 | 1 |
 | `src/foundation/capabilities/context-packaging/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
@@ -85,6 +94,7 @@
 | `src/foundation/capabilities/release-rollback/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/skill-authoring-expert/SKILL.md` | foundation-capability | 43/60 | needs-review | 1 | 1 |
 | `src/foundation/capabilities/solution-optimality-evaluation/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/testability-seam-design/SKILL.md` | foundation-capability | 43/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/async-job-design/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/contract-testing/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/integration-testing/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
@@ -119,15 +129,15 @@
 | `src/professional-skills/data-middleware-change-builder/SKILL.md` | professional-skill | 55/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/delivery-release-gate/SKILL.md` | professional-skill | 55/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/domain-impact-modeler/SKILL.md` | professional-skill | 55/60 | sample-grade | 0 | 0 |
-| `src/professional-skills/architecture-impact-reviewer/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/change-intake-compiler/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/task-dag-planner/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/acceptance-criteria-builder/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
-| `src/professional-skills/change-documentation-gate/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/change-impact-analyzer/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/integration-change-builder/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/reliability-observability-gate/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/security-privacy-gate/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/architecture-impact-reviewer/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/change-documentation-gate/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/change-forge-router/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/data-api-contract-changer/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/frontend-change-builder/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |

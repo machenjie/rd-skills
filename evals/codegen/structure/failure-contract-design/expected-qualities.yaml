@@ -1,0 +1,43 @@
+id: failure-contract-design
+category: structure
+complexity: L3
+focus:
+  - boundary error taxonomy
+  - retryable versus terminal state
+  - safe user-visible error mapping
+  - async failure and DLQ behavior
+route_hints:
+  skills:
+    - backend-change-builder
+    - integration-change-builder
+    - reliability-observability-gate
+  capabilities:
+    - failure-contract-design
+    - logging-error-handling
+    - idempotency-retry-design
+    - observability
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - Adapter, repository, service, controller, job, and consumer boundaries declare failure contracts.
+  - Retryable, terminal, validation, permission, conflict, timeout, cancellation, and partial failure states are distinguishable.
+  - Raw SDK or database internals are translated at the boundary.
+  - Logs preserve cause safely without leaking secrets or PII.
+required_qualities:
+  - Failure Contract includes taxonomy, translation map, retryability, fallback, compensation, and DLQ behavior.
+  - User-visible messages are safe and internal diagnostics preserve cause.
+  - Silent fallback is replaced by typed degradation and observability.
+  - Negative tests cover boundary errors and async poison-message behavior.
+forbidden_shortcuts:
+  - Swallowing errors with silent fallback.
+  - Returning generic errors for retryable, terminal, validation, permission, conflict, timeout, or cancellation states.
+  - Leaking raw database or SDK errors across API boundaries.
+  - Leaving partial failure without compensation, rollback, DLQ, or explicit acceptance.
+evidence:
+  - Failure contract decision.
+  - Boundary translation map.
+  - Negative-path test output.
+  - Log, metric, and trace field list.

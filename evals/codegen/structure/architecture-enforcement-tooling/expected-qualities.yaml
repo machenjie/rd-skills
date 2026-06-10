@@ -1,0 +1,43 @@
+id: architecture-enforcement-tooling
+category: structure
+complexity: L3
+focus:
+  - enforceable architecture rules
+  - import and dependency checks
+  - CI integration
+  - generated code exceptions
+route_hints:
+  skills:
+    - architecture-impact-reviewer
+    - backend-change-builder
+    - ai-code-review-refactor
+  capabilities:
+    - architecture-enforcement-tooling
+    - module-boundary-design
+    - code-review
+    - code-clarity-maintainability
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - test gate
+expected_outcomes:
+  - Architecture rules are converted into CI-enforced checks rather than documentation only.
+  - Import boundaries, cycles, public/private exports, and forbidden dependencies are checked by language-appropriate tooling.
+  - Generated code exceptions are explicit.
+  - Migration path and ownership are defined.
+required_qualities:
+  - Architecture Enforcement Plan lists rules, tools, CI command, failure examples, exceptions, owner, and residual unenforced rules.
+  - Tool choice fits language and stack, such as ArchUnit, Dependency Cruiser, import-linter, eslint boundaries, go vet, or staticcheck.
+  - Rule failures are understandable to contributors.
+  - Existing code can migrate incrementally when needed.
+forbidden_shortcuts:
+  - Writing architecture rules only in documentation with no CI gate.
+  - Adding import boundary rules without failure examples.
+  - Blocking generated code without explicit exception policy.
+  - Enforcing rules manually only in code review.
+evidence:
+  - Architecture enforcement plan.
+  - CI command or lint rule.
+  - Failure example.
+  - Generated-code exception and owner.

@@ -1,0 +1,43 @@
+id: algorithm-data-structure-selection
+category: structure
+complexity: L3
+focus:
+  - input size and distribution
+  - complexity and memory budget
+  - access-pattern data structure fit
+  - streaming and chunking
+route_hints:
+  skills:
+    - backend-change-builder
+    - reliability-observability-gate
+    - ai-code-review-refactor
+  capabilities:
+    - algorithm-data-structure-selection
+    - solution-optimality-evaluation
+    - language-performance-safety
+    - profiling
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - Expected input size, distribution, and worst-case behavior are stated before implementation.
+  - Data structure matches access pattern for dedupe, grouping, sorting, top-K, graph, prefix, or range query.
+  - Unbounded inputs use streaming, pagination, chunking, or bounded memory.
+  - Hot paths have benchmark or profile evidence.
+required_qualities:
+  - Algorithm/Data Structure Decision compares simpler and optimized alternatives.
+  - Time and space complexity include average and worst case.
+  - Memory budget and batch size are explicit for 10M input scale.
+  - Hot key, skew, stable ordering, approximate/exact, and online/offline tradeoffs are addressed when relevant.
+forbidden_shortcuts:
+  - Using nested scans over 10M records without bounded N.
+  - Loading all records into memory when streaming or chunking is required.
+  - Choosing list, map, set, heap, tree, trie, graph, bloom filter, LRU, or LFU without access-pattern rationale.
+  - Claiming optimization without benchmark or profile evidence.
+evidence:
+  - Algorithm decision record.
+  - Complexity and memory budget.
+  - Streaming or chunking test.
+  - Benchmark or profile output for hot path.

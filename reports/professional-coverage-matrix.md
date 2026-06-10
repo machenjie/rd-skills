@@ -1,16 +1,24 @@
 # Professional Coverage Matrix
 
-- Generated: 2026-06-10T09:08:27.702635+00:00
-- Rows checked: 48
+- Generated: 2026-06-10T09:49:31.925390+00:00
+- Rows checked: 58
 
 | Item | Kind | Mode Matrix | Proactive Triggers | Evidence Contract | Output Contract | Failure Modes | Quality Gate | Reference Loading Hint | Routing Coverage | Benchmark Coverage | Anti-bloat Status | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `algorithm-data-structure-selection` | foundation-capability | n/a | n/a | partial | partial | yes | yes | no | no | no | ok | needs-review |
+| `architecture-enforcement-tooling` | foundation-capability | n/a | n/a | partial | partial | yes | yes | no | no | no | ok | needs-review |
 | `async-job-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (1) | yes (1) | ok | acceptable |
 | `cache-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (3) | yes (2) | ok | acceptable |
+| `cleanup-deletion-governance` | foundation-capability | n/a | n/a | partial | partial | yes | yes | no | no | no | ok | needs-review |
 | `code-review` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (4) | yes (2) | ok | acceptable |
+| `configuration-runtime-policy` | foundation-capability | n/a | n/a | partial | partial | yes | yes | no | no | no | ok | needs-review |
+| `consumer-impact-analysis` | foundation-capability | n/a | n/a | partial | partial | yes | yes | no | no | no | ok | needs-review |
 | `contract-testing` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (9) | yes (1) | ok | acceptable |
 | `cpp-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (2) | yes (1) | ok | acceptable |
+| `data-side-effect-flow-tracing` | foundation-capability | n/a | n/a | partial | partial | yes | yes | no | no | no | ok | needs-review |
+| `dependency-wiring-lifecycle` | foundation-capability | n/a | n/a | partial | partial | yes | yes | no | no | no | ok | needs-review |
 | `e2e-testing` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (4) | yes (1) | ok | acceptable |
+| `failure-contract-design` | foundation-capability | n/a | n/a | partial | partial | yes | yes | no | no | no | ok | needs-review |
 | `failure-diagnosis` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (7) | yes (1) | ok | acceptable |
 | `go-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (1) | yes (1) | ok | acceptable |
 | `idempotency-retry-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (10) | yes (2) | ok | acceptable |
@@ -21,6 +29,7 @@
 | `language-testing-strategy` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (2) | yes (1) | ok | acceptable |
 | `logging-error-handling` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (7) | yes (1) | ok | acceptable |
 | `message-queue-design` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (4) | yes (2) | ok | acceptable |
+| `model-boundary-mapping` | foundation-capability | n/a | n/a | partial | partial | yes | yes | no | no | no | ok | needs-review |
 | `observability` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (27) | yes (3) | ok | acceptable |
 | `python-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (1) | yes (1) | ok | acceptable |
 | `refactoring` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (9) | yes (2) | ok | acceptable |
@@ -31,6 +40,7 @@
 | `shell-cli-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (1) | yes (1) | ok | acceptable |
 | `sql-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (1) | yes (1) | ok | acceptable |
 | `test-strategy` | foundation-capability | n/a | n/a | partial | yes | yes | yes | yes | yes (4) | no | ok | acceptable |
+| `testability-seam-design` | foundation-capability | n/a | n/a | partial | partial | yes | yes | no | no | no | ok | needs-review |
 | `transaction-consistency` | foundation-capability | n/a | n/a | partial | yes | yes | yes | yes | yes (7) | yes (1) | ok | acceptable |
 | `typescript-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (1) | yes (1) | ok | acceptable |
 | `unit-testing` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (15) | yes (2) | ok | acceptable |
@@ -53,3 +63,16 @@
 | `reliability-observability-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (30) | no | ok | sample-grade |
 | `security-privacy-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (25) | no | ok | sample-grade |
 | `task-dag-planner` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (1) | no | ok | sample-grade |
+
+## Weak Spots
+
+- `algorithm-data-structure-selection`: Reference Loading Hint, Routing Coverage, Benchmark Coverage
+- `architecture-enforcement-tooling`: Reference Loading Hint, Routing Coverage, Benchmark Coverage
+- `cleanup-deletion-governance`: Reference Loading Hint, Routing Coverage, Benchmark Coverage
+- `configuration-runtime-policy`: Reference Loading Hint, Routing Coverage, Benchmark Coverage
+- `consumer-impact-analysis`: Reference Loading Hint, Routing Coverage, Benchmark Coverage
+- `data-side-effect-flow-tracing`: Reference Loading Hint, Routing Coverage, Benchmark Coverage
+- `dependency-wiring-lifecycle`: Reference Loading Hint, Routing Coverage, Benchmark Coverage
+- `failure-contract-design`: Reference Loading Hint, Routing Coverage, Benchmark Coverage
+- `model-boundary-mapping`: Reference Loading Hint, Routing Coverage, Benchmark Coverage
+- `testability-seam-design`: Reference Loading Hint, Routing Coverage, Benchmark Coverage

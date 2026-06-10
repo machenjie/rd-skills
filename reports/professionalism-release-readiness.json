@@ -46,7 +46,7 @@
       "blocking": true,
       "evidence_source": "config/skill-content-exceptions.yaml and reports/skill-content-audit.json",
       "item": "content bloat exceptions",
-      "notes": "- classifications: {'KEEP_AS_IS': 127, 'TIGHTEN_BODY': 5}; - domain_extensions: 7; - foundation_capabilities: 106; - heavy_domain: 0; - heavy_foundation: 0; - heavy_professional: 0; - low_professionalism: 0; - move_to_reference: 0; - professional_skills: 19; - split_candidates: 0",
+      "notes": "- classifications: {'KEEP_AS_IS': 136, 'TIGHTEN_BODY': 6}; - domain_extensions: 7; - foundation_capabilities: 116; - heavy_domain: 0; - heavy_foundation: 0; - heavy_professional: 0; - low_professionalism: 0; - move_to_reference: 0; - professional_skills: 19; - split_candidates: 0",
       "status": "pass"
     },
     {
@@ -72,26 +72,108 @@
     "split_candidates": 0
   },
   "default_regression_status": "pass",
-  "generated_at": "2026-06-10T09:08:19.068603+00:00",
+  "generated_at": "2026-06-10T09:51:04.729102+00:00",
   "key_foundation_capability_coverage_summary": {
-    "count": 29,
+    "count": 39,
     "statuses": {
-      "acceptable": 29
+      "acceptable": 29,
+      "needs-review": 10
     }
   },
   "known_accepted_warnings": [],
   "latest_results_available": {
     "benchmark_errors": 0,
-    "coverage_rows_checked": 48,
+    "coverage_rows_checked": 58,
     "professional_agent_sample_warnings": 0,
     "professional_agent_samples_checked": 5,
     "promoted_agent_sample_strict_warnings": 0,
     "promoted_agent_samples_strict_checked": 5,
     "release_blocking_professionalism_warnings": 0,
-    "skill_professionalism_average_score": 41.43,
+    "skill_professionalism_average_score": 41.26,
     "skill_professionalism_warnings": 4
   },
-  "non_blocking_followups": [],
+  "non_blocking_followups": [
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/algorithm-data-structure-selection/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/architecture-enforcement-tooling/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/cleanup-deletion-governance/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/configuration-runtime-policy/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/consumer-impact-analysis/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/data-side-effect-flow-tracing/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/dependency-wiring-lifecycle/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/failure-contract-design/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/model-boundary-mapping/SKILL.md"
+    },
+    {
+      "baseline_value": "acceptable",
+      "category": "key-foundation-capability-needs-review",
+      "current_value": "needs-review",
+      "message": "key foundation capability remains needs-review",
+      "severity": "info",
+      "target": "src/foundation/capabilities/testability-seam-design/SKILL.md"
+    }
+  ],
   "out_of_scope_non_key_skill_eval_warnings": {
     "non_key_capability_advisory_warnings": 2,
     "other_untracked_skill_eval_warnings": 2,

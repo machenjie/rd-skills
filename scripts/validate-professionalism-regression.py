@@ -114,6 +114,16 @@ KEY_FOUNDATION_CAPABILITIES = {
     "cpp-professional-usage",
     "sql-professional-usage",
     "shell-cli-professional-usage",
+    "testability-seam-design",
+    "dependency-wiring-lifecycle",
+    "algorithm-data-structure-selection",
+    "failure-contract-design",
+    "configuration-runtime-policy",
+    "model-boundary-mapping",
+    "data-side-effect-flow-tracing",
+    "architecture-enforcement-tooling",
+    "consumer-impact-analysis",
+    "cleanup-deletion-governance",
 }
 
 

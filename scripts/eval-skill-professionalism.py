@@ -92,6 +92,16 @@ KEY_FOUNDATION_CAPABILITIES = {
     "cpp-professional-usage",
     "sql-professional-usage",
     "shell-cli-professional-usage",
+    "testability-seam-design",
+    "dependency-wiring-lifecycle",
+    "algorithm-data-structure-selection",
+    "failure-contract-design",
+    "configuration-runtime-policy",
+    "model-boundary-mapping",
+    "data-side-effect-flow-tracing",
+    "architecture-enforcement-tooling",
+    "consumer-impact-analysis",
+    "cleanup-deletion-governance",
 }
 
 SECTION_ALIASES = {
@@ -193,6 +203,18 @@ BOUNDARY_TERMS = (
     "internal dependency direction",
     "object boundary lost during file merge",
     "object boundary missing during file split",
+    "testability seam",
+    "dependency wiring",
+    "composition root",
+    "lifecycle scope",
+    "algorithm data structure",
+    "failure contract",
+    "configuration runtime policy",
+    "model boundary mapping",
+    "side-effect flow",
+    "architecture enforcement",
+    "consumer impact",
+    "cleanup deletion",
 )
 
 VALIDATION_TERMS = (

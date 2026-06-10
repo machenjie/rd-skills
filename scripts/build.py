@@ -542,6 +542,7 @@ def _render_capability_reference(
             "Critical Details",
             "Failure Modes",
             "Output Contract",
+            "Evidence Contract",
             "Quality Gate",
             "Completion Criteria",
         ),

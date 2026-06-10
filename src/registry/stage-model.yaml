@@ -41,6 +41,10 @@ stages:
       - architecture-tradeoff-analysis
       - extensibility-design
       - solution-optimality-evaluation
+    conditional_capabilities:
+      - architecture-enforcement-tooling
+      - consumer-impact-analysis
+      - dependency-wiring-lifecycle
     skip_by_default:
       - language idiom checks
       - coding
@@ -66,6 +70,15 @@ stages:
       - module-boundary-design
       - code-clarity-maintainability
       - language-idiom-enforcement
+    conditional_capabilities:
+      - testability-seam-design
+      - dependency-wiring-lifecycle
+      - algorithm-data-structure-selection
+      - failure-contract-design
+      - configuration-runtime-policy
+      - model-boundary-mapping
+      - data-side-effect-flow-tracing
+      - cleanup-deletion-governance
     skip_by_default:
       - full architecture review
       - release
@@ -90,6 +103,12 @@ stages:
       - language-idiom-enforcement
       - input-validation
       - logging-error-handling
+    conditional_capabilities:
+      - dependency-wiring-lifecycle
+      - algorithm-data-structure-selection
+      - failure-contract-design
+      - configuration-runtime-policy
+      - data-side-effect-flow-tracing
     skip_by_default:
       - architecture deep review
       - release
@@ -197,6 +216,11 @@ stages:
       - code-clarity-maintainability
       - code-review
       - regression-testing
+    conditional_capabilities:
+      - testability-seam-design
+      - model-boundary-mapping
+      - data-side-effect-flow-tracing
+      - cleanup-deletion-governance
     skip_by_default:
       - feature design
       - release
@@ -228,6 +252,11 @@ stages:
       - contract-testing
       - e2e-testing
       - regression-testing
+      - testability-seam-design
+      - algorithm-data-structure-selection
+      - failure-contract-design
+      - model-boundary-mapping
+      - data-side-effect-flow-tracing
     skip_by_default:
       - architecture redesign
       - coding of new features
@@ -255,6 +284,11 @@ stages:
       - kubernetes-gateway
       - observability
       - backup-recovery
+    conditional_capabilities:
+      - configuration-runtime-policy
+      - architecture-enforcement-tooling
+      - consumer-impact-analysis
+      - cleanup-deletion-governance
     skip_by_default:
       - language deep checks
       - coding
