@@ -155,6 +155,10 @@ Cache correctness is defined by **what staleness is acceptable, for how long, un
 - `Vary: User-Agent` collapses hit rate; switching to `Vary: Accept-Encoding` recovers it.
 - PII cached with long TTL violates erasure SLA.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` only when the change touches distributed caches, HTTP/CDN caches, tenant or permission scoped data, mutable entitlements, pricing, inventory, negative caching, stampede protection, cache-down fallback, or production observability. Do not load it for an isolated request-local memoization with no shared state, no sensitive data, and no stale-read consequence.
+
 # Output Contract
 
 Return a cache strategy with, per cached value class:
@@ -183,13 +187,20 @@ Return a cache strategy with, per cached value class:
 
 # Evidence Contract
 
-Close this capability only with cache-correctness evidence:
+A cache change is complete only when the output includes:
 
-- **Boundaries inspected:** source of truth, cache key namespace, tenant/permission scope, TTL and jitter, invalidation write path, cache-down fallback, hot-key behavior, and HTTP/CDN cacheability if applicable.
-- **Validation evidence:** stale-read, permission revoke, invalidation race, stampede, miss flood, cache-down, and mixed schema-version test output or a not-verified disclosure.
-- **What evidence proves:** the cache accelerates reads within the declared staleness budget without becoming the only copy of data or crossing tenant/permission boundaries.
-- **What evidence does not prove:** production hot-key distribution, edge-cache behavior, or origin capacity unless measured with representative traffic.
-- **Residual risk and handoff:** name any unmeasured memory pressure, purge latency, warm-up, or erasure-path risk; hand off to `observability`, `web-security`, or `reliability-observability-gate` when production signals or shared-cache security remain open.
+- **Source of truth**: canonical store and how the cache is derived.
+- **Key design**: namespace, version, tenant/user/resource boundary, cardinality, and collision prevention.
+- **TTL / invalidation**: TTL value, TTL jitter, explicit invalidation trigger, write-through/write-around/write-back choice, and stale-window acceptance.
+- **Negative caching**: whether misses/errors are cached, for how long, and how poisoning is prevented.
+- **Staleness contract**: maximum stale duration and user-visible consequence.
+- **Stampede protection**: lock, singleflight, request coalescing, backoff, or warmup strategy.
+- **Memory bound**: estimated key count, value size, eviction policy, hot-key risk, and monitoring metric.
+- **Failure behavior**: cache miss, backend unavailable, stampede, stale read, cross-tenant collision, partial invalidation, and multi-region invalidation if relevant.
+- **Validation evidence**: test or command proving TTL, invalidation, key isolation, stampede protection, negative cache behavior, and fallback behavior.
+- **What evidence proves**: the inspected cache path stays within the declared staleness, isolation, and fallback contract.
+- **What evidence does not prove**: production cardinality, real traffic skew, cache cluster pressure, rare invalidation race, or regional propagation delay.
+- **Residual risk**: untested invalidation path, owner, and next gate.
 
 # Quality Gate
 

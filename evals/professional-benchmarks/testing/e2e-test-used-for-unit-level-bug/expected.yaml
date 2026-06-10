@@ -1,0 +1,22 @@
+expected_stage: testing
+expected_professional_skill: quality-test-gate
+expected_capabilities:
+  - e2e-testing
+  - unit-testing
+expected_hidden_risks:
+  - E2E test used for unit-level bug
+  - slow browser test hides cheaper unit coverage
+  - test layer selection inverted for local logic
+expected_evidence:
+  - layer justification
+  - unit-level regression evidence
+  - E2E residual journey risk
+forbidden_behaviors:
+  - use E2E as primary coverage for pure helper logic
+  - omit layer justification
+  - ignore flake and fixture isolation
+expected_output_obligations:
+  - layer justification evidence
+  - validation evidence for narrowest sufficient layer
+  - what evidence proves and does not prove
+  - residual journey risk owner

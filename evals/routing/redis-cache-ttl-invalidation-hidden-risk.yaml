@@ -18,6 +18,8 @@ expected:
     - stale entitlement state
     - cross-tenant cache collision
     - unbounded Redis memory growth or hot key
+    - stale authorization or entitlement state
+    - unbounded cache cardinality or hot key
   skills:
     - data-middleware-change-builder
     - reliability-observability-gate

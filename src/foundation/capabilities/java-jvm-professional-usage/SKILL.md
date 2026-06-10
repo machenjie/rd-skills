@@ -110,6 +110,10 @@ Select when Java / Kotlin / JVM / Spring / transactions / executors / GC / enter
 - **Container heap default** — Symptom: pod OOM-killed at fraction of memory limit. Cause: JVM defaults to 25% of host memory; container limit ignored without `-XX:+UseContainerSupport` + `-XX:MaxRAMPercentage`. Detection: heap-vs-limit metric. Impact: restart loop.
 - **Anemic / over-engineered service** — Symptom: 5 layers, each delegating; or 30-line service with 6 patterns. Cause: ceremony unmoored from domain complexity. Detection: code review against domain complexity. Impact: maintenance cost without benefit.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when Java/JVM changes touch nullability, exceptions, executors/thread pools, transactions/resources, equality/hashCode, blocking calls, heap/GC pressure, or framework lifecycle. Do not load it for a trivial formatter or test-name-only change.
+
 # Output Contract
 
 Return a **JVM Usage Review** containing:
@@ -127,6 +131,21 @@ Return a **JVM Usage Review** containing:
 - **Security**: deserialization audit (Jackson, native serialization); dependency-check / OSV results
 - **Tests**: JUnit 5 + AssertJ; Testcontainers for integration; ArchUnit for architecture rules; jcstress for low-level concurrency
 - **Accepted exceptions** with owner / scope / expiration
+
+# Evidence Contract
+
+A Java/JVM change is professionally complete only when the output includes:
+
+- **Nullability and immutability**: nullable inputs/outputs, defensive copies, immutable value objects.
+- **Exception model**: checked/unchecked decision, typed domain exceptions, no swallowed exceptions.
+- **Thread/executor lifecycle**: executor ownership, shutdown, timeout, queue bounds, and interruption behavior.
+- **Equality/hashCode/ordering**: value object equality and collection behavior if changed.
+- **Transaction/resource cleanup**: try-with-resources, connection/session lifecycle, transaction boundaries.
+- **JVM runtime risk**: heap, GC pressure, blocking calls, thread pool saturation when relevant.
+- **Validation evidence**: unit/integration test, static analysis, build output, or not-verified disclosure.
+- **What evidence proves**: the inspected JVM correctness and lifecycle risk is covered.
+- **What evidence does not prove**: production heap behavior, all thread interleavings, external service behavior, or platform-specific tuning.
+- **Residual risk**: untested JVM/runtime behavior, owner, and next gate.
 
 # Quality Gate
 

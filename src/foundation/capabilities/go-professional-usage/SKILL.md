@@ -107,6 +107,10 @@ Select when Go is present or proposed. Pair with `language-idiom-enforcement`, `
 - **HTTP server without timeouts** — Symptom: slowloris / connection exhaustion. Cause: `http.ListenAndServe` defaults. Detection: production review. Impact: DoS exposure.
 - **`init()` overuse** — Symptom: tests can't isolate; import order matters. Cause: business logic in init. Detection: refactor to explicit constructors. Impact: test fragility.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when Go changes touch goroutines, context propagation, shared state, DB/HTTP resources, module dependencies, public package APIs, race-detector evidence, or production service settings. Do not load it for a trivial gofmt-only edit or local test name change.
+
 # Output Contract
 
 Return a **Go Usage Review** containing:
@@ -124,6 +128,20 @@ Return a **Go Usage Review** containing:
 - **Logging**: `slog` structured; no secrets; correlation/trace IDs propagated
 - **Build & deploy**: reproducible flags; static binary; image size
 - **Accepted exceptions** with owner / scope / expiration
+
+# Evidence Contract
+
+A Go change is professionally complete only when the output includes:
+
+- **Context boundary**: `context.Context` propagation, cancellation, timeout, and no `context.TODO()` in production path.
+- **Goroutine lifecycle**: ownership, cancellation, error propagation, and leak prevention.
+- **Error model**: wrapping with `%w`, sentinel/type errors when needed, and caller-visible behavior.
+- **Concurrency proof**: race-prone state, locks/channels/errgroup, and `go test -race` when applicable.
+- **Resource cleanup**: `defer Close`, connection/body handling, timer/ticker cleanup.
+- **Validation evidence**: `go test`, `go test -race`, lint/staticcheck, or not-verified disclosure.
+- **What evidence proves**: the inspected Go runtime and idiom risks are covered.
+- **What evidence does not prove**: production traffic, all scheduler interleavings, external dependency behavior, or platform-specific runtime behavior.
+- **Residual risk**: untested runtime behavior, owner, and next gate.
 
 # Quality Gate
 

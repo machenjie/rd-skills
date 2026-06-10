@@ -50,6 +50,12 @@ Select when implementation quality depends on language-specific idioms. Always p
 - Escalate to `security-privacy-gate` when an idiom violation maps to a CWE / OWASP risk (SQLi, command injection, deserialization, path traversal).
 - Escalate to `language-performance-safety` when an idiom debate is rooted in hot-path or allocation behavior.
 
+# Reference Loading Policy
+
+- Load `references/checklist.md` when reviewing naming, file layout, comments, error handling, resource handling, imports/modules, public APIs, framework conventions, or AI-generated code for language idiom risk.
+- Do not load the checklist for pure copy, documentation-only edits, or formatting-only changes that do not alter code semantics or public surface.
+- When the matching `<lang>-professional-usage` capability is selected, load that language capability before applying generic idiom checks, then use this checklist only for cross-language idiom contamination and repository-convention evidence.
+
 # Critical Details
 
 ## Naming Discipline
@@ -148,6 +154,19 @@ Required comments:
 - **String-composed SQL** — Symptom: SQLi in code review. Cause: idiom violation (using string concatenation instead of parameterized query). Detection: linter / static analysis (semgrep, CodeQL). Impact: CWE-89 exposure.
 - **Bare `except:` / `catch (Throwable)`** — Symptom: errors silently swallowed, debugging impossible. Cause: idiom violation. Detection: ruff E722 / sonar-rule. Impact: production silent-failure mode.
 - **Sync-in-async call** — Symptom: event-loop stall in Python asyncio / Node.js. Cause: blocking call inside async context. Detection: event-loop lag metric, async-profiler. Impact: head-of-line blocking.
+
+# Evidence Contract
+
+Language idiom enforcement is complete only when the output includes:
+
+- **Language surface**: language/runtime version detected and the idiom rule selected.
+- **Repository convention**: local naming, file layout, error handling, test style, import/module pattern, and framework convention inspected.
+- **Idiom decision**: what was changed to match the language/repository idiom and what was intentionally left unchanged.
+- **Anti-pattern rejected**: copied style from another language, invented abstraction, framework-incorrect pattern, or repository-inconsistent naming.
+- **Validation evidence**: formatter, linter, typecheck, test command, or explicit not-verified disclosure with reason.
+- **What evidence proves**: the changed code follows the inspected language and repository conventions for the covered surface.
+- **What evidence does not prove**: all project conventions, uninspected languages, runtime performance, or behavior outside the touched surface.
+- **Residual risk**: remaining convention uncertainty, owner, and trigger for follow-up review.
 
 # Output Contract
 

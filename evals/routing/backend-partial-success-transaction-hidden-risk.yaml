@@ -18,6 +18,9 @@ expected:
     - inconsistent account and billing state
     - event emitted without durable state or compensation
     - silent partial success with no recovery contract
+    - integration test mocks away real boundary
+    - mocked repository hides database constraint or transaction behavior
+    - transaction failure path not tested against real database
   skills:
     - backend-change-builder
     - data-api-contract-changer
@@ -29,6 +32,7 @@ expected:
     - service-business-logic
     - logging-error-handling
     - data-migration-design
+    - integration-testing
     - regression-testing
   domain_extensions: []
   quality_gates:

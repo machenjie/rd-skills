@@ -1,6 +1,6 @@
 # Professionalism Release Readiness
 
-- Generated: 2026-06-10T02:40:58.099725+00:00
+- Generated: 2026-06-10T03:28:39.701846+00:00
 - Status: strict-release-ready
 - Authoring ready: ready
 - Release ready: ready
@@ -17,7 +17,7 @@
 
 ## Key Foundation Capability Coverage Summary
 
-- Count: 29; Statuses: acceptable: 7, needs-review: 22
+- Count: 29; Statuses: acceptable: 29
 
 ## Release Checklist
 
@@ -34,18 +34,18 @@
 
 ## Benchmark Coverage Summary
 
-- cases_checked: 11
-- comparison_cases_checked: 11
+- cases_checked: 30
+- comparison_cases_checked: 30
 - empty_baseline_cases: 0
 - quality_failures: 0
 
 ## Routing Coverage Summary
 
-- cases_checked: 81
+- cases_checked: 88
 - cases_without_forbidden: 0
-- hidden_risks_checked: 34
+- hidden_risks_checked: 91
 - hidden_risks_needing_manual_review: 0
-- hidden_risks_strongly_covered: 30
+- hidden_risks_strongly_covered: 87
 - l1_anti_over_routing_count: 9
 
 ## Known Accepted Warnings
@@ -104,7 +104,7 @@
 - promoted_agent_sample_strict_warnings: 0
 - promoted_agent_samples_strict_checked: 5
 - release_blocking_professionalism_warnings: 0
-- skill_professionalism_average_score: 39.83
+- skill_professionalism_average_score: 41.26
 - skill_professionalism_warnings: 8
 
 ## Release Blockers
@@ -114,25 +114,3 @@
 ## Non-Blocking Follow-Ups
 
 - `known-warning` `src/foundation/capabilities/code-review/SKILL.md`: long Markdown table in SKILL.md body (16 rows); consider moving deep table to references
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/async-job-design/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/cache-design/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/contract-testing/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/cpp-professional-usage/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/e2e-testing/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/go-professional-usage/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/idempotency-retry-design/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/integration-testing/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/java-jvm-professional-usage/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/language-idiom-enforcement/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/language-performance-safety/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/language-testing-strategy/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/observability/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/python-professional-usage/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/refactoring/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/regression-testing/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/relational-database/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/rust-professional-usage/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/shell-cli-professional-usage/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/sql-professional-usage/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/typescript-professional-usage/SKILL.md`: key foundation capability remains needs-review
-- `key-foundation-capability-needs-review` `src/foundation/capabilities/unit-testing/SKILL.md`: key foundation capability remains needs-review

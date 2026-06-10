@@ -98,6 +98,10 @@ Shell (Bash 4+)     | 60%  | 30%         | n/a      | 10%      | shellcheck + ba
 - **Flaky retry masking** — Symptom: CI `retry: 3` hides 30% flake rate. Cause: time/order/concurrency bug treated as infra noise. Detection: flake-quarantine + root-cause SLA. Impact: real bugs ride flakes into production.
 - **Coverage % gamed** — Symptom: 95% line coverage, mutation score 10%. Cause: tests exercise lines without asserting behavior. Detection: mutation testing on critical modules. Impact: hidden defect surface.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when runtime-specific test obligations are in scope: async/sync boundaries, race detectors, sanitizers, fuzz/property tests, mutation testing, framework selection, fixture lifecycle, or CI language-tool lanes. Do not load it for a language-agnostic test-level decision already covered by `quality-test-gate`.
+
 # Output Contract
 
 Return a **Language Test Plan** containing:
@@ -110,6 +114,19 @@ Return a **Language Test Plan** containing:
 - **Acceptance-evidence mapping** — which acceptance criterion is proved by which test
 - **Coverage gaps** explicitly listed with owner and resolution plan
 - **Flake protocol** — quarantine path, root-cause SLA
+
+# Evidence Contract
+
+A language testing strategy is complete only when the output includes:
+
+- **Language runtime risk**: async/sync boundary, memory ownership, concurrency model, type/runtime validation, package/build system, or fixture lifecycle.
+- **Layer selection**: unit, integration, contract, E2E, property, mutation, snapshot, benchmark, race/concurrency test with rationale.
+- **Framework fit**: selected test framework and why it matches the language/runtime.
+- **Fixture ownership**: setup/teardown, isolation, parallelism, deterministic data, and cleanup.
+- **Language-specific validation**: typecheck, race detector, sanitizer, mutation test, async test harness, or equivalent.
+- **What evidence proves**: the language-specific failure mode is covered.
+- **What evidence does not prove**: cross-language boundary, production runtime, external dependency, performance behavior, or platform-specific behavior.
+- **Residual risk**: untested runtime behavior, owner, and next gate.
 
 # Quality Gate
 

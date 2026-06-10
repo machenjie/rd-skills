@@ -1,0 +1,21 @@
+expected_stage: code-review
+expected_professional_skill: backend-change-builder
+expected_capabilities:
+  - language-performance-safety
+expected_hidden_risks:
+  - performance unbounded concurrency
+  - runtime safety invariant missing for concurrent hot path
+  - measurement evidence absent for thread pool saturation
+expected_evidence:
+  - bounded fan-out and backpressure evidence
+  - event-loop lag or load-test evidence
+  - cancellation timeout and pool sizing evidence
+forbidden_behaviors:
+  - accept unbounded asyncio gather as faster without measurement
+  - omit concurrency bound and backpressure
+  - omit event-loop lag or load-test evidence
+expected_output_obligations:
+  - runtime performance safety evidence
+  - measurement contract and validation evidence
+  - what evidence proves and does not prove
+  - residual performance risk owner

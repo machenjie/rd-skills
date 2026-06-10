@@ -16,6 +16,10 @@ expected:
     - database migration
     - production deployment
     - irreversible data operation
+  hidden_risk_phrases:
+    - relational query without index or explain
+    - missing index or query plan evidence on large table
+    - production cardinality not represented by dev data
   skills:
     - change-intake-compiler
     - change-impact-analyzer
@@ -65,4 +69,3 @@ forbidden:
 notes: |
   This is a data/release/reliability route, not a frontend or external
   integration route.
-

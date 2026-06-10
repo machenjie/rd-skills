@@ -1,0 +1,21 @@
+expected_stage: code-review
+expected_professional_skill: data-middleware-change-builder
+expected_capabilities:
+  - sql-professional-usage
+expected_hidden_risks:
+  - SQL dynamic query without parameterization
+  - unsafe interpolation allows injection
+  - tenant predicate missing from query test
+expected_evidence:
+  - parameterized query evidence
+  - query plan and index evidence
+  - tenant predicate integration test
+forbidden_behaviors:
+  - concatenate request input into SQL
+  - trust sort parameter without allowlist
+  - omit injection or tenant-boundary test
+expected_output_obligations:
+  - SQL parameterization evidence
+  - validation evidence for query and tenant safety
+  - what evidence proves and does not prove
+  - residual data security risk owner

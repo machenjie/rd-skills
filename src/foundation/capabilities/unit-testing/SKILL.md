@@ -119,6 +119,10 @@ Escalate when: unit tests are the only test level for a change that involves a d
 - No regression test on bug fix: same bug re-introduced 3 months later in a refactor.
 - Over-broad mock: mock covers the validation logic; the validation is broken; test cannot detect it.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when the unit test touches business rules, boundary matrices, fixture ownership, mocks around risk boundaries, mutation testing, or regression evidence. Do not load it for a trivial pure-function assertion with obvious inputs and no mock, fixture, or defect context.
+
 # Output Contract
 
 Return a unit test plan with:
@@ -131,6 +135,20 @@ Return a unit test plan with:
 - `parametrize_strategy` (which cases use table-driven tests; table format)
 - `mutation_test_plan` (if applicable: mutation tool, threshold, CI gate)
 - `evidence_command` (command to run the test suite and output coverage or pass/fail)
+
+# Evidence Contract
+
+A unit test is accepted only when the output includes:
+
+- **Unit boundary**: function/class/module under test and dependencies excluded.
+- **Behavior under test**: observable input/output, state transition, error, or side effect.
+- **Mock boundary**: which collaborators are mocked and why mocking does not hide the defect or risk boundary.
+- **Assertions**: behavior-oriented assertions, not private implementation assertions.
+- **Negative path**: invalid input, denied case, exception, or edge case when relevant.
+- **Fixture ownership**: test data owner, setup/teardown, and isolation.
+- **What evidence proves**: the isolated behavior is correct.
+- **What evidence does not prove**: integration wiring, persistence, network, browser, concurrency, production config, or external contract.
+- **Residual risk**: untested integration or runtime behavior and next gate.
 
 # Quality Gate
 

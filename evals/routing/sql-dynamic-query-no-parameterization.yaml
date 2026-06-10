@@ -1,0 +1,50 @@
+---
+id: sql-dynamic-query-no-parameterization
+description: |
+  Dynamic SQL assembled from request input requires SQL professional usage,
+  security review, and real query evidence.
+prompt: |
+  A backend endpoint builds `WHERE name = '${query}'` by string interpolation
+  and adds `ORDER BY ${sort}` directly from request parameters. There is no
+  parameterization, query plan, tenant predicate test, or integration evidence.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: code-review
+  expected_context_budget_mode: staged-plan
+  risk_triggers:
+    - user data
+  hidden_risk_phrases:
+    - SQL dynamic query without parameterization
+    - unsafe interpolation allows injection
+    - tenant predicate missing from query test
+  skills:
+    - backend-change-builder
+    - data-middleware-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - sql-professional-usage
+    - relational-database
+    - input-validation
+    - integration-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - security gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - e2e-testing
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Dynamic SQL injection risk routes to backend/data/security/test, not release.

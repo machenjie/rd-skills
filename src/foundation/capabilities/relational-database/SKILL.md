@@ -135,6 +135,10 @@ Escalate when: a migration touches a table with > 10M rows or > 50k writes/s (re
 - EXPLAIN ANALYZE not run before deployment — a query that seq-scans a 10M-row table under load — 30-second queries — timeout cascade.
 - PII stored in a new table without encryption-at-rest verification — compliance audit finding.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when a relational change touches migrations, query plans, indexes, constraints, transactions, isolation levels, large tables, multi-tenant data, PII, or production rollback limits. Do not load it for a simple read-only query review with no schema, index, or data safety impact.
+
 # Output Contract
 
 Return a relational database design with:
@@ -152,13 +156,18 @@ Return a relational database design with:
 
 # Evidence Contract
 
-Close this capability only with relational-boundary evidence:
+A relational database change is complete only when the output includes:
 
-- **Boundaries inspected:** tables, constraints, indexes, transaction scope, isolation level, migration phases, API mapping boundary, query plans, and PII/retention controls.
-- **Validation evidence:** migration dry-run or staging output, rollback or forward-fix proof, EXPLAIN ANALYZE for critical queries, constraint/isolation integration tests, and consumer scan for dropped/renamed columns.
-- **What evidence proves:** relational invariants are enforced at the database boundary, critical queries have a justified plan, and migration phases can be deployed without known lock or compatibility break.
-- **What evidence does not prove:** production cardinality, lock timing, replica lag, or ETL/reporting compatibility unless validated against representative data and consumers.
-- **Residual risk and handoff:** name any untested table size, long-running lock, consumer scan gap, or rollback limit; hand off to `data-migration-design`, `transaction-consistency`, or `indexing-query-optimization` when deeper review remains open.
+- **Data ownership**: source table, owning module/service, and write authority.
+- **Query shape**: SQL/ORM query, filter, join, pagination, sort, and expected cardinality.
+- **Index strategy**: existing index, proposed index, selectivity, write cost, and query plan evidence.
+- **Transaction/isolation**: transaction boundary, isolation level, lock behavior, deadlock risk, retry behavior, and rollback behavior.
+- **Migration safety**: online DDL, expand/contract phase, backfill, lock timeout, batch size, rollback limitation, and replica lag.
+- **Data integrity**: constraints, foreign keys, uniqueness, nullability, and validation.
+- **Validation evidence**: EXPLAIN/ANALYZE, migration dry run, integration test, rollback test, or not-verified disclosure.
+- **What evidence proves**: query/migration works for the inspected path.
+- **What evidence does not prove**: production cardinality, lock contention, replica lag, long-running transaction, or long-tail query plans.
+- **Residual risk**: untested data path, owner, and next gate.
 
 # Quality Gate
 

@@ -1,0 +1,22 @@
+expected_stage: testing
+expected_professional_skill: quality-test-gate
+expected_capabilities:
+  - regression-testing
+  - agent-execution-discipline
+expected_hidden_risks:
+  - test passes before fix and is not a real regression test
+  - defect recurrence path not protected
+  - completion claim without red-before-fix evidence
+expected_evidence:
+  - pre-fix failing command output
+  - post-fix passing command output
+  - defect reference linked to test
+forbidden_behaviors:
+  - claim regression coverage without running test on pre-fix code
+  - add happy-path test unrelated to the defect
+  - omit what the test does not prove
+expected_output_obligations:
+  - red-before-fix evidence
+  - green-after-fix evidence
+  - what evidence proves and does not prove
+  - residual risk owner

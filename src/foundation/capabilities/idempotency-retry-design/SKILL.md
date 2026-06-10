@@ -160,6 +160,10 @@ The most dangerous failure in idempotency design is quiet: a duplicate operation
 - Key not bound to caller: API key leaked; attacker replays idempotency keys; injects payment results for other merchants.
 - No dead-letter table: background job fails 5 times; silently dropped; 10,000 invoices not generated; discovered in monthly billing reconciliation.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` only when the change touches payments, subscriptions, orders, webhooks, queue consumers, retries, redelivery, scheduled jobs, external writes, or operations where duplicate side effects are harmful. Do not load deep references for read-only retry wrappers or local-only retries with no external side effect.
+
 # Output Contract
 
 Return an idempotency and retry contract with:
@@ -178,13 +182,22 @@ Return an idempotency and retry contract with:
 
 # Evidence Contract
 
-Close this capability only with idempotency-specific evidence:
+An idempotency/retry design is complete only when the output includes:
 
-- **Boundaries inspected:** mutation entry point, idempotency store, caller binding, payload hash check, retry loop, external side effect, DLQ/reconciliation path, and observability signals.
-- **Validation evidence:** duplicate-key, payload-mismatch, cross-caller replay, timeout recovery, retry exhaustion, and DLQ routing test output or a not-verified disclosure.
-- **What evidence proves:** retries and redelivery cannot silently create duplicate side effects inside the inspected operation and retry window.
-- **What evidence does not prove:** every downstream provider is globally exactly-once or that expired idempotency keys are safe beyond the declared retention window.
-- **Residual risk and handoff:** name any untested provider behavior, replay window, or reconciliation owner; hand off to `async-job-design`, `message-queue-design`, or `reliability-observability-gate` when runtime delivery or production alerting remains open.
+- **Operation identity**: operation name, side effect, resource boundary, tenant/user scope, and external dependency.
+- **Idempotency key source**: client key, server-generated key, message ID, natural key, or composite key.
+- **Request fingerprint**: behavior when the same idempotency key is reused with a different payload.
+- **In-flight behavior**: behavior when the same key arrives while the first request is still processing.
+- **Key scope**: tenant/user/resource/time-window uniqueness and collision behavior.
+- **Dedupe store**: storage location, unique index, TTL, cleanup, and failure behavior.
+- **Atomicity**: whether dedupe record creation and side effect commit are atomic; if not, how partial success is recovered.
+- **Replay behavior**: original response replay, in-progress response, expired-key behavior, and conflict response.
+- **Retry policy**: retryable errors, non-retryable errors, backoff, jitter, max attempts, and timeout.
+- **Poison message / DLQ policy**: when retry stops, where the message goes, and how operators replay safely.
+- **Validation evidence**: duplicate request test, same-key-different-payload test, in-flight request test, expired key test, retry exhaustion test, and DLQ/replay test.
+- **What evidence proves**: the protected duplicate/retry path.
+- **What evidence does not prove**: untested downstream idempotency, production race, external system behavior, or clock skew.
+- **Residual risk**: side effects still not idempotent, owner, and next gate.
 
 # Quality Gate
 

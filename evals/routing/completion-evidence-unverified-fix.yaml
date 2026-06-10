@@ -20,6 +20,10 @@ expected:
   risk_triggers:
     - agent claims completion without evidence
     - missing test evidence
+  hidden_risk_phrases:
+    - test passes before fix and is not a real regression test
+    - defect recurrence path not protected
+    - completion claim without red-before-fix evidence
   skills:
     - backend-change-builder
     - quality-test-gate

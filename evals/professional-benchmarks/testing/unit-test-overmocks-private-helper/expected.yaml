@@ -1,0 +1,21 @@
+expected_stage: testing
+expected_professional_skill: quality-test-gate
+expected_capabilities:
+  - unit-testing
+expected_hidden_risks:
+  - over-mocked private helper hides behavior
+  - private helper assertion freezes implementation
+  - unit boundary not protected by observable assertions
+expected_evidence:
+  - unit boundary and dependencies excluded
+  - behavior-oriented assertions
+  - mock boundary and fixture ownership
+forbidden_behaviors:
+  - assert private helper calls instead of behavior
+  - mock collaborator that contains the rule under test
+  - place domain fixture in generic shared test utilities
+expected_output_obligations:
+  - unit boundary evidence
+  - validation evidence for observable behavior
+  - what evidence proves and does not prove
+  - residual integration risk owner

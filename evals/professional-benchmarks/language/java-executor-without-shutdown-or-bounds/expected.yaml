@@ -1,0 +1,21 @@
+expected_stage: code-review
+expected_professional_skill: backend-change-builder
+expected_capabilities:
+  - java-jvm-professional-usage
+expected_hidden_risks:
+  - Java executor without shutdown or bounds
+  - thread pool lifecycle leak
+  - interruption behavior not handled
+expected_evidence:
+  - executor ownership and shutdown evidence
+  - queue bound and timeout evidence
+  - interruption behavior validation
+forbidden_behaviors:
+  - create request-scoped executor without shutdown
+  - use unbounded executor queue
+  - ignore interruption behavior
+expected_output_obligations:
+  - thread executor lifecycle evidence
+  - validation evidence for shutdown or timeout
+  - what evidence proves and does not prove
+  - residual JVM runtime risk owner

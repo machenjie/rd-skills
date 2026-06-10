@@ -1,0 +1,23 @@
+expected_stage: refactoring
+expected_professional_skill: ai-code-review-refactor
+expected_capabilities:
+  - refactoring
+  - implementation-structure-design
+  - code-clarity-maintainability
+  - code-review
+expected_hidden_risks:
+  - hidden behavior change during supposedly behavior-preserving refactor
+  - public API or error semantics changed without evidence
+  - deletion path not proven safe
+expected_evidence:
+  - behavior preservation test evidence
+  - public API and error semantics diff review
+  - deletion path caller scan and rollback evidence
+forbidden_behaviors:
+  - call behavior change a refactor without approval
+  - change public API or error semantics without evidence
+  - delete old path without proving callers migrated
+expected_output_obligations:
+  - behavior preservation evidence
+  - compatibility statement
+  - residual behavior-change risk owner

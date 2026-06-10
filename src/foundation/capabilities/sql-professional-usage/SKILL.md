@@ -115,6 +115,10 @@ Select when SQL, migrations, reports, analytics, query performance, locking, pag
 - **Pre-Postgres-11 `ADD COLUMN ... DEFAULT`** — Symptom: migration locks table for minutes. Cause: default value rewrites table. Detection: version + DEFAULT-constant check. Impact: outage.
 - **MySQL `REPEATABLE READ` next-key deadlock** — Symptom: deadlock between range update and insert. Cause: gap lock. Detection: deadlock log; isolation review. Impact: failed transactions, retry storms.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when SQL changes touch dynamic queries, parameterization, joins, indexes, query plans, transactions/isolation, migrations, backfills, tenant predicates, or data safety. Do not load it for a trivial static lookup query with no user input or data-shape impact.
+
 # Output Contract
 
 Return a **SQL Usage Review** containing:
@@ -132,6 +136,20 @@ Return a **SQL Usage Review** containing:
 - **Connection pool**: size calculated via Little's Law
 - **Tests**: query unit tests against real engine (Testcontainers); migration forward+rollback test; perf assertion on critical queries
 - **Accepted exceptions** with owner / scope / expiration
+
+# Evidence Contract
+
+A SQL change is professionally complete only when the output includes:
+
+- **Parameterization**: no string-concatenated SQL or unsafe interpolation.
+- **Query shape**: joins, filters, grouping, sorting, pagination, and expected cardinality.
+- **Index and plan evidence**: index selection, EXPLAIN/ANALYZE, selectivity, scan type, and write overhead.
+- **Transaction/isolation**: locking, isolation level, deadlock risk, retry behavior, and rollback.
+- **Migration/data safety**: nullable/default/backfill strategy, constraint validation, and compatibility phase.
+- **Validation evidence**: query plan, migration dry run, integration test, or not-verified disclosure.
+- **What evidence proves**: the inspected SQL path is parameterized, planned, and safe for the declared data shape.
+- **What evidence does not prove**: production cardinality, lock contention, replica lag, or untested tenants.
+- **Residual risk**: untested data path, owner, and next gate.
 
 # Quality Gate
 

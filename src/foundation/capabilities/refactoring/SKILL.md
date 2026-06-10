@@ -168,7 +168,17 @@ Return a refactoring plan with:
 
 # Evidence Contract
 
-Close a refactor only when the output states the observable behavior boundary, inspected callers/contracts, reuse and placement rationale, characterization or regression commands, before/after complexity evidence, rollback unit, what tests prove, what they do not prove, residual behavior-change risk, and next review gate. "Tests pass" alone is not behavior-preservation evidence when contracts or side effects moved.
+A refactor is complete only when the output includes:
+
+- **Behavior preservation evidence**: characterization tests, regression tests, contract tests, snapshots, or explicit no-test rationale.
+- **Boundaries inspected**: callers, public APIs, imports, dependency direction, side effects, config, generated clients, reflection/dynamic dispatch, and tests.
+- **Move/extract rationale**: why the new function, class, module, adapter, or value object owns the behavior.
+- **Compatibility statement**: public contract, error semantics, data shape, ordering, timing, and side effects preserved or intentionally changed.
+- **Dependency direction**: imports/layers remain valid or the boundary shift is explicitly routed to architecture review.
+- **Deletion path**: what old code becomes removable, when, and what proves removal is safe.
+- **What evidence proves**: behavior equivalence for covered paths.
+- **What evidence does not prove**: untested consumers, dynamic reflection paths, runtime-only config, performance side effects, or hidden integration dependencies.
+- **Residual risk**: uncovered behavior, owner, and next gate.
 
 # Quality Gate
 

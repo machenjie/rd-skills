@@ -1,0 +1,21 @@
+expected_stage: testing
+expected_professional_skill: quality-test-gate
+expected_capabilities:
+  - language-testing-strategy
+expected_hidden_risks:
+  - language runtime risk tested at wrong layer
+  - Python async blocking call lacks async harness
+  - runtime boundary not covered by language-specific validation
+expected_evidence:
+  - async test harness evidence
+  - timeout and cancellation validation
+  - language-specific runtime boundary evidence
+forbidden_behaviors:
+  - treat mocked unit test as async runtime evidence
+  - ignore event-loop blocking risk
+  - omit timeout and cancellation test
+expected_output_obligations:
+  - language runtime risk evidence
+  - layer selection rationale
+  - what evidence proves and does not prove
+  - residual runtime risk owner

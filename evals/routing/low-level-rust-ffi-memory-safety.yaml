@@ -13,6 +13,13 @@ expected:
   expected_context_budget_mode: staged-plan
   risk_triggers:
     - production deployment
+  hidden_risk_phrases:
+    - Rust unsafe boundary without invariants
+    - unsafe block lacks safety contract
+    - FFI ownership can cause use-after-free
+    - C++ raw pointer lifetime without RAII
+    - dangling pointer ownership unclear
+    - sanitizer evidence missing
   skills:
     - architecture-impact-reviewer
     - backend-change-builder

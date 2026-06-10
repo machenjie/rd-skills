@@ -161,7 +161,14 @@ Return an observability plan with:
 
 # Evidence Contract
 
-Close observability design only when the output names the user-impact signal, logs/metrics/traces/alerts added or intentionally omitted, cardinality/privacy review, runbook owner, validation command or dashboard query, what the signal proves, what it does not prove during an incident, residual blind spots, and next gate.
+Close observability work only when the output includes:
+
+- **Boundaries inspected**: user journey, service/API/job/queue/dependency boundary, dashboard, alert, runbook, owner, and privacy boundary inspected or explicitly ruled out.
+- **Signal inventory**: structured log fields, metric names, trace spans, dashboard panels, alert expressions, and runbook links named.
+- **Validation evidence**: metric query, log query, trace lookup, dashboard path, alert rule validation, synthetic event, local config check, or explicit not-verified disclosure.
+- **What evidence proves**: which SLI/SLO, diagnostic path, alert path, trace correlation, or operator workflow is observable.
+- **What evidence does not prove**: production-scale cardinality, rare failure paths, historical baseline accuracy, alert actionability under load, or incident-response effectiveness.
+- **Residual risk**: remaining blind spot, alert owner, review date, and next gate such as `reliability-observability-gate` or `delivery-release-gate`.
 
 # Quality Gate
 

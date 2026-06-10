@@ -112,6 +112,10 @@ Select when Rust / Cargo / ownership / lifetimes / `unsafe` / traits / async run
 - **`Vec` growth in hot path** — Symptom: profile shows `realloc` hot. Cause: `Vec::push` without `with_capacity`. Detection: profile. Impact: latency.
 - **Cargo feature explosion** — Symptom: build pulls unexpected heavy deps. Cause: transitive feature unification. Detection: `cargo tree -e features`. Impact: bloat, build time.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when Rust changes touch ownership/lifetimes, error modeling, async/runtime behavior, unsafe, FFI, trait/public API design, concurrency, or validation tooling such as clippy, Miri, loom, or cargo test. Do not load it for rustfmt-only edits.
+
 # Output Contract
 
 Return a **Rust Usage Review** containing:
@@ -128,6 +132,20 @@ Return a **Rust Usage Review** containing:
 - **Tests**: unit + property (proptest / quickcheck) + fuzz (cargo-fuzz) + loom (concurrency) + miri (unsafe) coverage
 - **Performance**: criterion benchmarks for hot paths; allocation profile
 - **Accepted exceptions** with owner / scope / expiration
+
+# Evidence Contract
+
+A Rust change is professionally complete only when the output includes:
+
+- **Ownership boundary**: ownership, borrowing, lifetimes, clone/copy cost, and mutation boundary.
+- **Error model**: `Result`, typed errors, `thiserror`/`anyhow` boundary, and no panic in recoverable path.
+- **Async/runtime boundary**: runtime assumptions, cancellation, `Send`/`Sync`, blocking calls inside async.
+- **Unsafe boundary**: justification, invariants, tests, and safe wrapper if `unsafe` appears.
+- **Trait/API design**: trait object vs generic choice, coherence, object safety, and public API stability.
+- **Validation evidence**: `cargo test`, `cargo clippy`, `cargo fmt`, Miri/loom when applicable, or not-verified disclosure.
+- **What evidence proves**: the inspected Rust safety and API boundary is covered.
+- **What evidence does not prove**: every platform, production concurrency, FFI caller behavior, or all unsafe aliasing scenarios.
+- **Residual risk**: untested runtime behavior, owner, and next gate.
 
 # Quality Gate
 

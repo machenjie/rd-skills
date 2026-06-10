@@ -1,8 +1,8 @@
 {
   "authoring_ready": "ready",
   "benchmark_coverage_summary": {
-    "cases_checked": 11,
-    "comparison_cases_checked": 11,
+    "cases_checked": 30,
+    "comparison_cases_checked": 30,
     "empty_baseline_cases": 0,
     "quality_failures": 0
   },
@@ -72,12 +72,11 @@
     "split_candidates": 0
   },
   "default_regression_status": "pass",
-  "generated_at": "2026-06-10T02:40:58.099725+00:00",
+  "generated_at": "2026-06-10T03:28:39.701846+00:00",
   "key_foundation_capability_coverage_summary": {
     "count": 29,
     "statuses": {
-      "acceptable": 7,
-      "needs-review": 22
+      "acceptable": 29
     }
   },
   "known_accepted_warnings": [
@@ -106,7 +105,7 @@
     "promoted_agent_sample_strict_warnings": 0,
     "promoted_agent_samples_strict_checked": 5,
     "release_blocking_professionalism_warnings": 0,
-    "skill_professionalism_average_score": 39.83,
+    "skill_professionalism_average_score": 41.26,
     "skill_professionalism_warnings": 8
   },
   "non_blocking_followups": [
@@ -126,182 +125,6 @@
       "message": "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references",
       "severity": "info",
       "target": "src/foundation/capabilities/code-review/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/async-job-design/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/cache-design/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/contract-testing/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/cpp-professional-usage/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/e2e-testing/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/go-professional-usage/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/idempotency-retry-design/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/integration-testing/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/java-jvm-professional-usage/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/language-idiom-enforcement/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/language-performance-safety/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/language-testing-strategy/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/observability/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/python-professional-usage/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/refactoring/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/regression-testing/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/relational-database/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/rust-professional-usage/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/shell-cli-professional-usage/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/sql-professional-usage/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/typescript-professional-usage/SKILL.md"
-    },
-    {
-      "baseline_value": "acceptable",
-      "category": "key-foundation-capability-needs-review",
-      "current_value": "needs-review",
-      "message": "key foundation capability remains needs-review",
-      "severity": "info",
-      "target": "src/foundation/capabilities/unit-testing/SKILL.md"
     }
   ],
   "out_of_scope_non_key_skill_eval_warnings": {
@@ -462,11 +285,11 @@
     "python3 scripts/eval-professional-agent-samples.py --promoted-only --strict"
   ],
   "routing_coverage_summary": {
-    "cases_checked": 81,
+    "cases_checked": 88,
     "cases_without_forbidden": 0,
-    "hidden_risks_checked": 34,
+    "hidden_risks_checked": 91,
     "hidden_risks_needing_manual_review": 0,
-    "hidden_risks_strongly_covered": 30,
+    "hidden_risks_strongly_covered": 87,
     "l1_anti_over_routing_count": 9
   },
   "status": "strict-release-ready",

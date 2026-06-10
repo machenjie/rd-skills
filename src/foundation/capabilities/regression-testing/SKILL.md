@@ -148,6 +148,10 @@ Escalate when: a defect cannot be regression-tested and the residual risk is HIG
 - Timing-sensitive test added to CI — intermittent failures — disabled — defect recurs.
 - Integration test connects to shared development database — mutates data — breaks other tests — removed rather than fixed.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when the defect is security-sensitive, concurrency-sensitive, production incident driven, difficult to reproduce, or disputed in review. Do not load it for a simple deterministic bug when the defect report, failing test command, and red/green evidence are already sufficient.
+
 # Output Contract
 
 Return regression test coverage with:
@@ -161,6 +165,18 @@ Return regression test coverage with:
 - `test_link` (CI integration; PR gate requirement)
 - `untestable_documentation` (if applicable: defect reference, impossibility reason, residual risk, compensating controls, reviewer sign-off)
 - `mutation_test_validation` (optional: mutation testing result confirming test fails when defect mutation applied)
+
+# Evidence Contract
+
+A regression test is accepted only when the output includes:
+
+- **Defect basis**: defect ID, incident, review finding, exploit, failing user scenario, or exact failure report.
+- **Red-before-fix evidence**: command, commit/branch state, failure output, and why the failure matches the original defect.
+- **Green-after-fix evidence**: command, output, changed assertion path, and confirmation that the same test now passes.
+- **Triggering condition**: exact input, state, role, timing, dependency response, feature flag, or data shape that originally caused the bug.
+- **What evidence proves**: the specific recurrence path is blocked.
+- **What evidence does not prove**: adjacent variants, concurrency paths, production-only dependencies, load behavior, or untested clients.
+- **Residual risk**: untested variants, flaky or non-deterministic paths, impossible automated test rationale, owner, and compensating control.
 
 # Quality Gate
 

@@ -120,6 +120,10 @@ Select when shell, CLI, scripts, CI commands, release commands, destructive oper
 - **`curl | bash`** — Symptom: arbitrary script executed from network. Cause: install pattern unverified. Detection: prefer pinned artifacts + checksum; document risk. Impact: supply-chain compromise.
 - **Script grew to 1000 lines** — Symptom: error handling fragile; tests painful; data structures awkward. Cause: shell beyond its sweet spot. Detection: line-count + complexity review. Impact: bugs, hard to maintain.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when shell/CLI changes touch file deletion, quoting, globbing, `eval`, secrets, temp files, idempotent reruns, dry-run behavior, portability, traps, stdout/stderr, or exit-code contract. Do not load it for comment-only script edits.
+
 # Output Contract
 
 Return a **Shell / CLI Usage Review** containing:
@@ -137,6 +141,20 @@ Return a **Shell / CLI Usage Review** containing:
 - **Logging**: structured (where consumed by log pipeline) or plain to stderr
 - **Tests**: bats coverage of success, failure, dry-run, rerun, target-validation-block paths
 - **Accepted exceptions** with owner / scope / expiration
+
+# Evidence Contract
+
+A shell/CLI change is professionally complete only when the output includes:
+
+- **Execution safety**: `set -euo pipefail` decision, trap cleanup, exit codes, and failure propagation.
+- **Quoting/injection boundary**: variables quoted, arrays used for arguments, no unsafe `eval`, no glob surprises.
+- **Idempotency**: repeated run behavior, partial failure recovery, temp file cleanup, and dry-run support when applicable.
+- **Portability**: bash vs POSIX shell, OS assumptions, required tools, and version checks.
+- **Secret safety**: no secrets echoed, logged, or passed through process list unsafely.
+- **Validation evidence**: shellcheck, bats/shunit test, dry-run output, or not-verified disclosure.
+- **What evidence proves**: the inspected shell interface and execution safety risk is covered.
+- **What evidence does not prove**: every OS distribution, production filesystem state, or external command behavior.
+- **Residual risk**: untested runtime behavior, owner, and next gate.
 
 # Quality Gate
 

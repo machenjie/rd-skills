@@ -18,6 +18,10 @@ expected:
   expected_stage: bug-fix
   expected_context_budget_mode: single-stage
   risk_triggers: []
+  hidden_risk_phrases:
+    - Go goroutine without cancel or error propagation
+    - goroutine leak from missing cancellation
+    - error propagation lost in goroutine
   skills:
     - backend-change-builder
     - quality-test-gate

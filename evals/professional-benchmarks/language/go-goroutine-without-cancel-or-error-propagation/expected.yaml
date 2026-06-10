@@ -1,0 +1,21 @@
+expected_stage: code-review
+expected_professional_skill: backend-change-builder
+expected_capabilities:
+  - go-professional-usage
+expected_hidden_risks:
+  - Go goroutine without cancel or error propagation
+  - goroutine leak from missing cancellation
+  - error propagation lost in goroutine
+expected_evidence:
+  - context cancellation path
+  - goroutine lifecycle owner
+  - go test -race output
+forbidden_behaviors:
+  - launch goroutine without owner or cancellation
+  - drop goroutine error without propagation
+  - omit race detector evidence
+expected_output_obligations:
+  - context and goroutine lifecycle evidence
+  - validation evidence for race or cancellation
+  - what evidence proves and does not prove
+  - residual concurrency risk owner

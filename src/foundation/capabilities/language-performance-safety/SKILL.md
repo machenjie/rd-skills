@@ -80,6 +80,12 @@ Worker pool (IO)     = bounded; never unbounded; backpressure required
 - Escalate to `solution-optimality-evaluation` when an algorithmic alternative exists and tradeoff requires explicit comparison.
 - Escalate to `cache-design` when the change adds a cache or modifies caching behavior.
 
+# Reference Loading Policy
+
+- Load `references/checklist.md` when a change touches hot paths, allocation shape, garbage collection, async/event-loop behavior, thread or worker pools, lock scope, backpressure, cancellation, unsafe/FFI boundaries, native resources, reusable client/pool lifecycle, or any unbounded growth surface.
+- Do not load the checklist for cold-path readability changes unless the author makes a performance or safety claim.
+- When the matching `<lang>-professional-usage` capability is selected, load it for runtime-specific tool commands first, then load this checklist for the performance/safety evidence contract and measurement requirements.
+
 # Critical Details
 
 - **Allocation cost is not zero in any runtime.** Even Go and Rust pay for allocation in cache pressure, GC scan time (Go), or sync allocator overhead. Hot-path allocations should be measured and budgeted; pooling (sync.Pool, object pool, arena) considered only after profile justifies.
@@ -112,6 +118,19 @@ Worker pool (IO)     = bounded; never unbounded; backpressure required
 - **Cold-path "optimization"** — Symptom: complex code in rare path; profile shows < 0.1% impact. Cause: optimization without profile. Detection: profile review pre-merge. Impact: complexity tax, no perf gain.
 - **Microbench-only validation** — Symptom: 10× faster in microbench, no change in system p99. Cause: microbench did not reflect real shape. Detection: system-level benchmark. Impact: wasted effort, false claim.
 - **Pool sized by guess** — Symptom: connection-pool exhaustion or massive idle pool. Cause: pool size set without Little's-Law calculation. Detection: pool-wait metric, idle-conn metric. Impact: latency spike or wasted memory.
+
+# Evidence Contract
+
+Language performance/safety review is complete only when the output includes:
+
+- **Runtime risk**: allocation, GC, ownership, event-loop blocking, thread-pool saturation, lock contention, unsafe memory boundary, resource leak, or unbounded growth surface identified.
+- **Hot-path evidence**: profile, trace, load/stress result, or explicit statement that no hot-path claim is verified.
+- **Measurement contract**: before/after metric, benchmark command, race/sanitizer command, event-loop lag metric, pool metric, or not-verified disclosure.
+- **Bounds and lifecycle**: queue, fan-out, batch, collection, retry, client/pool, handle, subscription, timer, or file/resource limit and cleanup path.
+- **Concurrency/safety proof**: cancellation/backpressure behavior, race/sanitizer coverage, lock-scope evidence, unsafe/FFI invariant, or reviewer requirement.
+- **What evidence proves**: the inspected runtime risk is bounded, measured, or explicitly rejected for the covered path.
+- **What evidence does not prove**: production tail latency, all scheduler interleavings, all payload sizes, or unrelated hot paths.
+- **Residual risk**: remaining measurement gap, owner, and threshold that reopens the review.
 
 # Output Contract
 

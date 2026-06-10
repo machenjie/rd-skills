@@ -16,6 +16,10 @@ expected:
   expected_stage: code-review
   expected_context_budget_mode: single-stage
   risk_triggers: []
+  hidden_risk_phrases:
+    - idiom mismatch copied from other language
+    - invented abstraction ignores repository convention
+    - framework-incorrect naming or file layout
   skills:
     - backend-change-builder
     - architecture-impact-reviewer

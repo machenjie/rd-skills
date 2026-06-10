@@ -12,6 +12,10 @@ expected:
   expected_stage: testing
   expected_context_budget_mode: single-stage
   risk_triggers: []
+  hidden_risk_phrases:
+    - over-mocked private helper hides behavior
+    - private helper assertion freezes implementation
+    - unit boundary not protected by observable assertions
   skills:
     - backend-change-builder
     - quality-test-gate

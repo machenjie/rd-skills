@@ -137,6 +137,10 @@ Contract testing succeeds only when both **provider** and **consumer** perspecti
 - Sunset header not added; deprecated endpoint removed; partner integration fails without warning.
 - Pagination `meta.total` removed; consumer pagination UI breaks; not covered by contract test.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when a change touches provider/consumer compatibility, API schema, event payload, SDK method, webhook shape, versioning, schema registry mode, or external vendor contract behavior. Do not load it for provider-internal tests with no consumer-visible contract surface.
+
 # Output Contract
 
 Return a contract test plan with:
@@ -156,6 +160,20 @@ Return a contract test plan with:
 - `ci_gate` (tool + command that runs in CI; blocking condition)
 - `pact_broker_config` (broker URL; can-i-deploy check; consumer version selectors)
 - `migration_evidence` (for breaking changes: dual version period, consumer migration deadline, sunset date)
+
+# Evidence Contract
+
+A contract test is accepted only when the output includes:
+
+- **Provider and consumer**: service/library/API producer and each affected consumer.
+- **Contract surface**: request schema, response schema, error code, header, event payload, pagination, sort/filter, or SDK method.
+- **Compatibility claim**: backward-compatible, additive, breaking, deprecated, or versioned.
+- **Consumer verification**: generated client, pact/contract test, schema diff, fixture replay, or consumer test command.
+- **Provider verification**: provider-side contract validation command and output.
+- **Semantic limits**: what the contract verifies versus business behavior outside the schema.
+- **What evidence proves**: the named consumer/provider contract remains compatible.
+- **What evidence does not prove**: unknown consumers, production traffic compatibility, runtime data semantics, or behavior outside the contract.
+- **Residual risk**: unverified consumers, owner, and next gate.
 
 # Quality Gate
 

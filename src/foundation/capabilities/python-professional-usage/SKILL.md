@@ -105,6 +105,10 @@ Select when Python services, libraries, scripts, automation, data pipelines, AI 
 - **EOL Python** — Symptom: CVE without upstream patch. Cause: pinned to 3.8/3.9. Detection: runtime lifecycle audit. Impact: forced upgrade under deadline.
 - **GIL on CPU-bound threads** — Symptom: no speedup from `ThreadPoolExecutor` on CPU work. Cause: GIL. Detection: profile shows single-core utilization. Impact: latency / throughput floor.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when Python changes touch async/sync boundaries, IO/API validation, resource lifecycle, shared mutable state, imports/packaging, pytest fixtures, monkeypatching, or runtime typing gaps. Do not load it for a trivial local script copy edit.
+
 # Output Contract
 
 Return a **Python Usage Review** containing:
@@ -120,6 +124,20 @@ Return a **Python Usage Review** containing:
 - **Security**: bandit clean? pip-audit clean? deserialization / subprocess / SQL parametrization audited?
 - **Logging**: structured + no secrets?
 - **Accepted exceptions** with owner / scope / expiration
+
+# Evidence Contract
+
+A Python change is professionally complete only when the output includes:
+
+- **Type/runtime boundary**: type hints, runtime validation where data crosses IO/API boundaries, and `Any`/dynamic typing justification.
+- **Async/sync boundary**: no blocking IO inside event loop, cancellation behavior, timeout handling.
+- **Resource lifecycle**: context managers for files, sockets, sessions, locks, and temporary resources.
+- **Mutable/default state**: no unsafe mutable defaults, shared globals, or test-order coupling.
+- **Packaging/import boundary**: module placement, dependency direction, import side effects.
+- **Test evidence**: pytest fixture ownership, monkeypatch scope, and async test behavior when applicable.
+- **What evidence proves**: the inspected Python runtime and boundary risk is covered.
+- **What evidence does not prove**: production load, all interpreter versions, external dependency behavior, or cross-language clients.
+- **Residual risk**: untested runtime behavior, owner, and next gate.
 
 # Quality Gate
 

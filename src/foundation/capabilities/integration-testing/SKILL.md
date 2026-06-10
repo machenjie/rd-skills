@@ -121,6 +121,10 @@ The most expensive integration test failure pattern is the "everything is mocked
 - Auth filter bypassed in test; authorization rule never exercised in CI; role-based access bug ships to production.
 - Testcontainer spun up per test; 400-test suite takes 30 minutes; developers skip tests locally; CI becomes the only test run.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when a test crosses a real database, cache, queue, auth, transaction, external-adapter, rollback, timeout, or shared fixture boundary. Do not load it for a pure unit test or a simple local fake with no real integration seam.
+
 # Output Contract
 
 Return an integration test plan with:
@@ -139,13 +143,17 @@ Return an integration test plan with:
 
 # Evidence Contract
 
-Close this capability only with real-boundary test evidence:
+An integration test is accepted only when the output includes:
 
-- **Boundaries inspected:** boundary under test, real infrastructure version, controlled external stub/fake, auth context, transaction or cleanup strategy, and side effects that unit tests cannot prove.
-- **Validation evidence:** command output for success and failure-path tests, including response, persistent state, event/message, rollback, timeout, and request-body assertions where relevant.
-- **What evidence proves:** the selected seam works against realistic infrastructure and failure injection without shared mutable test state.
-- **What evidence does not prove:** full user journey behavior, provider compatibility beyond the controlled stub, or production topology unless covered by E2E, contract, or staging evidence.
-- **Residual risk and handoff:** name any uncontrolled dependency, flaky shared environment, or untested rollback path; hand off to `contract-testing`, `e2e-testing`, or `test-data-management` when those risks remain.
+- **Integration boundary**: which real components are exercised together.
+- **External boundaries mocked**: which dependencies remain mocked, stubbed, containerized, or recorded.
+- **Data state**: fixture ownership, database/cache/queue state, cleanup, and isolation.
+- **Environment isolation**: ephemeral database/container, transaction rollback, namespace isolation, or cleanup command.
+- **Parallel safety**: whether tests can run concurrently without shared-state collisions.
+- **Failure path**: timeout, transaction rollback, retry, invalid state, or dependency error when relevant.
+- **What evidence proves**: wiring and behavior across the selected boundary.
+- **What evidence does not prove**: full browser behavior, production scale, third-party production behavior, alternate services, or unrelated consumers.
+- **Residual risk**: untested external boundary, owner, and next gate.
 
 # Quality Gate
 

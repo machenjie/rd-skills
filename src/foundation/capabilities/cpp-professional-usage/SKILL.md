@@ -118,6 +118,10 @@ Select when C / C++ / native / ABI / FFI / embedded / memory-ownership / sanitiz
 - **False sharing** — Symptom: scaling collapses past N threads. Cause: per-thread fields on same cache line. Detection: perf c2c; align with `hardware_destructive_interference_size`. Impact: scalability cliff.
 - **Exception across FFI** — Symptom: undefined behavior in C caller. Cause: C++ exception escaped `extern "C"`. Detection: `try/catch` at boundary; sanitizer / review. Impact: UB in foreign code.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when C/C++ changes touch raw pointers, ownership/lifetime, bounds, undefined behavior, concurrency, atomics, ABI/API layout, FFI, sanitizers, static analysis, or exported headers. Do not load it for formatter-only or comment-only changes.
+
 # Output Contract
 
 Return a **C / C++ Usage Review** containing:
@@ -133,6 +137,20 @@ Return a **C / C++ Usage Review** containing:
 - **Dependencies**: vcpkg / Conan manifest; CVE / OSV scan status
 - **Tests**: unit + integration + fuzz (libFuzzer / AFL) + benchmark (gbench) coverage
 - **Accepted exceptions** with owner / scope / expiration
+
+# Evidence Contract
+
+A C/C++ change is professionally complete only when the output includes:
+
+- **Ownership model**: stack/heap ownership, RAII wrapper, smart pointer choice, and delete/free boundary.
+- **Lifetime and aliasing**: pointer/reference validity, iterator invalidation, object lifetime, and aliasing assumptions.
+- **Bounds and UB**: array/vector bounds, integer overflow, signed/unsigned conversion, undefined behavior risk.
+- **Concurrency**: lock ownership, atomics, memory ordering, and data race risk.
+- **ABI/API boundary**: struct layout, header compatibility, exported symbols, and FFI boundary.
+- **Validation evidence**: unit test, sanitizer, valgrind, static analyzer, or not-verified disclosure.
+- **What evidence proves**: the inspected native safety and ABI risk is covered.
+- **What evidence does not prove**: all platforms, production workload, compiler-specific UB exposure, or downstream binary compatibility.
+- **Residual risk**: untested runtime behavior, owner, and next gate.
 
 # Quality Gate
 

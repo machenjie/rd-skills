@@ -20,6 +20,9 @@ expected:
     - business logic pollution in shared/common/utils
     - unclear owner for tenant and invoice rules
     - hidden behavior change during refactor
+    - hidden behavior change during supposedly behavior-preserving refactor
+    - public API or error semantics changed without evidence
+    - deletion path not proven safe
   skills:
     - architecture-impact-reviewer
     - quality-test-gate

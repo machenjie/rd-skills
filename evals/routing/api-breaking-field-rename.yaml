@@ -14,6 +14,10 @@ expected:
   expected_context_budget_mode: staged-plan
   risk_triggers:
     - production deployment
+  hidden_risk_phrases:
+    - contract change without consumer verification
+    - provider-only test misses consumer compatibility
+    - breaking API field change lacks schema diff or migration evidence
   skills:
     - change-intake-compiler
     - change-impact-analyzer
@@ -61,4 +65,3 @@ forbidden:
 notes: |
   Breaking contract change needs API/data, client compatibility, docs, and
   delivery without inventing database or security work.
-

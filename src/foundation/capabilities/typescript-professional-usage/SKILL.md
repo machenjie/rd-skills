@@ -110,6 +110,10 @@ Select when TypeScript, frontend state, Node.js services, SDKs, generated types,
 - **Public SDK type break** — Symptom: downstream TS consumers can't compile after minor bump. Cause: type widened/narrowed without major bump. Detection: `api-extractor` + `tsd` snapshot in CI. Impact: ecosystem breakage.
 - **`fetch` ignored status** — Symptom: error response parsed as success body. Cause: missing `res.ok` check. Detection: code review + helper wrapper. Impact: silent failure modes.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when TypeScript changes touch API/storage/message boundaries, `any`/`unknown`, generated clients, async error paths, state modeling, public type exports, runtime validation, or browser/server bundle boundaries. Do not load it for copy-only text or test-name changes.
+
 # Output Contract
 
 Return a **TypeScript Usage Review** containing:
@@ -126,6 +130,20 @@ Return a **TypeScript Usage Review** containing:
 - **Security** — XSS / prototype-pollution / `eval` / unsafe deserialization audited
 - **Tests** — vitest/jest coverage; testing-library behavior + axe; Playwright E2E for critical flows
 - **Accepted exceptions** with owner / scope / expiration
+
+# Evidence Contract
+
+A TypeScript change is professionally complete only when the output includes:
+
+- **Type boundary**: `unknown` over `any`, discriminated unions, branded IDs, and explicit nullable states.
+- **Runtime validation**: validation at API/storage/message boundaries; static types are not trusted for external data.
+- **Async error path**: rejected promises, abort/cancellation, loading/error states, and no unhandled promise.
+- **State model**: impossible states eliminated or explicitly represented.
+- **Bundle/API boundary**: public type exports, generated client impact, and bundle/runtime compatibility.
+- **Test evidence**: typecheck, unit/component test, runtime validation test, or not-verified disclosure.
+- **What evidence proves**: the inspected TypeScript type/runtime boundary is covered.
+- **What evidence does not prove**: production data distribution, browser matrix, external API correctness, or downstream consumer behavior.
+- **Residual risk**: untested runtime behavior, owner, and next gate.
 
 # Quality Gate
 

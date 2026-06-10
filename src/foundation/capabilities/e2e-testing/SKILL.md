@@ -146,6 +146,10 @@ E2E tests are the most expensive tests to write, maintain, and debug. Precision 
 - No permission-denied E2E test; RBAC middleware bug ships; admin-only endpoint accessible to regular users.
 - Missing trace artifacts; intermittent failure in CI; engineer spends 3 hours adding logs to reproduce locally.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` when the change touches critical user journeys, auth/session flows, permission denial, checkout/payment confirmation, destructive actions, external stubs, flake policy, or CI browser artifacts. Do not load it when a lower-level unit, integration, or contract test is sufficient for the stated risk.
+
 # Output Contract
 
 Return an E2E plan with:
@@ -165,6 +169,20 @@ Return an E2E plan with:
 - `flake_controls` (waitFor strategy, no arbitrary timeouts, deterministic data)
 - `ci_configuration` (parallelism workers, browser matrix, trace/screenshot/video on failure)
 - `artifacts` (trace zip, screenshot, video; where stored in CI)
+
+# Evidence Contract
+
+An E2E test is accepted only when the output includes:
+
+- **User journey**: actor, entry point, full path, expected outcome, and business value.
+- **Layer justification**: why unit, integration, or contract tests are insufficient.
+- **State setup**: test data owner, environment, feature flags, authentication state, and cleanup.
+- **Observable assertions**: user-visible state, accessibility state, persisted result, network result, notification, or audit record.
+- **Stability controls**: deterministic waits, retry policy, fixture isolation, and flake mitigation.
+- **Flake budget**: expected stability and quarantine/triage plan if the test is flaky.
+- **What evidence proves**: the named end-to-end journey works through the selected environment.
+- **What evidence does not prove**: all browsers/devices/locales, production scale, third-party production behavior, alternate roles, or untested journeys.
+- **Residual risk**: untested journey variants, owner, and next gate.
 
 # Quality Gate
 

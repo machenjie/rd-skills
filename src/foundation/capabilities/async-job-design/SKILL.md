@@ -156,6 +156,10 @@ Async work fundamentally changes the failure model: **the request may succeed wh
 - One tenant's bulk operation starves all other tenants' jobs.
 - Saga step succeeds, compensation step fails on rollback → permanent inconsistency, no alarm.
 
+# Reference Loading Policy
+
+Read `references/checklist.md` only when the change touches queue workers, scheduled jobs, workflow engines, transactional enqueue, duplicate delivery, retries, DLQ/replay, cancellation, compensation, deploy skew, or production job observability. Do not load it for an isolated in-process best-effort task where loss is acceptable and no external side effect exists.
+
 # Output Contract
 
 Return an async job design containing:
@@ -180,13 +184,21 @@ Return an async job design containing:
 
 # Evidence Contract
 
-Close this capability only with async-lifecycle evidence:
+An async job design is complete only when the output includes:
 
-- **Boundaries inspected:** producer enqueue point, durable payload, idempotency key, worker lease/visibility timeout, retry policy, DLQ/quarantine, cancellation safe points, compensation, status model, and owner/runbook.
-- **Validation evidence:** duplicate delivery, timeout, retry exhaustion, poison message, cancellation, compensation, and backlog-drain test output or a not-verified disclosure.
-- **What evidence proves:** the job has bounded retries, visible terminal states, owned failure handling, and no silent loss under the inspected failure paths.
-- **What evidence does not prove:** every production replay, broker failover, or long-running workflow version interaction unless exercised with staging or production-like drills.
-- **Residual risk and handoff:** name any untested replay window, tenant fairness, downstream rate limit, or cost spike; hand off to `idempotency-retry-design`, `message-queue-design`, or `reliability-observability-gate` when delivery semantics or production SLOs remain open.
+- **Job boundary**: enqueue source, worker owner, payload schema, payload version, idempotency key, and tenant/resource scope.
+- **Transactional enqueue**: whether database write and job enqueue are atomic; if not, whether transactional outbox or recovery scan is required.
+- **Delivery semantics**: at-most-once / at-least-once / exactly-once claim and why the implementation actually satisfies it.
+- **Ack/Nack boundary**: when the message is acknowledged and what happens after worker failure before and after ack.
+- **Retry and DLQ policy**: retryable errors, non-retryable errors, backoff, max attempts, poison handling, and DLQ ownership.
+- **Replay procedure**: how failed jobs are safely replayed without duplicate side effects or tenant-boundary violations.
+- **Ordering and concurrency**: partitioning key, ordering guarantees, lock/concurrency assumptions, cancellation behavior.
+- **Deploy skew**: worker version compatibility with old/new payload schema during rolling deploy.
+- **Observability**: job duration, success/failure count, retry count, DLQ depth, last-success heartbeat, and alert owner.
+- **Validation evidence**: duplicate-delivery test, transactional enqueue/outbox test, retry test, DLQ test, replay test, cancellation test, or explicit not-verified disclosure.
+- **What evidence proves**: the inspected job has bounded retries, visible terminal states, owned failure handling, and no silent loss under the tested failure paths.
+- **What evidence does not prove**: unproven concurrency, production queue behavior, clock skew, ordering, or downstream idempotency.
+- **Residual risk**: untested failure mode, owner, and next gate.
 
 # Quality Gate
 
