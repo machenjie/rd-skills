@@ -1,5 +1,5 @@
 schema_version: 1
-generated_at: "2026-06-10T02:04:14.812894+00:00"
+generated_at: "2026-06-10T05:16:46.522620+00:00"
 source_reports:
   skill_professionalism: reports/skill-professionalism-eval.json
   professional_coverage_matrix: reports/professional-coverage-matrix.json
@@ -48,7 +48,7 @@ professional_skills:
     known_warnings: []
     required_sections_present: true
     missing_required_sections: []
-    benchmark_coverage_count: 3
+    benchmark_coverage_count: 6
     routing_coverage_count: 14
     coverage:
       mode_matrix: yes
@@ -88,8 +88,8 @@ professional_skills:
     known_warnings: []
     required_sections_present: true
     missing_required_sections: []
-    benchmark_coverage_count: 3
-    routing_coverage_count: 40
+    benchmark_coverage_count: 8
+    routing_coverage_count: 44
     coverage:
       mode_matrix: yes
       proactive_triggers: yes
@@ -188,7 +188,7 @@ professional_skills:
     known_warnings: []
     required_sections_present: true
     missing_required_sections: []
-    benchmark_coverage_count: 0
+    benchmark_coverage_count: 1
     routing_coverage_count: 14
     coverage:
       mode_matrix: yes
@@ -208,8 +208,8 @@ professional_skills:
     known_warnings: []
     required_sections_present: true
     missing_required_sections: []
-    benchmark_coverage_count: 1
-    routing_coverage_count: 12
+    benchmark_coverage_count: 4
+    routing_coverage_count: 13
     coverage:
       mode_matrix: yes
       proactive_triggers: yes
@@ -228,8 +228,8 @@ professional_skills:
     known_warnings: []
     required_sections_present: true
     missing_required_sections: []
-    benchmark_coverage_count: 2
-    routing_coverage_count: 25
+    benchmark_coverage_count: 3
+    routing_coverage_count: 26
     coverage:
       mode_matrix: yes
       proactive_triggers: yes
@@ -288,8 +288,8 @@ professional_skills:
     known_warnings: []
     required_sections_present: true
     missing_required_sections: []
-    benchmark_coverage_count: 1
-    routing_coverage_count: 11
+    benchmark_coverage_count: 2
+    routing_coverage_count: 13
     coverage:
       mode_matrix: yes
       proactive_triggers: yes
@@ -328,8 +328,8 @@ professional_skills:
     known_warnings: []
     required_sections_present: true
     missing_required_sections: []
-    benchmark_coverage_count: 0
-    routing_coverage_count: 71
+    benchmark_coverage_count: 5
+    routing_coverage_count: 78
     coverage:
       mode_matrix: yes
       proactive_triggers: yes
@@ -369,7 +369,7 @@ professional_skills:
     required_sections_present: true
     missing_required_sections: []
     benchmark_coverage_count: 0
-    routing_coverage_count: 22
+    routing_coverage_count: 24
     coverage:
       mode_matrix: yes
       proactive_triggers: yes
@@ -403,15 +403,12 @@ foundation_capabilities:
   async-job-design:
     path: src/foundation/capabilities/async-job-design/SKILL.md
     kind: foundation-capability
-    total_score: 40
-    status: needs-review
+    total_score: 44
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Reference Loading Policy"
+    required_sections_present: true
+    missing_required_sections: []
     benchmark_coverage_count: 1
     routing_coverage_count: 1
     coverage:
@@ -421,21 +418,18 @@ foundation_capabilities:
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   cache-design:
     path: src/foundation/capabilities/cache-design/SKILL.md
     kind: foundation-capability
-    total_score: 40
-    status: needs-review
+    total_score: 45
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 1
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 2
     routing_coverage_count: 3
     coverage:
       mode_matrix: n/a
@@ -444,7 +438,7 @@ foundation_capabilities:
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   code-review:
     path: src/foundation/capabilities/code-review/SKILL.md
@@ -453,11 +447,9 @@ foundation_capabilities:
     status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-    benchmark_coverage_count: 1
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 2
     routing_coverage_count: 4
     coverage:
       mode_matrix: n/a
@@ -471,74 +463,62 @@ foundation_capabilities:
   contract-testing:
     path: src/foundation/capabilities/contract-testing/SKILL.md
     kind: foundation-capability
-    total_score: 34
-    status: needs-review
+    total_score: 44
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
     routing_coverage_count: 8
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   cpp-professional-usage:
     path: src/foundation/capabilities/cpp-professional-usage/SKILL.md
     kind: foundation-capability
-    total_score: 38
-    status: needs-review
+    total_score: 49
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
     routing_coverage_count: 2
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   e2e-testing:
     path: src/foundation/capabilities/e2e-testing/SKILL.md
     kind: foundation-capability
-    total_score: 40
-    status: needs-review
+    total_score: 50
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
-    routing_coverage_count: 3
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
+    routing_coverage_count: 4
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   failure-diagnosis:
     path: src/foundation/capabilities/failure-diagnosis/SKILL.md
@@ -547,10 +527,8 @@ foundation_capabilities:
     status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
+    required_sections_present: true
+    missing_required_sections: []
     benchmark_coverage_count: 1
     routing_coverage_count: 7
     coverage:
@@ -565,39 +543,32 @@ foundation_capabilities:
   go-professional-usage:
     path: src/foundation/capabilities/go-professional-usage/SKILL.md
     kind: foundation-capability
-    total_score: 37
-    status: needs-review
+    total_score: 49
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
     routing_coverage_count: 1
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   idempotency-retry-design:
     path: src/foundation/capabilities/idempotency-retry-design/SKILL.md
     kind: foundation-capability
-    total_score: 39
-    status: needs-review
+    total_score: 45
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Reference Loading Policy"
+    required_sections_present: true
+    missing_required_sections: []
     benchmark_coverage_count: 2
     routing_coverage_count: 10
     coverage:
@@ -607,22 +578,19 @@ foundation_capabilities:
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   integration-testing:
     path: src/foundation/capabilities/integration-testing/SKILL.md
     kind: foundation-capability
-    total_score: 41
-    status: needs-review
+    total_score: 44
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
-    routing_coverage_count: 9
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
+    routing_coverage_count: 12
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
@@ -630,103 +598,87 @@ foundation_capabilities:
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   java-jvm-professional-usage:
     path: src/foundation/capabilities/java-jvm-professional-usage/SKILL.md
     kind: foundation-capability
-    total_score: 37
-    status: needs-review
+    total_score: 49
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
-    routing_coverage_count: 0
-    coverage:
-      mode_matrix: n/a
-      proactive_triggers: n/a
-      evidence_contract: partial
-      output_contract: yes
-      failure_modes: yes
-      quality_gate: yes
-      reference_loading_hint: partial
-      anti_bloat_status: ok
-  language-idiom-enforcement:
-    path: src/foundation/capabilities/language-idiom-enforcement/SKILL.md
-    kind: foundation-capability
-    total_score: 41
-    status: needs-review
-    known_warnings_count: 0
-    known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
     routing_coverage_count: 1
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
+      anti_bloat_status: ok
+  language-idiom-enforcement:
+    path: src/foundation/capabilities/language-idiom-enforcement/SKILL.md
+    kind: foundation-capability
+    total_score: 51
+    status: acceptable
+    known_warnings_count: 0
+    known_warnings: []
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
+    routing_coverage_count: 1
+    coverage:
+      mode_matrix: n/a
+      proactive_triggers: n/a
+      evidence_contract: yes
+      output_contract: yes
+      failure_modes: yes
+      quality_gate: yes
+      reference_loading_hint: yes
       anti_bloat_status: ok
   language-performance-safety:
     path: src/foundation/capabilities/language-performance-safety/SKILL.md
     kind: foundation-capability
-    total_score: 39
-    status: needs-review
+    total_score: 46
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
-    routing_coverage_count: 2
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
+    routing_coverage_count: 3
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   language-testing-strategy:
     path: src/foundation/capabilities/language-testing-strategy/SKILL.md
     kind: foundation-capability
-    total_score: 43
-    status: needs-review
+    total_score: 51
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
-    routing_coverage_count: 0
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
+    routing_coverage_count: 2
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   logging-error-handling:
     path: src/foundation/capabilities/logging-error-handling/SKILL.md
@@ -735,10 +687,8 @@ foundation_capabilities:
     status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
+    required_sections_present: true
+    missing_required_sections: []
     benchmark_coverage_count: 1
     routing_coverage_count: 7
     coverage:
@@ -757,10 +707,8 @@ foundation_capabilities:
     status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
+    required_sections_present: true
+    missing_required_sections: []
     benchmark_coverage_count: 2
     routing_coverage_count: 4
     coverage:
@@ -775,20 +723,18 @@ foundation_capabilities:
   observability:
     path: src/foundation/capabilities/observability/SKILL.md
     kind: foundation-capability
-    total_score: 40
-    status: needs-review
+    total_score: 43
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-    benchmark_coverage_count: 2
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 3
     routing_coverage_count: 26
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
@@ -797,44 +743,38 @@ foundation_capabilities:
   python-professional-usage:
     path: src/foundation/capabilities/python-professional-usage/SKILL.md
     kind: foundation-capability
-    total_score: 42
-    status: needs-review
+    total_score: 53
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
-    routing_coverage_count: 0
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
+    routing_coverage_count: 1
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   refactoring:
     path: src/foundation/capabilities/refactoring/SKILL.md
     kind: foundation-capability
-    total_score: 45
-    status: needs-review
+    total_score: 48
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-    benchmark_coverage_count: 1
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 2
     routing_coverage_count: 7
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
@@ -843,41 +783,14 @@ foundation_capabilities:
   regression-testing:
     path: src/foundation/capabilities/regression-testing/SKILL.md
     kind: foundation-capability
-    total_score: 39
-    status: needs-review
+    total_score: 49
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 2
-    routing_coverage_count: 25
-    coverage:
-      mode_matrix: n/a
-      proactive_triggers: n/a
-      evidence_contract: partial
-      output_contract: yes
-      failure_modes: yes
-      quality_gate: yes
-      reference_loading_hint: partial
-      anti_bloat_status: ok
-  relational-database:
-    path: src/foundation/capabilities/relational-database/SKILL.md
-    kind: foundation-capability
-    total_score: 40
-    status: needs-review
-    known_warnings_count: 0
-    known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
-    routing_coverage_count: 2
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 3
+    routing_coverage_count: 27
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
@@ -885,7 +798,27 @@ foundation_capabilities:
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
+      anti_bloat_status: ok
+  relational-database:
+    path: src/foundation/capabilities/relational-database/SKILL.md
+    kind: foundation-capability
+    total_score: 43
+    status: acceptable
+    known_warnings_count: 0
+    known_warnings: []
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
+    routing_coverage_count: 3
+    coverage:
+      mode_matrix: n/a
+      proactive_triggers: n/a
+      evidence_contract: yes
+      output_contract: yes
+      failure_modes: yes
+      quality_gate: yes
+      reference_loading_hint: yes
       anti_bloat_status: ok
   release-rollback:
     path: src/foundation/capabilities/release-rollback/SKILL.md
@@ -894,10 +827,8 @@ foundation_capabilities:
     status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
+    required_sections_present: true
+    missing_required_sections: []
     benchmark_coverage_count: 2
     routing_coverage_count: 18
     coverage:
@@ -912,74 +843,62 @@ foundation_capabilities:
   rust-professional-usage:
     path: src/foundation/capabilities/rust-professional-usage/SKILL.md
     kind: foundation-capability
-    total_score: 37
-    status: needs-review
+    total_score: 49
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
     routing_coverage_count: 2
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   shell-cli-professional-usage:
     path: src/foundation/capabilities/shell-cli-professional-usage/SKILL.md
     kind: foundation-capability
-    total_score: 42
-    status: needs-review
+    total_score: 51
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
-    routing_coverage_count: 0
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
+    routing_coverage_count: 1
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   sql-professional-usage:
     path: src/foundation/capabilities/sql-professional-usage/SKILL.md
     kind: foundation-capability
-    total_score: 37
-    status: needs-review
+    total_score: 49
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
-    routing_coverage_count: 0
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
+    routing_coverage_count: 1
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   test-strategy:
     path: src/foundation/capabilities/test-strategy/SKILL.md
@@ -988,10 +907,8 @@ foundation_capabilities:
     status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
+    required_sections_present: true
+    missing_required_sections: []
     benchmark_coverage_count: 0
     routing_coverage_count: 4
     coverage:
@@ -1010,10 +927,8 @@ foundation_capabilities:
     status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
+    required_sections_present: true
+    missing_required_sections: []
     benchmark_coverage_count: 1
     routing_coverage_count: 7
     coverage:
@@ -1028,50 +943,42 @@ foundation_capabilities:
   typescript-professional-usage:
     path: src/foundation/capabilities/typescript-professional-usage/SKILL.md
     kind: foundation-capability
-    total_score: 39
-    status: needs-review
+    total_score: 50
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
-    routing_coverage_count: 0
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 1
+    routing_coverage_count: 1
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
   unit-testing:
     path: src/foundation/capabilities/unit-testing/SKILL.md
     kind: foundation-capability
-    total_score: 37
-    status: needs-review
+    total_score: 44
+    status: acceptable
     known_warnings_count: 0
     known_warnings: []
-    required_sections_present: false
-    missing_required_sections:
-      - "Mode Matrix"
-      - "Proactive Professional Triggers"
-      - "Evidence Contract"
-      - "Reference Loading Policy"
-    benchmark_coverage_count: 0
-    routing_coverage_count: 12
+    required_sections_present: true
+    missing_required_sections: []
+    benchmark_coverage_count: 2
+    routing_coverage_count: 13
     coverage:
       mode_matrix: n/a
       proactive_triggers: n/a
-      evidence_contract: partial
+      evidence_contract: yes
       output_contract: yes
       failure_modes: yes
       quality_gate: yes
-      reference_loading_hint: partial
+      reference_loading_hint: yes
       anti_bloat_status: ok
 benchmarks:
   cases:
@@ -1122,6 +1029,39 @@ benchmarks:
       comparison_status: pass
       benchmark_quality_status: pass
       baseline_defect_hits_count: 1
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 13
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/api/contract-change-without-consumer-verification:
+      expected_stage: implementation-planning
+      expected_skills:
+        - data-api-contract-changer
+      expected_capabilities:
+        - contract-testing
+        - version-compatibility
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
       with_skill_obligation_coverage_count: 15
       with_skill_obligation_coverage:
         - "selected stage"
@@ -1249,6 +1189,40 @@ benchmarks:
       remaining_gaps: []
       errors_count: 0
       errors: []
+    evals/professional-benchmarks/data/cache-key-cross-tenant-collision:
+      expected_stage: implementation-planning
+      expected_skills:
+        - data-middleware-change-builder
+      expected_capabilities:
+        - cache-design
+        - permission-boundary-modeling
+        - observability
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 14
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
     evals/professional-benchmarks/data/redis-cache-without-ttl-or-invalidation:
       expected_stage: implementation-planning
       expected_skills:
@@ -1262,6 +1236,39 @@ benchmarks:
       comparison_status: pass
       benchmark_quality_status: pass
       baseline_defect_hits_count: 1
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 13
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/data/relational-query-without-index-or-explain:
+      expected_stage: implementation-planning
+      expected_skills:
+        - data-middleware-change-builder
+      expected_capabilities:
+        - relational-database
+        - indexing-query-optimization
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
       with_skill_obligation_coverage_count: 15
       with_skill_obligation_coverage:
         - "selected stage"
@@ -1389,6 +1396,361 @@ benchmarks:
       remaining_gaps: []
       errors_count: 0
       errors: []
+    evals/professional-benchmarks/language/cpp-raw-pointer-lifetime-without-raii:
+      expected_stage: code-review
+      expected_skills:
+        - ai-code-review-refactor
+      expected_capabilities:
+        - cpp-professional-usage
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 13
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/language/go-goroutine-without-cancel-or-error-propagation:
+      expected_stage: code-review
+      expected_skills:
+        - backend-change-builder
+      expected_capabilities:
+        - go-professional-usage
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 13
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/language/idiom-mismatch-copied-from-other-language:
+      expected_stage: code-review
+      expected_skills:
+        - backend-change-builder
+      expected_capabilities:
+        - language-idiom-enforcement
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 14
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/language/java-executor-without-shutdown-or-bounds:
+      expected_stage: code-review
+      expected_skills:
+        - backend-change-builder
+      expected_capabilities:
+        - java-jvm-professional-usage
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 13
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/language/performance-unbounded-concurrency:
+      expected_stage: code-review
+      expected_skills:
+        - backend-change-builder
+      expected_capabilities:
+        - language-performance-safety
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 14
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/language/python-async-blocking-call-without-timeout:
+      expected_stage: code-review
+      expected_skills:
+        - backend-change-builder
+      expected_capabilities:
+        - python-professional-usage
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 13
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/language/rust-unsafe-boundary-without-invariants:
+      expected_stage: code-review
+      expected_skills:
+        - ai-code-review-refactor
+      expected_capabilities:
+        - rust-professional-usage
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 13
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/language/shell-unquoted-rm-path:
+      expected_stage: code-review
+      expected_skills:
+        - delivery-release-gate
+      expected_capabilities:
+        - shell-cli-professional-usage
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 14
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/language/sql-dynamic-query-without-parameterization:
+      expected_stage: code-review
+      expected_skills:
+        - data-middleware-change-builder
+      expected_capabilities:
+        - sql-professional-usage
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 14
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/language/typescript-any-at-api-boundary:
+      expected_stage: code-review
+      expected_skills:
+        - frontend-change-builder
+      expected_capabilities:
+        - typescript-professional-usage
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 13
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/refactoring/refactor-with-hidden-behavior-change:
+      expected_stage: refactoring
+      expected_skills:
+        - ai-code-review-refactor
+      expected_capabilities:
+        - refactoring
+        - implementation-structure-design
+        - code-clarity-maintainability
+        - code-review
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 14
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
     evals/professional-benchmarks/refactoring/shared-utils-business-logic-pollution:
       expected_stage: refactoring
       expected_skills:
@@ -1459,8 +1821,170 @@ benchmarks:
       remaining_gaps: []
       errors_count: 0
       errors: []
-  cases_checked: 11
-  comparison_cases_checked: 11
+    evals/professional-benchmarks/testing/e2e-test-used-for-unit-level-bug:
+      expected_stage: testing
+      expected_skills:
+        - quality-test-gate
+      expected_capabilities:
+        - e2e-testing
+        - unit-testing
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 14
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/testing/integration-test-mocks-away-real-boundary:
+      expected_stage: testing
+      expected_skills:
+        - quality-test-gate
+      expected_capabilities:
+        - integration-testing
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 14
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/testing/language-runtime-risk-wrong-test-layer:
+      expected_stage: testing
+      expected_skills:
+        - quality-test-gate
+      expected_capabilities:
+        - language-testing-strategy
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 14
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/testing/regression-test-passes-before-fix:
+      expected_stage: testing
+      expected_skills:
+        - quality-test-gate
+      expected_capabilities:
+        - regression-testing
+        - agent-execution-discipline
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 13
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+    evals/professional-benchmarks/testing/unit-test-overmocks-private-helper:
+      expected_stage: testing
+      expected_skills:
+        - quality-test-gate
+      expected_capabilities:
+        - unit-testing
+      schema_status: pass
+      comparison_status: pass
+      benchmark_quality_status: pass
+      baseline_defect_hits_count: 3
+      with_skill_obligation_coverage_count: 15
+      with_skill_obligation_coverage:
+        - "selected stage"
+        - "selected professional skill"
+        - "selected capabilities"
+        - "expected hidden risks"
+        - "forbidden behaviors avoided"
+        - "expected evidence"
+        - "expected output obligations"
+        - "inspected boundaries"
+        - "what evidence does not prove"
+        - "residual risk"
+        - "residual risk owner"
+        - "next gate"
+        - "validation command or not-verified disclosure"
+        - "validation command outcome"
+        - "route relevance"
+      delta_score: 14
+      remaining_gaps_count: 0
+      remaining_gaps: []
+      errors_count: 0
+      errors: []
+  cases_checked: 30
+  comparison_cases_checked: 30
   errors_count: 0
 routing:
   cases:
@@ -1581,7 +2105,7 @@ routing:
       complexity: L3
       risk_level: high
       expected_skills_count: 4
-      expected_capabilities_count: 6
+      expected_capabilities_count: 7
       forbidden_counts:
         skills: 3
         capabilities: 2
@@ -1659,6 +2183,20 @@ routing:
         quality_gates: 0
       forbidden_present: true
       forbidden_complete: false
+      l1_anti_over_routing: false
+    e2e-layer-mismatch-unit-bug:
+      path: evals/routing/e2e-layer-mismatch-unit-bug.yaml
+      complexity: L2
+      risk_level: medium
+      expected_skills_count: 2
+      expected_capabilities_count: 5
+      forbidden_counts:
+        skills: 4
+        capabilities: 3
+        domain_extensions: 2
+        quality_gates: 3
+      forbidden_present: true
+      forbidden_complete: true
       l1_anti_over_routing: false
     finops-cloud-cost-spike:
       path: evals/routing/finops-cloud-cost-spike.yaml
@@ -1881,6 +2419,20 @@ routing:
         capabilities: 2
         domain_extensions: 3
         quality_gates: 1
+      forbidden_present: true
+      forbidden_complete: true
+      l1_anti_over_routing: false
+    java-executor-lifecycle-hidden-risk:
+      path: evals/routing/java-executor-lifecycle-hidden-risk.yaml
+      complexity: L2
+      risk_level: medium
+      expected_skills_count: 2
+      expected_capabilities_count: 3
+      forbidden_counts:
+        skills: 3
+        capabilities: 3
+        domain_extensions: 2
+        quality_gates: 2
       forbidden_present: true
       forbidden_complete: true
       l1_anti_over_routing: false
@@ -2248,6 +2800,20 @@ routing:
       forbidden_present: true
       forbidden_complete: false
       l1_anti_over_routing: false
+    language-testing-strategy-runtime-boundary:
+      path: evals/routing/language-testing-strategy-runtime-boundary.yaml
+      complexity: L2
+      risk_level: medium
+      expected_skills_count: 2
+      expected_capabilities_count: 4
+      forbidden_counts:
+        skills: 3
+        capabilities: 3
+        domain_extensions: 2
+        quality_gates: 2
+      forbidden_present: true
+      forbidden_complete: true
+      l1_anti_over_routing: false
     large-table-migration:
       path: evals/routing/large-table-migration.yaml
       complexity: L4
@@ -2402,6 +2968,20 @@ routing:
       forbidden_present: true
       forbidden_complete: true
       l1_anti_over_routing: false
+    python-async-blocking-call-hidden-risk:
+      path: evals/routing/python-async-blocking-call-hidden-risk.yaml
+      complexity: L2
+      risk_level: medium
+      expected_skills_count: 2
+      expected_capabilities_count: 3
+      forbidden_counts:
+        skills: 3
+        capabilities: 3
+        domain_extensions: 2
+        quality_gates: 2
+      forbidden_present: true
+      forbidden_complete: true
+      l1_anti_over_routing: false
     queue-consumer-idempotency-hidden-risk:
       path: evals/routing/queue-consumer-idempotency-hidden-risk.yaml
       complexity: L3
@@ -2486,6 +3066,20 @@ routing:
       forbidden_present: true
       forbidden_complete: true
       l1_anti_over_routing: false
+    shell-unquoted-variable-secret-risk:
+      path: evals/routing/shell-unquoted-variable-secret-risk.yaml
+      complexity: L3
+      risk_level: high
+      expected_skills_count: 3
+      expected_capabilities_count: 3
+      forbidden_counts:
+        skills: 2
+        capabilities: 2
+        domain_extensions: 2
+        quality_gates: 1
+      forbidden_present: true
+      forbidden_complete: true
+      l1_anti_over_routing: false
     side-effect-boundary-pollution:
       path: evals/routing/side-effect-boundary-pollution.yaml
       complexity: L2
@@ -2528,6 +3122,20 @@ routing:
       forbidden_present: true
       forbidden_complete: false
       l1_anti_over_routing: false
+    sql-dynamic-query-no-parameterization:
+      path: evals/routing/sql-dynamic-query-no-parameterization.yaml
+      complexity: L3
+      risk_level: high
+      expected_skills_count: 4
+      expected_capabilities_count: 5
+      forbidden_counts:
+        skills: 2
+        capabilities: 2
+        domain_extensions: 2
+        quality_gates: 1
+      forbidden_present: true
+      forbidden_complete: true
+      l1_anti_over_routing: false
     terraform-public-bucket:
       path: evals/routing/terraform-public-bucket.yaml
       complexity: L4
@@ -2553,6 +3161,20 @@ routing:
         capabilities: 2
         domain_extensions: 2
         quality_gates: 1
+      forbidden_present: true
+      forbidden_complete: true
+      l1_anti_over_routing: false
+    typescript-any-api-boundary-hidden-risk:
+      path: evals/routing/typescript-any-api-boundary-hidden-risk.yaml
+      complexity: L2
+      risk_level: medium
+      expected_skills_count: 2
+      expected_capabilities_count: 3
+      forbidden_counts:
+        skills: 3
+        capabilities: 3
+        domain_extensions: 2
+        quality_gates: 2
       forbidden_present: true
       forbidden_complete: true
       l1_anti_over_routing: false
