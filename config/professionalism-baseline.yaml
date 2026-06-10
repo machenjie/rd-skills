@@ -1,5 +1,5 @@
 schema_version: 1
-generated_at: "2026-06-10T01:56:10.242319+00:00"
+generated_at: "2026-06-10T02:04:14.812894+00:00"
 source_reports:
   skill_professionalism: reports/skill-professionalism-eval.json
   professional_coverage_matrix: reports/professional-coverage-matrix.json
