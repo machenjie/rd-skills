@@ -12,33 +12,40 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "validate-professionalism-regression.py"
 
 
-def _base_skill_eval(warnings: list[str] | None = None, total: int = 50, status: str = "acceptable") -> dict:
+def _base_skill_eval(
+    warnings: list[str] | None = None,
+    total: int = 50,
+    status: str = "acceptable",
+    extra_items: list[dict] | None = None,
+) -> dict:
+    items = [
+        {
+            "name": "backend-change-builder",
+            "path": "src/professional-skills/backend-change-builder/SKILL.md",
+            "kind": "professional-skill",
+            "total": total,
+            "status": status,
+            "warnings": warnings or [],
+            "likely_missing_sections": [],
+        },
+        {
+            "name": "agent-execution-discipline",
+            "path": "src/foundation/capabilities/agent-execution-discipline/SKILL.md",
+            "kind": "foundation-capability",
+            "total": 40,
+            "status": "acceptable",
+            "warnings": [],
+            "likely_missing_sections": [],
+        },
+        *(extra_items or []),
+    ]
     return {
         "generated_at": "2026-01-01T00:00:00+00:00",
-        "skills_checked": 2,
-        "warning_count": len(warnings or []),
+        "skills_checked": len(items),
+        "warning_count": sum(len(item.get("warnings") or []) for item in items),
         "average_score": 45.0,
         "duplicate_template_warnings": [],
-        "items": [
-            {
-                "name": "backend-change-builder",
-                "path": "src/professional-skills/backend-change-builder/SKILL.md",
-                "kind": "professional-skill",
-                "total": total,
-                "status": status,
-                "warnings": warnings or [],
-                "likely_missing_sections": [],
-            },
-            {
-                "name": "agent-execution-discipline",
-                "path": "src/foundation/capabilities/agent-execution-discipline/SKILL.md",
-                "kind": "foundation-capability",
-                "total": 40,
-                "status": "acceptable",
-                "warnings": [],
-                "likely_missing_sections": [],
-            },
-        ],
+        "items": items,
     }
 
 
@@ -262,6 +269,45 @@ class ValidateProfessionalismRegressionTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             report = json.loads((reports_dir / "professionalism-regression-report.json").read_text())
             self.assertEqual(report["summary"]["known_warnings"], 1)
+
+    def test_release_readiness_discloses_non_key_skill_eval_warnings(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            tmp = Path(raw)
+            reports_dir = tmp / "reports"
+            routing_dir = tmp / "routing"
+            baseline = tmp / "config" / "professionalism-baseline.yaml"
+            non_key_warning = "long Markdown table in SKILL.md body (16 rows); consider moving deep table to references"
+            skill_eval = _base_skill_eval(
+                warnings=["known warning"],
+                extra_items=[
+                    {
+                        "name": "api-contract-design",
+                        "path": "src/foundation/capabilities/api-contract-design/SKILL.md",
+                        "kind": "foundation-capability",
+                        "total": 48,
+                        "status": "acceptable",
+                        "warnings": [non_key_warning],
+                        "likely_missing_sections": [],
+                    }
+                ],
+            )
+            _write_reports(reports_dir, skill_eval=skill_eval)
+            _write_routing_case(routing_dir, forbidden=True)
+            self.assertEqual(_run(reports_dir, baseline, routing_dir, "--update-baseline").returncode, 0)
+            _write_reports(reports_dir, skill_eval=skill_eval)
+            result = _run(reports_dir, baseline, routing_dir)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            readiness = json.loads((reports_dir / "professionalism-release-readiness.json").read_text())
+            scope = readiness["out_of_scope_non_key_skill_eval_warnings"]
+            self.assertEqual(scope["total_skill_professionalism_warnings"], 2)
+            self.assertEqual(scope["tracked_release_warnings"], 1)
+            self.assertEqual(scope["non_key_capability_advisory_warnings"], 1)
+            self.assertEqual(scope["other_untracked_skill_eval_warnings"], 0)
+            self.assertEqual(scope["warnings"][0]["target"], "src/foundation/capabilities/api-contract-design/SKILL.md")
+            self.assertEqual(scope["warnings"][0]["message"], non_key_warning)
+            markdown = (reports_dir / "professionalism-release-readiness.md").read_text(encoding="utf-8")
+            self.assertIn("## Out-of-Scope / Non-Key Skill Eval Warnings", markdown)
+            self.assertIn("non_key_capability_advisory_warnings: 1", markdown)
 
     def test_new_warning_over_budget_fails(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

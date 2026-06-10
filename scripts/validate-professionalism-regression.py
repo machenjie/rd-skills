@@ -923,6 +923,7 @@ def _release_readiness_payload(
         content_summary=content_summary,
         agent_samples_strict=agent_samples_strict,
     )
+    skill_eval_warning_scope = _skill_eval_warning_scope(reports["skill_eval"], result)
     release_blockers = list(result.blockers)
     if strict_blockers and not result.strict:
         release_blockers.extend(
@@ -1008,6 +1009,7 @@ def _release_readiness_payload(
         "promoted_agent_samples_strict_status": _agent_strict_status(agent_samples_strict),
         "checklist": checklist,
         "known_accepted_warnings": [asdict(item) for item in result.known_warnings],
+        "out_of_scope_non_key_skill_eval_warnings": skill_eval_warning_scope,
         "content_bloat_status": {
             "heavy_professional": content_summary.get("heavy_professional", "unknown"),
             "heavy_foundation": content_summary.get("heavy_foundation", "unknown"),
@@ -1090,6 +1092,33 @@ def _render_readiness_markdown(payload: dict[str, Any]) -> str:
     if payload["known_accepted_warnings"]:
         for item in payload["known_accepted_warnings"]:
             lines.append(f"- `{item['target']}`: {item['message']}")
+    else:
+        lines.append("- None")
+    warning_scope = _dict(payload.get("out_of_scope_non_key_skill_eval_warnings"))
+    warning_scope_summary = {
+        key: value
+        for key, value in warning_scope.items()
+        if key != "warnings"
+    }
+    lines.extend(
+        [
+            "",
+            "## Out-of-Scope / Non-Key Skill Eval Warnings",
+            "",
+            _mapping_lines(warning_scope_summary),
+            "",
+        ]
+    )
+    scoped_warnings = [
+        item for item in warning_scope.get("warnings", [])
+        if isinstance(item, dict)
+    ]
+    if scoped_warnings:
+        for item in scoped_warnings:
+            lines.append(
+                f"- `{item.get('target', '')}` ({item.get('warning_type', 'other')}): "
+                f"{item.get('message', '')}"
+            )
     else:
         lines.append("- None")
     lines.extend(
@@ -1226,6 +1255,59 @@ def _checklist_row(
         "blocking": blocking,
         "notes": notes,
     }
+
+
+def _skill_eval_warning_scope(skill_eval: dict[str, Any], result: RegressionResult) -> dict[str, Any]:
+    all_records = _skill_eval_warning_records(skill_eval)
+    tracked_keys = {
+        (item.target, item.message)
+        for item in [*result.known_warnings, *result.warnings]
+    }
+    untracked_records = [
+        record for record in all_records
+        if (record["target"], record["message"]) not in tracked_keys
+    ]
+    non_key_capability_records = [
+        record for record in untracked_records
+        if record.get("kind") == "foundation-capability"
+    ]
+    source_warning_count = skill_eval.get("warning_count")
+    total_warning_count = (
+        int(source_warning_count)
+        if isinstance(source_warning_count, int)
+        else len(all_records)
+    )
+    return {
+        "total_skill_professionalism_warnings": total_warning_count,
+        "tracked_release_warnings": len(result.known_warnings) + len(result.warnings),
+        "non_key_capability_advisory_warnings": len(non_key_capability_records),
+        "other_untracked_skill_eval_warnings": len(untracked_records) - len(non_key_capability_records),
+        "policy": (
+            "Non-key foundation capability advisory warnings are report-only unless "
+            "promoted into the key coverage matrix or baseline release budget."
+        ),
+        "warnings": untracked_records,
+    }
+
+
+def _skill_eval_warning_records(skill_eval: dict[str, Any]) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for item in _mapping_list(skill_eval, "items", "skill professionalism report"):
+        path = _string(item.get("path"))
+        target = path or _string(item.get("name"))
+        for warning in _warning_messages(item.get("warnings")):
+            records.append(
+                {
+                    "name": _string(item.get("name")),
+                    "target": target,
+                    "path": path,
+                    "kind": _string(item.get("kind")),
+                    "message": warning,
+                    "warning_type": _warning_type(warning),
+                    "release_blocking": False,
+                }
+            )
+    return records
 
 
 def _readiness_followups(result: RegressionResult, foundation: dict[str, Any]) -> list[dict[str, Any]]:

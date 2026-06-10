@@ -569,7 +569,7 @@
   ],
   "expected_route_only_supplemental": 5,
   "findings": [],
-  "generated_at": "2026-06-10T02:05:28.452709+00:00",
+  "generated_at": "2026-06-10T02:20:14.009304+00:00",
   "hidden_risks_checked": 34,
   "hidden_risks_covered": 30,
   "hidden_risks_matched_by_expected_route_only": 5,

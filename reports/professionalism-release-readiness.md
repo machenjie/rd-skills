@@ -1,6 +1,6 @@
 # Professionalism Release Readiness
 
-- Generated: 2026-06-10T02:07:13.849868+00:00
+- Generated: 2026-06-10T02:20:13.671077+00:00
 - Status: strict-release-ready
 - Authoring ready: ready
 - Release ready: ready
@@ -50,6 +50,22 @@
 ## Known Accepted Warnings
 
 - `src/foundation/capabilities/code-review/SKILL.md`: long Markdown table in SKILL.md body (16 rows); consider moving deep table to references
+
+## Out-of-Scope / Non-Key Skill Eval Warnings
+
+- non_key_capability_advisory_warnings: 7
+- other_untracked_skill_eval_warnings: 0
+- policy: Non-key foundation capability advisory warnings are report-only unless promoted into the key coverage matrix or baseline release budget.
+- total_skill_professionalism_warnings: 8
+- tracked_release_warnings: 1
+
+- `src/foundation/capabilities/api-contract-design/SKILL.md` (body_bloat_exception): long Markdown table in SKILL.md body (16 rows); consider moving deep table to references
+- `src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md` (body_bloat_exception): long Markdown table in SKILL.md body (18 rows); consider moving deep table to references
+- `src/foundation/capabilities/context-packaging/SKILL.md` (body_bloat_exception): long Markdown table in SKILL.md body (17 rows); consider moving deep table to references
+- `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md` (other): Evidence Contract weak: evidence_contract_strength score 2/5 needs review
+- `src/foundation/capabilities/error-code-design/SKILL.md` (body_bloat_exception): long Markdown table in SKILL.md body (17 rows); consider moving deep table to references
+- `src/foundation/capabilities/skill-authoring-expert/SKILL.md` (other): Evidence Contract weak: evidence_contract_strength score 2/5 needs review
+- `src/foundation/capabilities/version-compatibility/SKILL.md` (body_bloat_exception): long Markdown table in SKILL.md body (17 rows); consider moving deep table to references
 
 ## Content Bloat Status
 

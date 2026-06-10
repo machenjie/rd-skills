@@ -36,6 +36,9 @@ Also run the repository validation/build suite listed in `AGENTS.md`.
 ## Non-Blocking Warnings
 
 - Existing baseline warnings may ship only when unchanged and visible in the regression report.
+- Skill professionalism eval warnings outside baseline-tracked release rows are report-only unless
+  promoted into the key coverage matrix or baseline release budget, and must be visible in release
+  readiness as out-of-scope / non-key advisory warnings.
 - Candidate professional samples may warn while under human review.
 - Daily development may use `--report-only`; release may not rely on report-only status.
 
@@ -95,6 +98,10 @@ Also run the repository validation/build suite listed in `AGENTS.md`.
 - content bloat exceptions
 - known warnings budget
 - baseline update drift
+
+It must also include an out-of-scope / non-key skill eval warnings section that reconciles total
+`skill-professionalism-eval` warnings against tracked release warnings and report-only advisory
+warnings.
 
 ## What Not To Do
 
