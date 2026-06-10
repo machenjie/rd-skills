@@ -171,9 +171,17 @@ capabilities:
     path: src/foundation/capabilities/module-boundary-design
     status: implemented
     used_by: [architecture-impact-reviewer, backend-change-builder, frontend-change-builder, domain-impact-modeler, ai-code-review-refactor]
-    triggers: [define module ownership interfaces dependencies allowed coupling directory density module split relationship change locality public API expansion shared common ownership]
+    triggers:
+      - define module ownership interfaces dependencies allowed coupling directory density module split relationship change locality public API expansion shared common ownership
+      - module internal object cluster module object graph public facade private internals internal dependency direction module object family module next-change location
     risk_notes: [Weak boundaries spread changes across unrelated code amplify regressions expose internals and turn shared folders into business logic dumping grounds]
-    expected_outputs: [module boundary map with ownership contracts dependencies forbidden crossings directory density module relationship type change locality and shared module audit]
+    expected_outputs:
+      - module boundary map with ownership contracts dependencies forbidden crossings directory density module relationship type change locality and shared module audit
+      - module internal composition plan
+      - module object graph
+      - module public facade
+      - module private internals
+      - internal dependency direction
   - id: "20"
     name: layered-architecture-design
     group: architecture-design
@@ -924,12 +932,18 @@ capabilities:
       - reuse existing function reuse existing class reuse existing module extension reuse composition adapter wrapper delegation
       - function placement method placement class placement file placement directory placement component placement hook placement service method repository method public private internal
       - object modeling object-oriented design object responsibility encapsulation invariant protection inheritance polymorphism class hierarchy value object domain object service object interface abstract class subclassing traits protocols substitutability object collaboration
+      - object-method encapsulation method placement parent-child object sibling object object relationship map inheritance vs composition delegation anemic object helper-bag object god object object boundary lost during merge object boundary missing during split module internal composition module object graph
       - file main object main responsibility long file oversized object large function method clusters function signature boolean trap weak typed bag side effect boundary collaborator dependency injection state lifecycle invariant
       - file granularity anti-fragmentation micro-file sprawl one-function file tiny helper file small file merge merge restraint navigation cost keep in existing file split merge decision one-function file without boundary excessive file split private helper co-location
       - shared utils common utils helper utility business logic in utils dependency direction cohesion coupling shared common pollution
       - doc comments exported comments public API comments test comments redundant comments stale comments comment quality
     risk_notes: [Poor naming and placement create duplicated logic shared utility pollution accidental public APIs circular dependencies architecture drift micro-file sprawl navigation cost regression and unmaintainable AI generated patches. Poor file granularity causes either big-ball-of-mud files or scattered tiny files that increase navigation cost and AI maintenance drift.]
-    expected_outputs: [implementation structure plan with reuse candidates vocabulary naming decisions responsibility taxonomy main object per file oversized assessment anti-fragmentation assessment file granularity decision keep-in-existing-file alternative small-file merge decision merge-restraint rationale navigation cost before/after object split decision function signature decision side effect boundary collaborator lifecycle decisions placement rationale dependency direction shared utility audit and test placement]
+    expected_outputs:
+      - implementation structure plan with reuse candidates vocabulary naming decisions responsibility taxonomy main object per file oversized assessment anti-fragmentation assessment file granularity decision keep-in-existing-file alternative small-file merge decision merge-restraint rationale navigation cost before/after object split decision function signature decision side effect boundary collaborator lifecycle decisions placement rationale dependency direction shared utility audit and test placement
+      - Object-Method Encapsulation Decision
+      - Object Relationship Map
+      - Inheritance vs Composition Decision
+      - Module Internal Composition Plan
 
   - id: "102"
     name: agent-execution-discipline

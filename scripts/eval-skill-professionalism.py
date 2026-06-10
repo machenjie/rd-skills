@@ -176,6 +176,23 @@ BOUNDARY_TERMS = (
     "reckless file merge",
     "lost small-file boundary",
     "split merge decision",
+    "object-method encapsulation",
+    "method placement",
+    "object relationship map",
+    "parent-child object",
+    "sibling object",
+    "inheritance vs composition",
+    "delegation",
+    "anemic object",
+    "helper-bag object",
+    "god object",
+    "module internal composition",
+    "module object graph",
+    "module public facade",
+    "module private internals",
+    "internal dependency direction",
+    "object boundary lost during file merge",
+    "object boundary missing during file split",
 )
 
 VALIDATION_TERMS = (

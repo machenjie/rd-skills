@@ -94,8 +94,27 @@ ANTI_FRAGMENTATION_KEYWORDS = (
     "lost small-file boundary",
     "split merge decision",
 )
+OBJECT_ORGANIZATION_KEYWORDS = (
+    "object-method encapsulation",
+    "method placement",
+    "object relationship map",
+    "parent-child object",
+    "sibling object",
+    "inheritance vs composition",
+    "delegation",
+    "anemic object",
+    "helper-bag object",
+    "god object",
+    "module internal composition",
+    "module object graph",
+    "module public facade",
+    "module private internals",
+    "internal dependency direction",
+    "object boundary lost during file merge",
+    "object boundary missing during file split",
+)
 CAPABILITY_KEYWORD_REQUIREMENTS = {
-    "implementation-structure-design": ANTI_FRAGMENTATION_KEYWORDS,
+    "implementation-structure-design": ANTI_FRAGMENTATION_KEYWORDS + OBJECT_ORGANIZATION_KEYWORDS,
     "code-clarity-maintainability": ANTI_FRAGMENTATION_KEYWORDS,
 }
 

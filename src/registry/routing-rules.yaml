@@ -117,6 +117,24 @@ risk_escalation_triggers:
   - lost small-file boundary
   - file count reduction without boundary analysis
   - merge hides side-effect boundary
+  - object-method encapsulation unclear
+  - method placed on wrong object
+  - method moved without invariant evidence
+  - anemic object
+  - helper-bag object
+  - god object
+  - parent-child object relationship unclear
+  - sibling object relationship unclear
+  - object relationship not declared
+  - inheritance hierarchy risk
+  - inheritance used for code sharing
+  - composition or delegation candidate
+  - module internal object cluster unclear
+  - module object graph unclear
+  - module contains unrelated object families
+  - object graph circular collaboration
+  - object boundary lost during file merge
+  - object boundary missing during file split
   - change locality violation
   - hallucinated API risk
   - dependency surface
@@ -260,6 +278,61 @@ risk_trigger_rules:
   - trigger: merge hides side-effect boundary
     required_capabilities: [implementation-structure-design, module-boundary-design, code-clarity-maintainability]
     required_quality_gates: [architecture gate, implementation gate]
+  - trigger: object-method encapsulation unclear
+    required_capabilities: [implementation-structure-design, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: method placed on wrong object
+    required_capabilities: [implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: method moved without invariant evidence
+    required_capabilities: [implementation-structure-design, refactoring]
+    required_quality_gates: [implementation gate, test gate]
+  - trigger: anemic object
+    required_capabilities: [implementation-structure-design, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: helper-bag object
+    required_capabilities: [implementation-structure-design, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: god object
+    required_capabilities: [implementation-structure-design, code-clarity-maintainability, refactoring]
+    required_quality_gates: [implementation gate]
+  - trigger: parent-child object relationship unclear
+    required_capabilities: [implementation-structure-design, module-boundary-design]
+    required_quality_gates: [architecture gate, implementation gate]
+  - trigger: sibling object relationship unclear
+    required_capabilities: [implementation-structure-design, module-boundary-design]
+    required_quality_gates: [architecture gate, implementation gate]
+  - trigger: object relationship not declared
+    required_capabilities: [implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: inheritance hierarchy risk
+    required_skills: [architecture-impact-reviewer, quality-test-gate]
+    required_capabilities: [implementation-structure-design]
+    required_quality_gates: [architecture gate, implementation gate, test gate]
+  - trigger: inheritance used for code sharing
+    required_capabilities: [implementation-structure-design, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: composition or delegation candidate
+    required_capabilities: [implementation-structure-design, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: module internal object cluster unclear
+    required_capabilities: [module-boundary-design, implementation-structure-design]
+    required_quality_gates: [architecture gate, implementation gate]
+  - trigger: module object graph unclear
+    required_capabilities: [module-boundary-design, implementation-structure-design]
+    required_quality_gates: [architecture gate, implementation gate]
+  - trigger: module contains unrelated object families
+    required_capabilities: [module-boundary-design, code-clarity-maintainability]
+    required_quality_gates: [architecture gate, implementation gate]
+  - trigger: object graph circular collaboration
+    required_capabilities: [implementation-structure-design, module-boundary-design]
+    required_quality_gates: [architecture gate, implementation gate]
+  - trigger: object boundary lost during file merge
+    required_capabilities: [implementation-structure-design, refactoring]
+    required_quality_gates: [implementation gate, test gate]
+  - trigger: object boundary missing during file split
+    required_capabilities: [implementation-structure-design, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
   - trigger: change locality violation
     required_capabilities: [module-boundary-design, code-clarity-maintainability]
     required_quality_gates: [architecture gate, implementation gate]
@@ -280,6 +353,14 @@ failure_routing:
     route_to: architecture-impact-reviewer
   - condition: implementation structure or placement unclear
     route_to: implementation-structure-design
+  - condition: object method encapsulation unclear
+    route_to: implementation-structure-design
+  - condition: object relationship unclear
+    route_to: implementation-structure-design
+  - condition: inheritance decision unclear
+    route_to: implementation-structure-design
+  - condition: module internal composition unclear
+    route_to: module-boundary-design
   - condition: code is hard to read or maintain
     route_to: code-clarity-maintainability
   - condition: over-fragmented file structure or micro-file sprawl
@@ -631,6 +712,7 @@ routing_rules:
       - prevent arbitrary folder driven architecture and cross module internal access
       - directory too large module split sibling parent child producer consumer orchestrator adapter port public API expansion change locality shared common ownership
       - over-fragmented directory module boundary micro-file sprawl across modules navigation cost regression across module boundary lost small-file boundary merge hides side-effect boundary
+      - module internal object cluster module object graph public facade private internals internal dependency direction module object family module next-change location object cluster split merge
     priority: 60
   - route_to: layered-architecture-design
     triggers:
@@ -956,6 +1038,7 @@ routing_rules:
       - decide reuse extend compose adapter private internal public export file ownership directory boundary dependency direction circular dependency test placement
       - file main object main responsibility oversized file oversized class large function object split function signature boolean trap weak type bag side effect boundary collaborator dependency injection lifecycle invariant state machine
       - file granularity anti-fragmentation keep in existing file one-function file without boundary tiny helper file trivial helper file excessive file split micro-file sprawl private helper co-location small file merge merge restraint split merge decision lost small-file boundary reckless file merge merge hides side-effect boundary
+      - object-method encapsulation method placement parent-child object sibling object object relationship map inheritance vs composition delegation anemic object helper-bag object god object object boundary lost during file merge object boundary missing during file split module internal composition module object graph
     priority: 60
   - route_to: code-clarity-maintainability
     triggers:

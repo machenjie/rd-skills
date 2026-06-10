@@ -1,0 +1,48 @@
+id: parent-child-sibling-object-relationship
+category: structure
+complexity: L3
+focus:
+  - object relationship map
+  - parent-child object
+  - sibling object
+  - forbidden internal access
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - module-boundary-design
+    - code-clarity-maintainability
+    - refactoring
+    - unit-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - AI review gate
+    - test gate
+expected_outcomes:
+  - Cancellation, refund, and shipping rules are split as sibling policies or child objects based on ownership evidence.
+  - The parent coordinates public lifecycle and does not become pass-through glue.
+  - Siblings do not access each other's internals.
+  - The Object Relationship Map declares relationship type, direction, allowed collaboration, and forbidden internal access.
+required_qualities:
+  - Distinguishes parent-child from sibling relationships.
+  - Names independent change reason or lifecycle for sibling objects.
+  - Names parent lifecycle/orchestration responsibility when child objects are used.
+  - Uses explicit policy, value object, contract, or module-local helper for shared behavior.
+  - Tests prove public behavior and forbidden relationship assumptions.
+forbidden_shortcuts:
+  - Parent becomes pass-through dumping ground.
+  - Siblings call each other's internals.
+  - Split follows method names only.
+  - Relationship type is not declared.
+  - Shared behavior is hidden in shared/common utilities.
+evidence:
+  - Object Relationship Map for cancellation, refund, and shipping rules.
+  - Parent-child or sibling rationale with forbidden internal access.
+  - Public behavior tests for cancellation, refund, and shipping interactions.
+  - Dependency or import evidence showing siblings do not depend on internals.

@@ -1,6 +1,6 @@
 ---
 name: module-boundary-design
-description: Designs module boundaries around business capability, ownership, dependency direction, contracts, and circular dependency prevention.
+description: Designs module boundaries around business capability, ownership, internal object composition, dependency direction, contracts, and circular dependency prevention.
 license: MIT
 changeforge_kind: foundation-capability
 changeforge_capability_id: "19"
@@ -9,15 +9,15 @@ changeforge_version: 0.1.0
 
 # Mission
 
-Define **module boundaries that protect business capability ownership, dependency direction, change isolation, and explicit cross-boundary contracts** — ensuring that each module can be changed, tested, and reasoned about independently, that circular dependencies are structurally impossible, and that the import graph is enforced by automated tooling rather than convention.
+Define **module boundaries that protect business capability ownership, cohesive internal object graphs, dependency direction, change isolation, and explicit cross-boundary contracts** — ensuring that each module can be changed, tested, and reasoned about independently, that circular dependencies are structurally impossible, and that the import graph is enforced by automated tooling rather than convention.
 
 # When To Use
 
-Use this capability when a change: adds a new module, package, bounded context, or feature directory; moves code from one module to another; introduces a new import from one module into another (especially across bounded context lines); creates shared utility code that might inadvertently accumulate business logic; proposes merging or splitting an existing module; or is flagged in review for "circular dependency", "coupling too many modules", or "business logic in shared utility."
+Use this capability when a change: adds a new module, package, bounded context, or feature directory; moves code from one module to another; introduces a new import from one module into another (especially across bounded context lines); creates shared utility code that might inadvertently accumulate business logic; proposes merging or splitting an existing module; organizes multiple objects/functions/helpers into a module internal object cluster; or is flagged in review for "circular dependency", "coupling too many modules", "module object graph unclear", or "business logic in shared utility."
 
 # Do Not Use When
 
-Do not use this capability to organize code by technical type alone (e.g., `controllers/`, `services/`, `models/` top-level folders — that is a `layered-architecture-design` concern). Do not use it to create arbitrary folder hierarchies without business ownership or dependency direction rationale. Do not use it to enforce module boundaries so granular that every function lives in an isolated module (boundary cost must be justified by change isolation benefit).
+Do not use this capability to organize code by technical type alone (e.g., `controllers/`, `services/`, `models/` top-level folders — that is a `layered-architecture-design` concern). Do not use it to create arbitrary folder hierarchies without business ownership, internal object graph, or dependency direction rationale. Do not use it to enforce module boundaries so granular that every object or function lives in an isolated module (boundary cost must be justified by change isolation benefit).
 
 # Non-Negotiable Rules
 
@@ -30,10 +30,12 @@ Do not use this capability to organize code by technical type alone (e.g., `cont
 - **Module public API surface must be minimal.** Export only what consumers need. Every additional exported type is a surface area that constrains the module's ability to refactor internally. The public API of a module is a commitment to all consumers.
 - **Directory size is a module-boundary signal.** A large directory is acceptable only when it still represents one owner, one capability or layer convention, one public API family, and one change rhythm.
 - **One directory should represent one module boundary unless it is explicitly a layer or grouping convention.** Mixed business object families, owners, public APIs, dependency clusters, jobs, adapters, domain code, infra, and test helpers require decomposition review.
+- **A module is a cohesive object graph plus a public contract, not just a directory.** A module must name its public facade/API, internal domain/value/service/policy/repository/adapter/mapper/helper objects, object relationship graph, internal dependency direction, public/private visibility, module-level tests, and next related change location.
 - **Every module split must declare its relationship type.** Use sibling, parent-child, producer-consumer, upper-lower layer, orchestrator, adapter/port, or shared technical module; do not split by arbitrary folder taste.
 - **Change locality is a boundary quality gate.** A small requirement should usually change the owning module and its tests; widespread edits require business justification or boundary repair.
 - **Public API expansion must be justified by real current consumers.** Do not export types, helpers, or submodule internals "just in case."
 - **Shared/common must not become a workaround for poor ownership decisions.** Shared technical modules contain domain-free utilities only and must not host business fixtures or rules.
+- **Module public API must not expose internals.** Internal policies, repositories, adapters, mappers, helpers, and concrete child objects remain private unless they are current cross-boundary contracts.
 
 # Industry Benchmarks
 
@@ -110,6 +112,20 @@ Rule: orders/internal/ is unreachable from outside (enforced by import-linter)
 Rule: every new export from orders/api/ requires explicit decision (it is a commitment)
 ```
 
+## Module Internal Composition
+
+A module is complete only when it has a cohesive object graph and a minimal public contract. Before adding, splitting, or merging modules, record:
+
+- public facade/API and current consumers;
+- internal domain objects, value objects, services/use cases, policies/specifications, repositories, adapters/clients, mappers/DTOs, module-local helpers, and tests;
+- object relationship graph including parent-child, sibling, collaborator, service plus policy, service plus repository, service plus adapter, value object, strategy/policy family, interface/protocol plus implementation, inheritance, composition, delegation, and module-local helper relationships;
+- internal dependency direction and cycle check;
+- public versus internal visibility and forbidden internal access;
+- module-level tests through the public facade or declared module-internal contracts;
+- next related change location for expected adjacent changes.
+
+Reject module structures that split by technical type mechanically, create one module per object, leave internal objects without an owner, expose internals through the public API, use shared/common as an ownership substitute, or group unrelated object families in one module.
+
 # Selection Rules
 
 Select this capability when: the primary concern is **which modules may import which other modules**, business capability isolation, or circular dependency prevention. Route elsewhere when: **layered-architecture-design** is primary (presentation / application / domain / infrastructure layer responsibilities); **microservice-splitting** is primary (the question is whether an in-process boundary should become a separate deployable service); **domain-event-modeling** is primary (inter-module communication via domain events); **extensibility-design** is primary (plugin or extension points across module boundaries).
@@ -161,6 +177,13 @@ Return a module boundary map with:
 - `ownership_declaration` (CODEOWNERS entries for each module)
 - `cross_boundary_communication` (for each inter-module dependency: direct import via public API, domain event, or orchestrator pattern — justified)
 - `directory_density_assessment` (business object families, owners, change rhythms, public APIs, naming clusters, dependency clusters, mixed roles, and file-count signal)
+- `module_internal_composition` (module owner/capability, cohesive object cluster, grouping rationale, and module-level test boundary)
+- `module_object_graph` (internal object/function/helper graph, relationship types, allowed collaboration, and forbidden internal access)
+- `module_public_facade` (minimal public API, current consumers, exported commands/queries/events/DTOs/contracts)
+- `module_private_internals` (internal domain/value/service/policy/repository/adapter/mapper/helper objects and visibility rules)
+- `internal_dependency_direction` (allowed internal imports/calls, forbidden directions, cycle check)
+- `module_next_change_location` (where the next related rule, adapter, policy, DTO, mapper, repository, or test change belongs)
+- `module_object_cluster_split_or_merge_decision` (split/merge/no-split decision for sub-clusters and object families)
 - `module_relationship_type` (sibling / parent-child / producer-consumer / upper-lower layer / orchestrator / adapter-port / shared technical module)
 - `change_locality_gate` (owning module, authoritative rule location, extension point, shared/common pressure, cross-module import delta, public API expansion, and small-change spread)
 - `migration_impact` (existing code that violates the new boundaries; refactoring plan with priority)
@@ -185,6 +208,10 @@ The boundary design is complete only when:
 13. Change locality is checked for small requirements; widespread edits are justified by business behavior or routed to boundary repair.
 14. Public API expansion names current consumers and rejects speculative exports.
 15. Shared/common remains a pure technical module and is not used to avoid choosing an owner.
+16. Module internal composition names the public facade, private internals, object graph, dependency direction, and module-level test boundary.
+17. A module groups cohesive objects/methods/helpers around one capability or layer; unrelated object families are split or explicitly justified.
+18. Internal policies, repositories, adapters, mappers, DTOs, helpers, and concrete child objects do not leak through the public facade unless they are real current contracts.
+19. A module split or merge declares object cluster split/merge rationale, next-change location, and dependency-direction impact.
 
 # Used By
 
@@ -200,4 +227,4 @@ Hand off to `layered-architecture-design` for presentation/application/domain/in
 
 # Completion Criteria
 
-The capability is complete when **every module boundary is defined by business capability, exposes an explicit public contract, prevents circular dependencies with automated tooling, restricts shared/common code to pure technical utilities, names an owner, evaluates directory density, declares the module relationship type, proves change locality for small requirements, and justifies every public API expansion with current consumers**.
+The capability is complete when **every module boundary is defined by business capability, exposes an explicit public contract, describes a cohesive internal object graph, keeps private internals private, names internal dependency direction, prevents circular dependencies with automated tooling, restricts shared/common code to pure technical utilities, names an owner, evaluates directory density, declares the module relationship type, proves change locality for small requirements, names the next related change location, and justifies every public API expansion with current consumers**.

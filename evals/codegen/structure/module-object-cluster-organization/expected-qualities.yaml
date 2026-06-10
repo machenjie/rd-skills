@@ -1,0 +1,50 @@
+id: module-object-cluster-organization
+category: structure
+complexity: L3
+focus:
+  - module internal composition
+  - module object graph
+  - module public facade
+  - internal dependency direction
+route_hints:
+  skills:
+    - backend-change-builder
+    - architecture-impact-reviewer
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - implementation-structure-design
+    - module-boundary-design
+    - code-clarity-maintainability
+    - refactoring
+    - unit-testing
+    - contract-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - architecture gate
+    - implementation gate
+    - AI review gate
+    - test gate
+expected_outcomes:
+  - Order cancellation becomes a cohesive module object cluster with a minimal public facade.
+  - Internal domain/value/policy/service/repository/adapter/mapper/helper objects are grouped by capability and local convention.
+  - Internal dependency direction is explicit and prevents internals from leaking outside.
+  - Tests exercise public behavior and module-level contracts.
+required_qualities:
+  - Produces a Module Internal Composition Plan.
+  - Names module public facade and module private internals.
+  - Declares module object graph and internal dependency direction.
+  - Names next-change location for adjacent cancellation rules.
+  - Rejects one directory per object without module cohesion.
+forbidden_shortcuts:
+  - Creating one directory per object without module cohesion.
+  - Putting business logic in shared/common.
+  - Exposing internals as public API.
+  - Grouping unrelated object families in the module.
+  - Omitting object graph or internal dependency direction.
+evidence:
+  - Module Internal Composition Plan with public facade, private internals, object graph, dependency direction, placement, and test boundary.
+  - Module boundary map proving public API is minimal and internals stay private.
+  - Public behavior tests for order cancellation module facade.
+  - Review evidence naming next-change location and rejected split/merge alternatives.

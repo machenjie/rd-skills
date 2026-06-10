@@ -69,8 +69,12 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "test-failure-no-env-blame",
     ),
     "structure": (
+        "inheritance-vs-composition-decision",
+        "module-object-cluster-organization",
+        "object-method-encapsulation-placement",
         "over-fragmented-file-split",
         "oversized-service-object-split",
+        "parent-child-sibling-object-relationship",
         "reckless-small-file-merge",
         "side-effect-boundary",
     ),

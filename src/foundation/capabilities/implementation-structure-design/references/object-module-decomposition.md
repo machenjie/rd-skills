@@ -2,6 +2,17 @@
 
 Use this reference when a change adds or modifies a file, object, function, signature, side-effect boundary, collaborator set, stateful object, or large service. It is intentionally loaded only for implementation-planning, code-review, and refactoring cases where structure quality is uncertain.
 
+## Mandatory Precondition: Object-Method-Module Organization
+
+Run Object-Method-Module Organization before any file split or merge. File split/merge is invalid if it cannot name the object relationship or module composition reason first.
+
+Required decision order:
+
+1. Object candidates: domain object, value object, aggregate/root, entity, service/use-case object, policy/specification, strategy, adapter/client/gateway, repository, mapper/assembler, DTO/schema, state machine, module-local helper, or plain function.
+2. Method ownership: which object owns each method and which methods are rejected from object placement because they are orchestration, pure calculation, mapping, validation, I/O, persistence, side effect, or infrastructure/UI/framework concern.
+3. Relationship type: self-contained object, parent-child, sibling, collaborator, service plus policy, service plus repository, service plus adapter, value object owned by domain/service, strategy/policy family, interface/protocol plus implementation, inheritance hierarchy, composition/delegation, module-local helper, or collapse/inline.
+4. Module internal composition: public facade/API, internal object graph, domain/value/service/policy/repository/adapter/mapper/helper/test grouping, internal dependency direction, minimal public API, private internals, file/directory placement, and next-change location.
+
 ## File Main Object Decision Tree
 
 1. Name the file's primary owner.
@@ -38,6 +49,12 @@ Use this reference when a change adds or modifies a file, object, function, sign
 
 Use this before creating a new file, accepting an extracted helper file, merging
 a small file, or rejecting a proposed merge.
+
+0. Run Object-Method-Module Organization first.
+   - New file creation requires object/method/module relationship evidence.
+   - Small file merge requires proof the file is not an independent object boundary.
+   - File split must state which object or module relationship the extracted file represents.
+   - File merge must prove object-method encapsulation does not get worse.
 
 1. Identify owner.
    - Name the primary owner for the behavior or small file.
@@ -142,38 +159,102 @@ This file should remain separate even if small because it owns an external proto
 
 ## Object Split Decision Tree
 
-1. Sibling objects.
-   - Use when responsibilities are peer capabilities that can change independently.
+1. Parent-child object split.
+   - Accepted when one object owns public lifecycle/orchestration and child objects own detailed sub-behavior.
+   - Parent responsibilities: public API, lifecycle sequencing, transaction/use-case boundary, error aggregation, collaborator coordination.
+   - Child responsibilities: detailed rules, state transitions, value-object invariants, adapter protocol details, or policy variants.
+   - Reject when the parent becomes only a pass-through dumping ground, the child reaches into parent internals, the parent forwards every method without adding lifecycle value, or the split does not reduce invariant/lifecycle/collaborator complexity.
+   - Tests: parent public behavior proves orchestration; child behavior is proven through public/module-internal contract without internal access.
+
+2. Sibling object split.
+   - Accepted when responsibilities are peer capabilities with independent change reasons or lifecycles.
    - Examples: `OrderCancellationPolicy`, `OrderRefundPolicy`, `OrderShippingPolicy`.
-   - Rule: siblings do not reach into each other's internals.
+   - Siblings must not access each other's internals or hidden state.
+   - Shared behavior must go through explicit policy, value object, contract, or module-local helper.
+   - Reject when objects are split by method names only or when one sibling needs to know another sibling's private data.
+   - Tests: each sibling has public behavior tests, and shared contract/helper behavior is covered at its own boundary.
 
-2. Parent-child objects.
-   - Use when one object owns the public lifecycle or orchestration and child objects hide detailed sub-behavior.
-   - Parent coordinates; child owns detail. Parent must not become a pass-through dumping ground.
+3. Inheritance versus composition.
+   - Inheritance is accepted only for true substitutable taxonomy, framework-required extension, or protocol conformance with current variants.
+   - Prove base preconditions, postconditions, error behavior, lifecycle compatibility, initialization safety, LSP/substitutability, and per-subtype contract tests.
+   - Reject inheritance for code reuse alone, caller branching by subtype, incompatible initialization, or speculative future variants.
+   - Prefer composition, delegation, strategy, or private helper extraction when behavior variation is not taxonomic.
 
-3. Strategy or policy.
-   - Use when algorithm or rule families are current, named, and expected to vary.
+4. Strategy or policy family.
+   - Use when algorithm or rule families are current, named, and expected to vary behind a stable contract.
    - Reject if there is only one implementation and the abstraction exists only because a branch looked untidy.
-   - Require contract tests for current variants.
+   - Require contract tests for current variants and a selection boundary that does not leak subtype decisions to callers.
 
-4. Adapter or port.
+5. Adapter or port.
    - Use for external systems, protocols, SDKs, formats, framework APIs, persistence, network calls, clocks, queues, and side effects.
    - Domain and policy objects depend on ports or data contracts, not concrete infrastructure.
+   - Keep small adapter/client/repository files separate when they protect side effects, retry/error behavior, resource ownership, or dependency direction.
 
-5. Value object.
-   - Use when a parameter group, state group, or business value has independent invariants.
+6. Value object.
+   - Use when a parameter group, state group, or business value has independent invariants, equality, normalization, or unit safety.
    - Use to replace scattered primitives when callers need the invariant, not merely to shorten a parameter list.
+   - Co-locate a narrow value object when it is owner-internal; split when it has independent invariant tests or current consumers.
 
-6. State machine.
+7. State machine.
    - Use when an object has more than three meaningful states, non-trivial transitions, invalid transitions, guards, or transition side effects.
    - Pair with `state-machine-modeling` for domain lifecycles.
+   - Keep side effects in orchestration/adapters unless the local domain model explicitly owns transition effects.
 
-7. Collaborator object.
+8. Collaborator object.
    - Use when constructor dependencies, method clusters, or side effects show the current object is coordinating unrelated collaborators.
    - Split by collaborator role only when each collaborator role maps to a responsibility, not just to reduce constructor parameter count cosmetically.
+   - Reject if the new collaborator only relays calls or creates circular collaboration.
 
-8. Collapse or inline.
-   - If a new object has no state, invariant, lifecycle, protocol role, current variation, or meaningful collaborator boundary, collapse to a function, module operation, or existing owner.
+9. Object plus private helper co-location.
+   - Keep private predicates, mappers, constants, narrow helper functions, and owner-internal value normalization near the object when they share owner, lifecycle, invariant set, collaborator family, and reason to change.
+   - Do not export these helpers for tests; test through owner public behavior unless a module-internal production contract exists.
+
+10. Object cluster to module.
+   - When several objects/functions/helpers form one business capability or layer, group them as a module object cluster instead of one directory per object.
+   - The cluster needs a public facade/API, private internals, internal dependency direction, object graph, test boundary, and next-change location.
+
+11. Object graph cycle check.
+   - Draw calls/imports among selected objects and helpers.
+   - Reject cycles where siblings call each other's internals, child objects reach into parent internals, policies call services, domain/value objects import adapters, or helpers depend on their owners.
+   - Break cycles with a service orchestrator, interface/port, policy/value object, module-local helper, event, or dependency inversion.
+
+12. Collapse or inline.
+   - If a new object has no state, invariant, lifecycle, protocol role, current variation, or meaningful collaborator boundary, collapse to a function, module operation, local helper, or existing owner.
+   - Collapse helper-bag classes, anemic objects, pass-through adapters without external boundary, and speculative strategies with one implementation.
+
+## Module Object Cluster Decision Tree
+
+1. Identify module capability or layer.
+   - Name the business capability, bounded context, feature, adapter boundary, layer, or generated-code boundary.
+   - Reject a module whose only owner is a technical bucket such as shared/common/utils unless it is pure technical utility.
+
+2. List objects and functions inside the module.
+   - Include public API/facade, domain objects, value objects, services/use cases, policies/specifications, repositories, adapters/clients, mappers/assemblers, DTOs/schemas, module-local helpers, and tests.
+
+3. Classify each item.
+   - Public API, internal domain, internal value, application/use-case, policy/specification, repository, infrastructure adapter, mapper/DTO, module-local helper, test, generated, or obsolete/collapse.
+
+4. Decide internal folders/files using repository convention.
+   - Common labels such as api/public, domain/internal, application/usecase, infrastructure/adapter, and tests may be useful, but do not force them when the repository uses another convention.
+   - Prefer the smallest structure that keeps public contracts visible and internals private.
+
+5. Decide public API.
+   - Expose the public facade, commands/queries/DTOs/events/contracts consumers need today.
+   - Do not expose internal policies, repositories, adapters, mappers, helpers, or concrete child objects just in case.
+
+6. Decide internal dependency direction.
+   - Public facade/application orchestrates domain/policies/repositories/adapters.
+   - Domain/value/policy code must not depend on infrastructure, UI, framework, or persistence details.
+   - Repositories/adapters implement contracts and isolate side effects.
+   - Helpers depend inward or stay leaf-local; they must not create cycles.
+
+7. Decide next-change location.
+   - For each likely adjacent change, name the file/object/module location a maintainer should edit first.
+   - If the answer is "search many files" or "shared/common," the cluster is not cohesive enough.
+
+8. Decide split/no-split for submodule.
+   - Split a submodule only when a sub-cluster has a separate public contract, owner, lifecycle, dependency direction, side-effect boundary, test boundary, or independent change rhythm.
+   - Keep inside the module when objects/functions are private to one capability and the public facade remains coherent.
 
 ## Function And Signature Structure Decision Tree
 
