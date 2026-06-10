@@ -800,7 +800,7 @@ capabilities:
     group: technology-selection
     path: src/foundation/capabilities/language-performance-safety
     status: implemented
-    used_by: [reliability-observability-gate, backend-change-builder, frontend-change-builder, low-level-systems-extension, solution-optimality-evaluation]
+    used_by: [reliability-observability-gate, backend-change-builder, frontend-change-builder, low-level-systems-extension, solution-optimality-evaluation, implementation-structure-design, design-pattern-selection, ai-code-review-refactor, quality-test-gate]
     triggers:
       - language performance safety allocation GC async blocking FFI unsafe native hot path memory concurrency event loop runtime constraints
       - CPU-bound storage IO network IO file IO blocking IO non-blocking IO coroutine goroutine thread pool worker pool lock held across IO event-loop blocking unbounded fan-out pool sizing per-operation client construction response body leak object allocation regression design pattern performance risk

@@ -41,9 +41,9 @@ Suggested-action distribution:
 | `security-privacy-gate` | professional-skill | 258 | 69 | body 258 lines exceeds review threshold 250 |
 | `reliability-observability-gate` | professional-skill | 253 | 69 | body 253 lines exceeds review threshold 250 |
 | `change-forge-router` | professional-skill | 263 | 71 | body 263 lines exceeds review threshold 250 |
+| `implementation-structure-design` | foundation-capability | 239 | 82 | section 'Critical Details' is 83 lines (> 80) — reference candidate |
 | `architecture-impact-reviewer` | professional-skill | 238 | 82 | - |
 | `task-dag-planner` | professional-skill | 236 | 82 | - |
-| `implementation-structure-design` | foundation-capability | 235 | 82 | section 'Critical Details' is 83 lines (> 80) — reference candidate |
 | `module-boundary-design` | foundation-capability | 222 | 82 | section 'Industry Benchmarks' is 89 lines (> 80) — reference candidate |
 | `experience-impact-modeler` | professional-skill | 219 | 82 | - |
 
@@ -90,7 +90,7 @@ Suggested-action distribution:
 | `change-forge-router` | professional-skill | 263 | 18 | - |
 | `security-privacy-gate` | professional-skill | 258 | 18 | - |
 | `reliability-observability-gate` | professional-skill | 253 | 18 | - |
-| `implementation-structure-design` | foundation-capability | 235 | 14 | Critical Details (83) |
+| `implementation-structure-design` | foundation-capability | 239 | 14 | Critical Details (83) |
 
 ### 2.5 Description Risk (frontmatter triggers)
 
@@ -153,8 +153,8 @@ Suggested-action distribution:
 | Skill | Lines | Words | Prof | Ctx | Route | Split | Classification | Phase | Risk |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `ci-cd` | 241 | 3227 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
+| `implementation-structure-design` | 239 | 5089 | 100 | 82 | 100 | 14 | KEEP_AS_IS | - | low |
 | `skill-authoring-expert` | 238 | 2207 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
-| `implementation-structure-design` | 235 | 5010 | 100 | 82 | 100 | 14 | KEEP_AS_IS | - | low |
 | `agent-execution-discipline` | 232 | 2856 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `cache-design` | 225 | 3312 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `failure-diagnosis` | 224 | 3097 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
@@ -183,11 +183,11 @@ Suggested-action distribution:
 | `event-driven-architecture` | 193 | 2631 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `dto-schema-design` | 191 | 2706 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `frontend-api-integration` | 191 | 2455 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
+| `language-performance-safety` | 191 | 2900 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `observability` | 191 | 2602 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `api-contract-design` | 190 | 2414 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `message-queue-design` | 190 | 2618 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `relational-database` | 190 | 2805 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `language-performance-safety` | 189 | 2829 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `non-goal-boundary-definition` | 189 | 2695 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `business-rule-extraction` | 188 | 2801 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `frontend-testing` | 188 | 2274 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
@@ -235,6 +235,7 @@ Suggested-action distribution:
 | `task-dag-decomposition` | 152 | 2491 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `cli-daemon-interface-design` | 148 | 1667 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `language-runtime-selection` | 148 | 1903 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
+| `design-pattern-selection` | 147 | 2162 | 100 | 95 | 100 | 8 | KEEP_AS_IS | - | low |
 | `language-testing-strategy` | 147 | 1902 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `user-role-identification` | 147 | 2404 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `user-flow-modeling` | 146 | 2555 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -243,7 +244,6 @@ Suggested-action distribution:
 | `transaction-consistency` | 145 | 2531 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `web-security` | 144 | 2506 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `idempotency-retry-design` | 142 | 1972 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `design-pattern-selection` | 141 | 2083 | 100 | 95 | 100 | 8 | KEEP_AS_IS | - | low |
 | `page-component-decomposition` | 140 | 2480 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `search-analytics-design` | 140 | 2277 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `architecture-tradeoff-analysis` | 138 | 1627 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -287,18 +287,18 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 
 | Files | Excerpt |
 | --- | --- |
-| 19 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 19 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
-| 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 19 | do not load every reference by default. treat references as targeted support selected by t |
-| 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
 | 19 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
+| 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
+| 19 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 19 | do not load every reference by default. treat references as targeted support selected by t |
+| 19 | l1 changes: do not read references unless the task touches security, data, auth, external  |
+| 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 18 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 18 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 9 | these triggers are hidden-risk escalators, not ordinary checklist items. |
-| 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
 | 8 | **accepted exceptions** with owner / scope / expiration |
+| 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
 | 7 | **residual risk**: untested runtime behavior, owner, and next gate. |
 | 7 | **block/pass decision** with required conditions for approval. |
 

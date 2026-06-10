@@ -1,7 +1,7 @@
 {
-  "average_score": 41.43,
+  "average_score": 41.44,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-10T08:58:29.669362+00:00",
+  "generated_at": "2026-06-10T09:08:24.172611+00:00",
   "items": [
     {
       "body_lines": 216,
@@ -1118,7 +1118,7 @@
       "warnings": []
     },
     {
-      "body_lines": 141,
+      "body_lines": 147,
       "dimensions": {
         "anti_bloat_control": 4,
         "boundary_clarity": 5,
@@ -1644,7 +1644,7 @@
       "warnings": []
     },
     {
-      "body_lines": 235,
+      "body_lines": 239,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1869,7 +1869,7 @@
       "warnings": []
     },
     {
-      "body_lines": 189,
+      "body_lines": 191,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1880,7 +1880,7 @@
         "proactive_trigger_quality": 1,
         "professional_depth": 5,
         "reference_precision": 3,
-        "stage_fit": 2,
+        "stage_fit": 3,
         "trigger_accuracy": 3,
         "validation_obligation": 4
       },
@@ -1890,7 +1890,7 @@
       "path": "src/foundation/capabilities/language-performance-safety/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 46,
+      "total": 47,
       "warnings": []
     },
     {

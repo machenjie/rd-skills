@@ -39,6 +39,12 @@ Start with direct code. Escalate only when a current force makes direct code wor
 
 Escalate to `architecture-impact-reviewer` when the pattern changes module boundaries, dependency direction, public API, inheritance hierarchy, port/adapter boundary, or cross-service contract. Escalate to `quality-test-gate` when contract tests, public behavior tests, stress tests, or lifecycle cleanup tests are missing. Escalate to `reliability-observability-gate` when observer fan-out, worker pools, backpressure, circuit breaker, bulkhead, hidden IO, or production latency/SLO risk is present. Escalate to `integration-change-builder` when adapter, proxy, repository, or anti-corruption layer hides network/storage IO.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active decision rules. When deep references are added later, load them only when multiple pattern candidates, public interfaces/base classes/registries/providers, lifecycle/concurrency/IO/runtime risk, L3+ scope, or AI-generated pattern usage without evidence is present.
+
+Do not load deep references for direct-code decisions with one local rule, one owner, no selected pattern, and no public API, lifecycle, concurrency, IO, or runtime risk.
+
 # Critical Details
 
 ## Pattern Matrix

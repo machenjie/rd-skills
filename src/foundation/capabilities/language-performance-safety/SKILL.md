@@ -181,7 +181,7 @@ Return a **Performance & Safety Assessment** containing:
 
 # Used By
 
-reliability-observability-gate, backend-change-builder, frontend-change-builder, low-level-systems-extension, solution-optimality-evaluation
+reliability-observability-gate, backend-change-builder, frontend-change-builder, low-level-systems-extension, solution-optimality-evaluation, implementation-structure-design, design-pattern-selection, ai-code-review-refactor, quality-test-gate
 
 # Handoff
 
@@ -195,3 +195,5 @@ reliability-observability-gate, backend-change-builder, frontend-change-builder,
 # Completion Criteria
 
 Assessment is complete when: hot-path classification is profile-backed; allocation, GC pause, lock scope, async-block, backpressure, cancellation, and pool sizing are each answered with measurement or explicit acceptance; unsafe/FFI boundaries are documented and sanitizer-covered; concurrency changes have race-detector evidence; and every optimization claim has system-level before/after numbers. "Should be fast" is not an acceptance condition.
+
+Pattern Performance Impact is complete when selected patterns on runtime-sensitive paths declare pattern-induced allocation, indirection, hidden IO, object creation, lock contention, client/pool lifecycle, fan-out, backpressure, cancellation, cleanup, and resource lifecycle obligations; Object Pool has profile evidence; Observer/PubSub has unsubscribe, backpressure, and error isolation; Singleton/global state has synchronization, test reset, and shutdown cleanup; Proxy/Decorator/Repository/Adapter expose IO timeout, retry, and cleanup; and Command/Worker/Queue includes idempotency, retry, backpressure, and cancellation.

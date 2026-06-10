@@ -1894,12 +1894,12 @@
         "table with 36 rows (> 20) \u2014 move-to-reference candidate"
       ],
       "has_shared_optimality": false,
-      "heading_count": 17,
+      "heading_count": 18,
       "kind": "foundation-capability",
       "largest_section_lines": 50,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 36,
-      "line_count": 141,
+      "line_count": 147,
       "name": "design-pattern-selection",
       "optimality_section_length": 0,
       "output_contract_length": 21,
@@ -1918,7 +1918,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 7,
-      "word_count": 2083
+      "word_count": 2162
     },
     {
       "anti_example_section_length": 13,
@@ -2655,7 +2655,7 @@
       "largest_section_lines": 83,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 0,
-      "line_count": 235,
+      "line_count": 239,
       "name": "implementation-structure-design",
       "optimality_section_length": 0,
       "output_contract_length": 18,
@@ -2677,7 +2677,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 7,
-      "word_count": 5010
+      "word_count": 5089
     },
     {
       "anti_example_section_length": 13,
@@ -3003,7 +3003,7 @@
       "largest_section_lines": 32,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 9,
-      "line_count": 189,
+      "line_count": 191,
       "name": "language-performance-safety",
       "optimality_section_length": 0,
       "output_contract_length": 17,
@@ -3019,8 +3019,8 @@
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
-      "used_by_count": 5,
-      "word_count": 2829
+      "used_by_count": 9,
+      "word_count": 2900
     },
     {
       "anti_example_section_length": 0,
