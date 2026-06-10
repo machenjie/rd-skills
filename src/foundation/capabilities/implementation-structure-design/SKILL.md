@@ -92,7 +92,7 @@ Escalate to `agent-execution-discipline` when an agent adds structure without do
 
 # Critical Details
 
-The full discovery protocol, decision trees, and record templates live in this capability's `references/` (loaded in the dev profile and by skill authors). The body below carries the decision-critical rules compiled into every consuming professional skill. Resolve every structure decision under seven questions: naming, reuse and placement, object-method-module organization, object and module decomposition, object modeling, placement boundaries, and shared-utility pollution.
+The full discovery protocol, decision trees, and record templates live in this capability's `references/` (loaded in the dev profile and by skill authors). The body below carries the decision-critical rules compiled into every consuming professional skill. Resolve every structure decision through the full structure lens: naming, reuse and placement, object-method-module organization, object and module decomposition, object modeling, design pattern decision, performance-aware structure decision, placement boundaries, and shared-utility pollution.
 
 ## Reuse & Placement
 

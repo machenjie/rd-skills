@@ -805,7 +805,7 @@ capabilities:
       - language performance safety allocation GC async blocking FFI unsafe native hot path memory concurrency event loop runtime constraints
       - CPU-bound storage IO network IO file IO blocking IO non-blocking IO coroutine goroutine thread pool worker pool lock held across IO event-loop blocking unbounded fan-out pool sizing per-operation client construction response body leak object allocation regression design pattern performance risk
     risk_notes: [Runtime specific performance and safety issues often appear only under representative load or native boundary stress]
-    expected_outputs: [runtime performance safety assessment with hot path classification allocation concurrency unsafe boundary evidence mitigation and residual risk]
+    expected_outputs: [runtime performance safety assessment with hot path classification allocation concurrency unsafe boundary pattern performance impact hidden IO client/pool lifecycle cleanup backpressure cancellation evidence mitigation and residual risk]
   - id: "88"
     name: package-dependency-management
     group: technology-selection
