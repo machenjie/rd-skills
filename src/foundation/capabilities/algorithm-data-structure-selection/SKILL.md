@@ -45,6 +45,14 @@ Select this capability when the main risk is computational complexity or data ac
 
 Escalate to `reliability-observability-gate` when the algorithm affects SLOs, batch windows, queue lag, memory pressure, or cost. Escalate to `bigdata-product-extension` for distributed stream or batch jobs. Escalate to `security-privacy-gate` when adversarial input can trigger pathological complexity.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active algorithm and data-structure decision rules.
+
+If deep references are added later, load them only for L3+ work, production-scale inputs, hot paths, unbounded load-all processing, unclear complexity, memory-budget risk, or benchmark/profile interpretation.
+
+Do not load deep references for L1/L2 local changes where input size is bounded and the inline output contract for time, space, memory, and rejected alternatives is enough.
+
 # Critical Details
 
 - Map/list/set/heap/queue/deque/tree/trie/graph/Bloom filter/LRU/LFU/interval tree/segment tree choices must name the access pattern they optimize.
@@ -69,14 +77,6 @@ Escalate to `reliability-observability-gate` when the algorithm affects SLOs, ba
 - Using a list for membership checks in a hot path.
 - Ignoring worst-case graph cycles, skewed keys, adversarial input, or stable ordering.
 - Adding a complex probabilistic structure without explaining approximate versus exact semantics.
-
-# Reference Loading Policy
-
-Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active algorithm and data-structure decision rules.
-
-If deep references are added later, load them only for L3+ work, production-scale inputs, hot paths, unbounded load-all processing, unclear complexity, memory-budget risk, or benchmark/profile interpretation.
-
-Do not load deep references for L1/L2 local changes where input size is bounded and the inline output contract for time, space, memory, and rejected alternatives is enough.
 
 # Output Contract
 

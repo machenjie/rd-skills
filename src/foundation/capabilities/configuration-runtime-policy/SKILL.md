@@ -45,6 +45,14 @@ Select this capability when the main decision is runtime variability policy. Use
 
 Escalate to `security-privacy-gate` when config can alter auth, tenant isolation, data visibility, encryption, URLs, or secrets. Escalate to `domain-impact-modeler` when config changes business invariants. Escalate to `reliability-observability-gate` when kill switches, hot reload, or runtime config affects production availability.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active runtime configuration and feature-flag policy.
+
+If deep references are added later, load them only for L3+ work, public or operator-visible config changes, runtime behavior switches, feature-flag lifecycle risk, invariant bypass, rollout/rollback impact, or stale cleanup debt.
+
+Do not load deep references for L1/L2 local config edits where the inline output contract for schema, default, validation, owner, expiry, and cleanup can be satisfied.
+
 # Critical Details
 
 - Build-time config is baked into artifacts; deploy-time config changes with environment; runtime config can change without deploy and needs observability.
@@ -65,14 +73,6 @@ Escalate to `security-privacy-gate` when config can alter auth, tenant isolation
 - Hot reload applies partially and leaves mixed behavior.
 - Default points to production dependency in tests or to unsafe development behavior in production.
 - Config change has no test matrix or rollout/rollback path.
-
-# Reference Loading Policy
-
-Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active runtime configuration and feature-flag policy.
-
-If deep references are added later, load them only for L3+ work, public or operator-visible config changes, runtime behavior switches, feature-flag lifecycle risk, invariant bypass, rollout/rollback impact, or stale cleanup debt.
-
-Do not load deep references for L1/L2 local config edits where the inline output contract for schema, default, validation, owner, expiry, and cleanup can be satisfied.
 
 # Output Contract
 

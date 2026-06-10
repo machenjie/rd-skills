@@ -95,9 +95,44 @@ STRUCTURED_CODE_CORRECTNESS_CAPABILITIES = frozenset(
         "116",
     }
 )
-STRUCTURED_CODE_CORRECTNESS_REQUIRED_SECTIONS = (
-    "Evidence Contract",
-    "Reference Loading Policy",
+REFERENCE_LOADING_POLICY_CAPABILITIES = frozenset(
+    {
+        "105",
+        "106",
+        "107",
+        "108",
+        "109",
+        "110",
+        "111",
+        "112",
+        "113",
+        "114",
+        "115",
+        "116",
+    }
+)
+REFERENCE_LOADING_POLICY_POSITION_CAPABILITIES = frozenset(
+    {
+        "105",
+        "106",
+        "107",
+        "108",
+        "109",
+        "110",
+        "111",
+        "112",
+        "113",
+        "114",
+    }
+)
+STRUCTURED_CODE_CORRECTNESS_REQUIRED_SECTIONS = ("Evidence Contract",)
+REFERENCE_LOADING_POLICY_REQUIRED_TERMS = (
+    "inline-only",
+    "deep reference",
+    "l1",
+    "l2",
+    "l3",
+    "output contract",
 )
 ANTI_FRAGMENTATION_KEYWORDS = (
     "anti-fragmentation",
@@ -301,24 +336,60 @@ def _validate_structured_code_correctness_sections(
         errors,
     )
 
+
+def _validate_reference_loading_policy(
+    capability_id: str | None,
+    body: str,
+    context: str,
+    errors: list[str],
+) -> None:
+    if capability_id not in REFERENCE_LOADING_POLICY_CAPABILITIES:
+        return
+
+    validate_required_sections(
+        body,
+        ("Reference Loading Policy",),
+        context,
+        errors,
+    )
+
+    if capability_id in REFERENCE_LOADING_POLICY_POSITION_CAPABILITIES:
+        top_level_titles: list[str] = []
+        for line in body.splitlines():
+            match = re.match(r"^#\s+(.+?)\s*#*\s*$", line)
+            if match:
+                top_level_titles.append(match.group(1).strip())
+
+        if top_level_titles.count("Reference Loading Policy") != 1:
+            errors.append(
+                f"{context}: expected exactly one top-level Reference Loading Policy section"
+            )
+        else:
+            required_order = (
+                "Risk Escalation Rules",
+                "Reference Loading Policy",
+                "Critical Details",
+            )
+            if all(title in top_level_titles for title in required_order):
+                risk_index = top_level_titles.index("Risk Escalation Rules")
+                critical_index = top_level_titles.index("Critical Details")
+                between = top_level_titles[risk_index + 1 : critical_index]
+                if between != ["Reference Loading Policy"]:
+                    errors.append(
+                        f"{context}: Reference Loading Policy must appear directly "
+                        "between Risk Escalation Rules and Critical Details"
+                    )
+
     policy = extract_section_body(body, "Reference Loading Policy")
     if policy is None:
         return
 
     folded = policy.casefold()
-    required_terms = (
-        "inline-only",
-        "deep reference",
-        "l1",
-        "l2",
-        "l3",
-        "output contract",
-    )
-    for term in required_terms:
+    for term in REFERENCE_LOADING_POLICY_REQUIRED_TERMS:
         if term not in folded:
             errors.append(
-                f"{context}: structured code correctness Reference Loading Policy "
-                f"must mention '{term}'"
+                f"{context}: foundation capability Reference Loading Policy must mention "
+                f"'{term}'"
             )
 
 
@@ -506,6 +577,12 @@ def main() -> int:
 
         validate_required_sections(body, REQUIRED_SECTIONS, file_context, errors)
         _validate_structured_code_correctness_sections(
+            normalized_capability_id,
+            body,
+            file_context,
+            errors,
+        )
+        _validate_reference_loading_policy(
             normalized_capability_id,
             body,
             file_context,

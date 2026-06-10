@@ -45,6 +45,14 @@ Select this capability when the primary risk is hidden or misordered side effect
 
 Escalate to `data-middleware-change-builder` when persistence, cache, queue, search, or storage owns the side effect. Escalate to `integration-change-builder` for external API effects. Escalate to `reliability-observability-gate` when side-effect ordering affects production recovery or SLOs. Escalate to `security-privacy-gate` when side effects can leak or mutate sensitive data.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active data and side-effect flow rules.
+
+If deep references are added later, load them only for L3+ work, cross-boundary transactions, mapper/getter side effects, event-before-commit risk, cache source-of-truth ambiguity, external IO, idempotency, or compensation.
+
+Do not load deep references for L1/L2 local flow edits where the inline output contract for input-to-response map, ordering decision, and side-effect visibility is enough.
+
 # Critical Details
 
 - Trace input to validation, mapping, policy, mutation, transaction, persistence, event, cache, external IO, response.
@@ -66,14 +74,6 @@ Escalate to `data-middleware-change-builder` when persistence, cache, queue, sea
 - Logging callback mutates state or swallows errors.
 - External IO lacks timeout, cancellation, retry bounds, or cleanup.
 - Multi-step side effects are not idempotent and have no compensation.
-
-# Reference Loading Policy
-
-Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active data and side-effect flow rules.
-
-If deep references are added later, load them only for L3+ work, cross-boundary transactions, mapper/getter side effects, event-before-commit risk, cache source-of-truth ambiguity, external IO, idempotency, or compensation.
-
-Do not load deep references for L1/L2 local flow edits where the inline output contract for input-to-response map, ordering decision, and side-effect visibility is enough.
 
 # Output Contract
 

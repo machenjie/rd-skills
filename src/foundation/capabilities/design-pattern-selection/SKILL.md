@@ -41,9 +41,9 @@ Escalate to `architecture-impact-reviewer` when the pattern changes module bound
 
 # Reference Loading Policy
 
-Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active decision rules. When deep references are added later, load them only when multiple pattern candidates, public interfaces/base classes/registries/providers, lifecycle/concurrency/IO/runtime risk, L3+ scope, or AI-generated pattern usage without evidence is present.
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active decision rules. If deep references are added later, load them only for L3+ work, multiple pattern candidates, public interfaces/base classes/registries/providers, lifecycle/concurrency/IO/runtime risk, or AI-generated pattern usage without evidence.
 
-Do not load deep references for direct-code decisions with one local rule, one owner, no selected pattern, and no public API, lifecycle, concurrency, IO, or runtime risk.
+Do not load deep references for L1/L2 direct-code decisions where the inline output contract can name one local rule, one owner, no selected pattern, and no public API, lifecycle, concurrency, IO, or runtime risk.
 
 # Critical Details
 

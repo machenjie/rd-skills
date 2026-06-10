@@ -1538,18 +1538,18 @@
       "bullet_count": 91,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
-      "context_efficiency_score": 100,
+      "context_efficiency_score": 90,
       "critical_details_length": 41,
       "description_findings": [],
       "description_length": 275,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 21,
+      "heading_count": 22,
       "kind": "foundation-capability",
       "largest_section_lines": 41,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 0,
-      "line_count": 200,
+      "line_count": 208,
       "name": "code-clarity-maintainability",
       "optimality_section_length": 0,
       "output_contract_length": 22,
@@ -1566,7 +1566,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 6,
-      "word_count": 2475
+      "word_count": 2573
     },
     {
       "anti_example_section_length": 13,
@@ -2184,7 +2184,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
       "used_by_count": 7,
-      "word_count": 2162
+      "word_count": 2167
     },
     {
       "anti_example_section_length": 13,

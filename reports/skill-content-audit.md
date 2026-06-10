@@ -178,6 +178,7 @@ Suggested-action distribution:
 | `authentication-security` | 210 | 2779 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `concurrency-control` | 210 | 2872 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
 | `degradation-circuit-breaking` | 210 | 2909 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
+| `code-clarity-maintainability` | 208 | 2573 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `domain-event-modeling` | 208 | 2713 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
 | `performance-budgeting` | 208 | 3069 | 100 | 82 | 100 | 14 | KEEP_AS_IS | - | low |
 | `engineering-stage-professionalism` | 207 | 2027 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -188,7 +189,6 @@ Suggested-action distribution:
 | `kubernetes-gateway` | 204 | 2864 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `language-idiom-enforcement` | 204 | 2371 | 100 | 82 | 100 | 14 | KEEP_AS_IS | - | low |
 | `form-validation-design` | 203 | 2532 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
-| `code-clarity-maintainability` | 200 | 2475 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `regression-testing` | 199 | 2785 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `requirement-structuring` | 198 | 2346 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `backup-recovery` | 197 | 2941 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
@@ -249,7 +249,7 @@ Suggested-action distribution:
 | `task-dag-decomposition` | 152 | 2491 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `cli-daemon-interface-design` | 148 | 1667 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `language-runtime-selection` | 148 | 1903 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
-| `design-pattern-selection` | 147 | 2162 | 100 | 95 | 100 | 8 | KEEP_AS_IS | - | low |
+| `design-pattern-selection` | 147 | 2167 | 100 | 95 | 100 | 8 | KEEP_AS_IS | - | low |
 | `language-testing-strategy` | 147 | 1902 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `user-role-identification` | 147 | 2404 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `user-flow-modeling` | 146 | 2555 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -314,15 +314,15 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | 19 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
 | 19 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 19 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 19 | do not load every reference by default. treat references as targeted support selected by t |
-| 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
 | 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 18 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
+| 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
+| 19 | do not load every reference by default. treat references as targeted support selected by t |
 | 18 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 18 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 9 | these triggers are hidden-risk escalators, not ordinary checklist items. |
-| 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
 | 8 | **accepted exceptions** with owner / scope / expiration |
+| 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
 | 7 | **residual risk**: untested runtime behavior, owner, and next gate. |
 | 7 | **block/pass decision** with required conditions for approval. |
 

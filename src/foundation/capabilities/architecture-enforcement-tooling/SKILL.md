@@ -45,6 +45,14 @@ Select this capability when the primary gap is enforcement tooling. Use `module-
 
 Escalate to `delivery-release-gate` when new CI gates affect release flow. Escalate to `architecture-impact-reviewer` when enforcement reveals ambiguous ownership. Escalate to `ai-code-review-refactor` when generated code or AI-produced files need exemptions that could hide real violations.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active architecture enforcement rules.
+
+If deep references are added later, load them only for L3+ work, module or public-boundary enforcement, import/cycle/export rules, generated-code exceptions, CI gate design, or staged migration of existing violations.
+
+Do not load deep references for L1/L2 local checks where the inline output contract for rule list, tool choice, CI command, failure example, and exception policy is sufficient.
+
 # Critical Details
 
 - Import boundary checks enforce allowed dependency direction and forbidden cross-module internals.
@@ -64,14 +72,6 @@ Escalate to `delivery-release-gate` when new CI gates affect release flow. Escal
 - Existing violations are ignored without baseline or cleanup owner.
 - Dead-code tool deletes reflection, registration, migration, or generated references.
 - Public export check breaks consumers without consumer impact analysis.
-
-# Reference Loading Policy
-
-Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active architecture enforcement rules.
-
-If deep references are added later, load them only for L3+ work, module or public-boundary enforcement, import/cycle/export rules, generated-code exceptions, CI gate design, or staged migration of existing violations.
-
-Do not load deep references for L1/L2 local checks where the inline output contract for rule list, tool choice, CI command, failure example, and exception policy is sufficient.
 
 # Output Contract
 

@@ -81,6 +81,14 @@ Escalate to `quality-test-gate` when tests are hard to understand, over-mock int
 
 Escalate to `agent-execution-discipline` when an agent claims clarity is improved without before/after evidence, same-pattern scan, or validation output.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active code clarity, maintainability, and split/merge readability rules.
+
+If deep references are added later, load them only for L3+ work, AI-generated or refactored code with unclear main flow, high cognitive complexity, file split/merge risk, hidden side effects, test clarity or private-helper pressure, or cross-module change locality risk.
+
+Do not load deep references for L1/L2 local clarity edits where the inline output contract can state main-flow readability, owning location, deletion path, test clarity, rejected simplifications, and validation evidence.
+
 # Critical Details
 
 ## Future Maintainer Review Steps

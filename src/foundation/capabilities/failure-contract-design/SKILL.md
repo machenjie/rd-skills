@@ -56,6 +56,14 @@ This capability owns cross-layer failure taxonomy: retryable, terminal, validati
 
 Escalate to `security-privacy-gate` when errors can expose secrets, PII, auth state, tenant data, or provider internals. Escalate to `reliability-observability-gate` when silent fallback, retries, degraded mode, or dependency failures affect SLOs. Escalate to `data-api-contract-changer` when public API error contracts change.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active cross-boundary failure contract rules.
+
+If deep references are added later, load them only for L3+ work, public API or async/message boundaries, partial failure, raw dependency error leakage, fallback/degradation, compensation, DLQ, or unclear retryable versus terminal semantics.
+
+Do not load deep references for L1/L2 local error handling where the inline output contract for taxonomy, translation map, and handoff boundaries to error-code, logging, or retry capabilities is sufficient.
+
 # Critical Details
 
 - Retryable failures include transient network, timeout, throttling, and dependency saturation only when the operation is idempotent or guarded.
@@ -77,14 +85,6 @@ Escalate to `security-privacy-gate` when errors can expose secrets, PII, auth st
 - Losing root cause when wrapping errors.
 - Publishing partial success without compensation or explicit acceptance.
 - Queue consumer ACKs before durable processing and has no DLQ or replay behavior.
-
-# Reference Loading Policy
-
-Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active cross-boundary failure contract rules.
-
-If deep references are added later, load them only for L3+ work, public API or async/message boundaries, partial failure, raw dependency error leakage, fallback/degradation, compensation, DLQ, or unclear retryable versus terminal semantics.
-
-Do not load deep references for L1/L2 local error handling where the inline output contract for taxonomy, translation map, and handoff boundaries to error-code, logging, or retry capabilities is sufficient.
 
 # Output Contract
 

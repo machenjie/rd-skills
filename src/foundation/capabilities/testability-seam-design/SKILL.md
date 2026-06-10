@@ -46,6 +46,14 @@ Select this capability over `unit-testing` when the design of the seam itself is
 
 Escalate to `quality-test-gate` when test layer selection, fixture ownership, or flaky risk is unresolved. Escalate to `integration-change-builder`, `data-middleware-change-builder`, or `backend-change-builder` when the seam crosses HTTP, DB, queue, cache, file, clock, or environment boundaries. Escalate to `language-testing-strategy` when runtime-specific tools such as race detectors, mutation testing, property-based testing, or fake timers are needed.
 
+# Reference Loading Policy
+
+Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active seam-design rules.
+
+If deep references are added later, load them only for L3+ work, AI-generated tests, private-helper export pressure, unclear public behavior boundaries, external contract doubles, or uncontrolled time/randomness/IO risks.
+
+Do not load deep references for L1/L2 local changes where the output contract can be satisfied from the inline public-boundary, seam map, and deterministic-test rules.
+
 # Critical Details
 
 - Public behavior boundary: API endpoint, service method, component behavior, CLI command, job outcome, repository contract, event contract, or module facade.
@@ -69,14 +77,6 @@ Escalate to `quality-test-gate` when test layer selection, fixture ownership, or
 - Using real wall clock time, random UUIDs, sleeps, or external services in tests.
 - Refactoring first and adding characterization tests later.
 - Treating snapshot or golden updates as proof without naming the behavior protected.
-
-# Reference Loading Policy
-
-Current mode is inline-only: this capability has no deep reference files today, so this `SKILL.md` contains the active seam-design rules.
-
-If deep references are added later, load them only for L3+ work, AI-generated tests, private-helper export pressure, unclear public behavior boundaries, external contract doubles, or uncontrolled time/randomness/IO risks.
-
-Do not load deep references for L1/L2 local changes where the output contract can be satisfied from the inline public-boundary, seam map, and deterministic-test rules.
 
 # Output Contract
 
