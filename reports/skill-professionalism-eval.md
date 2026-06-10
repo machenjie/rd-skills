@@ -1,9 +1,9 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-10T07:57:41.655973+00:00
-- Skills/capabilities checked: 124
-- Warning count: 3
-- Average score: 41.41/60
+- Generated: 2026-06-10T08:58:29.669362+00:00
+- Skills/capabilities checked: 125
+- Warning count: 4
+- Average score: 41.43/60
 
 ## Scores
 
@@ -74,9 +74,10 @@
 | `src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md` | foundation-capability | 39/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/controller-api-implementation/SKILL.md` | foundation-capability | 39/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/package-dependency-management/SKILL.md` | foundation-capability | 39/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/module-boundary-design/SKILL.md` | foundation-capability | 40/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/technology-stack-selection/SKILL.md` | foundation-capability | 40/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/web-security/SKILL.md` | foundation-capability | 40/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/module-boundary-design/SKILL.md` | foundation-capability | 41/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/design-pattern-selection/SKILL.md` | foundation-capability | 42/60 | acceptable | 0 | 1 |
 | `src/foundation/capabilities/context-packaging/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/message-queue-design/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/observability/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
@@ -98,9 +99,9 @@
 | `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md` | foundation-capability | 47/60 | needs-review | 1 | 1 |
 | `src/foundation/capabilities/test-strategy/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/agent-execution-discipline/SKILL.md` | foundation-capability | 48/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/implementation-structure-design/SKILL.md` | foundation-capability | 48/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cpp-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/go-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/implementation-structure-design/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/java-jvm-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/refactoring/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/regression-testing/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
@@ -138,6 +139,12 @@
 
 ### `src/foundation/capabilities/api-contract-design/SKILL.md`
 - message: long Markdown table in SKILL.md body (16 rows); consider moving deep table to references | type: body_bloat_exception | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
+
+Recommended fixes:
+- Move low-frequency tables/examples into owned references and remove duplicated template prose.
+
+### `src/foundation/capabilities/design-pattern-selection/SKILL.md`
+- message: long Markdown table in SKILL.md body (37 rows); consider moving deep table to references | type: body_bloat_exception | scope: non-key-foundation-capability | release_relevance: advisory-only | reason: Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.
 
 Recommended fixes:
 - Move low-frequency tables/examples into owned references and remove duplicated template prose.

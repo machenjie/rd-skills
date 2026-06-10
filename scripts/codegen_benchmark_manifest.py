@@ -69,14 +69,22 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "test-failure-no-env-blame",
     ),
     "structure": (
+        "design-pattern-overengineering",
         "inheritance-vs-composition-decision",
         "module-object-cluster-organization",
         "object-method-encapsulation-placement",
+        "observer-lifecycle-backpressure",
         "over-fragmented-file-split",
         "oversized-service-object-split",
         "parent-child-sibling-object-relationship",
+        "pattern-selection-with-real-variation",
         "reckless-small-file-merge",
         "side-effect-boundary",
+    ),
+    "performance": (
+        "event-loop-blocking-async-path",
+        "lock-held-across-io",
+        "per-operation-client-construction",
     ),
     "finops": (
         "cloud-cost-regression",

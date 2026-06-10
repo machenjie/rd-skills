@@ -88,6 +88,7 @@ Worker pool (IO)     = bounded; never unbounded; backpressure required
 
 # Critical Details
 
+- **Design pattern performance risk is runtime risk.** Pattern-induced allocation, indirection, hidden IO, lifecycle state, lock contention, task fan-out, and pool/client creation must be assessed before accepting the structure. Factories and builders can create expensive objects per request; decorators and proxies can hide IO or order-dependent side effects; repositories and adapters can hide network/storage IO; observers and workers can create unbounded fan-out; commands require idempotency, retry, cancellation, and backpressure; singletons/global state require synchronization, test reset, and shutdown cleanup.
 - **Allocation cost is not zero in any runtime.** Even Go and Rust pay for allocation in cache pressure, GC scan time (Go), or sync allocator overhead. Hot-path allocations should be measured and budgeted; pooling (sync.Pool, object pool, arena) considered only after profile justifies.
 - **GC pause SLO mapping**: if p99.9 latency budget is 50 ms, GC pause budget is typically < 10 ms. JVM G1 default may exceed; ZGC / Shenandoah / Go's concurrent GC fit better. Hard real-time / sub-ms requires no-GC (Rust / C++).
 - **Event-loop block detection**: instrument event-loop lag (`@nodejs/perf_hooks` `monitorEventLoopDelay`, Python `asyncio.get_event_loop().slow_callback_duration`, JVM reactor `Schedulers.metrics()`). Lag > 10 ms p99 indicates blocking work on the loop.
@@ -103,6 +104,19 @@ Worker pool (IO)     = bounded; never unbounded; backpressure required
 - **Response/body cleanup**: every successful or failed outbound call must release network resources in the runtime's idiom: close response bodies, consume/drain only when required for connection reuse, cancel inflight requests on timeout, and close streams/readers/writers on all paths.
 - **Fan-out and batch ceilings**: `Promise.all`, goroutine/task spawning, thread creation, queue publishing, SQL `IN` clauses, and bulk writes must have a concurrency or batch-size ceiling. Large work is chunked with checkpoints, partial-failure handling, and cancellation.
 - **Long-lived handles are leak surfaces.** Timers, intervals, subscriptions, watchers, file descriptors, cursors, prepared statements, transactions, locks, and temporary files require explicit ownership and cleanup on success, failure, cancellation, and shutdown.
+
+## Pattern Performance Impact
+
+| Pattern | Runtime impact to prove |
+| --- | --- |
+| Singleton | global mutable state, lock contention, test reset, shutdown cleanup |
+| Object Pool | allocation profile required, contention, stale object reset, leak detection |
+| Observer/PubSub | subscription lifecycle, bounded fan-out, backpressure, error isolation |
+| Decorator/Proxy | hidden IO, order dependency, latency budget, resource cleanup |
+| Factory/Builder | construction cost, per-request client creation risk, object graph churn |
+| Strategy/Command | allocation and dispatch overhead; idempotency/retry for commands |
+| Repository/Adapter | network/storage IO visibility, timeout, retry, pool, cleanup |
+| Pipeline/Worker Pool | queue size, pool sizing, backpressure, cancellation, partial failure |
 
 # Failure Modes
 
@@ -140,6 +154,7 @@ Return a **Performance & Safety Assessment** containing:
 - **Allocation budget** for H1 / H2 paths (B/req, allocs/req, target)
 - **GC pause analysis** (algorithm, observed pause distribution vs SLO)
 - **Concurrency / async risks**: blocking points, lock scope, cancellation propagation, backpressure design
+- **Pattern Performance Impact**: pattern-induced allocation, indirection, hidden IO, object creation, lock contention, client/pool lifecycle, fan-out, backpressure, cancellation, and cleanup obligations
 - **Pool sizing** with Little's-Law calculation (DB conn, HTTP client, worker pool)
 - **Growth-surface audit**: collections, buffers, batches, caches, pagination windows, retry queues, and fan-out points with explicit item/byte limits
 - **Client/pool lifecycle**: where reusable clients/pools are constructed, how they are reused, closed, refreshed, and observed
@@ -156,11 +171,13 @@ Return a **Performance & Safety Assessment** containing:
 4. Async / event-loop code has no blocking call on the loop; blocking work is on dedicated executor; event-loop lag metric present.
 5. Pool sizes calculated via Little's Law; bounded queues / executors / retry loops everywhere.
 6. Cancellation token / context / signal propagated through every async boundary.
-7. Unsafe / FFI changes have written invariant doc + ≥ 2 reviewers + sanitizer CI coverage.
-8. Concurrency change has race-detector / sanitizer / stress-test evidence in CI.
-9. Every optimization claim has before/after numbers from a system-level benchmark, not microbench-only.
-10. Collections, buffers, caches, pages, batches, and fan-out lists have explicit count/byte ceilings and reject or stream oversized inputs.
-11. Reusable clients/pools are not constructed per operation; response bodies, streams, timers, subscriptions, cursors, and file handles are cleaned up on all paths.
+7. Design patterns on runtime-sensitive paths declare pattern performance risk, pattern-induced allocation/indirection, hidden IO, object pool evidence, observer cleanup, singleton/global-state synchronization, and command/worker backpressure or idempotency obligations.
+8. Proxy, decorator, repository, and adapter do not hide network/storage IO, timeout, retry, or cleanup from the owning structure decision.
+9. Unsafe / FFI changes have written invariant doc + ≥ 2 reviewers + sanitizer CI coverage.
+10. Concurrency change has race-detector / sanitizer / stress-test evidence in CI.
+11. Every optimization claim has before/after numbers from a system-level benchmark, not microbench-only.
+12. Collections, buffers, caches, pages, batches, and fan-out lists have explicit count/byte ceilings and reject or stream oversized inputs.
+13. Reusable clients/pools are not constructed per operation; response bodies, streams, timers, subscriptions, cursors, and file handles are cleaned up on all paths.
 
 # Used By
 

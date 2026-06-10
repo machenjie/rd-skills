@@ -7,7 +7,7 @@ ChangeForge Skill Mesh is a skill-authoring repository. Its source content, regi
 The source repo contains authored material:
 
 - `src/professional-skills`: 19 top-level professional skills.
-- `src/foundation/capabilities`: 105 implemented foundation capabilities plus `_template`.
+- `src/foundation/capabilities`: 106 implemented foundation capabilities plus `_template`.
 - `src/domain-extensions`: 7 optional domain extension skills.
 - `src/registry`: `skills.yaml`, `capabilities.yaml`, `domain-extensions.yaml`, and `routing-rules.yaml`.
 - `src/hook-runtime`: optional project-level hook runtime source for warning-only execution reminders.

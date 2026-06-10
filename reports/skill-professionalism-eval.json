@@ -1,7 +1,7 @@
 {
-  "average_score": 41.41,
+  "average_score": 41.43,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-10T07:57:41.655973+00:00",
+  "generated_at": "2026-06-10T08:58:29.669362+00:00",
   "items": [
     {
       "body_lines": 216,
@@ -1118,6 +1118,43 @@
       "warnings": []
     },
     {
+      "body_lines": 141,
+      "dimensions": {
+        "anti_bloat_control": 4,
+        "boundary_clarity": 5,
+        "evidence_contract_strength": 2,
+        "failure_mode_coverage": 2,
+        "mode_coverage": 4,
+        "output_actionability": 2,
+        "proactive_trigger_quality": 1,
+        "professional_depth": 5,
+        "reference_precision": 4,
+        "stage_fit": 5,
+        "trigger_accuracy": 5,
+        "validation_obligation": 3
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "design-pattern-selection",
+      "path": "src/foundation/capabilities/design-pattern-selection/SKILL.md",
+      "recommended_fixes": [
+        "Move low-frequency tables/examples into owned references and remove duplicated template prose."
+      ],
+      "status": "acceptable",
+      "total": 42,
+      "warnings": [
+        {
+          "item": "design-pattern-selection",
+          "item_kind": "foundation-capability",
+          "message": "long Markdown table in SKILL.md body (37 rows); consider moving deep table to references",
+          "reason": "Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release.",
+          "release_relevance": "advisory-only",
+          "scope": "non-key-foundation-capability",
+          "type": "body_bloat_exception"
+        }
+      ]
+    },
+    {
       "body_lines": 177,
       "dimensions": {
         "anti_bloat_control": 4,
@@ -1607,19 +1644,19 @@
       "warnings": []
     },
     {
-      "body_lines": 281,
+      "body_lines": 235,
       "dimensions": {
-        "anti_bloat_control": 4,
+        "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
-        "failure_mode_coverage": 4,
+        "failure_mode_coverage": 3,
         "mode_coverage": 2,
         "output_actionability": 5,
         "proactive_trigger_quality": 1,
         "professional_depth": 5,
         "reference_precision": 4,
         "stage_fit": 5,
-        "trigger_accuracy": 3,
+        "trigger_accuracy": 4,
         "validation_obligation": 5
       },
       "kind": "foundation-capability",
@@ -1628,7 +1665,7 @@
       "path": "src/foundation/capabilities/implementation-structure-design/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 48,
+      "total": 49,
       "warnings": []
     },
     {
@@ -1832,7 +1869,7 @@
       "warnings": []
     },
     {
-      "body_lines": 172,
+      "body_lines": 189,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -2007,7 +2044,7 @@
       "warnings": []
     },
     {
-      "body_lines": 195,
+      "body_lines": 222,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -2020,7 +2057,7 @@
         "reference_precision": 2,
         "stage_fit": 5,
         "trigger_accuracy": 3,
-        "validation_obligation": 2
+        "validation_obligation": 3
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -2028,7 +2065,7 @@
       "path": "src/foundation/capabilities/module-boundary-design/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 40,
+      "total": 41,
       "warnings": []
     },
     {
@@ -3146,6 +3183,6 @@
       "warnings": []
     }
   ],
-  "skills_checked": 124,
-  "warning_count": 3
+  "skills_checked": 125,
+  "warning_count": 4
 }

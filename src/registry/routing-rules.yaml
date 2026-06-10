@@ -33,14 +33,14 @@ supported_change_types:
 runtime_profiles:
   - name: recommended
     top_level: 19 professional skills
-    foundation_mode: 105 foundation capabilities compiled into professional references
+    foundation_mode: 106 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 19 professional skills and 7 domain extensions
-    foundation_mode: 105 foundation capabilities compiled into professional references
+    foundation_mode: 106 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 19 professional skills, 105 foundation capabilities, and 7 domain extensions
+    top_level: 19 professional skills, 106 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -138,6 +138,49 @@ risk_escalation_triggers:
   - change locality violation
   - hallucinated API risk
   - dependency surface
+  - design pattern selection needed
+  - pattern overengineering
+  - pattern misuse
+  - speculative abstraction pattern
+  - strategy with one implementation
+  - abstract base class for code reuse
+  - singleton global state risk
+  - factory hides simple construction
+  - builder for trivial DTO
+  - observer lifecycle leak
+  - decorator hides side effects
+  - proxy hides network IO
+  - facade god object risk
+  - mediator god object risk
+  - object pool without profile evidence
+  - command without idempotency
+  - state pattern without state machine
+  - visitor breaks encapsulation
+  - hot path changed
+  - CPU-bound work on request path
+  - CPU-bound work on event loop
+  - blocking IO in async path
+  - event-loop blocking
+  - coroutine cancellation missing
+  - goroutine leak risk
+  - thread pool saturation
+  - worker pool unbounded
+  - unbounded fan-out
+  - lock scope unclear
+  - lock held across IO
+  - race condition risk
+  - deadlock risk
+  - storage IO hidden in domain object
+  - network IO hidden behind proxy or repository
+  - per-operation client construction
+  - connection pool sizing missing
+  - response body stream leak
+  - unbounded queue buffer cache collection
+  - backpressure missing
+  - timeout/cancellation missing
+  - object allocation regression
+  - GC pressure risk
+  - design pattern performance risk
 risk_trigger_rules:
   - trigger: auth
     required_skills: [security-privacy-gate]
@@ -336,6 +379,146 @@ risk_trigger_rules:
   - trigger: change locality violation
     required_capabilities: [module-boundary-design, code-clarity-maintainability]
     required_quality_gates: [architecture gate, implementation gate]
+  - trigger: design pattern selection needed
+    required_capabilities: [design-pattern-selection, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: pattern overengineering
+    required_capabilities: [design-pattern-selection, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: pattern misuse
+    required_capabilities: [design-pattern-selection, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: speculative abstraction pattern
+    required_capabilities: [design-pattern-selection, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: strategy with one implementation
+    required_capabilities: [design-pattern-selection, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: abstract base class for code reuse
+    required_capabilities: [design-pattern-selection, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: singleton global state risk
+    required_capabilities: [design-pattern-selection, language-performance-safety]
+    required_skills: [quality-test-gate]
+    required_quality_gates: [implementation gate, test gate]
+  - trigger: factory hides simple construction
+    required_capabilities: [design-pattern-selection, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: builder for trivial DTO
+    required_capabilities: [design-pattern-selection, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: observer lifecycle leak
+    required_capabilities: [design-pattern-selection, language-performance-safety]
+    required_skills: [reliability-observability-gate]
+    required_quality_gates: [implementation gate, reliability gate]
+  - trigger: decorator hides side effects
+    required_capabilities: [design-pattern-selection, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: proxy hides network IO
+    required_capabilities: [design-pattern-selection, language-performance-safety]
+    required_skills: [integration-change-builder]
+    required_quality_gates: [implementation gate]
+  - trigger: facade god object risk
+    required_capabilities: [design-pattern-selection, implementation-structure-design, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: mediator god object risk
+    required_capabilities: [design-pattern-selection, implementation-structure-design, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: object pool without profile evidence
+    required_capabilities: [design-pattern-selection, language-performance-safety, profiling]
+    required_quality_gates: [implementation gate, reliability gate]
+  - trigger: command without idempotency
+    required_capabilities: [design-pattern-selection, idempotency-retry-design, async-job-design]
+    required_quality_gates: [implementation gate]
+  - trigger: state pattern without state machine
+    required_capabilities: [design-pattern-selection, implementation-structure-design, state-machine-modeling]
+    required_quality_gates: [implementation gate]
+  - trigger: visitor breaks encapsulation
+    required_capabilities: [design-pattern-selection, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: hot path changed
+    required_capabilities: [language-performance-safety, profiling, solution-optimality-evaluation]
+    required_quality_gates: [reliability gate]
+  - trigger: CPU-bound work on request path
+    required_capabilities: [language-performance-safety, profiling, solution-optimality-evaluation]
+    required_quality_gates: [reliability gate]
+  - trigger: CPU-bound work on event loop
+    required_capabilities: [language-performance-safety, concurrency-control]
+    required_quality_gates: [implementation gate, reliability gate]
+  - trigger: blocking IO in async path
+    required_capabilities: [language-performance-safety]
+    required_skills: [reliability-observability-gate]
+    required_quality_gates: [reliability gate]
+  - trigger: event-loop blocking
+    required_capabilities: [language-performance-safety, concurrency-control]
+    required_quality_gates: [implementation gate, reliability gate]
+  - trigger: coroutine cancellation missing
+    required_capabilities: [language-performance-safety, concurrency-control]
+    required_quality_gates: [implementation gate]
+  - trigger: goroutine leak risk
+    required_capabilities: [language-performance-safety, concurrency-control]
+    required_quality_gates: [implementation gate, reliability gate]
+  - trigger: thread pool saturation
+    required_capabilities: [language-performance-safety, concurrency-control, profiling]
+    required_quality_gates: [reliability gate]
+  - trigger: worker pool unbounded
+    required_capabilities: [language-performance-safety, concurrency-control]
+    required_quality_gates: [implementation gate, reliability gate]
+  - trigger: unbounded fan-out
+    required_capabilities: [language-performance-safety, concurrency-control]
+    required_skills: [reliability-observability-gate]
+    required_quality_gates: [reliability gate]
+  - trigger: lock scope unclear
+    required_capabilities: [concurrency-control, language-performance-safety]
+    required_quality_gates: [implementation gate]
+  - trigger: lock held across IO
+    required_capabilities: [concurrency-control, language-performance-safety]
+    required_quality_gates: [implementation gate, reliability gate]
+  - trigger: race condition risk
+    required_capabilities: [concurrency-control]
+    required_skills: [quality-test-gate]
+    required_quality_gates: [test gate]
+  - trigger: deadlock risk
+    required_capabilities: [concurrency-control]
+    required_skills: [quality-test-gate]
+    required_quality_gates: [test gate]
+  - trigger: per-operation client construction
+    required_capabilities: [language-performance-safety]
+    required_skills: [integration-change-builder]
+    required_quality_gates: [implementation gate]
+  - trigger: connection pool sizing missing
+    required_capabilities: [language-performance-safety]
+    required_skills: [reliability-observability-gate]
+    required_quality_gates: [reliability gate]
+  - trigger: response body stream leak
+    required_capabilities: [language-performance-safety]
+    required_skills: [integration-change-builder]
+    required_quality_gates: [implementation gate]
+  - trigger: unbounded queue buffer cache collection
+    required_capabilities: [language-performance-safety, concurrency-control]
+    required_quality_gates: [implementation gate, reliability gate]
+  - trigger: backpressure missing
+    required_capabilities: [language-performance-safety, async-job-design]
+    required_quality_gates: [implementation gate, reliability gate]
+  - trigger: timeout/cancellation missing
+    required_capabilities: [language-performance-safety, concurrency-control]
+    required_quality_gates: [implementation gate]
+  - trigger: object allocation regression
+    required_capabilities: [language-performance-safety, profiling]
+    required_quality_gates: [reliability gate]
+  - trigger: GC pressure risk
+    required_capabilities: [language-performance-safety, profiling]
+    required_quality_gates: [reliability gate]
+  - trigger: design pattern performance risk
+    required_capabilities: [design-pattern-selection, language-performance-safety, profiling]
+    required_quality_gates: [implementation gate, reliability gate]
+  - trigger: network IO hidden behind proxy or repository
+    required_capabilities: [implementation-structure-design, design-pattern-selection, language-performance-safety]
+    required_skills: [integration-change-builder]
+    required_quality_gates: [implementation gate]
+  - trigger: storage IO hidden in domain object
+    required_capabilities: [implementation-structure-design, language-performance-safety]
+    required_quality_gates: [implementation gate]
 failure_routing:
   - condition: unclear requirement
     route_to: change-intake-compiler
@@ -359,6 +542,18 @@ failure_routing:
     route_to: implementation-structure-design
   - condition: inheritance decision unclear
     route_to: implementation-structure-design
+  - condition: design pattern decision unclear
+    route_to: design-pattern-selection
+  - condition: design pattern may be overengineered
+    route_to: design-pattern-selection
+  - condition: pattern hides side effects or lifecycle
+    route_to: design-pattern-selection
+  - condition: performance or async runtime risk unclear
+    route_to: language-performance-safety
+  - condition: concurrency or lock design unclear
+    route_to: concurrency-control
+  - condition: performance claim lacks measurement
+    route_to: profiling
   - condition: module internal composition unclear
     route_to: module-boundary-design
   - condition: code is hard to read or maintain
@@ -739,6 +934,12 @@ routing_rules:
       - design extension points plugins hooks provider abstraction configuration variation premature abstraction
       - justify extensibility from known variation and define compatibility support boundaries
     priority: 60
+  - route_to: design-pattern-selection
+    triggers:
+      - design pattern selection pattern candidates selected pattern rejected pattern simpler alternative direct code decision factory builder singleton adapter facade decorator proxy composite bridge strategy state command observer pubsub mediator chain of responsibility template method visitor specification repository unit of work dependency injection object pool
+      - pattern misuse pattern overengineering speculative abstraction pattern strategy with one implementation abstract base class for code reuse singleton global state risk factory hides simple construction builder for trivial DTO observer lifecycle leak decorator hides side effects proxy hides network IO facade god object risk mediator god object risk object pool without profile evidence command without idempotency state pattern without state machine visitor breaks encapsulation
+      - producer consumer worker pool pipeline reactor proactor async task fan-out bounded concurrency backpressure circuit breaker bulkhead pattern performance risk pattern hides IO pattern hides side effects
+    priority: 60
   - route_to: data-model-design
     triggers:
       - design data model entities relationships invariants ownership lifecycle query patterns migration risk
@@ -953,11 +1154,13 @@ routing_rules:
       - profile CPU memory IO locks database queries network allocation rendering bottlenecks before optimizing
       - measure baseline evidence compare optimization impact and identify real bottleneck
       - profile cloud cost anomaly unit economics query scan bytes egress storage autoscaling spend cost per request tenant job
+      - profile object pool allocation pressure pattern performance risk lock contention event-loop lag pool saturation GC pressure object allocation regression performance claim lacks measurement
     priority: 60
   - route_to: concurrency-control
     triggers:
       - handle races duplicate submits locks optimistic concurrency deadlocks worker parallelism lost updates
       - define concurrency invariant conflict behavior retry locking lease and parallel test coverage
+      - lock scope unclear lock held across IO race condition risk deadlock risk worker pool unbounded unbounded fan-out coroutine cancellation missing goroutine leak risk thread pool saturation shared mutable state
     priority: 60
   - route_to: degradation-circuit-breaking
     triggers:
@@ -1039,6 +1242,7 @@ routing_rules:
       - file main object main responsibility oversized file oversized class large function object split function signature boolean trap weak type bag side effect boundary collaborator dependency injection lifecycle invariant state machine
       - file granularity anti-fragmentation keep in existing file one-function file without boundary tiny helper file trivial helper file excessive file split micro-file sprawl private helper co-location small file merge merge restraint split merge decision lost small-file boundary reckless file merge merge hides side-effect boundary
       - object-method encapsulation method placement parent-child object sibling object object relationship map inheritance vs composition delegation anemic object helper-bag object god object object boundary lost during file merge object boundary missing during file split module internal composition module object graph
+      - design pattern selection pattern misuse pattern overengineering pattern performance risk factory builder singleton adapter facade decorator proxy strategy state command observer visitor object pool worker pool pipeline
     priority: 60
   - route_to: code-clarity-maintainability
     triggers:
@@ -1114,6 +1318,7 @@ routing_rules:
     triggers:
       - evaluate language specific performance safety allocation GC async blocking event loop FFI unsafe native hot path memory concurrency
       - review language runtime constraints performance and safety for high risk generated code services workers CLIs SDKs and data paths
+      - CPU-bound storage IO network IO file IO blocking IO non-blocking IO coroutine goroutine thread pool worker pool lock held across IO event-loop blocking unbounded fan-out pool sizing per-operation client construction response body leak object allocation regression design pattern performance risk
     priority: 60
   - route_to: package-dependency-management
     triggers:

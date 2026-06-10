@@ -86,7 +86,7 @@ Foundation capability groups:
 - Quality testing: 58 `test-strategy`, 59 `unit-testing`, 60 `integration-testing`, 61 `contract-testing`, 62 `e2e-testing`, 63 `test-data-management`, 64 `regression-testing`.
 - Reliability operations: 65 `performance-budgeting`, 66 `profiling`, 67 `concurrency-control`, 68 `degradation-circuit-breaking`, 69 `observability`, 70 `backup-recovery`.
 - Delivery platform: 71 `project-initialization`, 72 `containerization`, 73 `ci-cd`, 74 `kubernetes-gateway`, 75 `release-rollback`.
-- Engineering workflow: 76 `context-packaging`, 77 `task-dag-decomposition`, 78 `code-review`, 79 `refactoring`, 80 `documentation-generation`, 81 `failure-diagnosis`, 82 `solution-optimality-evaluation`, 101 `implementation-structure-design`, 102 `agent-execution-discipline`, 103 `skill-authoring-expert`, 104 `engineering-stage-professionalism`, 105 `code-clarity-maintainability`.
+- Engineering workflow: 76 `context-packaging`, 77 `task-dag-decomposition`, 78 `code-review`, 79 `refactoring`, 80 `documentation-generation`, 81 `failure-diagnosis`, 82 `solution-optimality-evaluation`, 101 `implementation-structure-design`, 102 `agent-execution-discipline`, 103 `skill-authoring-expert`, 104 `engineering-stage-professionalism`, 105 `code-clarity-maintainability`, 106 `design-pattern-selection`.
 - Technology selection: 83 `technology-stack-selection`, 84 `language-runtime-selection`, 85 `language-idiom-enforcement`, 86 `language-testing-strategy`, 87 `language-performance-safety`, 88 `package-dependency-management`.
 - Language professional usage: 89 `go-professional-usage`, 90 `java-jvm-professional-usage`, 91 `typescript-professional-usage`, 92 `python-professional-usage`, 93 `rust-professional-usage`, 94 `cpp-professional-usage`, 95 `shell-cli-professional-usage`, 96 `sql-professional-usage`.
 - Interface, storage, and global correctness: 97 `sdk-library-contract-design`, 98 `cli-daemon-interface-design`, 99 `file-storage-processing`, 100 `i18n-timezone-money-safety`.
@@ -101,7 +101,7 @@ Domain extension routing:
 - `payment-trading-extension`: payment, subscription, billing, invoice, refund, chargeback, trading, ledger, balance, checkout, reconciliation, settlement, entitlement, or tax.
 - `low-level-systems-extension`: OS, kernel, driver, native performance, C, C++, Rust systems, FFI, ABI, syscall, memory safety, atomics, descriptor, or platform runtime.
 
-Runtime profile awareness: recommended has 19 professional skills; full has 19 professional skills plus 7 domain extensions; dev has 19 professional skills, 105 foundation capabilities, and 7 domain extensions. Foundation capabilities compile into professional references in every profile.
+Runtime profile awareness: recommended has 19 professional skills; full has 19 professional skills plus 7 domain extensions; dev has 19 professional skills, 106 foundation capabilities, and 7 domain extensions. Foundation capabilities compile into professional references in every profile.
 
 ## Mode Matrix
 Select the routing mode before naming a professional path.

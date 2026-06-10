@@ -801,7 +801,9 @@ capabilities:
     path: src/foundation/capabilities/language-performance-safety
     status: implemented
     used_by: [reliability-observability-gate, backend-change-builder, frontend-change-builder, low-level-systems-extension, solution-optimality-evaluation]
-    triggers: [language performance safety allocation GC async blocking FFI unsafe native hot path memory concurrency event loop runtime constraints]
+    triggers:
+      - language performance safety allocation GC async blocking FFI unsafe native hot path memory concurrency event loop runtime constraints
+      - CPU-bound storage IO network IO file IO blocking IO non-blocking IO coroutine goroutine thread pool worker pool lock held across IO event-loop blocking unbounded fan-out pool sizing per-operation client construction response body leak object allocation regression design pattern performance risk
     risk_notes: [Runtime specific performance and safety issues often appear only under representative load or native boundary stress]
     expected_outputs: [runtime performance safety assessment with hot path classification allocation concurrency unsafe boundary evidence mitigation and residual risk]
   - id: "88"
@@ -933,6 +935,7 @@ capabilities:
       - function placement method placement class placement file placement directory placement component placement hook placement service method repository method public private internal
       - object modeling object-oriented design object responsibility encapsulation invariant protection inheritance polymorphism class hierarchy value object domain object service object interface abstract class subclassing traits protocols substitutability object collaboration
       - object-method encapsulation method placement parent-child object sibling object object relationship map inheritance vs composition delegation anemic object helper-bag object god object object boundary lost during merge object boundary missing during split module internal composition module object graph
+      - design pattern selection pattern misuse pattern overengineering pattern performance risk factory builder singleton adapter facade decorator proxy strategy state command observer visitor object pool worker pool pipeline
       - file main object main responsibility long file oversized object large function method clusters function signature boolean trap weak typed bag side effect boundary collaborator dependency injection state lifecycle invariant
       - file granularity anti-fragmentation micro-file sprawl one-function file tiny helper file small file merge merge restraint navigation cost keep in existing file split merge decision one-function file without boundary excessive file split private helper co-location
       - shared utils common utils helper utility business logic in utils dependency direction cohesion coupling shared common pollution
@@ -989,3 +992,14 @@ capabilities:
       - excessive file split reckless file merge navigation cost regression next-change location unclear after split or merge one-function file trivial helper file micro-file sprawl split merge readability
     risk_notes: [Working code that is hard to read change test or delete increases regression risk review cost excessive file split navigation cost regression and AI generated maintenance drift. Reducing file count or increasing file count without boundary evidence can make the main flow harder to maintain.]
     expected_outputs: [code clarity maintainability review with main flow control flow function purpose condition naming signature readability comment quality change navigation file navigation cost assessment split/merge readability review split merge readability decision next-change location before/after test clarity rejected split/merge simplification rejected simplifications and validation evidence]
+
+  - id: "106"
+    name: design-pattern-selection
+    group: engineering-workflow
+    path: src/foundation/capabilities/design-pattern-selection
+    status: implemented
+    used_by: [implementation-structure-design, architecture-impact-reviewer, backend-change-builder, frontend-change-builder, ai-code-review-refactor, refactoring, quality-test-gate]
+    triggers:
+      - design pattern pattern selection factory builder singleton adapter facade decorator proxy composite bridge strategy state command observer pubsub mediator chain of responsibility template method visitor specification repository unit of work dependency injection object pool producer consumer worker pool pipeline reactor proactor pattern misuse overengineering pattern performance risk
+    risk_notes: [Wrong patterns create speculative abstraction hidden global state side-effect opacity lifecycle leaks performance regressions and brittle object relationships]
+    expected_outputs: [Design Pattern Decision Record with selected/rejected patterns simpler alternative object relationship method placement performance/concurrency/IO impact tests and residual risk]

@@ -1,0 +1,44 @@
+id: event-loop-blocking-async-path
+category: performance
+complexity: L4
+focus:
+  - event-loop blocking
+  - CPU-bound offload
+  - blocking versus non-blocking IO
+  - cancellation and backpressure
+route_hints:
+  skills:
+    - backend-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - language-performance-safety
+    - concurrency-control
+    - profiling
+    - implementation-structure-design
+    - language-testing-strategy
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - CPU-bound work is detected on the async request path and offloaded to a worker or executor.
+  - Sync file or network IO is replaced with async IO or isolated behind a dedicated bounded pool.
+  - Fan-out is bounded and includes timeout, cancellation, and backpressure behavior.
+  - Event-loop lag, timeout, and overload tests or measurements are required.
+required_qualities:
+  - Produces a Performance-Aware Structure Decision.
+  - Routes async runtime risk to language-performance-safety and concurrency-control.
+  - Declares worker/executor ownership, pool sizing, timeout, and cancellation propagation.
+  - Adds tests or measurement evidence for event-loop lag and bounded fan-out.
+forbidden_shortcuts:
+  - Blocking call on event loop.
+  - Promise.all or gather unbounded.
+  - No timeout or cancellation.
+  - CPU-bound work on event loop.
+evidence:
+  - Runtime performance safety assessment for async path.
+  - Profiling or event-loop lag measurement plan.
+  - Tests for timeout, cancellation, and bounded fan-out.
+  - Implementation Structure Plan showing offload and IO boundaries.

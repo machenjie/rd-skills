@@ -1,0 +1,44 @@
+id: observer-lifecycle-backpressure
+category: structure
+complexity: L4
+focus:
+  - observer lifecycle
+  - pubsub backpressure
+  - event fan-out isolation
+  - observability and cleanup
+route_hints:
+  skills:
+    - backend-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - design-pattern-selection
+    - implementation-structure-design
+    - language-performance-safety
+    - async-job-design
+    - observability
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+expected_outcomes:
+  - Observer or pub/sub is accepted only with explicit subscription lifecycle and unsubscribe behavior.
+  - Notification, audit, and search indexing subscribers are isolated from the main transaction.
+  - Fan-out is bounded with backpressure, timeout, and error isolation.
+  - Metrics and logs expose subscriber failures, lag, queue depth, and drops.
+required_qualities:
+  - Produces a Design Pattern Decision Record for observer/pubsub versus direct service calls.
+  - Declares ownership, unsubscribe, cleanup, shutdown, and subscriber error behavior.
+  - Defines bounded queue or async-job backpressure behavior.
+  - Adds tests for subscriber failure, unsubscribe, and overload behavior.
+forbidden_shortcuts:
+  - Unbounded observers.
+  - No unsubscribe.
+  - Observer exception breaks main transaction.
+  - No metrics or logs.
+evidence:
+  - Design Pattern Decision Record with lifecycle and backpressure fields.
+  - Tests for unsubscribe, subscriber failure, and bounded fan-out.
+  - Reliability evidence for queue depth, subscriber error, and lag metrics.
+  - Implementation Structure Plan preserving event and transaction boundaries.

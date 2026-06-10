@@ -4,11 +4,11 @@ ChangeForge installs only built runtime artifacts from `dist/`. Source folders u
 
 ## Profiles
 
-- `recommended`: 19 professional skills as top-level runtime skills. 105 foundation capabilities are compiled into professional skill references.
-- `full`: 19 professional skills plus 7 domain extensions as top-level runtime skills. 105 foundation capabilities remain compiled references.
-- `dev`: 19 professional skills plus 105 foundation capabilities plus 7 domain extensions as top-level skills. Use only for ChangeForge authoring/debugging.
+- `recommended`: 19 professional skills as top-level runtime skills. 106 foundation capabilities are compiled into professional skill references.
+- `full`: 19 professional skills plus 7 domain extensions as top-level runtime skills. 106 foundation capabilities remain compiled references.
+- `dev`: 19 professional skills plus 106 foundation capabilities plus 7 domain extensions as top-level skills. Use only for ChangeForge authoring/debugging.
 
-Top-level runtime counts are `recommended` = 19, `full` = 26, and `dev` = 131.
+Top-level runtime counts are `recommended` = 19, `full` = 26, and `dev` = 132.
 
 `SKILL.md` is loaded when a skill is selected. Compiled `references/` are not fully loaded automatically; the router selects capabilities and professional skills read only selected references according to L1/L2/L3/L4/L5 policy.
 

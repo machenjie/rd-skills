@@ -12,11 +12,11 @@ Top-level runtime skills:
 
 References:
 
-- 105 foundation capabilities are compiled into relevant professional skill references under `references/capabilities/`.
+- 106 foundation capabilities are compiled into relevant professional skill references under `references/capabilities/`.
 - Compiled references are selectively loaded according to each professional skill's `Reference Loading Policy`; they are not loaded wholesale by default.
 - The router includes the domain extension index.
 
-Recommended does not install the 105 foundation capabilities as top-level skills.
+Recommended does not install the 106 foundation capabilities as top-level skills.
 
 Top-level count: 19.
 
@@ -31,9 +31,9 @@ Top-level runtime skills:
 
 References:
 
-- 105 foundation capabilities are compiled into relevant professional skill references and selectively loaded according to each professional skill's `Reference Loading Policy`.
+- 106 foundation capabilities are compiled into relevant professional skill references and selectively loaded according to each professional skill's `Reference Loading Policy`.
 
-Full does not install the 105 foundation capabilities as top-level skills.
+Full does not install the 106 foundation capabilities as top-level skills.
 
 Top-level count: 26.
 
@@ -44,10 +44,10 @@ Use only for ChangeForge development and debugging.
 Top-level runtime skills:
 
 - 19 professional skills.
-- 105 foundation capabilities.
+- 106 foundation capabilities.
 - 7 domain extensions.
 
-Top-level count: 131.
+Top-level count: 132.
 
 References:
 

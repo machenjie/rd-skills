@@ -450,7 +450,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 1,
       "used_by_count": 0,
-      "word_count": 4690
+      "word_count": 4692
     },
     {
       "anti_example_section_length": 10,
@@ -1881,6 +1881,46 @@
       "word_count": 2721
     },
     {
+      "anti_example_section_length": 0,
+      "benchmark_section_length": 4,
+      "bullet_count": 42,
+      "classification": "KEEP_AS_IS",
+      "code_block_count": 0,
+      "context_efficiency_score": 95,
+      "critical_details_length": 50,
+      "description_findings": [],
+      "description_length": 204,
+      "findings": [
+        "table with 36 rows (> 20) \u2014 move-to-reference candidate"
+      ],
+      "has_shared_optimality": false,
+      "heading_count": 17,
+      "kind": "foundation-capability",
+      "largest_section_lines": 50,
+      "largest_section_title": "Critical Details",
+      "largest_table_rows": 36,
+      "line_count": 141,
+      "name": "design-pattern-selection",
+      "optimality_section_length": 0,
+      "output_contract_length": 21,
+      "oversized_sections": [],
+      "oversized_tables": [
+        36
+      ],
+      "path": "src/foundation/capabilities/design-pattern-selection/SKILL.md",
+      "professionalism_score": 100,
+      "recommended_phase": "-",
+      "reference_link_count": 0,
+      "repeated_phrase_count": 0,
+      "risk_of_change": "low",
+      "routing_clarity_score": 100,
+      "split_candidate_score": 8,
+      "suggested_action": "Compact decision aid within budget; no action required.",
+      "table_count": 1,
+      "used_by_count": 7,
+      "word_count": 2083
+    },
+    {
       "anti_example_section_length": 13,
       "benchmark_section_length": 59,
       "bullet_count": 52,
@@ -2599,25 +2639,32 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 73,
+      "bullet_count": 82,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
-      "context_efficiency_score": 90,
-      "critical_details_length": 78,
+      "context_efficiency_score": 82,
+      "critical_details_length": 83,
       "description_findings": [],
       "description_length": 332,
-      "findings": [],
+      "findings": [
+        "section 'Critical Details' is 83 lines (> 80) \u2014 reference candidate"
+      ],
       "has_shared_optimality": false,
-      "heading_count": 26,
+      "heading_count": 27,
       "kind": "foundation-capability",
-      "largest_section_lines": 78,
+      "largest_section_lines": 83,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 0,
-      "line_count": 222,
+      "line_count": 235,
       "name": "implementation-structure-design",
       "optimality_section_length": 0,
-      "output_contract_length": 16,
-      "oversized_sections": [],
+      "output_contract_length": 18,
+      "oversized_sections": [
+        {
+          "lines": 83,
+          "title": "Critical Details"
+        }
+      ],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/implementation-structure-design/SKILL.md",
       "professionalism_score": 100,
@@ -2626,11 +2673,11 @@
       "repeated_phrase_count": 0,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
-      "split_candidate_score": 0,
+      "split_candidate_score": 14,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 7,
-      "word_count": 4648
+      "word_count": 5010
     },
     {
       "anti_example_section_length": 13,
@@ -2942,24 +2989,24 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 12,
-      "bullet_count": 93,
+      "bullet_count": 97,
       "classification": "KEEP_AS_IS",
       "code_block_count": 2,
       "context_efficiency_score": 100,
-      "critical_details_length": 18,
+      "critical_details_length": 32,
       "description_findings": [],
       "description_length": 218,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 18,
+      "heading_count": 19,
       "kind": "foundation-capability",
-      "largest_section_lines": 26,
-      "largest_section_title": "Selection Rules",
-      "largest_table_rows": 0,
-      "line_count": 172,
+      "largest_section_lines": 32,
+      "largest_section_title": "Critical Details",
+      "largest_table_rows": 9,
+      "line_count": 189,
       "name": "language-performance-safety",
       "optimality_section_length": 0,
-      "output_contract_length": 16,
+      "output_contract_length": 17,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/language-performance-safety/SKILL.md",
@@ -2971,9 +3018,9 @@
       "routing_clarity_score": 100,
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
-      "table_count": 0,
+      "table_count": 1,
       "used_by_count": 5,
-      "word_count": 2568
+      "word_count": 2829
     },
     {
       "anti_example_section_length": 0,
@@ -5164,11 +5211,11 @@
   ],
   "summary": {
     "classifications": {
-      "KEEP_AS_IS": 126,
+      "KEEP_AS_IS": 127,
       "TIGHTEN_BODY": 5
     },
     "domain_extensions": 7,
-    "foundation_capabilities": 105,
+    "foundation_capabilities": 106,
     "heavy_domain": 0,
     "heavy_foundation": 0,
     "heavy_professional": 0,
