@@ -14,6 +14,7 @@ expected:
   risk_level: medium
   expected_stage: code-review
   expected_context_budget_mode: staged-plan
+  stage_conflict_case: true
   risk_triggers:
     - agent claims completion without evidence
     - hallucinated API risk
@@ -21,14 +22,17 @@ expected:
   skills:
     - ai-code-review-refactor
     - backend-change-builder
+    - security-privacy-gate
     - quality-test-gate
   capabilities:
     - agent-execution-discipline
     - implementation-structure-design
+    - package-dependency-management
     - regression-testing
   domain_extensions: []
   quality_gates:
     - implementation gate
+    - security gate
     - test gate
     - AI review gate
     - execution discipline gate

@@ -2,12 +2,14 @@
 
 This directory contains golden-prompt cases used by
 `scripts/eval-routing.py` to validate ChangeForge's routing rules
-(`src/registry/routing-rules.yaml`) and `docs/ROUTING_EXAMPLES.md`.
+(`src/registry/routing-rules.yaml`), stage model
+(`src/registry/stage-model.yaml`), and `docs/ROUTING_EXAMPLES.md`.
 
 The default evaluation is offline and rule-based. It does not invoke any
 agent or model. It validates that each case is internally consistent,
-references real registry items, and matches the risk-driven required-gate
-rules and L1 anti-over-routing rules declared by the routing rules.
+references real registry items, and matches the risk-driven required-route
+rules, stage coverage rules, and L1 anti-over-routing rules declared by the
+registries.
 
 The same script can also compare captured router output YAML from
 `evals/routing-outputs/` against these golden cases. That mode still does
@@ -28,7 +30,7 @@ python3 scripts/eval-routing.py \
   --candidate-output evals/routing-outputs/backend-auth-idor.actual.yaml
 ```
 
-Compare the fixture directory and require at least 10 actual outputs:
+Compare the fixture directory and require at least 24 actual outputs:
 
 ```bash
 python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
@@ -48,6 +50,7 @@ expected:
   structure_required: false  # optional override for pure config/test/text/L1 exceptions
   expected_stage: requirement-intake | architecture-design | implementation-planning | coding | debugging-diagnosis | bug-fix | code-review | refactoring | testing | release-delivery | documentation-handoff | skill-authoring
   expected_context_budget_mode: minimal | single-stage | staged-plan
+  stage_conflict_case: true  # optional; counts toward conflict-resolution coverage
   expected_required_references:
     - references/capabilities/<id>-<capability-name>.md
   stage_route_required: false  # optional; must include stage_route_skip_reason
@@ -102,6 +105,9 @@ does not warrant them.
 - All `expected.*` and `forbidden.*` names exist in their respective
   registries.
 - `risk_triggers` are drawn from `routing-rules.yaml:risk_escalation_triggers`.
+  Required skills, capabilities, domain extensions, and quality gates are
+  enforced from `routing-rules.yaml:risk_trigger_rules`; the eval does not
+  carry a separate hardcoded risk mapping.
 - `hidden_risk_phrases`, when present, are not router triggers. They are evaluator-only phrases used
   by `validate-professional-routing-coverage.py` to prove a benchmark hidden risk is covered by a
   specific routing case without polluting the routing trigger enum.
@@ -130,6 +136,9 @@ does not warrant them.
     `expected.skills`.
   - `webhook`, `external integration` → `integration-change-builder`
     must be in `expected.skills`.
+  - `dependency surface` → `security-privacy-gate`,
+    `package-dependency-management`, `security gate`, and
+    `implementation gate`.
   - `payment`/`subscription`/`billing` → `payment-trading-extension` in
     `expected.domain_extensions`.
   - `wallet`/`private key`/`Web3 asset` → `web3-product-extension` in
@@ -141,8 +150,9 @@ does not warrant them.
   in `expected.skills` for L1 cases, and `expected.domain_extensions`
   must be empty.
 - For L2..L5 cases, `expected.quality_gates` must contain at least one
-  of `implementation gate`, `test gate`, or `documentation gate` so the
-  case carries verifiable evidence.
+  substantive evidence gate: `requirement gate`, `architecture gate`,
+  `API/data gate`, `implementation gate`, `test gate`, or
+  `documentation gate`.
 - For L2..L5 cases, `backend-change-builder`, `frontend-change-builder`,
   or `ai-code-review-refactor` combined with `implementation gate`
   requires `implementation-structure-design` in `expected.capabilities`,
@@ -150,6 +160,14 @@ does not warrant them.
 - The corpus contains at least 30 golden cases.
 - The corpus contains at least 8 L1 anti-over-routing cases.
 - Every domain extension appears in at least 2 golden cases.
+- Every canonical stage from `src/registry/stage-model.yaml` appears in
+  at least 2 golden cases.
+- Every canonical stage has at least 1 negative over-stage case with
+  `forbidden.*` coverage.
+- The corpus contains at least 12 `expected.stage_conflict_case: true`
+  cases.
+- `evals/routing-outputs/` contains at least 24 stage actual output fixtures
+  and at least 1 fixture for every canonical stage.
 
 ## Router Output Comparison
 
@@ -175,11 +193,35 @@ actual:
     - references/domain-extension-index.md
     - references/capabilities/16-permission-boundary-modeling.md
   stage_route_manifest:
+    schema_version: 1
     current_stage: bug-fix
+    next_stage: testing
+    product_surface: backend-product
+    language_surface: none
+    selected_skills:
+      - backend-change-builder
+      - security-privacy-gate
+      - quality-test-gate
+    selected_capabilities:
+      - authentication-authorization
+      - logging-error-handling
+      - regression-testing
+    selected_domain_extensions: []
     context_budget_mode: staged-plan
+    context_budget_rationale: why this budget fits the change level
+    required_evidence:
+      - minimal diff
+      - same-pattern scan record
+      - regression test
+      - blast-radius note
+    required_quality_gates:
+      - implementation gate
+      - security gate
+      - test gate
     skipped_capabilities:
       - capability: release-rollback
         reason: no release sequencing required for this route
+    handoff_target: testing
 ```
 
 `required_references` may use plain runtime paths or legacy
@@ -198,13 +240,20 @@ The comparison mode enforces:
 - L2-L5 actual output includes `changeforge_stage_route` or
   `stage_route_manifest`, unless the golden case explicitly disables that
   requirement with a skip reason.
-- `current_stage` is a canonical stage from
-  `routing-rules.yaml:engineering_stage_signals`, and `current_stage` and
-  `context_budget_mode` match the golden case or the complexity-derived
-  default.
+- `current_stage` is a canonical stage from `src/registry/stage-model.yaml`,
+  and `current_stage` and `context_budget_mode` match the golden case or the
+  complexity-derived default.
+- `next_stage` follows the canonical transition table, `product_surface` and
+  `language_surface` come from the stage model selectors, and
+  `selected_capabilities` belong to the active stage, product surface,
+  language surface, route-level capability set, or a declared risk trigger.
+- `required_evidence` includes the active stage evidence obligations, and
+  `required_quality_gates` includes the expected route gates and stage gates.
+- `handoff_target` is a selected owner, canonical stage, `blocked`, or `closed`.
 - Every selected capability exists in the registry, belongs to at least one
-  selected skill or domain extension through `used_by`, and has its
-  deterministic compiled capability reference in `actual.required_references`.
+  selected skill or domain extension through `used_by` unless the capability
+  is marked `route_level_capability: true`, and has its deterministic compiled
+  capability reference in `actual.required_references`.
 - Any skipped capability in the stage route includes a concrete reason.
 - L1 actual output does not over-route to heavyweight skills or domain
   extensions unless the golden case declares a matching risk trigger.

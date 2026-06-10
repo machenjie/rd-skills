@@ -1,0 +1,513 @@
+---
+schema_version: 1
+kind: changeforge.stage_model
+description: Canonical machine-readable engineering stage model for ChangeForge routing.
+stages:
+  - name: requirement-intake
+    purpose: understand requirement, clarify scope, name non-goals, define acceptance
+    default_capabilities:
+      - requirement-clarification
+      - requirement-structuring
+      - non-goal-boundary-definition
+      - acceptance-standard-definition
+      - scenario-decomposition
+    skip_by_default:
+      - coding
+      - language
+      - testing
+      - refactoring
+      - release
+    required_evidence:
+      - clarified scope
+      - explicit non-goals
+      - testable acceptance signal
+    required_quality_gates:
+      - requirement gate
+    allowed_next_stages:
+      - architecture-design
+      - implementation-planning
+    forbidden_default_capabilities:
+      - language-idiom-enforcement
+      - test-strategy
+      - refactoring
+      - release-rollback
+
+  - name: architecture-design
+    purpose: module boundaries, layering, dependency direction, data ownership, service boundaries, extensibility, reversibility
+    default_capabilities:
+      - architecture-style-selection
+      - module-boundary-design
+      - layered-architecture-design
+      - architecture-tradeoff-analysis
+      - extensibility-design
+      - solution-optimality-evaluation
+    skip_by_default:
+      - language idiom checks
+      - coding
+      - test authoring
+    required_evidence:
+      - boundary owners
+      - dependency direction
+      - rejected alternatives
+      - reversibility classification
+    required_quality_gates:
+      - architecture gate
+    allowed_next_stages:
+      - implementation-planning
+    forbidden_default_capabilities:
+      - language-idiom-enforcement
+      - unit-testing
+      - release-rollback
+
+  - name: implementation-planning
+    purpose: code placement, reuse decision, object/function/class/file/directory design, naming, readable main flow, public/private/internal boundaries
+    default_capabilities:
+      - implementation-structure-design
+      - module-boundary-design
+      - code-clarity-maintainability
+      - language-idiom-enforcement
+    skip_by_default:
+      - full architecture review
+      - release
+      - deep performance profiling
+    required_evidence:
+      - reuse candidates
+      - placement rationale
+      - visibility decisions
+      - test placement
+    required_quality_gates:
+      - implementation gate
+    allowed_next_stages:
+      - coding
+    forbidden_default_capabilities:
+      - architecture-tradeoff-analysis
+      - release-rollback
+      - profiling
+
+  - name: coding
+    purpose: implement code with language idiom, error handling, resource cleanup, input validation, concurrency, minimal implementation
+    default_capabilities:
+      - language-idiom-enforcement
+      - input-validation
+      - logging-error-handling
+    skip_by_default:
+      - architecture deep review
+      - release
+      - full regression suite design
+    required_evidence:
+      - idiomatic implementation
+      - validated inputs
+      - released resources
+      - minimal scope diff
+    required_quality_gates:
+      - implementation gate
+    allowed_next_stages:
+      - testing
+      - code-review
+    forbidden_default_capabilities:
+      - architecture-tradeoff-analysis
+      - release-rollback
+      - test-strategy
+
+  - name: debugging-diagnosis
+    purpose: reproduce, collect evidence, gather logs/metrics/traces, eliminate hypotheses, locate verified root cause
+    default_capabilities:
+      - failure-diagnosis
+      - agent-execution-discipline
+      - observability
+    skip_by_default:
+      - refactoring
+      - release
+      - new feature design
+    required_evidence:
+      - reproduction
+      - symptom/root-cause/contributing-factor split
+      - eliminated hypotheses
+      - verified cause
+    required_quality_gates:
+      - execution discipline gate
+    allowed_next_stages:
+      - bug-fix
+      - implementation-planning
+    forbidden_default_capabilities:
+      - refactoring
+      - release-rollback
+      - requirement-structuring
+
+  - name: bug-fix
+    purpose: minimal fix, same-pattern scan, regression test, compatibility, upstream/downstream impact
+    default_capabilities:
+      - agent-execution-discipline
+      - regression-testing
+      - code-review
+    skip_by_default:
+      - architecture redesign
+      - release
+    required_evidence:
+      - minimal diff
+      - same-pattern scan record
+      - regression test
+      - blast-radius note
+    required_quality_gates:
+      - implementation gate
+      - test gate
+    allowed_next_stages:
+      - testing
+      - code-review
+      - release-delivery
+    forbidden_default_capabilities:
+      - architecture-tradeoff-analysis
+      - release-rollback
+
+  - name: code-review
+    purpose: correctness, structure, naming, reuse, readability, security, reliability, test evidence, hallucinated-API check
+    default_capabilities:
+      - code-review
+      - implementation-structure-design
+      - code-clarity-maintainability
+      - language-idiom-enforcement
+    skip_by_default:
+      - release
+      - deployment
+      - infrastructure
+    required_evidence:
+      - findings with severity
+      - evidence
+      - impacted file
+      - required fix
+      - validation required
+    required_quality_gates:
+      - implementation gate
+    allowed_next_stages:
+      - refactoring
+      - bug-fix
+      - testing
+      - documentation-handoff
+    forbidden_default_capabilities:
+      - release-rollback
+      - ci-cd
+      - kubernetes-gateway
+      - containerization
+
+  - name: refactoring
+    purpose: behavior-preserving structure change
+    default_capabilities:
+      - refactoring
+      - implementation-structure-design
+      - code-clarity-maintainability
+      - code-review
+      - regression-testing
+    skip_by_default:
+      - feature design
+      - release
+    required_evidence:
+      - characterization tests
+      - preserved behavior
+      - selection rationale
+      - rollback path
+    required_quality_gates:
+      - implementation gate
+      - test gate
+    allowed_next_stages:
+      - testing
+      - code-review
+      - documentation-handoff
+    forbidden_default_capabilities:
+      - requirement-structuring
+      - release-rollback
+
+  - name: testing
+    purpose: unit, integration, contract, e2e, regression, fixtures, mocks, concurrency, language-specific tests
+    default_capabilities:
+      - test-strategy
+      - language-testing-strategy
+      - test-data-management
+    conditional_capabilities:
+      - unit-testing
+      - integration-testing
+      - contract-testing
+      - e2e-testing
+      - regression-testing
+    skip_by_default:
+      - architecture redesign
+      - coding of new features
+    required_evidence:
+      - risk-based layer selection
+      - deterministic data
+      - observable-behavior assertions
+      - evidence of gaps
+    required_quality_gates:
+      - test gate
+    allowed_next_stages:
+      - code-review
+      - release-delivery
+      - documentation-handoff
+    forbidden_default_capabilities:
+      - architecture-tradeoff-analysis
+      - project-initialization
+
+  - name: release-delivery
+    purpose: CI/CD, configuration, migration, feature flag, canary, rollback, observability
+    default_capabilities:
+      - ci-cd
+      - release-rollback
+      - containerization
+      - kubernetes-gateway
+      - observability
+      - backup-recovery
+    skip_by_default:
+      - language deep checks
+      - coding
+    required_evidence:
+      - rollout sequence
+      - rollback trigger
+      - config compatibility
+      - health checks
+      - alert ownership
+    required_quality_gates:
+      - delivery gate
+    allowed_next_stages:
+      - documentation-handoff
+      - closed
+    forbidden_default_capabilities:
+      - language-idiom-enforcement
+      - code-review
+
+  - name: documentation-handoff
+    purpose: change boundary, validation evidence, residual risk, runbook, API docs, changelog, next actions
+    default_capabilities:
+      - documentation-generation
+      - agent-execution-discipline
+    skip_by_default:
+      - coding capabilities
+    required_evidence:
+      - validated boundary
+      - residual risk
+      - updated docs list
+      - handoff target
+    required_quality_gates:
+      - documentation gate
+    allowed_next_stages:
+      - closed
+      - requirement-intake
+    forbidden_default_capabilities:
+      - controller-api-implementation
+      - service-business-logic
+      - release-rollback
+
+  - name: skill-authoring
+    purpose: author, review, slim, split, or maintain ChangeForge skills, capabilities, references, registry, or routing rules
+    default_capabilities:
+      - skill-authoring-expert
+      - documentation-generation
+      - agent-execution-discipline
+    skip_by_default:
+      - product coding
+      - language runtime
+      - release
+    required_evidence:
+      - boundary
+      - trigger precision
+      - output contract
+      - registry/routing/validation impact
+    required_quality_gates:
+      - documentation gate
+      - test gate
+    allowed_next_stages:
+      - documentation-handoff
+      - closed
+    forbidden_default_capabilities:
+      - controller-api-implementation
+      - language-runtime-selection
+      - release-rollback
+
+product_surfaces:
+  - surface: frontend-product
+    signals: [frontend, component, route, form, browser, accessibility, state]
+    required_skill: frontend-change-builder
+    default_capabilities: [page-component-decomposition, state-management-design, form-validation-design, frontend-api-integration]
+  - surface: backend-product
+    signals: [backend, service, controller, transaction, job, validation, auth]
+    required_skill: backend-change-builder
+    default_capabilities: [service-business-logic, authentication-authorization, idempotency-retry-design, logging-error-handling]
+  - surface: api-contract
+    signals: [api, endpoint, dto, schema, response, request, compatibility]
+    required_skill: data-api-contract-changer
+    default_capabilities: [api-contract-design, dto-schema-design, error-code-design, version-compatibility]
+  - surface: data-model
+    signals: [data model, table, column, entity, persistence, database]
+    required_skill: data-api-contract-changer
+    default_capabilities: [data-model-design, relational-database, indexing-query-optimization]
+  - surface: database-migration
+    signals: [migration, backfill, rollback, schema change, irreversible data]
+    required_skill: data-api-contract-changer
+    default_capabilities: [data-migration-design, transaction-consistency, release-rollback]
+  - surface: cache
+    signals: [cache, redis, ttl, invalidation, stampede]
+    required_skill: data-middleware-change-builder
+    default_capabilities: [cache-design, concurrency-control]
+  - surface: message-queue
+    signals: [queue, kafka, consumer, producer, dlq, offset, replay]
+    required_skill: data-middleware-change-builder
+    default_capabilities: [message-queue-design, idempotency-retry-design]
+  - surface: search-analytics
+    signals: [search, analytics, index, dashboard, freshness]
+    required_skill: data-middleware-change-builder
+    default_capabilities: [search-analytics-design, indexing-query-optimization]
+  - surface: external-integration
+    signals: [third-party, integration, provider, timeout, retry]
+    required_skill: integration-change-builder
+    default_capabilities: [degradation-circuit-breaking, idempotency-retry-design]
+  - surface: webhook
+    signals: [webhook, signature, replay, idempotency]
+    required_skill: integration-change-builder
+    default_capabilities: [authentication-security, idempotency-retry-design]
+  - surface: infrastructure-deployment
+    signals: [deployment, rollout, container, environment, infrastructure]
+    required_skill: delivery-release-gate
+    default_capabilities: [containerization, release-rollback, ci-cd]
+  - surface: kubernetes-helm
+    signals: [kubernetes, k8s, helm, ingress, serviceaccount, rbac]
+    required_skill: delivery-release-gate
+    default_capabilities: [kubernetes-gateway, ci-cd, secret-configuration-security]
+  - surface: ci-cd
+    signals: [ci, cd, workflow, pipeline, lockfile, dependency]
+    required_skill: delivery-release-gate
+    default_capabilities: [ci-cd, package-dependency-management]
+  - surface: ai-rag-agent
+    signals: [ai, llm, rag, agent, embedding, vector, prompt, model]
+    required_skill: ai-product-extension
+    default_capabilities: [threat-modeling, observability, test-strategy]
+  - surface: web3
+    signals: [web3, wallet, signature, smart contract, chain, token]
+    required_skill: web3-product-extension
+    default_capabilities: [authentication-security, threat-modeling]
+  - surface: payment-trading
+    signals: [payment, subscription, billing, invoice, trading, ledger]
+    required_skill: payment-trading-extension
+    default_capabilities: [idempotency-retry-design, transaction-consistency]
+  - surface: low-level-systems
+    signals: [kernel, driver, ffi, abi, syscall, memory safety]
+    required_skill: low-level-systems-extension
+    default_capabilities: [concurrency-control, language-performance-safety]
+  - surface: sdk-library
+    signals: [sdk, library, client, package, public api]
+    required_skill: data-api-contract-changer
+    default_capabilities: [sdk-library-contract-design, version-compatibility, package-dependency-management]
+  - surface: cli-daemon
+    signals: [cli, daemon, command, stdout, stderr, exit code]
+    required_skill: backend-change-builder
+    default_capabilities: [cli-daemon-interface-design, logging-error-handling]
+  - surface: documentation-only
+    signals: [documentation, docs, readme, changelog, runbook]
+    required_skill: change-documentation-gate
+    default_capabilities: [documentation-generation]
+  - surface: skill-authoring
+    signals: [skill, capability, registry, routing rule, stage model]
+    required_skill: change-forge-router
+    default_capabilities: [skill-authoring-expert, engineering-stage-professionalism]
+
+language_surfaces:
+  - language: go
+    capability: go-professional-usage
+    stages: [coding, bug-fix, code-review, refactoring, testing]
+    signals: [go, golang, goroutine, context, channel]
+  - language: java-jvm
+    capability: java-jvm-professional-usage
+    stages: [coding, bug-fix, code-review, refactoring, testing]
+    signals: [java, jvm, spring, executor, thread]
+  - language: typescript
+    capability: typescript-professional-usage
+    stages: [coding, bug-fix, code-review, refactoring, testing]
+    signals: [typescript, ts, node, react, promise]
+  - language: python
+    capability: python-professional-usage
+    stages: [coding, bug-fix, code-review, refactoring, testing]
+    signals: [python, py, asyncio, pytest, type hints]
+  - language: rust
+    capability: rust-professional-usage
+    stages: [coding, bug-fix, code-review, refactoring, testing]
+    signals: [rust, borrow, lifetime, unsafe, cargo]
+  - language: cpp
+    capability: cpp-professional-usage
+    stages: [coding, bug-fix, code-review, refactoring, testing]
+    signals: [c++, cpp, c, raii, abi]
+  - language: shell
+    capability: shell-cli-professional-usage
+    stages: [coding, bug-fix, code-review, refactoring, testing]
+    signals: [shell, bash, sh, zsh, cli]
+  - language: sql
+    capability: sql-professional-usage
+    stages: [coding, bug-fix, code-review, refactoring, testing]
+    signals: [sql, query, index, transaction, migration]
+
+stage_transitions:
+  - from: requirement-intake
+    to: [architecture-design, implementation-planning]
+  - from: architecture-design
+    to: [implementation-planning]
+  - from: implementation-planning
+    to: [coding]
+  - from: coding
+    to: [testing, code-review]
+  - from: debugging-diagnosis
+    to: [bug-fix, implementation-planning]
+  - from: bug-fix
+    to: [testing, code-review, release-delivery]
+  - from: code-review
+    to: [refactoring, bug-fix, testing, documentation-handoff]
+  - from: refactoring
+    to: [testing, code-review, documentation-handoff]
+  - from: testing
+    to: [code-review, release-delivery, documentation-handoff]
+  - from: release-delivery
+    to: [documentation-handoff, closed]
+  - from: documentation-handoff
+    to: [closed, requirement-intake]
+  - from: skill-authoring
+    to: [documentation-handoff, closed]
+
+stage_resolution:
+  precedence:
+    - explicit_user_stage
+    - active_action_verb
+    - evidence_state
+    - artifact_type
+    - risk_trigger
+  conflict_rules:
+    - when: [review, implementation plan]
+      current_stage: implementation-planning
+      reason: reviewing a plan before code is planning, not code-review
+    - when: [root cause unknown, fix]
+      current_stage: debugging-diagnosis
+      reason: no verified cause exists yet
+    - when: [behavior preserving, extract/move/split]
+      current_stage: refactoring
+      reason: structure movement without behavior change is refactoring
+    - when: [debug, release failure, migration]
+      current_stage: debugging-diagnosis
+      reason: diagnose the failure before release rerouting
+    - when: [test, generated code review]
+      current_stage: code-review
+      reason: generated implementation risk is reviewed before test expansion
+    - when: [docs, validation evidence, residual risk]
+      current_stage: documentation-handoff
+      reason: closure evidence and reader obligations are documentation handoff
+    - when: [skill, registry, routing rule]
+      current_stage: skill-authoring
+      reason: ChangeForge source artifacts use the skill-authoring stage
+    - when: [acceptance criteria, unclear scope]
+      current_stage: requirement-intake
+      reason: clarify the requirement before design or implementation
+    - when: [module boundary, dependency direction]
+      current_stage: architecture-design
+      reason: boundary ownership is architecture work
+    - when: [code placement, reuse decision]
+      current_stage: implementation-planning
+      reason: placement and reuse decisions precede coding
+    - when: [write implementation, selected design]
+      current_stage: coding
+      reason: active action is implementation
+    - when: [rollout, rollback, config]
+      current_stage: release-delivery
+      reason: rollout mechanics belong to release delivery

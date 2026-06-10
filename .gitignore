@@ -22,7 +22,10 @@ runtime/**
 !.env.example
 
 dist/
-evals/routing-outputs/
+evals/routing-outputs/*
+!evals/routing-outputs/
+!evals/routing-outputs/README.md
+!evals/routing-outputs/*.actual.yaml
 
 # Generated agent-behavior eval reports (working area)
 evals/agent-behavior/outputs/*

@@ -1,0 +1,46 @@
+---
+id: stage-model-registry-drift
+description: |
+  ChangeForge stage registry and docs need synchronized authoring and
+  validation, not product-code routing.
+prompt: |
+  Add a new field to src/registry/stage-model.yaml and make sure
+  ENGINEERING_STAGE_MODEL.md and the stage capability compact matrix stay
+  consistent.
+expected:
+  complexity: L3
+  risk_level: medium
+  expected_stage: skill-authoring
+  expected_context_budget_mode: staged-plan
+  stage_conflict_case: true
+  risk_triggers: []
+  skills:
+    - change-forge-router
+    - change-documentation-gate
+    - quality-test-gate
+  capabilities:
+    - skill-authoring-expert
+    - engineering-stage-professionalism
+    - documentation-generation
+    - agent-execution-discipline
+  domain_extensions: []
+  quality_gates:
+    - documentation gate
+    - test gate
+forbidden:
+  skills:
+    - backend-change-builder
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - controller-api-implementation
+    - language-runtime-selection
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Routing-rule and registry authoring must select skill-authoring, not product
+  implementation or release-delivery.

@@ -13,6 +13,7 @@ expected:
   risk_level: medium
   expected_stage: testing
   expected_context_budget_mode: single-stage
+  stage_conflict_case: true
   expected_required_references:
     - references/capabilities/101-implementation-structure-design.md
     - references/capabilities/102-agent-execution-discipline.md

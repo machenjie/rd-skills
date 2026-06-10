@@ -1,10 +1,11 @@
 # Engineering Stage Model
 
 ChangeForge launches professional capability by engineering stage, product surface,
-language surface, and risk surface. The router and the `engineering-stage-professionalism`
-foundation capability use this model to decide which capabilities to launch now, which to
-skip, and where to hand off next. This document is the canonical matrix; the capability body
-carries the compact launch rules and the output contract.
+language surface, and risk surface. `src/registry/stage-model.yaml` is the canonical
+machine-readable matrix. This document is the human-readable projection used to explain
+which capabilities launch now, which to skip, and where to hand off next. The
+`engineering-stage-professionalism` capability body carries the compact launch rules and
+output contract, and validators keep both views aligned with the registry source.
 
 The goal is precision, not coverage. A stage launches the smallest sufficient capability set.
 Heavy cross-stage loading is a defect: it bloats context and hides the next action.
@@ -12,14 +13,15 @@ Heavy cross-stage loading is a defect: it bloats context and hides the next acti
 ## 1. Stage Launch Matrix
 
 Each stage declares purpose, launch capabilities (launched by default for that stage),
-do-not-launch-by-default (skip unless a trigger forces them), required evidence, and the
-handoff target stage.
+do-not-launch-by-default (skip unless a trigger forces them), required evidence, required
+quality gates, and the allowed handoff target stage.
 
 ### requirement-intake
 - Purpose: understand requirement, clarify scope, name non-goals, define acceptance.
 - Launch: `requirement-clarification`, `requirement-structuring`, `non-goal-boundary-definition`, `acceptance-standard-definition`, `scenario-decomposition`.
 - Do not launch by default: coding, language, testing, refactoring, release capabilities.
 - Required evidence: clarified scope, explicit non-goals, testable acceptance signal.
+- Required quality gates: requirement gate.
 - Handoff: architecture-design or implementation-planning.
 
 ### architecture-design
@@ -27,6 +29,7 @@ handoff target stage.
 - Launch: `architecture-style-selection`, `module-boundary-design`, `layered-architecture-design`, `architecture-tradeoff-analysis`, `extensibility-design`, `solution-optimality-evaluation`.
 - Do not launch by default: language idiom checks, coding, test authoring.
 - Required evidence: boundary owners, dependency direction, rejected alternatives, reversibility classification.
+- Required quality gates: architecture gate.
 - Handoff: implementation-planning.
 
 ### implementation-planning
@@ -34,6 +37,7 @@ handoff target stage.
 - Launch: `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` (naming only).
 - Do not launch by default: full architecture review, release gate, deep performance profiling.
 - Required evidence: reuse candidates, placement rationale, visibility decisions, test placement.
+- Required quality gates: implementation gate.
 - Handoff: coding.
 
 ### coding
@@ -41,6 +45,7 @@ handoff target stage.
 - Launch: matching language professional usage capability, `language-idiom-enforcement`, `input-validation`, `logging-error-handling`, relevant builder skill.
 - Do not launch by default: architecture deep review, release gate, full regression suite design.
 - Required evidence: idiomatic implementation, validated inputs, released resources, minimal scope diff.
+- Required quality gates: implementation gate.
 - Handoff: testing or code-review.
 
 ### debugging-diagnosis
@@ -48,56 +53,64 @@ handoff target stage.
 - Launch: `failure-diagnosis`, `agent-execution-discipline`, `observability`, matching language professional usage capability.
 - Do not launch by default: refactoring, release gate, new feature design. Launch refactoring only if root cause requires structural change.
 - Required evidence: reproduction, symptom/root-cause/contributing-factor split, eliminated hypotheses, verified cause.
-- Handoff: bug-fix.
+- Required quality gates: execution discipline gate.
+- Handoff: bug-fix or implementation-planning.
 
 ### bug-fix
 - Purpose: minimal fix, same-pattern scan, regression test, compatibility, upstream/downstream impact.
 - Launch: relevant builder skill, `agent-execution-discipline`, `regression-testing`, `code-review`.
 - Do not launch by default: architecture redesign, release gate unless the fix ships directly.
 - Required evidence: minimal diff, same-pattern scan record, regression test, blast-radius note.
-- Handoff: testing or code-review.
+- Required quality gates: implementation gate, test gate.
+- Handoff: testing, code-review, or release-delivery.
 
 ### code-review
 - Purpose: correctness, structure, naming, reuse, readability, security, reliability, test evidence, hallucinated-API check.
-- Launch: `code-review`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`, `ai-code-review-refactor` (for generated code).
+- Launch: `code-review`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `ai-code-review-refactor` for generated code as a professional skill.
 - Do not launch by default: release gate, deployment, infrastructure capabilities.
 - Required evidence: findings with severity, evidence, impacted file, required fix, validation required.
-- Handoff: refactoring, bug-fix, or testing.
+- Required quality gates: implementation gate.
+- Handoff: refactoring, bug-fix, testing, or documentation-handoff.
 
 ### refactoring
 - Purpose: behavior-preserving structure change — extract, move, inline, merge, split, cleanup, readability, dependency direction, rollback.
 - Launch: `refactoring`, `implementation-structure-design`, `code-clarity-maintainability`, `code-review`, `regression-testing`.
 - Do not launch by default: feature design, release gate. Add `architecture-impact-reviewer` only when boundaries shift.
 - Required evidence: characterization tests, preserved behavior, selection rationale, rollback path.
-- Handoff: testing or code-review.
+- Required quality gates: implementation gate, test gate.
+- Handoff: testing, code-review, or documentation-handoff.
 
 ### testing
 - Purpose: unit, integration, contract, e2e, regression, fixtures, mocks, concurrency, language-specific tests.
 - Launch: `test-strategy`, `language-testing-strategy`, the matching test capability (`unit-testing`, `integration-testing`, `contract-testing`, `e2e-testing`, `regression-testing`), `test-data-management`.
 - Do not launch by default: architecture redesign, coding of new features.
 - Required evidence: risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps.
-- Handoff: code-review or release-delivery.
+- Required quality gates: test gate.
+- Handoff: code-review, release-delivery, or documentation-handoff.
 
 ### release-delivery
 - Purpose: CI/CD, configuration, migration, feature flag, canary, rollback, observability.
 - Launch: `ci-cd`, `release-rollback`, `containerization`, `kubernetes-gateway`, `observability`, `backup-recovery`.
 - Do not launch by default: language deep checks and coding unless code still changes.
 - Required evidence: rollout sequence, rollback trigger, config compatibility, health checks, alert ownership.
-- Handoff: documentation-handoff.
+- Required quality gates: delivery gate.
+- Handoff: documentation-handoff or closed.
 
 ### documentation-handoff
 - Purpose: change boundary, validation evidence, residual risk, runbook, API docs, changelog, next actions.
-- Launch: `documentation-generation`, `change-documentation-gate`, `agent-execution-discipline`.
+- Launch: `documentation-generation`, `agent-execution-discipline`; pair with `change-documentation-gate` as the professional owner.
 - Do not launch by default: coding capabilities unless docs contain API or code examples.
 - Required evidence: validated boundary, residual risk, updated docs list, handoff target.
-- Handoff: closed or next change.
+- Required quality gates: documentation gate.
+- Handoff: closed or requirement-intake for a next change.
 
 ### skill-authoring
 - Purpose: author, review, slim, split, or maintain ChangeForge skills, capabilities, references, registry, or routing rules.
-- Launch: `skill-authoring-expert`, `change-documentation-gate`, `ai-code-review-refactor`, `quality-test-gate`.
+- Launch: `skill-authoring-expert`, `documentation-generation`, `agent-execution-discipline`; pair with `change-documentation-gate`, `ai-code-review-refactor`, or `quality-test-gate` when those professional owners are selected by risk.
 - Do not launch by default: product coding, language runtime, release capabilities.
 - Required evidence: boundary, trigger precision, output contract, registry/routing/validation impact.
-- Handoff: documentation-handoff.
+- Required quality gates: documentation gate, test gate.
+- Handoff: documentation-handoff or closed.
 
 ## 2. Product Surface Selector
 
@@ -154,7 +167,30 @@ concerns. The full per-stage checklist lives in the language capability body, no
 - When both apply, select `engineering-stage-professionalism` before `agent-execution-discipline`: pick the stage first (routing priority 89), then apply execution discipline (priority 88) within that stage.
 - The matrices above are referenced, not copied into individual skills.
 
-## 5. Cross-Stage and Planning Professional Skills
+## 5. Stage Resolution
+
+When stage signals conflict, resolve the active stage in this order:
+explicit user stage, active action verb, evidence state, artifact type, then risk trigger.
+The action being performed outranks the artifact being touched.
+
+Conflict examples:
+
+| Signals | Current stage | Reason |
+| --- | --- | --- |
+| review + implementation plan | implementation-planning | reviewing a plan before code is planning, not code-review |
+| root cause unknown + fix | debugging-diagnosis | no verified cause exists yet |
+| behavior preserving + extract/move/split | refactoring | structure movement without behavior change is refactoring |
+| debug + release failure + migration | debugging-diagnosis | diagnose the failure before release rerouting |
+| test + generated code review | code-review | generated implementation risk is reviewed before test expansion |
+| docs + validation evidence + residual risk | documentation-handoff | closure evidence and reader obligations are documentation handoff |
+| skill + registry + routing rule | skill-authoring | ChangeForge source artifacts use the skill-authoring stage |
+| acceptance criteria + unclear scope | requirement-intake | clarify the requirement before design or implementation |
+| module boundary + dependency direction | architecture-design | boundary ownership is architecture work |
+| code placement + reuse decision | implementation-planning | placement and reuse decisions precede coding |
+| write implementation + selected design | coding | active action is implementation |
+| rollout + rollback + config | release-delivery | rollout mechanics belong to release delivery |
+
+## 6. Cross-Stage and Planning Professional Skills
 
 Some professional skills are not owned by a single stage: they compile intake, plan work
 across stages, model cross-cutting impact, or gate risk at any stage. The router selects

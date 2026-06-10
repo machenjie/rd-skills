@@ -100,4 +100,8 @@ Each task:
 - Skip rationale:
 - Context budget decision:
 - Required evidence:
+- Required quality gates:
+- Stage transition condition:
+- Stage selection evidence:
+- Stage conflicts ruled out:
 - Next stage handoff:

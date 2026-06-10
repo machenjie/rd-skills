@@ -1,0 +1,42 @@
+---
+id: docs-runbook-change-handoff
+description: |
+  Documentation handoff for an operational runbook update after validation.
+prompt: |
+  After changing retry behavior, update the runbook and changelog with the
+  validated boundary, residual operational risk, and owner handoff. No code
+  changes remain.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: documentation-handoff
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  skills:
+    - change-documentation-gate
+    - reliability-observability-gate
+  capabilities:
+    - documentation-generation
+    - agent-execution-discipline
+    - observability
+  domain_extensions: []
+  quality_gates:
+    - documentation gate
+    - reliability gate
+forbidden:
+  skills:
+    - backend-change-builder
+    - delivery-release-gate
+    - ai-code-review-refactor
+  capabilities:
+    - language-idiom-enforcement
+    - code-review
+    - release-rollback
+  domain_extensions:
+    - ai-product-extension
+  quality_gates:
+    - implementation gate
+    - AI review gate
+notes: |
+  A runbook handoff can mention reliability evidence without launching coding
+  or AI review stages.

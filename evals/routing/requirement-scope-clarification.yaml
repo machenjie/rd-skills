@@ -1,0 +1,47 @@
+---
+id: requirement-scope-clarification
+description: |
+  Requirement is not ready for design or implementation because scope,
+  non-goals, and acceptance are unclear.
+prompt: |
+  Help clarify a request to "improve account settings" before anyone starts
+  design or implementation. Identify what is in scope, what is explicitly
+  out of scope, and what acceptance signal would make the change testable.
+expected:
+  complexity: L2
+  risk_level: low
+  expected_stage: requirement-intake
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  skills:
+    - change-intake-compiler
+    - acceptance-criteria-builder
+  capabilities:
+    - requirement-clarification
+    - requirement-structuring
+    - non-goal-boundary-definition
+    - acceptance-standard-definition
+    - scenario-decomposition
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+forbidden:
+  skills:
+    - architecture-impact-reviewer
+    - backend-change-builder
+    - frontend-change-builder
+    - delivery-release-gate
+  capabilities:
+    - language-idiom-enforcement
+    - test-strategy
+    - refactoring
+    - release-rollback
+  domain_extensions:
+    - ai-product-extension
+    - web3-product-extension
+  quality_gates:
+    - implementation gate
+    - delivery gate
+notes: |
+  Requirement-intake must not load design, coding, testing, or release stages
+  before scope and acceptance are testable.

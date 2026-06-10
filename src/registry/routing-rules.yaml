@@ -109,6 +109,116 @@ risk_escalation_triggers:
   - change locality violation
   - hallucinated API risk
   - dependency surface
+risk_trigger_rules:
+  - trigger: auth
+    required_skills: [security-privacy-gate]
+  - trigger: authorization
+    required_skills: [security-privacy-gate]
+  - trigger: object-level permission
+    required_skills: [security-privacy-gate]
+  - trigger: user data
+    required_skills: [security-privacy-gate]
+  - trigger: PII
+    required_skills: [security-privacy-gate]
+  - trigger: file upload
+    required_skills: [security-privacy-gate]
+  - trigger: AI prompt
+    required_skills: [security-privacy-gate]
+    required_domain_extensions: [ai-product-extension]
+  - trigger: RAG
+    required_skills: [security-privacy-gate]
+    required_domain_extensions: [ai-product-extension]
+  - trigger: webhook
+    required_skills: [security-privacy-gate, integration-change-builder]
+  - trigger: external integration
+    required_skills: [integration-change-builder]
+  - trigger: secret/config change
+    required_skills: [security-privacy-gate]
+  - trigger: dependency upgrade with security impact
+    required_skills: [security-privacy-gate]
+  - trigger: dependency surface
+    required_skills: [security-privacy-gate]
+    required_capabilities: [package-dependency-management]
+    required_quality_gates: [security gate, implementation gate]
+  - trigger: database migration
+    required_skills: [data-api-contract-changer, delivery-release-gate]
+  - trigger: irreversible data operation
+    required_skills: [data-api-contract-changer, delivery-release-gate]
+  - trigger: production deployment
+    required_skills: [delivery-release-gate]
+  - trigger: production incident
+    required_skills: [reliability-observability-gate, change-documentation-gate]
+  - trigger: cloud IAM
+    required_skills: [security-privacy-gate]
+  - trigger: public exposure
+    required_skills: [security-privacy-gate]
+  - trigger: regulated workload
+    required_skills: [security-privacy-gate, delivery-release-gate, change-documentation-gate]
+  - trigger: compliance evidence
+    required_skills: [security-privacy-gate, delivery-release-gate, change-documentation-gate]
+  - trigger: cost anomaly
+    required_skills: [reliability-observability-gate]
+  - trigger: missing test evidence
+    required_skills: [quality-test-gate]
+    required_capabilities: [agent-execution-discipline]
+  - trigger: hallucinated API risk
+    required_skills: [ai-code-review-refactor]
+    required_capabilities: [agent-execution-discipline]
+  - trigger: payment
+    required_skills: [security-privacy-gate]
+    required_domain_extensions: [payment-trading-extension]
+  - trigger: subscription
+    required_skills: [security-privacy-gate]
+    required_domain_extensions: [payment-trading-extension]
+  - trigger: billing
+    required_skills: [security-privacy-gate]
+    required_domain_extensions: [payment-trading-extension]
+  - trigger: wallet
+    required_skills: [security-privacy-gate]
+    required_domain_extensions: [web3-product-extension]
+  - trigger: private key
+    required_skills: [security-privacy-gate]
+    required_domain_extensions: [web3-product-extension]
+  - trigger: Web3 asset
+    required_skills: [security-privacy-gate]
+    required_domain_extensions: [web3-product-extension]
+  - trigger: agent claims completion without evidence
+    required_capabilities: [agent-execution-discipline]
+    required_quality_gates: [execution discipline gate]
+  - trigger: agent diagnosis without verified cause
+    required_capabilities: [agent-execution-discipline, failure-diagnosis]
+    required_quality_gates: [execution discipline gate]
+  - trigger: same agent approach failed twice
+    required_capabilities: [agent-execution-discipline, failure-diagnosis]
+    required_quality_gates: [execution discipline gate]
+  - trigger: local fix without same pattern scan
+    required_capabilities: [agent-execution-discipline]
+    required_quality_gates: [execution discipline gate]
+  - trigger: new structure without reuse and placement rationale
+    required_capabilities: [agent-execution-discipline, implementation-structure-design]
+    required_quality_gates: [execution discipline gate, implementation gate]
+  - trigger: handoff without risk boundary and validation results
+    required_capabilities: [agent-execution-discipline]
+    required_quality_gates: [execution discipline gate]
+  - trigger: environment-blame without inspection
+    required_capabilities: [agent-execution-discipline, failure-diagnosis]
+  - trigger: route repair required
+    required_capabilities: [agent-execution-discipline]
+  - trigger: bug may exist in multiple modules
+    required_capabilities: [agent-execution-discipline]
+  - trigger: shared utility pollution risk
+    required_capabilities: [implementation-structure-design, agent-execution-discipline]
+  - trigger: business logic in shared utils
+    required_capabilities: [implementation-structure-design, agent-execution-discipline]
+  - trigger: unreadable main flow
+    required_capabilities: [code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: oversized function class or file
+    required_capabilities: [implementation-structure-design, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: change locality violation
+    required_capabilities: [module-boundary-design, code-clarity-maintainability]
+    required_quality_gates: [architecture gate, implementation gate]
 failure_routing:
   - condition: unclear requirement
     route_to: change-intake-compiler

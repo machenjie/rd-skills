@@ -955,6 +955,7 @@ capabilities:
     group: engineering-workflow
     path: src/foundation/capabilities/engineering-stage-professionalism
     status: implemented
+    route_level_capability: true
     used_by: [change-forge-router, backend-change-builder, frontend-change-builder, data-api-contract-changer, architecture-impact-reviewer, ai-code-review-refactor, quality-test-gate, delivery-release-gate]
     triggers: [engineering stage launch current stage product surface language surface risk surface minimum sufficient capability stage by stage execution explicit skip context budget next stage handoff design coding debugging bug fix code review refactoring testing release documentation handoff]
     risk_notes: [Loading every relevant capability at once bloats context hides the next action and launches out-of-stage considerations such as architecture review during coding or release gate during code review]

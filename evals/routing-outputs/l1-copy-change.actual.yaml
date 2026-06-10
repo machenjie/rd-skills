@@ -1,0 +1,18 @@
+---
+case_id: l1-copy-change
+actual:
+  complexity: L1
+  risk_level: low
+  skills:
+    - frontend-change-builder
+  capabilities:
+    - frontend-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+  required_references:
+    - references/capabilities/36-frontend-testing.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/routing-rules.md
+    - references/skill-registry.md

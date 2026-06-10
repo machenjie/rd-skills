@@ -1,6 +1,6 @@
 # Professionalism Release Readiness
 
-- Generated: 2026-06-10T05:19:56.487005+00:00
+- Generated: 2026-06-10T06:35:11.233604+00:00
 - Status: strict-release-ready
 - Authoring ready: ready
 - Release ready: ready
@@ -44,7 +44,7 @@
 
 ## Routing Coverage Summary
 
-- cases_checked: 88
+- cases_checked: 94
 - cases_without_forbidden: 0
 - hidden_risks_checked: 91
 - hidden_risks_needing_manual_review: 0

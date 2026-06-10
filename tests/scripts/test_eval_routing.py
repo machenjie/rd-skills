@@ -68,11 +68,38 @@ actual:
     - references/capabilities/54-web-security.md
     - references/capabilities/64-regression-testing.md
   stage_route_manifest:
+    schema_version: 1
     current_stage: bug-fix
+    next_stage: testing
+    product_surface: backend-product
+    language_surface: none
+    selected_skills:
+      - backend-change-builder
+      - security-privacy-gate
+      - quality-test-gate
+    selected_capabilities:
+      - authentication-authorization
+      - logging-error-handling
+      - regression-testing
+    selected_domain_extensions: []
     context_budget_mode: staged-plan
+    context_budget_rationale: L3 security bug fix needs staged evidence while the active stage stays bug-fix
+    required_evidence:
+      - minimal diff
+      - same-pattern scan record
+      - regression test
+      - blast-radius note
+    required_quality_gates:
+      - requirement gate
+      - impact gate
+      - implementation gate
+      - security gate
+      - test gate
+      - documentation gate
     skipped_capabilities:
       - capability: release-rollback
         reason: no release sequencing required for this route
+    handoff_target: testing
 """
 
 
@@ -140,11 +167,38 @@ class EvalRoutingCandidateTests(unittest.TestCase):
     def test_missing_stage_route_fails_for_l2_plus_candidate(self) -> None:
         candidate = VALID_BACKEND_AUTH_IDOR.replace(
             "  stage_route_manifest:\n"
+            "    schema_version: 1\n"
             "    current_stage: bug-fix\n"
+            "    next_stage: testing\n"
+            "    product_surface: backend-product\n"
+            "    language_surface: none\n"
+            "    selected_skills:\n"
+            "      - backend-change-builder\n"
+            "      - security-privacy-gate\n"
+            "      - quality-test-gate\n"
+            "    selected_capabilities:\n"
+            "      - authentication-authorization\n"
+            "      - logging-error-handling\n"
+            "      - regression-testing\n"
+            "    selected_domain_extensions: []\n"
             "    context_budget_mode: staged-plan\n"
+            "    context_budget_rationale: L3 security bug fix needs staged evidence while the active stage stays bug-fix\n"
+            "    required_evidence:\n"
+            "      - minimal diff\n"
+            "      - same-pattern scan record\n"
+            "      - regression test\n"
+            "      - blast-radius note\n"
+            "    required_quality_gates:\n"
+            "      - requirement gate\n"
+            "      - impact gate\n"
+            "      - implementation gate\n"
+            "      - security gate\n"
+            "      - test gate\n"
+            "      - documentation gate\n"
             "    skipped_capabilities:\n"
             "      - capability: release-rollback\n"
-            "        reason: no release sequencing required for this route\n",
+            "        reason: no release sequencing required for this route\n"
+            "    handoff_target: testing\n",
             "",
         )
         result = _run_candidate(candidate)

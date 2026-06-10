@@ -1,0 +1,27 @@
+---
+case_id: deploy-repeated-retry-no-new-evidence
+actual:
+  complexity: L4
+  risk_level: high
+  skills: [data-api-contract-changer, data-middleware-change-builder, delivery-release-gate, reliability-observability-gate, quality-test-gate]
+  capabilities: [agent-execution-discipline, failure-diagnosis, data-migration-design, release-rollback]
+  domain_extensions: []
+  quality_gates: [implementation gate, test gate, reliability gate, delivery gate, AI review gate, execution discipline gate]
+  required_references: [references/capabilities/102-agent-execution-discipline.md, references/capabilities/81-failure-diagnosis.md, references/capabilities/30-data-migration-design.md, references/capabilities/75-release-rollback.md, references/capability-index.md, references/domain-extension-index.md, references/routing-rules.md, references/skill-registry.md]
+  stage_route_manifest:
+    schema_version: 1
+    current_stage: debugging-diagnosis
+    next_stage: bug-fix
+    product_surface: database-migration
+    language_surface: none
+    selected_skills: [data-api-contract-changer, data-middleware-change-builder, reliability-observability-gate, quality-test-gate]
+    selected_capabilities: [agent-execution-discipline, failure-diagnosis, data-migration-design]
+    selected_domain_extensions: []
+    skipped_capabilities:
+      - capability: refactoring
+        reason: no verified root cause supports structural change yet
+    context_budget_mode: staged-plan
+    context_budget_rationale: L4 failed deploy must diagnose before another release attempt
+    required_evidence: [reproduction, symptom/root-cause/contributing-factor split, eliminated hypotheses, verified cause]
+    required_quality_gates: [implementation gate, test gate, reliability gate, delivery gate, AI review gate, execution discipline gate]
+    handoff_target: bug-fix

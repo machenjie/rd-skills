@@ -5,22 +5,24 @@ This is an offline structural check. It does not access the network and does
 not call any model. It verifies that the engineering-stage launch architecture
 is present and wired:
 
-1. docs/ENGINEERING_STAGE_MODEL.md exists with the stage, product, and language
-   surface selectors.
-2. The engineering-stage-professionalism foundation capability exists and is
+1. src/registry/stage-model.yaml is the canonical machine-readable stage,
+   product-surface, language-surface, transition, and conflict-resolution
+   source.
+2. docs/ENGINEERING_STAGE_MODEL.md exists with a projection of the stage,
+   product, and language surface selectors.
+3. The engineering-stage-professionalism foundation capability exists and is
    registered.
-3. The skill-authoring-expert foundation capability exists.
-4. change-forge-router points to the route result template, which declares the
+4. The skill-authoring-expert foundation capability exists.
+5. change-forge-router points to the route result template, which declares the
    Stage Professionalism output contract.
-5. routing-rules.yaml declares a stage-specific route and stage signals.
-6. The router declares a machine-readable stage route manifest.
-7. No long language-deep checklist is copied into the router or the stage
+6. routing-rules.yaml declares a stage-specific route and stage signals.
+7. The router declares a machine-readable stage route manifest.
+8. No long language-deep checklist is copied into the router or the stage
    launcher body.
-8. The full Stage Launch Matrix is not copied into skill bodies (it is owned by
-   docs/ENGINEERING_STAGE_MODEL.md and referenced, not duplicated).
-9. The recommended/full/dev profile count math is intact.
-10. The authored capability count matches scripts/validation_utils.
-11. Prose counts in docs and routing-rules match the canonical foundation
+9. The full Stage Launch Matrix is not copied into skill bodies.
+10. The recommended/full/dev profile count math is intact.
+11. The authored capability count matches scripts/validation_utils.
+12. Prose counts in docs and routing-rules match the canonical foundation
     capability count and the dev profile top-level count (no stale 102/128).
 """
 
@@ -38,6 +40,7 @@ from validation_utils import (
     fail_many,
     load_yaml_file,
     parse_frontmatter,
+    registry_items,
     relpath,
     visible_child_dirs,
 )
@@ -52,6 +55,9 @@ DOMAIN_EXTENSIONS_DIR = ROOT / "src" / "domain-extensions"
 REGISTRY_DIR = ROOT / "src" / "registry"
 CAPABILITIES_REGISTRY = REGISTRY_DIR / "capabilities.yaml"
 ROUTING_RULES_REGISTRY = REGISTRY_DIR / "routing-rules.yaml"
+SKILLS_REGISTRY = REGISTRY_DIR / "skills.yaml"
+DOMAIN_EXTENSIONS_REGISTRY = REGISTRY_DIR / "domain-extensions.yaml"
+STAGE_MODEL_REGISTRY = REGISTRY_DIR / "stage-model.yaml"
 ROUTER_SKILL = PROFESSIONAL_SKILLS_DIR / "change-forge-router" / "SKILL.md"
 ROUTER_RESULT_TEMPLATE = (
     PROFESSIONAL_SKILLS_DIR
@@ -91,6 +97,10 @@ ROUTER_STAGE_FIELDS = (
     "Skip rationale",
     "Context budget decision",
     "Next stage handoff",
+    "Required quality gates",
+    "Stage transition condition",
+    "Stage selection evidence",
+    "Stage conflicts ruled out",
 )
 
 # Markers that only appear when a per-language deep checklist is copied wholesale
@@ -157,6 +167,364 @@ def _read_body(path: Path, errors: list[str]) -> str | None:
         errors.append(str(exc).replace(str(ROOT) + "/", ""))
         return None
     return body
+
+
+def _registry_names(path: Path, key: str, ref_keys: tuple[str, ...]) -> set[str]:
+    try:
+        data = load_yaml_file(path)
+    except ValidationProblem:
+        return set()
+    names: set[str] = set()
+    for entry in registry_items(data, key, path, []):
+        if not isinstance(entry, dict):
+            continue
+        for ref_key in ref_keys:
+            value = entry.get(ref_key)
+            if isinstance(value, str) and value.strip():
+                names.add(value.strip())
+                break
+    return names
+
+
+def _string_list(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item.strip() for item in value if isinstance(item, str) and item.strip()]
+
+
+def _stage_entries(stage_model: dict[str, object]) -> dict[str, dict[str, object]]:
+    stages: dict[str, dict[str, object]] = {}
+    for entry in stage_model.get("stages", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        name = entry.get("name")
+        if isinstance(name, str) and name.strip():
+            stages[name.strip()] = entry
+    return stages
+
+
+def _load_stage_model(errors: list[str]) -> dict[str, object] | None:
+    if not STAGE_MODEL_REGISTRY.is_file():
+        errors.append(f"missing stage model registry: {relpath(ROOT, STAGE_MODEL_REGISTRY)}")
+        return None
+    try:
+        data = load_yaml_file(STAGE_MODEL_REGISTRY)
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+        return None
+    if not isinstance(data, dict):
+        errors.append(f"{relpath(ROOT, STAGE_MODEL_REGISTRY)}: registry must be a mapping")
+        return None
+    if data.get("kind") != "changeforge.stage_model":
+        errors.append(
+            f"{relpath(ROOT, STAGE_MODEL_REGISTRY)}: kind must be changeforge.stage_model"
+        )
+    return data
+
+
+def _load_quality_gates(errors: list[str]) -> set[str]:
+    try:
+        data = load_yaml_file(ROUTING_RULES_REGISTRY)
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+        return set()
+    if not isinstance(data, dict):
+        return set()
+    return {
+        item.strip().casefold()
+        for item in data.get("quality_gates", []) or []
+        if isinstance(item, str) and item.strip()
+    }
+
+
+def _check_stage_model_registry(stage_model: dict[str, object], errors: list[str]) -> None:
+    rel = relpath(ROOT, STAGE_MODEL_REGISTRY)
+    capability_names = _registry_names(
+        CAPABILITIES_REGISTRY,
+        "capabilities",
+        ("name", "changeforge_capability_id", "id"),
+    )
+    skill_names = _registry_names(SKILLS_REGISTRY, "skills", ("name", "skill", "id"))
+    extension_names = _registry_names(
+        DOMAIN_EXTENSIONS_REGISTRY,
+        "domain_extensions",
+        ("name", "domain_extension", "id"),
+    )
+    quality_gates = _load_quality_gates(errors)
+
+    stages = _stage_entries(stage_model)
+    if tuple(stages) != REQUIRED_STAGES:
+        errors.append(
+            f"{rel}: stages must be declared in canonical order "
+            f"{list(REQUIRED_STAGES)}, found {list(stages)}"
+        )
+
+    for stage in REQUIRED_STAGES:
+        entry = stages.get(stage)
+        if entry is None:
+            continue
+        for field in (
+            "purpose",
+            "default_capabilities",
+            "skip_by_default",
+            "required_evidence",
+            "required_quality_gates",
+            "allowed_next_stages",
+            "forbidden_default_capabilities",
+        ):
+            value = entry.get(field)
+            if field == "purpose":
+                if not isinstance(value, str) or not value.strip():
+                    errors.append(f"{rel}: stage '{stage}' field '{field}' is required")
+            elif not _string_list(value):
+                errors.append(
+                    f"{rel}: stage '{stage}' field '{field}' must be a non-empty list"
+                )
+        for field in ("default_capabilities", "conditional_capabilities", "forbidden_default_capabilities"):
+            for capability in _string_list(entry.get(field)):
+                if capability not in capability_names:
+                    errors.append(
+                        f"{rel}: stage '{stage}' {field} references unknown capability "
+                        f"'{capability}'"
+                    )
+        for gate in _string_list(entry.get("required_quality_gates")):
+            if gate.casefold() not in quality_gates:
+                errors.append(
+                    f"{rel}: stage '{stage}' required_quality_gates contains unknown "
+                    f"gate '{gate}'"
+                )
+        for next_stage in _string_list(entry.get("allowed_next_stages")):
+            if next_stage != "closed" and next_stage not in REQUIRED_STAGES:
+                errors.append(
+                    f"{rel}: stage '{stage}' allowed_next_stages contains unknown "
+                    f"stage '{next_stage}'"
+                )
+
+    transitions: dict[str, list[str]] = {}
+    for entry in stage_model.get("stage_transitions", []) or []:
+        if not isinstance(entry, dict):
+            errors.append(f"{rel}: stage_transitions entries must be mappings")
+            continue
+        source = entry.get("from")
+        targets = _string_list(entry.get("to"))
+        if not isinstance(source, str) or source not in REQUIRED_STAGES:
+            errors.append(f"{rel}: stage_transitions contains unknown source {source!r}")
+            continue
+        transitions[source] = targets
+        for target in targets:
+            if target != "closed" and target not in REQUIRED_STAGES:
+                errors.append(
+                    f"{rel}: transition from '{source}' contains unknown target '{target}'"
+                )
+    for stage, entry in stages.items():
+        if transitions.get(stage) != _string_list(entry.get("allowed_next_stages")):
+            errors.append(
+                f"{rel}: stage '{stage}' allowed_next_stages must match "
+                "stage_transitions"
+            )
+
+    surfaces = stage_model.get("product_surfaces")
+    if not isinstance(surfaces, list) or not surfaces:
+        errors.append(f"{rel}: product_surfaces must be a non-empty list")
+    else:
+        seen_surfaces: set[str] = set()
+        for entry in surfaces:
+            if not isinstance(entry, dict):
+                errors.append(f"{rel}: product_surfaces entries must be mappings")
+                continue
+            surface = entry.get("surface")
+            if not isinstance(surface, str) or not surface.strip():
+                errors.append(f"{rel}: product surface missing surface name")
+                continue
+            if surface in seen_surfaces:
+                errors.append(f"{rel}: duplicate product surface '{surface}'")
+            seen_surfaces.add(surface)
+            required_skill = entry.get("required_skill")
+            if not isinstance(required_skill, str) or required_skill not in skill_names | extension_names:
+                errors.append(
+                    f"{rel}: product surface '{surface}' references unknown "
+                    f"required_skill '{required_skill}'"
+                )
+            for capability in _string_list(entry.get("default_capabilities")):
+                if capability not in capability_names:
+                    errors.append(
+                        f"{rel}: product surface '{surface}' references unknown "
+                        f"capability '{capability}'"
+                    )
+            if not _string_list(entry.get("signals")):
+                errors.append(f"{rel}: product surface '{surface}' needs signals")
+
+    languages = stage_model.get("language_surfaces")
+    if not isinstance(languages, list) or not languages:
+        errors.append(f"{rel}: language_surfaces must be a non-empty list")
+    else:
+        seen_languages: set[str] = set()
+        for entry in languages:
+            if not isinstance(entry, dict):
+                errors.append(f"{rel}: language_surfaces entries must be mappings")
+                continue
+            language = entry.get("language")
+            if not isinstance(language, str) or not language.strip():
+                errors.append(f"{rel}: language surface missing language")
+                continue
+            if language in seen_languages:
+                errors.append(f"{rel}: duplicate language surface '{language}'")
+            seen_languages.add(language)
+            capability = entry.get("capability")
+            if not isinstance(capability, str) or capability not in capability_names:
+                errors.append(
+                    f"{rel}: language surface '{language}' references unknown "
+                    f"capability '{capability}'"
+                )
+            for stage in _string_list(entry.get("stages")):
+                if stage not in REQUIRED_STAGES:
+                    errors.append(
+                        f"{rel}: language surface '{language}' references unknown "
+                        f"stage '{stage}'"
+                    )
+            if not _string_list(entry.get("signals")):
+                errors.append(f"{rel}: language surface '{language}' needs signals")
+
+    resolution = stage_model.get("stage_resolution")
+    if not isinstance(resolution, dict):
+        errors.append(f"{rel}: stage_resolution must be a mapping")
+        return
+    expected_precedence = [
+        "explicit_user_stage",
+        "active_action_verb",
+        "evidence_state",
+        "artifact_type",
+        "risk_trigger",
+    ]
+    if _string_list(resolution.get("precedence")) != expected_precedence:
+        errors.append(f"{rel}: stage_resolution.precedence has drifted")
+    conflict_rules = resolution.get("conflict_rules")
+    if not isinstance(conflict_rules, list) or len(conflict_rules) < 12:
+        errors.append(f"{rel}: stage_resolution.conflict_rules needs at least 12 rules")
+    else:
+        for index, rule in enumerate(conflict_rules):
+            if not isinstance(rule, dict):
+                errors.append(f"{rel}: conflict_rules[{index}] must be a mapping")
+                continue
+            current_stage = rule.get("current_stage")
+            if not isinstance(current_stage, str) or current_stage not in REQUIRED_STAGES:
+                errors.append(
+                    f"{rel}: conflict_rules[{index}] references unknown stage "
+                    f"'{current_stage}'"
+                )
+            if not _string_list(rule.get("when")):
+                errors.append(f"{rel}: conflict_rules[{index}] needs when signals")
+            reason = rule.get("reason")
+            if not isinstance(reason, str) or not reason.strip():
+                errors.append(f"{rel}: conflict_rules[{index}] needs reason")
+
+
+def _markdown_section(markdown: str, heading: str) -> str:
+    pattern = re.compile(
+        rf"^### {re.escape(heading)}\s*$([\s\S]*?)(?=^### |\Z)",
+        re.MULTILINE,
+    )
+    match = pattern.search(markdown)
+    return match.group(1) if match else ""
+
+
+def _check_stage_model_doc_consistency(
+    stage_model: dict[str, object],
+    errors: list[str],
+) -> None:
+    if not STAGE_MODEL_DOC.is_file():
+        return
+    text = STAGE_MODEL_DOC.read_text(encoding="utf-8")
+    folded = text.casefold()
+    if "src/registry/stage-model.yaml" not in text:
+        errors.append(
+            f"{relpath(ROOT, STAGE_MODEL_DOC)}: document must name "
+            "src/registry/stage-model.yaml as the machine source"
+        )
+    for stage, entry in _stage_entries(stage_model).items():
+        section = _markdown_section(text, stage)
+        if not section:
+            errors.append(f"{relpath(ROOT, STAGE_MODEL_DOC)}: missing stage section '{stage}'")
+            continue
+        section_folded = section.casefold()
+        for field in ("default_capabilities", "required_evidence", "required_quality_gates", "allowed_next_stages"):
+            for value in _string_list(entry.get(field)):
+                if value.casefold() not in section_folded:
+                    errors.append(
+                        f"{relpath(ROOT, STAGE_MODEL_DOC)}: stage '{stage}' section "
+                        f"missing {field} value '{value}'"
+                    )
+        for value in _string_list(entry.get("skip_by_default")):
+            if value.casefold() not in section_folded:
+                errors.append(
+                    f"{relpath(ROOT, STAGE_MODEL_DOC)}: stage '{stage}' section "
+                    f"missing skip_by_default value '{value}'"
+                )
+
+    for entry in stage_model.get("product_surfaces", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        values = [entry.get("surface"), entry.get("required_skill")]
+        values.extend(_string_list(entry.get("default_capabilities")))
+        for value in values:
+            if isinstance(value, str) and value.casefold() not in folded:
+                errors.append(
+                    f"{relpath(ROOT, STAGE_MODEL_DOC)}: product surface projection "
+                    f"missing '{value}'"
+                )
+
+    for entry in stage_model.get("language_surfaces", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        values = [entry.get("language"), entry.get("capability")]
+        values.extend(_string_list(entry.get("stages")))
+        for value in values:
+            if isinstance(value, str) and value.casefold() not in folded:
+                errors.append(
+                    f"{relpath(ROOT, STAGE_MODEL_DOC)}: language surface projection "
+                    f"missing '{value}'"
+                )
+
+
+def _check_stage_capability_compact_matrix(
+    stage_model: dict[str, object],
+    errors: list[str],
+) -> None:
+    body = _read_body(CAPABILITIES_DIR / STAGE_CAPABILITY / "SKILL.md", errors)
+    if body is None:
+        return
+    folded = body.casefold()
+    if "stage model registry" not in body.casefold():
+        errors.append(
+            f"{relpath(ROOT, CAPABILITIES_DIR / STAGE_CAPABILITY / 'SKILL.md')}: "
+            "stage capability must reference the stage model registry"
+        )
+    for stage, entry in _stage_entries(stage_model).items():
+        row_match = re.search(
+            rf"^\| {re.escape(stage)} \|(.+)$",
+            body,
+            flags=re.MULTILINE,
+        )
+        if not row_match:
+            errors.append(
+                f"{relpath(ROOT, CAPABILITIES_DIR / STAGE_CAPABILITY / 'SKILL.md')}: "
+                f"compact matrix missing stage '{stage}'"
+            )
+            continue
+        row = row_match.group(0).casefold()
+        for capability in _string_list(entry.get("default_capabilities")):
+            if capability.casefold() not in row:
+                errors.append(
+                    f"{relpath(ROOT, CAPABILITIES_DIR / STAGE_CAPABILITY / 'SKILL.md')}: "
+                    f"compact matrix stage '{stage}' missing default capability "
+                    f"'{capability}'"
+                )
+    for marker in ("Stage transition condition", "Stage selection evidence", "Stage conflicts ruled out"):
+        if marker.casefold() not in folded:
+            errors.append(
+                f"{relpath(ROOT, CAPABILITIES_DIR / STAGE_CAPABILITY / 'SKILL.md')}: "
+                f"output contract missing '{marker}'"
+            )
 
 
 def _check_stage_model_doc(errors: list[str]) -> None:
@@ -396,8 +764,13 @@ def _check_doc_count_consistency(errors: list[str]) -> None:
 
 def main() -> int:
     errors: list[str] = []
+    stage_model = _load_stage_model(errors)
 
     _check_stage_model_doc(errors)
+    if stage_model is not None:
+        _check_stage_model_registry(stage_model, errors)
+        _check_stage_model_doc_consistency(stage_model, errors)
+        _check_stage_capability_compact_matrix(stage_model, errors)
     _check_capability_present(STAGE_CAPABILITY, errors)
     _check_capability_present(AUTHORING_CAPABILITY, errors)
     _check_capability_registered(STAGE_CAPABILITY, errors)

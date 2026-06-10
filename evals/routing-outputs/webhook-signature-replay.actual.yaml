@@ -1,0 +1,68 @@
+---
+case_id: webhook-signature-replay
+actual:
+  complexity: L3
+  risk_level: high
+  skills:
+    - change-intake-compiler
+    - integration-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - quality-test-gate
+    - change-documentation-gate
+  capabilities:
+    - implementation-structure-design
+    - idempotency-retry-design
+    - input-validation
+    - secret-configuration-security
+    - integration-testing
+    - logging-error-handling
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - implementation gate
+    - security gate
+    - test gate
+    - documentation gate
+  required_references:
+    - references/capabilities/101-implementation-structure-design.md
+    - references/capabilities/42-idempotency-retry-design.md
+    - references/capabilities/44-logging-error-handling.md
+    - references/capabilities/53-input-validation.md
+    - references/capabilities/56-secret-configuration-security.md
+    - references/capabilities/60-integration-testing.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/routing-rules.md
+    - references/skill-registry.md
+  stage_route_manifest:
+    schema_version: 1
+    current_stage: bug-fix
+    next_stage: testing
+    product_surface: webhook
+    language_surface: none
+    selected_skills:
+      - integration-change-builder
+      - backend-change-builder
+      - security-privacy-gate
+      - quality-test-gate
+    selected_capabilities:
+      - idempotency-retry-design
+    selected_domain_extensions: []
+    skipped_capabilities:
+      - capability: release-rollback
+        reason: no release sequencing required for this route
+    context_budget_mode: staged-plan
+    context_budget_rationale: L3 webhook security bug fix needs staged security and testing evidence
+    required_evidence:
+      - minimal diff
+      - same-pattern scan record
+      - regression test
+      - blast-radius note
+    required_quality_gates:
+      - requirement gate
+      - implementation gate
+      - security gate
+      - test gate
+      - documentation gate
+    handoff_target: testing

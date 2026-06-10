@@ -1,0 +1,27 @@
+---
+case_id: refactor-shared-utility-pollution-hidden-risk
+actual:
+  complexity: L3
+  risk_level: medium
+  skills: [architecture-impact-reviewer, quality-test-gate, ai-code-review-refactor]
+  capabilities: [implementation-structure-design, module-boundary-design, code-clarity-maintainability, refactoring, code-review, agent-execution-discipline]
+  domain_extensions: []
+  quality_gates: [architecture gate, implementation gate, test gate, AI review gate, execution discipline gate]
+  required_references: [references/capabilities/101-implementation-structure-design.md, references/capabilities/19-module-boundary-design.md, references/capabilities/105-code-clarity-maintainability.md, references/capabilities/79-refactoring.md, references/capabilities/78-code-review.md, references/capabilities/102-agent-execution-discipline.md, references/capability-index.md, references/domain-extension-index.md, references/routing-rules.md, references/skill-registry.md]
+  stage_route_manifest:
+    schema_version: 1
+    current_stage: refactoring
+    next_stage: testing
+    product_surface: none
+    language_surface: none
+    selected_skills: [architecture-impact-reviewer, quality-test-gate, ai-code-review-refactor]
+    selected_capabilities: [implementation-structure-design, module-boundary-design, code-clarity-maintainability, refactoring, code-review, agent-execution-discipline]
+    selected_domain_extensions: []
+    skipped_capabilities:
+      - capability: release-rollback
+        reason: behavior-preserving refactor does not launch release-delivery by default
+    context_budget_mode: staged-plan
+    context_budget_rationale: L3 shared utility refactor needs staged validation after refactoring
+    required_evidence: [characterization tests, preserved behavior, selection rationale, rollback path]
+    required_quality_gates: [architecture gate, implementation gate, test gate, AI review gate, execution discipline gate]
+    handoff_target: testing

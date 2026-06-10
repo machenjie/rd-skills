@@ -47,7 +47,7 @@ changeforge_route:
 
 Manifest rules:
 
-- `selected_capabilities` must each map to a `selected_skills` entry through the capability `used_by` relationship; do not list a capability whose owning skill is absent.
+- `selected_capabilities` must each map to a `selected_skills` entry through the capability `used_by` relationship, unless the capability is explicitly marked as a route-level capability in the registry. Do not list an ordinary capability whose owning skill is absent.
 - `required_references` must include the four router self-use references above plus the deterministic `references/capabilities/<capability-id>-<capability-name>.md` path for every selected capability.
 - `skipped_quality_gates` must give a `reason` for each skipped gate; never drop a gate silently. A gate is either in `required_quality_gates` or in `skipped_quality_gates` with a reason.
 - Keep `selected_skills`, `selected_capabilities`, `required_quality_gates`, and `skipped_quality_gates` consistent with the Markdown sections; the manifest is a projection of the same decision, not a second route.

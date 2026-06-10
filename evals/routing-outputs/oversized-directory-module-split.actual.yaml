@@ -1,0 +1,27 @@
+---
+case_id: oversized-directory-module-split
+actual:
+  complexity: L3
+  risk_level: medium
+  skills: [architecture-impact-reviewer, backend-change-builder, quality-test-gate]
+  capabilities: [module-boundary-design, implementation-structure-design, code-clarity-maintainability, refactoring, regression-testing]
+  domain_extensions: []
+  quality_gates: [architecture gate, implementation gate, test gate]
+  required_references: [references/capabilities/19-module-boundary-design.md, references/capabilities/101-implementation-structure-design.md, references/capabilities/105-code-clarity-maintainability.md, references/capabilities/79-refactoring.md, references/capabilities/64-regression-testing.md, references/capability-index.md, references/domain-extension-index.md, references/routing-rules.md, references/skill-registry.md]
+  stage_route_manifest:
+    schema_version: 1
+    current_stage: architecture-design
+    next_stage: implementation-planning
+    product_surface: backend-product
+    language_surface: none
+    selected_skills: [architecture-impact-reviewer, backend-change-builder, quality-test-gate]
+    selected_capabilities: [module-boundary-design, code-clarity-maintainability]
+    selected_domain_extensions: []
+    skipped_capabilities:
+      - capability: unit-testing
+        reason: test authoring waits until architecture boundary is selected
+    context_budget_mode: staged-plan
+    context_budget_rationale: L3 module split needs architecture stage before refactoring work
+    required_evidence: [boundary owners, dependency direction, rejected alternatives, reversibility classification]
+    required_quality_gates: [architecture gate, implementation gate, test gate]
+    handoff_target: implementation-planning

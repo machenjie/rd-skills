@@ -121,7 +121,7 @@ Suggested-action distribution:
 | `change-intake-compiler` | 199 | 3230 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `ai-code-review-refactor` | 319 | 4497 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `quality-test-gate` | 275 | 4480 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `change-forge-router` | 263 | 4668 | 100 | 71 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `change-forge-router` | 263 | 4690 | 100 | 71 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `security-privacy-gate` | 258 | 4226 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `reliability-observability-gate` | 253 | 4237 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 
@@ -164,7 +164,7 @@ Suggested-action distribution:
 | `degradation-circuit-breaking` | 210 | 2909 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
 | `domain-event-modeling` | 208 | 2713 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
 | `performance-budgeting` | 208 | 3069 | 100 | 82 | 100 | 14 | KEEP_AS_IS | - | low |
-| `engineering-stage-professionalism` | 207 | 1958 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `engineering-stage-professionalism` | 207 | 2024 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `containerization` | 205 | 2889 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `data-migration-design` | 205 | 2873 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `e2e-testing` | 205 | 2565 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
@@ -287,11 +287,11 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | Files | Excerpt |
 | --- | --- |
 | 19 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
-| 19 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 19 | do not load every reference by default. treat references as targeted support selected by t |
-| 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
 | 19 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 19 | do not load every reference by default. treat references as targeted support selected by t |
+| 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
+| 19 | l1 changes: do not read references unless the task touches security, data, auth, external  |
+| 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 18 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 18 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |

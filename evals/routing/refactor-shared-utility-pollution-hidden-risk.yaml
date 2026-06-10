@@ -12,6 +12,7 @@ expected:
   risk_level: medium
   expected_stage: refactoring
   expected_context_budget_mode: staged-plan
+  stage_conflict_case: true
   risk_triggers:
     - shared utility pollution risk
     - business logic in shared utils

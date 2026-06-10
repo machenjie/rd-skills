@@ -1,0 +1,27 @@
+---
+case_id: stage-model-registry-drift
+actual:
+  complexity: L3
+  risk_level: medium
+  skills: [change-forge-router, change-documentation-gate, quality-test-gate]
+  capabilities: [skill-authoring-expert, engineering-stage-professionalism, documentation-generation, agent-execution-discipline]
+  domain_extensions: []
+  quality_gates: [documentation gate, test gate]
+  required_references: [references/capabilities/103-skill-authoring-expert.md, references/capabilities/104-engineering-stage-professionalism.md, references/capabilities/80-documentation-generation.md, references/capabilities/102-agent-execution-discipline.md, references/capability-index.md, references/domain-extension-index.md, references/routing-rules.md, references/skill-registry.md]
+  stage_route_manifest:
+    schema_version: 1
+    current_stage: skill-authoring
+    next_stage: documentation-handoff
+    product_surface: skill-authoring
+    language_surface: none
+    selected_skills: [change-forge-router, change-documentation-gate, quality-test-gate]
+    selected_capabilities: [skill-authoring-expert, engineering-stage-professionalism, documentation-generation, agent-execution-discipline]
+    selected_domain_extensions: []
+    skipped_capabilities:
+      - capability: service-business-logic
+        reason: stage-model registry work is not product coding
+    context_budget_mode: staged-plan
+    context_budget_rationale: L3 registry drift prevention spans authoring and documentation validation
+    required_evidence: [boundary, trigger precision, output contract, registry/routing/validation impact]
+    required_quality_gates: [documentation gate, test gate]
+    handoff_target: documentation-handoff

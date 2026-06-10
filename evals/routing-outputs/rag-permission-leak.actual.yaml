@@ -1,0 +1,88 @@
+---
+case_id: rag-permission-leak
+actual:
+  complexity: L4
+  risk_level: critical
+  skills:
+    - change-intake-compiler
+    - change-impact-analyzer
+    - domain-impact-modeler
+    - data-middleware-change-builder
+    - backend-change-builder
+    - security-privacy-gate
+    - reliability-observability-gate
+    - quality-test-gate
+    - change-documentation-gate
+    - ai-code-review-refactor
+  capabilities:
+    - implementation-structure-design
+    - permission-boundary-modeling
+    - threat-modeling
+    - web-security
+    - search-analytics-design
+    - input-validation
+    - regression-testing
+    - observability
+  domain_extensions:
+    - ai-product-extension
+  quality_gates:
+    - requirement gate
+    - impact gate
+    - domain gate
+    - implementation gate
+    - security gate
+    - reliability gate
+    - test gate
+    - documentation gate
+    - AI review gate
+  required_references:
+    - references/capabilities/101-implementation-structure-design.md
+    - references/capabilities/16-permission-boundary-modeling.md
+    - references/capabilities/51-search-analytics-design.md
+    - references/capabilities/52-threat-modeling.md
+    - references/capabilities/53-input-validation.md
+    - references/capabilities/54-web-security.md
+    - references/capabilities/64-regression-testing.md
+    - references/capabilities/69-observability.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/routing-rules.md
+    - references/skill-registry.md
+  stage_route_manifest:
+    schema_version: 1
+    current_stage: bug-fix
+    next_stage: testing
+    product_surface: ai-rag-agent
+    language_surface: none
+    selected_skills:
+      - data-middleware-change-builder
+      - backend-change-builder
+      - security-privacy-gate
+      - quality-test-gate
+    selected_capabilities:
+      - threat-modeling
+      - regression-testing
+      - observability
+    selected_domain_extensions:
+      - ai-product-extension
+    skipped_capabilities:
+      - capability: release-rollback
+        reason: no rollout work is active until the permission fix is tested
+    context_budget_mode: staged-plan
+    context_budget_rationale: L4 RAG permission bug fix needs staged security and AI-review evidence
+    required_evidence:
+      - minimal diff
+      - same-pattern scan record
+      - regression test
+      - blast-radius note
+    required_quality_gates:
+      - requirement gate
+      - impact gate
+      - domain gate
+      - implementation gate
+      - security gate
+      - reliability gate
+      - test gate
+      - documentation gate
+      - AI review gate
+    handoff_target: testing

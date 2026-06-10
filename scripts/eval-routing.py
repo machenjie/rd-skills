@@ -9,18 +9,16 @@ Loads cases from ``evals/routing/*.yaml`` and validates that each case:
 * uses risk triggers and quality gates that are declared in
   ``src/registry/routing-rules.yaml``;
 * keeps ``expected.*`` and ``forbidden.*`` disjoint;
-* satisfies the risk-driven required route rules derived from the routing
-    rules (auth/PII → security gate; database migration → data + release;
-    payment → payment-trading-extension; wallet → web3; AI prompt → ai-product;
-    agent execution risks → agent-execution-discipline and execution discipline
-    gate; etc.);
+* satisfies the risk-driven required route rules declared in
+  ``routing-rules.yaml:risk_trigger_rules``;
 * respects L1 anti-over-routing - heavy gates and design-time skills must
   not appear unless the case opts in through ``risk_triggers``.
 * requires L2+ implementation cases that route to backend, frontend, or
   AI review implementation skills to include ``implementation-structure-design``
   unless the case explicitly sets ``expected.structure_required: false``.
 * requires L2-L5 stage-aware cases to declare the expected canonical
-  engineering stage unless they explicitly opt out with a skip reason.
+  engineering stage from ``stage-model.yaml`` unless they explicitly opt out
+  with a skip reason.
 
 By default this remains an offline golden spec check. It does not invoke
 any agent or model. When ``--candidate-output`` or ``--candidate-output-dir``
@@ -33,6 +31,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -50,6 +49,8 @@ ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_DIR = ROOT / "src" / "registry"
 EVALS_DIR = ROOT / "evals" / "routing"
 OUTPUTS_DIR = ROOT / "evals" / "routing-outputs"
+STAGE_MODEL_REGISTRY = REGISTRY_DIR / "stage-model.yaml"
+ROUTING_RULES_REGISTRY = REGISTRY_DIR / "routing-rules.yaml"
 
 VALID_COMPLEXITIES = {"L1", "L2", "L3", "L4", "L5"}
 VALID_RISK_LEVELS = {"low", "medium", "high", "critical"}
@@ -57,7 +58,10 @@ VALID_CONTEXT_BUDGET_MODES = {"minimal", "single-stage", "staged-plan"}
 MIN_ROUTING_CASES = 30
 MIN_L1_ANTI_OVER_ROUTING_CASES = 8
 MIN_DOMAIN_EXTENSION_CASES = 2
-MIN_CANDIDATE_OUTPUTS = 10
+MIN_CANDIDATE_OUTPUTS = 24
+MIN_CASES_PER_STAGE = 2
+MIN_CONFLICT_CASES = 12
+MIN_STAGE_ACTUAL_OUTPUTS = 24
 
 ROUTER_SELF_REFERENCES: tuple[tuple[str, str], ...] = (
     ("change-forge-router", "references/routing-rules.md"),
@@ -81,132 +85,7 @@ IMPLEMENTATION_SKILLS_REQUIRE_STRUCTURE: tuple[str, ...] = (
     "ai-code-review-refactor",
 )
 
-# Risk-trigger → required professional skill / domain extension rules.
-# Each entry maps a risk trigger (matched case-insensitively against the
-# routing-rules.yaml ``risk_escalation_triggers`` allow-list) to the set of
-# skill or extension names that must appear in ``expected.skills`` or
-# ``expected.domain_extensions``.
-RISK_REQUIRED_SKILLS: dict[str, tuple[str, ...]] = {
-    "auth": ("security-privacy-gate",),
-    "authorization": ("security-privacy-gate",),
-    "object-level permission": ("security-privacy-gate",),
-    "user data": ("security-privacy-gate",),
-    "pii": ("security-privacy-gate",),
-    "file upload": ("security-privacy-gate",),
-    "ai prompt": ("security-privacy-gate",),
-    "rag": ("security-privacy-gate",),
-    "webhook": ("security-privacy-gate", "integration-change-builder"),
-    "external integration": ("integration-change-builder",),
-    "secret/config change": ("security-privacy-gate",),
-    "dependency upgrade with security impact": ("security-privacy-gate",),
-    "database migration": (
-        "data-api-contract-changer",
-        "delivery-release-gate",
-    ),
-    "irreversible data operation": (
-        "data-api-contract-changer",
-        "delivery-release-gate",
-    ),
-    "production deployment": ("delivery-release-gate",),
-    "production incident": (
-        "reliability-observability-gate",
-        "change-documentation-gate",
-    ),
-    "cloud iam": ("security-privacy-gate",),
-    "public exposure": ("security-privacy-gate",),
-    "regulated workload": (
-        "security-privacy-gate",
-        "delivery-release-gate",
-        "change-documentation-gate",
-    ),
-    "compliance evidence": (
-        "security-privacy-gate",
-        "delivery-release-gate",
-        "change-documentation-gate",
-    ),
-    "cost anomaly": ("reliability-observability-gate",),
-    "missing test evidence": ("quality-test-gate",),
-    "hallucinated API risk": ("ai-code-review-refactor",),
-    "payment": ("security-privacy-gate",),
-    "subscription": ("security-privacy-gate",),
-    "billing": ("security-privacy-gate",),
-    "wallet": ("security-privacy-gate",),
-    "private key": ("security-privacy-gate",),
-    "web3 asset": ("security-privacy-gate",),
-}
-
-RISK_REQUIRED_DOMAIN_EXTENSIONS: dict[str, str] = {
-    "payment": "payment-trading-extension",
-    "subscription": "payment-trading-extension",
-    "billing": "payment-trading-extension",
-    "wallet": "web3-product-extension",
-    "private key": "web3-product-extension",
-    "web3 asset": "web3-product-extension",
-    "ai prompt": "ai-product-extension",
-    "rag": "ai-product-extension",
-}
-
-RISK_REQUIRED_CAPABILITIES: dict[str, tuple[str, ...]] = {
-    "agent claims completion without evidence": ("agent-execution-discipline",),
-    "agent diagnosis without verified cause": (
-        "agent-execution-discipline",
-        "failure-diagnosis",
-    ),
-    "same agent approach failed twice": (
-        "agent-execution-discipline",
-        "failure-diagnosis",
-    ),
-    "local fix without same pattern scan": ("agent-execution-discipline",),
-    "new structure without reuse and placement rationale": (
-        "agent-execution-discipline",
-        "implementation-structure-design",
-    ),
-    "handoff without risk boundary and validation results": (
-        "agent-execution-discipline",
-    ),
-    "missing test evidence": ("agent-execution-discipline",),
-    "environment-blame without inspection": (
-        "agent-execution-discipline",
-        "failure-diagnosis",
-    ),
-    "route repair required": ("agent-execution-discipline",),
-    "bug may exist in multiple modules": ("agent-execution-discipline",),
-    "shared utility pollution risk": (
-        "implementation-structure-design",
-        "agent-execution-discipline",
-    ),
-    "business logic in shared utils": (
-        "implementation-structure-design",
-        "agent-execution-discipline",
-    ),
-    "unreadable main flow": ("code-clarity-maintainability",),
-    "oversized function class or file": (
-        "implementation-structure-design",
-        "code-clarity-maintainability",
-    ),
-    "change locality violation": (
-        "module-boundary-design",
-        "code-clarity-maintainability",
-    ),
-    "hallucinated API risk": ("agent-execution-discipline",),
-}
-
-RISK_REQUIRED_QUALITY_GATES: dict[str, tuple[str, ...]] = {
-    "agent claims completion without evidence": ("execution discipline gate",),
-    "agent diagnosis without verified cause": ("execution discipline gate",),
-    "same agent approach failed twice": ("execution discipline gate",),
-    "local fix without same pattern scan": ("execution discipline gate",),
-    "new structure without reuse and placement rationale": (
-        "execution discipline gate",
-        "implementation gate",
-    ),
-    "unreadable main flow": ("implementation gate",),
-    "oversized function class or file": ("implementation gate",),
-    "change locality violation": ("architecture gate", "implementation gate"),
-    "handoff without risk boundary and validation results": (
-        "execution discipline gate",
-    ),
-}
+RiskRule = dict[str, tuple[str, ...]]
 
 # Skills and extensions that are explicitly forbidden at L1 unless the case
 # opts in by declaring a risk trigger that requires them.
@@ -317,6 +196,7 @@ def _load_capability_metadata() -> dict[str, dict[str, Any]]:
             used_by = []
         metadata[name] = {
             "id": capability_id.strip(),
+            "route_level_capability": entry.get("route_level_capability") is True,
             "used_by": {
                 item.strip()
                 for item in used_by
@@ -339,10 +219,108 @@ def _capability_reference_path(
     return f"references/capabilities/{capability_id}-{capability}.md"
 
 
-def _load_routing_allow_lists() -> tuple[set[str], set[str], set[str]]:
-    """Return (risk_triggers, quality_gates, stages) from routing-rules.yaml."""
+def _string_tuple(value: Any) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if not isinstance(value, list):
+        return ()
+    out: list[str] = []
+    for item in value:
+        if isinstance(item, str) and item.strip():
+            out.append(item.strip())
+    return tuple(out)
 
-    path = REGISTRY_DIR / "routing-rules.yaml"
+
+def _load_stage_model() -> dict[str, Any]:
+    if not STAGE_MODEL_REGISTRY.is_file():
+        return {}
+    try:
+        data = load_yaml_file(STAGE_MODEL_REGISTRY)
+    except ValidationProblem:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _stage_model_stages(stage_model: dict[str, Any] | None = None) -> dict[str, dict[str, Any]]:
+    model = stage_model if stage_model is not None else _load_stage_model()
+    stages: dict[str, dict[str, Any]] = {}
+    for entry in model.get("stages", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        name = entry.get("name")
+        if isinstance(name, str) and name.strip():
+            stages[name.strip()] = entry
+    return stages
+
+
+def _stage_model_surfaces(stage_model: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    surfaces: dict[str, dict[str, Any]] = {}
+    for entry in stage_model.get("product_surfaces", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        surface = entry.get("surface")
+        if isinstance(surface, str) and surface.strip():
+            surfaces[surface.strip()] = entry
+    return surfaces
+
+
+def _stage_model_languages(stage_model: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    languages: dict[str, dict[str, Any]] = {}
+    for entry in stage_model.get("language_surfaces", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        language = entry.get("language")
+        if isinstance(language, str) and language.strip():
+            languages[language.strip()] = entry
+    return languages
+
+
+def _stage_model_transitions(stage_model: dict[str, Any]) -> dict[str, set[str]]:
+    transitions: dict[str, set[str]] = {}
+    for entry in stage_model.get("stage_transitions", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        source = entry.get("from")
+        targets = entry.get("to")
+        if not isinstance(source, str) or not isinstance(targets, list):
+            continue
+        transitions[source.strip()] = {
+            target.strip()
+            for target in targets
+            if isinstance(target, str) and target.strip()
+        }
+    return transitions
+
+
+def _load_risk_trigger_rules() -> dict[str, RiskRule]:
+    if not ROUTING_RULES_REGISTRY.is_file():
+        return {}
+    try:
+        data = load_yaml_file(ROUTING_RULES_REGISTRY)
+    except ValidationProblem:
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    rules: dict[str, RiskRule] = {}
+    for entry in data.get("risk_trigger_rules", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        trigger = entry.get("trigger")
+        if not isinstance(trigger, str) or not trigger.strip():
+            continue
+        rules[trigger.strip().casefold()] = {
+            "skills": _string_tuple(entry.get("required_skills")),
+            "capabilities": _string_tuple(entry.get("required_capabilities")),
+            "domain_extensions": _string_tuple(entry.get("required_domain_extensions")),
+            "quality_gates": _string_tuple(entry.get("required_quality_gates")),
+        }
+    return rules
+
+
+def _load_routing_allow_lists() -> tuple[set[str], set[str], set[str]]:
+    """Return (risk_triggers, quality_gates, stages) from registry YAML."""
+
+    path = ROUTING_RULES_REGISTRY
     if not path.is_file():
         return set(), set(), set()
     try:
@@ -361,13 +339,14 @@ def _load_routing_allow_lists() -> tuple[set[str], set[str], set[str]]:
         for item in data.get("quality_gates", []) or []
         if isinstance(item, (str, int))
     }
-    stages: set[str] = set()
-    for entry in data.get("engineering_stage_signals", []) or []:
-        if not isinstance(entry, dict):
-            continue
-        stage = entry.get("stage")
-        if isinstance(stage, str) and stage.strip():
-            stages.add(stage.strip())
+    stages = set(_stage_model_stages().keys())
+    if not stages:
+        for entry in data.get("engineering_stage_signals", []) or []:
+            if not isinstance(entry, dict):
+                continue
+            stage = entry.get("stage")
+            if isinstance(stage, str) and stage.strip():
+                stages.add(stage.strip())
     return triggers, gates, stages
 
 
@@ -395,6 +374,7 @@ def _validate_case(  # noqa: C901 - branchy validator by design
     allowed_gates: set[str],
     allowed_stages: set[str],
     errors: list[str],
+    risk_rules: dict[str, RiskRule] | None = None,
 ) -> None:
     rel = relpath(ROOT, path)
     if not isinstance(data, dict):
@@ -585,6 +565,7 @@ def _validate_case(  # noqa: C901 - branchy validator by design
         expected_sets,
         forbidden_sets,
         errors,
+        risk_rules or _load_risk_trigger_rules(),
     )
 
     _enforce_l1_anti_over_routing(
@@ -593,6 +574,7 @@ def _validate_case(  # noqa: C901 - branchy validator by design
         normalized_triggers,
         expected_sets,
         errors,
+        risk_rules or _load_risk_trigger_rules(),
     )
 
     _enforce_evidence_gates(rel, complexity, expected_sets, errors)
@@ -639,6 +621,7 @@ def _enforce_risk_required(
     expected_sets: dict[str, list[str]],
     forbidden_sets: dict[str, list[str]],
     errors: list[str],
+    risk_rules: dict[str, RiskRule],
 ) -> None:
     expected_skills = set(expected_sets["skills"])
     expected_capabilities = set(expected_sets["capabilities"])
@@ -650,7 +633,8 @@ def _enforce_risk_required(
     forbidden_gates = {gate.casefold() for gate in forbidden_sets["quality_gates"]}
 
     for trigger in normalized_triggers:
-        required_skills = RISK_REQUIRED_SKILLS.get(trigger, ())
+        rule = risk_rules.get(trigger, {})
+        required_skills = rule.get("skills", ())
         for skill in required_skills:
             if skill not in expected_skills:
                 errors.append(
@@ -662,7 +646,7 @@ def _enforce_risk_required(
                     f"{rel}: risk_trigger '{trigger}' requires '{skill}' "
                     f"but it is listed in forbidden.skills"
                 )
-        required_capabilities = RISK_REQUIRED_CAPABILITIES.get(trigger, ())
+        required_capabilities = rule.get("capabilities", ())
         for capability in required_capabilities:
             if capability not in expected_capabilities:
                 errors.append(
@@ -674,7 +658,7 @@ def _enforce_risk_required(
                     f"{rel}: risk_trigger '{trigger}' requires '{capability}' "
                     f"but it is listed in forbidden.capabilities"
                 )
-        required_gates = RISK_REQUIRED_QUALITY_GATES.get(trigger, ())
+        required_gates = rule.get("quality_gates", ())
         for gate in required_gates:
             gate_key = gate.casefold()
             if gate_key not in expected_gates:
@@ -687,8 +671,7 @@ def _enforce_risk_required(
                     f"{rel}: risk_trigger '{trigger}' requires '{gate}' "
                     f"but it is listed in forbidden.quality_gates"
                 )
-        required_extension = RISK_REQUIRED_DOMAIN_EXTENSIONS.get(trigger)
-        if required_extension is not None:
+        for required_extension in rule.get("domain_extensions", ()):
             if required_extension not in expected_extensions:
                 errors.append(
                     f"{rel}: risk_trigger '{trigger}' requires "
@@ -709,6 +692,7 @@ def _enforce_l1_anti_over_routing(
     normalized_triggers: list[str],
     expected_sets: dict[str, list[str]],
     errors: list[str],
+    risk_rules: dict[str, RiskRule],
 ) -> None:
     if complexity != "L1":
         return
@@ -716,8 +700,9 @@ def _enforce_l1_anti_over_routing(
     opt_in_skills: set[str] = set()
     opt_in_capabilities: set[str] = set()
     for trigger in normalized_triggers:
-        opt_in_skills.update(RISK_REQUIRED_SKILLS.get(trigger, ()))
-        opt_in_capabilities.update(RISK_REQUIRED_CAPABILITIES.get(trigger, ()))
+        rule = risk_rules.get(trigger, {})
+        opt_in_skills.update(rule.get("skills", ()))
+        opt_in_capabilities.update(rule.get("capabilities", ()))
 
     expected_skills = set(expected_sets["skills"])
     over_routed = (
@@ -756,7 +741,14 @@ def _enforce_evidence_gates(
     if complexity in (None, "L1"):
         return
     gates_lower = {gate.casefold() for gate in expected_sets["quality_gates"]}
-    evidence_options = {"implementation gate", "test gate", "documentation gate"}
+    evidence_options = {
+        "requirement gate",
+        "architecture gate",
+        "api/data gate",
+        "implementation gate",
+        "test gate",
+        "documentation gate",
+    }
     if not gates_lower & evidence_options:
         errors.append(
             f"{rel}: {complexity} case must list at least one of "
@@ -861,9 +853,48 @@ def _is_l1_anti_over_routing_case(data: dict[str, Any]) -> bool:
     )
 
 
+def _is_negative_over_stage_case(data: dict[str, Any]) -> bool:
+    if not _case_expected(data).get("expected_stage"):
+        return False
+    return any(_case_forbidden_list(data, field) for field in EXPECTED_FIELDS)
+
+
+def _is_stage_conflict_case(data: dict[str, Any]) -> bool:
+    expected = _case_expected(data)
+    return expected.get("stage_conflict_case") is True
+
+
+def _actual_output_stage_counts(output_dir: Path, errors: list[str]) -> Counter[str]:
+    counts: Counter[str] = Counter()
+    if not output_dir.exists():
+        errors.append(f"{_display_path(output_dir)}: stage actual output directory not found")
+        return counts
+    for output_path in _iter_output_files(output_dir):
+        try:
+            data = load_yaml_file(output_path)
+        except ValidationProblem as exc:
+            errors.append(str(exc))
+            continue
+        if not isinstance(data, dict):
+            errors.append(f"{_display_path(output_path)}: top-level must be a mapping")
+            continue
+        actual = _extract_actual_payload(data)
+        if actual is None:
+            errors.append(f"{_display_path(output_path)}: actual router output must be a mapping")
+            continue
+        manifest = _actual_stage_manifest(data, actual)
+        if manifest is None:
+            continue
+        current = manifest.get("current_stage")
+        if isinstance(current, str) and current.strip():
+            counts[current.strip()] += 1
+    return counts
+
+
 def _enforce_collection_requirements(
     cases: dict[str, tuple[Path, dict[str, Any]]],
     extensions: set[str],
+    allowed_stages: set[str],
     errors: list[str],
 ) -> None:
     if len(cases) < MIN_ROUTING_CASES:
@@ -894,6 +925,53 @@ def _enforce_collection_requirements(
             errors.append(
                 f"evals/routing: domain extension '{extension}' must appear in "
                 f"at least {MIN_DOMAIN_EXTENSION_CASES} golden cases; found {count}"
+            )
+
+    for stage in sorted(allowed_stages):
+        stage_cases = [
+            case_id
+            for case_id, (_, data) in cases.items()
+            if _case_expected(data).get("expected_stage") == stage
+        ]
+        if len(stage_cases) < MIN_CASES_PER_STAGE:
+            errors.append(
+                f"evals/routing: stage '{stage}' must appear in at least "
+                f"{MIN_CASES_PER_STAGE} golden cases; found {len(stage_cases)}"
+            )
+        negative_cases = [
+            case_id
+            for case_id, (_, data) in cases.items()
+            if _case_expected(data).get("expected_stage") == stage
+            and _is_negative_over_stage_case(data)
+        ]
+        if not negative_cases:
+            errors.append(
+                f"evals/routing: stage '{stage}' must have at least one "
+                "negative over-stage case with forbidden coverage"
+            )
+
+    conflict_cases = [
+        case_id for case_id, (_, data) in cases.items() if _is_stage_conflict_case(data)
+    ]
+    if len(conflict_cases) < MIN_CONFLICT_CASES:
+        errors.append(
+            f"evals/routing: expected at least {MIN_CONFLICT_CASES} stage "
+            f"conflict-resolution cases; found {len(conflict_cases)}"
+        )
+
+    output_counts = _actual_output_stage_counts(OUTPUTS_DIR, errors)
+    total_outputs = sum(output_counts.values())
+    if total_outputs < MIN_STAGE_ACTUAL_OUTPUTS:
+        errors.append(
+            f"{_display_path(OUTPUTS_DIR)}: expected at least "
+            f"{MIN_STAGE_ACTUAL_OUTPUTS} stage actual output fixture(s), found "
+            f"{total_outputs}"
+        )
+    for stage in sorted(allowed_stages):
+        if output_counts.get(stage, 0) < 1:
+            errors.append(
+                f"{_display_path(OUTPUTS_DIR)}: stage '{stage}' must have at "
+                "least one actual output fixture"
             )
 
 
@@ -1132,6 +1210,7 @@ def _enforce_l1_actual_anti_over_routing(
     expected: dict[str, Any],
     actual_sets: dict[str, list[str]],
     errors: list[str],
+    risk_rules: dict[str, RiskRule],
 ) -> None:
     if expected.get("complexity") != "L1":
         return
@@ -1141,8 +1220,9 @@ def _enforce_l1_actual_anti_over_routing(
     opt_in_skills: set[str] = set()
     opt_in_capabilities: set[str] = set()
     for trigger in normalized_triggers:
-        opt_in_skills.update(RISK_REQUIRED_SKILLS.get(trigger, ()))
-        opt_in_capabilities.update(RISK_REQUIRED_CAPABILITIES.get(trigger, ()))
+        rule = risk_rules.get(trigger, {})
+        opt_in_skills.update(rule.get("skills", ()))
+        opt_in_capabilities.update(rule.get("capabilities", ()))
 
     over_routed = (
         set(actual_sets["skills"]).intersection(L1_OVER_ROUTING_SKILLS)
@@ -1211,6 +1291,14 @@ def _enforce_actual_capability_references(
         metadata = capability_metadata.get(capability)
         if metadata is None:
             continue
+        if metadata.get("route_level_capability") is True:
+            reference = _capability_reference_path(capability, capability_metadata)
+            if reference is not None and reference not in reference_paths:
+                errors.append(
+                    f"{rel}: actual.required_references is missing selected capability "
+                    f"reference '{reference}'"
+                )
+            continue
         used_by = metadata.get("used_by")
         if (
             isinstance(used_by, set)
@@ -1229,12 +1317,102 @@ def _enforce_actual_capability_references(
             )
 
 
-def _enforce_actual_stage_route(
+def _manifest_string_list(
+    manifest: dict[str, Any],
+    field: str,
+    item_key: str | None = None,
+) -> list[str] | None:
+    return _extract_string_items(manifest.get(field), item_key)
+
+
+def _stage_manifest_required_schema_errors(rel: str, manifest: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    required_string_fields = (
+        "current_stage",
+        "next_stage",
+        "product_surface",
+        "language_surface",
+        "context_budget_mode",
+        "context_budget_rationale",
+        "handoff_target",
+    )
+    required_list_fields = (
+        "selected_skills",
+        "selected_capabilities",
+        "selected_domain_extensions",
+        "skipped_capabilities",
+        "required_evidence",
+        "required_quality_gates",
+    )
+    if manifest.get("schema_version") != 1:
+        errors.append(f"{rel}: changeforge_stage_route.schema_version must be 1")
+    for field in required_string_fields:
+        value = manifest.get(field)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"{rel}: changeforge_stage_route.{field} is required")
+    for field in required_list_fields:
+        if not isinstance(manifest.get(field), list):
+            errors.append(f"{rel}: changeforge_stage_route.{field} must be a list")
+    return errors
+
+
+def _folded_items(values: Iterable[str]) -> set[str]:
+    return {value.strip().casefold() for value in values if value.strip()}
+
+
+def _required_phrase_missing(required: Iterable[str], actual: Iterable[str]) -> list[str]:
+    actual_folded = [item.casefold() for item in actual]
+    missing: list[str] = []
+    for phrase in required:
+        key = phrase.casefold()
+        if not any(key in item or item in key for item in actual_folded):
+            missing.append(phrase)
+    return missing
+
+
+def _stage_allowed_capabilities(
+    current_stage: str,
+    product_surface: str,
+    language_surface: str,
+    expected: dict[str, Any],
+    stage_model: dict[str, Any],
+    risk_rules: dict[str, RiskRule],
+) -> set[str]:
+    stages = _stage_model_stages(stage_model)
+    surfaces = _stage_model_surfaces(stage_model)
+    languages = _stage_model_languages(stage_model)
+    allowed: set[str] = {"engineering-stage-professionalism"}
+
+    stage_entry = stages.get(current_stage, {})
+    allowed.update(_string_tuple(stage_entry.get("default_capabilities")))
+    allowed.update(_string_tuple(stage_entry.get("conditional_capabilities")))
+
+    surface_entry = surfaces.get(product_surface)
+    if surface_entry is not None:
+        allowed.update(_string_tuple(surface_entry.get("default_capabilities")))
+
+    language_entry = languages.get(language_surface)
+    if language_entry is not None:
+        capability = language_entry.get("capability")
+        if isinstance(capability, str) and capability.strip():
+            allowed.add(capability.strip())
+
+    for trigger in _as_string_list(expected.get("risk_triggers")) or []:
+        rule = risk_rules.get(trigger.casefold(), {})
+        allowed.update(rule.get("capabilities", ()))
+    return allowed
+
+
+def _enforce_actual_stage_route(  # noqa: C901 - manifest schema is intentionally explicit.
     rel: str,
     expected: dict[str, Any],
     output_data: dict[str, Any],
     actual: dict[str, Any],
+    actual_sets: dict[str, list[str]],
     allowed_stages: set[str],
+    allowed_gates: set[str],
+    stage_model: dict[str, Any],
+    risk_rules: dict[str, RiskRule],
     errors: list[str],
 ) -> None:
     manifest = _actual_stage_manifest(output_data, actual)
@@ -1244,24 +1422,86 @@ def _enforce_actual_stage_route(
     if manifest is None:
         return
 
+    errors.extend(_stage_manifest_required_schema_errors(rel, manifest))
+
+    stages = _stage_model_stages(stage_model)
+    surfaces = _stage_model_surfaces(stage_model)
+    languages = _stage_model_languages(stage_model)
+    transitions = _stage_model_transitions(stage_model)
+
     current = manifest.get("current_stage")
     if not isinstance(current, str) or not current.strip():
         errors.append(f"{rel}: changeforge_stage_route.current_stage is required")
+        current_stage = ""
     elif current.strip() not in allowed_stages:
         errors.append(
             f"{rel}: changeforge_stage_route.current_stage must be one of "
             f"{sorted(allowed_stages)}, found '{current.strip()}'"
         )
+        current_stage = current.strip()
+    else:
+        current_stage = current.strip()
     expected_stage = expected.get("expected_stage")
     if (
         isinstance(expected_stage, str)
         and expected_stage.strip()
-        and current != expected_stage
+        and current_stage != expected_stage
     ):
         errors.append(
             f"{rel}: changeforge_stage_route.current_stage must be "
-            f"{expected_stage!r}, found {current!r}"
+            f"{expected_stage!r}, found {current_stage!r}"
         )
+
+    next_stage = manifest.get("next_stage")
+    if isinstance(next_stage, str) and next_stage.strip() and current_stage:
+        next_stage = next_stage.strip()
+        allowed_next = transitions.get(current_stage) or set(
+            _string_tuple(stages.get(current_stage, {}).get("allowed_next_stages"))
+        )
+        if next_stage not in allowed_next:
+            errors.append(
+                f"{rel}: changeforge_stage_route.next_stage {next_stage!r} is not "
+                f"allowed from {current_stage!r}; expected one of {sorted(allowed_next)}"
+            )
+
+    product_surface = manifest.get("product_surface")
+    if isinstance(product_surface, str) and product_surface.strip():
+        product_surface = product_surface.strip()
+        if product_surface != "none" and product_surface not in surfaces:
+            errors.append(
+                f"{rel}: changeforge_stage_route.product_surface must be one of "
+                f"{sorted(surfaces)} or 'none', found {product_surface!r}"
+            )
+        surface_entry = surfaces.get(product_surface)
+        if surface_entry is not None:
+            required_skill = surface_entry.get("required_skill")
+            selected_owners = set(actual_sets["skills"]) | set(actual_sets["domain_extensions"])
+            if isinstance(required_skill, str) and required_skill not in selected_owners:
+                errors.append(
+                    f"{rel}: product_surface {product_surface!r} requires selected "
+                    f"skill or extension {required_skill!r}"
+                )
+    else:
+        product_surface = ""
+
+    language_surface = manifest.get("language_surface")
+    if isinstance(language_surface, str) and language_surface.strip():
+        language_surface = language_surface.strip()
+        if language_surface != "none" and language_surface not in languages:
+            errors.append(
+                f"{rel}: changeforge_stage_route.language_surface must be one of "
+                f"{sorted(languages)} or 'none', found {language_surface!r}"
+            )
+        language_entry = languages.get(language_surface)
+        if language_entry is not None:
+            language_stages = set(_string_tuple(language_entry.get("stages")))
+            if current_stage and current_stage not in language_stages:
+                errors.append(
+                    f"{rel}: language_surface {language_surface!r} is not valid for "
+                    f"stage {current_stage!r}"
+                )
+    else:
+        language_surface = ""
 
     actual_budget = manifest.get("context_budget_mode")
     expected_budget = _expected_context_budget_mode(expected)
@@ -1271,12 +1511,161 @@ def _enforce_actual_stage_route(
             f"{expected_budget!r}, found {actual_budget!r}"
         )
 
+    selected_skills = _manifest_string_list(manifest, "selected_skills", "skill")
+    if selected_skills is None:
+        errors.append(f"{rel}: changeforge_stage_route.selected_skills must be a list")
+        selected_skills = []
+    else:
+        missing = sorted(set(selected_skills) - set(actual_sets["skills"]))
+        if missing:
+            errors.append(
+                f"{rel}: changeforge_stage_route.selected_skills are not present "
+                f"in actual.skills: {missing}"
+            )
+
+    selected_extensions = _manifest_string_list(
+        manifest,
+        "selected_domain_extensions",
+        "extension",
+    )
+    if selected_extensions is None:
+        errors.append(
+            f"{rel}: changeforge_stage_route.selected_domain_extensions must be a list"
+        )
+        selected_extensions = []
+    else:
+        missing = sorted(set(selected_extensions) - set(actual_sets["domain_extensions"]))
+        if missing:
+            errors.append(
+                f"{rel}: changeforge_stage_route.selected_domain_extensions are not "
+                f"present in actual.domain_extensions: {missing}"
+            )
+
+    selected_capabilities = _manifest_string_list(
+        manifest,
+        "selected_capabilities",
+        "capability",
+    )
+    if selected_capabilities is None:
+        errors.append(
+            f"{rel}: changeforge_stage_route.selected_capabilities must be a list"
+        )
+        selected_capabilities = []
+    else:
+        missing = sorted(set(selected_capabilities) - set(actual_sets["capabilities"]))
+        if missing:
+            errors.append(
+                f"{rel}: changeforge_stage_route.selected_capabilities are not present "
+                f"in actual.capabilities: {missing}"
+            )
+        allowed_capabilities = _stage_allowed_capabilities(
+            current_stage,
+            product_surface,
+            language_surface,
+            expected,
+            stage_model,
+            risk_rules,
+        )
+        outside_stage = sorted(set(selected_capabilities) - allowed_capabilities)
+        if outside_stage:
+            errors.append(
+                f"{rel}: changeforge_stage_route.selected_capabilities are not allowed "
+                f"for stage/surface/language/risk: {outside_stage}"
+            )
+        forbidden_default = set(
+            _string_tuple(stages.get(current_stage, {}).get("forbidden_default_capabilities"))
+        )
+        forbidden_selected = sorted(set(selected_capabilities) & forbidden_default)
+        if forbidden_selected:
+            errors.append(
+                f"{rel}: changeforge_stage_route selected default-forbidden "
+                f"capabilities for {current_stage!r}: {forbidden_selected}"
+            )
+
+    if current_stage == "debugging-diagnosis" and "refactoring" in selected_capabilities:
+        reason = manifest.get("verified_root_cause_reason")
+        if not isinstance(reason, str) or not reason.strip():
+            errors.append(
+                f"{rel}: debugging-diagnosis may select 'refactoring' only with "
+                "verified_root_cause_reason"
+            )
+
+    required_evidence = _manifest_string_list(manifest, "required_evidence")
+    if required_evidence is None:
+        errors.append(f"{rel}: changeforge_stage_route.required_evidence must be a list")
+        required_evidence = []
+    if not required_evidence:
+        errors.append(f"{rel}: changeforge_stage_route.required_evidence must be non-empty")
+    elif current_stage in stages:
+        missing_evidence = _required_phrase_missing(
+            _string_tuple(stages[current_stage].get("required_evidence")),
+            required_evidence,
+        )
+        if missing_evidence:
+            errors.append(
+                f"{rel}: changeforge_stage_route.required_evidence is missing "
+                f"stage evidence {missing_evidence}"
+            )
+
+    required_gates = _manifest_string_list(manifest, "required_quality_gates")
+    if required_gates is None:
+        errors.append(
+            f"{rel}: changeforge_stage_route.required_quality_gates must be a list"
+        )
+        required_gates = []
+    gates_folded = _folded_items(required_gates)
+    if not gates_folded:
+        errors.append(
+            f"{rel}: changeforge_stage_route.required_quality_gates must be non-empty"
+        )
+    for gate in required_gates:
+        if gate.casefold() not in allowed_gates:
+            errors.append(
+                f"{rel}: changeforge_stage_route.required_quality_gates contains "
+                f"unknown gate '{gate}'"
+            )
+    stage_gates = {
+        gate.casefold()
+        for gate in _string_tuple(stages.get(current_stage, {}).get("required_quality_gates"))
+    }
+    missing_stage_gates = sorted(stage_gates - gates_folded)
+    if missing_stage_gates:
+        errors.append(
+            f"{rel}: changeforge_stage_route.required_quality_gates missing stage "
+            f"gate(s) {missing_stage_gates}"
+        )
+    expected_gates = {
+        gate.casefold()
+        for gate in _as_string_list(expected.get("quality_gates")) or []
+    }
+    missing_expected_gates = sorted(expected_gates - gates_folded)
+    if missing_expected_gates:
+        errors.append(
+            f"{rel}: changeforge_stage_route.required_quality_gates missing expected "
+            f"route gate(s) {missing_expected_gates}"
+        )
+
     skipped_missing_reason = _stage_skipped_without_reason(manifest)
     if skipped_missing_reason:
         errors.append(
             f"{rel}: changeforge_stage_route.skipped_capabilities missing reason for "
             f"{skipped_missing_reason}"
         )
+
+    handoff = manifest.get("handoff_target")
+    if isinstance(handoff, str) and handoff.strip():
+        handoff = handoff.strip()
+        legal_targets = (
+            set(allowed_stages)
+            | {"blocked", "closed"}
+            | set(actual_sets["skills"])
+            | set(actual_sets["domain_extensions"])
+        )
+        if handoff not in legal_targets:
+            errors.append(
+                f"{rel}: changeforge_stage_route.handoff_target {handoff!r} is not "
+                f"a legal stage, selected owner, 'blocked', or 'closed'"
+            )
 
 
 def _compare_candidate_output(  # noqa: C901 - schema comparison is branchy.
@@ -1290,6 +1679,8 @@ def _compare_candidate_output(  # noqa: C901 - schema comparison is branchy.
     allowed_gates: set[str],
     allowed_stages: set[str],
     capability_metadata: dict[str, dict[str, Any]],
+    stage_model: dict[str, Any],
+    risk_rules: dict[str, RiskRule],
     errors: list[str],
 ) -> None:
     rel = _display_path(output_path)
@@ -1401,14 +1792,24 @@ def _compare_candidate_output(  # noqa: C901 - schema comparison is branchy.
             errors,
         )
 
-    _enforce_l1_actual_anti_over_routing(rel, expected, actual_sets, errors)
+    _enforce_l1_actual_anti_over_routing(
+        rel,
+        expected,
+        actual_sets,
+        errors,
+        risk_rules,
+    )
     _enforce_l4_l5_actual_gate_coverage(rel, expected, actual_sets, errors)
     _enforce_actual_stage_route(
         rel,
         expected,
         output_data,
         actual,
+        actual_sets,
         allowed_stages,
+        allowed_gates,
+        stage_model,
+        risk_rules,
         errors,
     )
 
@@ -1527,6 +1928,8 @@ def main(argv: list[str] | None = None) -> int:
     skills, capabilities, extensions = _load_registry_names()
     capability_metadata = _load_capability_metadata()
     allowed_triggers, allowed_gates, allowed_stages = _load_routing_allow_lists()
+    stage_model = _load_stage_model()
+    risk_rules = _load_risk_trigger_rules()
     if not skills or not capabilities or not extensions:
         errors.append(
             "registry data appears empty or unreadable; run validate-registry first."
@@ -1540,7 +1943,11 @@ def main(argv: list[str] | None = None) -> int:
             "routing-rules.yaml is missing risk_escalation_triggers or quality_gates."
         )
     if not allowed_stages:
-        errors.append("routing-rules.yaml is missing engineering_stage_signals.")
+        errors.append("stage-model.yaml is missing canonical stages.")
+    if not stage_model:
+        errors.append("stage-model.yaml appears empty or unreadable.")
+    if not risk_rules:
+        errors.append("routing-rules.yaml is missing risk_trigger_rules.")
 
     seen_ids: set[str] = set()
     cases: dict[str, tuple[Path, dict[str, Any]]] = {}
@@ -1565,9 +1972,10 @@ def main(argv: list[str] | None = None) -> int:
             allowed_gates,
             allowed_stages,
             errors,
+            risk_rules,
         )
 
-    _enforce_collection_requirements(cases, extensions, errors)
+    _enforce_collection_requirements(cases, extensions, allowed_stages, errors)
 
     output_files = [_repo_path(path) for path in args.candidate_output]
     if args.candidate_output_dir is not None:
@@ -1611,6 +2019,8 @@ def main(argv: list[str] | None = None) -> int:
             allowed_gates,
             allowed_stages,
             capability_metadata,
+            stage_model,
+            risk_rules,
             errors,
         )
         compared_outputs += 1

@@ -13,6 +13,7 @@ expected:
   risk_level: medium
   expected_stage: implementation-planning
   expected_context_budget_mode: single-stage
+  stage_conflict_case: true
   risk_triggers: []
   skills:
     - domain-impact-modeler

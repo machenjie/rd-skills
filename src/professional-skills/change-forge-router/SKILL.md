@@ -234,8 +234,8 @@ Populate Required References for router self-use and for every selected support 
 ### Machine-Readable Route Manifests
 After the Markdown Routing Result, also emit two fenced YAML blocks that hooks, doctor, telemetry review, and the routing/agent-behavior eval tools parse. They never replace the human-readable sections and never authorize any tool to mutate skills, routing rules, or capabilities.
 
-- `changeforge_route`: the route projection — `route_id`, `complexity`, `risk_level`, `execution_mode`, `selected_skills`, `selected_capabilities`, `selected_domain_extensions`, `required_references`, `required_quality_gates`, `skipped_quality_gates` (each with a `reason`), `blocking_questions`, `assumptions`, and `handoff_target`. Every `selected_capabilities` entry must map to a `selected_skills` entry via the capability `used_by` relationship, and `required_references` must list the four router self-use references plus the deterministic `references/capabilities/<capability-id>-<capability-name>.md` path for each selected capability.
-- `changeforge_stage_route`: the stage projection of `## 12. Stage Professionalism` — `current_stage`, `next_stage`, `product_surface`, `language_surface`, the `selected_*` lists, `skipped_capabilities` (each with a `reason`), `context_budget_mode` (`minimal` for L1, `single-stage` for L2, `staged-plan` for L3+), `required_evidence`, `required_quality_gates`, and `handoff_target`. Emit it only for non-trivial engineering tasks, name exactly one `current_stage`, and keep it consistent with `changeforge_route`.
+- `changeforge_route`: the route projection — `route_id`, `complexity`, `risk_level`, `execution_mode`, `selected_skills`, `selected_capabilities`, `selected_domain_extensions`, `required_references`, `required_quality_gates`, `skipped_quality_gates` (each with a `reason`), `blocking_questions`, `assumptions`, and `handoff_target`. Every ordinary `selected_capabilities` entry must map to a `selected_skills` entry via the capability `used_by` relationship; route-level capabilities marked in the registry are allowed at manifest level. `required_references` must list the four router self-use references plus the deterministic `references/capabilities/<capability-id>-<capability-name>.md` path for each selected capability.
+- `changeforge_stage_route`: the stage projection of `## 12. Stage Professionalism` — `schema_version`, `current_stage`, `next_stage`, `product_surface`, `language_surface`, the `selected_*` lists, `skipped_capabilities` (each with a `reason`), `context_budget_mode` (`minimal` for L1, `single-stage` for L2, `staged-plan` for L3+), `context_budget_rationale`, `required_evidence`, `required_quality_gates`, and `handoff_target`. Emit it only for non-trivial engineering tasks, name exactly one `current_stage`, and keep it consistent with `changeforge_route`.
 
 Full manifest schemas, field templates, and rules: `references/route-manifest.md`.
 
@@ -251,7 +251,7 @@ Close routing only when all canonical evidence answers are concrete (answer sche
 The route passes only when:
 
 - Every selected professional skill has a clear reason, input, and expected output.
-- Every selected foundation capability is tied to a selected professional skill.
+- Every ordinary selected foundation capability is tied to a selected professional skill; route-level capabilities are explicitly marked in the registry.
 - Every selected domain extension has a domain signal, risk, and required output.
 - Required References lists router self-use references and every selected capability, checklist, or domain extension reference required by the route.
 - Every impacted area has a selected skill, a quality gate, a non-blocking assumption, or an explicit skip reason.

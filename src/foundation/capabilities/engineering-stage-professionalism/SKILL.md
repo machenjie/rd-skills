@@ -60,18 +60,18 @@ Map the stage to its launch set using the compact matrix below:
 
 | Stage | Launch focus | Skip by default |
 | --- | --- | --- |
-| requirement-intake | `requirement-clarification`, `acceptance-standard-definition`, `non-goal-boundary-definition` | coding, language, testing |
-| architecture-design | `architecture-style-selection`, `module-boundary-design`, `solution-optimality-evaluation` | language idiom, coding |
-| implementation-planning | `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability` | full architecture review, release |
-| coding | language professional usage, `language-idiom-enforcement`, `input-validation` | architecture deep review, release |
+| requirement-intake | `requirement-clarification`, `requirement-structuring`, `non-goal-boundary-definition`, `acceptance-standard-definition`, `scenario-decomposition` | coding, language, testing, refactoring, release |
+| architecture-design | `architecture-style-selection`, `module-boundary-design`, `layered-architecture-design`, `architecture-tradeoff-analysis`, `extensibility-design`, `solution-optimality-evaluation` | language idiom, coding, test authoring |
+| implementation-planning | `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` | full architecture review, release, deep performance profiling |
+| coding | matching language professional usage capability, `language-idiom-enforcement`, `input-validation`, `logging-error-handling` | architecture deep review, release, full regression suite design |
 | debugging-diagnosis | `failure-diagnosis`, `agent-execution-discipline`, `observability` | refactoring, new design |
 | bug-fix | `agent-execution-discipline`, `regression-testing`, `code-review` | architecture redesign |
-| code-review | `code-review`, `implementation-structure-design`, `code-clarity-maintainability`, `ai-code-review-refactor` | release, deployment |
-| refactoring | `refactoring`, `implementation-structure-design`, `code-clarity-maintainability`, `regression-testing` | feature design, release |
-| testing | `test-strategy`, `language-testing-strategy`, matching test capability | new feature coding |
-| release-delivery | `ci-cd`, `release-rollback`, `observability` | language deep checks |
+| code-review | `code-review`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `ai-code-review-refactor` as the professional owner for generated code | release, deployment, infrastructure |
+| refactoring | `refactoring`, `implementation-structure-design`, `code-clarity-maintainability`, `code-review`, `regression-testing` | feature design, release |
+| testing | `test-strategy`, `language-testing-strategy`, `test-data-management`, matching test capability | architecture redesign, new feature coding |
+| release-delivery | `ci-cd`, `release-rollback`, `containerization`, `kubernetes-gateway`, `observability`, `backup-recovery` | language deep checks, coding |
 | documentation-handoff | `documentation-generation`, `agent-execution-discipline` | coding capabilities |
-| skill-authoring | `skill-authoring-expert` | product coding, release |
+| skill-authoring | `skill-authoring-expert`, `documentation-generation`, `agent-execution-discipline` | product coding, language runtime, release |
 
 Select the product surface and language surface for the change, and launch only the
 matching professional skill and capabilities. Pair with `change-forge-router` for the overall
@@ -119,7 +119,7 @@ Each stage has a minimum evidence obligation before handoff:
 - The launch set is additive per active stage only; previously launched stages are not kept loaded once their evidence is produced and handed off.
 - Skip rationale is part of the output, not a silent omission. "Skipped: release gate (no rollout in this change)" is valid; dropping the gate silently is not.
 - The context budget decision is explicit: `minimal` for L1, `single-stage` for L2, `staged-plan` for L3+ where planning spans stages but execution stays staged.
-- This capability keeps a compact launch matrix in its own body; it does not copy or depend on an external matrix file. Per-language deep checklists stay in the language professional usage capability bodies.
+- The canonical machine-readable launch matrix lives in the stage model registry. This body keeps only a compact runtime summary, and validators reject drift between them. Per-language deep checklists stay in the language professional usage capability bodies.
 - Mode Matrix sections in professional skills refine the active stage: for example, backend `bug-fix` selects bug-fix stage evidence, while backend `performance/reliability fix` stays in coding, debugging, or release depending on whether the work is implementation, diagnosis, or rollout.
 - Anti-pattern examples that must be rejected: loading architecture, coding, testing, and release gates for one local patch; running release-delivery during review because a deployment might happen later; loading all language capabilities for a config-only release; keeping debugging references loaded after root cause has been handed to bug-fix.
 
@@ -159,6 +159,9 @@ Return a **Stage Professional Launch Plan**:
 - Context budget decision:
 - Required evidence:
 - Required quality gates:
+- Stage transition condition:
+- Stage selection evidence:
+- Stage conflicts ruled out:
 - Handoff target:
 
 Each selected capability must cite its stage, product surface, language surface, or risk
@@ -188,14 +191,11 @@ and does not prove, residual risk, and the next gate or handoff.
 
 # Used By
 
+Route-level capability. It may be selected whenever a `changeforge_stage_route`
+manifest is emitted, even if the stage owner is not one of the selected
+professional skills.
+
 - change-forge-router
-- backend-change-builder
-- frontend-change-builder
-- data-api-contract-changer
-- architecture-impact-reviewer
-- ai-code-review-refactor
-- quality-test-gate
-- delivery-release-gate
 
 # Handoff
 

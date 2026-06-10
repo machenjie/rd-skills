@@ -1,0 +1,27 @@
+---
+case_id: docs-runbook-change-handoff
+actual:
+  complexity: L2
+  risk_level: medium
+  skills: [change-documentation-gate, reliability-observability-gate]
+  capabilities: [documentation-generation, agent-execution-discipline, observability]
+  domain_extensions: []
+  quality_gates: [documentation gate, reliability gate]
+  required_references: [references/capabilities/80-documentation-generation.md, references/capabilities/102-agent-execution-discipline.md, references/capabilities/69-observability.md, references/capability-index.md, references/domain-extension-index.md, references/routing-rules.md, references/skill-registry.md]
+  stage_route_manifest:
+    schema_version: 1
+    current_stage: documentation-handoff
+    next_stage: closed
+    product_surface: documentation-only
+    language_surface: none
+    selected_skills: [change-documentation-gate, reliability-observability-gate]
+    selected_capabilities: [documentation-generation, agent-execution-discipline]
+    selected_domain_extensions: []
+    skipped_capabilities:
+      - capability: code-review
+        reason: no code review is active during runbook handoff
+    context_budget_mode: single-stage
+    context_budget_rationale: L2 operational handoff keeps runtime evidence and docs in one stage
+    required_evidence: [validated boundary, residual risk, updated docs list, handoff target]
+    required_quality_gates: [documentation gate, reliability gate]
+    handoff_target: closed

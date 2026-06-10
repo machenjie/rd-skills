@@ -1,0 +1,48 @@
+---
+id: skill-output-contract-update
+description: |
+  A skill output contract update requires skill-authoring discipline and
+  validator coverage.
+prompt: |
+  Update engineering-stage-professionalism/SKILL.md so its Output Contract
+  names required quality gates and transition evidence, and add validation so
+  future edits cannot drift.
+expected:
+  complexity: L3
+  risk_level: medium
+  expected_stage: skill-authoring
+  expected_context_budget_mode: staged-plan
+  stage_conflict_case: true
+  risk_triggers: []
+  skills:
+    - change-forge-router
+    - ai-code-review-refactor
+    - change-documentation-gate
+    - quality-test-gate
+  capabilities:
+    - skill-authoring-expert
+    - engineering-stage-professionalism
+    - documentation-generation
+    - agent-execution-discipline
+  domain_extensions: []
+  quality_gates:
+    - documentation gate
+    - test gate
+    - AI review gate
+forbidden:
+  skills:
+    - backend-change-builder
+    - data-api-contract-changer
+    - delivery-release-gate
+  capabilities:
+    - service-business-logic
+    - api-contract-design
+    - release-rollback
+  domain_extensions:
+    - low-level-systems-extension
+  quality_gates:
+    - API/data gate
+    - delivery gate
+notes: |
+  A SKILL.md contract edit must stay inside ChangeForge skill-authoring and
+  validation boundaries.

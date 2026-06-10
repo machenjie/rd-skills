@@ -1,0 +1,27 @@
+---
+case_id: backend-partial-success-transaction-hidden-risk
+actual:
+  complexity: L3
+  risk_level: high
+  skills: [backend-change-builder, data-api-contract-changer, integration-change-builder, quality-test-gate]
+  capabilities: [implementation-structure-design, transaction-consistency, service-business-logic, logging-error-handling, data-migration-design, integration-testing, regression-testing]
+  domain_extensions: []
+  quality_gates: [implementation gate, API/data gate, test gate]
+  required_references: [references/capabilities/101-implementation-structure-design.md, references/capabilities/48-transaction-consistency.md, references/capabilities/38-service-business-logic.md, references/capabilities/44-logging-error-handling.md, references/capabilities/30-data-migration-design.md, references/capabilities/60-integration-testing.md, references/capabilities/64-regression-testing.md, references/capability-index.md, references/domain-extension-index.md, references/routing-rules.md, references/skill-registry.md]
+  stage_route_manifest:
+    schema_version: 1
+    current_stage: implementation-planning
+    next_stage: coding
+    product_surface: backend-product
+    language_surface: none
+    selected_skills: [backend-change-builder, data-api-contract-changer, integration-change-builder, quality-test-gate]
+    selected_capabilities: [implementation-structure-design, service-business-logic, logging-error-handling]
+    selected_domain_extensions: []
+    skipped_capabilities:
+      - capability: release-rollback
+        reason: release sequencing waits until transaction boundary is planned and implemented
+    context_budget_mode: staged-plan
+    context_budget_rationale: L3 partial-success risk needs placement and transaction planning before coding
+    required_evidence: [reuse candidates, placement rationale, visibility decisions, test placement]
+    required_quality_gates: [implementation gate, API/data gate, test gate]
+    handoff_target: coding

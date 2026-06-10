@@ -15,6 +15,7 @@ expected:
   risk_level: high
   expected_stage: debugging-diagnosis
   expected_context_budget_mode: staged-plan
+  stage_conflict_case: true
   risk_triggers:
     - same agent approach failed twice
     - database migration

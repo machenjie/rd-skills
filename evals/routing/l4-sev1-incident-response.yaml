@@ -12,6 +12,7 @@ expected:
   complexity: L4
   expected_stage: debugging-diagnosis
   expected_context_budget_mode: staged-plan
+  stage_conflict_case: true
   risk_triggers:
     - production incident
   skills:

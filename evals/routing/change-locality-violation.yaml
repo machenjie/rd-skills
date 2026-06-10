@@ -11,6 +11,7 @@ expected:
   risk_level: medium
   expected_stage: architecture-design
   expected_context_budget_mode: staged-plan
+  stage_conflict_case: true
   risk_triggers:
     - change locality violation
   skills:
