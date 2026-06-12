@@ -54,8 +54,13 @@ class SessionBootstrapTests(unittest.TestCase):
             event = {"hookEventName": "SessionStart"}
             result = run_bootstrap(event, cwd, cache, mode="warn", agent="claude")
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("route preflight", result.stdout.casefold())
-            self.assertIn("change-forge-router", result.stdout)
+            payload = json.loads(result.stdout)
+            self.assertEqual(
+                payload["hookSpecificOutput"]["hookEventName"], "SessionStart"
+            )
+            context = payload["hookSpecificOutput"]["additionalContext"]
+            self.assertIn("route preflight", context.casefold())
+            self.assertIn("change-forge-router", context)
             # Advisory only: it must never emit a block decision.
             self.assertNotIn("\"decision\"", result.stdout)
 

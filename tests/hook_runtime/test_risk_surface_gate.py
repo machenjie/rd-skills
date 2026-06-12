@@ -14,13 +14,16 @@ SCRIPT_DIR = ROOT / "src" / "hook-runtime" / "scripts"
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
 
 
-def run_risk(event: dict) -> subprocess.CompletedProcess[str]:
+def run_risk(event: dict, *, agent: str | None = None) -> subprocess.CompletedProcess[str]:
     with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
         event["cwd"] = cwd
         env = os.environ.copy()
         env["XDG_CACHE_HOME"] = cache
         env.pop("CHANGEFORGE_HOOK_MODE", None)
-        env.pop("CHANGEFORGE_AGENT", None)
+        if agent is None:
+            env.pop("CHANGEFORGE_AGENT", None)
+        else:
+            env["CHANGEFORGE_AGENT"] = agent
         return subprocess.run(
             [sys.executable, str(SCRIPT_DIR / "changeforge_risk_surface_gate.py")],
             input=json.dumps(event),
@@ -44,6 +47,19 @@ class RiskSurfaceGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertIn("security", result.stdout)
         self.assertIn("security gate", result.stdout)
+
+    def test_claude_auth_path_outputs_additional_context(self) -> None:
+        event = {
+            "runtime": "claude",
+            "hook_event_name": "PostToolUse",
+            "tool_name": "Edit",
+            "tool_input": {"file_path": "src/auth/session_token.py"},
+        }
+        result = run_risk(event, agent="claude")
+        self.assertEqual(result.returncode, 0)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["hookSpecificOutput"]["hookEventName"], "PostToolUse")
+        self.assertIn("security gate", payload["hookSpecificOutput"]["additionalContext"])
 
     def test_migration_sql_schema_triggers_data_api_gate(self) -> None:
         event = {

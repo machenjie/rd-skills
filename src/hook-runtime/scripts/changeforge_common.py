@@ -31,10 +31,11 @@ STATE_LIST_FIELDS = (
     "suggested_gates",
 )
 KNOWN_RUNTIMES = {"codex", "claude", "copilot"}
-# Runtimes that consume JSON stdout. Codex wraps event-specific context in
-# hookSpecificOutput; Copilot command hooks consume top-level additionalContext
-# only for context-capable events and top-level decision fields for Stop.
-JSON_OUTPUT_RUNTIMES = {"codex", "copilot"}
+# Runtimes that consume structured JSON stdout. Codex and Claude wrap
+# event-specific context in hookSpecificOutput; Copilot command hooks consume
+# top-level additionalContext only for context-capable events and top-level
+# decision fields for Stop.
+JSON_OUTPUT_RUNTIMES = {"codex", "claude", "copilot"}
 HOOK_MODES = {"off", "monitor", "warn", "block"}
 
 # Telemetry is an operational fact log written to the user cache. It never
@@ -96,10 +97,11 @@ def read_event() -> dict:
 def detect_runtime(event: dict) -> str:
     """Return codex / claude / copilot / unknown.
 
-    VS Code Copilot and Codex both send snake_case event keys, so they cannot be
-    told apart from the payload alone. The forced ``CHANGEFORGE_AGENT`` env var
-    (set by each agent's hook template command) is authoritative; the event-key
-    fallback only distinguishes Codex-style from Claude-style payloads.
+    Claude Code, VS Code Copilot, and Codex can all send snake_case event keys,
+    so the payload alone is not authoritative. The forced
+    ``CHANGEFORGE_AGENT`` env var set by each hook template command is the
+    contract; event-key fallback is only for legacy fixtures and best-effort
+    local runs.
     """
     forced = os.environ.get("CHANGEFORGE_AGENT", "").strip().casefold()
     if forced in KNOWN_RUNTIMES:
@@ -291,19 +293,8 @@ def emit_warning(runtime: str, hook_event_name: str, message: str) -> None:
         if _compact(hook_event_name) in {"posttooluse", "posttoolusefailure", "notification"}:
             print(json.dumps({"additionalContext": text}, sort_keys=True))
         return
-    if runtime == "codex":
-        event = hook_event_name or "PostToolUse"
-        print(
-            json.dumps(
-                {
-                    "hookSpecificOutput": {
-                        "hookEventName": event,
-                        "additionalContext": text,
-                    }
-                },
-                sort_keys=True,
-            )
-        )
+    if runtime in {"codex", "claude"}:
+        _emit_hook_specific_context(hook_event_name or "PostToolUse", text)
         return
     print(text)
 
@@ -325,19 +316,23 @@ def emit_stop_reminder(runtime: str, message: str, *, continue_turn: bool) -> No
         else:
             print(json.dumps({"systemMessage": text}, sort_keys=True))
         return
-    print(text)
+    if runtime == "claude":
+        if continue_turn:
+            print(json.dumps({"decision": "block", "reason": text}, sort_keys=True))
+        else:
+            print(json.dumps({"systemMessage": text}, sort_keys=True))
+        return
 
 
 def emit_session_context(runtime: str, message: str, event_name: str = "SessionStart") -> None:
     """Emit additional developer context for a context-injecting hook.
 
-    Used by SessionStart, SubagentStart, and UserPromptSubmit. Codex supports
-    JSON context for all three events; Copilot consumes additionalContext for
-    SessionStart and SubagentStart but not UserPromptSubmit. Claude receives
-    plain stdout. This is advisory only: it never emits a block decision, never
-    reads references, and fails open. ``event_name`` defaults to SessionStart so
-    existing callers keep working; Codex echoes the matching ``hookEventName``
-    in hookSpecificOutput.
+    Used by SessionStart, SubagentStart, and UserPromptSubmit. Codex and Claude
+    use hookSpecificOutput.additionalContext; Copilot consumes top-level
+    additionalContext for SessionStart and SubagentStart but not
+    UserPromptSubmit. This is advisory only: it never emits a block decision,
+    never reads references, and fails open. ``event_name`` defaults to
+    SessionStart so existing callers keep working.
     """
     if runtime not in KNOWN_RUNTIMES:
         return
@@ -348,29 +343,19 @@ def emit_session_context(runtime: str, message: str, event_name: str = "SessionS
         if _compact(event_name) in {"sessionstart", "subagentstart", "notification"}:
             print(json.dumps({"additionalContext": text}, sort_keys=True))
         return
-    if runtime == "codex":
-        print(
-            json.dumps(
-                {
-                    "hookSpecificOutput": {
-                        "hookEventName": event_name,
-                        "additionalContext": text,
-                    }
-                },
-                sort_keys=True,
-            )
-        )
+    if runtime in {"codex", "claude"}:
+        _emit_hook_specific_context(event_name, text)
         return
-    print(text)
 
 
 def emit_subagent_stop_reminder(runtime: str, message: str) -> None:
     """Emit a SubagentStop-compatible advisory ``systemMessage`` where supported.
 
-    Codex supports advisory ``systemMessage`` output. Copilot SubagentStop only
+    Codex and Claude support advisory ``systemMessage`` output. Claude
+    SubagentStop ``additionalContext`` would keep the subagent running, while
+    this reminder is intentionally non-continuing. Copilot SubagentStop only
     supports decision control, so this advisory reminder emits nothing there.
-    This reminder never returns ``decision: block`` (which would force the
-    subagent to continue) and never ``continue: false``.
+    This reminder never returns ``decision: block`` or ``continue: false``.
     """
     if runtime not in KNOWN_RUNTIMES:
         return
@@ -387,6 +372,20 @@ def emit_block(runtime: str, hook_event_name: str, reason: str) -> None:
     if runtime not in KNOWN_RUNTIMES:
         return
     print(json.dumps({"decision": "block", "reason": reason.strip()}, sort_keys=True))
+
+
+def _emit_hook_specific_context(hook_event_name: str, text: str) -> None:
+    print(
+        json.dumps(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": hook_event_name,
+                    "additionalContext": text,
+                }
+            },
+            sort_keys=True,
+        )
+    )
 
 
 def debug_enabled() -> bool:

@@ -105,6 +105,21 @@ class ChangeForgeCommonTests(unittest.TestCase):
         self.assertEqual(common.detect_runtime({"hook_event_name": "PostToolUse"}), "codex")
         self.assertEqual(common.detect_runtime({"hookEventName": "PostToolUse"}), "claude")
 
+    def test_runtime_detection_uses_claude_env_override_for_snake_case(self) -> None:
+        common = load_common()
+        previous_agent = os.environ.get("CHANGEFORGE_AGENT")
+        os.environ["CHANGEFORGE_AGENT"] = "claude"
+        try:
+            self.assertEqual(
+                common.detect_runtime({"hook_event_name": "PostToolUse"}),
+                "claude",
+            )
+        finally:
+            if previous_agent is None:
+                os.environ.pop("CHANGEFORGE_AGENT", None)
+            else:
+                os.environ["CHANGEFORGE_AGENT"] = previous_agent
+
     def test_extract_changed_paths_from_apply_patch(self) -> None:
         common = load_common()
         event = json.loads((FIXTURE_DIR / "codex_post_tool_use_apply_patch.json").read_text())

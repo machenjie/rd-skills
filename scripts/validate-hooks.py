@@ -42,8 +42,7 @@ COPILOT_USER_TEMPLATE = (
     HOOK_RUNTIME_ROOT / "templates" / "copilot-user" / "changeforge-hooks.json"
 )
 COPILOT_TEMPLATES = (COPILOT_TEMPLATE, COPILOT_USER_TEMPLATE)
-# Copilot event -> the hook script(s) each event must invoke.
-COPILOT_EVENT_SCRIPTS = {
+RICH_EVENT_SCRIPTS = {
     "SessionStart": ("changeforge_session_bootstrap",),
     "UserPromptSubmit": ("changeforge_user_prompt_route_reminder",),
     "PreToolUse": ("changeforge_pre_tool_risk_preview",),
@@ -52,6 +51,8 @@ COPILOT_EVENT_SCRIPTS = {
     "SubagentStop": ("changeforge_subagent_stop_reminder",),
     "Stop": ("changeforge_stop_closure_gate",),
 }
+# Copilot event -> the hook script(s) each event must invoke.
+COPILOT_EVENT_SCRIPTS = RICH_EVENT_SCRIPTS
 BOOTSTRAP_TEMPLATE = (
     HOOK_RUNTIME_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"
 )
@@ -105,9 +106,9 @@ def main() -> int:
     if isinstance(codex_user, dict):
         _validate_template(codex_user, CODEX_USER_TEMPLATE, timeout_limit=10, errors=errors)
     if isinstance(claude, dict):
-        _validate_template(claude, CLAUDE_TEMPLATE, timeout_limit=10000, errors=errors)
+        _validate_template(claude, CLAUDE_TEMPLATE, timeout_limit=10, errors=errors)
     if isinstance(claude_user, dict):
-        _validate_template(claude_user, CLAUDE_USER_TEMPLATE, timeout_limit=10000, errors=errors)
+        _validate_template(claude_user, CLAUDE_USER_TEMPLATE, timeout_limit=10, errors=errors)
     if isinstance(copilot, dict):
         _validate_copilot_template(copilot, COPILOT_TEMPLATE, errors=errors)
     if isinstance(copilot_user, dict):
@@ -233,7 +234,7 @@ def _validate_python_files(errors: list[str]) -> None:
         common_text = common_script.read_text(encoding="utf-8")
         if "hookSpecificOutput" not in common_text or "additionalContext" not in common_text:
             errors.append(
-                "changeforge_common.py: Codex warnings must use hookSpecificOutput.additionalContext"
+                "changeforge_common.py: Codex and Claude warnings must use hookSpecificOutput.additionalContext"
             )
         if '"additionalContext": text' not in common_text:
             errors.append(
@@ -320,19 +321,19 @@ def _validate_template(
             f"{relpath(ROOT, path)}: SessionStart must invoke changeforge_session_bootstrap"
         )
 
-    # Codex exposes additional events the runtime uses to reinforce routing and
-    # closure discipline. Require each one to invoke its dedicated hook script.
-    if path in CODEX_TEMPLATES:
-        for event, script in (
-            ("UserPromptSubmit", "changeforge_user_prompt_route_reminder"),
-            ("PreToolUse", "changeforge_pre_tool_risk_preview"),
-            ("SubagentStart", "changeforge_session_bootstrap"),
-            ("SubagentStop", "changeforge_subagent_stop_reminder"),
-        ):
-            if not _event_invokes(hooks, event, script):
-                errors.append(
-                    f"{relpath(ROOT, path)}: Codex {event} must invoke {script}"
-                )
+    # Codex and Claude expose the lifecycle events the runtime uses to reinforce
+    # routing and closure discipline. Require each one to invoke its dedicated
+    # hook script.
+    if path in CODEX_TEMPLATES or path in CLAUDE_TEMPLATES:
+        agent_name = "Codex" if path in CODEX_TEMPLATES else "Claude"
+        for event, scripts in RICH_EVENT_SCRIPTS.items():
+            if event == "PostToolUse" or event == "Stop" or event == "SessionStart":
+                continue
+            for script in scripts:
+                if not _event_invokes(hooks, event, script):
+                    errors.append(
+                        f"{relpath(ROOT, path)}: {agent_name} {event} must invoke {script}"
+                    )
 
     matchers = _post_tool_matchers(hooks)
     if not any("edit" in matcher.casefold() for matcher in matchers):
@@ -360,16 +361,23 @@ def _validate_template(
             errors.append(
                 f"{relpath(ROOT, path)}:{context}: Codex hook command must set CHANGEFORGE_AGENT=codex"
             )
+        if path in CLAUDE_TEMPLATES and "CHANGEFORGE_AGENT=claude" not in command:
+            errors.append(
+                f"{relpath(ROOT, path)}:{context}: Claude hook command must set CHANGEFORGE_AGENT=claude"
+            )
         if path in CODEX_TEMPLATES and "/usr/bin/env python3" not in command:
             errors.append(
                 f"{relpath(ROOT, path)}:{context}: Codex hook command should use /usr/bin/env python3"
             )
+        if path in CLAUDE_TEMPLATES and "/usr/bin/env python3" not in command:
+            errors.append(
+                f"{relpath(ROOT, path)}:{context}: Claude hook command should use /usr/bin/env python3"
+            )
 
     for timeout, context in _timeouts(hooks):
         if timeout > timeout_limit:
-            limit_label = "10000 ms" if timeout_limit == 10000 else "10 seconds"
             errors.append(
-                f"{relpath(ROOT, path)}:{context}: timeout {timeout} exceeds {limit_label}"
+                f"{relpath(ROOT, path)}:{context}: timeout {timeout} exceeds {timeout_limit} seconds"
             )
 
 

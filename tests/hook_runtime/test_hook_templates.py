@@ -10,24 +10,45 @@ HOOK_ROOT = ROOT / "src" / "hook-runtime"
 
 
 class HookTemplateTests(unittest.TestCase):
+    def collect_commands(self, value: object) -> list[str]:
+        commands: list[str] = []
+
+        def collect(child: object) -> None:
+            if isinstance(child, dict):
+                command = child.get("command")
+                if isinstance(command, str):
+                    commands.append(command)
+                for nested in child.values():
+                    collect(nested)
+            elif isinstance(child, list):
+                for nested in child:
+                    collect(nested)
+
+        collect(value)
+        return commands
+
+    def collect_timeouts(self, value: object) -> list[int]:
+        timeouts: list[int] = []
+
+        def collect(child: object) -> None:
+            if isinstance(child, dict):
+                timeout = child.get("timeout")
+                if isinstance(timeout, int):
+                    timeouts.append(timeout)
+                for nested in child.values():
+                    collect(nested)
+            elif isinstance(child, list):
+                for nested in child:
+                    collect(nested)
+
+        collect(value)
+        return timeouts
+
     def test_codex_hooks_json_parses(self) -> None:
         data = json.loads((HOOK_ROOT / "templates" / "codex" / "hooks.json").read_text())
         self.assertIn("PostToolUse", data["hooks"])
         self.assertIn("Stop", data["hooks"])
-        commands = []
-
-        def collect(value: object) -> None:
-            if isinstance(value, dict):
-                command = value.get("command")
-                if isinstance(command, str):
-                    commands.append(command)
-                for child in value.values():
-                    collect(child)
-            elif isinstance(value, list):
-                for child in value:
-                    collect(child)
-
-        collect(data["hooks"])
+        commands = self.collect_commands(data["hooks"])
         self.assertTrue(commands)
         for command in commands:
             self.assertIn("CHANGEFORGE_AGENT=codex", command)
@@ -42,11 +63,26 @@ class HookTemplateTests(unittest.TestCase):
                 / "settings.changeforge-hooks.fragment.json"
             ).read_text()
         )
-        self.assertIn("PostToolUse", data["hooks"])
-        self.assertIn("Stop", data["hooks"])
-        self.assertIn("SessionStart", data["hooks"])
+        for event in (
+            "SessionStart",
+            "UserPromptSubmit",
+            "PreToolUse",
+            "PostToolUse",
+            "SubagentStart",
+            "SubagentStop",
+            "Stop",
+        ):
+            self.assertIn(event, data["hooks"])
         session_commands = json.dumps(data["hooks"]["SessionStart"])
         self.assertIn("changeforge_session_bootstrap", session_commands)
+        commands = self.collect_commands(data["hooks"])
+        self.assertTrue(commands)
+        for command in commands:
+            self.assertIn("CHANGEFORGE_AGENT=claude", command)
+            self.assertIn("/usr/bin/env python3", command)
+            self.assertIn("${CLAUDE_PROJECT_DIR}/.claude/hooks/", command)
+        self.assertTrue(self.collect_timeouts(data["hooks"]))
+        self.assertTrue(all(timeout <= 10 for timeout in self.collect_timeouts(data["hooks"])))
 
     def test_codex_wires_session_start_and_new_events(self) -> None:
         # Codex now exposes SessionStart and several other events; the template
@@ -87,12 +123,23 @@ class HookTemplateTests(unittest.TestCase):
             ).read_text()
         )
         hooks = data["hooks"]
-        self.assertIn("SessionStart", hooks)
-        self.assertIn("PostToolUse", hooks)
-        self.assertIn("Stop", hooks)
+        for event in (
+            "SessionStart",
+            "UserPromptSubmit",
+            "PreToolUse",
+            "PostToolUse",
+            "SubagentStart",
+            "SubagentStop",
+            "Stop",
+        ):
+            self.assertIn(event, hooks)
         commands = json.dumps(hooks)
         self.assertIn("${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/", commands)
+        self.assertIn("CHANGEFORGE_AGENT=claude", commands)
+        self.assertIn("/usr/bin/env python3", commands)
         self.assertNotIn("CLAUDE_PROJECT_DIR", commands)
+        self.assertTrue(self.collect_timeouts(hooks))
+        self.assertTrue(all(timeout <= 10 for timeout in self.collect_timeouts(hooks)))
 
     def test_copilot_template_is_flat_and_wires_events(self) -> None:
         # VS Code Copilot uses the flat (matcher-less) format: each event maps

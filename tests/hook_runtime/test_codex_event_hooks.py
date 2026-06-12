@@ -13,13 +13,19 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPT_DIR = ROOT / "src" / "hook-runtime" / "scripts"
 
 
-def _run(script: str, event: dict, *, mode: str | None = None) -> subprocess.CompletedProcess[str]:
+def _run(
+    script: str,
+    event: dict,
+    *,
+    mode: str | None = None,
+    agent: str = "codex",
+) -> subprocess.CompletedProcess[str]:
     with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
         event = dict(event)
         event.setdefault("cwd", cwd)
         env = os.environ.copy()
         env["XDG_CACHE_HOME"] = cache
-        env["CHANGEFORGE_AGENT"] = "codex"
+        env["CHANGEFORGE_AGENT"] = agent
         if mode is None:
             env.pop("CHANGEFORGE_HOOK_MODE", None)
         else:
@@ -179,6 +185,52 @@ class SessionBootstrapSubagentStartTests(unittest.TestCase):
         )
         # Advisory only: the subagent start must not be blocked.
         self.assertNotIn("\"decision\"", result.stdout)
+
+
+class ClaudeLifecycleHookTests(unittest.TestCase):
+    def test_user_prompt_submit_emits_claude_additional_context(self) -> None:
+        event = {"hook_event_name": "UserPromptSubmit", "prompt": "change hook templates"}
+        result = _run(
+            "changeforge_user_prompt_route_reminder.py",
+            event,
+            agent="claude",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["hookSpecificOutput"]["hookEventName"], "UserPromptSubmit")
+        self.assertIn("changeforge_route", payload["hookSpecificOutput"]["additionalContext"])
+
+    def test_pre_tool_use_emits_claude_advisory_without_permission_decision(self) -> None:
+        event = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Edit",
+            "tool_input": {"file_path": "src/auth/session_token.py"},
+        }
+        result = _run("changeforge_pre_tool_risk_preview.py", event, agent="claude")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["hookSpecificOutput"]["hookEventName"], "PreToolUse")
+        self.assertIn("security", payload["hookSpecificOutput"]["additionalContext"])
+        self.assertNotIn("permissionDecision", payload["hookSpecificOutput"])
+        self.assertNotIn("decision", payload)
+
+    def test_subagent_start_emits_claude_preflight_context(self) -> None:
+        event = {"hook_event_name": "SubagentStart", "agent_type": "Explore"}
+        result = _run("changeforge_session_bootstrap.py", event, agent="claude")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["hookSpecificOutput"]["hookEventName"], "SubagentStart")
+        self.assertIn("route preflight", payload["hookSpecificOutput"]["additionalContext"].casefold())
+
+    def test_subagent_stop_emits_claude_system_message_without_continuation(self) -> None:
+        event = {"hook_event_name": "SubagentStop", "agent_type": "Explore"}
+        result = _run("changeforge_subagent_stop_reminder.py", event, agent="claude")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertIn("systemMessage", payload)
+        self.assertIn("changeforge_route", payload["systemMessage"])
+        self.assertNotIn("decision", payload)
+        self.assertNotIn("continue", payload)
 
 
 if __name__ == "__main__":

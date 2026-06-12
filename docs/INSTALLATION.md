@@ -49,15 +49,17 @@ and user scope:
 
 The hook runtime is not a skill and does not replace `change-forge-router`. It
 adds a `SessionStart` route-preflight reminder (Codex, Claude, and Copilot) and
-warning-only reminders across the agent lifecycle. Codex wires a per-prompt
-route reminder (`UserPromptSubmit`), a pre-edit risk preview (`PreToolUse`), the
-structure and risk gates after edits (`PostToolUse`), a subagent preflight
-(`SubagentStart`), a subagent closure reminder (`SubagentStop`), and the closure
-gate (`Stop`). Copilot wires the same lifecycle events, but only emits output
-for the schemas Copilot consumes: top-level `additionalContext` for
-`SessionStart`, `SubagentStart`, and `PostToolUse`, and top-level
-`decision`/`reason` for Stop block mode. The shared scripts recognize both
-Codex/Claude and VS Code Copilot tool names. Hooks are never installed by
+warning-only reminders across the agent lifecycle. Codex and Claude wire a
+per-prompt route reminder (`UserPromptSubmit`), a pre-edit risk preview
+(`PreToolUse`), the structure and risk gates after edits (`PostToolUse`), a
+subagent preflight (`SubagentStart`), a subagent closure reminder
+(`SubagentStop`), and the closure gate (`Stop`). Claude commands explicitly set
+`CHANGEFORGE_AGENT=claude` and use 10-second `timeout` values because Claude
+Code measures timeout in seconds. Copilot wires the same lifecycle events, but
+only emits output for the schemas Copilot consumes: top-level
+`additionalContext` for `SessionStart`, `SubagentStart`, and `PostToolUse`, and
+top-level `decision`/`reason` for Stop block mode. The shared scripts recognize
+both Codex/Claude and VS Code Copilot tool names. Hooks are never installed by
 default; pass `--with-hooks` to `installers/install.py` for Codex, Claude, or
 Copilot project or user scope, and existing hook configuration is always
 preserved.

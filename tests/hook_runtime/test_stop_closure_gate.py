@@ -117,8 +117,9 @@ class StopClosureGateTests(unittest.TestCase):
             )
             result = run_stop(event, cwd, cache)
         self.assertEqual(result.returncode, 0)
-        self.assertIn("ChangeForge Closure Gate reminder", result.stdout)
-        self.assertIn("changed files", result.stdout)
+        payload = json.loads(result.stdout)
+        self.assertIn("ChangeForge Closure Gate reminder", payload["systemMessage"])
+        self.assertIn("changed files", payload["systemMessage"])
 
     def test_file_naming_findings_request_naming_evidence(self) -> None:
         event = {"hook_event_name": "Stop", "runtime": "claude", "response": "done"}
@@ -243,6 +244,22 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
         self.assertEqual(payload["decision"], "block")
+
+    def test_claude_block_mode_outputs_block_decision(self) -> None:
+        event = {
+            "hook_event_name": "Stop",
+            "runtime": "claude",
+            "stop_hook_active": False,
+            "last_assistant_message": "done",
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, runtime="claude", comment_findings=["a.py: uncommented"])
+            result = run_stop(event, cwd, cache, mode="block", agent="claude")
+        self.assertEqual(result.returncode, 0)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["decision"], "block")
+        self.assertIn("comment", payload["reason"])
 
     def test_state_cleared_after_stop(self) -> None:
         event = {"hook_event_name": "Stop", "runtime": "claude", "response": "done"}

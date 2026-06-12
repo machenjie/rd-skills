@@ -5,8 +5,41 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_session_bootstrap.py",
-            "timeout": 10000
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_session_bootstrap.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_user_prompt_route_reminder.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_pre_tool_risk_preview.py\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_pre_tool_risk_preview.py\"",
+            "timeout": 10
           }
         ]
       }
@@ -17,13 +50,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_post_edit_structure_gate.py",
-            "timeout": 10000
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_post_edit_structure_gate.py\"",
+            "timeout": 10
           },
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_risk_surface_gate.py",
-            "timeout": 10000
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_risk_surface_gate.py\"",
+            "timeout": 10
           }
         ]
       },
@@ -32,8 +65,30 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_risk_surface_gate.py",
-            "timeout": 10000
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_risk_surface_gate.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_session_bootstrap.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_subagent_stop_reminder.py\"",
+            "timeout": 10
           }
         ]
       }
@@ -43,8 +98,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_stop_closure_gate.py",
-            "timeout": 10000
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_stop_closure_gate.py\"",
+            "timeout": 10
           }
         ]
       }

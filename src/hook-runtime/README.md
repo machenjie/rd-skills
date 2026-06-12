@@ -20,17 +20,19 @@ The runtime provides these reminder hooks:
   the Codex `compact` source) and `SubagentStart`, remind the agent to run a
   `change-forge-router` preflight before engineering work. Also ships as an
   advisory install-time fragment.
-- Route Reminder: at Codex `UserPromptSubmit`, add a concise per-prompt reminder
-  to route and emit a `changeforge_route` manifest. It reminds the agent to
+- Route Reminder: at Codex and Claude `UserPromptSubmit`, add a concise
+  per-prompt reminder to route and emit a `changeforge_route` manifest. It
+  reminds the agent to
   clarify requirements before action, inspect target-project code before
   planning, name TDD or validation evidence before implementation, assign
   action-specific owner and independent review skills, repair/re-review findings,
   and hand off with validation evidence and residual risk. Never reads or records
   the prompt text.
-- Pre-Edit Risk Preview: at Codex `PreToolUse`, preview risk surfaces before an
-  edit or command runs. Advisory only; never denies the tool call. Copilot wires
-  `PreToolUse`, but warning-only advisory output is suppressed because Copilot
-  only consumes permission decisions or argument modifications for that event.
+- Pre-Edit Risk Preview: at Codex and Claude `PreToolUse`, preview risk surfaces
+  before an edit or command runs. Advisory only; never denies the tool call.
+  Copilot wires `PreToolUse`, but warning-only advisory output is suppressed
+  because Copilot only consumes permission decisions or argument modifications
+  for that event.
 - Post-Edit Structure Gate: after edit tools run, detect structural code changes
   that should preserve reuse, placement, ownership, dependency direction, public
   API decisions, same-pattern scans, and nearby tests.
@@ -40,11 +42,11 @@ The runtime provides these reminder hooks:
 - Stop Closure Gate: before final handoff, remind the agent to include the
   ChangeForge path used, changed files, validation evidence, residual risk, and
   next actions.
-- Subagent Closure Reminder: at Codex `SubagentStop`, remind the subagent to
-  carry closure evidence back to the parent. Advisory only; never forces
-  continuation and never touches the parent turn's closure state. Copilot wires
-  `SubagentStop`, but warning-only advisory output is suppressed because Copilot
-  only consumes block/allow decision output for that event.
+- Subagent Closure Reminder: at Codex and Claude `SubagentStop`, remind the
+  subagent to carry closure evidence back to the parent. Advisory only; never
+  forces continuation and never touches the parent turn's closure state. Copilot
+  wires `SubagentStop`, but warning-only advisory output is suppressed because
+  Copilot only consumes block/allow decision output for that event.
 
 ## Non-Goals
 
@@ -89,8 +91,11 @@ and loads every `*.json` in its hook folder, so its config is the dedicated
 `changeforge-hooks.json` and the scripts, manifest, and bootstrap fragment live
 in a `changeforge/` subfolder. Copilot context output is top-level
 `additionalContext` for supported events; Stop block output is top-level
-`decision`/`reason`. Each layout includes `.changeforge-hook-manifest.json` so
-installation validation can prove which hook scripts and scope were emitted.
+`decision`/`reason`. Claude commands set `CHANGEFORGE_AGENT=claude` explicitly,
+emit `hookSpecificOutput.additionalContext` for context-bearing events, and use
+10-second `timeout` values because Claude Code measures timeout in seconds.
+Each layout includes `.changeforge-hook-manifest.json` so installation
+validation can prove which hook scripts and scope were emitted.
 
 The installer can place these hooks for Codex, Claude, and Copilot project or
 user scope with `installers/install.py --with-hooks`; existing hook

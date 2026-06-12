@@ -73,16 +73,22 @@ REQUIRED_HOOK_DIST_FILES = (
     "claude/project/.claude/changeforge-route-preflight.md",
     "claude/project/.claude/hooks/changeforge_common.py",
     "claude/project/.claude/hooks/changeforge_session_bootstrap.py",
+    "claude/project/.claude/hooks/changeforge_user_prompt_route_reminder.py",
+    "claude/project/.claude/hooks/changeforge_pre_tool_risk_preview.py",
     "claude/project/.claude/hooks/changeforge_post_edit_structure_gate.py",
     "claude/project/.claude/hooks/changeforge_risk_surface_gate.py",
+    "claude/project/.claude/hooks/changeforge_subagent_stop_reminder.py",
     "claude/project/.claude/hooks/changeforge_stop_closure_gate.py",
     "claude/user/.claude/settings.changeforge-hooks.fragment.json",
     "claude/user/.claude/.changeforge-hook-manifest.json",
     "claude/user/.claude/changeforge-route-preflight.md",
     "claude/user/.claude/hooks/changeforge_common.py",
     "claude/user/.claude/hooks/changeforge_session_bootstrap.py",
+    "claude/user/.claude/hooks/changeforge_user_prompt_route_reminder.py",
+    "claude/user/.claude/hooks/changeforge_pre_tool_risk_preview.py",
     "claude/user/.claude/hooks/changeforge_post_edit_structure_gate.py",
     "claude/user/.claude/hooks/changeforge_risk_surface_gate.py",
+    "claude/user/.claude/hooks/changeforge_subagent_stop_reminder.py",
     "claude/user/.claude/hooks/changeforge_stop_closure_gate.py",
     "copilot/project/.github/hooks/changeforge-hooks.json",
     "copilot/project/.github/hooks/changeforge/.changeforge-hook-manifest.json",
@@ -113,10 +119,10 @@ BASE_HOOK_NAMES = {
     "changeforge_risk_surface_gate",
     "changeforge_stop_closure_gate",
 }
-# Both runtimes wire the route-preflight bootstrap as a SessionStart hook and
-# ship the install-time bootstrap fragment. Codex and Copilot additionally wire
-# the per-prompt route reminder, the pre-edit risk preview, and the subagent
-# closure reminder enabled by their richer hook events.
+# Each runtime wires the route-preflight bootstrap as a SessionStart hook and
+# ships the install-time bootstrap fragment. Codex, Claude, and Copilot also
+# ship the per-prompt route reminder, pre-edit risk preview, and subagent
+# closure reminder scripts for their richer hook events.
 RICH_HOOK_NAMES = frozenset(
     BASE_HOOK_NAMES
     | {
@@ -128,7 +134,7 @@ RICH_HOOK_NAMES = frozenset(
 )
 EXPECTED_HOOK_NAMES_BY_AGENT = {
     "codex": RICH_HOOK_NAMES,
-    "claude": frozenset(BASE_HOOK_NAMES | {"changeforge_session_bootstrap"}),
+    "claude": RICH_HOOK_NAMES,
     "copilot": RICH_HOOK_NAMES,
 }
 BOOTSTRAP_FRAGMENT_NAME = "changeforge-route-preflight.md"

@@ -509,28 +509,18 @@ def _copy_hook_scripts(target: Path) -> None:
 
 
 def _write_hook_manifest(target: Path, agent: str, scope: str) -> None:
-    # Both runtimes now wire the route-preflight bootstrap as a SessionStart
-    # hook and also ship the install-time bootstrap fragment for the advisory
-    # path. Codex and Copilot additionally wire the per-prompt route reminder,
-    # the pre-edit risk preview, and the subagent closure reminder enabled by
-    # their richer hook events.
-    if agent in ("codex", "copilot"):
-        hooks = [
-            "changeforge_session_bootstrap",
-            "changeforge_user_prompt_route_reminder",
-            "changeforge_pre_tool_risk_preview",
-            "changeforge_post_edit_structure_gate",
-            "changeforge_risk_surface_gate",
-            "changeforge_subagent_stop_reminder",
-            "changeforge_stop_closure_gate",
-        ]
-    else:
-        hooks = [
-            "changeforge_session_bootstrap",
-            "changeforge_post_edit_structure_gate",
-            "changeforge_risk_surface_gate",
-            "changeforge_stop_closure_gate",
-        ]
+    # Each interactive runtime wires the route-preflight bootstrap and ships the
+    # same lifecycle hook scripts. Runtime-specific output differences stay in
+    # changeforge_common.py and the templates, not in the manifest.
+    hooks = [
+        "changeforge_session_bootstrap",
+        "changeforge_user_prompt_route_reminder",
+        "changeforge_pre_tool_risk_preview",
+        "changeforge_post_edit_structure_gate",
+        "changeforge_risk_surface_gate",
+        "changeforge_subagent_stop_reminder",
+        "changeforge_stop_closure_gate",
+    ]
     manifest = {
         "kind": "changeforge-hook-runtime",
         "agent": agent,

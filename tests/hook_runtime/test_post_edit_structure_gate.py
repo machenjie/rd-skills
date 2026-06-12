@@ -116,7 +116,12 @@ class PostEditStructureGateTests(unittest.TestCase):
         }
         result = run_structure(event)
         self.assertEqual(result.returncode, 0)
-        self.assertIn("ChangeForge Structure Gate triggered", result.stdout)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["hookSpecificOutput"]["hookEventName"], "PostToolUse")
+        self.assertIn(
+            "ChangeForge Structure Gate triggered",
+            payload["hookSpecificOutput"]["additionalContext"],
+        )
 
     def test_file_naming_mismatch_against_siblings_warns(self) -> None:
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
@@ -350,6 +355,25 @@ class PostEditStructureGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
         self.assertIn("additionalContext", payload["hookSpecificOutput"])
+        self.assertIn(
+            "ChangeForge Structure Gate triggered",
+            payload["hookSpecificOutput"]["additionalContext"],
+        )
+
+    def test_warn_mode_outputs_claude_additional_context(self) -> None:
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd = Path(cwd_s).resolve()
+            cache = Path(cache_s)
+            event = {
+                **apply_patch_event(
+                    add_file_patch("internal/services/order_service.go", "package services")
+                ),
+                "runtime": "claude",
+            }
+            result = run_gate(event, cwd, cache, mode="warn", agent="claude")
+        self.assertEqual(result.returncode, 0)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["hookSpecificOutput"]["hookEventName"], "PostToolUse")
         self.assertIn(
             "ChangeForge Structure Gate triggered",
             payload["hookSpecificOutput"]["additionalContext"],

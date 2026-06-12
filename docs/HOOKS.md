@@ -20,13 +20,13 @@ The first-stage runtime provides these reminder gates:
   so the route preflight is re-injected once context is compacted). The same
   guidance also ships as an install-time bootstrap fragment for users who prefer
   not to trust executable hooks.
-- Route Reminder (`UserPromptSubmit`, Codex): adds a concise per-prompt
+- Route Reminder (`UserPromptSubmit`, Codex and Claude): adds a concise per-prompt
   reminder to run `change-forge-router` and emit a `changeforge_route` manifest
   for any engineering change. It is advisory developer context, never reads or
   records the prompt text, and writes no telemetry. Copilot also wires the event
   for lifecycle coverage, but Copilot does not process `userPromptSubmitted`
   output, so it is not a reliable context-injection point.
-- Pre-Edit Risk Preview (`PreToolUse`, Codex): before an edit or command runs,
+- Pre-Edit Risk Preview (`PreToolUse`, Codex and Claude): before an edit or command runs,
   it previews ChangeForge risk surfaces (auth, data contract, cache, queue,
   Kubernetes, Helm, big data) and reminds the agent to route first. It reuses
   the Risk Surface Gate matching, is advisory only, never denies the tool call,
@@ -51,7 +51,7 @@ The first-stage runtime provides these reminder gates:
   skill path, changed files, validation evidence, residual risk, next steps, and
   the structure-evidence records (file naming, reuse ladder, extension safety,
   advanced refactor, comment quality) for any structure sub-gate that fired.
-- Subagent Closure Reminder (`SubagentStop`, Codex): reminds a stopping subagent
+- Subagent Closure Reminder (`SubagentStop`, Codex and Claude): reminds a stopping subagent
   to hand the parent the route manifest, validation evidence, and residual risk.
   It emits an advisory `systemMessage`, never forces the subagent to continue,
   and never touches the parent turn's closure state. Copilot `subagentStop`
@@ -134,19 +134,20 @@ Runtime support:
 - Any runtime can install the advisory fragment with
   `installers/install.py --with-bootstrap`.
 
-## Codex And Copilot Event Coverage
+## Agent Event Coverage
 
-Codex and VS Code Copilot both expose the lifecycle events ChangeForge needs, so
-their hooks reinforce routing and closure discipline at every stage, not only
-after edits:
+Codex, Claude, and VS Code Copilot expose the lifecycle events ChangeForge
+needs, so their hooks reinforce routing and closure discipline at every stage,
+not only after edits:
 
 - `SessionStart` (Codex also with the `compact` source) and `SubagentStart`
   inject the route preflight.
-- `UserPromptSubmit` adds a per-prompt route reminder for Codex. Copilot wires
-  the event, but Copilot does not process its output.
-- `PreToolUse` previews risk surfaces before an edit or command runs for Codex.
-  Copilot wires the event, but warning-only preview output is suppressed because
-  Copilot `preToolUse` does not consume advisory `additionalContext`.
+- `UserPromptSubmit` adds a per-prompt route reminder for Codex and Claude.
+  Copilot wires the event, but Copilot does not process its output.
+- `PreToolUse` previews risk surfaces before an edit or command runs for Codex
+  and Claude. Copilot wires the event, but warning-only preview output is
+  suppressed because Copilot `preToolUse` does not consume advisory
+  `additionalContext`.
 - `PostToolUse` runs the structure and risk-surface gates after edits and
   commands.
 - `Stop` runs the closure gate. In Copilot block mode it emits top-level
@@ -162,8 +163,10 @@ VS Code Copilot uses the flat (matcher-less) hook config format with
 VS Code-compatible snake_case fields. ChangeForge emits top-level
 `additionalContext` only for Copilot context-capable events such as
 `SessionStart`, `SubagentStart`, and `PostToolUse`; Stop block output uses
-top-level `decision`/`reason`. Codex keeps `hookSpecificOutput.additionalContext`
-for context hooks and `systemMessage` for warning-only Stop output.
+top-level `decision`/`reason`. Codex and Claude use
+`hookSpecificOutput.additionalContext` for context hooks and `systemMessage` for
+warning-only Stop/SubagentStop output; Stop block output uses top-level
+`decision`/`reason` for both.
 
 These remain execution-time guardrails. They detect edited paths, patch signals,
 risk surfaces, and missing closure evidence, and they remind the agent to route;
@@ -175,10 +178,10 @@ they never select a complete route, never block by default, and never replace
 Hooks can:
 - remind on route preflight at session start, subagent start, and after
   compaction (`SessionStart`/`SubagentStart`);
-- remind on routing per user prompt (Codex `UserPromptSubmit`; Copilot wires the
-  event but its output is not processed);
-- preview risk surfaces before an edit or command runs (Codex `PreToolUse`;
-  Copilot cannot consume advisory preview context);
+- remind on routing per user prompt (Codex and Claude `UserPromptSubmit`;
+  Copilot wires the event but its output is not processed);
+- preview risk surfaces before an edit or command runs (Codex and Claude
+  `PreToolUse`; Copilot cannot consume advisory preview context);
 - remind on new file naming pattern mismatches;
 - remind on structural path changes;
 - remind on helper/common/utils/shared pollution risk;
@@ -187,8 +190,8 @@ Hooks can:
 - remind on advanced refactor evidence;
 - remind on comment quality evidence;
 - remind on Stop-stage closure evidence;
-- remind a stopping subagent to carry closure evidence (`SubagentStop`, Codex;
-  Copilot warning-only advisory output is not emitted).
+- remind a stopping subagent to carry closure evidence (`SubagentStop`, Codex
+  and Claude; Copilot warning-only advisory output is not emitted).
 
 Hooks cannot:
 - replace `change-forge-router`;
@@ -276,8 +279,11 @@ dist/claude/project/.claude/.changeforge-hook-manifest.json
 dist/claude/project/.claude/changeforge-route-preflight.md
 dist/claude/project/.claude/hooks/changeforge_common.py
 dist/claude/project/.claude/hooks/changeforge_session_bootstrap.py
+dist/claude/project/.claude/hooks/changeforge_user_prompt_route_reminder.py
+dist/claude/project/.claude/hooks/changeforge_pre_tool_risk_preview.py
 dist/claude/project/.claude/hooks/changeforge_post_edit_structure_gate.py
 dist/claude/project/.claude/hooks/changeforge_risk_surface_gate.py
+dist/claude/project/.claude/hooks/changeforge_subagent_stop_reminder.py
 dist/claude/project/.claude/hooks/changeforge_stop_closure_gate.py
 
 dist/claude/user/.claude/...      # same Claude layout, CLAUDE_CONFIG_DIR-resolved paths
@@ -293,15 +299,18 @@ dist/universal/bootstrap/changeforge-route-preflight.md
 ```
 
 Codex, Claude, and Copilot all wire the session bootstrap as a `SessionStart`
-hook; the same scripts ship in the project and user layouts. The Codex layout
-also wires per-prompt route reminders, pre-edit risk preview, and advisory
-subagent closure reminders. The Copilot layout wires the same lifecycle events,
-but only emits JSON for outputs Copilot consumes: top-level `additionalContext`
-for session/subagent start and post-tool gates, and top-level `decision`/`reason`
-for Stop block mode. VS Code Copilot loads every `*.json` in the hook folder, so
-its managed config is the dedicated `changeforge-hooks.json` and the scripts
-plus manifest live in a `changeforge/` subfolder VS Code does not scan for
-config. Do not install `src/hook-runtime` directly.
+hook and ship the same lifecycle scripts in the project and user layouts. Codex
+and Claude emit `hookSpecificOutput.additionalContext` for context-bearing
+events; Claude commands explicitly set `CHANGEFORGE_AGENT=claude` because Claude
+Code hook input also uses snake_case fields. Claude `timeout` values are seconds
+and stay within the 10-second budget. The Copilot layout wires the same
+lifecycle events, but only emits JSON for outputs Copilot consumes: top-level
+`additionalContext` for session/subagent start and post-tool gates, and
+top-level `decision`/`reason` for Stop block mode. VS Code Copilot loads every
+`*.json` in the hook folder, so its managed config is the dedicated
+`changeforge-hooks.json` and the scripts plus manifest live in a `changeforge/`
+subfolder VS Code does not scan for config. Do not install `src/hook-runtime`
+directly.
 
 ## Manually Enable Hooks
 
@@ -398,12 +407,12 @@ python3 scripts/validate-installation.py
 
 `validate-hooks.py` checks script presence, Python compilation, template JSON,
 required hook events, `SessionStart` bootstrap wiring, the advisory bootstrap
-fragment, timeout limits, Codex command protocol, Copilot `version: 1` and
-`timeoutSec`, JSON warning output, Stop output separation, no direct `src/` hook
-commands, no user-specific absolute paths, no network imports, and no
-project-source writes. The `unittest` command exercises hook behavior fixtures
-and must discover the hook runtime tests from the repository-level `tests`
-directory.
+fragment, 10-second timeout limits, Codex and Claude command protocol, Copilot
+`version: 1` and `timeoutSec`, JSON warning output, Stop output separation, no
+direct `src/` hook commands, no user-specific absolute paths, no network
+imports, and no project-source writes. The `unittest` command exercises hook
+behavior fixtures and must discover the hook runtime tests from the
+repository-level `tests` directory.
 
 ## Troubleshooting
 
