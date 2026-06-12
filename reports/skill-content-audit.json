@@ -421,26 +421,26 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 3,
-      "bullet_count": 162,
+      "bullet_count": 181,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 0,
       "context_efficiency_score": 71,
-      "critical_details_length": 60,
+      "critical_details_length": 71,
       "description_findings": [],
       "description_length": 308,
       "findings": [
-        "body 264 lines exceeds review threshold 250"
+        "body 306 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
-      "heading_count": 19,
+      "heading_count": 21,
       "kind": "professional-skill",
-      "largest_section_lines": 68,
-      "largest_section_title": "Technical Selection Criteria",
-      "largest_table_rows": 6,
-      "line_count": 264,
+      "largest_section_lines": 71,
+      "largest_section_title": "Critical Details",
+      "largest_table_rows": 14,
+      "line_count": 306,
       "name": "change-forge-router",
       "optimality_section_length": 0,
-      "output_contract_length": 30,
+      "output_contract_length": 35,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/change-forge-router/SKILL.md",
@@ -452,9 +452,9 @@
       "routing_clarity_score": 100,
       "split_candidate_score": 18,
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
-      "table_count": 1,
+      "table_count": 2,
       "used_by_count": 0,
-      "word_count": 4749
+      "word_count": 5604
     },
     {
       "anti_example_section_length": 10,
@@ -971,11 +971,11 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 9,
-      "bullet_count": 116,
+      "bullet_count": 127,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 90,
-      "critical_details_length": 56,
+      "critical_details_length": 60,
       "description_findings": [
         "description: long (365 chars); keep it to trigger conditions, not a body summary"
       ],
@@ -984,15 +984,15 @@
         "description: long (365 chars); keep it to trigger conditions, not a body summary"
       ],
       "has_shared_optimality": false,
-      "heading_count": 26,
+      "heading_count": 27,
       "kind": "foundation-capability",
-      "largest_section_lines": 56,
+      "largest_section_lines": 60,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 0,
-      "line_count": 232,
+      "line_count": 247,
       "name": "agent-execution-discipline",
       "optimality_section_length": 0,
-      "output_contract_length": 17,
+      "output_contract_length": 18,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/agent-execution-discipline/SKILL.md",
@@ -1006,7 +1006,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 19,
-      "word_count": 2923
+      "word_count": 3343
     },
     {
       "anti_example_section_length": 0,
@@ -2455,7 +2455,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 9,
-      "bullet_count": 84,
+      "bullet_count": 91,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 90,
@@ -2469,7 +2469,7 @@
       "largest_section_lines": 27,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 13,
-      "line_count": 207,
+      "line_count": 214,
       "name": "engineering-stage-professionalism",
       "optimality_section_length": 0,
       "output_contract_length": 27,
@@ -2486,7 +2486,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
       "used_by_count": 8,
-      "word_count": 2027
+      "word_count": 2240
     },
     {
       "anti_example_section_length": 14,

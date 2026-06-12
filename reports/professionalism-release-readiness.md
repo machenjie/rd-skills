@@ -1,6 +1,6 @@
 # Professionalism Release Readiness
 
-- Generated: 2026-06-12T03:20:10.629857+00:00
+- Generated: 2026-06-12T07:28:34.860297+00:00
 - Status: strict-release-ready
 - Authoring ready: ready
 - Release ready: ready
@@ -44,7 +44,7 @@
 
 ## Routing Coverage Summary
 
-- cases_checked: 96
+- cases_checked: 97
 - cases_without_forbidden: 0
 - hidden_risks_checked: 91
 - hidden_risks_needing_manual_review: 0
@@ -120,7 +120,7 @@
 - promoted_agent_sample_strict_warnings: 0
 - promoted_agent_samples_strict_checked: 5
 - release_blocking_professionalism_warnings: 0
-- skill_professionalism_average_score: 41.26
+- skill_professionalism_average_score: 41.27
 - skill_professionalism_warnings: 4
 
 ## Release Blockers

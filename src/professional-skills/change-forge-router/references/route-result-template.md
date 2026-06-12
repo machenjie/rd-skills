@@ -28,7 +28,33 @@ fields so the router body can stay compact.
 - Non-blocking:
 - Assumptions:
 
-## 4. Impact Areas
+## 4. Runtime Prompt Execution Gates
+
+### Requirement Clarification Gate
+- Current behavior:
+- Desired behavior:
+- Non-goals:
+- Constraints:
+- Acceptance / TDD signal:
+- Blocking questions:
+- Assumptions:
+- Clarification status: blocked / clarified / clarified-with-assumptions
+
+### Read-Before-Plan Gate
+- Files/code/config/tests/docs inspected before plan:
+- Existing conventions found:
+- Call-chain or ownership boundaries inspected:
+- Not inspected:
+- Risk accepted from not-inspected boundaries:
+
+### TDD Plan Gate
+- Failing or new test expected:
+- Updated test/eval expected:
+- Test/eval/validation command:
+- Acceptance evidence:
+- Not-verified fallback:
+
+## 5. Impact Areas
 - Product behavior:
 - UX:
 - Domain:
@@ -43,32 +69,52 @@ fields so the router body can stay compact.
 - Delivery:
 - Documentation:
 
-## 5. Professional Skill Path
+## 6. Professional Skill Path
 | Order | Skill | Why | Input | Output |
 | --- | --- | --- | --- | --- |
 
-## 6. Foundation Capabilities
+## 7. Foundation Capabilities
 | Capability ID | Capability | Why | Used By | Expected Output |
 | --- | --- | --- | --- | --- |
 
-## 7. Domain Extensions
+## 8. Domain Extensions
 | Extension | Why | Risks | Required Outputs |
 | --- | --- | --- | --- |
 
-## 8. Required References
+## 9. Required References And Task DAG
+
+### Required References
 | Skill | Reference | Why | Required/Optional |
 | --- | --- | --- | --- |
 
-## 9. Task DAG
+### Task DAG
 Each task:
 - id
 - name
-- skill
+- owner_skill
 - capabilities
 - depends_on
 - files_or_artifacts
 - acceptance
+- tdd_or_validation_signal
+- review_skill
+- review_evidence
+- repair_if_review_fails
 - rollback_note
+
+### Action Skill Map
+| Action | Owner skill | Capabilities | Input | Output | Review skill | Review evidence | Repair route if review fails |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+
+### Review And Repair Loop
+- Review owner:
+- Review result:
+- Findings:
+- Repair owner:
+- Repair result:
+- Re-review owner:
+- Re-review result:
+- Remaining risk:
 
 ## 10. Quality Gates
 - requirement gate

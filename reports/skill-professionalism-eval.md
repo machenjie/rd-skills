@@ -1,9 +1,9 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-12T02:58:01.607835+00:00
+- Generated: 2026-06-12T07:28:20.747014+00:00
 - Skills/capabilities checked: 135
 - Warning count: 4
-- Average score: 41.26/60
+- Average score: 41.27/60
 
 ## Scores
 
@@ -138,10 +138,10 @@
 | `src/professional-skills/security-privacy-gate/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/architecture-impact-reviewer/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/change-documentation-gate/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
-| `src/professional-skills/change-forge-router/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/data-api-contract-changer/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/frontend-change-builder/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/ai-code-review-refactor/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/change-forge-router/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/quality-test-gate/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/backend-change-builder/SKILL.md` | professional-skill | 60/60 | sample-grade | 0 | 0 |
 

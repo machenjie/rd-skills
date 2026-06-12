@@ -38,12 +38,17 @@ capabilities should launch. Use before doing the work, and again when the active
 2. **Mapped launch.** Every launched capability maps to the current stage, product surface, language surface, or a named risk trigger.
 3. **Explicit skip.** Every heavy capability not launched this stage is recorded with a skip reason.
 4. **Stage-by-stage execution.** A cross-stage task is split; it does not load all stages' capabilities at once.
-5. **No default coding deep review.** The coding stage does not launch architecture deep review by default.
-6. **No default release gate at review.** The code-review stage does not launch the release gate by default.
-7. **No default refactor at debugging.** The debugging-diagnosis stage launches refactoring only when the verified root cause requires structural change.
-8. **No default language deep checks at release.** The release-delivery stage does not launch language deep checks unless code still changes.
-9. **No default coding at documentation.** The documentation-handoff stage launches coding capabilities only when docs contain API or code examples.
-10. **Skill-authoring uses its owner.** The skill-authoring stage always launches `skill-authoring-expert`.
+5. **Requirement intake precedes engineering action.** For target-project engineering prompts, requirement-intake runs before implementation-planning or coding unless the prompt already provides current behavior, desired behavior, non-goals, constraints, and testable acceptance.
+6. **Read before implementation planning.** Implementation-planning cannot start until relevant target-project code, tests, configs, docs, existing implementation, conventions, and likely call chain have been inspected or the plan is explicitly non-executing with not-inspected risk.
+7. **TDD signal before coding.** Coding cannot start until inspected boundaries and a failing/new/updated test, eval, validation command, acceptance check, or not-verified residual risk are named.
+8. **Independent review by stage.** Code-review and action review must be performed by a review skill or capability different from the action owner.
+9. **Repair/re-review closes review.** Review findings route back to the owner skill or a specialist for repair, then return to review before the stage can advance.
+10. **No default coding deep review.** The coding stage does not launch architecture deep review by default.
+11. **No default release gate at review.** The code-review stage does not launch the release gate by default.
+12. **No default refactor at debugging.** The debugging-diagnosis stage launches refactoring only when the verified root cause requires structural change.
+13. **No default language deep checks at release.** The release-delivery stage does not launch language deep checks unless code still changes.
+14. **No default coding at documentation.** The documentation-handoff stage launches coding capabilities only when docs contain API or code examples.
+15. **Skill-authoring uses its owner.** The skill-authoring stage always launches `skill-authoring-expert`.
 
 # Industry Benchmarks
 
@@ -83,13 +88,13 @@ Each stage has a minimum evidence obligation before handoff:
 
 | Stage | Professional evidence required |
 | --- | --- |
-| requirement-intake | current behavior, desired behavior, non-goals, assumptions, open questions, and completion signal. |
+| requirement-intake | current behavior, desired behavior, non-goals, constraints, assumptions, open questions, and testable completion signal. |
 | architecture-design | affected boundaries, dependency direction, ownership, simpler alternative, tradeoff, and rollback implication. |
-| implementation-planning | reuse ladder, placement rationale, touched files, validation commands, and split/sequence decision. |
-| coding | inspected local convention, selected capabilities, changed boundary, tests or validators run, and residual risk. |
+| implementation-planning | inspected target-project boundaries, reuse ladder, placement rationale, touched files, validation commands, and split/sequence decision. |
+| coding | inspected local convention, selected capabilities, changed boundary, TDD or validation signal, tests or validators run, and residual risk. |
 | debugging-diagnosis | symptom, hypothesis tested, method, verified cause, counter-evidence, and no same-path third retry. |
 | bug-fix | verified cause, same-pattern scan, regression proof, old behavior preservation, and local/broad fix rationale. |
-| code-review | severity-classified findings, boundary inspected, missing evidence, behavior-change risk, and required fix owner. |
+| code-review | independent review owner, severity-classified findings, boundary inspected, missing evidence, behavior-change risk, required fix owner, and re-review result when repaired. |
 | refactoring | before/after behavior preservation, affected callers, deletion path, placement decision, and regression evidence. |
 | testing | risk-based test level, fixture/data owner, what the test proves, what it does not prove, and flaky-risk note. |
 | release-delivery | rollout plan, rollback path, config/migration compatibility, monitoring signal, and owner acceptance. |
@@ -99,9 +104,11 @@ Each stage has a minimum evidence obligation before handoff:
 # Stage Transition Rules
 
 - Move from diagnosis to bug-fix only after a verified cause exists or the next action is a reversible instrumentation change.
-- Move from implementation-planning to coding only after reuse, placement, validation, and skipped heavy capabilities are named.
+- Move from requirement-intake to implementation-planning only after blocking requirement questions are resolved or the plan records explicit assumptions and residual risk.
+- Move from implementation-planning to coding only after target-project evidence is inspected and reuse, placement, validation, and skipped heavy capabilities are named.
 - Move from coding to testing only after the changed behavior and residual risk are explicit; tests are then selected by risk, not by habit.
-- Move from code-review to refactoring only when findings require behavior-preserving movement and old behavior proof is available.
+- Move from coding to code-review only with a review owner different from the action owner.
+- Move from code-review to refactoring or bug-fix only when findings name a repair owner; move from code-review to documentation-handoff only after repaired findings have been re-reviewed or residual risk is explicitly accepted.
 - Move from testing to release-delivery only when the test result states what it proves, what it does not prove, and which release risk remains.
 - Move from release-delivery to documentation-handoff when rollout, rollback, migration, config, or operational behavior changes reader obligations.
 

@@ -1,0 +1,81 @@
+---
+id: developer-runtime-prompt-flow
+description: |
+  Developer uses rd-skills in a target project. The agent must clarify
+  requirements, inspect relevant code before planning, produce a TDD-oriented
+  plan, route each action to a professional skill, review each action with a
+  different skill, and repair/re-review when findings exist.
+prompt: |
+  In my target project, add an order cancellation flow. Use rd-skills and
+  proceed professionally. You must not start editing until the requirement is
+  clear, you have inspected the relevant code, and you have a TDD-oriented plan.
+  Each action must use the right professional skill, and each completed action
+  must be reviewed by a different skill. If review finds a problem, repair it
+  and review again.
+expected:
+  complexity: L3
+  risk_level: medium
+  expected_stage: requirement-intake
+  expected_context_budget_mode: staged-plan
+  stage_conflict_case: true
+  structure_required: false
+  risk_triggers:
+    - action before requirement clarification
+    - plan before target-project inspection
+    - implementation before TDD signal
+    - action review without independent reviewer
+    - review finding without repair and re-review
+    - missing test evidence
+    - handoff without risk boundary and validation results
+  skills:
+    - change-forge-router
+    - change-intake-compiler
+    - change-impact-analyzer
+    - acceptance-criteria-builder
+    - task-dag-planner
+    - quality-test-gate
+    - ai-code-review-refactor
+  capabilities:
+    - requirement-clarification
+    - requirement-structuring
+    - non-goal-boundary-definition
+    - acceptance-standard-definition
+    - scenario-decomposition
+    - context-packaging
+    - task-dag-decomposition
+    - engineering-stage-professionalism
+    - agent-execution-discipline
+    - code-review
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - requirement gate
+    - impact gate
+    - implementation gate
+    - test gate
+    - AI review gate
+    - execution discipline gate
+forbidden:
+  skills:
+    - delivery-release-gate
+    - security-privacy-gate
+    - reliability-observability-gate
+  capabilities:
+    - release-rollback
+    - kubernetes-gateway
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+    - security gate
+    - reliability gate
+notes: |
+  This case is about runtime developer use of rd-skills in a target project, not
+  authoring rd-skills itself. The router must not jump directly to coding. It
+  must start with requirement clarification, then require inspected code before
+  plan, then TDD-oriented planning, action-specific skill ownership, independent
+  review, and repair/re-review when review fails. structure_required is false
+  because the current stage is requirement-intake; implementation placement is
+  not executed until the runtime protocol advances to implementation-planning.

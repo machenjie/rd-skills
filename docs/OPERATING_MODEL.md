@@ -28,6 +28,33 @@ ChangeForge is self-contained. It does not ingest, scan, index, summarize, map, 
 6. Declare acceptance criteria, risk escalation, quality gates, evidence, and handoff order.
 7. Build, package, install, upgrade, uninstall, or doctor from `dist/` only.
 
+## Target-Project Runtime Prompt Flow
+
+When a developer uses installed ChangeForge skills in a target project, engineering
+prompts follow a stricter execution sequence than ordinary Q&A:
+
+1. Requirement clarification before action: current behavior, desired behavior,
+   non-goals, constraints, acceptance/TDD signal, blocking questions,
+   assumptions, and proceed/block status.
+2. Read before plan: inspect relevant target-project code, tests, configs, docs,
+   existing implementation, conventions, and likely call chain before planning.
+3. TDD-oriented plan before implementation: name the failing, new, or updated
+   test, eval, validation command, acceptance check, or explicit not-verified
+   residual risk.
+4. Action-specific skill ownership: split work into actions and select the most
+   specific owner skill or capability for each action.
+5. Independent review: each action is reviewed by a different skill or capability
+   from the owner.
+6. Repair and re-review: findings route back to the owner or specialist, then
+   return to review before closure.
+7. Evidence handoff: closure carries clarification, inspected boundaries, TDD
+   evidence, action-to-skill mapping, review/repair records, validation results,
+   residual risk, next gate, and route manifests.
+
+Pure explanation, translation, or question-answering with no engineering action
+may skip the full engineering flow after stating that no engineering action is
+being taken.
+
 ## Skill Layers
 
 Professional skills are the runtime entry points Codex, Claude Code, GitHub Copilot, and hosted OpenAI API consumers should invoke for product-change work. They own orchestration, impact analysis, implementation guidance, test gates, release gates, documentation gates, and specialist review.

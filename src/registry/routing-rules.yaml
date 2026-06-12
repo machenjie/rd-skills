@@ -96,6 +96,11 @@ risk_escalation_triggers:
   - agent diagnosis without verified cause
   - same agent approach failed twice
   - local fix without same pattern scan
+  - action before requirement clarification
+  - plan before target-project inspection
+  - implementation before TDD signal
+  - action review without independent reviewer
+  - review finding without repair and re-review
   - new structure without reuse and placement rationale
   - handoff without risk boundary and validation results
   - missing test evidence
@@ -298,6 +303,26 @@ risk_trigger_rules:
   - trigger: local fix without same pattern scan
     required_capabilities: [agent-execution-discipline]
     required_quality_gates: [execution discipline gate]
+  - trigger: action before requirement clarification
+    required_skills: [change-intake-compiler]
+    required_capabilities: [requirement-clarification, agent-execution-discipline]
+    required_quality_gates: [requirement gate, execution discipline gate]
+  - trigger: plan before target-project inspection
+    required_skills: [change-impact-analyzer, task-dag-planner]
+    required_capabilities: [context-packaging, task-dag-decomposition, agent-execution-discipline]
+    required_quality_gates: [impact gate, execution discipline gate]
+  - trigger: implementation before TDD signal
+    required_skills: [acceptance-criteria-builder, quality-test-gate]
+    required_capabilities: [acceptance-standard-definition, regression-testing, agent-execution-discipline]
+    required_quality_gates: [requirement gate, test gate, execution discipline gate]
+  - trigger: action review without independent reviewer
+    required_skills: [quality-test-gate, ai-code-review-refactor]
+    required_capabilities: [code-review, agent-execution-discipline]
+    required_quality_gates: [test gate, AI review gate, execution discipline gate]
+  - trigger: review finding without repair and re-review
+    required_skills: [quality-test-gate, ai-code-review-refactor]
+    required_capabilities: [code-review, agent-execution-discipline]
+    required_quality_gates: [test gate, AI review gate, execution discipline gate]
   - trigger: new structure without reuse and placement rationale
     required_capabilities: [agent-execution-discipline, implementation-structure-design]
     required_quality_gates: [execution discipline gate, implementation gate]
@@ -778,6 +803,16 @@ failure_routing:
     route_to: agent-execution-discipline
   - condition: local fix without same pattern scan
     route_to: agent-execution-discipline
+  - condition: action before requirement clarification
+    route_to: change-intake-compiler
+  - condition: plan before target-project inspection
+    route_to: change-impact-analyzer
+  - condition: implementation before TDD signal
+    route_to: acceptance-criteria-builder
+  - condition: action review without independent reviewer
+    route_to: quality-test-gate
+  - condition: review finding without repair and re-review
+    route_to: quality-test-gate
   - condition: handoff without risk boundary and validation results
     route_to: agent-execution-discipline
   - condition: contract or schema mismatch

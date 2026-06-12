@@ -25,6 +25,13 @@ python3 installers/install.py --agent copilot --scope project --target /path/to/
 
 After installation, start with `change-forge-router` when the right workflow is unclear, or invoke a specific skill such as `frontend-change-builder`, `backend-change-builder`, `data-api-contract-changer`, `quality-test-gate`, or `delivery-release-gate` when the work is already scoped.
 
+For engineering prompts in a target project, ChangeForge runtime use starts with
+requirement clarification, then target-project code inspection before planning,
+a TDD-oriented plan, action-specific skill ownership, independent review,
+repair/re-review when findings exist, and evidence-based handoff with route
+manifests. Pure explanation or translation prompts with no engineering action can
+skip the full engineering flow after saying no engineering action is being taken.
+
 See [docs/USAGE.md](docs/USAGE.md) for the full usage guide, including profile selection, agent-specific install examples, OpenAI API zip output, upgrade, uninstall, and authoring workflows.
 
 Optional project-level hook artifacts are also built for Codex and Claude Code.

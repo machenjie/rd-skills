@@ -21,8 +21,12 @@ The runtime provides these reminder hooks:
   `change-forge-router` preflight before engineering work. Also ships as an
   advisory install-time fragment.
 - Route Reminder: at Codex `UserPromptSubmit`, add a concise per-prompt reminder
-  to route and emit a `changeforge_route` manifest. Never reads or records the
-  prompt text.
+  to route and emit a `changeforge_route` manifest. It reminds the agent to
+  clarify requirements before action, inspect target-project code before
+  planning, name TDD or validation evidence before implementation, assign
+  action-specific owner and independent review skills, repair/re-review findings,
+  and hand off with validation evidence and residual risk. Never reads or records
+  the prompt text.
 - Pre-Edit Risk Preview: at Codex `PreToolUse`, preview risk surfaces before an
   edit or command runs. Advisory only; never denies the tool call.
 - Post-Edit Structure Gate: after edit tools run, detect structural code changes
@@ -43,6 +47,8 @@ The runtime provides these reminder hooks:
 - Do not replace `change-forge-router`.
 - Do not turn hooks into professional skills.
 - Do not read every `references/` file.
+- Do not read, record, log, or echo user prompt text.
+- Do not choose the full route; the router remains the semantic source of truth.
 - Do not block agents by default.
 - Do not install `src/hook-runtime` directly.
 - Do not install `src/` or `src/registry` as runtime content.

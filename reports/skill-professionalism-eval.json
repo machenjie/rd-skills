@@ -1,7 +1,7 @@
 {
-  "average_score": 41.26,
+  "average_score": 41.27,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-12T02:58:01.607835+00:00",
+  "generated_at": "2026-06-12T07:28:20.747014+00:00",
   "items": [
     {
       "body_lines": 216,
@@ -129,7 +129,7 @@
       "warnings": []
     },
     {
-      "body_lines": 264,
+      "body_lines": 306,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -142,7 +142,7 @@
         "reference_precision": 5,
         "stage_fit": 5,
         "trigger_accuracy": 5,
-        "validation_obligation": 4
+        "validation_obligation": 5
       },
       "kind": "professional-skill",
       "likely_missing_sections": [],
@@ -150,7 +150,7 @@
       "path": "src/professional-skills/change-forge-router/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 58,
+      "total": 59,
       "warnings": []
     },
     {
@@ -504,7 +504,7 @@
       "warnings": []
     },
     {
-      "body_lines": 232,
+      "body_lines": 247,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1505,7 +1505,7 @@
       "warnings": []
     },
     {
-      "body_lines": 207,
+      "body_lines": 214,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,

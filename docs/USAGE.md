@@ -116,6 +116,45 @@ Use `change-forge-router` when the requested work needs classification, routing,
 Use change-forge-router to classify this request, select the minimum sufficient ChangeForge skill path, and list the evidence gates before implementation.
 ```
 
+For engineering prompts in the target project, the expected runtime flow is:
+
+1. Clarify requirements before action: current behavior, desired behavior,
+   non-goals, constraints, acceptance/TDD signal, blocking questions,
+   assumptions, and proceed/block status.
+2. Inspect relevant target-project code, tests, configs, docs, existing
+   implementation, conventions, and likely call chain before writing a plan.
+3. Produce a TDD-oriented plan naming the failing, new, or updated test, eval,
+   validation command, acceptance check, or explicit not-verified risk.
+4. Split the work into actions and assign each action the most specific owner
+   professional skill or selected capability.
+5. Review each completed action with a different review skill or capability.
+6. If review finds issues, route repair to the owner or specialist, then
+   re-review before handoff.
+7. Hand off with the clarification record, inspected boundaries, TDD evidence,
+   action-to-skill map, review and repair record, validation evidence, residual
+   risk, next gate, and route manifests.
+
+Pure explanation, translation, or question-answering with no engineering action
+may skip the full engineering flow after stating that no engineering action is
+being taken.
+
+Action ownership should match the work being performed, and the review owner
+must be different from the action owner. Common mappings:
+
+| Action | Owner | Review |
+| --- | --- | --- |
+| Requirement clarification | `change-intake-compiler` | `acceptance-criteria-builder` or `quality-test-gate` |
+| Acceptance / TDD | `acceptance-criteria-builder` | `quality-test-gate` |
+| Impact analysis | `change-impact-analyzer` | `change-forge-router` or `quality-test-gate` |
+| Planning | `task-dag-planner` | `change-impact-analyzer` or `quality-test-gate` |
+| Frontend implementation | `frontend-change-builder` | `quality-test-gate` or `ai-code-review-refactor` |
+| Backend implementation | `backend-change-builder` | `quality-test-gate` or `ai-code-review-refactor` |
+| API/data contract | `data-api-contract-changer` | `quality-test-gate` or `architecture-impact-reviewer` |
+| Data middleware | `data-middleware-change-builder` | `reliability-observability-gate` or `quality-test-gate` |
+| External integration | `integration-change-builder` | `security-privacy-gate`, `reliability-observability-gate`, or `quality-test-gate` |
+| Documentation | `change-documentation-gate` | `change-forge-router` or `quality-test-gate` |
+| Final handoff | `agent-execution-discipline` | `quality-test-gate` |
+
 Use more specific skills when the work is already scoped:
 
 ```text

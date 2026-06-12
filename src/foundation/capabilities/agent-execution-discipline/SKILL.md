@@ -38,6 +38,11 @@ Launched across stages as the execution kernel, with emphasis in debugging-diagn
 # Non-Negotiable Rules
 
 - **Evidence-based completion.** A change is not complete until concrete evidence (test output, validator output, fixture diff, screenshot, log excerpt, or measured result) is attached to the completion claim.
+- **No engineering action before requirement clarification.** For target-project engineering prompts, the agent must first record current behavior, desired behavior, non-goals, constraints, acceptance/TDD signal, blocking questions, assumptions, and proceed/block status. If blocking questions remain, the agent stops and asks them instead of reading, planning, or editing around the gap.
+- **No plan before target-project inspection.** A plan is invalid until the agent has inspected relevant target-project code, tests, configs, docs, existing implementation, conventions, and likely call chain, or has explicitly limited the work to non-executing advice with not-inspected risk.
+- **No implementation before TDD or validation signal.** Before editing behavior, the agent names the failing, new, or updated test, eval, validation command, acceptance check, or explicit not-verified residual risk that will prove the change.
+- **No action closure without independent review.** Each action must name an owner skill or capability and a different review skill or capability. The action owner may not substitute self-review for an independent review gate.
+- **No review closure while findings remain.** When review finds issues, route repair to the owner skill or appropriate specialist, then re-run the independent review. Handoff is blocked until findings are repaired and re-reviewed, or explicitly carried as not-verified residual risk with an owner.
 - **No completion claim without fresh verification evidence.** Success-implying language ("done", "fixed", "should pass", "looks good", and similar phrases catalogued in the completion-evidence reference) is forbidden unless a fresh command output, validator result, or artifact from the current change backs it. Evidence from before the current change, from a different file, or from a superseded run is stale and must be re-run. The phrase is not the evidence; the captured outcome is.
 - **Honest not-verified disclosure.** When verification cannot be run, the agent must state "Not verified", state why it was not run, state the residual risk, and give the exact command the user or next agent should run. It may say "changes prepared, not yet verified"; it may not say the change is complete.
 - **Partial verification is reported as partial.** A passing linter is not a passing build, a passing unit test is not a passing integration suite, and one green test is not full coverage. Generalizing a partial run to "all checks pass" is an overclaim.
@@ -80,7 +85,7 @@ Prefer companion capabilities for the substantive content: `implementation-struc
 
 # With-Skill Vs Without-Skill Behavior
 
-This capability changes agent behavior from plausible completion to evidenced execution: completion must name boundary, fresh command output, residual risk, and handoff; diagnosis must name symptom, tested hypothesis, method, verified cause, and counter-evidence; local fixes require same-pattern scan; new helpers/classes/files require reuse and placement rationale; two same-path failures force route repair; validation states what it proves and does not prove.
+This capability changes agent behavior from plausible completion to evidenced execution: engineering prompts start with requirement clarification, plans follow target-project inspection, implementation follows a TDD or validation signal, actions have owner and independent review skills, review findings trigger repair and re-review, completion must name boundary, fresh command output, residual risk, and handoff; diagnosis must name symptom, tested hypothesis, method, verified cause, and counter-evidence; local fixes require same-pattern scan; new helpers/classes/files require reuse and placement rationale; two same-path failures force route repair; validation states what it proves and does not prove.
 
 # Risk Escalation Rules
 
@@ -132,6 +137,10 @@ Delegate the schema to `implementation-structure-design`; this capability requir
 
 Every handoff must include boundary, validation results with exit codes, residual risk, and handoff target with the specific question or action required. When the change was routed, the package restates the `changeforge_route` manifest (and `changeforge_stage_route` when the work was non-trivial) so the closure carries the selected skills, capabilities, required references, and quality gates as machine-checkable evidence rather than dropping them after the first turn.
 
+## Runtime Prompt Flow Ledger
+
+For target-project engineering work, attach a ledger with: requirement clarification and proceed/block decision; files, code paths, configs, tests, docs, conventions, and call-chain boundaries inspected before plan; TDD or validation signal named before implementation; action owner/review skill map with different owner and review skills; review findings, repair owner, repair evidence, re-review result, and remaining risk. Pure explanation, translation, or no-action Q&A may record "no engineering action" and skip the full ledger.
+
 ## Evidence Contract Answer Set
 
 The five questions every professional skill's own Evidence Contract must answer; the skill names the concrete artifact for each answer, this capability enforces that none is skipped:
@@ -170,6 +179,7 @@ The body carries the decision-critical execution rules and is the part compiled 
 Return an Execution Discipline Report alongside any non-trivial agent-assisted change:
 
 - **Evidence inventory**: list of commands run, outputs captured, artifacts produced, outcomes.
+- **Runtime prompt flow ledger**: requirement clarification, inspected boundaries before plan, TDD/validation signal, action owner/review map, and repair/re-review record.
 - **Completion claim status**: verified (with the backing command and outcome), partially verified (with the gap named), or not verified (with the not-verified disclosure: status, why not run, residual risk, exact command).
 - **Verified cause statement** (when a diagnosis is part of the change): symptom, hypothesis, method, verified cause, counter-evidence.
 - **Route repair ledger** (when applicable): attempt 1, attempt 2, failure signature, route change, new hypothesis.
@@ -185,24 +195,29 @@ Return an Execution Discipline Report alongside any non-trivial agent-assisted c
 # Quality Gate
 
 1. Completion claim has an evidence inventory with at least one concrete command-output, artifact, or validator result.
-2. Any diagnosis attached to the change carries a verified-cause statement.
-3. If the agent attempted the same approach twice and failed, a route repair ledger is attached and no third same-path retry occurred.
-4. Any local code fix carries a same-pattern scan record covering the rest of the codebase.
-5. Any new function, class, file, directory, component, hook, service, repository, adapter, utility, or abstraction carries reuse and placement rationale.
-6. The closure package lists boundary, validation results, residual risks, and the next handoff target.
-7. No entertainment rhetoric, persona narration, emoji status lines, or runtime PUA state are introduced by the change.
-8. Any new or renamed structure has local naming convention evidence.
-9. Any new code has a Reuse Ladder Record.
-10. Any extension of existing logic has an Extension Safety Record.
-11. Any exported/public declaration has a doc comment in the language-standard format.
-12. Any complex internal logic and non-trivial test has required comments or an explicit omission rationale.
-13. When a professional skill emits an Evidence Contract, all five canonical answers — basis, files and boundaries inspected, placement rationale, validation commands, residual risk — are present and non-empty.
-14. Any completion claim names a fresh verification (command, validator, or test) that ran against the current change; success-implying language without backing evidence is absent.
-15. Partial verification is reported as partial, never generalized to a full pass; "all tests pass" is not claimed from a lint-only or single-test run.
-16. When verification could not run, a not-verified disclosure — status, why not run, residual risk, exact command — replaces any completion claim.
-17. When the change is a review, spec compliance (requirement, acceptance criteria, non-goals, plan, compatibility, old-behavior preservation) is confirmed before code-quality judgement, and implementer self-review does not replace independent review.
-18. AI-generated code is rejected or repaired when it shows local-only fixing, invented helpers, missing reuse search, wrong shared/common placement, hidden scope expansion, or validation overclaim.
-19. Every professional skill closure answers the full evidence contract set: inspected boundaries, judgment, reuse/placement rationale, behavior preservation, validation evidence, residual risk, and next gate.
+2. Engineering work did not start before requirement clarification, unless the output explicitly states no engineering action is being taken.
+3. Planning did not start before relevant target-project code, tests, configs, docs, conventions, and call-chain boundaries were inspected, or not-inspected risk was explicitly accepted for non-executing advice.
+4. Implementation did not start before a TDD or validation signal was named.
+5. Every action names an owner skill/capability and a different review skill/capability.
+6. Every review finding has a repair owner and re-review result before closure, or a not-verified residual risk disclosure with owner.
+7. Any diagnosis attached to the change carries a verified-cause statement.
+8. If the agent attempted the same approach twice and failed, a route repair ledger is attached and no third same-path retry occurred.
+9. Any local code fix carries a same-pattern scan record covering the rest of the codebase.
+10. Any new function, class, file, directory, component, hook, service, repository, adapter, utility, or abstraction carries reuse and placement rationale.
+11. The closure package lists boundary, validation results, residual risks, and the next handoff target.
+12. No entertainment rhetoric, persona narration, emoji status lines, or runtime PUA state are introduced by the change.
+13. Any new or renamed structure has local naming convention evidence.
+14. Any new code has a Reuse Ladder Record.
+15. Any extension of existing logic has an Extension Safety Record.
+16. Any exported/public declaration has a doc comment in the language-standard format.
+17. Any complex internal logic and non-trivial test has required comments or an explicit omission rationale.
+18. When a professional skill emits an Evidence Contract, all five canonical answers — basis, files and boundaries inspected, placement rationale, validation commands, residual risk — are present and non-empty.
+19. Any completion claim names a fresh verification (command, validator, or test) that ran against the current change; success-implying language without backing evidence is absent.
+20. Partial verification is reported as partial, never generalized to a full pass; "all tests pass" is not claimed from a lint-only or single-test run.
+21. When verification could not run, a not-verified disclosure — status, why not run, residual risk, exact command — replaces any completion claim.
+22. When the change is a review, spec compliance (requirement, acceptance criteria, non-goals, plan, compatibility, old-behavior preservation) is confirmed before code-quality judgement, and implementer self-review does not replace independent review.
+23. AI-generated code is rejected or repaired when it shows local-only fixing, invented helpers, missing reuse search, wrong shared/common placement, hidden scope expansion, or validation overclaim.
+24. Every professional skill closure answers the full evidence contract set: inspected boundaries, judgment, reuse/placement rationale, behavior preservation, validation evidence, residual risk, and next gate.
 
 # Used By
 

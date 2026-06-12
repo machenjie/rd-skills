@@ -31,9 +31,13 @@ ROUTE_REMINDER = (
     "engineering change (code, review, debug, test, refactor, release, or skill "
     "authoring), run change-forge-router before acting and emit a changeforge_route "
     "manifest naming selected_skills, selected_capabilities, required_references, and "
-    "required_quality_gates; restate it at handoff. A route described only in prose is "
-    "not closure evidence. Skip routing only for a pure question, explanation, or "
-    "translation with no engineering action."
+    "required_quality_gates. Runtime protocol: clarify requirements before action; "
+    "inspect relevant target-project code, tests, configs, docs, and call chain before "
+    "planning; name TDD or validation evidence before implementation; assign each "
+    "action an owner skill and a different review skill; repair and re-review findings; "
+    "restate route manifests, validation evidence, residual risk, and next gate at "
+    "handoff. A route described only in prose is not closure evidence. Skip routing "
+    "only for a pure question, explanation, or translation with no engineering action."
 )
 
 

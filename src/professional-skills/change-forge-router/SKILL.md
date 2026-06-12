@@ -26,6 +26,10 @@ Do not use the router to invoke every skill, invent a product program around a l
 - Choose the minimum sufficient professional path; add skills only when the classification, impact, risk, or missing information requires them.
 - Treat bug fixes, refactors, API changes, data changes, migrations, review, tests, docs, reliability, security, and deployment as first-class changes.
 - Preserve missing information as blocking questions, non-blocking questions, or explicit assumptions.
+- For engineering prompts in a target project, run the runtime prompt execution protocol before any implementation path: clarify requirement, inspect relevant target-project evidence before planning, create a TDD-oriented plan, split action-specific skill ownership, require independent review, repair findings, re-review, and hand off with evidence. Pure explanation, translation, or question-answering with no engineering action may skip the full protocol only after stating that no engineering action is being taken.
+- Do not plan engineering work before inspecting the relevant target-project code, tests, configs, docs, existing implementation, and likely call chain. A plan based only on the user prompt is invalid unless the prompt is explicitly asking for non-executing advice and no target-project action will follow.
+- Do not route a single generalized skill to own every action. Each action must have the most specific owner professional skill or selected capability, and each completed action must have a review skill or capability that is different from the owner.
+- If review finds a defect, missing evidence, wrong boundary, or untested acceptance path, route repair back to the owner skill or the appropriate specialist, then repeat review before closure.
 - Escalate risk when auth, authorization, object-level permission, payment, subscription, billing, wallet, private key, Web3 asset, user data, PII, file upload, AI prompt, RAG, external integration, webhook, database migration, production deployment, production incident, cloud IAM, public exposure, regulated workload, compliance evidence, cost anomaly, secret/config change, security-sensitive dependency upgrade, or irreversible data operation is plausible.
 - Route domain extensions only when domain signals are present; do not attach them because they are available.
 - Route foundation capabilities as targeted support for selected professional skills; do not list all capabilities unless the user asks for a catalog.
@@ -131,8 +135,38 @@ Risk triggers include auth, authorization, object-level permission, payment, sub
 
 Escalate to L5 when regulated, financial, Web3, AI, migration, or production-critical behavior combines with security, data integrity, external dependency, or rollback risk.
 
+## Action-Specific Owner And Review Routing
+Select only rows that match the actual action; the owner and review skill must differ.
+
+| Action type | Owner skill / capability | Typical review skill / capability |
+| --- | --- | --- |
+| Requirement clarification | `change-intake-compiler` with `requirement-clarification`, `requirement-structuring`, `non-goal-boundary-definition` | `acceptance-criteria-builder` or `quality-test-gate` |
+| Acceptance / TDD | `acceptance-criteria-builder` with `acceptance-standard-definition`, `scenario-decomposition` | `quality-test-gate` |
+| Impact analysis | `change-impact-analyzer` with `context-packaging` | `change-forge-router` or `quality-test-gate` |
+| Planning | `task-dag-planner` with `task-dag-decomposition`, `engineering-stage-professionalism` | `change-impact-analyzer` or `quality-test-gate` |
+| Frontend implementation | `frontend-change-builder` | `quality-test-gate` or `ai-code-review-refactor` |
+| Backend implementation | `backend-change-builder` | `quality-test-gate` or `ai-code-review-refactor` |
+| API/data contract | `data-api-contract-changer` | `quality-test-gate` or `architecture-impact-reviewer` |
+| Data middleware | `data-middleware-change-builder` | `reliability-observability-gate` or `quality-test-gate` |
+| External integration | `integration-change-builder` | `security-privacy-gate`, `reliability-observability-gate`, or `quality-test-gate` |
+| Security-sensitive work | relevant implementation owner | `security-privacy-gate` |
+| Reliability/performance | relevant implementation owner or `reliability-observability-gate` | `reliability-observability-gate` or `quality-test-gate` |
+| Documentation | `change-documentation-gate` | `change-forge-router` or `quality-test-gate` |
+| Final handoff | `agent-execution-discipline` | `quality-test-gate` |
+
 ## Critical Details
 Read `references/checklist.md` for non-trivial routing. Use generated router references for the current skill registry, capability index, domain extension index, and routing rules when available.
+
+### Runtime Prompt Execution Protocol
+This protocol applies when a developer uses ChangeForge skills in any target project for feature work, bug fixing, refactoring, testing, review, debugging, release, documentation, API/data, security, reliability, or other engineering action. It is not limited to authoring this repository.
+
+1. **Requirement clarification gate.** Before any engineering operation, clarify current behavior, desired behavior, non-goals, constraints, acceptance, and the TDD or validation signal. If a blocking unknown could change the data model, API contract, authorization boundary, rollout, rollback, or user-visible behavior, stop and ask the blocking question. If execution may proceed, record assumptions and risk.
+2. **Read-before-plan gate.** Before planning, inspect relevant target-project code, tests, configs, docs, existing implementation, conventions, and call chain. A plan without inspected boundaries is invalid.
+3. **TDD plan gate.** Before implementation, name the failing, new, or updated test, eval, validation command, acceptance check, or explicit not-verified residual risk that proves the intended behavior.
+4. **Action-specific skill routing.** Break the work into actions. Each action has an owner professional skill or selected capability matched to the action type: intake, acceptance, impact, planning, frontend, backend, API/data, middleware, integration, security, reliability, docs, test, release, or final handoff.
+5. **Independent review gate.** Each action has a review skill or capability different from the owner. Review evidence must be concrete; self-review by the same owner skill is not enough.
+6. **Repair/re-review loop.** Any review finding routes repair to the owner skill or appropriate specialist, then repeats independent review. Handoff is invalid while review findings remain unresolved or unreviewed after repair.
+7. **Evidence handoff.** Final handoff carries clarification, inspected boundaries, TDD evidence, action-to-skill map, review results, repair/re-review record, validation results, residual risk, next gate, and the `changeforge_route` / `changeforge_stage_route` manifests.
 
 Route by evidence in the request:
 
@@ -211,13 +245,18 @@ Do not load every reference by default. Treat references as targeted support sel
 - Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
 
 ## Output Contract
-Return the Markdown Routing Result using `references/route-result-template.md` as the exact section template. It owns sections 1-12: Request Classification, Interpreted Change, Missing Information, Impact Areas, Professional Skill Path, Foundation Capabilities, Domain Extensions, Required References, Task DAG, Quality Gates, Next Actions, and Stage Professionalism.
+Return the Markdown Routing Result using `references/route-result-template.md` as the exact section template. It owns the runtime prompt execution gates plus the route sections: Request Classification, Interpreted Change, Missing Information, Requirement Clarification Gate, Read-Before-Plan Gate, TDD Plan Gate, Impact Areas, Professional Skill Path, Foundation Capabilities, Domain Extensions, Required References, Task DAG, Action Skill Map, Review And Repair Loop, Quality Gates, Next Actions, and Stage Professionalism.
 
 Use `None` when a domain extension is not selected. Use `Skipped: reason` for quality gates that are not needed. Use concrete assumptions rather than silent gaps.
 
 The routing result must also state:
 - **Mode selected**: routing mode and trigger signal that selected it.
 - **Boundaries inspected**: request scope, product/code/data/security/release/docs surfaces, source-vs-dist boundary when authoring skills, and skipped surfaces with reasons.
+- **Clarification status**: blocked, clarified, or clarified-with-assumptions, including current behavior, desired behavior, non-goals, constraints, acceptance/TDD signal, blocking questions, assumptions, and risk.
+- **Read-before-plan evidence**: files, code paths, configs, tests, docs, existing implementation, conventions, and call-chain boundaries inspected before plan; any not-inspected boundary must carry accepted risk.
+- **TDD plan evidence**: failing/new/updated test, eval, validation command, acceptance check, or not-verified fallback before implementation starts.
+- **Action ownership and review map**: every action names owner skill, selected capabilities, input, output, independent review skill, review evidence, and repair route if review fails.
+- **Repair/re-review record**: review findings, repair owner, re-review result, remaining risk, and the point at which closure is allowed.
 - **Professional judgment**: why the route is minimum sufficient, which hidden risks were escalated or ruled out, and why skipped gates are safe.
 - **Reuse and placement rationale**: existing professional skill, capability, reference, or registry path reused instead of inventing a new path.
 - **Behavior preservation statement**: existing runtime profile, skill registry, source/dist separation, and routed behavior preserved or intentionally changed.
@@ -257,7 +296,10 @@ The route passes only when:
 - Required References lists router self-use references and every selected capability, checklist, or domain extension reference required by the route.
 - Every impacted area has a selected skill, a quality gate, a non-blocking assumption, or an explicit skip reason.
 - Complexity and risk match the escalation triggers.
-- The task DAG is acyclic, reviewable, acceptance-linked, and rollback-aware.
+- The task DAG is acyclic, reviewable, acceptance-linked, rollback-aware, and each task has `owner_skill`, a different `review_skill`, review evidence, and repair/re-review instructions.
+- The requirement clarification, read-before-plan, and TDD plan gates are complete or explicitly blocked before implementation begins.
+- Each action has an action-specific owner skill and independent review skill; the same skill cannot close its own action review.
+- Any review finding has a repair owner and a completed re-review before handoff, or the handoff is blocked with residual risk.
 - The `changeforge_route` manifest is present, lists the router self-use references and selected capability references, maps each selected capability to a selected skill, and records every skipped gate with a reason.
 - For non-trivial engineering tasks, the `changeforge_stage_route` manifest is present, names one `current_stage`, records `skipped_capabilities` with reasons, and matches the `## Stage Professionalism` section.
 - The route does not rely on undeclared asset ingestion, external knowledge stores, or undeclared runtime content.
