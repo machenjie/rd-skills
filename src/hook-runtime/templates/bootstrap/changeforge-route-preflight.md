@@ -1,11 +1,13 @@
 <!-- ChangeForge route-preflight bootstrap. Advisory guidance, not a router. -->
 # ChangeForge Route Preflight
 
-This fragment is an optional, install-time bootstrap reminder for runtimes that
-do not expose a session-start hook (for example Codex). It carries the same
-route-preflight discipline that the Claude `SessionStart` bootstrap hook emits.
-It does not replace `change-forge-router`, does not select a full route, and
-does not load compiled references.
+This fragment is an optional, install-time bootstrap reminder. It is the no-trust
+alternative to the executable `SessionStart` bootstrap hook (now wired for both
+Codex and Claude): it carries the same route-preflight discipline as plain
+guidance text for users who prefer not to trust executable hooks, or for project
+instructions (for example AGENTS.md) that should always reference it. It does not
+replace `change-forge-router`, does not select a full route, and does not load
+compiled references.
 
 ## Preflight Rules
 

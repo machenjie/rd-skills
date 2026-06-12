@@ -308,13 +308,15 @@ def emit_stop_reminder(runtime: str, message: str, *, continue_turn: bool) -> No
     print(text)
 
 
-def emit_session_context(runtime: str, message: str) -> None:
-    """Emit SessionStart-compatible additional context for the route preflight.
+def emit_session_context(runtime: str, message: str, event_name: str = "SessionStart") -> None:
+    """Emit additional developer context for a context-injecting hook.
 
-    SessionStart runs before any tool. The bootstrap reminder is advisory
-    context only: it never emits a block decision, never reads references, and
-    fails open. Codex has no stable session hook today, so this path is wired
-    for Claude; it still renders correctly for either runtime if invoked.
+    Used by SessionStart, SubagentStart, and UserPromptSubmit. These events add
+    ``hookSpecificOutput.additionalContext`` (Codex) or plain stdout (Claude) as
+    extra developer context. This is advisory only: it never emits a block
+    decision, never reads references, and fails open. ``event_name`` defaults to
+    SessionStart so existing callers keep working; other callers pass the event
+    they are wired to so Codex echoes the matching ``hookEventName``.
     """
     if runtime not in KNOWN_RUNTIMES:
         return
@@ -326,7 +328,7 @@ def emit_session_context(runtime: str, message: str) -> None:
             json.dumps(
                 {
                     "hookSpecificOutput": {
-                        "hookEventName": "SessionStart",
+                        "hookEventName": event_name,
                         "additionalContext": text,
                     }
                 },
@@ -335,6 +337,21 @@ def emit_session_context(runtime: str, message: str) -> None:
         )
         return
     print(text)
+
+
+def emit_subagent_stop_reminder(runtime: str, message: str) -> None:
+    """Emit a SubagentStop-compatible advisory ``systemMessage``.
+
+    SubagentStop requires JSON on stdout; plain text is invalid for this event.
+    This reminder is advisory only: it never returns ``decision: block`` (which
+    would force the subagent to continue) and never ``continue: false``.
+    """
+    if runtime not in KNOWN_RUNTIMES:
+        return
+    text = message.strip()
+    if not text:
+        return
+    print(json.dumps({"systemMessage": text}, sort_keys=True))
 
 
 def emit_block(runtime: str, hook_event_name: str, reason: str) -> None:
@@ -378,12 +395,28 @@ def is_post_tool_use(event: dict) -> bool:
     return not name or _compact(name) == "posttooluse"
 
 
+def is_pre_tool_use(event: dict) -> bool:
+    return _compact(event_name(event)) == "pretooluse"
+
+
 def is_stop(event: dict) -> bool:
     return _compact(event_name(event)) == "stop"
 
 
 def is_session_start(event: dict) -> bool:
     return _compact(event_name(event)) == "sessionstart"
+
+
+def is_user_prompt_submit(event: dict) -> bool:
+    return _compact(event_name(event)) == "userpromptsubmit"
+
+
+def is_subagent_start(event: dict) -> bool:
+    return _compact(event_name(event)) == "subagentstart"
+
+
+def is_subagent_stop(event: dict) -> bool:
+    return _compact(event_name(event)) == "subagentstop"
 
 
 def merge_state(

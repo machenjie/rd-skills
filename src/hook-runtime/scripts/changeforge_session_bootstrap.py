@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""Emit a ChangeForge route-preflight reminder at session start.
+"""Emit a ChangeForge route-preflight reminder at session or subagent start.
 
 This is a bootstrap reminder, not a router and not a planner. It reminds the
 agent to run a ChangeForge route preflight before engineering work and to bind
 completion claims to validation evidence. It never selects a full route, never
 reads compiled references, never calls an LLM, never touches the network, and
 never writes project source. It fails open and only ever adds advisory context.
+
+It is wired to SessionStart (including the post-compaction ``compact`` source)
+and to SubagentStart, so a spawned subagent inherits the same route-preflight
+discipline as the parent session.
 """
 
 from __future__ import annotations
@@ -15,8 +19,10 @@ from changeforge_common import (
     debug_log,
     detect_runtime,
     emit_session_context,
+    event_name,
     hook_mode,
     is_session_start,
+    is_subagent_start,
     read_event,
     repo_root,
 )
@@ -56,16 +62,19 @@ def main() -> int:
     mode = hook_mode()
     if mode == "off":
         return 0
-    if not is_session_start(event):
+    is_session = is_session_start(event)
+    is_subagent = is_subagent_start(event)
+    if not (is_session or is_subagent):
         return 0
 
     repo = None
     try:
         repo = repo_root(cwd_from_event(event))
-        debug_log(repo, f"session bootstrap runtime={runtime} mode={mode}")
+        debug_log(repo, f"session bootstrap runtime={runtime} mode={mode} event={event_name(event)}")
         if mode == "monitor":
             return 0
-        emit_session_context(runtime, PREFLIGHT_MESSAGE)
+        target_event = "SubagentStart" if is_subagent else "SessionStart"
+        emit_session_context(runtime, PREFLIGHT_MESSAGE, event_name=target_event)
     except Exception as exc:  # noqa: BLE001 - bootstrap must fail open
         if repo is not None:
             debug_log(repo, f"session bootstrap failed open: {exc}")

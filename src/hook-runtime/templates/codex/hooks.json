@@ -1,5 +1,54 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_session_bootstrap.py\"",
+            "timeout": 10,
+            "statusMessage": "Loading ChangeForge route preflight"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_user_prompt_route_reminder.py\"",
+            "timeout": 10,
+            "statusMessage": "Adding ChangeForge route reminder"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "apply_patch|Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_pre_tool_risk_preview.py\"",
+            "timeout": 10,
+            "statusMessage": "Previewing ChangeForge risk surface before edit"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_pre_tool_risk_preview.py\"",
+            "timeout": 10,
+            "statusMessage": "Previewing ChangeForge command risk"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "apply_patch|Edit|Write|MultiEdit",
@@ -26,6 +75,30 @@
             "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_risk_surface_gate.py\"",
             "timeout": 10,
             "statusMessage": "Checking ChangeForge command risk"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_session_bootstrap.py\"",
+            "timeout": 10,
+            "statusMessage": "Loading ChangeForge route preflight for subagent"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_subagent_stop_reminder.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking ChangeForge subagent closure"
           }
         ]
       }

@@ -29,8 +29,11 @@ BOOTSTRAP_TEMPLATE = (
 REQUIRED_HOOK_SCRIPTS = (
     "changeforge_common.py",
     "changeforge_session_bootstrap.py",
+    "changeforge_user_prompt_route_reminder.py",
+    "changeforge_pre_tool_risk_preview.py",
     "changeforge_post_edit_structure_gate.py",
     "changeforge_risk_surface_gate.py",
+    "changeforge_subagent_stop_reminder.py",
     "changeforge_stop_closure_gate.py",
 )
 NETWORK_IMPORT_RE = re.compile(
@@ -146,6 +149,24 @@ def _validate_python_files(errors: list[str]) -> None:
                 "changeforge_session_bootstrap.py: bootstrap must not emit a block decision"
             )
 
+    # The context-injecting and reminder hooks are advisory only. They add
+    # developer context or a systemMessage and must never deny a tool call or
+    # force continuation through a block decision.
+    advisory_scripts = (
+        "changeforge_user_prompt_route_reminder.py",
+        "changeforge_pre_tool_risk_preview.py",
+        "changeforge_subagent_stop_reminder.py",
+    )
+    for script_name in advisory_scripts:
+        advisory_path = HOOK_SCRIPTS_DIR / script_name
+        if not advisory_path.is_file():
+            continue
+        advisory_text = advisory_path.read_text(encoding="utf-8")
+        if "emit_block(" in advisory_text or "emit_stop_reminder(" in advisory_text:
+            errors.append(f"{script_name}: advisory hook must not block or emit a stop reminder")
+        if '"decision"' in advisory_text or "permissionDecision" in advisory_text:
+            errors.append(f"{script_name}: advisory hook must not emit a block or deny decision")
+
     structure_script = HOOK_SCRIPTS_DIR / "changeforge_post_edit_structure_gate.py"
     if structure_script.is_file():
         structure_text = structure_script.read_text(encoding="utf-8")
@@ -223,27 +244,35 @@ def _validate_template(
         if required_event not in hooks:
             errors.append(f"{relpath(ROOT, path)}: missing {required_event} hook")
 
-    # The route-preflight bootstrap is wired as a SessionStart hook for Claude
-    # only. Codex has no stable session-start hook, so it must not declare one;
-    # Codex relies on the install-time bootstrap fragment instead.
-    if path == CLAUDE_TEMPLATE:
-        session_start = hooks.get("SessionStart")
-        if not isinstance(session_start, list) or not session_start:
-            errors.append(
-                f"{relpath(ROOT, path)}: Claude template must wire a SessionStart bootstrap hook"
-            )
-        elif not any(
-            "changeforge_session_bootstrap" in command
-            for command, _context in _commands({"SessionStart": session_start})
-        ):
-            errors.append(
-                f"{relpath(ROOT, path)}: SessionStart must invoke changeforge_session_bootstrap"
-            )
-    if path == CODEX_TEMPLATE and "SessionStart" in hooks:
+    # Both templates wire the route-preflight bootstrap as a SessionStart hook.
+    # Codex now exposes SessionStart (including the post-compaction compact
+    # source), so it no longer relies only on the install-time fragment.
+    session_start = hooks.get("SessionStart")
+    if not isinstance(session_start, list) or not session_start:
         errors.append(
-            f"{relpath(ROOT, path)}: Codex has no stable session-start hook; "
-            "use the install-time bootstrap fragment instead of a SessionStart hook"
+            f"{relpath(ROOT, path)}: template must wire a SessionStart bootstrap hook"
         )
+    elif not any(
+        "changeforge_session_bootstrap" in command
+        for command, _context in _commands({"SessionStart": session_start})
+    ):
+        errors.append(
+            f"{relpath(ROOT, path)}: SessionStart must invoke changeforge_session_bootstrap"
+        )
+
+    # Codex exposes additional events the runtime uses to reinforce routing and
+    # closure discipline. Require each one to invoke its dedicated hook script.
+    if path == CODEX_TEMPLATE:
+        for event, script in (
+            ("UserPromptSubmit", "changeforge_user_prompt_route_reminder"),
+            ("PreToolUse", "changeforge_pre_tool_risk_preview"),
+            ("SubagentStart", "changeforge_session_bootstrap"),
+            ("SubagentStop", "changeforge_subagent_stop_reminder"),
+        ):
+            if not _event_invokes(hooks, event, script):
+                errors.append(
+                    f"{relpath(ROOT, path)}: Codex {event} must invoke {script}"
+                )
 
     matchers = _post_tool_matchers(hooks)
     if not any("edit" in matcher.casefold() for matcher in matchers):
@@ -308,6 +337,16 @@ def _commands(value: Any, context: str = "hooks") -> list[tuple[str, str]]:
         for index, child in enumerate(value):
             result.extend(_commands(child, f"{context}[{index}]"))
     return result
+
+
+def _event_invokes(hooks: dict[str, Any], event: str, script: str) -> bool:
+    """True when an event group exists and at least one command invokes script."""
+    groups = hooks.get(event)
+    if not isinstance(groups, list) or not groups:
+        return False
+    return any(
+        script in command for command, _context in _commands({event: groups})
+    )
 
 
 def _timeouts(value: Any, context: str = "hooks") -> list[tuple[int, str]]:

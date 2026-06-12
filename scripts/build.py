@@ -451,16 +451,28 @@ def _copy_hook_scripts(target: Path) -> None:
 
 
 def _write_hook_manifest(target: Path, agent: str, scope: str) -> None:
-    hooks = [
-        "changeforge_post_edit_structure_gate",
-        "changeforge_risk_surface_gate",
-        "changeforge_stop_closure_gate",
-    ]
-    # Codex has no stable session-start hook, so the bootstrap reminder is wired
-    # as a SessionStart hook for Claude only. Both runtimes still ship the
-    # install-time bootstrap fragment for the advisory path.
-    if agent == "claude":
-        hooks = ["changeforge_session_bootstrap", *hooks]
+    # Both runtimes now wire the route-preflight bootstrap as a SessionStart
+    # hook and also ship the install-time bootstrap fragment for the advisory
+    # path. Codex additionally wires the per-prompt route reminder, the
+    # pre-edit risk preview, and the subagent closure reminder enabled by the
+    # current Codex hook events.
+    if agent == "codex":
+        hooks = [
+            "changeforge_session_bootstrap",
+            "changeforge_user_prompt_route_reminder",
+            "changeforge_pre_tool_risk_preview",
+            "changeforge_post_edit_structure_gate",
+            "changeforge_risk_surface_gate",
+            "changeforge_subagent_stop_reminder",
+            "changeforge_stop_closure_gate",
+        ]
+    else:
+        hooks = [
+            "changeforge_session_bootstrap",
+            "changeforge_post_edit_structure_gate",
+            "changeforge_risk_surface_gate",
+            "changeforge_stop_closure_gate",
+        ]
     manifest = {
         "kind": "changeforge-hook-runtime",
         "agent": agent,
@@ -468,7 +480,7 @@ def _write_hook_manifest(target: Path, agent: str, scope: str) -> None:
         "source_version": _source_version(),
         "hooks": hooks,
         "bootstrap_fragment": BOOTSTRAP_FRAGMENT_NAME,
-        "session_bootstrap_hook": agent == "claude",
+        "session_bootstrap_hook": True,
     }
     (target / ".changeforge-hook-manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n",

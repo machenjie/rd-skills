@@ -51,8 +51,11 @@ REQUIRED_HOOK_DIST_FILES = (
     "codex/project/.codex/changeforge-route-preflight.md",
     "codex/project/.codex/hooks/changeforge_common.py",
     "codex/project/.codex/hooks/changeforge_session_bootstrap.py",
+    "codex/project/.codex/hooks/changeforge_user_prompt_route_reminder.py",
+    "codex/project/.codex/hooks/changeforge_pre_tool_risk_preview.py",
     "codex/project/.codex/hooks/changeforge_post_edit_structure_gate.py",
     "codex/project/.codex/hooks/changeforge_risk_surface_gate.py",
+    "codex/project/.codex/hooks/changeforge_subagent_stop_reminder.py",
     "codex/project/.codex/hooks/changeforge_stop_closure_gate.py",
     "claude/project/.claude/settings.changeforge-hooks.fragment.json",
     "claude/project/.claude/.changeforge-hook-manifest.json",
@@ -69,10 +72,20 @@ BASE_HOOK_NAMES = {
     "changeforge_risk_surface_gate",
     "changeforge_stop_closure_gate",
 }
-# Codex has no stable session-start hook, so only Claude wires the bootstrap as
-# a SessionStart hook. Both agents still ship the install-time bootstrap fragment.
+# Both runtimes wire the route-preflight bootstrap as a SessionStart hook and
+# ship the install-time bootstrap fragment. Codex additionally wires the
+# per-prompt route reminder, the pre-edit risk preview, and the subagent
+# closure reminder enabled by the current Codex hook events.
 EXPECTED_HOOK_NAMES_BY_AGENT = {
-    "codex": frozenset(BASE_HOOK_NAMES),
+    "codex": frozenset(
+        BASE_HOOK_NAMES
+        | {
+            "changeforge_session_bootstrap",
+            "changeforge_user_prompt_route_reminder",
+            "changeforge_pre_tool_risk_preview",
+            "changeforge_subagent_stop_reminder",
+        }
+    ),
     "claude": frozenset(BASE_HOOK_NAMES | {"changeforge_session_bootstrap"}),
 }
 BOOTSTRAP_FRAGMENT_NAME = "changeforge-route-preflight.md"
@@ -375,9 +388,9 @@ def _validate_hook_manifest(path: Path, *, agent: str, errors: list[str]) -> Non
         errors.append(
             f"{relpath(ROOT, path)}: bootstrap_fragment must be {BOOTSTRAP_FRAGMENT_NAME}"
         )
-    if data.get("session_bootstrap_hook") is not (agent == "claude"):
+    if data.get("session_bootstrap_hook") is not True:
         errors.append(
-            f"{relpath(ROOT, path)}: session_bootstrap_hook must be {agent == 'claude'}"
+            f"{relpath(ROOT, path)}: session_bootstrap_hook must be True"
         )
 
 

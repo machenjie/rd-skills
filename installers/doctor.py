@@ -306,10 +306,7 @@ def _check_project_hooks(target: Path | None, issues: list[str]) -> None:
         bootstrap_path = hook_root / "changeforge-route-preflight.md"
         if bootstrap_path.is_file():
             wired = (scripts_dir / "changeforge_session_bootstrap.py").is_file()
-            if agent == "claude":
-                detail = "SessionStart hook script present" if wired else "SessionStart hook script missing"
-            else:
-                detail = "advisory only (Codex has no session-start hook)"
+            detail = "SessionStart hook script present" if wired else "SessionStart hook script missing"
             print(f"- {agent}: route-preflight bootstrap fragment present ({detail})")
         else:
             print(f"- {agent}: route-preflight bootstrap fragment not found (optional)")

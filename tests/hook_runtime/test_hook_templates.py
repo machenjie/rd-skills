@@ -48,10 +48,22 @@ class HookTemplateTests(unittest.TestCase):
         session_commands = json.dumps(data["hooks"]["SessionStart"])
         self.assertIn("changeforge_session_bootstrap", session_commands)
 
-    def test_codex_fragment_has_no_session_start(self) -> None:
-        # Codex has no stable session-start hook; the bootstrap is advisory there.
+    def test_codex_wires_session_start_and_new_events(self) -> None:
+        # Codex now exposes SessionStart and several other events; the template
+        # must wire each one to its dedicated ChangeForge hook script.
         data = json.loads((HOOK_ROOT / "templates" / "codex" / "hooks.json").read_text())
-        self.assertNotIn("SessionStart", data["hooks"])
+        hooks = data["hooks"]
+        for event, script in (
+            ("SessionStart", "changeforge_session_bootstrap"),
+            ("UserPromptSubmit", "changeforge_user_prompt_route_reminder"),
+            ("PreToolUse", "changeforge_pre_tool_risk_preview"),
+            ("SubagentStart", "changeforge_session_bootstrap"),
+            ("SubagentStop", "changeforge_subagent_stop_reminder"),
+        ):
+            self.assertIn(event, hooks)
+            self.assertIn(script, json.dumps(hooks[event]))
+        # SessionStart matcher covers the post-compaction compact source.
+        self.assertIn("compact", json.dumps(hooks["SessionStart"]))
 
     def test_bootstrap_fragment_exists_and_points_to_router(self) -> None:
         fragment = (

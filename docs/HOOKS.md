@@ -15,8 +15,20 @@ The first-stage runtime provides these reminder gates:
   engineering work, to require `implementation-structure-design` before new
   structure, and to bind any completion claim to `agent-execution-discipline`.
   It only emits a route preflight; it never selects a full route and never reads
-  references. It is wired as a Claude `SessionStart` hook. Codex has no stable
-  session-start hook, so Codex uses the install-time bootstrap fragment instead.
+  references. It is wired as a `SessionStart` hook for both Codex and Claude
+  (Codex `SessionStart` also fires with the `compact` source after compaction,
+  so the route preflight is re-injected once context is compacted). The same
+  guidance also ships as an install-time bootstrap fragment for users who prefer
+  not to trust executable hooks.
+- Route Reminder (Codex `UserPromptSubmit`): adds a concise per-prompt reminder
+  to run `change-forge-router` and emit a `changeforge_route` manifest for any
+  engineering change. It is advisory developer context, never reads or records
+  the prompt text, and writes no telemetry.
+- Pre-Edit Risk Preview (Codex `PreToolUse`): before an edit or command runs, it
+  previews ChangeForge risk surfaces (auth, data contract, cache, queue,
+  Kubernetes, Helm, big data) and reminds the agent to route first. It reuses the
+  Risk Surface Gate matching, is advisory only, never denies the tool call, and
+  never mutates per-turn state.
 
 - Post-Edit Structure Gate: runs after edit tools and warns when changed paths
   look like structural code, shared utilities, public interfaces, SDK/client
@@ -35,6 +47,11 @@ The first-stage runtime provides these reminder gates:
   skill path, changed files, validation evidence, residual risk, next steps, and
   the structure-evidence records (file naming, reuse ladder, extension safety,
   advanced refactor, comment quality) for any structure sub-gate that fired.
+- Subagent Closure Reminder (Codex `SubagentStop`): reminds a stopping subagent
+  to hand the parent the route manifest, validation evidence, and residual risk.
+  It emits an advisory `systemMessage`, never forces the subagent to continue,
+  and never touches the parent turn's closure state. The Session Bootstrap also
+  runs at `SubagentStart` so a spawned subagent inherits the route preflight.
 
 The default behavior is warning-only. A hook failure must fail open and must not
 interrupt normal agent execution.
@@ -100,28 +117,42 @@ Bootstrap boundaries:
 
 Runtime support:
 
-- Claude project hooks wire the bootstrap as a `SessionStart` hook
-  (`changeforge_session_bootstrap.py`).
-- Codex has no stable session-start hook, so the same guidance ships as an
-  install-time fragment (`changeforge-route-preflight.md`). Reference it from
-  the project's agent instructions to enable it.
+- Codex and Claude project hooks both wire the bootstrap as a `SessionStart`
+  hook (`changeforge_session_bootstrap.py`), and also at `SubagentStart` so
+  spawned subagents inherit the preflight. Codex `SessionStart` additionally
+  fires with the `compact` source, re-injecting the preflight after compaction.
+- The same guidance also ships as an install-time fragment
+  (`changeforge-route-preflight.md`) for users who prefer not to trust an
+  executable hook, or to reference from the project's agent instructions.
 - Any runtime can install the advisory fragment with
   `installers/install.py --with-bootstrap`.
 
-## Codex Post-Execution Limitation
+## Codex Event Coverage
 
-Codex project hooks currently operate as execution-time guardrails. For Codex,
-ChangeForge relies on PostToolUse and Stop reminders rather than assuming a
-stable pre-edit planning hook. Therefore, hooks cannot replace upfront routing or
-implementation structure planning. They can only detect edited paths, patch
-signals, and missing closure evidence after execution has begun. The session
-bootstrap is the route preflight reminder; for Codex it ships as an install-time
-fragment rather than a SessionStart hook.
+Codex exposes the lifecycle events ChangeForge needs, so Codex project hooks now
+reinforce routing and closure discipline at every stage, not only after edits:
+
+- `SessionStart` (including the `compact` source) and `SubagentStart` inject the
+  route preflight.
+- `UserPromptSubmit` adds a per-prompt route reminder.
+- `PreToolUse` previews risk surfaces before an edit or command runs.
+- `PostToolUse` runs the structure and risk-surface gates after edits and
+  commands.
+- `Stop` runs the closure gate; `SubagentStop` reminds the subagent to carry
+  closure evidence back to the parent.
+
+These remain execution-time guardrails. They detect edited paths, patch signals,
+risk surfaces, and missing closure evidence, and they remind the agent to route;
+they never select a complete route, never block by default, and never replace
+`change-forge-router` or `implementation-structure-design`.
 
 ## Hook Capability Boundary
 
 Hooks can:
-- remind on route preflight at session start (Claude SessionStart);
+- remind on route preflight at session start, subagent start, and after
+  compaction (`SessionStart`/`SubagentStart`);
+- remind on routing per user prompt (Codex `UserPromptSubmit`);
+- preview risk surfaces before an edit or command runs (Codex `PreToolUse`);
 - remind on new file naming pattern mismatches;
 - remind on structural path changes;
 - remind on helper/common/utils/shared pollution risk;
@@ -129,7 +160,8 @@ Hooks can:
 - remind on extension reuse safety;
 - remind on advanced refactor evidence;
 - remind on comment quality evidence;
-- remind on Stop-stage closure evidence.
+- remind on Stop-stage closure evidence;
+- remind a stopping subagent to carry closure evidence (Codex `SubagentStop`).
 
 Hooks cannot:
 - replace `change-forge-router`;

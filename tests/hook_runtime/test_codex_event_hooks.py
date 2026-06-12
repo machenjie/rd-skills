@@ -1,0 +1,185 @@
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT_DIR = ROOT / "src" / "hook-runtime" / "scripts"
+
+
+def _run(script: str, event: dict, *, mode: str | None = None) -> subprocess.CompletedProcess[str]:
+    with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+        event = dict(event)
+        event.setdefault("cwd", cwd)
+        env = os.environ.copy()
+        env["XDG_CACHE_HOME"] = cache
+        env["CHANGEFORGE_AGENT"] = "codex"
+        if mode is None:
+            env.pop("CHANGEFORGE_HOOK_MODE", None)
+        else:
+            env["CHANGEFORGE_HOOK_MODE"] = mode
+        return subprocess.run(
+            [sys.executable, str(SCRIPT_DIR / script)],
+            input=json.dumps(event),
+            text=True,
+            capture_output=True,
+            cwd=cwd,
+            env=env,
+            check=False,
+        )
+
+
+class UserPromptRouteReminderTests(unittest.TestCase):
+    SCRIPT = "changeforge_user_prompt_route_reminder.py"
+
+    def test_user_prompt_submit_emits_route_reminder(self) -> None:
+        event = {"hook_event_name": "UserPromptSubmit", "prompt": "add a redis cache to lookups"}
+        result = _run(self.SCRIPT, event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["hookSpecificOutput"]["hookEventName"], "UserPromptSubmit")
+        context = payload["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("change-forge-router", context)
+        self.assertIn("changeforge_route", context)
+
+    def test_prompt_text_is_never_echoed(self) -> None:
+        # Privacy: the reminder is fixed and must never include prompt content.
+        secret = "SECRET_TOKEN_abc123_should_not_appear"
+        event = {"hook_event_name": "UserPromptSubmit", "prompt": f"deploy with {secret}"}
+        result = _run(self.SCRIPT, event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn(secret, result.stdout)
+
+    def test_off_mode_is_silent(self) -> None:
+        event = {"hook_event_name": "UserPromptSubmit", "prompt": "x"}
+        result = _run(self.SCRIPT, event, mode="off")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "")
+
+    def test_monitor_mode_is_silent(self) -> None:
+        event = {"hook_event_name": "UserPromptSubmit", "prompt": "x"}
+        result = _run(self.SCRIPT, event, mode="monitor")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "")
+
+    def test_non_user_prompt_event_is_ignored(self) -> None:
+        event = {"hook_event_name": "Stop"}
+        result = _run(self.SCRIPT, event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "")
+
+
+class PreToolRiskPreviewTests(unittest.TestCase):
+    SCRIPT = "changeforge_pre_tool_risk_preview.py"
+
+    def test_pre_edit_auth_path_emits_advisory(self) -> None:
+        event = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Edit",
+            "tool_input": {"file_path": "src/auth/session_token.py"},
+        }
+        result = _run(self.SCRIPT, event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["hookSpecificOutput"]["hookEventName"], "PreToolUse")
+        context = payload["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("security", context)
+        self.assertIn("change-forge-router", context)
+        # Advisory only: never deny or block.
+        self.assertNotIn("permissionDecision", result.stdout)
+        self.assertNotIn("\"decision\"", result.stdout)
+
+    def test_pre_edit_non_risk_path_is_silent(self) -> None:
+        event = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Edit",
+            "tool_input": {"file_path": "docs/notes.md"},
+        }
+        result = _run(self.SCRIPT, event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "")
+
+    def test_bash_migration_command_emits_advisory(self) -> None:
+        event = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Bash",
+            "tool_input": {"command": "psql -f db/migrations/004_add_column.sql"},
+        }
+        result = _run(self.SCRIPT, event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertIn("data-api", payload["hookSpecificOutput"]["additionalContext"])
+
+    def test_off_mode_is_silent(self) -> None:
+        event = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Edit",
+            "tool_input": {"file_path": "src/auth/session_token.py"},
+        }
+        result = _run(self.SCRIPT, event, mode="off")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "")
+
+    def test_post_tool_use_event_is_ignored(self) -> None:
+        event = {
+            "hook_event_name": "PostToolUse",
+            "tool_name": "Edit",
+            "tool_input": {"file_path": "src/auth/session_token.py"},
+        }
+        result = _run(self.SCRIPT, event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "")
+
+
+class SubagentStopReminderTests(unittest.TestCase):
+    SCRIPT = "changeforge_subagent_stop_reminder.py"
+
+    def test_subagent_stop_emits_system_message(self) -> None:
+        event = {"hook_event_name": "SubagentStop", "agent_type": "explore"}
+        result = _run(self.SCRIPT, event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertIn("systemMessage", payload)
+        self.assertIn("changeforge_route", payload["systemMessage"])
+        # Advisory only: never force continuation.
+        self.assertNotIn("decision", payload)
+        self.assertNotIn("continue", payload)
+
+    def test_off_mode_is_silent(self) -> None:
+        event = {"hook_event_name": "SubagentStop", "agent_type": "explore"}
+        result = _run(self.SCRIPT, event, mode="off")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "")
+
+    def test_non_subagent_stop_event_is_ignored(self) -> None:
+        event = {"hook_event_name": "Stop"}
+        result = _run(self.SCRIPT, event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "")
+
+
+class SessionBootstrapSubagentStartTests(unittest.TestCase):
+    SCRIPT = "changeforge_session_bootstrap.py"
+
+    def test_subagent_start_emits_preflight_for_subagent(self) -> None:
+        event = {"hook_event_name": "SubagentStart", "agent_type": "explore"}
+        result = _run(self.SCRIPT, event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["hookSpecificOutput"]["hookEventName"], "SubagentStart")
+        self.assertIn(
+            "route preflight",
+            payload["hookSpecificOutput"]["additionalContext"].casefold(),
+        )
+        # Advisory only: the subagent start must not be blocked.
+        self.assertNotIn("\"decision\"", result.stdout)
+
+
+if __name__ == "__main__":
+    unittest.main()

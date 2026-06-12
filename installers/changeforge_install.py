@@ -71,14 +71,18 @@ HOOK_MANIFEST_NAME = ".changeforge-hook-manifest.json"
 HOOK_SCRIPT_NAMES = (
     "changeforge_common.py",
     "changeforge_session_bootstrap.py",
+    "changeforge_user_prompt_route_reminder.py",
+    "changeforge_pre_tool_risk_preview.py",
     "changeforge_post_edit_structure_gate.py",
     "changeforge_risk_surface_gate.py",
+    "changeforge_subagent_stop_reminder.py",
     "changeforge_stop_closure_gate.py",
 )
 
 # Advisory route-preflight bootstrap. The fragment is plain guidance text, not an
 # executable hook, so it can be installed for any project scope and never needs
-# to be trusted. Codex has no session-start hook, so this is its bootstrap path.
+# to be trusted. It is also the bootstrap path for users who prefer not to trust
+# executable hooks.
 BOOTSTRAP_FRAGMENT_NAME = "changeforge-route-preflight.md"
 UNIVERSAL_BOOTSTRAP_SOURCE = (
     ROOT / "dist" / "universal" / "bootstrap" / BOOTSTRAP_FRAGMENT_NAME
@@ -648,7 +652,10 @@ def plan_bootstrap_install(agent: str, scope: str, project_root: Path) -> Bootst
             "Claude project hooks can also wire this as a SessionStart hook via --with-hooks"
         )
     elif agent == "codex":
-        notes.append("Codex has no session-start hook; this advisory fragment is its bootstrap path")
+        notes.append(
+            "Codex project hooks can also wire this as a SessionStart hook via --with-hooks; "
+            "this advisory fragment is the no-trust alternative"
+        )
     return BootstrapPlan(
         agent=agent,
         scope=scope,

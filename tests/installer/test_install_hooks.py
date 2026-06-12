@@ -71,8 +71,17 @@ class InstallHooksTests(unittest.TestCase):
             manifest = codex_dir / ".changeforge-hook-manifest.json"
             hooks_json = codex_dir / "hooks.json"
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(len(scripts), 5)
+            self.assertEqual(len(scripts), 8)
             self.assertTrue((codex_dir / "hooks" / "changeforge_session_bootstrap.py").is_file())
+            self.assertTrue(
+                (codex_dir / "hooks" / "changeforge_user_prompt_route_reminder.py").is_file()
+            )
+            self.assertTrue(
+                (codex_dir / "hooks" / "changeforge_pre_tool_risk_preview.py").is_file()
+            )
+            self.assertTrue(
+                (codex_dir / "hooks" / "changeforge_subagent_stop_reminder.py").is_file()
+            )
             self.assertTrue((codex_dir / "changeforge-route-preflight.md").is_file())
             self.assertTrue(manifest.is_file())
             self.assertTrue(hooks_json.is_file())
