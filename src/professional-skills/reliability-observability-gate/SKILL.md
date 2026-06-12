@@ -33,6 +33,7 @@ Launched for debugging-diagnosis and release-delivery production-risk review. Pe
 - **release-delivery**: performance and capacity budgets, alerts, rollback signals, and recovery readiness.
 
 ## Non-Negotiable Rules
+- Direct use still runs runtime flow.
 - **Every user-facing path must have an SLI**: if there is no measurable signal, there is no way to detect degradation before users report it.
 - **SLOs must be defined before the feature ships**: an SLO added after an incident is a post-hoc measurement, not a reliability commitment.
 - **Error budgets must be tracked and acted on**: when the error budget is exhausted, feature development stops until reliability is restored — this is the SRE error budget policy.

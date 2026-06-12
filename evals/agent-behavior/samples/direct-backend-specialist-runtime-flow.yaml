@@ -1,0 +1,155 @@
+id: direct-backend-specialist-runtime-flow
+description: |
+  Direct backend-change-builder invocation may skip router reclassification when
+  scope is known, but it must still carry the runtime prompt protocol.
+prompt: |
+  Use backend-change-builder directly to modify PATCH /orders/{id}/status. The
+  scope is narrow, so do not re-route; just edit it.
+validation_evidence: true
+residual_risk: true
+expected:
+  selected_skills:
+    - backend-change-builder
+    - data-api-contract-changer
+    - security-privacy-gate
+    - quality-test-gate
+  forbidden_skills:
+    - frontend-change-builder
+    - delivery-release-gate
+  selected_capabilities:
+    - agent-execution-discipline
+    - implementation-structure-design
+    - authentication-authorization
+    - api-contract-design
+    - regression-testing
+    - code-review
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+  required_quality_gates:
+    - API/data gate
+    - security gate
+    - implementation gate
+    - test gate
+    - execution discipline gate
+  runtime_prompt_flow:
+    required: true
+    clarification_status: clarified-with-assumptions
+    required_inspected_boundaries:
+      - files
+      - tests
+      - docs
+    required_actions:
+      - modify-order-status-endpoint
+    require_owner_review_distinct: true
+    require_repair_route: true
+    require_re_review_result: true
+    require_validation_evidence: true
+    require_residual_risk: true
+manifest:
+  schema_version: 1
+  route_id: direct-backend-specialist-runtime-flow
+  complexity: L2
+  risk_level: high
+  execution_mode: implement
+  selected_skills:
+    - backend-change-builder
+    - data-api-contract-changer
+    - security-privacy-gate
+    - quality-test-gate
+  selected_capabilities:
+    - agent-execution-discipline
+    - implementation-structure-design
+    - authentication-authorization
+    - api-contract-design
+    - regression-testing
+    - code-review
+  selected_domain_extensions: []
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/26-api-contract-design.md
+    - references/capabilities/41-authentication-authorization.md
+    - references/capabilities/64-regression-testing.md
+    - references/capabilities/78-code-review.md
+    - references/capabilities/101-implementation-structure-design.md
+    - references/capabilities/102-agent-execution-discipline.md
+  required_quality_gates:
+    - API/data gate
+    - security gate
+    - implementation gate
+    - test gate
+    - execution discipline gate
+  skipped_quality_gates:
+    - delivery gate => no deployment, migration, or runtime packaging change in scope
+  assumptions:
+    - Existing order API files and tests can be inspected before editing.
+  runtime_prompt_flow:
+    schema_version: 1
+    clarification_status:
+      status: clarified-with-assumptions
+      current_behavior: status endpoint exists but validation and ownership behavior are unclear
+      desired_behavior: update order status with server-side validation and object authorization
+      non_goals:
+        - frontend flow changes
+      constraints:
+        - use backend-change-builder directly
+      acceptance_tdd_signal: regression or integration test for allowed and denied status updates
+      blocking_questions: []
+      assumptions:
+        - existing order API and tests can be inspected before editing
+    inspected_boundaries:
+      files:
+        - src/orders/api/status_handler.py
+      code_paths:
+        - status update handler
+        - order service
+        - authorization policy
+      tests:
+        - tests/orders/test_status_update.py
+      configs: []
+      docs:
+        - docs/api/orders.md
+      conventions:
+        - existing backend service and test placement
+      not_inspected: []
+    tdd_signal:
+      kind: updated-test
+      command_or_check: pytest tests/orders/test_status_update.py -q
+      expected_evidence: allowed update succeeds and cross-account update returns 403
+    actions:
+      - id: modify-order-status-endpoint
+        owner_skill: backend-change-builder
+        owner_capabilities:
+          - implementation-structure-design
+          - authentication-authorization
+        review_skill: quality-test-gate
+        review_capabilities:
+          - regression-testing
+          - code-review
+        review_evidence: tests cover allowed, denied, validation, and old behavior
+        repair_route_if_review_fails: backend-change-builder
+        re_review_required: true
+        re_review_result: pending
+    repair_route:
+      required_when_review_fails: true
+      owner_skill: backend-change-builder
+      evidence: repair diff and pytest rerun before re-review
+    validation_evidence:
+      - command: pytest tests/orders/test_status_update.py -q
+        outcome: planned
+        proves: status update behavior and denied object-authorization case
+        does_not_prove: production tenant data or every API client
+    residual_risk:
+      - risk: target-project files are illustrative in this captured sample
+        owner: next runtime agent
+        next_gate: inspect actual target project before editing
+  handoff_target: backend-change-builder
+notes: |
+  Regression guard for the direct specialist-skill bypass gap. The sample is
+  illustrative but machine-readable, so missing runtime protocol fields fail the
+  agent-behavior eval.

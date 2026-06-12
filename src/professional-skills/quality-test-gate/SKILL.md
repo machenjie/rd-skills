@@ -29,6 +29,7 @@ Define the minimum evidence needed to prove a change works correctly, does not r
 - Test strategy is already defined in an accepted acceptance criteria document with complete coverage for all risks.
 
 ## Non-Negotiable Rules
+- Direct use still runs runtime flow.
 - **Map every material test to an acceptance criterion or a named risk** — tests without a justifying requirement or risk are noise; risks without a test are gaps.
 - **Include negative path and failure mode coverage** when behavior changes — a test suite that only covers the happy path does not test the behavior, it tests the best case.
 - **Mock boundaries must reflect real contracts**: mocks that return data the real dependency would never return create false confidence; consumer-driven contract tests or integration tests must validate mock assumptions.

@@ -26,6 +26,7 @@ Design and review external integration changes so that every outbound call is bo
 - No external network, external credentials, or external ownership risk is involved.
 
 ## Non-Negotiable Rules
+- Direct use still runs runtime flow.
 - **Always set explicit timeouts on all outbound HTTP calls**: a missing timeout is an unbounded thread hold that cascades into request queue exhaustion; default `0` (no timeout) is never acceptable in production.
 - **Retry with exponential backoff and jitter, with a bounded retry count**: unbounded retries amplify incidents and can trigger provider rate limits or account bans.
 - **Idempotency is required for all commands that can be retried**: every outbound write, payment, or state-transition command must use idempotency keys to prevent duplication of effects on network retry.

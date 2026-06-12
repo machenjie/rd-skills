@@ -32,6 +32,7 @@ TELEMETRY_SCHEMA_VERSION = "1"
 TELEMETRY_SUBDIRS = ("sessions", "reports", "suggestions", "promoted")
 ROUTE_MANIFEST_KEY = "changeforge_route"
 STAGE_MANIFEST_KEY = "changeforge_stage_route"
+RUNTIME_PROMPT_FLOW_KEY = "runtime_prompt_flow"
 _ROUTE_MANIFEST_FENCE_RE = re.compile(
     r"```[a-zA-Z0-9]*\s*\n(?P<block>.*?)```",
     re.DOTALL,
@@ -169,6 +170,22 @@ def manifest_string_list(manifest: dict[str, Any], *keys: str) -> list[str]:
         if isinstance(value, list):
             return [str(item).strip() for item in value if str(item).strip()]
     return []
+
+
+def manifest_runtime_prompt_flow(manifest: dict[str, Any]) -> dict[str, Any] | None:
+    """Return the nested runtime prompt-flow manifest, when present."""
+    value = manifest.get(RUNTIME_PROMPT_FLOW_KEY)
+    return value if isinstance(value, dict) else None
+
+
+def runtime_flow_actions(flow: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """Return structured runtime-flow action entries."""
+    if not isinstance(flow, dict):
+        return []
+    actions = flow.get("actions")
+    if not isinstance(actions, list):
+        return []
+    return [entry for entry in actions if isinstance(entry, dict)]
 
 
 def load_registry_names(registry_dir: Path) -> dict[str, set[str]]:

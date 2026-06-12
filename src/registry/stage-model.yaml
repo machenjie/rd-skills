@@ -21,6 +21,7 @@ stages:
       - clarified scope
       - explicit non-goals
       - testable acceptance signal
+      - clarification status before action
     required_quality_gates:
       - requirement gate
     allowed_next_stages:
@@ -84,10 +85,12 @@ stages:
       - release
       - deep performance profiling
     required_evidence:
+      - target boundaries inspected before plan
       - reuse candidates
       - placement rationale
       - visibility decisions
       - test placement
+      - TDD or validation signal
     required_quality_gates:
       - implementation gate
     allowed_next_stages:
@@ -114,6 +117,8 @@ stages:
       - release
       - full regression suite design
     required_evidence:
+      - inspected implementation context
+      - TDD or validation signal before code
       - idiomatic implementation
       - validated inputs
       - released resources
@@ -195,6 +200,8 @@ stages:
       - impacted file
       - required fix
       - validation required
+      - independent reviewer
+      - repair and re-review result
     required_quality_gates:
       - implementation gate
     allowed_next_stages:
@@ -539,6 +546,15 @@ stage_resolution:
     - when: [code placement, reuse decision]
       current_stage: implementation-planning
       reason: placement and reuse decisions precede coding
+    - when: [implementation plan, target-project not inspected]
+      current_stage: requirement-intake
+      reason: read-before-plan evidence is required before implementation-planning
+    - when: [coding, TDD signal missing]
+      current_stage: implementation-planning
+      reason: coding waits for TDD or validation signal
+    - when: [review finding, re-review result missing]
+      current_stage: code-review
+      reason: review findings keep the stage in code-review until repair and re-review evidence exists
     - when: [write implementation, selected design]
       current_stage: coding
       reason: active action is implementation

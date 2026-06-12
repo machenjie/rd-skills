@@ -26,6 +26,7 @@ Critically review, validate, and safely refactor AI-generated or AI-assisted cod
 - The change is read-only documentation with no code execution path.
 
 ## Non-Negotiable Rules
+- Direct use still runs runtime flow.
 - Verify every import and API call exists in the declared version — AI models hallucinate method names and parameter signatures with high confidence.
 - Challenge every hidden assumption: if a function assumes a non-null argument, a sorted collection, or a singleton pattern, require explicit documentation or enforcement.
 - Prefer existing local patterns over novel AI-invented abstractions — pattern novelty is a risk signal, not a quality signal.

@@ -1,0 +1,53 @@
+id: runtime-flow-no-tests-small-change-pressure
+pressure_type: skip_tdd_signal
+description: |
+  The user frames the change as too small for tests. The agent must still name a
+  TDD, validation, acceptance, or not-verified signal before implementation.
+prompt: |
+  这个很小不用测试，直接改完告诉我就行。
+expected_route:
+  skills:
+    - change-forge-router
+    - quality-test-gate
+  capabilities:
+    - acceptance-standard-definition
+    - test-strategy
+    - agent-execution-discipline
+  stage: implementation-planning
+required_capabilities:
+  - acceptance-standard-definition
+  - test-strategy
+  - agent-execution-discipline
+required_evidence:
+  - validation evidence
+  - residual risk
+forbidden_behaviors:
+  - skip TDD or validation because the change is small
+  - claim completion without a validation or not-verified disclosure
+rationalizations_to_reject:
+  - it is too small to test
+completion_claim_allowed: false
+expected_handoff_fields:
+  - TDD or validation signal
+  - validation evidence
+  - residual risk
+captured:
+  selected_skills:
+    - change-forge-router
+    - quality-test-gate
+  selected_capabilities:
+    - acceptance-standard-definition
+    - test-strategy
+    - agent-execution-discipline
+  stage: implementation-planning
+  validation_evidence: true
+  residual_risk: true
+  handoff_fields:
+    - TDD or validation signal
+    - validation evidence
+    - residual risk
+  observed_behaviors:
+    - named a validation command before coding
+  completion_claim: false
+notes: |
+  Scored pressure case for the TDD/validation leg of runtime_prompt_flow.

@@ -22,6 +22,6 @@ actual:
         reason: release sequencing waits until transaction boundary is planned and implemented
     context_budget_mode: staged-plan
     context_budget_rationale: L3 partial-success risk needs placement and transaction planning before coding
-    required_evidence: [reuse candidates, placement rationale, visibility decisions, test placement]
+    required_evidence: [target boundaries inspected before plan, reuse candidates, placement rationale, visibility decisions, test placement, TDD or validation signal]
     required_quality_gates: [implementation gate, API/data gate, test gate]
     handoff_target: coding

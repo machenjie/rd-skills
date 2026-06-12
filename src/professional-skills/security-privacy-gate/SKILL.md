@@ -34,6 +34,7 @@ Risk-escalation gate across all stages; deepest in coding, code-review, and rele
 - **release-delivery**: dependency exposure, IAM and configuration exposure, and privacy obligations before ship.
 
 ## Non-Negotiable Rules
+- Direct use still runs runtime flow.
 - **Object-level authorization (IDOR prevention) must be enforced for every data access**: route-level or function-level authorization is insufficient — every database query that retrieves user-owned data must verify that the requesting user owns or has permission to access that specific record.
 - **Input validation at every trust boundary**: validate type, length, format, and allowed values for every input that crosses a trust boundary — client to server, server to external service, file upload, URL parameter.
 - **Output encoding context-specific**: HTML entity encoding for HTML context, parameterized queries for SQL context, JSON serialization for JSON output, URL encoding for URLs — never concatenate user input into output directly.

@@ -7,8 +7,11 @@ It validates route recall/precision, capability recall, reference adherence,
 quality-gate closure, validation evidence, and the ``changeforge_stage_route``
 stage projection (presence, stage correctness, stage capability alignment,
 skipped-capability rationale, and context-budget validity). Missing router
-self-use references in the manifest are a hard error. It never calls a model,
-never reaches the network, and never edits skills, routing rules, or
+self-use references in the manifest are a hard error. Samples can also opt in to
+``runtime_prompt_flow`` scoring so the eval can verify clarification,
+read-before-plan evidence, TDD signal, action owner/review mapping,
+repair/re-review, validation evidence, and residual risk. It never calls a
+model, never reaches the network, and never edits skills, routing rules, or
 capabilities.
 
 With no samples it prints ``no samples found`` and exits 0 so it can sit in the
@@ -30,7 +33,9 @@ from telemetry_utils import (
     extract_route_manifest,
     extract_stage_manifest,
     load_registry_names,
+    manifest_runtime_prompt_flow,
     manifest_string_list,
+    runtime_flow_actions,
 )
 from validation_utils import load_yaml_file, ValidationProblem
 
@@ -57,6 +62,14 @@ STAGE_SCORE_KEYS = (
     "skipped_capability_rationale",
     "context_budget_validity",
 )
+RUNTIME_FLOW_SCORE_KEYS = (
+    "runtime_clarification",
+    "runtime_inspection",
+    "runtime_tdd_signal",
+    "runtime_action_review",
+    "runtime_repair_rereview",
+    "runtime_validation_residual",
+)
 SCORE_KEYS = (
     "route_recall",
     "route_precision",
@@ -64,6 +77,7 @@ SCORE_KEYS = (
     "reference_adherence",
     "gate_closure",
     "validation_evidence_score",
+    *RUNTIME_FLOW_SCORE_KEYS,
     *STAGE_SCORE_KEYS,
 )
 
@@ -189,6 +203,12 @@ def _evaluate_sample(
         "gate_closure": _gate_closure(expected_gates, required_gates, skipped_gates),
         "validation_evidence_score": 1.0 if _has_validation_evidence(data, manifest) else 0.0,
     }
+    runtime_scores, runtime_errors = _runtime_flow_scores(
+        expected,
+        manifest_runtime_prompt_flow(manifest),
+    )
+    scores.update(runtime_scores)
+    errors.extend(runtime_errors)
     scores.update(_stage_scores(expected, _resolve_stage_manifest(data)))
     missing_self_refs = [ref for ref in ROUTER_SELF_REFERENCES if ref not in manifest_refs]
     if missing_self_refs:
@@ -290,6 +310,207 @@ def _stage_scores(
         "skipped_capability_rationale": rationale,
         "context_budget_validity": budget_validity,
     }
+
+
+def _runtime_flow_scores(
+    expected: dict[str, Any],
+    flow: dict[str, Any] | None,
+) -> tuple[dict[str, float], list[str]]:
+    """Score the nested runtime prompt-flow projection.
+
+    Runtime-flow scoring is opt-in. Existing samples that do not declare
+    ``expected.runtime_prompt_flow`` score 1.0 on every runtime-flow dimension.
+    """
+    spec = expected.get("runtime_prompt_flow")
+    if spec is None:
+        return {key: 1.0 for key in RUNTIME_FLOW_SCORE_KEYS}, []
+    if not isinstance(spec, dict):
+        return (
+            {key: 0.0 for key in RUNTIME_FLOW_SCORE_KEYS},
+            ["expected.runtime_prompt_flow must be a mapping"],
+        )
+    if not isinstance(flow, dict):
+        errors = []
+        if spec.get("required") is True:
+            errors.append("expected runtime_prompt_flow missing from route manifest")
+        return {key: 0.0 for key in RUNTIME_FLOW_SCORE_KEYS}, errors
+
+    errors: list[str] = []
+    clarification_score = _runtime_clarification_score(spec, flow, errors)
+    inspection_score = _runtime_inspection_score(spec, flow, errors)
+    tdd_score = _runtime_tdd_score(flow, errors, required=bool(spec.get("required")))
+    action_score = _runtime_action_review_score(spec, flow, errors)
+    repair_score = _runtime_repair_score(spec, flow, errors)
+    validation_score = _runtime_validation_residual_score(spec, flow, errors)
+
+    return (
+        {
+            "runtime_clarification": clarification_score,
+            "runtime_inspection": inspection_score,
+            "runtime_tdd_signal": tdd_score,
+            "runtime_action_review": action_score,
+            "runtime_repair_rereview": repair_score,
+            "runtime_validation_residual": validation_score,
+        },
+        errors,
+    )
+
+
+def _runtime_clarification_score(
+    spec: dict[str, Any],
+    flow: dict[str, Any],
+    errors: list[str],
+) -> float:
+    clarification = flow.get("clarification_status")
+    if isinstance(clarification, dict):
+        status = str(clarification.get("status", "")).strip()
+    elif isinstance(clarification, str):
+        status = clarification.strip()
+    else:
+        status = ""
+    expected_status = str(spec.get("clarification_status", "")).strip()
+    ok = bool(status) and (not expected_status or status == expected_status)
+    if not ok and spec.get("required") is True:
+        errors.append("runtime_prompt_flow.clarification_status is missing or mismatched")
+    return 1.0 if ok else 0.0
+
+
+def _runtime_inspection_score(
+    spec: dict[str, Any],
+    flow: dict[str, Any],
+    errors: list[str],
+) -> float:
+    inspected = flow.get("inspected_boundaries")
+    if not isinstance(inspected, dict):
+        if spec.get("required") is True:
+            errors.append("runtime_prompt_flow.inspected_boundaries is missing")
+        return 0.0
+    required = _expected_list(spec, "required_inspected_boundaries")
+    if required:
+        present = [
+            key
+            for key in required
+            if _has_runtime_boundary(inspected.get(key))
+        ]
+        missing = sorted(set(required) - set(present))
+        if missing and spec.get("required") is True:
+            errors.append(
+                "runtime_prompt_flow.inspected_boundaries missing required field(s): "
+                + ", ".join(missing)
+            )
+        return len(present) / len(required)
+    return 1.0 if any(_has_runtime_boundary(value) for value in inspected.values()) else 0.0
+
+
+def _runtime_tdd_score(flow: dict[str, Any], errors: list[str], *, required: bool) -> float:
+    signal = flow.get("tdd_signal")
+    if isinstance(signal, dict):
+        kind = str(signal.get("kind", "")).strip()
+        command = str(signal.get("command_or_check", "")).strip()
+        expected = str(signal.get("expected_evidence", "")).strip()
+        ok = bool(kind) and bool(command or expected)
+    elif isinstance(signal, str):
+        ok = bool(signal.strip())
+    else:
+        ok = False
+    if not ok and required:
+        errors.append("runtime_prompt_flow.tdd_signal is missing or incomplete")
+    return 1.0 if ok else 0.0
+
+
+def _runtime_action_review_score(
+    spec: dict[str, Any],
+    flow: dict[str, Any],
+    errors: list[str],
+) -> float:
+    actions = runtime_flow_actions(flow)
+    if not actions:
+        if spec.get("required") is True:
+            errors.append("runtime_prompt_flow.actions is missing")
+        return 0.0
+
+    required_ids = _expected_list(spec, "required_actions")
+    id_score = _recall(required_ids, [str(action.get("id", "")).strip() for action in actions])
+    complete = 0
+    for action in actions:
+        owner = str(action.get("owner_skill", "")).strip()
+        reviewer = str(action.get("review_skill", "")).strip()
+        evidence = str(action.get("review_evidence", "")).strip()
+        action_id = str(action.get("id", "")).strip()
+        if action_id and owner and reviewer and evidence:
+            if spec.get("require_owner_review_distinct") is True and owner == reviewer:
+                continue
+            complete += 1
+    completeness = complete / len(actions)
+    score = (id_score + completeness) / 2
+    if score < 1.0 and spec.get("required") is True:
+        errors.append("runtime_prompt_flow.actions lacks required owner/review/evidence mapping")
+    return score
+
+
+def _runtime_repair_score(
+    spec: dict[str, Any],
+    flow: dict[str, Any],
+    errors: list[str],
+) -> float:
+    require_repair = spec.get("require_repair_route") is True
+    require_rereview = spec.get("require_re_review_result") is True
+    if not (require_repair or require_rereview):
+        return 1.0
+    actions = runtime_flow_actions(flow)
+    if not actions:
+        errors.append("runtime_prompt_flow repair/re-review expected but no actions exist")
+        return 0.0
+    repair_route = flow.get("repair_route")
+    has_top_level_repair = isinstance(repair_route, dict) and bool(
+        str(repair_route.get("owner_skill", "")).strip()
+    )
+    satisfied = 0
+    for action in actions:
+        has_repair = bool(str(action.get("repair_route_if_review_fails", "")).strip())
+        rereview_required = action.get("re_review_required") is True
+        rereview_result = str(action.get("re_review_result", "")).strip()
+        repair_ok = (not require_repair) or has_repair or has_top_level_repair
+        rereview_ok = (not require_rereview) or (rereview_required and bool(rereview_result))
+        if repair_ok and rereview_ok:
+            satisfied += 1
+    score = satisfied / len(actions)
+    if score < 1.0:
+        errors.append("runtime_prompt_flow repair/re-review evidence is incomplete")
+    return score
+
+
+def _runtime_validation_residual_score(
+    spec: dict[str, Any],
+    flow: dict[str, Any],
+    errors: list[str],
+) -> float:
+    require_validation = spec.get("require_validation_evidence") is True
+    require_residual = spec.get("require_residual_risk") is True
+    validation_ok = (not require_validation) or _has_runtime_boundary(flow.get("validation_evidence"))
+    residual_ok = (not require_residual) or _has_runtime_boundary(flow.get("residual_risk"))
+    if not validation_ok:
+        errors.append("runtime_prompt_flow.validation_evidence is missing")
+    if not residual_ok:
+        errors.append("runtime_prompt_flow.residual_risk is missing")
+    checks = []
+    if require_validation:
+        checks.append(1.0 if validation_ok else 0.0)
+    if require_residual:
+        checks.append(1.0 if residual_ok else 0.0)
+    if not checks:
+        return 1.0
+    return sum(checks) / len(checks)
+
+
+def _has_runtime_boundary(value: Any) -> bool:
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, list):
+        return any(_has_runtime_boundary(item) for item in value)
+    if isinstance(value, dict):
+        return any(_has_runtime_boundary(item) for item in value.values())
+    return value is True
 
 
 def _stage_skipped(manifest: dict[str, Any]) -> list[tuple[str, str]]:

@@ -22,6 +22,6 @@ actual:
         reason: language checks wait until implementation is selected
     context_budget_mode: single-stage
     context_budget_rationale: L2 clarification needs one requirement-intake stage before planning
-    required_evidence: [clarified scope, explicit non-goals, testable acceptance signal]
+    required_evidence: [clarified scope, explicit non-goals, testable acceptance signal, clarification status before action]
     required_quality_gates: [requirement gate]
     handoff_target: implementation-planning

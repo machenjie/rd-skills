@@ -20,7 +20,7 @@ quality gates, and the allowed handoff target stage.
 - Purpose: understand requirement, clarify scope, name non-goals, define acceptance.
 - Launch: `requirement-clarification`, `requirement-structuring`, `non-goal-boundary-definition`, `acceptance-standard-definition`, `scenario-decomposition`.
 - Do not launch by default: coding, language, testing, refactoring, release capabilities.
-- Required evidence: clarified scope, explicit non-goals, testable acceptance signal.
+- Required evidence: clarified scope, explicit non-goals, testable acceptance signal, clarification status before action.
 - Required quality gates: requirement gate.
 - Handoff: architecture-design or implementation-planning.
 
@@ -36,7 +36,7 @@ quality gates, and the allowed handoff target stage.
 - Purpose: code placement, reuse decision, object/function/class/file/directory design, naming, readable main flow, public/private/internal boundaries.
 - Launch: `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` (naming only).
 - Do not launch by default: full architecture review, release gate, deep performance profiling.
-- Required evidence: reuse candidates, placement rationale, visibility decisions, test placement.
+- Required evidence: target boundaries inspected before plan, reuse candidates, placement rationale, visibility decisions, test placement, TDD or validation signal.
 - Required quality gates: implementation gate.
 - Handoff: coding.
 
@@ -44,7 +44,7 @@ quality gates, and the allowed handoff target stage.
 - Purpose: implement code with language idiom, error handling, resource cleanup, input validation, concurrency, minimal implementation.
 - Launch: matching language professional usage capability, `language-idiom-enforcement`, `input-validation`, `logging-error-handling`, relevant builder skill.
 - Do not launch by default: architecture deep review, release gate, full regression suite design.
-- Required evidence: idiomatic implementation, validated inputs, released resources, minimal scope diff.
+- Required evidence: inspected implementation context, TDD or validation signal before code, idiomatic implementation, validated inputs, released resources, minimal scope diff.
 - Required quality gates: implementation gate.
 - Handoff: testing or code-review.
 
@@ -68,7 +68,7 @@ quality gates, and the allowed handoff target stage.
 - Purpose: correctness, structure, naming, reuse, readability, security, reliability, test evidence, hallucinated-API check.
 - Launch: `code-review`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `ai-code-review-refactor` for generated code as a professional skill.
 - Do not launch by default: release gate, deployment, infrastructure capabilities.
-- Required evidence: findings with severity, evidence, impacted file, required fix, validation required.
+- Required evidence: findings with severity, evidence, impacted file, required fix, validation required, independent reviewer, repair and re-review result.
 - Required quality gates: implementation gate.
 - Handoff: refactoring, bug-fix, testing, or documentation-handoff.
 
@@ -187,6 +187,9 @@ Conflict examples:
 | acceptance criteria + unclear scope | requirement-intake | clarify the requirement before design or implementation |
 | module boundary + dependency direction | architecture-design | boundary ownership is architecture work |
 | code placement + reuse decision | implementation-planning | placement and reuse decisions precede coding |
+| implementation plan + target-project not inspected | requirement-intake | read-before-plan evidence is required before implementation-planning |
+| coding + TDD signal missing | implementation-planning | coding waits for TDD or validation signal |
+| review finding + re-review result missing | code-review | review findings keep the stage in code-review until repair and re-review evidence exists |
 | write implementation + selected design | coding | active action is implementation |
 | rollout + rollback + config | release-delivery | rollout mechanics belong to release delivery |
 

@@ -27,6 +27,7 @@ Map the full user experience impact of a proposed change — from entry point th
 - The experience impact was already fully modeled in a prior artifact that is current and accurate.
 
 ## Non-Negotiable Rules
+- Direct use still runs runtime flow.
 - **Cover the full user flow, not only the changed component**: every upstream entry point and downstream exit state must be enumerated.
 - **All states are required for every interactive element**: empty, loading, success, error, disabled, and validation states are not optional — they are the design contract.
 - **Accessibility is a product requirement, not an afterthought**: WCAG 2.1 AA is the baseline; keyboard navigation, focus management, screen reader labels, and color contrast must be specified before implementation, not as a post-ship audit.

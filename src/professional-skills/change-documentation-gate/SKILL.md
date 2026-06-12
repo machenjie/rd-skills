@@ -25,6 +25,7 @@ Ensure every change leaves accurate, audience-appropriate documentation exactly 
 - The change is a revert of a recently merged commit where no documentation was yet published to consumers.
 
 ## Non-Negotiable Rules
+- Direct use still runs runtime flow.
 - Update documentation that real users or operators depend on — never let "it's in the code" serve as user or operator documentation.
 - Preserve accuracy over volume: a correct one-sentence update is superior to a verbose misleading paragraph.
 - Never expose secrets, credentials, internal IP addresses, or security-sensitive implementation details in public-facing documentation.

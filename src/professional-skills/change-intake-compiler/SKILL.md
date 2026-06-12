@@ -25,6 +25,7 @@ Transform ambiguous, incomplete, or solution-premixed change input — from any 
 - The request is a pure exploratory spike — output is a discovery artifact, not a behavioral change.
 
 ## Non-Negotiable Rules
+- Direct use still runs runtime flow.
 - Strictly separate facts (observed behavior), assumptions (believed to be true), decisions (already made by stakeholder authority), and open questions (require resolution before proceeding).
 - Non-goals and constraints must be preserved — removing them creates uncontrolled scope expansion.
 - Never invent requirements to make the request feel complete — unknown information must surface as explicit open questions.

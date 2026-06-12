@@ -25,6 +25,7 @@ Decompose a complex product or code change into a directed acyclic graph (DAG) o
 - The change is a documentation-only update with no implementation dependencies.
 
 ## Non-Negotiable Rules
+- Direct use still runs runtime flow.
 - **Tasks must be small enough to review in a single pass**: a task that requires reviewing 5 modules simultaneously is not a task, it is a phase — break it down further.
 - **All dependencies between tasks must be explicit**: implicit sequencing assumptions cause parallel work collisions; if Task B requires Task A's output, that dependency must be in the graph.
 - **Verification tasks are first-class nodes in the graph**: test, validate, and verify tasks are not afterthoughts — they are blocking gates that prevent downstream work from starting until evidence is produced.

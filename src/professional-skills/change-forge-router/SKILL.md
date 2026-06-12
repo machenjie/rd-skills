@@ -17,11 +17,12 @@ Use before implementation, investigation, review, release, or documentation work
 Use the router especially when the request is broad, ambiguous, high risk, cross-module, domain-specific, production-facing, or likely to involve API, data, security, reliability, release, or documentation impact.
 
 ## Do Not Use When
-Do not use when a specialist skill is explicitly requested and the scope is already narrow, the impacted surface is known, and no routing decision remains.
+Do not use when a specialist skill is explicitly requested, the scope is already narrow, the impacted surface is known, and no routing decision remains. This skips router reclassification only; it does not skip the runtime prompt execution protocol, evidence gates, independent review, repair/re-review, or evidence handoff owned by the invoked skill path.
 
 Do not use the router to invoke every skill, invent a product program around a local edit, assume a new system is being built, or introduce out-of-scope asset mapping. Runtime work must be based on the request, available project context, and ChangeForge-authored skills, not undeclared external libraries or knowledge stores.
 
 ## Non-Negotiable Rules
+- Direct use still runs runtime flow.
 - Classify the request before prescribing work.
 - Choose the minimum sufficient professional path; add skills only when the classification, impact, risk, or missing information requires them.
 - Treat bug fixes, refactors, API changes, data changes, migrations, review, tests, docs, reliability, security, and deployment as first-class changes.
@@ -274,7 +275,7 @@ Populate Required References for router self-use and for every selected support 
 ### Machine-Readable Route Manifests
 After the Markdown Routing Result, also emit two fenced YAML blocks that hooks, doctor, telemetry review, and the routing/agent-behavior eval tools parse. They never replace the human-readable sections and never authorize any tool to mutate skills, routing rules, or capabilities.
 
-- `changeforge_route`: the route projection — `route_id`, `complexity`, `risk_level`, `execution_mode`, `selected_skills`, `selected_capabilities`, `selected_domain_extensions`, `required_references`, `required_quality_gates`, `skipped_quality_gates` (each with a `reason`), `blocking_questions`, `assumptions`, and `handoff_target`. Every ordinary `selected_capabilities` entry must map to a `selected_skills` entry via the capability `used_by` relationship; route-level capabilities marked in the registry are allowed at manifest level. `required_references` must list the four router self-use references plus the deterministic `references/capabilities/<capability-id>-<capability-name>.md` path for each selected capability.
+- `changeforge_route`: the route projection — `route_id`, `complexity`, `risk_level`, `execution_mode`, `selected_skills`, `selected_capabilities`, `selected_domain_extensions`, `required_references`, `required_quality_gates`, `skipped_quality_gates` (each with a `reason`), `blocking_questions`, `assumptions`, `runtime_prompt_flow`, and `handoff_target`. `runtime_prompt_flow` carries clarification status, inspected boundaries, TDD signal, action owner/review/repair mapping, validation evidence, and residual risk so direct specialist-skill invocation can skip reclassification without skipping the execution protocol. Every ordinary `selected_capabilities` entry must map to a `selected_skills` entry via the capability `used_by` relationship; route-level capabilities marked in the registry are allowed at manifest level. `required_references` must list the four router self-use references plus the deterministic `references/capabilities/<capability-id>-<capability-name>.md` path for each selected capability.
 - `changeforge_stage_route`: the stage projection of `## 12. Stage Professionalism` — `schema_version`, `current_stage`, `next_stage`, `product_surface`, `language_surface`, the `selected_*` lists, `skipped_capabilities` (each with a `reason`), `context_budget_mode` (`minimal` for L1, `single-stage` for L2, `staged-plan` for L3+), `context_budget_rationale`, `required_evidence`, `required_quality_gates`, and `handoff_target`. Emit it only for non-trivial engineering tasks, name exactly one `current_stage`, and keep it consistent with `changeforge_route`.
 
 Full manifest schemas, field templates, and rules: `references/route-manifest.md`.

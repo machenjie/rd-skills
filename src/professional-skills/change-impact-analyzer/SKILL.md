@@ -24,6 +24,7 @@ Expose the complete blast radius of a proposed change before design or implement
 - The change is a typo fix, comment update, or test data cleanup with zero behavioral surface area.
 
 ## Non-Negotiable Rules
+- Direct use still runs runtime flow.
 - Inspect every potentially affected surface — do not stop at the first impacted component and assume the rest is safe.
 - Distinguish impact types: Direct (code must change), Indirect (behavior or contract changes), Downstream (consumers must adapt), Latent (no immediate change but risk is created).
 - Never mark a surface as "not impacted" without explicit reasoning — unknown is not the same as unimpacted.

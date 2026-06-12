@@ -26,10 +26,14 @@ sample's captured output and scores it against the sample's `expected` block:
   router self-use references;
 - every `expected.required_quality_gates` entry is either required or skipped with a
   reason;
-- validation evidence and residual risk are present.
+- validation evidence and residual risk are present;
+- when `expected.runtime_prompt_flow.required` is true, the manifest carries
+  clarification status, inspected boundaries, TDD signal, action owner/review
+  mapping, repair/re-review requirements, validation evidence, and residual risk.
 
 It reports `route_recall`, `route_precision`, `capability_recall`,
-`reference_adherence`, `gate_closure`, and `validation_evidence_score`.
+`reference_adherence`, `gate_closure`, `validation_evidence_score`, runtime flow
+scores, and stage projection scores.
 
 ## Sample format
 
@@ -48,6 +52,19 @@ expected:
     - references/routing-rules.md
   required_quality_gates:
     - security gate
+  runtime_prompt_flow:
+    required: true
+    clarification_status: clarified-with-assumptions
+    required_inspected_boundaries:
+      - files
+      - tests
+    required_actions:
+      - update-backend-handler
+    require_owner_review_distinct: true
+    require_repair_route: true
+    require_re_review_result: true
+    require_validation_evidence: true
+    require_residual_risk: true
 actual:
   # Preferred: the parsed manifest captured from a real session.
   route_manifest:
@@ -60,6 +77,31 @@ actual:
       - references/routing-rules.md
     required_quality_gates:
       - security gate
+    runtime_prompt_flow:
+      schema_version: 1
+      clarification_status:
+        status: clarified-with-assumptions
+      inspected_boundaries:
+        files:
+          - src/orders/api.py
+        tests:
+          - tests/test_orders.py
+      tdd_signal:
+        kind: updated-test
+        command_or_check: pytest tests/test_orders.py -q
+        expected_evidence: order authorization regression passes
+      actions:
+        - id: update-backend-handler
+          owner_skill: backend-change-builder
+          review_skill: quality-test-gate
+          review_evidence: regression and authorization cases pass
+          repair_route_if_review_fails: backend-change-builder
+          re_review_required: true
+          re_review_result: pending
+      validation_evidence:
+        - command: pytest tests/test_orders.py -q
+      residual_risk:
+        - risk: target runtime still needs actual project verification
     skipped_quality_gates:
       - gate: delivery gate
         reason: no deployment change in scope

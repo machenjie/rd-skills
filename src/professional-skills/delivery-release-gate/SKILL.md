@@ -35,6 +35,7 @@ Owns release-delivery; also serves infrastructure-deployment, kubernetes-helm, a
 - **documentation-handoff**: release notes, runbook, and post-release verification.
 
 ## Non-Negotiable Rules
+- Direct use still runs runtime flow.
 - **Define rollback before release** — every deployable change must have a documented, tested rollback procedure before deployment begins; "revert the commit" is not a rollback plan.
 - **Verify all environment configuration and secrets references** before deployment — missing or misconfigured environment variables are the leading cause of post-deploy failures.
 - **Sequence migrations safely** — database migrations must be compatible with both the old and new application version during the rollout window (EMC discipline).

@@ -22,6 +22,6 @@ actual:
         reason: reviewing a vague plan is requirement intake, not code review
     context_budget_mode: single-stage
     context_budget_rationale: L2 plan review first needs requirement boundaries and acceptance
-    required_evidence: [clarified scope, explicit non-goals, testable acceptance signal]
+    required_evidence: [clarified scope, explicit non-goals, testable acceptance signal, clarification status before action]
     required_quality_gates: [requirement gate]
     handoff_target: implementation-planning

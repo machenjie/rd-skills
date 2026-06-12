@@ -235,7 +235,7 @@
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 23,
-      "bullet_count": 119,
+      "bullet_count": 120,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 82,
@@ -249,7 +249,7 @@
       "largest_section_lines": 23,
       "largest_section_title": "Industry Benchmarks",
       "largest_table_rows": 10,
-      "line_count": 216,
+      "line_count": 217,
       "name": "acceptance-criteria-builder",
       "optimality_section_length": 0,
       "output_contract_length": 19,
@@ -266,12 +266,12 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 2967
+      "word_count": 2974
     },
     {
       "anti_example_section_length": 14,
       "benchmark_section_length": 22,
-      "bullet_count": 194,
+      "bullet_count": 195,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 69,
@@ -279,7 +279,7 @@
       "description_findings": [],
       "description_length": 240,
       "findings": [
-        "body 344 lines exceeds review threshold 250"
+        "body 345 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 23,
@@ -287,7 +287,7 @@
       "largest_section_lines": 70,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 10,
-      "line_count": 344,
+      "line_count": 345,
       "name": "ai-code-review-refactor",
       "optimality_section_length": 5,
       "output_contract_length": 70,
@@ -304,12 +304,12 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 5260
+      "word_count": 5267
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 21,
-      "bullet_count": 148,
+      "bullet_count": 149,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 67,
@@ -317,7 +317,7 @@
       "description_findings": [],
       "description_length": 215,
       "findings": [
-        "body 253 lines exceeds review threshold 250"
+        "body 254 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 23,
@@ -325,7 +325,7 @@
       "largest_section_lines": 44,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 7,
-      "line_count": 253,
+      "line_count": 254,
       "name": "architecture-impact-reviewer",
       "optimality_section_length": 5,
       "output_contract_length": 26,
@@ -342,12 +342,12 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3935
+      "word_count": 3942
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 20,
-      "bullet_count": 157,
+      "bullet_count": 158,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 69,
@@ -355,7 +355,7 @@
       "description_findings": [],
       "description_length": 212,
       "findings": [
-        "body 258 lines exceeds review threshold 250"
+        "body 259 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 22,
@@ -363,7 +363,7 @@
       "largest_section_lines": 35,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 258,
+      "line_count": 259,
       "name": "backend-change-builder",
       "optimality_section_length": 5,
       "output_contract_length": 32,
@@ -380,12 +380,12 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4490
+      "word_count": 4497
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 25,
-      "bullet_count": 131,
+      "bullet_count": 132,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 82,
@@ -399,7 +399,7 @@
       "largest_section_lines": 33,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 12,
-      "line_count": 233,
+      "line_count": 234,
       "name": "change-documentation-gate",
       "optimality_section_length": 0,
       "output_contract_length": 24,
@@ -416,12 +416,12 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3722
+      "word_count": 3729
     },
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 3,
-      "bullet_count": 181,
+      "bullet_count": 182,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 0,
       "context_efficiency_score": 71,
@@ -429,7 +429,7 @@
       "description_findings": [],
       "description_length": 308,
       "findings": [
-        "body 306 lines exceeds review threshold 250"
+        "body 307 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 21,
@@ -437,7 +437,7 @@
       "largest_section_lines": 71,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 14,
-      "line_count": 306,
+      "line_count": 307,
       "name": "change-forge-router",
       "optimality_section_length": 0,
       "output_contract_length": 35,
@@ -454,12 +454,12 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 5604
+      "word_count": 5667
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 22,
-      "bullet_count": 114,
+      "bullet_count": 115,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 82,
@@ -473,7 +473,7 @@
       "largest_section_lines": 25,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 214,
+      "line_count": 215,
       "name": "change-impact-analyzer",
       "optimality_section_length": 5,
       "output_contract_length": 19,
@@ -490,12 +490,12 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3316
+      "word_count": 3323
     },
     {
       "anti_example_section_length": 9,
       "benchmark_section_length": 13,
-      "bullet_count": 111,
+      "bullet_count": 112,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 82,
@@ -509,7 +509,7 @@
       "largest_section_lines": 26,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 6,
-      "line_count": 199,
+      "line_count": 200,
       "name": "change-intake-compiler",
       "optimality_section_length": 0,
       "output_contract_length": 23,
@@ -526,12 +526,12 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 3230
+      "word_count": 3237
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 25,
-      "bullet_count": 124,
+      "bullet_count": 125,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 84,
@@ -545,7 +545,7 @@
       "largest_section_lines": 28,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 11,
-      "line_count": 225,
+      "line_count": 226,
       "name": "data-api-contract-changer",
       "optimality_section_length": 5,
       "output_contract_length": 24,
@@ -562,12 +562,12 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3681
+      "word_count": 3688
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 23,
-      "bullet_count": 130,
+      "bullet_count": 131,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 84,
@@ -581,7 +581,7 @@
       "largest_section_lines": 29,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 223,
+      "line_count": 224,
       "name": "data-middleware-change-builder",
       "optimality_section_length": 0,
       "output_contract_length": 24,
@@ -598,12 +598,12 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3815
+      "word_count": 3822
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 22,
-      "bullet_count": 152,
+      "bullet_count": 153,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 69,
@@ -611,7 +611,7 @@
       "description_findings": [],
       "description_length": 253,
       "findings": [
-        "body 252 lines exceeds review threshold 250"
+        "body 253 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 23,
@@ -619,7 +619,7 @@
       "largest_section_lines": 25,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 8,
-      "line_count": 252,
+      "line_count": 253,
       "name": "delivery-release-gate",
       "optimality_section_length": 0,
       "output_contract_length": 25,
@@ -636,12 +636,12 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4114
+      "word_count": 4121
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 18,
-      "bullet_count": 107,
+      "bullet_count": 108,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 82,
@@ -655,7 +655,7 @@
       "largest_section_lines": 26,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 7,
-      "line_count": 201,
+      "line_count": 202,
       "name": "domain-impact-modeler",
       "optimality_section_length": 0,
       "output_contract_length": 20,
@@ -672,12 +672,12 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3227
+      "word_count": 3234
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 21,
-      "bullet_count": 120,
+      "bullet_count": 121,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 82,
@@ -691,7 +691,7 @@
       "largest_section_lines": 27,
       "largest_section_title": "Experimentation And Analytics Impact",
       "largest_table_rows": 9,
-      "line_count": 219,
+      "line_count": 220,
       "name": "experience-impact-modeler",
       "optimality_section_length": 0,
       "output_contract_length": 20,
@@ -708,12 +708,12 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3359
+      "word_count": 3366
     },
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 20,
-      "bullet_count": 139,
+      "bullet_count": 140,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 84,
@@ -727,7 +727,7 @@
       "largest_section_lines": 30,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 8,
-      "line_count": 238,
+      "line_count": 239,
       "name": "frontend-change-builder",
       "optimality_section_length": 5,
       "output_contract_length": 24,
@@ -744,12 +744,12 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4216
+      "word_count": 4223
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 21,
-      "bullet_count": 130,
+      "bullet_count": 131,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 84,
@@ -763,7 +763,7 @@
       "largest_section_lines": 32,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 8,
-      "line_count": 228,
+      "line_count": 229,
       "name": "integration-change-builder",
       "optimality_section_length": 5,
       "output_contract_length": 24,
@@ -780,12 +780,12 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4108
+      "word_count": 4115
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 22,
-      "bullet_count": 185,
+      "bullet_count": 186,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 69,
@@ -793,7 +793,7 @@
       "description_findings": [],
       "description_length": 202,
       "findings": [
-        "body 298 lines exceeds review threshold 250"
+        "body 299 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 23,
@@ -801,7 +801,7 @@
       "largest_section_lines": 42,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 298,
+      "line_count": 299,
       "name": "quality-test-gate",
       "optimality_section_length": 0,
       "output_contract_length": 28,
@@ -818,12 +818,12 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 5180
+      "word_count": 5187
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 21,
-      "bullet_count": 164,
+      "bullet_count": 165,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 69,
@@ -831,7 +831,7 @@
       "description_findings": [],
       "description_length": 276,
       "findings": [
-        "body 271 lines exceeds review threshold 250"
+        "body 272 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 24,
@@ -839,7 +839,7 @@
       "largest_section_lines": 31,
       "largest_section_title": "Cost And Capacity Guardrails",
       "largest_table_rows": 7,
-      "line_count": 271,
+      "line_count": 272,
       "name": "reliability-observability-gate",
       "optimality_section_length": 5,
       "output_contract_length": 28,
@@ -856,12 +856,12 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4740
+      "word_count": 4747
     },
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 28,
-      "bullet_count": 145,
+      "bullet_count": 146,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 69,
@@ -869,7 +869,7 @@
       "description_findings": [],
       "description_length": 273,
       "findings": [
-        "body 258 lines exceeds review threshold 250"
+        "body 259 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 24,
@@ -877,7 +877,7 @@
       "largest_section_lines": 35,
       "largest_section_title": "Compliance Evidence",
       "largest_table_rows": 14,
-      "line_count": 258,
+      "line_count": 259,
       "name": "security-privacy-gate",
       "optimality_section_length": 0,
       "output_contract_length": 22,
@@ -894,12 +894,12 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4226
+      "word_count": 4233
     },
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 20,
-      "bullet_count": 129,
+      "bullet_count": 130,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 82,
@@ -913,7 +913,7 @@
       "largest_section_lines": 40,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 7,
-      "line_count": 236,
+      "line_count": 237,
       "name": "task-dag-planner",
       "optimality_section_length": 0,
       "output_contract_length": 22,
@@ -930,7 +930,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3807
+      "word_count": 3814
     },
     {
       "anti_example_section_length": 0,

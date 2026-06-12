@@ -36,16 +36,16 @@ Suggested-action distribution:
 
 | Skill | Kind | Lines | Efficiency | Top finding |
 | --- | --- | --- | --- | --- |
-| `architecture-impact-reviewer` | professional-skill | 253 | 67 | body 253 lines exceeds review threshold 250 |
-| `ai-code-review-refactor` | professional-skill | 344 | 69 | body 344 lines exceeds review threshold 250 |
-| `quality-test-gate` | professional-skill | 298 | 69 | body 298 lines exceeds review threshold 250 |
-| `reliability-observability-gate` | professional-skill | 271 | 69 | body 271 lines exceeds review threshold 250 |
-| `backend-change-builder` | professional-skill | 258 | 69 | body 258 lines exceeds review threshold 250 |
-| `security-privacy-gate` | professional-skill | 258 | 69 | body 258 lines exceeds review threshold 250 |
-| `delivery-release-gate` | professional-skill | 252 | 69 | body 252 lines exceeds review threshold 250 |
-| `change-forge-router` | professional-skill | 306 | 71 | body 306 lines exceeds review threshold 250 |
+| `architecture-impact-reviewer` | professional-skill | 254 | 67 | body 254 lines exceeds review threshold 250 |
+| `ai-code-review-refactor` | professional-skill | 345 | 69 | body 345 lines exceeds review threshold 250 |
+| `quality-test-gate` | professional-skill | 299 | 69 | body 299 lines exceeds review threshold 250 |
+| `reliability-observability-gate` | professional-skill | 272 | 69 | body 272 lines exceeds review threshold 250 |
+| `backend-change-builder` | professional-skill | 259 | 69 | body 259 lines exceeds review threshold 250 |
+| `security-privacy-gate` | professional-skill | 259 | 69 | body 259 lines exceeds review threshold 250 |
+| `delivery-release-gate` | professional-skill | 253 | 69 | body 253 lines exceeds review threshold 250 |
+| `change-forge-router` | professional-skill | 307 | 71 | body 307 lines exceeds review threshold 250 |
 | `implementation-structure-design` | foundation-capability | 239 | 82 | section 'Critical Details' is 83 lines (> 80) — reference candidate |
-| `task-dag-planner` | professional-skill | 236 | 82 | - |
+| `task-dag-planner` | professional-skill | 237 | 82 | - |
 
 ### 2.2 Lowest Professionalism
 
@@ -85,12 +85,12 @@ Suggested-action distribution:
 | `degradation-circuit-breaking` | foundation-capability | 210 | 26 | Industry Benchmarks (101) |
 | `domain-event-modeling` | foundation-capability | 208 | 26 | Industry Benchmarks (86) |
 | `form-validation-design` | foundation-capability | 203 | 26 | Industry Benchmarks (86) |
-| `ai-code-review-refactor` | professional-skill | 344 | 18 | - |
-| `change-forge-router` | professional-skill | 306 | 18 | - |
-| `quality-test-gate` | professional-skill | 298 | 18 | - |
-| `reliability-observability-gate` | professional-skill | 271 | 18 | - |
-| `backend-change-builder` | professional-skill | 258 | 18 | - |
-| `security-privacy-gate` | professional-skill | 258 | 18 | - |
+| `ai-code-review-refactor` | professional-skill | 345 | 18 | - |
+| `change-forge-router` | professional-skill | 307 | 18 | - |
+| `quality-test-gate` | professional-skill | 299 | 18 | - |
+| `reliability-observability-gate` | professional-skill | 272 | 18 | - |
+| `backend-change-builder` | professional-skill | 259 | 18 | - |
+| `security-privacy-gate` | professional-skill | 259 | 18 | - |
 
 ### 2.5 Description Risk (frontmatter triggers)
 
@@ -107,60 +107,60 @@ Suggested-action distribution:
 
 | Skill | Lines | Words | Prof | Ctx | Route | Split | Classification | Phase | Risk |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `frontend-change-builder` | 238 | 4216 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
-| `task-dag-planner` | 236 | 3807 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `change-documentation-gate` | 233 | 3722 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `integration-change-builder` | 228 | 4108 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
-| `data-api-contract-changer` | 225 | 3681 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
-| `data-middleware-change-builder` | 223 | 3815 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
-| `experience-impact-modeler` | 219 | 3359 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `acceptance-criteria-builder` | 216 | 2967 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `change-impact-analyzer` | 214 | 3316 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `domain-impact-modeler` | 201 | 3227 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `change-intake-compiler` | 199 | 3230 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `ai-code-review-refactor` | 344 | 5260 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `change-forge-router` | 306 | 5604 | 100 | 71 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `quality-test-gate` | 298 | 5180 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `reliability-observability-gate` | 271 | 4740 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `backend-change-builder` | 258 | 4490 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `security-privacy-gate` | 258 | 4226 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `architecture-impact-reviewer` | 253 | 3935 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `delivery-release-gate` | 252 | 4114 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `frontend-change-builder` | 239 | 4223 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
+| `task-dag-planner` | 237 | 3814 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
+| `change-documentation-gate` | 234 | 3729 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
+| `integration-change-builder` | 229 | 4115 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
+| `data-api-contract-changer` | 226 | 3688 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
+| `data-middleware-change-builder` | 224 | 3822 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
+| `experience-impact-modeler` | 220 | 3366 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
+| `acceptance-criteria-builder` | 217 | 2974 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
+| `change-impact-analyzer` | 215 | 3323 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
+| `domain-impact-modeler` | 202 | 3234 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
+| `change-intake-compiler` | 200 | 3237 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
+| `ai-code-review-refactor` | 345 | 5267 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `change-forge-router` | 307 | 5667 | 100 | 71 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `quality-test-gate` | 299 | 5187 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `reliability-observability-gate` | 272 | 4747 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `backend-change-builder` | 259 | 4497 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `security-privacy-gate` | 259 | 4233 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `architecture-impact-reviewer` | 254 | 3942 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `delivery-release-gate` | 253 | 4121 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 
 #### Detailed findings — Professional Skills
 
 - **`ai-code-review-refactor`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/ai-code-review-refactor/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 344 lines exceeds review threshold 250
+  - Finding: body 345 lines exceeds review threshold 250
 - **`change-forge-router`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/change-forge-router/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 306 lines exceeds review threshold 250
+  - Finding: body 307 lines exceeds review threshold 250
 - **`quality-test-gate`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/quality-test-gate/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 298 lines exceeds review threshold 250
+  - Finding: body 299 lines exceeds review threshold 250
 - **`reliability-observability-gate`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/reliability-observability-gate/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 271 lines exceeds review threshold 250
+  - Finding: body 272 lines exceeds review threshold 250
 - **`backend-change-builder`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/backend-change-builder/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 258 lines exceeds review threshold 250
+  - Finding: body 259 lines exceeds review threshold 250
 - **`security-privacy-gate`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/security-privacy-gate/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 258 lines exceeds review threshold 250
+  - Finding: body 259 lines exceeds review threshold 250
 - **`architecture-impact-reviewer`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/architecture-impact-reviewer/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 253 lines exceeds review threshold 250
+  - Finding: body 254 lines exceeds review threshold 250
 - **`delivery-release-gate`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/delivery-release-gate/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 252 lines exceeds review threshold 250
+  - Finding: body 253 lines exceeds review threshold 250
 
 ### 3.2 Foundation Capabilities (116)
 
@@ -313,12 +313,12 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | --- | --- |
 | 19 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 19 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
+| 19 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
 | 19 | do not load every reference by default. treat references as targeted support selected by t |
 | 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 19 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
-| 18 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
+| 19 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 18 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 18 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 9 | these triggers are hidden-risk escalators, not ordinary checklist items. |
 | 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |

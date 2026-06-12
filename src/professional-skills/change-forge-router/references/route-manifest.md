@@ -42,6 +42,65 @@ changeforge_route:
     - <question that blocks safe execution, or omit when none>
   assumptions:
     - <explicit assumption used in place of a missing answer>
+  runtime_prompt_flow:
+    schema_version: 1
+    clarification_status:
+      status: <blocked|clarified|clarified-with-assumptions|not-applicable>
+      current_behavior: <observed or requested current behavior>
+      desired_behavior: <desired behavior>
+      non_goals:
+        - <out-of-scope behavior>
+      constraints:
+        - <constraint that shapes execution>
+      acceptance_tdd_signal: <test, eval, command, acceptance check, or not-verified risk>
+      blocking_questions:
+        - <question that blocks safe execution, or omit when none>
+      assumptions:
+        - <assumption accepted before action, or omit when none>
+    inspected_boundaries:
+      files:
+        - <target file inspected before planning>
+      code_paths:
+        - <call chain, module, function, or behavior path inspected>
+      tests:
+        - <test or eval file inspected>
+      configs:
+        - <config, hook, build, or runtime setting inspected>
+      docs:
+        - <doc or reference inspected>
+      conventions:
+        - <existing pattern or placement convention inspected>
+      not_inspected:
+        - <boundary not inspected and accepted risk, or omit when none>
+    tdd_signal:
+      kind: <failing-test|new-test|updated-test|eval|validation-command|acceptance-check|not-verified>
+      command_or_check: <command, check, or explicit not-verified reason>
+      expected_evidence: <expected evidence before closure>
+    actions:
+      - id: <stable action id>
+        owner_skill: <skill or capability responsible for the action>
+        owner_capabilities:
+          - <capability used by the owner>
+        review_skill: <different skill or capability responsible for independent review>
+        review_capabilities:
+          - <capability used for review>
+        review_evidence: <evidence the reviewer must inspect>
+        repair_route_if_review_fails: <repair owner skill or blocked>
+        re_review_required: <true|false>
+        re_review_result: <pending|passed|not-run|not-applicable>
+    repair_route:
+      required_when_review_fails: <true|false>
+      owner_skill: <repair owner skill or blocked>
+      evidence: <repair and re-review evidence required>
+    validation_evidence:
+      - command: <validator, test, build, eval, or not-verified disclosure>
+        outcome: <passed|failed|planned|not-run|not-verified>
+        proves: <what the evidence proves>
+        does_not_prove: <what remains unproven>
+    residual_risk:
+      - risk: <remaining risk or assumption>
+        owner: <skill, gate, or human owner>
+        next_gate: <next gate or closed>
   handoff_target: <next skill name or blocked>
 ```
 
@@ -50,6 +109,8 @@ Manifest rules:
 - `selected_capabilities` must each map to a `selected_skills` entry through the capability `used_by` relationship, unless the capability is explicitly marked as a route-level capability in the registry. Do not list an ordinary capability whose owning skill is absent.
 - `required_references` must include the four router self-use references above plus the deterministic `references/capabilities/<capability-id>-<capability-name>.md` path for every selected capability.
 - `skipped_quality_gates` must give a `reason` for each skipped gate; never drop a gate silently. A gate is either in `required_quality_gates` or in `skipped_quality_gates` with a reason.
+- `runtime_prompt_flow` is required for target-project engineering changes and for direct specialist-skill invocation. Direct invocation may skip router reclassification when scope is known, but this nested manifest records that requirement clarification, read-before-plan evidence, TDD/validation signal, independent review, repair/re-review, validation evidence, and residual risk were not skipped.
+- Each `runtime_prompt_flow.actions[]` entry must name an `owner_skill` and a different `review_skill`. A review finding requires `repair_route_if_review_fails`, `re_review_required: true`, and a concrete `re_review_result` before handoff can close.
 - Keep `selected_skills`, `selected_capabilities`, `required_quality_gates`, and `skipped_quality_gates` consistent with the Markdown sections; the manifest is a projection of the same decision, not a second route.
 - The manifest is read by tooling. It does not substitute for the human-readable routing explanation, and it does not authorize any tool to mutate skills, routing rules, or capabilities.
 

@@ -35,7 +35,9 @@ skill path:
 - A completion claim is coming — bind it to `agent-execution-discipline`: no
   completion claim without fresh validation evidence and residual risk.
 - The user already named a narrow skill path and the scope is known — respect it
-  and do not re-route.
+  and do not re-route, but still run requirement clarification, read-before-plan,
+  TDD/validation signal, action/review mapping, repair/re-review, and evidence
+  handoff through that skill path.
 - Pure question, explanation, or translation with no engineering action — no
   routing needed.
 

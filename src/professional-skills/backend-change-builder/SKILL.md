@@ -27,6 +27,7 @@ Implement or review backend changes that preserve correctness, authorization int
 - API contract design (response shapes, versioning) is the primary concern — use `data-api-contract-changer` first.
 
 ## Non-Negotiable Rules
+- Direct use still runs runtime flow.
 - **Always validate at trust boundaries** — every input that crosses a trust boundary (HTTP, message queue, webhook, CLI) must be validated for type, range, presence, and format before processing.
 - **Always enforce authorization server-side** — client-supplied user IDs, resource IDs, and permission claims must be verified against the authoritative store, never trusted directly.
 - **Object-level authorization (IDOR prevention)** — every resource fetch, update, and delete must verify that the authenticated principal owns or has explicit permission to that specific object, not just the resource class.

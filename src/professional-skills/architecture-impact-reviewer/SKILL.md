@@ -28,6 +28,7 @@ Keep the architecture coherent, observable, and evolutionarily sound by rigorous
 - Documentation or configuration updates with no impact on system topology or service contracts.
 
 ## Non-Negotiable Rules
+- Direct use still runs runtime flow.
 - Default to the simplest sufficient design — **complexity requires justification, simplicity does not**.
 - Respect existing ownership and dependency direction: dependencies must flow toward stable, lower-volatility layers, never the other direction.
 - All tradeoffs between chosen design and alternatives must be made explicit in writing — no implicit decisions.
