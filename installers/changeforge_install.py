@@ -56,14 +56,24 @@ FOUNDATION_MODES = {
     "dev": "top-level-and-compiled-references",
 }
 
-# Optional project hook runtime. Hooks are warning-only execution reminders and
-# are never installed by default. Only Codex and Claude project scopes are
-# supported, and existing project hook configuration is always preserved.
+# Optional project and user hook runtime. Hooks are warning-only execution
+# reminders and are never installed by default. Codex and Claude support both
+# project and user scope; existing hook configuration is always preserved.
 HOOK_SOURCE_ROOTS = {
-    "codex": ROOT / "dist" / "codex" / "project" / ".codex",
-    "claude": ROOT / "dist" / "claude" / "project" / ".claude",
+    ("codex", "project"): ROOT / "dist" / "codex" / "project" / ".codex",
+    ("codex", "user"): ROOT / "dist" / "codex" / "user" / ".codex",
+    ("claude", "project"): ROOT / "dist" / "claude" / "project" / ".claude",
+    ("claude", "user"): ROOT / "dist" / "claude" / "user" / ".claude",
 }
+HOOK_AGENTS = ("codex", "claude")
+HOOK_SCOPES = ("project", "user")
+# Project hooks install under the project root; user hooks install under the
+# agent home directory (Codex ~/.codex, Claude ~/.claude).
 HOOK_PROJECT_SUBPATH = {
+    "codex": Path(".codex"),
+    "claude": Path(".claude"),
+}
+HOOK_USER_HOME_SUBDIR = {
     "codex": Path(".codex"),
     "claude": Path(".claude"),
 }
@@ -407,22 +417,37 @@ def version_changes(
 
 
 def hooks_supported(agent: str, scope: str) -> bool:
-    """Hooks are only supported for Codex and Claude project installs."""
-    return agent in HOOK_SOURCE_ROOTS and scope == "project"
+    """Hooks are supported for Codex and Claude project and user installs."""
+    return agent in HOOK_AGENTS and scope in HOOK_SCOPES
 
 
-def plan_hook_install(agent: str, project_root: Path) -> HookPlan:
-    """Compute a merge-safe hook install plan without writing anything."""
-    source_root = HOOK_SOURCE_ROOTS.get(agent)
+def plan_hook_install(agent: str, scope: str, target: Path | None) -> HookPlan:
+    """Compute a merge-safe hook install plan without writing anything.
+
+    Project hooks install under the project root (``--target``). User hooks
+    install under the agent home directory (Codex ``~/.codex``, Claude
+    ``~/.claude``); ``--target`` does not relocate user hooks, so the skills
+    ``--target`` override never accidentally redirects them. Set ``HOME`` (or
+    the agent's home variable) to sandbox a user-scope hook install.
+    """
+    source_root = HOOK_SOURCE_ROOTS.get((agent, scope))
     if source_root is None:
-        raise InstallError(f"hooks are only supported for codex and claude, not {agent}")
+        raise InstallError(
+            f"hooks are only supported for codex and claude project or user installs, "
+            f"not {agent} {scope}"
+        )
     if not source_root.is_dir():
         raise InstallError(
             f"missing built hook runtime {source_root.relative_to(ROOT)}; "
             "run python3 scripts/build.py --profile <profile>"
         )
 
-    target_root = project_root.expanduser().resolve() / HOOK_PROJECT_SUBPATH[agent]
+    if scope == "project":
+        if target is None:
+            raise InstallError("project hook install requires the project root target")
+        target_root = target.expanduser().resolve() / HOOK_PROJECT_SUBPATH[agent]
+    else:
+        target_root = (Path.home() / HOOK_USER_HOME_SUBDIR[agent]).expanduser().resolve()
     plan = HookPlan(agent=agent, source_root=source_root, target_root=target_root)
 
     for script_name in HOOK_SCRIPT_NAMES:
@@ -454,7 +479,7 @@ def plan_hook_install(agent: str, project_root: Path) -> HookPlan:
         _plan_codex_config(plan)
     else:
         _plan_claude_config(plan)
-    plan.notes.extend(_hook_activation_notes(agent))
+    plan.notes.extend(_hook_activation_notes(agent, scope))
     return plan
 
 
@@ -556,15 +581,22 @@ def _group_with_new_commands(group: Any, known_commands: set[str]) -> dict[str, 
     return new_group
 
 
-def _hook_activation_notes(agent: str) -> list[str]:
+def _hook_activation_notes(agent: str, scope: str) -> list[str]:
     notes = [
         "hooks are warning-only; default mode is CHANGEFORGE_HOOK_MODE=warn",
         "hooks are not auto-trusted",
     ]
+    hook_label = "user hook" if scope == "user" else "project hook"
     if agent == "codex":
-        notes.append("run /hooks in Codex and trust the project hook after reviewing the command")
+        notes.append(f"run /hooks in Codex and trust the {hook_label} after reviewing the command")
+        if scope == "user":
+            notes.append("user hooks were written to ~/.codex; they apply to every Codex project")
     else:
-        notes.append("merge settings.changeforge-hooks.fragment.json into .claude/settings.json")
+        notes.append("merge settings.changeforge-hooks.fragment.json into settings.json")
+        if scope == "user":
+            notes.append(
+                "user hooks live in ~/.claude; merge the fragment into ~/.claude/settings.json"
+            )
     return notes
 
 

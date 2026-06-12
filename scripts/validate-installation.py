@@ -57,6 +57,17 @@ REQUIRED_HOOK_DIST_FILES = (
     "codex/project/.codex/hooks/changeforge_risk_surface_gate.py",
     "codex/project/.codex/hooks/changeforge_subagent_stop_reminder.py",
     "codex/project/.codex/hooks/changeforge_stop_closure_gate.py",
+    "codex/user/.codex/hooks.json",
+    "codex/user/.codex/.changeforge-hook-manifest.json",
+    "codex/user/.codex/changeforge-route-preflight.md",
+    "codex/user/.codex/hooks/changeforge_common.py",
+    "codex/user/.codex/hooks/changeforge_session_bootstrap.py",
+    "codex/user/.codex/hooks/changeforge_user_prompt_route_reminder.py",
+    "codex/user/.codex/hooks/changeforge_pre_tool_risk_preview.py",
+    "codex/user/.codex/hooks/changeforge_post_edit_structure_gate.py",
+    "codex/user/.codex/hooks/changeforge_risk_surface_gate.py",
+    "codex/user/.codex/hooks/changeforge_subagent_stop_reminder.py",
+    "codex/user/.codex/hooks/changeforge_stop_closure_gate.py",
     "claude/project/.claude/settings.changeforge-hooks.fragment.json",
     "claude/project/.claude/.changeforge-hook-manifest.json",
     "claude/project/.claude/changeforge-route-preflight.md",
@@ -65,6 +76,14 @@ REQUIRED_HOOK_DIST_FILES = (
     "claude/project/.claude/hooks/changeforge_post_edit_structure_gate.py",
     "claude/project/.claude/hooks/changeforge_risk_surface_gate.py",
     "claude/project/.claude/hooks/changeforge_stop_closure_gate.py",
+    "claude/user/.claude/settings.changeforge-hooks.fragment.json",
+    "claude/user/.claude/.changeforge-hook-manifest.json",
+    "claude/user/.claude/changeforge-route-preflight.md",
+    "claude/user/.claude/hooks/changeforge_common.py",
+    "claude/user/.claude/hooks/changeforge_session_bootstrap.py",
+    "claude/user/.claude/hooks/changeforge_post_edit_structure_gate.py",
+    "claude/user/.claude/hooks/changeforge_risk_surface_gate.py",
+    "claude/user/.claude/hooks/changeforge_stop_closure_gate.py",
     "universal/bootstrap/changeforge-route-preflight.md",
 )
 BASE_HOOK_NAMES = {
@@ -348,16 +367,30 @@ def _validate_hook_runtime(errors: list[str]) -> None:
     _validate_hook_manifest(
         DIST_DIR / "codex/project/.codex/.changeforge-hook-manifest.json",
         agent="codex",
+        scope="project",
+        errors=errors,
+    )
+    _validate_hook_manifest(
+        DIST_DIR / "codex/user/.codex/.changeforge-hook-manifest.json",
+        agent="codex",
+        scope="user",
         errors=errors,
     )
     _validate_hook_manifest(
         DIST_DIR / "claude/project/.claude/.changeforge-hook-manifest.json",
         agent="claude",
+        scope="project",
+        errors=errors,
+    )
+    _validate_hook_manifest(
+        DIST_DIR / "claude/user/.claude/.changeforge-hook-manifest.json",
+        agent="claude",
+        scope="user",
         errors=errors,
     )
 
 
-def _validate_hook_manifest(path: Path, *, agent: str, errors: list[str]) -> None:
+def _validate_hook_manifest(path: Path, *, agent: str, scope: str, errors: list[str]) -> None:
     if not path.is_file():
         return
     try:
@@ -372,8 +405,8 @@ def _validate_hook_manifest(path: Path, *, agent: str, errors: list[str]) -> Non
         errors.append(f"{relpath(ROOT, path)}: kind must be changeforge-hook-runtime")
     if data.get("agent") != agent:
         errors.append(f"{relpath(ROOT, path)}: agent must be {agent}")
-    if data.get("scope") != "project":
-        errors.append(f"{relpath(ROOT, path)}: scope must be project")
+    if data.get("scope") != scope:
+        errors.append(f"{relpath(ROOT, path)}: scope must be {scope}")
     hooks = data.get("hooks")
     expected_hooks = EXPECTED_HOOK_NAMES_BY_AGENT[agent]
     if (

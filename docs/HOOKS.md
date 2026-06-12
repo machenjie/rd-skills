@@ -188,12 +188,17 @@ Hooks cannot:
 
 ## Supported Runtimes
 
-First-stage build output supports project scope only:
+Build output supports Codex and Claude project and user scope:
 
 - Codex project hooks: `dist/codex/project/.codex`
+- Codex user hooks: `dist/codex/user/.codex`
 - Claude project hooks: `dist/claude/project/.claude`
+- Claude user hooks: `dist/claude/user/.claude`
 
-User and admin hook scopes are intentionally out of scope for the first stage.
+Project hooks resolve their command path from the project git root; user hooks
+resolve it from the agent home directory (`${CODEX_HOME:-$HOME/.codex}` for
+Codex, `${CLAUDE_CONFIG_DIR:-$HOME/.claude}` for Claude) so they apply across
+every project. Admin hook scope is intentionally out of scope.
 
 ## Hook Modes
 
@@ -216,7 +221,7 @@ python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
 ```
 
-Expected project hook outputs:
+Expected hook outputs (project and user scope):
 
 ```text
 dist/codex/project/.codex/hooks.json
@@ -224,9 +229,14 @@ dist/codex/project/.codex/.changeforge-hook-manifest.json
 dist/codex/project/.codex/changeforge-route-preflight.md
 dist/codex/project/.codex/hooks/changeforge_common.py
 dist/codex/project/.codex/hooks/changeforge_session_bootstrap.py
+dist/codex/project/.codex/hooks/changeforge_user_prompt_route_reminder.py
+dist/codex/project/.codex/hooks/changeforge_pre_tool_risk_preview.py
 dist/codex/project/.codex/hooks/changeforge_post_edit_structure_gate.py
 dist/codex/project/.codex/hooks/changeforge_risk_surface_gate.py
+dist/codex/project/.codex/hooks/changeforge_subagent_stop_reminder.py
 dist/codex/project/.codex/hooks/changeforge_stop_closure_gate.py
+
+dist/codex/user/.codex/...        # same Codex layout, CODEX_HOME-resolved paths
 
 dist/claude/project/.claude/settings.changeforge-hooks.fragment.json
 dist/claude/project/.claude/.changeforge-hook-manifest.json
@@ -237,12 +247,15 @@ dist/claude/project/.claude/hooks/changeforge_post_edit_structure_gate.py
 dist/claude/project/.claude/hooks/changeforge_risk_surface_gate.py
 dist/claude/project/.claude/hooks/changeforge_stop_closure_gate.py
 
+dist/claude/user/.claude/...      # same Claude layout, CLAUDE_CONFIG_DIR-resolved paths
+
 dist/universal/bootstrap/changeforge-route-preflight.md
 ```
 
-The Codex hooks ship the session bootstrap script too, but Codex does not wire a
-`SessionStart` hook; Codex enables the route preflight through the advisory
-fragment instead. Do not install `src/hook-runtime` directly.
+Codex and Claude both wire the session bootstrap as a `SessionStart` hook;
+the same scripts ship in the project and user layouts. The Codex layout also
+wires the per-prompt route reminder, pre-edit risk preview, and subagent
+closure reminder. Do not install `src/hook-runtime` directly.
 
 ## Manually Enable Hooks
 
@@ -263,18 +276,25 @@ hooks first.
 
 ## Installer-Assisted Hook Enablement
 
-The installer can also place hooks for Codex and Claude **project** scope. Hooks
-are never installed by default; they require `--with-hooks` and are written only
-when neither `--dry-run` nor `--hooks-dry-run` is set. Existing project hook
+The installer can place hooks for Codex and Claude in **project** or **user**
+scope. Hooks are never installed by default; they require `--with-hooks` and are
+written only when neither `--dry-run` nor `--hooks-dry-run` is set. Existing hook
 configuration is always preserved.
+
+Project hooks install under the project root's `.codex`/`.claude`; user hooks
+install under the agent home (`~/.codex`, `~/.claude`) and apply to every
+project, so `--target` does not relocate them. Sandbox a user-scope install by
+pointing `HOME` (or `CODEX_HOME`/`CLAUDE_CONFIG_DIR`) at a scratch directory.
 
 ```bash
 python3 scripts/build.py --profile full
-# Show the merge plan without writing anything:
+# Project scope: show the merge plan, then write and merge config:
 python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full --with-hooks --hooks-dry-run
-# Write hook scripts and merge config (preserving existing hooks):
 python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full --with-hooks
-# Inspect installed hooks:
+# User scope: hooks install under ~/.codex and apply to every Codex project:
+python3 installers/install.py --agent codex --scope user --profile full --with-hooks
+python3 installers/install.py --agent claude --scope user --profile full --with-hooks
+# Inspect installed project hooks:
 python3 installers/doctor.py --check-hooks --target /path/to/project
 # Install only the advisory route-preflight fragment (any project install, incl. Codex):
 python3 installers/install.py --agent codex --scope project --target /path/to/project --profile full --with-bootstrap
@@ -283,10 +303,10 @@ python3 installers/doctor.py --check-bootstrap --target /path/to/project
 ```
 
 For Codex, the installer merges ChangeForge hook groups into an existing
-`.codex/hooks.json` without removing user hooks. For Claude, it places
+`hooks.json` without removing user hooks. For Claude, it places
 `settings.changeforge-hooks.fragment.json` and never modifies an existing
-`.claude/settings.json`; merge the fragment's `hooks` into `settings.json` by
-hand, including the `SessionStart` bootstrap entry. The `--with-bootstrap` option
+`settings.json`; merge the fragment's `hooks` into `settings.json` by hand,
+including the `SessionStart` bootstrap entry. The `--with-bootstrap` option
 writes only the advisory fragment to `.changeforge/changeforge-route-preflight.md`
 and never installs executable hooks. The installer never trusts hooks
 automatically.

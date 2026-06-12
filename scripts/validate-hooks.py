@@ -17,12 +17,24 @@ HOOK_RUNTIME_ROOT = ROOT / "src" / "hook-runtime"
 HOOK_SCRIPTS_DIR = HOOK_RUNTIME_ROOT / "scripts"
 HOOK_SCHEMAS_DIR = HOOK_RUNTIME_ROOT / "schemas"
 CODEX_TEMPLATE = HOOK_RUNTIME_ROOT / "templates" / "codex" / "hooks.json"
+CODEX_USER_TEMPLATE = HOOK_RUNTIME_ROOT / "templates" / "codex-user" / "hooks.json"
 CLAUDE_TEMPLATE = (
     HOOK_RUNTIME_ROOT
     / "templates"
     / "claude"
     / "settings.changeforge-hooks.fragment.json"
 )
+CLAUDE_USER_TEMPLATE = (
+    HOOK_RUNTIME_ROOT
+    / "templates"
+    / "claude-user"
+    / "settings.changeforge-hooks.fragment.json"
+)
+# Codex and Claude each ship a project template and a user-scope template. The
+# user templates are identical in shape but resolve their command path from the
+# agent home (CODEX_HOME/CLAUDE_CONFIG_DIR) instead of the project git root.
+CODEX_TEMPLATES = (CODEX_TEMPLATE, CODEX_USER_TEMPLATE)
+CLAUDE_TEMPLATES = (CLAUDE_TEMPLATE, CLAUDE_USER_TEMPLATE)
 BOOTSTRAP_TEMPLATE = (
     HOOK_RUNTIME_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"
 )
@@ -66,11 +78,17 @@ def main() -> int:
     _validate_schema_files(errors)
     _validate_bootstrap_fragment(errors)
     codex = _load_json(CODEX_TEMPLATE, errors)
+    codex_user = _load_json(CODEX_USER_TEMPLATE, errors)
     claude = _load_json(CLAUDE_TEMPLATE, errors)
+    claude_user = _load_json(CLAUDE_USER_TEMPLATE, errors)
     if isinstance(codex, dict):
         _validate_template(codex, CODEX_TEMPLATE, timeout_limit=10, errors=errors)
+    if isinstance(codex_user, dict):
+        _validate_template(codex_user, CODEX_USER_TEMPLATE, timeout_limit=10, errors=errors)
     if isinstance(claude, dict):
         _validate_template(claude, CLAUDE_TEMPLATE, timeout_limit=10000, errors=errors)
+    if isinstance(claude_user, dict):
+        _validate_template(claude_user, CLAUDE_USER_TEMPLATE, timeout_limit=10000, errors=errors)
 
     if errors:
         return fail_many("validate-hooks", errors)
@@ -86,7 +104,7 @@ def _validate_required_files(errors: list[str]) -> None:
         path = HOOK_SCRIPTS_DIR / file_name
         if not path.is_file():
             errors.append(f"missing hook script: {relpath(ROOT, path)}")
-    for path in (CODEX_TEMPLATE, CLAUDE_TEMPLATE):
+    for path in (CODEX_TEMPLATE, CODEX_USER_TEMPLATE, CLAUDE_TEMPLATE, CLAUDE_USER_TEMPLATE):
         if not path.is_file():
             errors.append(f"missing hook template: {relpath(ROOT, path)}")
 
@@ -262,7 +280,7 @@ def _validate_template(
 
     # Codex exposes additional events the runtime uses to reinforce routing and
     # closure discipline. Require each one to invoke its dedicated hook script.
-    if path == CODEX_TEMPLATE:
+    if path in CODEX_TEMPLATES:
         for event, script in (
             ("UserPromptSubmit", "changeforge_user_prompt_route_reminder"),
             ("PreToolUse", "changeforge_pre_tool_risk_preview"),
@@ -281,7 +299,7 @@ def _validate_template(
         )
     if not any("bash" in matcher.casefold() for matcher in matchers):
         errors.append(f"{relpath(ROOT, path)}: PostToolUse must include a Bash matcher")
-    if path == CODEX_TEMPLATE and not any(
+    if path in CODEX_TEMPLATES and not any(
         "apply_patch" in matcher.casefold() for matcher in matchers
     ):
         errors.append(
@@ -296,11 +314,11 @@ def _validate_template(
             errors.append(
                 f"{relpath(ROOT, path)}:{context}: hook command must not contain a user absolute path"
             )
-        if path == CODEX_TEMPLATE and "CHANGEFORGE_AGENT=codex" not in command:
+        if path in CODEX_TEMPLATES and "CHANGEFORGE_AGENT=codex" not in command:
             errors.append(
                 f"{relpath(ROOT, path)}:{context}: Codex hook command must set CHANGEFORGE_AGENT=codex"
             )
-        if path == CODEX_TEMPLATE and "/usr/bin/env python3" not in command:
+        if path in CODEX_TEMPLATES and "/usr/bin/env python3" not in command:
             errors.append(
                 f"{relpath(ROOT, path)}:{context}: Codex hook command should use /usr/bin/env python3"
             )

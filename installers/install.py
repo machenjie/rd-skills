@@ -49,7 +49,7 @@ def main() -> int:
     parser.add_argument(
         "--with-hooks",
         action="store_true",
-        help="Also install warning-only project hooks (codex/claude project only).",
+        help="Also install warning-only hooks (codex/claude project or user).",
     )
     parser.add_argument(
         "--hooks-dry-run",
@@ -143,18 +143,22 @@ def main() -> int:
 
 
 def _install_hooks(args: argparse.Namespace, scope: str) -> None:
-    """Install warning-only project hooks, preserving existing hook config.
+    """Install warning-only hooks, preserving existing hook config.
 
     Hooks are never installed unless --with-hooks is passed, and they are only
-    supported for Codex and Claude project scopes. Files are written only when
-    neither --dry-run nor --hooks-dry-run is set.
+    supported for Codex and Claude project and user scopes. Project hooks install
+    under the project root (--target); user hooks install under the agent home
+    directory (~/.codex, ~/.claude) regardless of --target. Files are written only
+    when neither --dry-run nor --hooks-dry-run is set.
     """
     if not hooks_supported(args.agent, scope):
-        raise InstallError("--with-hooks is only supported for codex and claude project installs")
-    if args.target is None:
-        raise InstallError("--with-hooks requires --target (the project root)")
+        raise InstallError(
+            "--with-hooks is only supported for codex and claude project or user installs"
+        )
+    if scope == "project" and args.target is None:
+        raise InstallError("--with-hooks requires --target (the project root) for project installs")
 
-    plan = plan_hook_install(args.agent, args.target)
+    plan = plan_hook_install(args.agent, scope, args.target)
     for line in render_hook_plan(plan):
         print(f"install: {line}")
 
@@ -162,7 +166,7 @@ def _install_hooks(args: argparse.Namespace, scope: str) -> None:
         print("install: hooks: dry run; no hook files written")
         return
     apply_hook_install(plan, dry_run=False)
-    print("install: hooks: installed project hooks; review and trust before enabling")
+    print("install: hooks: installed hooks; review and trust before enabling")
 
 
 def _install_bootstrap(args: argparse.Namespace, scope: str) -> None:

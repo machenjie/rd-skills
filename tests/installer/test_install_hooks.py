@@ -113,28 +113,41 @@ class InstallHooksTests(unittest.TestCase):
             self.assertIn("echo user-hook", commands)
             self.assertIn("changeforge_post_edit_structure_gate", commands)
 
-    def test_with_hooks_rejected_for_user_scope(self) -> None:
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(INSTALL_SCRIPT),
-                "--agent",
-                "codex",
-                "--scope",
-                "user",
-                "--profile",
-                "recommended",
-                "--with-hooks",
-                "--dry-run",
-            ],
-            text=True,
-            capture_output=True,
-            cwd=str(ROOT),
-            env=os.environ.copy(),
-            check=False,
-        )
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("only supported for codex and claude project", result.stderr)
+    def test_with_hooks_user_scope_installs_to_home(self) -> None:
+        # User-scope hooks install under the agent home (~/.codex), sandboxed
+        # here by pointing HOME at a temp dir. --target is not required.
+        with tempfile.TemporaryDirectory() as home:
+            env = os.environ.copy()
+            env["HOME"] = home
+            env.pop("CODEX_HOME", None)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(INSTALL_SCRIPT),
+                    "--agent",
+                    "codex",
+                    "--scope",
+                    "user",
+                    "--profile",
+                    "recommended",
+                    "--with-hooks",
+                ],
+                text=True,
+                capture_output=True,
+                cwd=str(ROOT),
+                env=env,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            codex_dir = Path(home) / ".codex"
+            scripts = sorted((codex_dir / "hooks").glob("changeforge_*.py"))
+            self.assertEqual(len(scripts), 8)
+            self.assertTrue((codex_dir / "hooks.json").is_file())
+            manifest = json.loads(
+                (codex_dir / ".changeforge-hook-manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(manifest["scope"], "user")
+            self.assertEqual(manifest["agent"], "codex")
 
 
 class InstallBootstrapTests(unittest.TestCase):

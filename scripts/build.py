@@ -43,7 +43,9 @@ AGENT_SKILL_ROOTS = (
 
 HOOK_OUTPUT_ROOTS = {
     ("codex", "project"): DIST_DIR / "codex" / "project" / ".codex",
+    ("codex", "user"): DIST_DIR / "codex" / "user" / ".codex",
     ("claude", "project"): DIST_DIR / "claude" / "project" / ".claude",
+    ("claude", "user"): DIST_DIR / "claude" / "user" / ".claude",
 }
 BOOTSTRAP_TEMPLATE = (
     HOOK_RUNTIME_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"
@@ -394,7 +396,9 @@ def _build_hook_runtime() -> None:
     if not BOOTSTRAP_TEMPLATE.is_file():
         raise BuildError(f"missing bootstrap template: {BOOTSTRAP_TEMPLATE.relative_to(ROOT)}")
     _build_codex_hook_runtime()
+    _build_codex_user_hook_runtime()
     _build_claude_hook_runtime()
+    _build_claude_user_hook_runtime()
     _build_universal_bootstrap()
 
 
@@ -411,6 +415,19 @@ def _build_codex_hook_runtime() -> None:
     _write_hook_manifest(target, agent="codex", scope="project")
 
 
+def _build_codex_user_hook_runtime() -> None:
+    target = HOOK_OUTPUT_ROOTS[("codex", "user")]
+    hooks_dir = target / "hooks"
+    _reset_dir(hooks_dir)
+    _copy_hook_scripts(hooks_dir)
+    shutil.copy2(
+        HOOK_RUNTIME_ROOT / "templates" / "codex-user" / "hooks.json",
+        target / "hooks.json",
+    )
+    _copy_bootstrap_fragment(target)
+    _write_hook_manifest(target, agent="codex", scope="user")
+
+
 def _build_claude_hook_runtime() -> None:
     target = HOOK_OUTPUT_ROOTS[("claude", "project")]
     hooks_dir = target / "hooks"
@@ -425,6 +442,22 @@ def _build_claude_hook_runtime() -> None:
     )
     _copy_bootstrap_fragment(target)
     _write_hook_manifest(target, agent="claude", scope="project")
+
+
+def _build_claude_user_hook_runtime() -> None:
+    target = HOOK_OUTPUT_ROOTS[("claude", "user")]
+    hooks_dir = target / "hooks"
+    _reset_dir(hooks_dir)
+    _copy_hook_scripts(hooks_dir)
+    shutil.copy2(
+        HOOK_RUNTIME_ROOT
+        / "templates"
+        / "claude-user"
+        / "settings.changeforge-hooks.fragment.json",
+        target / "settings.changeforge-hooks.fragment.json",
+    )
+    _copy_bootstrap_fragment(target)
+    _write_hook_manifest(target, agent="claude", scope="user")
 
 
 def _build_universal_bootstrap() -> None:

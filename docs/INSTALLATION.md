@@ -37,10 +37,13 @@ For project installs, `--target` is the project root. For user and admin install
 
 ## Optional Hook Runtime
 
-Builds also emit optional project-level hook artifacts:
+Builds also emit optional hook artifacts for Codex and Claude, project and user
+scope:
 
 - Codex project hook runtime: `dist/codex/project/.codex`
+- Codex user hook runtime: `dist/codex/user/.codex`
 - Claude project hook fragment and scripts: `dist/claude/project/.claude`
+- Claude user hook fragment and scripts: `dist/claude/user/.claude`
 
 The hook runtime is not a skill and does not replace `change-forge-router`. It
 adds a `SessionStart` route-preflight reminder (both Codex and Claude) and
@@ -50,7 +53,20 @@ per-prompt route reminder (`UserPromptSubmit`), a pre-edit risk preview
 subagent preflight (`SubagentStart`), a subagent closure reminder
 (`SubagentStop`), and the closure gate (`Stop`). Hooks are never installed by
 default; pass `--with-hooks` to `installers/install.py` for Codex or Claude
-project scope, and existing project hook configuration is always preserved.
+project or user scope, and existing hook configuration is always preserved.
+
+Project hooks install under the project root and resolve their command path from
+the git root. User hooks install under the agent home (`~/.codex`, `~/.claude`),
+apply to every project, and resolve their command path from
+`${CODEX_HOME:-$HOME/.codex}` / `${CLAUDE_CONFIG_DIR:-$HOME/.claude}`; for user
+scope `--target` does not relocate the hooks.
+
+```bash
+# Codex user hooks (apply to every Codex project):
+python3 installers/install.py --agent codex --scope user --profile full --with-hooks
+# Claude user hooks:
+python3 installers/install.py --agent claude --scope user --profile full --with-hooks
+```
 
 The route-preflight guidance also ships as an advisory fragment for users who
 prefer not to trust an executable hook. Install only that fragment for any

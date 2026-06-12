@@ -65,6 +65,35 @@ class HookTemplateTests(unittest.TestCase):
         # SessionStart matcher covers the post-compaction compact source.
         self.assertIn("compact", json.dumps(hooks["SessionStart"]))
 
+    def test_codex_user_template_resolves_from_codex_home(self) -> None:
+        # The user template mirrors the project events but resolves its command
+        # path from CODEX_HOME (with a $HOME/.codex fallback), never the git root.
+        data = json.loads((HOOK_ROOT / "templates" / "codex-user" / "hooks.json").read_text())
+        hooks = data["hooks"]
+        for event in ("SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop"):
+            self.assertIn(event, hooks)
+        commands = json.dumps(hooks)
+        self.assertIn("${CODEX_HOME:-$HOME/.codex}/hooks/", commands)
+        self.assertIn("CHANGEFORGE_AGENT=codex", commands)
+        self.assertNotIn("git rev-parse", commands)
+
+    def test_claude_user_fragment_resolves_from_config_dir(self) -> None:
+        data = json.loads(
+            (
+                HOOK_ROOT
+                / "templates"
+                / "claude-user"
+                / "settings.changeforge-hooks.fragment.json"
+            ).read_text()
+        )
+        hooks = data["hooks"]
+        self.assertIn("SessionStart", hooks)
+        self.assertIn("PostToolUse", hooks)
+        self.assertIn("Stop", hooks)
+        commands = json.dumps(hooks)
+        self.assertIn("${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/", commands)
+        self.assertNotIn("CLAUDE_PROJECT_DIR", commands)
+
     def test_bootstrap_fragment_exists_and_points_to_router(self) -> None:
         fragment = (
             HOOK_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"

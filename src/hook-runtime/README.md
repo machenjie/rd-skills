@@ -60,15 +60,21 @@ must not interrupt normal agent execution.
 
 ## Build Output
 
-`scripts/build.py` copies this runtime into project-level hook layouts:
+`scripts/build.py` copies this runtime into project and user hook layouts:
 
 ```text
 dist/codex/project/.codex
+dist/codex/user/.codex
 dist/claude/project/.claude
+dist/claude/user/.claude
 ```
 
-Each generated project hook layout includes `.changeforge-hook-manifest.json`
-so installation validation can prove which hook scripts were emitted.
+Project layouts resolve their command path from the project git root; user
+layouts resolve it from the agent home (`${CODEX_HOME:-$HOME/.codex}`,
+`${CLAUDE_CONFIG_DIR:-$HOME/.claude}`). Each layout includes
+`.changeforge-hook-manifest.json` so installation validation can prove which
+hook scripts and scope were emitted.
 
-Installer integration is intentionally deferred. The first phase validates and
-builds hook artifacts only.
+The installer can place these hooks for Codex and Claude project or user scope
+with `installers/install.py --with-hooks`; existing hook configuration is always
+preserved and hooks are never trusted automatically.
