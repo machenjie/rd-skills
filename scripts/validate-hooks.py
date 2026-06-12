@@ -176,6 +176,10 @@ def _validate_python_files(errors: list[str]) -> None:
             errors.append("changeforge_stop_closure_gate.py: Stop hook must not use emit_warning")
         if "emit_stop_reminder(" not in text:
             errors.append("changeforge_stop_closure_gate.py: Stop hook must use emit_stop_reminder")
+        if "transcript_path" not in text or "transcriptPath" not in text:
+            errors.append(
+                "changeforge_stop_closure_gate.py: Stop hook must read Copilot transcript paths"
+            )
 
     bootstrap_script = HOOK_SCRIPTS_DIR / "changeforge_session_bootstrap.py"
     if bootstrap_script.is_file():
@@ -230,6 +234,14 @@ def _validate_python_files(errors: list[str]) -> None:
         if "hookSpecificOutput" not in common_text or "additionalContext" not in common_text:
             errors.append(
                 "changeforge_common.py: Codex warnings must use hookSpecificOutput.additionalContext"
+            )
+        if '"additionalContext": text' not in common_text:
+            errors.append(
+                "changeforge_common.py: Copilot context hooks must emit top-level additionalContext"
+            )
+        if '"decision": "block"' not in common_text or '"reason": text' not in common_text:
+            errors.append(
+                "changeforge_common.py: Copilot Stop blocks must emit top-level decision/reason"
             )
         if "CHANGEFORGE_AGENT" not in common_text:
             errors.append("changeforge_common.py: detect_runtime must support CHANGEFORGE_AGENT override")
@@ -374,6 +386,9 @@ def _validate_copilot_template(
     every command must set CHANGEFORGE_AGENT=copilot, use python3, avoid src/ and
     user absolute paths, and stay within the 10-second timeout budget.
     """
+    if data.get("version") != 1:
+        errors.append(f"{relpath(ROOT, path)}: Copilot hook template must set version to 1")
+
     hooks = data.get("hooks")
     if not isinstance(hooks, dict):
         errors.append(f"{relpath(ROOT, path)}: hooks must be a JSON object")
@@ -406,8 +421,17 @@ def _validate_copilot_template(
                 f"{relpath(ROOT, path)}:{context}: Copilot hook command should use /usr/bin/env python3"
             )
 
-    for timeout, context in _timeouts(hooks):
-        if timeout > 10:
+    for entry, context in _command_entries(hooks):
+        if "timeout" in entry:
+            errors.append(
+                f"{relpath(ROOT, path)}:{context}: Copilot hook command must use timeoutSec, not timeout"
+            )
+        timeout = entry.get("timeoutSec")
+        if not isinstance(timeout, int):
+            errors.append(
+                f"{relpath(ROOT, path)}:{context}: Copilot hook command must set timeoutSec"
+            )
+        elif timeout > 10:
             errors.append(
                 f"{relpath(ROOT, path)}:{context}: timeout {timeout} exceeds 10 seconds"
             )
@@ -436,6 +460,19 @@ def _commands(value: Any, context: str = "hooks") -> list[tuple[str, str]]:
     elif isinstance(value, list):
         for index, child in enumerate(value):
             result.extend(_commands(child, f"{context}[{index}]"))
+    return result
+
+
+def _command_entries(value: Any, context: str = "hooks") -> list[tuple[dict[str, Any], str]]:
+    result: list[tuple[dict[str, Any], str]] = []
+    if isinstance(value, dict):
+        if isinstance(value.get("command"), str):
+            result.append((value, context))
+        for key, child in value.items():
+            result.extend(_command_entries(child, f"{context}.{key}"))
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            result.extend(_command_entries(child, f"{context}[{index}]"))
     return result
 
 

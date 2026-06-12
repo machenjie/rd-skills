@@ -411,6 +411,41 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertNotIn("no changeforge_route manifest", result.stdout)
         self.assertNotIn("completion language but shows no validation", result.stdout)
 
+    def test_copilot_stop_reads_final_text_from_transcript_path(self) -> None:
+        manifest_text = (
+            "Change prepared. Changed files listed. "
+            "Validation: ran pytest -q, 12 passed, exit 0. Residual risk: none. "
+            "Next steps: review.\n\n"
+            "```yaml\n"
+            "changeforge_route:\n"
+            "  selected_skills:\n"
+            "    - quality-test-gate\n"
+            "  selected_capabilities:\n"
+            "    - regression-testing\n"
+            "  required_references:\n"
+            "    - references/routing-rules.md\n"
+            "  required_quality_gates:\n"
+            "    - regression gate\n"
+            "```\n"
+        )
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            transcript = cwd / "copilot-transcript.jsonl"
+            transcript.write_text(
+                json.dumps({"role": "user", "content": "fix hook"}) + "\n"
+                + json.dumps({"role": "assistant", "content": manifest_text}) + "\n",
+                encoding="utf-8",
+            )
+            seed_state(cwd, cache, runtime="copilot", changed_paths=["a.py"])
+            event = {
+                "hook_event_name": "Stop",
+                "runtime": "copilot",
+                "transcript_path": str(transcript),
+            }
+            result = run_stop(event, cwd, cache, agent="copilot")
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("no complete changeforge_route manifest", result.stdout)
+
     def test_closure_reminder_flags_incomplete_route_manifest(self) -> None:
         manifest_text = (
             "Change prepared. Changed files and risk are noted. "

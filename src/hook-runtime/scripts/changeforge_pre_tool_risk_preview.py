@@ -6,12 +6,14 @@ heads-up when a pending edit or command touches a risk surface (auth, migration,
 cache, queue, Kubernetes, Helm, or big-data). It reuses the exact matching of the
 PostToolUse risk gate so the pre- and post-edit views agree.
 
-It is advisory only: it adds developer context, never denies the tool call, never
-mutates per-turn hook state, never writes telemetry, never reads compiled
-references, never calls an LLM, never touches the network, and never writes
-project source. It fails open. The PostToolUse risk gate remains the authority
-that records findings and the closure gate checks; this preview only nudges the
-agent to route before the change lands.
+It is advisory only: it adds developer context where the runtime supports that
+output, never denies the tool call, never mutates per-turn hook state, never
+writes telemetry, never reads compiled references, never calls an LLM, never
+touches the network, and never writes project source. Copilot preToolUse only
+consumes permission decisions or argument modifications, so Copilot warning-only
+preview output is suppressed. It fails open. The PostToolUse risk gate remains
+the authority that records findings and the closure gate checks; this preview
+only nudges the agent to route before the change lands.
 """
 
 from __future__ import annotations

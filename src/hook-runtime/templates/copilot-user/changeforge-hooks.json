@@ -1,57 +1,58 @@
 {
+  "version": 1,
   "hooks": {
     "SessionStart": [
       {
         "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_session_bootstrap.py\"",
-        "timeout": 10
+        "timeoutSec": 10
       }
     ],
     "UserPromptSubmit": [
       {
         "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_user_prompt_route_reminder.py\"",
-        "timeout": 10
+        "timeoutSec": 10
       }
     ],
     "PreToolUse": [
       {
         "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_pre_tool_risk_preview.py\"",
-        "timeout": 10
+        "timeoutSec": 10
       }
     ],
     "PostToolUse": [
       {
         "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_post_edit_structure_gate.py\"",
-        "timeout": 10
+        "timeoutSec": 10
       },
       {
         "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_risk_surface_gate.py\"",
-        "timeout": 10
+        "timeoutSec": 10
       }
     ],
     "SubagentStart": [
       {
         "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_session_bootstrap.py\"",
-        "timeout": 10
+        "timeoutSec": 10
       }
     ],
     "SubagentStop": [
       {
         "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_subagent_stop_reminder.py\"",
-        "timeout": 10
+        "timeoutSec": 10
       }
     ],
     "Stop": [
       {
         "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_stop_closure_gate.py\"",
-        "timeout": 10
+        "timeoutSec": 10
       }
     ]
   }

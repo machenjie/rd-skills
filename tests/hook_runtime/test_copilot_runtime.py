@@ -41,11 +41,8 @@ class CopilotRuntimeTests(unittest.TestCase):
         result = _run("changeforge_session_bootstrap.py", event)
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout)
-        self.assertEqual(payload["hookSpecificOutput"]["hookEventName"], "SessionStart")
-        self.assertIn(
-            "route preflight",
-            payload["hookSpecificOutput"]["additionalContext"].casefold(),
-        )
+        self.assertIn("route preflight", payload["additionalContext"].casefold())
+        self.assertNotIn("hookSpecificOutput", payload)
 
     def test_risk_gate_matches_vscode_replace_string_tool(self) -> None:
         # VS Code Copilot uses replace_string_in_file with a camelCase filePath;
@@ -58,7 +55,7 @@ class CopilotRuntimeTests(unittest.TestCase):
         result = _run("changeforge_risk_surface_gate.py", event)
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout)
-        context = payload["hookSpecificOutput"]["additionalContext"]
+        context = payload["additionalContext"]
         self.assertIn("security", context)
 
     def test_risk_gate_matches_vscode_run_terminal_command(self) -> None:
@@ -70,7 +67,7 @@ class CopilotRuntimeTests(unittest.TestCase):
         result = _run("changeforge_risk_surface_gate.py", event)
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout)
-        self.assertIn("data-api", payload["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("data-api", payload["additionalContext"])
 
     def test_structure_gate_matches_vscode_create_file(self) -> None:
         # create_file with a service path should trigger the structure gate.
@@ -83,9 +80,10 @@ class CopilotRuntimeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         # A structural path produces a JSON additionalContext reminder.
         payload = json.loads(result.stdout)
-        self.assertEqual(payload["hookSpecificOutput"]["hookEventName"], "PostToolUse")
+        self.assertIn("ChangeForge Structure Gate triggered", payload["additionalContext"])
+        self.assertNotIn("hookSpecificOutput", payload)
 
-    def test_pre_tool_preview_advisory_never_denies(self) -> None:
+    def test_pre_tool_preview_does_not_emit_unsupported_context(self) -> None:
         event = {
             "hook_event_name": "PreToolUse",
             "tool_name": "create_file",
@@ -93,10 +91,8 @@ class CopilotRuntimeTests(unittest.TestCase):
         }
         result = _run("changeforge_pre_tool_risk_preview.py", event)
         self.assertEqual(result.returncode, 0, result.stderr)
-        payload = json.loads(result.stdout)
-        self.assertEqual(payload["hookSpecificOutput"]["hookEventName"], "PreToolUse")
-        self.assertIn("security", payload["hookSpecificOutput"]["additionalContext"])
-        # Advisory only: never deny or block.
+        # Copilot PreToolUse supports permission decisions, not additionalContext.
+        self.assertEqual(result.stdout.strip(), "")
         self.assertNotIn("permissionDecision", result.stdout)
         self.assertNotIn("\"decision\"", result.stdout)
 
@@ -110,13 +106,69 @@ class CopilotRuntimeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.strip(), "")
 
-    def test_user_prompt_reminder_emits_json(self) -> None:
+    def test_user_prompt_reminder_does_not_emit_unsupported_context(self) -> None:
         event = {"hook_event_name": "UserPromptSubmit", "prompt": "add redis cache"}
         result = _run("changeforge_user_prompt_route_reminder.py", event)
         self.assertEqual(result.returncode, 0, result.stderr)
-        payload = json.loads(result.stdout)
-        self.assertEqual(payload["hookSpecificOutput"]["hookEventName"], "UserPromptSubmit")
-        self.assertIn("change-forge-router", payload["hookSpecificOutput"]["additionalContext"])
+        # Copilot userPromptSubmitted output is not processed, so avoid a fake
+        # context injection signal.
+        self.assertEqual(result.stdout.strip(), "")
+
+    def test_subagent_stop_reminder_does_not_emit_unsupported_system_message(self) -> None:
+        event = {"hook_event_name": "SubagentStop"}
+        result = _run("changeforge_subagent_stop_reminder.py", event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "")
+
+    def test_stop_block_mode_emits_top_level_decision(self) -> None:
+        # Regression: Copilot agentStop consumes top-level decision/reason, not Codex hookSpecificOutput.
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            env = os.environ.copy()
+            env["XDG_CACHE_HOME"] = cache
+            env["CHANGEFORGE_AGENT"] = "copilot"
+            env["CHANGEFORGE_HOOK_MODE"] = "block"
+
+            seed = subprocess.run(
+                [
+                    sys.executable,
+                    "-c",
+                    (
+                        "import importlib.util, pathlib, os; "
+                        f"p=pathlib.Path({str(SCRIPT_DIR / 'changeforge_common.py')!r}); "
+                        "s=importlib.util.spec_from_file_location('cf', p); "
+                        "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+                        f"m.save_state(pathlib.Path({cwd!r}), {{'runtime':'copilot','changed_paths':['a.py']}})"
+                    ),
+                ],
+                text=True,
+                capture_output=True,
+                cwd=cwd,
+                env=env,
+                check=False,
+            )
+            self.assertEqual(seed.returncode, 0, seed.stderr)
+
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT_DIR / "changeforge_stop_closure_gate.py")],
+                input=json.dumps(
+                    {
+                        "hook_event_name": "Stop",
+                        "cwd": cwd,
+                        "stop_hook_active": False,
+                        "response": "done",
+                    }
+                ),
+                text=True,
+                capture_output=True,
+                cwd=cwd,
+                env=env,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["decision"], "block")
+            self.assertIn("changeforge_route", payload["reason"])
+            self.assertNotIn("hookSpecificOutput", payload)
 
 
 if __name__ == "__main__":

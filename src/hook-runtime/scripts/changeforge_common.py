@@ -31,8 +31,9 @@ STATE_LIST_FIELDS = (
     "suggested_gates",
 )
 KNOWN_RUNTIMES = {"codex", "claude", "copilot"}
-# Runtimes that consume JSON stdout (hookSpecificOutput / decision). Claude reads
-# plain stdout for added context, so it is intentionally excluded here.
+# Runtimes that consume JSON stdout. Codex wraps event-specific context in
+# hookSpecificOutput; Copilot command hooks consume top-level additionalContext
+# only for context-capable events and top-level decision fields for Stop.
 JSON_OUTPUT_RUNTIMES = {"codex", "copilot"}
 HOOK_MODES = {"off", "monitor", "warn", "block"}
 
@@ -280,13 +281,17 @@ def save_state(repo: Path, state: dict) -> None:
 
 
 def emit_warning(runtime: str, hook_event_name: str, message: str) -> None:
-    """Emit runtime-compatible additional context."""
+    """Emit runtime-compatible additional context for post-tool warnings."""
     if runtime not in KNOWN_RUNTIMES:
         return
     text = message.strip()
     if not text:
         return
-    if runtime in JSON_OUTPUT_RUNTIMES:
+    if runtime == "copilot":
+        if _compact(hook_event_name) in {"posttooluse", "posttoolusefailure", "notification"}:
+            print(json.dumps({"additionalContext": text}, sort_keys=True))
+        return
+    if runtime == "codex":
         event = hook_event_name or "PostToolUse"
         print(
             json.dumps(
@@ -311,23 +316,8 @@ def emit_stop_reminder(runtime: str, message: str, *, continue_turn: bool) -> No
     if not text:
         return
     if runtime == "copilot":
-        # VS Code Copilot expects the Stop block decision inside hookSpecificOutput;
-        # the advisory (warn) path uses the common systemMessage field.
         if continue_turn:
-            print(
-                json.dumps(
-                    {
-                        "hookSpecificOutput": {
-                            "hookEventName": "Stop",
-                            "decision": "block",
-                            "reason": text,
-                        }
-                    },
-                    sort_keys=True,
-                )
-            )
-        else:
-            print(json.dumps({"systemMessage": text}, sort_keys=True))
+            print(json.dumps({"decision": "block", "reason": text}, sort_keys=True))
         return
     if runtime == "codex":
         if continue_turn:
@@ -341,20 +331,24 @@ def emit_stop_reminder(runtime: str, message: str, *, continue_turn: bool) -> No
 def emit_session_context(runtime: str, message: str, event_name: str = "SessionStart") -> None:
     """Emit additional developer context for a context-injecting hook.
 
-    Used by SessionStart, SubagentStart, and UserPromptSubmit. These events add
-    ``hookSpecificOutput.additionalContext`` (Codex and Copilot) or plain stdout
-    (Claude) as extra developer context. This is advisory only: it never emits a
-    block decision, never reads references, and fails open. ``event_name``
-    defaults to SessionStart so existing callers keep working; other callers pass
-    the event they are wired to so the runtime echoes the matching
-    ``hookEventName``.
+    Used by SessionStart, SubagentStart, and UserPromptSubmit. Codex supports
+    JSON context for all three events; Copilot consumes additionalContext for
+    SessionStart and SubagentStart but not UserPromptSubmit. Claude receives
+    plain stdout. This is advisory only: it never emits a block decision, never
+    reads references, and fails open. ``event_name`` defaults to SessionStart so
+    existing callers keep working; Codex echoes the matching ``hookEventName``
+    in hookSpecificOutput.
     """
     if runtime not in KNOWN_RUNTIMES:
         return
     text = message.strip()
     if not text:
         return
-    if runtime in JSON_OUTPUT_RUNTIMES:
+    if runtime == "copilot":
+        if _compact(event_name) in {"sessionstart", "subagentstart", "notification"}:
+            print(json.dumps({"additionalContext": text}, sort_keys=True))
+        return
+    if runtime == "codex":
         print(
             json.dumps(
                 {
@@ -371,16 +365,19 @@ def emit_session_context(runtime: str, message: str, event_name: str = "SessionS
 
 
 def emit_subagent_stop_reminder(runtime: str, message: str) -> None:
-    """Emit a SubagentStop-compatible advisory ``systemMessage``.
+    """Emit a SubagentStop-compatible advisory ``systemMessage`` where supported.
 
-    SubagentStop requires JSON on stdout; plain text is invalid for this event.
-    This reminder is advisory only: it never returns ``decision: block`` (which
-    would force the subagent to continue) and never ``continue: false``.
+    Codex supports advisory ``systemMessage`` output. Copilot SubagentStop only
+    supports decision control, so this advisory reminder emits nothing there.
+    This reminder never returns ``decision: block`` (which would force the
+    subagent to continue) and never ``continue: false``.
     """
     if runtime not in KNOWN_RUNTIMES:
         return
     text = message.strip()
     if not text:
+        return
+    if runtime == "copilot":
         return
     print(json.dumps({"systemMessage": text}, sort_keys=True))
 

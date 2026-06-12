@@ -100,6 +100,7 @@ class HookTemplateTests(unittest.TestCase):
         data = json.loads(
             (HOOK_ROOT / "templates" / "copilot" / "changeforge-hooks.json").read_text()
         )
+        self.assertEqual(data["version"], 1)
         hooks = data["hooks"]
         for event, script in (
             ("SessionStart", "changeforge_session_bootstrap"),
@@ -114,6 +115,8 @@ class HookTemplateTests(unittest.TestCase):
             entries = hooks[event]
             # Flat format: entries carry "command" directly, not nested "hooks".
             self.assertTrue(all("command" in entry for entry in entries))
+            self.assertTrue(all("timeoutSec" in entry for entry in entries))
+            self.assertFalse(any("timeout" in entry for entry in entries))
             self.assertNotIn("matcher", json.dumps(entries))
             self.assertIn(script, json.dumps(entries))
         commands = json.dumps(hooks)
@@ -124,6 +127,7 @@ class HookTemplateTests(unittest.TestCase):
         data = json.loads(
             (HOOK_ROOT / "templates" / "copilot-user" / "changeforge-hooks.json").read_text()
         )
+        self.assertEqual(data["version"], 1)
         commands = json.dumps(data["hooks"])
         self.assertIn("${HOME}/.copilot/hooks/changeforge/", commands)
         self.assertIn("CHANGEFORGE_AGENT=copilot", commands)

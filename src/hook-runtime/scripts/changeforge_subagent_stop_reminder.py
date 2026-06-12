@@ -7,11 +7,12 @@ discipline the parent Stop gate enforces: the route manifest, validation
 evidence, and residual risk.
 
 It is advisory only. It never returns ``decision: block`` (which would force the
-subagent to keep running) and never ``continue: false``. It deliberately does not
-load, mutate, or clear the per-turn hook state, because that state belongs to the
-parent turn and the parent Stop closure gate still needs it. It writes no
-telemetry, reads no references, makes no network call, and never writes project
-source. It fails open.
+subagent to keep running) and never ``continue: false``. Copilot SubagentStop
+only consumes decision output, so Copilot warning-only output is suppressed. It
+deliberately does not load, mutate, or clear the per-turn hook state, because
+that state belongs to the parent turn and the parent Stop closure gate still
+needs it. It writes no telemetry, reads no references, makes no network call,
+and never writes project source. It fails open.
 """
 
 from __future__ import annotations

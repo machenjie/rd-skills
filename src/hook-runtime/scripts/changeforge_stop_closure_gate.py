@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import json
 import re
+from pathlib import Path
 
 from changeforge_common import (
     clear_state,
@@ -22,6 +24,8 @@ from changeforge_common import (
     write_telemetry_event,
 )
 
+
+MAX_TRANSCRIPT_BYTES = 1_000_000
 
 CLOSURE_KEYWORDS = {
     "skills": ["skill", "ChangeForge", "router", "路由", "技能"],
@@ -420,6 +424,95 @@ def _final_text(event: dict) -> str:
         value = event.get(key)
         if isinstance(value, str):
             return value
+    return _final_text_from_transcript(event)
+
+
+def _final_text_from_transcript(event: dict) -> str:
+    path_value = event.get("transcript_path") or event.get("transcriptPath")
+    if not isinstance(path_value, str) or not path_value.strip():
+        return ""
+    try:
+        path = Path(path_value).expanduser()
+        with path.open("rb") as file:
+            try:
+                file.seek(0, 2)
+                size = file.tell()
+                file.seek(max(size - MAX_TRANSCRIPT_BYTES, 0))
+            except OSError:
+                pass
+            transcript = file.read().decode("utf-8", errors="replace")
+    except Exception:
+        return ""
+
+    assistant_texts: list[str] = []
+    for line in transcript.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        candidate = _assistant_text_from_record(record)
+        if candidate:
+            assistant_texts.append(candidate)
+    if assistant_texts:
+        return assistant_texts[-1]
+    return transcript
+
+
+def _assistant_text_from_record(record: object) -> str:
+    if not isinstance(record, dict):
+        return ""
+    role = _record_role(record)
+    if role and role not in {"assistant", "assistant_message", "assistantmessage"}:
+        return ""
+    if not role and not _record_has_assistant_message(record):
+        return ""
+
+    for key in ("content", "text", "message", "response", "final_response"):
+        text = _text_from_value(record.get(key))
+        if text:
+            return text
+    return ""
+
+
+def _record_role(record: dict) -> str:
+    for key in ("role", "type", "speaker"):
+        value = record.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip().casefold()
+    author = record.get("author")
+    if isinstance(author, dict):
+        value = author.get("role") or author.get("name")
+        if isinstance(value, str) and value.strip():
+            return value.strip().casefold()
+    message = record.get("message")
+    if isinstance(message, dict):
+        return _record_role(message)
+    return ""
+
+
+def _record_has_assistant_message(record: dict) -> bool:
+    message = record.get("message")
+    return isinstance(message, dict) and _record_role(message) in {
+        "assistant",
+        "assistant_message",
+        "assistantmessage",
+    }
+
+
+def _text_from_value(value: object) -> str:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        parts = [_text_from_value(item) for item in value]
+        return "\n".join(part for part in parts if part)
+    if isinstance(value, dict):
+        for key in ("text", "content", "value", "message"):
+            text = _text_from_value(value.get(key))
+            if text:
+                return text
     return ""
 
 

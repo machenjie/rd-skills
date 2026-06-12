@@ -16,8 +16,8 @@ ChangeForge skills, capabilities, domain extensions, and quality gates.
 
 The runtime provides these reminder hooks:
 
-- Session Bootstrap: at `SessionStart` (both Codex and Claude, including the
-  Codex `compact` source) and `SubagentStart`, remind the agent to run a
+- Session Bootstrap: at `SessionStart` (Codex, Claude, and Copilot, including
+  the Codex `compact` source) and `SubagentStart`, remind the agent to run a
   `change-forge-router` preflight before engineering work. Also ships as an
   advisory install-time fragment.
 - Route Reminder: at Codex `UserPromptSubmit`, add a concise per-prompt reminder
@@ -28,7 +28,9 @@ The runtime provides these reminder hooks:
   and hand off with validation evidence and residual risk. Never reads or records
   the prompt text.
 - Pre-Edit Risk Preview: at Codex `PreToolUse`, preview risk surfaces before an
-  edit or command runs. Advisory only; never denies the tool call.
+  edit or command runs. Advisory only; never denies the tool call. Copilot wires
+  `PreToolUse`, but warning-only advisory output is suppressed because Copilot
+  only consumes permission decisions or argument modifications for that event.
 - Post-Edit Structure Gate: after edit tools run, detect structural code changes
   that should preserve reuse, placement, ownership, dependency direction, public
   API decisions, same-pattern scans, and nearby tests.
@@ -40,7 +42,9 @@ The runtime provides these reminder hooks:
   next actions.
 - Subagent Closure Reminder: at Codex `SubagentStop`, remind the subagent to
   carry closure evidence back to the parent. Advisory only; never forces
-  continuation and never touches the parent turn's closure state.
+  continuation and never touches the parent turn's closure state. Copilot wires
+  `SubagentStop`, but warning-only advisory output is suppressed because Copilot
+  only consumes block/allow decision output for that event.
 
 ## Non-Goals
 
@@ -80,11 +84,13 @@ dist/copilot/user/.copilot
 Project layouts resolve their command path from the project git root; user
 layouts resolve it from the agent home (`${CODEX_HOME:-$HOME/.codex}`,
 `${CLAUDE_CONFIG_DIR:-$HOME/.claude}`, `${HOME}/.copilot`). VS Code Copilot uses
-the flat (matcher-less) hook config format and loads every `*.json` in its hook
-folder, so its config is the dedicated `changeforge-hooks.json` and the scripts,
-manifest, and bootstrap fragment live in a `changeforge/` subfolder. Each layout
-includes `.changeforge-hook-manifest.json` so installation validation can prove
-which hook scripts and scope were emitted.
+the flat (matcher-less) hook config format with `version: 1` and `timeoutSec`
+and loads every `*.json` in its hook folder, so its config is the dedicated
+`changeforge-hooks.json` and the scripts, manifest, and bootstrap fragment live
+in a `changeforge/` subfolder. Copilot context output is top-level
+`additionalContext` for supported events; Stop block output is top-level
+`decision`/`reason`. Each layout includes `.changeforge-hook-manifest.json` so
+installation validation can prove which hook scripts and scope were emitted.
 
 The installer can place these hooks for Codex, Claude, and Copilot project or
 user scope with `installers/install.py --with-hooks`; existing hook

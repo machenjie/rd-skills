@@ -20,15 +20,19 @@ The first-stage runtime provides these reminder gates:
   so the route preflight is re-injected once context is compacted). The same
   guidance also ships as an install-time bootstrap fragment for users who prefer
   not to trust executable hooks.
-- Route Reminder (`UserPromptSubmit`, Codex and Copilot): adds a concise
-  per-prompt reminder to run `change-forge-router` and emit a `changeforge_route`
-  manifest for any engineering change. It is advisory developer context, never
-  reads or records the prompt text, and writes no telemetry.
-- Pre-Edit Risk Preview (`PreToolUse`, Codex and Copilot): before an edit or
-  command runs, it previews ChangeForge risk surfaces (auth, data contract,
-  cache, queue, Kubernetes, Helm, big data) and reminds the agent to route
-  first. It reuses the Risk Surface Gate matching, is advisory only, never denies
-  the tool call, and never mutates per-turn state.
+- Route Reminder (`UserPromptSubmit`, Codex): adds a concise per-prompt
+  reminder to run `change-forge-router` and emit a `changeforge_route` manifest
+  for any engineering change. It is advisory developer context, never reads or
+  records the prompt text, and writes no telemetry. Copilot also wires the event
+  for lifecycle coverage, but Copilot does not process `userPromptSubmitted`
+  output, so it is not a reliable context-injection point.
+- Pre-Edit Risk Preview (`PreToolUse`, Codex): before an edit or command runs,
+  it previews ChangeForge risk surfaces (auth, data contract, cache, queue,
+  Kubernetes, Helm, big data) and reminds the agent to route first. It reuses
+  the Risk Surface Gate matching, is advisory only, never denies the tool call,
+  and never mutates per-turn state. Copilot `preToolUse` supports permission
+  decisions and argument modification, not advisory `additionalContext`, so the
+  Copilot runtime stays silent for warning-only preview output.
 
 - Post-Edit Structure Gate: runs after edit tools and warns when changed paths
   look like structural code, shared utilities, public interfaces, SDK/client
@@ -47,10 +51,12 @@ The first-stage runtime provides these reminder gates:
   skill path, changed files, validation evidence, residual risk, next steps, and
   the structure-evidence records (file naming, reuse ladder, extension safety,
   advanced refactor, comment quality) for any structure sub-gate that fired.
-- Subagent Closure Reminder (`SubagentStop`, Codex and Copilot): reminds a stopping subagent
+- Subagent Closure Reminder (`SubagentStop`, Codex): reminds a stopping subagent
   to hand the parent the route manifest, validation evidence, and residual risk.
   It emits an advisory `systemMessage`, never forces the subagent to continue,
-  and never touches the parent turn's closure state. The Session Bootstrap also
+  and never touches the parent turn's closure state. Copilot `subagentStop`
+  supports block/allow decision control, not advisory `systemMessage`, so the
+  Copilot runtime stays silent in warning-only mode. The Session Bootstrap also
   runs at `SubagentStart` so a spawned subagent inherits the route preflight.
 
 The default behavior is warning-only. A hook failure must fail open and must not
@@ -136,20 +142,28 @@ after edits:
 
 - `SessionStart` (Codex also with the `compact` source) and `SubagentStart`
   inject the route preflight.
-- `UserPromptSubmit` adds a per-prompt route reminder.
-- `PreToolUse` previews risk surfaces before an edit or command runs.
+- `UserPromptSubmit` adds a per-prompt route reminder for Codex. Copilot wires
+  the event, but Copilot does not process its output.
+- `PreToolUse` previews risk surfaces before an edit or command runs for Codex.
+  Copilot wires the event, but warning-only preview output is suppressed because
+  Copilot `preToolUse` does not consume advisory `additionalContext`.
 - `PostToolUse` runs the structure and risk-surface gates after edits and
   commands.
-- `Stop` runs the closure gate; `SubagentStop` reminds the subagent to carry
-  closure evidence back to the parent.
+- `Stop` runs the closure gate. In Copilot block mode it emits top-level
+  `decision`/`reason` so the agent is forced to continue with the missing
+  evidence. `SubagentStop` emits an advisory reminder only where supported.
 
 The shared hook scripts recognize both Codex/Claude tool names
 (`edit`, `write`, `apply_patch`, `bash`) and VS Code Copilot tool names
 (`editFiles`, `create_file`, `replace_string_in_file`, `insert_edit_into_file`,
 `runTerminalCommand`), so the structure and risk gates fire under every runtime.
-VS Code Copilot uses the flat (matcher-less) hook config format and reads JSON
-stdout, so ChangeForge emits `hookSpecificOutput.additionalContext` and
-`systemMessage` rather than plain text.
+VS Code Copilot uses the flat (matcher-less) hook config format with
+`version: 1` and `timeoutSec`. It uses PascalCase event names so payloads carry
+VS Code-compatible snake_case fields. ChangeForge emits top-level
+`additionalContext` only for Copilot context-capable events such as
+`SessionStart`, `SubagentStart`, and `PostToolUse`; Stop block output uses
+top-level `decision`/`reason`. Codex keeps `hookSpecificOutput.additionalContext`
+for context hooks and `systemMessage` for warning-only Stop output.
 
 These remain execution-time guardrails. They detect edited paths, patch signals,
 risk surfaces, and missing closure evidence, and they remind the agent to route;
@@ -161,8 +175,10 @@ they never select a complete route, never block by default, and never replace
 Hooks can:
 - remind on route preflight at session start, subagent start, and after
   compaction (`SessionStart`/`SubagentStart`);
-- remind on routing per user prompt (Codex `UserPromptSubmit`);
-- preview risk surfaces before an edit or command runs (Codex `PreToolUse`);
+- remind on routing per user prompt (Codex `UserPromptSubmit`; Copilot wires the
+  event but its output is not processed);
+- preview risk surfaces before an edit or command runs (Codex `PreToolUse`;
+  Copilot cannot consume advisory preview context);
 - remind on new file naming pattern mismatches;
 - remind on structural path changes;
 - remind on helper/common/utils/shared pollution risk;
@@ -171,7 +187,8 @@ Hooks can:
 - remind on advanced refactor evidence;
 - remind on comment quality evidence;
 - remind on Stop-stage closure evidence;
-- remind a stopping subagent to carry closure evidence (`SubagentStop`, Codex and Copilot).
+- remind a stopping subagent to carry closure evidence (`SubagentStop`, Codex;
+  Copilot warning-only advisory output is not emitted).
 
 Hooks cannot:
 - replace `change-forge-router`;
@@ -276,12 +293,15 @@ dist/universal/bootstrap/changeforge-route-preflight.md
 ```
 
 Codex, Claude, and Copilot all wire the session bootstrap as a `SessionStart`
-hook; the same scripts ship in the project and user layouts. The Codex and
-Copilot layouts also wire the per-prompt route reminder, pre-edit risk preview,
-and subagent closure reminder. VS Code Copilot loads every `*.json` in the hook
-folder, so its managed config is the dedicated `changeforge-hooks.json` and the
-scripts plus manifest live in a `changeforge/` subfolder VS Code does not scan
-for config. Do not install `src/hook-runtime` directly.
+hook; the same scripts ship in the project and user layouts. The Codex layout
+also wires per-prompt route reminders, pre-edit risk preview, and advisory
+subagent closure reminders. The Copilot layout wires the same lifecycle events,
+but only emits JSON for outputs Copilot consumes: top-level `additionalContext`
+for session/subagent start and post-tool gates, and top-level `decision`/`reason`
+for Stop block mode. VS Code Copilot loads every `*.json` in the hook folder, so
+its managed config is the dedicated `changeforge-hooks.json` and the scripts
+plus manifest live in a `changeforge/` subfolder VS Code does not scan for
+config. Do not install `src/hook-runtime` directly.
 
 ## Manually Enable Hooks
 
@@ -377,13 +397,13 @@ python3 scripts/validate-installation.py
 ```
 
 `validate-hooks.py` checks script presence, Python compilation, template JSON,
-required hook events, the Claude `SessionStart` bootstrap wiring, the absence of
-a Codex `SessionStart` hook, the advisory bootstrap fragment, timeout limits,
-Codex command protocol, Codex JSON warning output, Stop output separation, no
-direct `src/` hook commands, no user-specific absolute paths, no network
-imports, and no project-source writes. The `unittest` command exercises hook
-behavior fixtures and must discover the hook runtime tests from the
-repository-level `tests` directory.
+required hook events, `SessionStart` bootstrap wiring, the advisory bootstrap
+fragment, timeout limits, Codex command protocol, Copilot `version: 1` and
+`timeoutSec`, JSON warning output, Stop output separation, no direct `src/` hook
+commands, no user-specific absolute paths, no network imports, and no
+project-source writes. The `unittest` command exercises hook behavior fixtures
+and must discover the hook runtime tests from the repository-level `tests`
+directory.
 
 ## Troubleshooting
 
