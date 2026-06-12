@@ -46,6 +46,8 @@ HOOK_OUTPUT_ROOTS = {
     ("codex", "user"): DIST_DIR / "codex" / "user" / ".codex",
     ("claude", "project"): DIST_DIR / "claude" / "project" / ".claude",
     ("claude", "user"): DIST_DIR / "claude" / "user" / ".claude",
+    ("copilot", "project"): DIST_DIR / "copilot" / "project" / ".github",
+    ("copilot", "user"): DIST_DIR / "copilot" / "user" / ".copilot",
 }
 BOOTSTRAP_TEMPLATE = (
     HOOK_RUNTIME_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"
@@ -399,6 +401,8 @@ def _build_hook_runtime() -> None:
     _build_codex_user_hook_runtime()
     _build_claude_hook_runtime()
     _build_claude_user_hook_runtime()
+    _build_copilot_hook_runtime("project")
+    _build_copilot_hook_runtime("user")
     _build_universal_bootstrap()
 
 
@@ -460,6 +464,27 @@ def _build_claude_user_hook_runtime() -> None:
     _write_hook_manifest(target, agent="claude", scope="user")
 
 
+def _build_copilot_hook_runtime(scope: str) -> None:
+    # VS Code Copilot loads every *.json in the hook folder, so the managed hook
+    # config lives at <hooks>/changeforge-hooks.json while the scripts, manifest,
+    # and bootstrap fragment live in a <hooks>/changeforge/ subfolder VS Code does
+    # not scan for config. Project commands resolve from the git root; user
+    # commands resolve from $HOME/.copilot.
+    target = HOOK_OUTPUT_ROOTS[("copilot", scope)]
+    hooks_root = target / "hooks"
+    _reset_dir(hooks_root)
+    scripts_dir = hooks_root / "changeforge"
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+    _copy_hook_scripts(scripts_dir)
+    template_dir = "copilot" if scope == "project" else "copilot-user"
+    shutil.copy2(
+        HOOK_RUNTIME_ROOT / "templates" / template_dir / "changeforge-hooks.json",
+        hooks_root / "changeforge-hooks.json",
+    )
+    _copy_bootstrap_fragment(scripts_dir)
+    _write_hook_manifest(scripts_dir, agent="copilot", scope=scope)
+
+
 def _build_universal_bootstrap() -> None:
     _reset_dir(UNIVERSAL_BOOTSTRAP_ROOT)
     shutil.copy2(
@@ -486,10 +511,10 @@ def _copy_hook_scripts(target: Path) -> None:
 def _write_hook_manifest(target: Path, agent: str, scope: str) -> None:
     # Both runtimes now wire the route-preflight bootstrap as a SessionStart
     # hook and also ship the install-time bootstrap fragment for the advisory
-    # path. Codex additionally wires the per-prompt route reminder, the
-    # pre-edit risk preview, and the subagent closure reminder enabled by the
-    # current Codex hook events.
-    if agent == "codex":
+    # path. Codex and Copilot additionally wire the per-prompt route reminder,
+    # the pre-edit risk preview, and the subagent closure reminder enabled by
+    # their richer hook events.
+    if agent in ("codex", "copilot"):
         hooks = [
             "changeforge_session_bootstrap",
             "changeforge_user_prompt_route_reminder",

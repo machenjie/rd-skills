@@ -94,6 +94,41 @@ class HookTemplateTests(unittest.TestCase):
         self.assertIn("${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/", commands)
         self.assertNotIn("CLAUDE_PROJECT_DIR", commands)
 
+    def test_copilot_template_is_flat_and_wires_events(self) -> None:
+        # VS Code Copilot uses the flat (matcher-less) format: each event maps
+        # directly to a list of command entries, no matcher groups.
+        data = json.loads(
+            (HOOK_ROOT / "templates" / "copilot" / "changeforge-hooks.json").read_text()
+        )
+        hooks = data["hooks"]
+        for event, script in (
+            ("SessionStart", "changeforge_session_bootstrap"),
+            ("UserPromptSubmit", "changeforge_user_prompt_route_reminder"),
+            ("PreToolUse", "changeforge_pre_tool_risk_preview"),
+            ("PostToolUse", "changeforge_post_edit_structure_gate"),
+            ("SubagentStart", "changeforge_session_bootstrap"),
+            ("SubagentStop", "changeforge_subagent_stop_reminder"),
+            ("Stop", "changeforge_stop_closure_gate"),
+        ):
+            self.assertIn(event, hooks)
+            entries = hooks[event]
+            # Flat format: entries carry "command" directly, not nested "hooks".
+            self.assertTrue(all("command" in entry for entry in entries))
+            self.assertNotIn("matcher", json.dumps(entries))
+            self.assertIn(script, json.dumps(entries))
+        commands = json.dumps(hooks)
+        self.assertIn("CHANGEFORGE_AGENT=copilot", commands)
+        self.assertIn("/.github/hooks/changeforge/", commands)
+
+    def test_copilot_user_template_resolves_from_home(self) -> None:
+        data = json.loads(
+            (HOOK_ROOT / "templates" / "copilot-user" / "changeforge-hooks.json").read_text()
+        )
+        commands = json.dumps(data["hooks"])
+        self.assertIn("${HOME}/.copilot/hooks/changeforge/", commands)
+        self.assertIn("CHANGEFORGE_AGENT=copilot", commands)
+        self.assertNotIn("git rev-parse", commands)
+
     def test_bootstrap_fragment_exists_and_points_to_router(self) -> None:
         fragment = (
             HOOK_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"

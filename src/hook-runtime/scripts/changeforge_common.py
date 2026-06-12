@@ -30,7 +30,10 @@ STATE_LIST_FIELDS = (
     "suggested_domain_extensions",
     "suggested_gates",
 )
-KNOWN_RUNTIMES = {"codex", "claude"}
+KNOWN_RUNTIMES = {"codex", "claude", "copilot"}
+# Runtimes that consume JSON stdout (hookSpecificOutput / decision). Claude reads
+# plain stdout for added context, so it is intentionally excluded here.
+JSON_OUTPUT_RUNTIMES = {"codex", "copilot"}
 HOOK_MODES = {"off", "monitor", "warn", "block"}
 
 # Telemetry is an operational fact log written to the user cache. It never
@@ -90,7 +93,13 @@ def read_event() -> dict:
 
 
 def detect_runtime(event: dict) -> str:
-    """Return codex / claude / unknown."""
+    """Return codex / claude / copilot / unknown.
+
+    VS Code Copilot and Codex both send snake_case event keys, so they cannot be
+    told apart from the payload alone. The forced ``CHANGEFORGE_AGENT`` env var
+    (set by each agent's hook template command) is authoritative; the event-key
+    fallback only distinguishes Codex-style from Claude-style payloads.
+    """
     forced = os.environ.get("CHANGEFORGE_AGENT", "").strip().casefold()
     if forced in KNOWN_RUNTIMES:
         return forced
@@ -98,6 +107,8 @@ def detect_runtime(event: dict) -> str:
     runtime_value = event.get("runtime") or event.get("agent") or event.get("runtimeName")
     if isinstance(runtime_value, str):
         runtime = runtime_value.strip().casefold()
+        if "copilot" in runtime:
+            return "copilot"
         if "codex" in runtime:
             return "codex"
         if "claude" in runtime:
@@ -275,7 +286,7 @@ def emit_warning(runtime: str, hook_event_name: str, message: str) -> None:
     text = message.strip()
     if not text:
         return
-    if runtime == "codex":
+    if runtime in JSON_OUTPUT_RUNTIMES:
         event = hook_event_name or "PostToolUse"
         print(
             json.dumps(
@@ -299,6 +310,25 @@ def emit_stop_reminder(runtime: str, message: str, *, continue_turn: bool) -> No
     text = message.strip()
     if not text:
         return
+    if runtime == "copilot":
+        # VS Code Copilot expects the Stop block decision inside hookSpecificOutput;
+        # the advisory (warn) path uses the common systemMessage field.
+        if continue_turn:
+            print(
+                json.dumps(
+                    {
+                        "hookSpecificOutput": {
+                            "hookEventName": "Stop",
+                            "decision": "block",
+                            "reason": text,
+                        }
+                    },
+                    sort_keys=True,
+                )
+            )
+        else:
+            print(json.dumps({"systemMessage": text}, sort_keys=True))
+        return
     if runtime == "codex":
         if continue_turn:
             print(json.dumps({"decision": "block", "reason": text}, sort_keys=True))
@@ -312,18 +342,19 @@ def emit_session_context(runtime: str, message: str, event_name: str = "SessionS
     """Emit additional developer context for a context-injecting hook.
 
     Used by SessionStart, SubagentStart, and UserPromptSubmit. These events add
-    ``hookSpecificOutput.additionalContext`` (Codex) or plain stdout (Claude) as
-    extra developer context. This is advisory only: it never emits a block
-    decision, never reads references, and fails open. ``event_name`` defaults to
-    SessionStart so existing callers keep working; other callers pass the event
-    they are wired to so Codex echoes the matching ``hookEventName``.
+    ``hookSpecificOutput.additionalContext`` (Codex and Copilot) or plain stdout
+    (Claude) as extra developer context. This is advisory only: it never emits a
+    block decision, never reads references, and fails open. ``event_name``
+    defaults to SessionStart so existing callers keep working; other callers pass
+    the event they are wired to so the runtime echoes the matching
+    ``hookEventName``.
     """
     if runtime not in KNOWN_RUNTIMES:
         return
     text = message.strip()
     if not text:
         return
-    if runtime == "codex":
+    if runtime in JSON_OUTPUT_RUNTIMES:
         print(
             json.dumps(
                 {

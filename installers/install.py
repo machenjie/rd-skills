@@ -49,7 +49,7 @@ def main() -> int:
     parser.add_argument(
         "--with-hooks",
         action="store_true",
-        help="Also install warning-only hooks (codex/claude project or user).",
+        help="Also install warning-only hooks (codex/claude/copilot project or user).",
     )
     parser.add_argument(
         "--hooks-dry-run",
@@ -146,14 +146,14 @@ def _install_hooks(args: argparse.Namespace, scope: str) -> None:
     """Install warning-only hooks, preserving existing hook config.
 
     Hooks are never installed unless --with-hooks is passed, and they are only
-    supported for Codex and Claude project and user scopes. Project hooks install
-    under the project root (--target); user hooks install under the agent home
-    directory (~/.codex, ~/.claude) regardless of --target. Files are written only
-    when neither --dry-run nor --hooks-dry-run is set.
+    supported for Codex, Claude, and Copilot project and user scopes. Project
+    hooks install under the project root (--target); user hooks install under the
+    agent home directory (~/.codex, ~/.claude, ~/.copilot) regardless of --target.
+    Files are written only when neither --dry-run nor --hooks-dry-run is set.
     """
     if not hooks_supported(args.agent, scope):
         raise InstallError(
-            "--with-hooks is only supported for codex and claude project or user installs"
+            "--with-hooks is only supported for codex, claude, and copilot project or user installs"
         )
     if scope == "project" and args.target is None:
         raise InstallError("--with-hooks requires --target (the project root) for project installs")

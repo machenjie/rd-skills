@@ -84,6 +84,28 @@ REQUIRED_HOOK_DIST_FILES = (
     "claude/user/.claude/hooks/changeforge_post_edit_structure_gate.py",
     "claude/user/.claude/hooks/changeforge_risk_surface_gate.py",
     "claude/user/.claude/hooks/changeforge_stop_closure_gate.py",
+    "copilot/project/.github/hooks/changeforge-hooks.json",
+    "copilot/project/.github/hooks/changeforge/.changeforge-hook-manifest.json",
+    "copilot/project/.github/hooks/changeforge/changeforge-route-preflight.md",
+    "copilot/project/.github/hooks/changeforge/changeforge_common.py",
+    "copilot/project/.github/hooks/changeforge/changeforge_session_bootstrap.py",
+    "copilot/project/.github/hooks/changeforge/changeforge_user_prompt_route_reminder.py",
+    "copilot/project/.github/hooks/changeforge/changeforge_pre_tool_risk_preview.py",
+    "copilot/project/.github/hooks/changeforge/changeforge_post_edit_structure_gate.py",
+    "copilot/project/.github/hooks/changeforge/changeforge_risk_surface_gate.py",
+    "copilot/project/.github/hooks/changeforge/changeforge_subagent_stop_reminder.py",
+    "copilot/project/.github/hooks/changeforge/changeforge_stop_closure_gate.py",
+    "copilot/user/.copilot/hooks/changeforge-hooks.json",
+    "copilot/user/.copilot/hooks/changeforge/.changeforge-hook-manifest.json",
+    "copilot/user/.copilot/hooks/changeforge/changeforge-route-preflight.md",
+    "copilot/user/.copilot/hooks/changeforge/changeforge_common.py",
+    "copilot/user/.copilot/hooks/changeforge/changeforge_session_bootstrap.py",
+    "copilot/user/.copilot/hooks/changeforge/changeforge_user_prompt_route_reminder.py",
+    "copilot/user/.copilot/hooks/changeforge/changeforge_pre_tool_risk_preview.py",
+    "copilot/user/.copilot/hooks/changeforge/changeforge_post_edit_structure_gate.py",
+    "copilot/user/.copilot/hooks/changeforge/changeforge_risk_surface_gate.py",
+    "copilot/user/.copilot/hooks/changeforge/changeforge_subagent_stop_reminder.py",
+    "copilot/user/.copilot/hooks/changeforge/changeforge_stop_closure_gate.py",
     "universal/bootstrap/changeforge-route-preflight.md",
 )
 BASE_HOOK_NAMES = {
@@ -92,20 +114,22 @@ BASE_HOOK_NAMES = {
     "changeforge_stop_closure_gate",
 }
 # Both runtimes wire the route-preflight bootstrap as a SessionStart hook and
-# ship the install-time bootstrap fragment. Codex additionally wires the
-# per-prompt route reminder, the pre-edit risk preview, and the subagent
-# closure reminder enabled by the current Codex hook events.
+# ship the install-time bootstrap fragment. Codex and Copilot additionally wire
+# the per-prompt route reminder, the pre-edit risk preview, and the subagent
+# closure reminder enabled by their richer hook events.
+RICH_HOOK_NAMES = frozenset(
+    BASE_HOOK_NAMES
+    | {
+        "changeforge_session_bootstrap",
+        "changeforge_user_prompt_route_reminder",
+        "changeforge_pre_tool_risk_preview",
+        "changeforge_subagent_stop_reminder",
+    }
+)
 EXPECTED_HOOK_NAMES_BY_AGENT = {
-    "codex": frozenset(
-        BASE_HOOK_NAMES
-        | {
-            "changeforge_session_bootstrap",
-            "changeforge_user_prompt_route_reminder",
-            "changeforge_pre_tool_risk_preview",
-            "changeforge_subagent_stop_reminder",
-        }
-    ),
+    "codex": RICH_HOOK_NAMES,
     "claude": frozenset(BASE_HOOK_NAMES | {"changeforge_session_bootstrap"}),
+    "copilot": RICH_HOOK_NAMES,
 }
 BOOTSTRAP_FRAGMENT_NAME = "changeforge-route-preflight.md"
 
@@ -385,6 +409,18 @@ def _validate_hook_runtime(errors: list[str]) -> None:
     _validate_hook_manifest(
         DIST_DIR / "claude/user/.claude/.changeforge-hook-manifest.json",
         agent="claude",
+        scope="user",
+        errors=errors,
+    )
+    _validate_hook_manifest(
+        DIST_DIR / "copilot/project/.github/hooks/changeforge/.changeforge-hook-manifest.json",
+        agent="copilot",
+        scope="project",
+        errors=errors,
+    )
+    _validate_hook_manifest(
+        DIST_DIR / "copilot/user/.copilot/hooks/changeforge/.changeforge-hook-manifest.json",
+        agent="copilot",
         scope="user",
         errors=errors,
     )

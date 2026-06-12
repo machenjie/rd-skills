@@ -274,15 +274,35 @@ def _check_project_hooks(target: Path | None, issues: list[str]) -> None:
     """
     project_root = (target.expanduser().resolve() if target is not None else Path.cwd().resolve())
     print(f"doctor: project hooks ({project_root})")
+    # Each spec: agent, config dir, scripts dir, manifest/bootstrap dir, config file.
+    # Codex/Claude keep scripts and aux files at the agent config root; VS Code
+    # Copilot nests them under .github/hooks/changeforge/ with the config json at
+    # .github/hooks/changeforge-hooks.json.
+    codex_root = project_root / ".codex"
+    claude_root = project_root / ".claude"
+    copilot_hooks = project_root / ".github" / "hooks"
+    copilot_scripts = copilot_hooks / "changeforge"
     hook_specs = (
-        ("codex", project_root / ".codex", "hooks.json"),
-        ("claude", project_root / ".claude", "settings.changeforge-hooks.fragment.json"),
+        ("codex", codex_root, codex_root / "hooks", codex_root, codex_root / "hooks.json"),
+        (
+            "claude",
+            claude_root,
+            claude_root / "hooks",
+            claude_root,
+            claude_root / "settings.changeforge-hooks.fragment.json",
+        ),
+        (
+            "copilot",
+            copilot_hooks,
+            copilot_scripts,
+            copilot_scripts,
+            copilot_hooks / "changeforge-hooks.json",
+        ),
     )
     any_present = False
-    for agent, hook_root, config_name in hook_specs:
-        scripts_dir = hook_root / "hooks"
-        manifest_path = hook_root / ".changeforge-hook-manifest.json"
-        config_path = hook_root / config_name
+    for agent, _config_root, scripts_dir, aux_dir, config_path in hook_specs:
+        manifest_path = aux_dir / ".changeforge-hook-manifest.json"
+        config_name = config_path.name
         present_signals = [scripts_dir.is_dir(), manifest_path.is_file(), config_path.is_file()]
         if not any(present_signals):
             continue
@@ -303,7 +323,7 @@ def _check_project_hooks(target: Path | None, issues: list[str]) -> None:
                 issues.append(f"{agent}: {config_name} does not reference changeforge hook scripts")
         else:
             print(f"- {agent}: {config_name} not found (manual merge may be pending)")
-        bootstrap_path = hook_root / "changeforge-route-preflight.md"
+        bootstrap_path = aux_dir / "changeforge-route-preflight.md"
         if bootstrap_path.is_file():
             wired = (scripts_dir / "changeforge_session_bootstrap.py").is_file()
             detail = "SessionStart hook script present" if wired else "SessionStart hook script missing"

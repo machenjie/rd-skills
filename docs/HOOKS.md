@@ -15,20 +15,20 @@ The first-stage runtime provides these reminder gates:
   engineering work, to require `implementation-structure-design` before new
   structure, and to bind any completion claim to `agent-execution-discipline`.
   It only emits a route preflight; it never selects a full route and never reads
-  references. It is wired as a `SessionStart` hook for both Codex and Claude
+  It is wired as a `SessionStart` hook for Codex, Claude, and Copilot
   (Codex `SessionStart` also fires with the `compact` source after compaction,
   so the route preflight is re-injected once context is compacted). The same
   guidance also ships as an install-time bootstrap fragment for users who prefer
   not to trust executable hooks.
-- Route Reminder (Codex `UserPromptSubmit`): adds a concise per-prompt reminder
-  to run `change-forge-router` and emit a `changeforge_route` manifest for any
-  engineering change. It is advisory developer context, never reads or records
-  the prompt text, and writes no telemetry.
-- Pre-Edit Risk Preview (Codex `PreToolUse`): before an edit or command runs, it
-  previews ChangeForge risk surfaces (auth, data contract, cache, queue,
-  Kubernetes, Helm, big data) and reminds the agent to route first. It reuses the
-  Risk Surface Gate matching, is advisory only, never denies the tool call, and
-  never mutates per-turn state.
+- Route Reminder (`UserPromptSubmit`, Codex and Copilot): adds a concise
+  per-prompt reminder to run `change-forge-router` and emit a `changeforge_route`
+  manifest for any engineering change. It is advisory developer context, never
+  reads or records the prompt text, and writes no telemetry.
+- Pre-Edit Risk Preview (`PreToolUse`, Codex and Copilot): before an edit or
+  command runs, it previews ChangeForge risk surfaces (auth, data contract,
+  cache, queue, Kubernetes, Helm, big data) and reminds the agent to route
+  first. It reuses the Risk Surface Gate matching, is advisory only, never denies
+  the tool call, and never mutates per-turn state.
 
 - Post-Edit Structure Gate: runs after edit tools and warns when changed paths
   look like structural code, shared utilities, public interfaces, SDK/client
@@ -47,7 +47,7 @@ The first-stage runtime provides these reminder gates:
   skill path, changed files, validation evidence, residual risk, next steps, and
   the structure-evidence records (file naming, reuse ladder, extension safety,
   advanced refactor, comment quality) for any structure sub-gate that fired.
-- Subagent Closure Reminder (Codex `SubagentStop`): reminds a stopping subagent
+- Subagent Closure Reminder (`SubagentStop`, Codex and Copilot): reminds a stopping subagent
   to hand the parent the route manifest, validation evidence, and residual risk.
   It emits an advisory `systemMessage`, never forces the subagent to continue,
   and never touches the parent turn's closure state. The Session Bootstrap also
@@ -117,29 +117,39 @@ Bootstrap boundaries:
 
 Runtime support:
 
-- Codex and Claude project hooks both wire the bootstrap as a `SessionStart`
-  hook (`changeforge_session_bootstrap.py`), and also at `SubagentStart` so
-  spawned subagents inherit the preflight. Codex `SessionStart` additionally
-  fires with the `compact` source, re-injecting the preflight after compaction.
+- Codex, Claude, and Copilot project hooks all wire the bootstrap as a
+  `SessionStart` hook (`changeforge_session_bootstrap.py`), and also at
+  `SubagentStart` so spawned subagents inherit the preflight. Codex
+  `SessionStart` additionally fires with the `compact` source, re-injecting the
+  preflight after compaction.
 - The same guidance also ships as an install-time fragment
   (`changeforge-route-preflight.md`) for users who prefer not to trust an
   executable hook, or to reference from the project's agent instructions.
 - Any runtime can install the advisory fragment with
   `installers/install.py --with-bootstrap`.
 
-## Codex Event Coverage
+## Codex And Copilot Event Coverage
 
-Codex exposes the lifecycle events ChangeForge needs, so Codex project hooks now
-reinforce routing and closure discipline at every stage, not only after edits:
+Codex and VS Code Copilot both expose the lifecycle events ChangeForge needs, so
+their hooks reinforce routing and closure discipline at every stage, not only
+after edits:
 
-- `SessionStart` (including the `compact` source) and `SubagentStart` inject the
-  route preflight.
+- `SessionStart` (Codex also with the `compact` source) and `SubagentStart`
+  inject the route preflight.
 - `UserPromptSubmit` adds a per-prompt route reminder.
 - `PreToolUse` previews risk surfaces before an edit or command runs.
 - `PostToolUse` runs the structure and risk-surface gates after edits and
   commands.
 - `Stop` runs the closure gate; `SubagentStop` reminds the subagent to carry
   closure evidence back to the parent.
+
+The shared hook scripts recognize both Codex/Claude tool names
+(`edit`, `write`, `apply_patch`, `bash`) and VS Code Copilot tool names
+(`editFiles`, `create_file`, `replace_string_in_file`, `insert_edit_into_file`,
+`runTerminalCommand`), so the structure and risk gates fire under every runtime.
+VS Code Copilot uses the flat (matcher-less) hook config format and reads JSON
+stdout, so ChangeForge emits `hookSpecificOutput.additionalContext` and
+`systemMessage` rather than plain text.
 
 These remain execution-time guardrails. They detect edited paths, patch signals,
 risk surfaces, and missing closure evidence, and they remind the agent to route;
@@ -161,7 +171,7 @@ Hooks can:
 - remind on advanced refactor evidence;
 - remind on comment quality evidence;
 - remind on Stop-stage closure evidence;
-- remind a stopping subagent to carry closure evidence (Codex `SubagentStop`).
+- remind a stopping subagent to carry closure evidence (`SubagentStop`, Codex and Copilot).
 
 Hooks cannot:
 - replace `change-forge-router`;
@@ -188,17 +198,23 @@ Hooks cannot:
 
 ## Supported Runtimes
 
-Build output supports Codex and Claude project and user scope:
+Build output supports Codex, Claude, and Copilot project and user scope:
 
 - Codex project hooks: `dist/codex/project/.codex`
 - Codex user hooks: `dist/codex/user/.codex`
 - Claude project hooks: `dist/claude/project/.claude`
 - Claude user hooks: `dist/claude/user/.claude`
+- Copilot project hooks: `dist/copilot/project/.github`
+- Copilot user hooks: `dist/copilot/user/.copilot`
 
 Project hooks resolve their command path from the project git root; user hooks
 resolve it from the agent home directory (`${CODEX_HOME:-$HOME/.codex}` for
-Codex, `${CLAUDE_CONFIG_DIR:-$HOME/.claude}` for Claude) so they apply across
-every project. Admin hook scope is intentionally out of scope.
+Codex, `${CLAUDE_CONFIG_DIR:-$HOME/.claude}` for Claude, `${HOME}/.copilot` for
+Copilot) so they apply across every project. VS Code Copilot loads every `*.json`
+in its hook folder, so the managed config is a dedicated
+`.github/hooks/changeforge-hooks.json` (project) or
+`~/.copilot/hooks/changeforge-hooks.json` (user) and the scripts live in a
+`changeforge/` subfolder. Admin hook scope is intentionally out of scope.
 
 ## Hook Modes
 
@@ -249,13 +265,23 @@ dist/claude/project/.claude/hooks/changeforge_stop_closure_gate.py
 
 dist/claude/user/.claude/...      # same Claude layout, CLAUDE_CONFIG_DIR-resolved paths
 
+dist/copilot/project/.github/hooks/changeforge-hooks.json
+dist/copilot/project/.github/hooks/changeforge/changeforge_common.py
+dist/copilot/project/.github/hooks/changeforge/...   # scripts, manifest, bootstrap
+
+dist/copilot/user/.copilot/hooks/changeforge-hooks.json
+dist/copilot/user/.copilot/hooks/changeforge/...     # $HOME/.copilot-resolved paths
+
 dist/universal/bootstrap/changeforge-route-preflight.md
 ```
 
-Codex and Claude both wire the session bootstrap as a `SessionStart` hook;
-the same scripts ship in the project and user layouts. The Codex layout also
-wires the per-prompt route reminder, pre-edit risk preview, and subagent
-closure reminder. Do not install `src/hook-runtime` directly.
+Codex, Claude, and Copilot all wire the session bootstrap as a `SessionStart`
+hook; the same scripts ship in the project and user layouts. The Codex and
+Copilot layouts also wire the per-prompt route reminder, pre-edit risk preview,
+and subagent closure reminder. VS Code Copilot loads every `*.json` in the hook
+folder, so its managed config is the dedicated `changeforge-hooks.json` and the
+scripts plus manifest live in a `changeforge/` subfolder VS Code does not scan
+for config. Do not install `src/hook-runtime` directly.
 
 ## Manually Enable Hooks
 
@@ -276,15 +302,16 @@ hooks first.
 
 ## Installer-Assisted Hook Enablement
 
-The installer can place hooks for Codex and Claude in **project** or **user**
-scope. Hooks are never installed by default; they require `--with-hooks` and are
-written only when neither `--dry-run` nor `--hooks-dry-run` is set. Existing hook
-configuration is always preserved.
+The installer can place hooks for Codex, Claude, and Copilot in **project** or
+**user** scope. Hooks are never installed by default; they require `--with-hooks`
+and are written only when neither `--dry-run` nor `--hooks-dry-run` is set.
+Existing hook configuration is always preserved.
 
-Project hooks install under the project root's `.codex`/`.claude`; user hooks
-install under the agent home (`~/.codex`, `~/.claude`) and apply to every
-project, so `--target` does not relocate them. Sandbox a user-scope install by
-pointing `HOME` (or `CODEX_HOME`/`CLAUDE_CONFIG_DIR`) at a scratch directory.
+Project hooks install under the project root's `.codex`/`.claude`/`.github`; user
+hooks install under the agent home (`~/.codex`, `~/.claude`, `~/.copilot`) and
+apply to every project, so `--target` does not relocate them. Sandbox a
+user-scope install by pointing `HOME` (or `CODEX_HOME`/`CLAUDE_CONFIG_DIR`) at a
+scratch directory.
 
 ```bash
 python3 scripts/build.py --profile full
@@ -294,6 +321,9 @@ python3 installers/install.py --agent codex --scope project --target /path/to/pr
 # User scope: hooks install under ~/.codex and apply to every Codex project:
 python3 installers/install.py --agent codex --scope user --profile full --with-hooks
 python3 installers/install.py --agent claude --scope user --profile full --with-hooks
+# Copilot (VS Code): project hooks in .github/hooks, user hooks in ~/.copilot/hooks:
+python3 installers/install.py --agent copilot --scope project --target /path/to/project --profile full --with-hooks
+python3 installers/install.py --agent copilot --scope user --profile full --with-hooks
 # Inspect installed project hooks:
 python3 installers/doctor.py --check-hooks --target /path/to/project
 # Install only the advisory route-preflight fragment (any project install, incl. Codex):
@@ -306,7 +336,10 @@ For Codex, the installer merges ChangeForge hook groups into an existing
 `hooks.json` without removing user hooks. For Claude, it places
 `settings.changeforge-hooks.fragment.json` and never modifies an existing
 `settings.json`; merge the fragment's `hooks` into `settings.json` by hand,
-including the `SessionStart` bootstrap entry. The `--with-bootstrap` option
+including the `SessionStart` bootstrap entry. For Copilot, it writes the
+dedicated `changeforge-hooks.json` into `.github/hooks` (project) or
+`~/.copilot/hooks` (user) and leaves any other hook JSON in that folder
+untouched; VS Code loads it automatically. The `--with-bootstrap` option
 writes only the advisory fragment to `.changeforge/changeforge-route-preflight.md`
 and never installs executable hooks. The installer never trusts hooks
 automatically.

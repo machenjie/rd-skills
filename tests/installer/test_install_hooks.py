@@ -150,6 +150,123 @@ class InstallHooksTests(unittest.TestCase):
             self.assertEqual(manifest["agent"], "codex")
 
 
+class InstallCopilotHooksTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        if not (DIST_CODEX_HOOKS / "hooks.json").is_file():
+            _build_recommended()
+
+    def test_copilot_project_hooks_install_to_github(self) -> None:
+        # VS Code Copilot project hooks: config at .github/hooks/changeforge-hooks.json,
+        # scripts nested in .github/hooks/changeforge/.
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(INSTALL_SCRIPT),
+                    "--agent",
+                    "copilot",
+                    "--scope",
+                    "project",
+                    "--target",
+                    str(project),
+                    "--profile",
+                    "recommended",
+                    "--with-hooks",
+                ],
+                text=True,
+                capture_output=True,
+                cwd=str(ROOT),
+                env=os.environ.copy(),
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            hooks_dir = project / ".github" / "hooks"
+            config = hooks_dir / "changeforge-hooks.json"
+            scripts_dir = hooks_dir / "changeforge"
+            self.assertTrue(config.is_file())
+            scripts = sorted(scripts_dir.glob("changeforge_*.py"))
+            self.assertEqual(len(scripts), 8)
+            self.assertTrue((scripts_dir / ".changeforge-hook-manifest.json").is_file())
+            # The manifest is nested so VS Code does not parse it as a hook config.
+            self.assertFalse((hooks_dir / ".changeforge-hook-manifest.json").exists())
+            payload = json.loads(config.read_text(encoding="utf-8"))
+            self.assertIn("PostToolUse", payload["hooks"])
+
+    def test_copilot_project_preserves_existing_hook_json(self) -> None:
+        # Installing the managed config must not touch a user's own hook JSON in
+        # the same .github/hooks folder.
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            hooks_dir = project / ".github" / "hooks"
+            hooks_dir.mkdir(parents=True)
+            user_hook = hooks_dir / "my-format.json"
+            user_hook.write_text(
+                json.dumps({"hooks": {"PostToolUse": [{"type": "command", "command": "echo mine"}]}}),
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(INSTALL_SCRIPT),
+                    "--agent",
+                    "copilot",
+                    "--scope",
+                    "project",
+                    "--target",
+                    str(project),
+                    "--profile",
+                    "recommended",
+                    "--with-hooks",
+                ],
+                text=True,
+                capture_output=True,
+                cwd=str(ROOT),
+                env=os.environ.copy(),
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            # The user's own hook file is untouched.
+            self.assertIn("echo mine", user_hook.read_text(encoding="utf-8"))
+            self.assertTrue((hooks_dir / "changeforge-hooks.json").is_file())
+
+    def test_copilot_user_hooks_install_to_home(self) -> None:
+        with tempfile.TemporaryDirectory() as home:
+            env = os.environ.copy()
+            env["HOME"] = home
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(INSTALL_SCRIPT),
+                    "--agent",
+                    "copilot",
+                    "--scope",
+                    "user",
+                    "--profile",
+                    "recommended",
+                    "--with-hooks",
+                ],
+                text=True,
+                capture_output=True,
+                cwd=str(ROOT),
+                env=env,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            hooks_dir = Path(home) / ".copilot" / "hooks"
+            self.assertTrue((hooks_dir / "changeforge-hooks.json").is_file())
+            scripts = sorted((hooks_dir / "changeforge").glob("changeforge_*.py"))
+            self.assertEqual(len(scripts), 8)
+            manifest = json.loads(
+                (hooks_dir / "changeforge" / ".changeforge-hook-manifest.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(manifest["scope"], "user")
+            self.assertEqual(manifest["agent"], "copilot")
+
+
 class InstallBootstrapTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:

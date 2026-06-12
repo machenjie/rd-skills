@@ -35,6 +35,23 @@ CLAUDE_USER_TEMPLATE = (
 # agent home (CODEX_HOME/CLAUDE_CONFIG_DIR) instead of the project git root.
 CODEX_TEMPLATES = (CODEX_TEMPLATE, CODEX_USER_TEMPLATE)
 CLAUDE_TEMPLATES = (CLAUDE_TEMPLATE, CLAUDE_USER_TEMPLATE)
+# VS Code Copilot uses the flat (matcher-less) hook config format. Project
+# commands resolve from the git root; user commands resolve from $HOME/.copilot.
+COPILOT_TEMPLATE = HOOK_RUNTIME_ROOT / "templates" / "copilot" / "changeforge-hooks.json"
+COPILOT_USER_TEMPLATE = (
+    HOOK_RUNTIME_ROOT / "templates" / "copilot-user" / "changeforge-hooks.json"
+)
+COPILOT_TEMPLATES = (COPILOT_TEMPLATE, COPILOT_USER_TEMPLATE)
+# Copilot event -> the hook script(s) each event must invoke.
+COPILOT_EVENT_SCRIPTS = {
+    "SessionStart": ("changeforge_session_bootstrap",),
+    "UserPromptSubmit": ("changeforge_user_prompt_route_reminder",),
+    "PreToolUse": ("changeforge_pre_tool_risk_preview",),
+    "PostToolUse": ("changeforge_post_edit_structure_gate", "changeforge_risk_surface_gate"),
+    "SubagentStart": ("changeforge_session_bootstrap",),
+    "SubagentStop": ("changeforge_subagent_stop_reminder",),
+    "Stop": ("changeforge_stop_closure_gate",),
+}
 BOOTSTRAP_TEMPLATE = (
     HOOK_RUNTIME_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"
 )
@@ -81,6 +98,8 @@ def main() -> int:
     codex_user = _load_json(CODEX_USER_TEMPLATE, errors)
     claude = _load_json(CLAUDE_TEMPLATE, errors)
     claude_user = _load_json(CLAUDE_USER_TEMPLATE, errors)
+    copilot = _load_json(COPILOT_TEMPLATE, errors)
+    copilot_user = _load_json(COPILOT_USER_TEMPLATE, errors)
     if isinstance(codex, dict):
         _validate_template(codex, CODEX_TEMPLATE, timeout_limit=10, errors=errors)
     if isinstance(codex_user, dict):
@@ -89,6 +108,10 @@ def main() -> int:
         _validate_template(claude, CLAUDE_TEMPLATE, timeout_limit=10000, errors=errors)
     if isinstance(claude_user, dict):
         _validate_template(claude_user, CLAUDE_USER_TEMPLATE, timeout_limit=10000, errors=errors)
+    if isinstance(copilot, dict):
+        _validate_copilot_template(copilot, COPILOT_TEMPLATE, errors=errors)
+    if isinstance(copilot_user, dict):
+        _validate_copilot_template(copilot_user, COPILOT_USER_TEMPLATE, errors=errors)
 
     if errors:
         return fail_many("validate-hooks", errors)
@@ -104,7 +127,14 @@ def _validate_required_files(errors: list[str]) -> None:
         path = HOOK_SCRIPTS_DIR / file_name
         if not path.is_file():
             errors.append(f"missing hook script: {relpath(ROOT, path)}")
-    for path in (CODEX_TEMPLATE, CODEX_USER_TEMPLATE, CLAUDE_TEMPLATE, CLAUDE_USER_TEMPLATE):
+    for path in (
+        CODEX_TEMPLATE,
+        CODEX_USER_TEMPLATE,
+        CLAUDE_TEMPLATE,
+        CLAUDE_USER_TEMPLATE,
+        COPILOT_TEMPLATE,
+        COPILOT_USER_TEMPLATE,
+    ):
         if not path.is_file():
             errors.append(f"missing hook template: {relpath(ROOT, path)}")
 
@@ -328,6 +358,58 @@ def _validate_template(
             limit_label = "10000 ms" if timeout_limit == 10000 else "10 seconds"
             errors.append(
                 f"{relpath(ROOT, path)}:{context}: timeout {timeout} exceeds {limit_label}"
+            )
+
+
+def _validate_copilot_template(
+    data: dict[str, Any],
+    path: Path,
+    *,
+    errors: list[str],
+) -> None:
+    """Validate a VS Code Copilot flat hook template.
+
+    Copilot uses the matcher-less format: each event maps directly to a list of
+    command entries. Every supported event must invoke its dedicated script, and
+    every command must set CHANGEFORGE_AGENT=copilot, use python3, avoid src/ and
+    user absolute paths, and stay within the 10-second timeout budget.
+    """
+    hooks = data.get("hooks")
+    if not isinstance(hooks, dict):
+        errors.append(f"{relpath(ROOT, path)}: hooks must be a JSON object")
+        return
+
+    for event, scripts in COPILOT_EVENT_SCRIPTS.items():
+        entries = hooks.get(event)
+        if not isinstance(entries, list) or not entries:
+            errors.append(f"{relpath(ROOT, path)}: missing {event} hook")
+            continue
+        rendered = json.dumps(entries)
+        for script in scripts:
+            if script not in rendered:
+                errors.append(f"{relpath(ROOT, path)}: {event} must invoke {script}")
+
+    for command, context in _commands(hooks):
+        lowered = command.casefold()
+        if "src/" in lowered or "src\\" in lowered:
+            errors.append(f"{relpath(ROOT, path)}:{context}: hook command must not reference src/")
+        if USER_ABSOLUTE_PATH_RE.search(command):
+            errors.append(
+                f"{relpath(ROOT, path)}:{context}: hook command must not contain a user absolute path"
+            )
+        if "CHANGEFORGE_AGENT=copilot" not in command:
+            errors.append(
+                f"{relpath(ROOT, path)}:{context}: Copilot hook command must set CHANGEFORGE_AGENT=copilot"
+            )
+        if "/usr/bin/env python3" not in command:
+            errors.append(
+                f"{relpath(ROOT, path)}:{context}: Copilot hook command should use /usr/bin/env python3"
+            )
+
+    for timeout, context in _timeouts(hooks):
+        if timeout > 10:
+            errors.append(
+                f"{relpath(ROOT, path)}:{context}: timeout {timeout} exceeds 10 seconds"
             )
 
 

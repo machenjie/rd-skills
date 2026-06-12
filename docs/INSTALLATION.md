@@ -37,35 +37,45 @@ For project installs, `--target` is the project root. For user and admin install
 
 ## Optional Hook Runtime
 
-Builds also emit optional hook artifacts for Codex and Claude, project and user
-scope:
+Builds also emit optional hook artifacts for Codex, Claude, and Copilot, project
+and user scope:
 
 - Codex project hook runtime: `dist/codex/project/.codex`
 - Codex user hook runtime: `dist/codex/user/.codex`
 - Claude project hook fragment and scripts: `dist/claude/project/.claude`
 - Claude user hook fragment and scripts: `dist/claude/user/.claude`
+- Copilot project hook config and scripts: `dist/copilot/project/.github`
+- Copilot user hook config and scripts: `dist/copilot/user/.copilot`
 
 The hook runtime is not a skill and does not replace `change-forge-router`. It
-adds a `SessionStart` route-preflight reminder (both Codex and Claude) and
-warning-only reminders across the agent lifecycle. For Codex it also wires a
-per-prompt route reminder (`UserPromptSubmit`), a pre-edit risk preview
+adds a `SessionStart` route-preflight reminder (Codex, Claude, and Copilot) and
+warning-only reminders across the agent lifecycle. For Codex and Copilot it also
+wires a per-prompt route reminder (`UserPromptSubmit`), a pre-edit risk preview
 (`PreToolUse`), the structure and risk gates after edits (`PostToolUse`), a
 subagent preflight (`SubagentStart`), a subagent closure reminder
-(`SubagentStop`), and the closure gate (`Stop`). Hooks are never installed by
-default; pass `--with-hooks` to `installers/install.py` for Codex or Claude
-project or user scope, and existing hook configuration is always preserved.
+(`SubagentStop`), and the closure gate (`Stop`). The shared scripts recognize
+both Codex/Claude and VS Code Copilot tool names. Hooks are never installed by
+default; pass `--with-hooks` to `installers/install.py` for Codex, Claude, or
+Copilot project or user scope, and existing hook configuration is always
+preserved.
 
 Project hooks install under the project root and resolve their command path from
-the git root. User hooks install under the agent home (`~/.codex`, `~/.claude`),
-apply to every project, and resolve their command path from
-`${CODEX_HOME:-$HOME/.codex}` / `${CLAUDE_CONFIG_DIR:-$HOME/.claude}`; for user
-scope `--target` does not relocate the hooks.
+the git root. User hooks install under the agent home (`~/.codex`, `~/.claude`,
+`~/.copilot`), apply to every project, and resolve their command path from
+`${CODEX_HOME:-$HOME/.codex}` / `${CLAUDE_CONFIG_DIR:-$HOME/.claude}` /
+`${HOME}/.copilot`; for user scope `--target` does not relocate the hooks. VS
+Code Copilot loads every `*.json` in its hook folder, so the managed config is a
+dedicated `changeforge-hooks.json` and the scripts live in a `changeforge/`
+subfolder.
 
 ```bash
 # Codex user hooks (apply to every Codex project):
 python3 installers/install.py --agent codex --scope user --profile full --with-hooks
 # Claude user hooks:
 python3 installers/install.py --agent claude --scope user --profile full --with-hooks
+# Copilot project hooks (.github/hooks) and user hooks (~/.copilot/hooks):
+python3 installers/install.py --agent copilot --scope project --target /path/to/project --profile full --with-hooks
+python3 installers/install.py --agent copilot --scope user --profile full --with-hooks
 ```
 
 The route-preflight guidance also ships as an advisory fragment for users who

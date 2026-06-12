@@ -27,7 +27,23 @@ from changeforge_common import (
 )
 
 
-WATCHED_TOOLS = {"edit", "write", "multiedit", "applypatch", "bash"}
+# Compacted (lowercase, alphanumeric-only) watched tool names across runtimes:
+# Codex/Claude edit + bash tools, plus VS Code Copilot edit tools and the
+# VS Code terminal tools (runTerminalCommand, runInTerminal / run_in_terminal).
+WATCHED_TOOLS = {
+    "edit",
+    "write",
+    "multiedit",
+    "applypatch",
+    "bash",
+    "editfiles",
+    "createfile",
+    "replacestringinfile",
+    "inserteditintofile",
+    "multireplacestringinfile",
+    "runterminalcommand",
+    "runinterminal",
+}
 RISK_RULES = [
     {
         "name": "security",

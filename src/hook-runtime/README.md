@@ -67,14 +67,19 @@ dist/codex/project/.codex
 dist/codex/user/.codex
 dist/claude/project/.claude
 dist/claude/user/.claude
+dist/copilot/project/.github
+dist/copilot/user/.copilot
 ```
 
 Project layouts resolve their command path from the project git root; user
 layouts resolve it from the agent home (`${CODEX_HOME:-$HOME/.codex}`,
-`${CLAUDE_CONFIG_DIR:-$HOME/.claude}`). Each layout includes
-`.changeforge-hook-manifest.json` so installation validation can prove which
-hook scripts and scope were emitted.
+`${CLAUDE_CONFIG_DIR:-$HOME/.claude}`, `${HOME}/.copilot`). VS Code Copilot uses
+the flat (matcher-less) hook config format and loads every `*.json` in its hook
+folder, so its config is the dedicated `changeforge-hooks.json` and the scripts,
+manifest, and bootstrap fragment live in a `changeforge/` subfolder. Each layout
+includes `.changeforge-hook-manifest.json` so installation validation can prove
+which hook scripts and scope were emitted.
 
-The installer can place these hooks for Codex and Claude project or user scope
-with `installers/install.py --with-hooks`; existing hook configuration is always
-preserved and hooks are never trusted automatically.
+The installer can place these hooks for Codex, Claude, and Copilot project or
+user scope with `installers/install.py --with-hooks`; existing hook
+configuration is always preserved and hooks are never trusted automatically.

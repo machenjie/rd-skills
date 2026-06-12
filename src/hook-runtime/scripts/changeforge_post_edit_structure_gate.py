@@ -34,7 +34,21 @@ from changeforge_common import (
 )
 
 
-EDIT_TOOLS = {"edit", "write", "multiedit", "applypatch"}
+# Compacted (lowercase, alphanumeric-only) edit tool names across runtimes:
+# Codex/Claude (edit, write, multiedit, apply_patch) and VS Code Copilot
+# (editFiles, createFile/create_file, replace_string_in_file,
+# insert_edit_into_file, multi_replace_string_in_file).
+EDIT_TOOLS = {
+    "edit",
+    "write",
+    "multiedit",
+    "applypatch",
+    "editfiles",
+    "createfile",
+    "replacestringinfile",
+    "inserteditintofile",
+    "multireplacestringinfile",
+}
 STRUCTURE_PATH_HINTS = [
     "/service/",
     "/services/",

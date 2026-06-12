@@ -57,25 +57,45 @@ FOUNDATION_MODES = {
 }
 
 # Optional project and user hook runtime. Hooks are warning-only execution
-# reminders and are never installed by default. Codex and Claude support both
-# project and user scope; existing hook configuration is always preserved.
+# reminders and are never installed by default. Codex, Claude, and Copilot
+# support both project and user scope; existing hook configuration is always
+# preserved.
 HOOK_SOURCE_ROOTS = {
     ("codex", "project"): ROOT / "dist" / "codex" / "project" / ".codex",
     ("codex", "user"): ROOT / "dist" / "codex" / "user" / ".codex",
     ("claude", "project"): ROOT / "dist" / "claude" / "project" / ".claude",
     ("claude", "user"): ROOT / "dist" / "claude" / "user" / ".claude",
+    ("copilot", "project"): ROOT / "dist" / "copilot" / "project" / ".github",
+    ("copilot", "user"): ROOT / "dist" / "copilot" / "user" / ".copilot",
 }
-HOOK_AGENTS = ("codex", "claude")
+HOOK_AGENTS = ("codex", "claude", "copilot")
 HOOK_SCOPES = ("project", "user")
 # Project hooks install under the project root; user hooks install under the
-# agent home directory (Codex ~/.codex, Claude ~/.claude).
+# agent home directory (Codex ~/.codex, Claude ~/.claude, Copilot ~/.copilot).
 HOOK_PROJECT_SUBPATH = {
     "codex": Path(".codex"),
     "claude": Path(".claude"),
+    "copilot": Path(".github"),
 }
 HOOK_USER_HOME_SUBDIR = {
     "codex": Path(".codex"),
     "claude": Path(".claude"),
+    "copilot": Path(".copilot"),
+}
+# Per-agent hook layout relative to the agent config root. Codex and Claude keep
+# scripts in hooks/ with the manifest and bootstrap fragment at the root. VS Code
+# Copilot loads every *.json in the hook folder, so the managed config lives at
+# hooks/changeforge-hooks.json while scripts, manifest, and bootstrap live in a
+# hooks/changeforge/ subfolder VS Code does not scan for config.
+HOOK_SCRIPTS_SUBDIR = {
+    "codex": Path("hooks"),
+    "claude": Path("hooks"),
+    "copilot": Path("hooks") / "changeforge",
+}
+HOOK_AUX_SUBDIR = {
+    "codex": Path("."),
+    "claude": Path("."),
+    "copilot": Path("hooks") / "changeforge",
 }
 HOOK_MANIFEST_NAME = ".changeforge-hook-manifest.json"
 HOOK_SCRIPT_NAMES = (
@@ -417,7 +437,7 @@ def version_changes(
 
 
 def hooks_supported(agent: str, scope: str) -> bool:
-    """Hooks are supported for Codex and Claude project and user installs."""
+    """Hooks are supported for Codex, Claude, and Copilot project/user installs."""
     return agent in HOOK_AGENTS and scope in HOOK_SCOPES
 
 
@@ -426,15 +446,16 @@ def plan_hook_install(agent: str, scope: str, target: Path | None) -> HookPlan:
 
     Project hooks install under the project root (``--target``). User hooks
     install under the agent home directory (Codex ``~/.codex``, Claude
-    ``~/.claude``); ``--target`` does not relocate user hooks, so the skills
-    ``--target`` override never accidentally redirects them. Set ``HOME`` (or
-    the agent's home variable) to sandbox a user-scope hook install.
+    ``~/.claude``, Copilot ``~/.copilot``); ``--target`` does not relocate user
+    hooks, so the skills ``--target`` override never accidentally redirects them.
+    Set ``HOME`` (or the agent's home variable) to sandbox a user-scope hook
+    install.
     """
     source_root = HOOK_SOURCE_ROOTS.get((agent, scope))
     if source_root is None:
         raise InstallError(
-            f"hooks are only supported for codex and claude project or user installs, "
-            f"not {agent} {scope}"
+            f"hooks are only supported for codex, claude, and copilot project or user "
+            f"installs, not {agent} {scope}"
         )
     if not source_root.is_dir():
         raise InstallError(
@@ -450,25 +471,27 @@ def plan_hook_install(agent: str, scope: str, target: Path | None) -> HookPlan:
         target_root = (Path.home() / HOOK_USER_HOME_SUBDIR[agent]).expanduser().resolve()
     plan = HookPlan(agent=agent, source_root=source_root, target_root=target_root)
 
+    scripts_subdir = HOOK_SCRIPTS_SUBDIR[agent]
+    aux_subdir = HOOK_AUX_SUBDIR[agent]
     for script_name in HOOK_SCRIPT_NAMES:
-        source_script = source_root / "hooks" / script_name
+        source_script = source_root / scripts_subdir / script_name
         if not source_script.is_file():
             raise InstallError(f"missing built hook script {source_script.relative_to(ROOT)}")
-        destination = target_root / "hooks" / script_name
+        destination = target_root / scripts_subdir / script_name
         action = "overwrite" if destination.exists() else "create"
         plan.script_actions.append((source_script, destination, action))
 
-    manifest_source = source_root / HOOK_MANIFEST_NAME
-    manifest_target = target_root / HOOK_MANIFEST_NAME
+    manifest_source = source_root / aux_subdir / HOOK_MANIFEST_NAME
+    manifest_target = target_root / aux_subdir / HOOK_MANIFEST_NAME
     plan.manifest_action = (
         manifest_source,
         manifest_target,
         "overwrite" if manifest_target.exists() else "create",
     )
 
-    bootstrap_source = source_root / BOOTSTRAP_FRAGMENT_NAME
+    bootstrap_source = source_root / aux_subdir / BOOTSTRAP_FRAGMENT_NAME
     if bootstrap_source.is_file():
-        bootstrap_target = target_root / BOOTSTRAP_FRAGMENT_NAME
+        bootstrap_target = target_root / aux_subdir / BOOTSTRAP_FRAGMENT_NAME
         plan.bootstrap_action = (
             bootstrap_source,
             bootstrap_target,
@@ -477,10 +500,26 @@ def plan_hook_install(agent: str, scope: str, target: Path | None) -> HookPlan:
 
     if agent == "codex":
         _plan_codex_config(plan)
+    elif agent == "copilot":
+        _plan_copilot_config(plan)
     else:
         _plan_claude_config(plan)
     plan.notes.extend(_hook_activation_notes(agent, scope))
     return plan
+
+
+def _plan_copilot_config(plan: HookPlan) -> None:
+    # VS Code Copilot reads every *.json in the hook folder, so the managed config
+    # is a dedicated, ChangeForge-owned file. Place it (overwrite the managed copy)
+    # without touching any other hook JSON the user authored in the same folder.
+    config_relpath = Path("hooks") / "changeforge-hooks.json"
+    source_config = load_json(plan.source_root / config_relpath)
+    if not isinstance(source_config, dict):
+        raise InstallError("built copilot changeforge-hooks.json is malformed")
+    plan.config_target = plan.target_root / config_relpath
+    plan.config_payload = source_config
+    plan.config_summary.append("place hooks/changeforge-hooks.json (other hook JSON is untouched)")
+    plan.config_summary.append("VS Code loads every *.json in .github/hooks; user hook files are preserved")
 
 
 def _plan_codex_config(plan: HookPlan) -> None:
@@ -591,6 +630,13 @@ def _hook_activation_notes(agent: str, scope: str) -> list[str]:
         notes.append(f"run /hooks in Codex and trust the {hook_label} after reviewing the command")
         if scope == "user":
             notes.append("user hooks were written to ~/.codex; they apply to every Codex project")
+    elif agent == "copilot":
+        notes.append("VS Code loads .json hook files automatically; review them before enabling")
+        notes.append("use /hooks or 'Chat: Configure Hooks' in VS Code to inspect loaded hooks")
+        if scope == "project":
+            notes.append("project hooks live in .github/hooks; other hook JSON there is preserved")
+        else:
+            notes.append("user hooks live in ~/.copilot/hooks; they apply to every workspace")
     else:
         notes.append("merge settings.changeforge-hooks.fragment.json into settings.json")
         if scope == "user":
@@ -604,18 +650,22 @@ def apply_hook_install(plan: HookPlan, dry_run: bool) -> None:
     """Write the planned hook files. Preserves existing project hook config."""
     if dry_run:
         return
-    hooks_dir = plan.target_root / "hooks"
-    hooks_dir.mkdir(parents=True, exist_ok=True)
+    # Create each destination parent so layouts that nest scripts (Copilot uses
+    # hooks/changeforge/) are handled the same as the flat Codex/Claude layout.
     for source_script, destination, _action in plan.script_actions:
+        destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source_script, destination)
         destination.chmod(0o755)
     if plan.manifest_action is not None:
         manifest_source, manifest_target, _ = plan.manifest_action
+        manifest_target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(manifest_source, manifest_target)
     if plan.bootstrap_action is not None:
         bootstrap_source, bootstrap_target, _ = plan.bootstrap_action
+        bootstrap_target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(bootstrap_source, bootstrap_target)
     if plan.config_target is not None and plan.config_payload is not None:
+        plan.config_target.parent.mkdir(parents=True, exist_ok=True)
         write_json(plan.config_target, plan.config_payload)
 
 
