@@ -868,6 +868,7 @@ def _empty_state() -> dict:
         "suggested_gates": [],
         "validation_command_seen": False,
         "validation_seen": False,
+        "route_preflight_emitted": False,
         "turn_id": "",
         "updated_at": "",
     }

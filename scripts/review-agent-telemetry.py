@@ -124,6 +124,19 @@ PRESSURE_CANDIDATE_TYPES = frozenset({
     "unverified_completion_claim",
 })
 
+# Suggestion types that fire only because the route manifest did not name a
+# capability. When the session emitted no route manifest at all, missed_router
+# is the single actionable root cause and these are downstream cascades of that
+# one gap; resolving the missing manifest is the prerequisite for assessing
+# them. They stay primary when a manifest was present but simply omitted the
+# capability, because that is a real, independently actionable manifest gap.
+MANIFEST_DERIVED_SUGGESTION_TYPES = frozenset({
+    "missed_implementation_structure",
+    "missed_reuse_evidence",
+    "missed_language_capability",
+    "missed_middleware_capability",
+})
+
 
 @dataclass
 class SessionSummary:
@@ -191,6 +204,8 @@ class Suggestion:
     promotion_target: str
     requires_human_review: bool = True
     pressure_candidate: bool = False
+    cascading: bool = False
+    cascading_from: str = ""
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -203,6 +218,8 @@ class Suggestion:
             "promotion_target": self.promotion_target,
             "requires_human_review": self.requires_human_review,
             "pressure_candidate": self.pressure_candidate,
+            "cascading": self.cascading,
+            "cascading_from": self.cascading_from,
         }
 
 
@@ -282,11 +299,28 @@ def _analyze_repo(
     for suggestion in suggestions:
         issue_counts[suggestion.type] = issue_counts.get(suggestion.type, 0) + 1
 
+    code_change_closures = sum(
+        1 for session in sessions.values() if session.stop_seen and session.has_code_change
+    )
+    route_manifest_closures = sum(
+        1
+        for session in sessions.values()
+        if session.stop_seen and session.has_code_change and session.manifest_seen
+    )
+    route_manifest_adoption = (
+        round(route_manifest_closures / code_change_closures, 4)
+        if code_change_closures
+        else 0.0
+    )
+
     summary = {
         "schema_version": TELEMETRY_SCHEMA_VERSION,
         "repo_hash": repo_hash,
         "records": len(records),
         "sessions": len(sessions),
+        "code_change_closures": code_change_closures,
+        "route_manifest_closures": route_manifest_closures,
+        "route_manifest_adoption": route_manifest_adoption,
         "missed_router": issue_counts.get("missed_router", 0),
         "missed_reference": _count_metric(sessions.values(), _is_missing_reference),
         "incomplete_required_references": _count_metric(
@@ -297,6 +331,8 @@ def _analyze_repo(
         "unverified_completion_claims": issue_counts.get("unverified_completion_claim", 0),
         "residual_risk_missing": issue_counts.get("missed_residual_risk", 0),
         "pressure_candidate_suggestions": sum(1 for s in suggestions if s.pressure_candidate),
+        "primary_suggestions": sum(1 for s in suggestions if not s.cascading),
+        "cascading_suggestions": sum(1 for s in suggestions if s.cascading),
         "high_severity_suggestions": sum(1 for s in suggestions if s.severity == "high"),
         "issue_counts": issue_counts,
     }
@@ -382,6 +418,15 @@ def _detect_issues(session: SessionSummary) -> list[Suggestion]:
         if result is not None:
             result.suggestion_id = _suggestion_id(result.type, session, index)
             suggestions.append(result)
+    # A session that emitted no route manifest already raises missed_router as
+    # its root cause. The capability/structure/reuse gaps it also raises are
+    # downstream of that one missing manifest, so mark them as cascading rather
+    # than counting them as independent, separately actionable findings.
+    if not session.manifest_seen:
+        for suggestion in suggestions:
+            if suggestion.type in MANIFEST_DERIVED_SUGGESTION_TYPES:
+                suggestion.cascading = True
+                suggestion.cascading_from = "missed_router"
     return suggestions
 
 
@@ -711,6 +756,8 @@ def _render_markdown(
         f"- repo hash: {repo_hash}",
         f"- records: {summary['records']}",
         f"- sessions: {summary['sessions']}",
+        f"- code change closures: {summary['code_change_closures']}",
+        f"- route manifest adoption: {_format_adoption(summary)}",
         f"- missed router: {summary['missed_router']}",
         f"- missed reference: {summary['missed_reference']}",
         f"- incomplete required references: {summary['incomplete_required_references']}",
@@ -719,6 +766,8 @@ def _render_markdown(
         f"- unverified completion claims: {summary['unverified_completion_claims']}",
         f"- residual risk missing: {summary['residual_risk_missing']}",
         f"- pressure candidate suggestions: {summary['pressure_candidate_suggestions']}",
+        f"- primary suggestions: {summary['primary_suggestions']}",
+        f"- cascading suggestions: {summary['cascading_suggestions']}",
         f"- high severity suggestions: {summary['high_severity_suggestions']}",
         "",
         "## Issue Counts",
@@ -730,16 +779,22 @@ def _render_markdown(
     else:
         lines.append("- none")
     lines.extend(["", "## Suggestions", ""])
-    if suggestions:
-        lines.append("| id | type | severity | promotion target | evidence |")
-        lines.append("| --- | --- | --- | --- | --- |")
-        for suggestion in suggestions:
-            lines.append(
-                f"| {suggestion.suggestion_id} | {suggestion.type} | {suggestion.severity} "
-                f"| {suggestion.promotion_target} | {suggestion.evidence} |"
-            )
-    else:
+    if not suggestions:
         lines.append("No suggestions. Telemetry closure looks complete for the reviewed window.")
+    else:
+        primary = [s for s in suggestions if not s.cascading]
+        cascading = [s for s in suggestions if s.cascading]
+        lines.append(
+            "Primary suggestions are independently actionable root causes. Cascading "
+            "suggestions exist only because the session emitted no route manifest; fix "
+            "the missing route manifest (missed_router) first and they clear together."
+        )
+        lines.extend(["", f"### Primary ({len(primary)})", ""])
+        lines.extend(_suggestion_table(primary))
+        lines.extend(
+            ["", f"### Cascading from a missing route manifest ({len(cascading)})", ""]
+        )
+        lines.extend(_suggestion_table(cascading))
     lines.extend(
         [
             "",
@@ -810,6 +865,29 @@ def _short(items: list[str], limit: int = 3) -> str:
     head = items[:limit]
     suffix = "" if len(items) <= limit else ", ..."
     return ", ".join(head) + suffix
+
+
+def _format_adoption(summary: dict[str, Any]) -> str:
+    """Render route-manifest adoption as ``present/closures (NN%)``."""
+    closures = int(summary.get("code_change_closures", 0) or 0)
+    present = int(summary.get("route_manifest_closures", 0) or 0)
+    rate = float(summary.get("route_manifest_adoption", 0.0) or 0.0)
+    return f"{present}/{closures} ({rate * 100:.0f}%)"
+
+
+def _suggestion_table(suggestions: list[Suggestion]) -> list[str]:
+    if not suggestions:
+        return ["None."]
+    rows = [
+        "| id | type | severity | promotion target | evidence |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for suggestion in suggestions:
+        rows.append(
+            f"| {suggestion.suggestion_id} | {suggestion.type} | {suggestion.severity} "
+            f"| {suggestion.promotion_target} | {suggestion.evidence} |"
+        )
+    return rows
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:

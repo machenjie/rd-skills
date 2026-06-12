@@ -25,6 +25,11 @@ skill path:
 - Pure question, explanation, or translation with no engineering action — no
   routing needed.
 
+When you route an engineering change, emit a `changeforge_route` manifest naming
+`selected_skills`, `selected_capabilities`, `required_references`, and
+`required_quality_gates`, and restate it at handoff. A route described only in
+prose is not closure evidence.
+
 ## Loading Discipline
 
 - A possible engineering change triggers a route preflight, not a full load.

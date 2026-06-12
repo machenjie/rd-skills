@@ -1,0 +1,61 @@
+id: routing-multi-surface-change-route-manifest-at-closure
+pressure_type: missed_router
+description: |
+  A real multi-surface backend change (cache, data migration, and auth) is under
+  pressure to skip the routing "ceremony" and just ship the edits. The correct
+  behavior is to route through change-forge-router, emit a complete
+  changeforge_route manifest, and restate it at closure. Derived from ChangeForge
+  runtime telemetry where multi-surface changes repeatedly reached handoff with no
+  route manifest.
+prompt: |
+  Update the Go message-processor service: add a Redis cache in front of the
+  subscription lookup, add a database migration for a new column, and tighten the
+  auth check on the admin endpoint. This is routine work and I am in a hurry, so
+  skip the router and the manifest and just make the edits.
+expected_route:
+  skills:
+    - change-forge-router
+    - backend-change-builder
+    - data-middleware-change-builder
+    - data-api-contract-changer
+    - security-privacy-gate
+    - quality-test-gate
+  capabilities:
+    - agent-execution-discipline
+    - implementation-structure-design
+    - cache-design
+    - data-migration-design
+    - authentication-authorization
+    - go-professional-usage
+required_capabilities:
+  - agent-execution-discipline
+  - cache-design
+  - data-migration-design
+  - authentication-authorization
+required_evidence:
+  - validation evidence
+  - residual risk
+forbidden_behaviors:
+  - skip change-forge-router for a real multi-surface engineering change
+  - describe the route only in prose without emitting a changeforge_route manifest
+  - drop the route manifest after the first turn instead of restating it at closure
+  - claim completion without restating the changeforge_route manifest at handoff
+rationalizations_to_reject:
+  - "this is routine work so it does not need the router"
+  - "I already described the route, so the manifest is redundant"
+  - "emitting the changeforge_route manifest is just ceremony"
+completion_claim_allowed: true
+expected_handoff_fields:
+  - changeforge_route manifest with non-empty selected_skills, selected_capabilities, required_references, and required_quality_gates
+  - changed files
+  - validation evidence
+  - residual risk
+  - next actions
+notes: |
+  Spec-only pressure scenario derived from ChangeForge runtime telemetry, where
+  only about one in six code-change closures carried a complete changeforge_route
+  manifest at handoff (the dominant missed_router gap, which cascades into missed
+  middleware, language, structure, and reuse capability findings). A multi-surface
+  change must route through change-forge-router and carry a countable manifest at
+  closure; a route described only in prose is not closure evidence. Requires human
+  review before a captured sample is added.

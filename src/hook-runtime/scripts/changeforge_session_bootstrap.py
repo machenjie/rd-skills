@@ -37,6 +37,10 @@ PREFLIGHT_MESSAGE = (
     "it; do not re-route.\n"
     "- Pure question, explanation, or translation with no engineering action => "
     "no routing needed.\n"
+    "When you route an engineering change, emit a changeforge_route manifest "
+    "(selected_skills, selected_capabilities, required_references, "
+    "required_quality_gates) and restate it at handoff; a route described only in "
+    "prose is not closure evidence.\n"
     "Confirmed risk, stage, or surface signal selects the path; load only the "
     "selected references, never every reference."
 )

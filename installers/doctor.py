@@ -241,6 +241,14 @@ def _report_telemetry(
         return
 
     print(f"- report: {report_path}")
+    adoption = summary.get("route_manifest_adoption")
+    closures = summary.get("code_change_closures")
+    if adoption is not None and closures is not None:
+        present = summary.get("route_manifest_closures", 0)
+        print(
+            f"- route manifest adoption: {present}/{closures} "
+            f"({float(adoption) * 100:.0f}%)"
+        )
     for label, key in (
         ("sessions", "sessions"),
         ("missed router", "missed_router"),

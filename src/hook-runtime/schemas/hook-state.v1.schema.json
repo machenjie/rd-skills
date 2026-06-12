@@ -109,6 +109,10 @@
       "description": "Whether a validation-looking command was observed this turn. This is not completion evidence without an outcome in the stop closure.",
       "type": "boolean"
     },
+    "route_preflight_emitted": {
+      "description": "Whether the route-preflight reminder was already emitted this turn, so the risk gate nudges routing once instead of on every observed risk surface.",
+      "type": "boolean"
+    },
     "turn_id": {
       "type": "string"
     },

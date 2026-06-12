@@ -91,6 +91,53 @@ class RiskSurfaceGateTests(unittest.TestCase):
         self.assertIn("bigdata-product-extension", result.stdout)
         self.assertIn("reliability gate", result.stdout)
 
+    def test_first_risk_surface_emits_route_preflight(self) -> None:
+        event = {
+            "runtime": "codex",
+            "hookEventName": "PostToolUse",
+            "toolName": "Edit",
+            "toolInput": {"file_path": "src/auth/session_token.py"},
+        }
+        result = run_risk(event)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("Route preflight", result.stdout)
+        self.assertIn("change-forge-router", result.stdout)
+        self.assertIn("changeforge_route", result.stdout)
+
+    def test_route_preflight_not_repeated_in_same_turn(self) -> None:
+        event = {
+            "runtime": "codex",
+            "hookEventName": "PostToolUse",
+            "toolName": "Edit",
+            "toolInput": {"file_path": "src/auth/session_token.py"},
+        }
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            env = os.environ.copy()
+            env["XDG_CACHE_HOME"] = cache
+            env.pop("CHANGEFORGE_HOOK_MODE", None)
+            env.pop("CHANGEFORGE_AGENT", None)
+            event["cwd"] = cwd
+
+            def _run() -> subprocess.CompletedProcess[str]:
+                return subprocess.run(
+                    [sys.executable, str(SCRIPT_DIR / "changeforge_risk_surface_gate.py")],
+                    input=json.dumps(event),
+                    text=True,
+                    capture_output=True,
+                    cwd=cwd,
+                    env=env,
+                    check=False,
+                )
+
+            first = _run()
+            second = _run()
+        self.assertIn("Route preflight", first.stdout)
+        self.assertIn("security", first.stdout)
+        # The second risk surface in the same turn keeps the warning but drops the
+        # one-time route-preflight nudge so the reminder is not repeated per edit.
+        self.assertNotIn("Route preflight", second.stdout)
+        self.assertIn("security", second.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

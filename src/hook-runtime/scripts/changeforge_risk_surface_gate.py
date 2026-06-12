@@ -19,6 +19,7 @@ from changeforge_common import (
     normalize_path,
     read_event,
     repo_root,
+    save_state,
     session_id_from_event,
     summarize_command_program,
     tool_name,
@@ -132,7 +133,7 @@ def main() -> int:
             repo,
             f"risk gate runtime={runtime} event={event_name(event)} tool={tool_name(event)} paths={paths} command={command!r} findings={findings}",
         )
-        merge_state(
+        state = merge_state(
             repo,
             runtime,
             changed_paths=paths,
@@ -166,7 +167,14 @@ def main() -> int:
         )
         if not findings or mode == "monitor":
             return 0
-        message = _warning_message(findings)
+        # First risk surface of the turn carries a route-preflight nudge so Codex,
+        # which has no session-start hook, still gets an early routing reminder.
+        # Subsequent risk warnings in the same turn omit it to avoid repetition.
+        preflight_needed = not bool(state.get("route_preflight_emitted"))
+        message = _warning_message(findings, include_route_preflight=preflight_needed)
+        if preflight_needed:
+            state["route_preflight_emitted"] = True
+            save_state(repo, state)
         if mode == "block":
             emit_block(runtime, event_name(event), message)
             return 0
@@ -212,7 +220,11 @@ def _looks_like_validation(command: str) -> bool:
     return any(marker in lowered for marker in VALIDATION_MARKERS)
 
 
-def _warning_message(findings: list[dict[str, object]]) -> str:
+def _warning_message(
+    findings: list[dict[str, object]],
+    *,
+    include_route_preflight: bool = False,
+) -> str:
     surface_lines = []
     for finding in findings:
         evidence = finding.get("evidence", [])
@@ -226,7 +238,16 @@ def _warning_message(findings: list[dict[str, object]]) -> str:
             "\nExpected ChangeForge domain extensions:\n"
             f"{chr(10).join(extension_lines)}\n"
         )
-    return f"""ChangeForge Risk Surface Gate triggered.
+    preflight_text = ""
+    if include_route_preflight:
+        preflight_text = (
+            "Route preflight (first risk surface this turn): run change-forge-router "
+            "before continuing and emit a changeforge_route manifest naming "
+            "selected_skills, selected_capabilities, required_references, and "
+            "required_quality_gates. Restate it at handoff; a route described only in "
+            "prose is not closure evidence.\n\n"
+        )
+    return f"""{preflight_text}ChangeForge Risk Surface Gate triggered.
 
 Detected risk surfaces:
 {chr(10).join(surface_lines)}

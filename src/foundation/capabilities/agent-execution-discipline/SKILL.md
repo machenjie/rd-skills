@@ -45,7 +45,7 @@ Launched across stages as the execution kernel, with emphasis in debugging-diagn
 - **Route repair after repeated failure.** After two failures of the same approach (same command, same patch shape, same hypothesis) the agent must change the route. Allowed route changes: reread the failing output, inspect the call site, reduce the change scope, or escalate. Repeating the same path a third time is forbidden.
 - **Same-pattern scan before local fix.** Before applying a local fix to a bug, defect, or wrong call, the agent must scan for the same pattern in the rest of the codebase. If the pattern exists elsewhere, the fix must either cover all instances or explicitly justify why it is local-only.
 - **Reuse and placement rationale before new structure.** No new function, class, file, directory, component, hook, service, repository, adapter, utility, or abstraction may be added without an explicit reuse search, placement decision, and shared/common/utils audit. This rule delegates to `implementation-structure-design` for the placement schema.
-- **Proactive closure with risk, boundary, and validation result.** Every handoff or task closure must include: the change boundary, the validation results that were actually run, the residual risks, and the next-skill or human handoff target. Silent handoff is rejected.
+- **Proactive closure with risk, boundary, and validation result.** Every handoff or task closure must include: the change boundary, the validation results that were actually run, the residual risks, and the next-skill or human handoff target. When the change was routed, the closure also restates the `changeforge_route` manifest (and `changeforge_stage_route` for non-trivial work) instead of dropping it after the first turn. Silent handoff is rejected.
 - **Local convention scan before naming.**
   Before adding or renaming any file, function, method, class, directory, component, hook, service, repository, adapter, helper, or utility, the agent must inspect same-file, same-directory, parent-module, sibling-module, and test naming conventions.
 - **Reuse ladder before new code.**
@@ -130,7 +130,7 @@ Delegate the schema to `implementation-structure-design`; this capability requir
 
 ## Proactive Closure Package
 
-Every handoff must include boundary, validation results with exit codes, residual risk, and handoff target with the specific question or action required.
+Every handoff must include boundary, validation results with exit codes, residual risk, and handoff target with the specific question or action required. When the change was routed, the package restates the `changeforge_route` manifest (and `changeforge_stage_route` when the work was non-trivial) so the closure carries the selected skills, capabilities, required references, and quality gates as machine-checkable evidence rather than dropping them after the first turn.
 
 ## Evidence Contract Answer Set
 

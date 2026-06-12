@@ -211,6 +211,130 @@ class ReviewAgentTelemetryTests(unittest.TestCase):
             text = suggestions[0].read_text(encoding="utf-8") if suggestions else ""
             self.assertNotIn("unverified_completion_claim", text)
 
+    def test_reports_route_manifest_adoption_rate(self) -> None:
+        # One code+stop session emits a manifest, one does not: adoption is 1/2.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "telemetry"
+            repo_hash = "repohashaaaaaaaaaaaaaaaa"
+            self._seed(
+                root,
+                repo_hash,
+                [
+                    _record(session_id="s1", changed_paths=["src/a.py"]),
+                    _record(
+                        session_id="s1",
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["src/a.py"],
+                        route_manifest_detected=True,
+                        validation_evidence_detected=True,
+                        residual_risk_detected=True,
+                    ),
+                    _record(session_id="s2", changed_paths=["src/b.py"]),
+                    _record(
+                        session_id="s2",
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["src/b.py"],
+                        route_manifest_detected=False,
+                    ),
+                ],
+            )
+            json_result = _run("--telemetry-root", str(root), "--format", "json")
+            self.assertEqual(json_result.returncode, 0)
+            report = list((root / repo_hash / "reports").glob("*-agent-telemetry-review.json"))
+            self.assertTrue(report)
+            summary = json.loads(report[0].read_text(encoding="utf-8"))["summary"]
+            self.assertEqual(summary["code_change_closures"], 2)
+            self.assertEqual(summary["route_manifest_closures"], 1)
+            self.assertEqual(summary["route_manifest_adoption"], 0.5)
+
+            md_result = _run("--telemetry-root", str(root))
+            self.assertEqual(md_result.returncode, 0)
+            md_report = list((root / repo_hash / "reports").glob("*-agent-telemetry-review.md"))
+            self.assertTrue(md_report)
+            self.assertIn(
+                "- route manifest adoption: 1/2 (50%)",
+                md_report[0].read_text(encoding="utf-8"),
+            )
+
+    def test_no_manifest_capability_misses_marked_cascading(self) -> None:
+        # A no-manifest code session raises missed_router as the actionable root
+        # cause; its capability/structure misses are downstream cascades of it.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "telemetry"
+            repo_hash = "repohashaaaaaaaaaaaaaaaa"
+            structure = {"structure_findings": ["src/services/order_service.go: new file"]}
+            self._seed(
+                root,
+                repo_hash,
+                [
+                    _record(
+                        changed_paths=["src/services/order_service.go"],
+                        hook_findings=structure,
+                    ),
+                    _record(
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["src/services/order_service.go"],
+                        risk_surfaces=["cache"],
+                        route_manifest_detected=False,
+                        hook_findings=structure,
+                    ),
+                ],
+            )
+            result = _run("--telemetry-root", str(root), "--format", "json")
+            self.assertEqual(result.returncode, 0)
+            report = list((root / repo_hash / "reports").glob("*-agent-telemetry-review.json"))
+            self.assertTrue(report)
+            data = json.loads(report[0].read_text(encoding="utf-8"))
+            by_type = {s["type"]: s for s in data["suggestions"]}
+            self.assertIn("missed_router", by_type)
+            self.assertFalse(by_type["missed_router"]["cascading"])
+            for cascading_type in (
+                "missed_language_capability",
+                "missed_middleware_capability",
+                "missed_implementation_structure",
+            ):
+                self.assertIn(cascading_type, by_type)
+                self.assertTrue(by_type[cascading_type]["cascading"], cascading_type)
+                self.assertEqual(
+                    by_type[cascading_type]["cascading_from"], "missed_router"
+                )
+            self.assertGreaterEqual(data["summary"]["cascading_suggestions"], 3)
+            self.assertGreaterEqual(data["summary"]["primary_suggestions"], 1)
+
+    def test_manifest_present_capability_miss_stays_primary(self) -> None:
+        # When a manifest is present but omits a capability, the miss is a real,
+        # independently actionable gap and must not be marked cascading.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "telemetry"
+            repo_hash = "repohashaaaaaaaaaaaaaaaa"
+            self._seed(
+                root,
+                repo_hash,
+                [
+                    _record(changed_paths=["src/services/order_service.go"]),
+                    _record(
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["src/services/order_service.go"],
+                        route_manifest_detected=True,
+                        required_references_detected=True,
+                        validation_evidence_detected=True,
+                        residual_risk_detected=True,
+                        manifest_selected_capabilities=["logging-error-handling"],
+                    ),
+                ],
+            )
+            result = _run("--telemetry-root", str(root), "--format", "json")
+            self.assertEqual(result.returncode, 0)
+            report = list((root / repo_hash / "reports").glob("*-agent-telemetry-review.json"))
+            data = json.loads(report[0].read_text(encoding="utf-8"))
+            by_type = {s["type"]: s for s in data["suggestions"]}
+            self.assertIn("missed_language_capability", by_type)
+            self.assertFalse(by_type["missed_language_capability"]["cascading"])
+
 
 if __name__ == "__main__":
     unittest.main()
