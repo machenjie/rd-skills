@@ -24,7 +24,7 @@ Expose the complete blast radius of a proposed change before design or implement
 - The change is a typo fix, comment update, or test data cleanup with zero behavioral surface area.
 
 ## Non-Negotiable Rules
-- Direct use still runs runtime flow.
+- **Direct use still runs the runtime prompt flow.** When `change-impact-analyzer` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
 - Inspect every potentially affected surface — do not stop at the first impacted component and assume the rest is safe.
 - Distinguish impact types: Direct (code must change), Indirect (behavior or contract changes), Downstream (consumers must adapt), Latent (no immediate change but risk is created).
 - Never mark a surface as "not impacted" without explicit reasoning — unknown is not the same as unimpacted.

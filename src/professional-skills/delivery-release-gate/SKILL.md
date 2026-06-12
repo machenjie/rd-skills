@@ -35,7 +35,7 @@ Owns release-delivery; also serves infrastructure-deployment, kubernetes-helm, a
 - **documentation-handoff**: release notes, runbook, and post-release verification.
 
 ## Non-Negotiable Rules
-- Direct use still runs runtime flow.
+- **Direct use still runs the runtime prompt flow.** When `delivery-release-gate` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
 - **Define rollback before release** — every deployable change must have a documented, tested rollback procedure before deployment begins; "revert the commit" is not a rollback plan.
 - **Verify all environment configuration and secrets references** before deployment — missing or misconfigured environment variables are the leading cause of post-deploy failures.
 - **Sequence migrations safely** — database migrations must be compatible with both the old and new application version during the rollout window (EMC discipline).

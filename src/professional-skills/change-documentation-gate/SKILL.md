@@ -25,7 +25,7 @@ Ensure every change leaves accurate, audience-appropriate documentation exactly 
 - The change is a revert of a recently merged commit where no documentation was yet published to consumers.
 
 ## Non-Negotiable Rules
-- Direct use still runs runtime flow.
+- **Direct use still runs the runtime prompt flow.** When `change-documentation-gate` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
 - Update documentation that real users or operators depend on — never let "it's in the code" serve as user or operator documentation.
 - Preserve accuracy over volume: a correct one-sentence update is superior to a verbose misleading paragraph.
 - Never expose secrets, credentials, internal IP addresses, or security-sensitive implementation details in public-facing documentation.

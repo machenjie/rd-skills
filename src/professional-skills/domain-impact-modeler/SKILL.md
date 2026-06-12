@@ -26,7 +26,7 @@ Identify, map, and reason about the full business domain impact of a proposed ch
 - The impact analysis is already captured in a change intake document with an approved domain model review.
 
 ## Non-Negotiable Rules
-- Direct use still runs runtime flow.
+- **Direct use still runs the runtime prompt flow.** When `domain-impact-modeler` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
 - **Bounded context boundaries must be explicit**: every aggregate has one owning context; no aggregate is shared or mutated by two contexts simultaneously.
 - **Domain events are contractual commitments**: once a domain event is published and consumed, its shape is as binding as a public API — changes require versioning, consumer notification, and migration.
 - **Ubiquitous language changes propagate everywhere the term is used**: renaming a concept in code without updating the language in documentation, team vocabulary, and consumer schemas creates two models that drift apart.

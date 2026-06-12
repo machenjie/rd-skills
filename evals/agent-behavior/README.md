@@ -28,8 +28,11 @@ sample's captured output and scores it against the sample's `expected` block:
   reason;
 - validation evidence and residual risk are present;
 - when `expected.runtime_prompt_flow.required` is true, the manifest carries
-  clarification status, inspected boundaries, TDD signal, action owner/review
-  mapping, repair/re-review requirements, validation evidence, and residual risk.
+  closure mode, clarification status, inspected boundaries, TDD signal, action
+  owner/review mapping, repair/re-review requirements, validation evidence, and
+  residual risk. `plan` may carry pending re-review and planned validation;
+  `action-handoff` and `final-handoff` require concrete re-review and validation
+  closure states.
 
 It reports `route_recall`, `route_precision`, `capability_recall`,
 `reference_adherence`, `gate_closure`, `validation_evidence_score`, runtime flow
@@ -54,6 +57,7 @@ expected:
     - security gate
   runtime_prompt_flow:
     required: true
+    closure_mode: plan
     clarification_status: clarified-with-assumptions
     required_inspected_boundaries:
       - files
@@ -79,6 +83,7 @@ actual:
       - security gate
     runtime_prompt_flow:
       schema_version: 1
+      closure_mode: plan
       clarification_status:
         status: clarified-with-assumptions
       inspected_boundaries:
@@ -100,6 +105,7 @@ actual:
           re_review_result: pending
       validation_evidence:
         - command: pytest tests/test_orders.py -q
+          outcome: planned
       residual_risk:
         - risk: target runtime still needs actual project verification
     skipped_quality_gates:

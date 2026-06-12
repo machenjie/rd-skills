@@ -27,7 +27,7 @@ Implement or review product-grade frontend changes that are state-complete, acce
 - The change is a design system contribution with no product behavior — use the design system's own contribution process.
 
 ## Non-Negotiable Rules
-- Direct use still runs runtime flow.
+- **Direct use still runs the runtime prompt flow.** When `frontend-change-builder` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
 - **Respect existing design system and component boundaries**: do not create new components that duplicate existing ones; do not override design system tokens in one-off local styles.
 - **Cover all required states for every interactive element**: loading, empty, error, success, disabled, validation, and permission-denied — omitting these creates broken flows in production.
 - **Keyboard navigation and screen reader access are mandatory**: every interactive element must be keyboard-operable and have an accessible name; WCAG 2.1 AA is the minimum standard.

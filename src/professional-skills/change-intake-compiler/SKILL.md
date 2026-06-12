@@ -25,7 +25,7 @@ Transform ambiguous, incomplete, or solution-premixed change input — from any 
 - The request is a pure exploratory spike — output is a discovery artifact, not a behavioral change.
 
 ## Non-Negotiable Rules
-- Direct use still runs runtime flow.
+- **Direct use still runs the runtime prompt flow.** When `change-intake-compiler` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
 - Strictly separate facts (observed behavior), assumptions (believed to be true), decisions (already made by stakeholder authority), and open questions (require resolution before proceeding).
 - Non-goals and constraints must be preserved — removing them creates uncontrolled scope expansion.
 - Never invent requirements to make the request feel complete — unknown information must surface as explicit open questions.

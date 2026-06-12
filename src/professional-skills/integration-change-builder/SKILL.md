@@ -26,7 +26,7 @@ Design and review external integration changes so that every outbound call is bo
 - No external network, external credentials, or external ownership risk is involved.
 
 ## Non-Negotiable Rules
-- Direct use still runs runtime flow.
+- **Direct use still runs the runtime prompt flow.** When `integration-change-builder` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
 - **Always set explicit timeouts on all outbound HTTP calls**: a missing timeout is an unbounded thread hold that cascades into request queue exhaustion; default `0` (no timeout) is never acceptable in production.
 - **Retry with exponential backoff and jitter, with a bounded retry count**: unbounded retries amplify incidents and can trigger provider rate limits or account bans.
 - **Idempotency is required for all commands that can be retried**: every outbound write, payment, or state-transition command must use idempotency keys to prevent duplication of effects on network retry.

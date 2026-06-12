@@ -36,6 +36,7 @@ expected:
     - execution discipline gate
   runtime_prompt_flow:
     required: true
+    closure_mode: plan
     clarification_status: clarified-with-assumptions
     required_inspected_boundaries:
       - files
@@ -90,6 +91,7 @@ manifest:
     - Existing order API files and tests can be inspected before editing.
   runtime_prompt_flow:
     schema_version: 1
+    closure_mode: plan
     clarification_status:
       status: clarified-with-assumptions
       current_behavior: status endpoint exists but validation and ownership behavior are unclear

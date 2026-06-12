@@ -27,7 +27,7 @@ Map the full user experience impact of a proposed change — from entry point th
 - The experience impact was already fully modeled in a prior artifact that is current and accurate.
 
 ## Non-Negotiable Rules
-- Direct use still runs runtime flow.
+- **Direct use still runs the runtime prompt flow.** When `experience-impact-modeler` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
 - **Cover the full user flow, not only the changed component**: every upstream entry point and downstream exit state must be enumerated.
 - **All states are required for every interactive element**: empty, loading, success, error, disabled, and validation states are not optional — they are the design contract.
 - **Accessibility is a product requirement, not an afterthought**: WCAG 2.1 AA is the baseline; keyboard navigation, focus management, screen reader labels, and color contrast must be specified before implementation, not as a post-ship audit.

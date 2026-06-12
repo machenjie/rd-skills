@@ -26,7 +26,7 @@ Critically review, validate, and safely refactor AI-generated or AI-assisted cod
 - The change is read-only documentation with no code execution path.
 
 ## Non-Negotiable Rules
-- Direct use still runs runtime flow.
+- **Direct use still runs the runtime prompt flow.** When `ai-code-review-refactor` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
 - Verify every import and API call exists in the declared version — AI models hallucinate method names and parameter signatures with high confidence.
 - Challenge every hidden assumption: if a function assumes a non-null argument, a sorted collection, or a singleton pattern, require explicit documentation or enforcement.
 - Prefer existing local patterns over novel AI-invented abstractions — pattern novelty is a risk signal, not a quality signal.

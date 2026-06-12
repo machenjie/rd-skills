@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-12T07:57:02.225449+00:00",
+  "generated_at": "2026-06-12T08:19:30.528550+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -843,7 +843,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (17)",
-      "score": 56,
+      "score": 57,
       "status": "sample-grade",
       "warnings": []
     },
@@ -879,7 +879,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (13)",
-      "score": 55,
+      "score": 56,
       "status": "sample-grade",
       "warnings": []
     },
@@ -915,7 +915,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (6)",
-      "score": 55,
+      "score": 56,
       "status": "sample-grade",
       "warnings": []
     },
@@ -933,8 +933,8 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (6)",
-      "score": 53,
-      "status": "acceptable",
+      "score": 54,
+      "status": "sample-grade",
       "warnings": []
     },
     {

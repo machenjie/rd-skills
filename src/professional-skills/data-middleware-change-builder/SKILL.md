@@ -27,7 +27,7 @@ Design and review changes to persistence, caching, queueing, search, streaming, 
 - Infrastructure provisioning (adding a new Redis cluster) without any behavior change — use `delivery-release-gate` for infrastructure rollout.
 
 ## Non-Negotiable Rules
-- Direct use still runs runtime flow.
+- **Direct use still runs the runtime prompt flow.** When `data-middleware-change-builder` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
 - **Declare the source of truth before any read or write path is designed** — every entity has exactly one authoritative store; all other stores are derived.
 - **Design indexes from access patterns, not from data shape** — an index that matches no query plan is pure write overhead; a missing index on a query run 10,000 times per second is a production incident.
 - **Cache invalidation must be explicit** — stale-reads-on-write and cache stampede are not edge cases; they are the default failure mode of cache-first designs.

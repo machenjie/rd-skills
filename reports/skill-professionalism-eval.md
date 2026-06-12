@@ -1,9 +1,9 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-12T07:57:01.312759+00:00
+- Generated: 2026-06-12T08:19:29.604085+00:00
 - Skills/capabilities checked: 135
 - Warning count: 4
-- Average score: 41.27/60
+- Average score: 41.30/60
 
 ## Scores
 
@@ -125,14 +125,14 @@
 | `src/foundation/capabilities/language-testing-strategy/SKILL.md` | foundation-capability | 51/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/shell-cli-professional-usage/SKILL.md` | foundation-capability | 51/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/python-professional-usage/SKILL.md` | foundation-capability | 53/60 | acceptable | 0 | 0 |
-| `src/professional-skills/experience-impact-modeler/SKILL.md` | professional-skill | 53/60 | acceptable | 0 | 0 |
-| `src/professional-skills/data-middleware-change-builder/SKILL.md` | professional-skill | 55/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/experience-impact-modeler/SKILL.md` | professional-skill | 54/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/delivery-release-gate/SKILL.md` | professional-skill | 55/60 | sample-grade | 0 | 0 |
-| `src/professional-skills/domain-impact-modeler/SKILL.md` | professional-skill | 55/60 | sample-grade | 0 | 0 |
-| `src/professional-skills/change-intake-compiler/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/data-middleware-change-builder/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/domain-impact-modeler/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/task-dag-planner/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/acceptance-criteria-builder/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/change-impact-analyzer/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/change-intake-compiler/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/integration-change-builder/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/reliability-observability-gate/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/security-privacy-gate/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |

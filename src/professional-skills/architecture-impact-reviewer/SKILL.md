@@ -28,7 +28,7 @@ Keep the architecture coherent, observable, and evolutionarily sound by rigorous
 - Documentation or configuration updates with no impact on system topology or service contracts.
 
 ## Non-Negotiable Rules
-- Direct use still runs runtime flow.
+- **Direct use still runs the runtime prompt flow.** When `architecture-impact-reviewer` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
 - Default to the simplest sufficient design — **complexity requires justification, simplicity does not**.
 - Respect existing ownership and dependency direction: dependencies must flow toward stable, lower-volatility layers, never the other direction.
 - All tradeoffs between chosen design and alternatives must be made explicit in writing — no implicit decisions.

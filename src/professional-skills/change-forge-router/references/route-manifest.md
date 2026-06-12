@@ -44,6 +44,7 @@ changeforge_route:
     - <explicit assumption used in place of a missing answer>
   runtime_prompt_flow:
     schema_version: 1
+    closure_mode: <plan|action-handoff|final-handoff>
     clarification_status:
       status: <blocked|clarified|clarified-with-assumptions|not-applicable>
       current_behavior: <observed or requested current behavior>
@@ -87,7 +88,7 @@ changeforge_route:
         review_evidence: <evidence the reviewer must inspect>
         repair_route_if_review_fails: <repair owner skill or blocked>
         re_review_required: <true|false>
-        re_review_result: <pending|passed|not-run|not-applicable>
+        re_review_result: <pending|passed|blocked-with-residual-risk|not-verified-with-owner|not-run|not-applicable>
     repair_route:
       required_when_review_fails: <true|false>
       owner_skill: <repair owner skill or blocked>
@@ -95,6 +96,7 @@ changeforge_route:
     validation_evidence:
       - command: <validator, test, build, eval, or not-verified disclosure>
         outcome: <passed|failed|planned|not-run|not-verified>
+        reason: <required when outcome is not-run, or omit>
         proves: <what the evidence proves>
         does_not_prove: <what remains unproven>
     residual_risk:
@@ -111,6 +113,7 @@ Manifest rules:
 - `skipped_quality_gates` must give a `reason` for each skipped gate; never drop a gate silently. A gate is either in `required_quality_gates` or in `skipped_quality_gates` with a reason.
 - `runtime_prompt_flow` is required for target-project engineering changes and for direct specialist-skill invocation. Direct invocation may skip router reclassification when scope is known, but this nested manifest records that requirement clarification, read-before-plan evidence, TDD/validation signal, independent review, repair/re-review, validation evidence, and residual risk were not skipped.
 - Each `runtime_prompt_flow.actions[]` entry must name an `owner_skill` and a different `review_skill`. A review finding requires `repair_route_if_review_fails`, `re_review_required: true`, and a concrete `re_review_result` before handoff can close.
+- `runtime_prompt_flow.closure_mode` separates planning from closure. `plan` may carry `re_review_result: pending` and `validation_evidence.outcome: planned`. `action-handoff` and `final-handoff` may close re-review only with `passed`, `blocked-with-residual-risk`, or `not-verified-with-owner`, and may close validation only with `passed`, `failed`, `not-run` plus disclosure, or `not-verified` plus residual risk.
 - Keep `selected_skills`, `selected_capabilities`, `required_quality_gates`, and `skipped_quality_gates` consistent with the Markdown sections; the manifest is a projection of the same decision, not a second route.
 - The manifest is read by tooling. It does not substitute for the human-readable routing explanation, and it does not authorize any tool to mutate skills, routing rules, or capabilities.
 

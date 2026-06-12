@@ -25,7 +25,7 @@ Transform ambiguous change intent into a complete, testable, behaviorally precis
 - The request is exploratory research or spike work with no deliverable behavioral outcome.
 
 ## Non-Negotiable Rules
-- Direct use still runs runtime flow.
+- **Direct use still runs the runtime prompt flow.** When `acceptance-criteria-builder` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
 - Every criterion must be independently verifiable — no cluster criteria that bundle unrelated behaviors.
 - Cover happy path, all named edge cases, error states, constraint violations, and non-functional requirements as first-class criteria, not footnotes.
 - Never embed implementation details (class names, SQL queries, algorithm choices) — specify **what** must be true, not **how** it is achieved.

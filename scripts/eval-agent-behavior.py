@@ -55,6 +55,19 @@ ROUTER_SELF_REFERENCES = (
     "references/domain-extension-index.md",
 )
 VALID_BUDGET_MODES = {"minimal", "single-stage", "staged-plan"}
+RUNTIME_FLOW_CLOSURE_MODES = {"plan", "action-handoff", "final-handoff"}
+RUNTIME_FLOW_CLOSURE_HANDOFF_MODES = {"action-handoff", "final-handoff"}
+RUNTIME_FLOW_HANDOFF_REREVIEW_RESULTS = {
+    "passed",
+    "blocked-with-residual-risk",
+    "not-verified-with-owner",
+}
+RUNTIME_FLOW_HANDOFF_VALIDATION_OUTCOMES = {
+    "passed",
+    "failed",
+    "not-run",
+    "not-verified",
+}
 STAGE_SCORE_KEYS = (
     "stage_presence",
     "stage_correctness",
@@ -336,12 +349,18 @@ def _runtime_flow_scores(
         return {key: 0.0 for key in RUNTIME_FLOW_SCORE_KEYS}, errors
 
     errors: list[str] = []
+    closure_mode = _runtime_closure_mode(spec, flow, errors)
     clarification_score = _runtime_clarification_score(spec, flow, errors)
     inspection_score = _runtime_inspection_score(spec, flow, errors)
     tdd_score = _runtime_tdd_score(flow, errors, required=bool(spec.get("required")))
     action_score = _runtime_action_review_score(spec, flow, errors)
-    repair_score = _runtime_repair_score(spec, flow, errors)
-    validation_score = _runtime_validation_residual_score(spec, flow, errors)
+    repair_score = _runtime_repair_score(spec, flow, errors, closure_mode=closure_mode)
+    validation_score = _runtime_validation_residual_score(
+        spec,
+        flow,
+        errors,
+        closure_mode=closure_mode,
+    )
 
     return (
         {
@@ -354,6 +373,25 @@ def _runtime_flow_scores(
         },
         errors,
     )
+
+
+def _runtime_closure_mode(
+    spec: dict[str, Any],
+    flow: dict[str, Any],
+    errors: list[str],
+) -> str:
+    expected = str(spec.get("closure_mode", "")).strip()
+    actual = str(flow.get("closure_mode", "")).strip()
+    mode = actual or expected or "plan"
+    if expected and actual != expected:
+        errors.append("runtime_prompt_flow.closure_mode is missing or mismatched")
+    if mode not in RUNTIME_FLOW_CLOSURE_MODES:
+        errors.append(
+            "runtime_prompt_flow.closure_mode must be one of: "
+            + ", ".join(sorted(RUNTIME_FLOW_CLOSURE_MODES))
+        )
+        return "plan"
+    return mode
 
 
 def _runtime_clarification_score(
@@ -452,6 +490,8 @@ def _runtime_repair_score(
     spec: dict[str, Any],
     flow: dict[str, Any],
     errors: list[str],
+    *,
+    closure_mode: str,
 ) -> float:
     require_repair = spec.get("require_repair_route") is True
     require_rereview = spec.get("require_re_review_result") is True
@@ -465,18 +505,35 @@ def _runtime_repair_score(
     has_top_level_repair = isinstance(repair_route, dict) and bool(
         str(repair_route.get("owner_skill", "")).strip()
     )
+    handoff_mode = closure_mode in RUNTIME_FLOW_CLOSURE_HANDOFF_MODES
     satisfied = 0
+    invalid_rereview_results: list[str] = []
     for action in actions:
         has_repair = bool(str(action.get("repair_route_if_review_fails", "")).strip())
         rereview_required = action.get("re_review_required") is True
         rereview_result = str(action.get("re_review_result", "")).strip()
         repair_ok = (not require_repair) or has_repair or has_top_level_repair
-        rereview_ok = (not require_rereview) or (rereview_required and bool(rereview_result))
+        action_requires_rereview = require_rereview or (handoff_mode and rereview_required)
+        if not action_requires_rereview:
+            rereview_ok = True
+        elif not (rereview_required and rereview_result):
+            rereview_ok = False
+        elif handoff_mode and rereview_result not in RUNTIME_FLOW_HANDOFF_REREVIEW_RESULTS:
+            rereview_ok = False
+            invalid_rereview_results.append(rereview_result)
+        else:
+            rereview_ok = True
         if repair_ok and rereview_ok:
             satisfied += 1
     score = satisfied / len(actions)
     if score < 1.0:
-        errors.append("runtime_prompt_flow repair/re-review evidence is incomplete")
+        if invalid_rereview_results:
+            errors.append(
+                "runtime_prompt_flow action/final handoff re_review_result must be one of: "
+                + ", ".join(sorted(RUNTIME_FLOW_HANDOFF_REREVIEW_RESULTS))
+            )
+        else:
+            errors.append("runtime_prompt_flow repair/re-review evidence is incomplete")
     return score
 
 
@@ -484,12 +541,21 @@ def _runtime_validation_residual_score(
     spec: dict[str, Any],
     flow: dict[str, Any],
     errors: list[str],
+    *,
+    closure_mode: str,
 ) -> float:
     require_validation = spec.get("require_validation_evidence") is True
     require_residual = spec.get("require_residual_risk") is True
-    validation_ok = (not require_validation) or _has_runtime_boundary(flow.get("validation_evidence"))
-    residual_ok = (not require_residual) or _has_runtime_boundary(flow.get("residual_risk"))
-    if not validation_ok:
+    validation_value = flow.get("validation_evidence")
+    validation_present = _has_runtime_boundary(validation_value)
+    validation_ok = (not require_validation) or validation_present
+    validation_semantic_ok = True
+    if validation_ok and require_validation and closure_mode in RUNTIME_FLOW_CLOSURE_HANDOFF_MODES:
+        validation_semantic_ok = _runtime_handoff_validation_ok(validation_value, flow, errors)
+        validation_ok = validation_semantic_ok
+    residual_value = flow.get("residual_risk")
+    residual_ok = (not require_residual) or _has_runtime_boundary(residual_value)
+    if not validation_ok and not validation_present:
         errors.append("runtime_prompt_flow.validation_evidence is missing")
     if not residual_ok:
         errors.append("runtime_prompt_flow.residual_risk is missing")
@@ -501,6 +567,63 @@ def _runtime_validation_residual_score(
     if not checks:
         return 1.0
     return sum(checks) / len(checks)
+
+
+def _runtime_handoff_validation_ok(
+    validation_value: Any,
+    flow: dict[str, Any],
+    errors: list[str],
+) -> bool:
+    entries = _runtime_validation_entries(validation_value)
+    if not entries:
+        return False
+
+    saw_planned = False
+    saw_invalid = False
+    for entry in entries:
+        outcome = str(entry.get("outcome", "")).strip()
+        if outcome == "planned":
+            saw_planned = True
+            continue
+        if outcome not in RUNTIME_FLOW_HANDOFF_VALIDATION_OUTCOMES:
+            saw_invalid = True
+            continue
+        if outcome in {"passed", "failed"}:
+            return True
+        if outcome == "not-run" and _runtime_validation_disclosure_present(entry):
+            return True
+        if outcome == "not-verified" and (
+            _has_runtime_boundary(entry.get("residual_risk"))
+            or _has_runtime_boundary(flow.get("residual_risk"))
+        ):
+            return True
+
+    if saw_planned:
+        errors.append(
+            "runtime_prompt_flow.validation_evidence outcome cannot be only planned "
+            "in action/final handoff"
+        )
+    if saw_invalid:
+        errors.append(
+            "runtime_prompt_flow.validation_evidence outcome must be one of: "
+            + ", ".join(sorted(RUNTIME_FLOW_HANDOFF_VALIDATION_OUTCOMES))
+        )
+    return False
+
+
+def _runtime_validation_entries(value: Any) -> list[dict[str, Any]]:
+    if isinstance(value, dict):
+        return [value]
+    if isinstance(value, list):
+        return [item for item in value if isinstance(item, dict)]
+    return []
+
+
+def _runtime_validation_disclosure_present(entry: dict[str, Any]) -> bool:
+    return any(
+        _has_runtime_boundary(entry.get(key))
+        for key in ("reason", "why_not_run", "disclosure", "does_not_prove")
+    )
 
 
 def _has_runtime_boundary(value: Any) -> bool:
