@@ -102,6 +102,7 @@ KEY_FOUNDATION_CAPABILITIES = {
     "architecture-enforcement-tooling",
     "consumer-impact-analysis",
     "cleanup-deletion-governance",
+    "minimal-correct-implementation",
 }
 
 SECTION_ALIASES = {
@@ -319,6 +320,26 @@ DUPLICATE_IGNORE_FRAGMENTS = (
     "`42 idempotency-retry-design`",
     "`82 solution-optimality-evaluation`",
     "| mode | trigger signals | professional focus | required evidence | companion capabilities",
+)
+
+MINIMAL_CORRECTNESS_TERMS = (
+    "existence",
+    "simplicity ladder",
+    "standard library",
+    "native",
+    "existing repository",
+    "installed dependency",
+    "local direct",
+    "new dependency",
+    "one implementation",
+    "delete",
+    "shrink",
+    "yagni",
+    "shortcut",
+    "ceiling",
+    "upgrade trigger",
+    "validation evidence",
+    "residual risk",
 )
 
 
@@ -796,7 +817,18 @@ def _score_anti_bloat(
         score -= 1
     if _reference_files(path) and not has_hint:
         score -= 1
+    if path.parent.name == "minimal-correct-implementation":
+        term_hits = _minimal_correctness_term_hits(f"{body}\n{reference_text}")
+        if term_hits < 10:
+            score -= 1
+        if term_hits < 7:
+            score -= 1
     return _clamp(score, 0, 5)
+
+
+def _minimal_correctness_term_hits(text: str) -> int:
+    folded = text.casefold()
+    return sum(1 for term in MINIMAL_CORRECTNESS_TERMS if term.casefold() in folded)
 
 
 def _warnings(

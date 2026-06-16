@@ -22,6 +22,6 @@ actual:
         reason: SKILL.md output contract is not an API/data contract change
     context_budget_mode: staged-plan
     context_budget_rationale: L3 skill contract update needs authoring, review, and validation gates
-    required_evidence: [boundary, trigger precision, output contract, registry/routing/validation impact]
+    required_evidence: [boundary, trigger precision, output contract, registry/routing/validation impact, minimal scope diff, deleted or rejected complexity, shortcut ceiling and upgrade trigger when shortcuts remain]
     required_quality_gates: [documentation gate, test gate, AI review gate]
     handoff_target: documentation-handoff

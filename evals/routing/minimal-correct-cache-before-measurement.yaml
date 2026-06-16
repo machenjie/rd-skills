@@ -1,0 +1,45 @@
+---
+id: minimal-correct-cache-before-measurement
+description: |
+  Custom cache layer requested before measured need or primitive review.
+prompt: |
+  Add a custom in-memory cache class, lock manager, and retry loop around this
+  repository because it might get slow later. There is no production baseline
+  yet. Prefer datastore or existing cache primitives if they are enough.
+expected:
+  complexity: L3
+  risk_level: high
+  expected_stage: architecture-design
+  expected_context_budget_mode: staged-plan
+  risk_triggers: []
+  skills:
+    - data-middleware-change-builder
+    - reliability-observability-gate
+    - quality-test-gate
+  capabilities:
+    - minimal-correct-implementation
+    - cache-design
+    - performance-budgeting
+    - observability
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - reliability gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-api-contract-changer
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+    - payment-trading-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Speculative cache machinery should route to minimal correctness plus data
+  middleware and reliability, not to a custom layer by default.

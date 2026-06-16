@@ -1,0 +1,45 @@
+---
+id: minimal-correct-shortcut-ledger-missing
+description: |
+  Deliberate shortcut lacks ceiling and upgrade trigger.
+prompt: |
+  Keep this shortcut for now, but the code only says "temporary shortcut" and
+  does not state a ceiling, owner, validation, or when to upgrade it.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: refactoring
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  skills:
+    - ai-code-review-refactor
+    - change-documentation-gate
+    - quality-test-gate
+  capabilities:
+    - minimal-correct-implementation
+    - cleanup-deletion-governance
+    - implementation-structure-design
+    - agent-execution-discipline
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - AI review gate
+    - implementation gate
+    - test gate
+    - documentation gate
+forbidden:
+  skills:
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Shortcut acceptance requires a ledger with ceiling, upgrade trigger,
+  validation evidence, and residual risk.

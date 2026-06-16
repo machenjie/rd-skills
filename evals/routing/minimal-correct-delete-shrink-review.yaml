@@ -1,0 +1,47 @@
+---
+id: minimal-correct-delete-shrink-review
+description: |
+  Delete and shrink stale branches with cleanup governance.
+prompt: |
+  Review this module for dead compatibility code, stale fallbacks, and
+  scaffold-for-later branches. I want a safe delete/shrink plan with caller
+  search and rollback notes, not a rewrite.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: refactoring
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  skills:
+    - ai-code-review-refactor
+    - change-documentation-gate
+    - quality-test-gate
+  capabilities:
+    - minimal-correct-implementation
+    - cleanup-deletion-governance
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - refactoring
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - AI review gate
+    - implementation gate
+    - test gate
+    - documentation gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-middleware-change-builder
+    - delivery-release-gate
+  capabilities:
+    - release-rollback
+    - data-migration-design
+  domain_extensions:
+    - payment-trading-extension
+    - bigdata-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Deletion is allowed only with caller search, behavior preservation, tests,
+  and rollback or cleanup tracking.

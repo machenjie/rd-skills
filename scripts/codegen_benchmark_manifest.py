@@ -63,7 +63,9 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
     ),
     "devex": (
         "bugfix-same-pattern-scan",
+        "dependency-stdlib-native-ladder",
         "helper-reuse-search",
+        "minimal-correct-implementation-ladder",
         "monorepo-affected-tests",
         "structure-placement-reuse-existing-function",
         "test-failure-no-env-blame",
@@ -89,6 +91,7 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "architecture-enforcement-tooling",
         "consumer-impact-analysis",
         "cleanup-deletion-governance",
+        "complexity-delete-list-review",
         "side-effect-boundary",
     ),
     "performance": (

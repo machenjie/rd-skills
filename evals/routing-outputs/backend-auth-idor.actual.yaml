@@ -61,6 +61,7 @@ actual:
     required_evidence:
       - minimal diff
       - same-pattern scan record
+      - deleted or rejected complexity
       - regression test
       - blast-radius note
     required_quality_gates:

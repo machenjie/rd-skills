@@ -41,6 +41,7 @@ Define the minimum evidence needed to prove a change works correctly, does not r
 - **Experiment and model rollout tests require data validity checks**: exposure logging, sample ratio mismatch, feature point-in-time correctness, training-serving skew, drift metrics, and rollback version must be verified like code behavior.
 - **Affected-test selection must be proven against a full-suite baseline**: monorepo speedups are valid only when module graph, dependency edges, cache keys, and generated inputs cannot skip impacted tests.
 - **Agent-provided test evidence must be concrete**: accept command output, exit codes, logs, fixtures, screenshots, or recorded validator results; reject "tests should pass", undocumented local runs, and partial runs reported as full (a lint or type-check pass is not a test pass; one green test is not full-suite success).
+- **Minimal validation is risk-bound**: L1 low-risk changes may use the smallest meaningful runnable check, but a smoke check is not evidence for money, security, auth, data migration, retry/idempotency, or production reliability correctness. Do not delete a meaningful smoke or self-check as bloat.
 - **Test structure follows module structure**: test files, fixtures, factories, mocks, and golden data must have an owning module or contract boundary; shared test helpers must not become business-fixture dumping grounds.
 - **Tests exercise public behavior by default**: refactors and splits are verified through public APIs, module contracts, or observable behavior, not private helper calls that freeze implementation details.
 
@@ -91,6 +92,7 @@ Select the testing mode by risk. Do not request tests generically; name the fail
 | Integration/external dependency | DB/cache/queue/search/provider/webhook/file storage. | Mock-vs-real boundary, sandbox parity, retries, DLQ, reconciliation. | Real dependency or contract test, mock assumptions, failure simulation. | `integration-testing`, `integration-change-builder`, `data-middleware-change-builder` | Mock-only confidence. |
 | Frontend/user behavior/a11y | UI form, route, component, focus, validation, disabled/error states. | User behavior, accessibility semantics, state coverage. | Accessibility-query assertions, axe/keyboard evidence, state matrix. | `frontend-testing`, `frontend-change-builder` | CSS selector/internal hook assertions. |
 | Flaky/performance/security | Flaky CI, load/latency, auth, permission, calculation, race/idempotency. | Stabilize signal, cover negative cases, avoid false confidence. | Flake triage, property/negative cases, load/security evidence. | `security-privacy-gate`, `reliability-observability-gate` | Blind retries as a fix. |
+| Minimal validation decision | L1 local change, simplicity-ladder decision, delete/shrink pass, or deliberate shortcut requests smaller evidence. | Choose the cheapest check that can fail for the real risk and reject under-testing for high-risk paths. | Risk classification, runnable check, what it proves/does not prove. | `minimal-correct-implementation`, `agent-execution-discipline` | Smoke check for security/auth/money/migration/retry/idempotency/reliability. |
 
 ## Proactive Professional Triggers
 
@@ -275,13 +277,14 @@ Close a test strategy only when all five canonical answers are concrete (answer 
 21. Tests do not rely on private helper access when public behavior can prove the outcome.
 22. Module splits include corresponding test and fixture ownership review.
 23. Test pass claims map to the actual command and suite that ran; a lint or type-check pass is never reported as a test pass, and a single passing test is never reported as full-suite or full-coverage success.
-24. Reused test results are fresh: if code or inputs changed after a run, the suite is re-run before the pass is claimed.
-25. Test acceptance maps to the acceptance criteria and non-goals (spec compliance) before test-quality sign-off; a clean test suite does not substitute for a missing required behavior.
-26. Every proposed or reported test states what it proves and what it does not prove.
-27. Bug fixes include regression evidence for the verified defect or a documented reason the regression is non-automatable.
-28. Private helpers are not exported only for tests; tests exercise public behavior or explicit seams.
-29. Time, randomness, UUIDs, concurrency, and external I/O are deterministic or explicitly isolated in tests.
-30. Failure contracts and model mappings have negative-path and compatibility coverage when they cross boundaries.
+24. Minimal checks are accepted only for risk levels where they actually prove the selected behavior; high-risk gates keep their required unit, integration, contract, security, reliability, migration, or rollback evidence.
+25. Reused test results are fresh: if code or inputs changed after a run, the suite is re-run before the pass is claimed.
+26. Test acceptance maps to the acceptance criteria and non-goals (spec compliance) before test-quality sign-off; a clean test suite does not substitute for a missing required behavior.
+27. Every proposed or reported test states what it proves and what it does not prove.
+28. Bug fixes include regression evidence for the verified defect or a documented reason the regression is non-automatable.
+29. Private helpers are not exported only for tests; tests exercise public behavior or explicit seams.
+30. Time, randomness, UUIDs, concurrency, and external I/O are deterministic or explicitly isolated in tests.
+31. Failure contracts and model mappings have negative-path and compatibility coverage when they cross boundaries.
 
 ## Handoff
 - **backend-change-builder** — with test obligations for service, repository, and API layers.

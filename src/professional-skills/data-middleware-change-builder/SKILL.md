@@ -37,6 +37,7 @@ Design and review changes to persistence, caching, queueing, search, streaming, 
 - **Never write a forward migration without a tested rollback migration** — data layer rollbacks that require manual intervention are the leading cause of extended production outages.
 - **Large table operations must use online migration strategies** — offline migrations that require downtime on tables > 100k rows are not acceptable in production without a formal maintenance window.
 - **Search re-indexing must be blue/green or shadow-indexed** — cutover to a new mapping during active traffic corrupts relevance scores and may drop documents.
+- **Prefer datastore and middleware primitives before custom layers** — use database constraints, indexes, TTLs, queue/DLQ policies, cache capabilities, existing pool/client lifecycle, and built-in retry/backoff support before custom cache wrappers, lock managers, retry loops, connection pools, or pipeline stages.
 
 ## Industry Benchmarks
 - **Use-the-Index-Luke (Markus Winand)**: Index design starting from query requirements — no index without a named query it serves; no query without explaining its index strategy.
@@ -74,6 +75,7 @@ Evaluate every data or middleware change against:
 - **Poison message routing**: What happens when a message cannot be processed? Is there a DLQ with alerting?
 - **Replication lag tolerance**: Are there read operations that must see the latest write? Are they using the primary or a replica?
 - **Migration rollback**: Is there a tested rollback migration? Can the old application code function with the new schema?
+- **Minimal correctness**: Built-in store/cache/queue/search feature, existing middleware path, or small local change considered before new middleware abstraction, cache layer, retry/lock/pool helper, or operational branch.
 
 ## Mode Matrix
 Select the data/middleware mode before changing storage, cache, queue, search, backfill, or query behavior.
@@ -101,6 +103,7 @@ Select the data/middleware mode before changing storage, cache, queue, search, b
 - **Signal:** repository/cache/queue/search errors are swallowed, generalized, or leaked as raw driver/SDK/database internals. **Hidden risk:** retryability and terminal failure are unclear, and diagnostics may leak internals. **Required professional action:** define data-layer failure contract. **Route to:** `failure-contract-design`, `logging-error-handling`. **Evidence required:** boundary translation map, retry/DLQ behavior, safe message, and negative tests.
 - **Signal:** cache/event/search/index mutation is hidden in mapper, getter, policy, or model conversion. **Hidden risk:** side-effect ordering and source-of-truth drift. **Required professional action:** trace data and side-effect flow. **Route to:** `data-side-effect-flow-tracing`, `cache-design`. **Evidence required:** flow map, source of truth, transaction/outbox ordering, and idempotency/compensation.
 - **Signal:** DB/cache/queue/search tests need private repository helpers, live infrastructure, wall-clock timing, random IDs, or broad shared fixtures to pass. **Hidden risk:** middleware tests become flaky or implementation-coupled while real boundary behavior remains unproven. **Required professional action:** design explicit test seams and contract/integration proof. **Route to:** `testability-seam-design`, `quality-test-gate`. **Evidence required:** public repository/queue/cache boundary, fake/stub/contract decision, deterministic controls, fixture owner, and validation output.
+- **Signal:** data-layer work adds a custom cache, retry loop, lock manager, connection pool, queue abstraction, index helper, search pipeline, or derived-store branch before proving built-in middleware features are insufficient. **Hidden risk:** extra data machinery creates drift, stale state, retry storms, or ownership ambiguity. **Required professional action:** run minimal-correctness review, prefer built-in middleware primitives, and keep any shortcut bounded by telemetry and rollback criteria. **Route to:** `minimal-correct-implementation`, `cache-design`, `message-queue-design`, `reliability-observability-gate`. **Evidence required:** primitive considered, current scale/consistency need, validation result, rollback path, and upgrade trigger.
 
 ### Decision Tree: Index Design Required?
 
@@ -186,6 +189,7 @@ Return a data and middleware change plan with:
 - **Migration plan**: Forward migration steps; rollback migration; online vs. offline strategy; execution window.
 - **Failure mode analysis**: Named failure scenarios with prevention or recovery strategy.
 - **Reuse and placement rationale**: why each index, cache key, queue topic, migration, backfill, or derived-store update belongs at this storage/middleware boundary.
+- **Minimal Correctness Decision**: datastore/middleware primitive selected or rejected, custom layer avoided or justified, deleted/shrunk data machinery, and shortcut ceiling with telemetry and upgrade trigger.
 - **Behavior preservation**: read/write semantics, freshness, ordering, rollback, and old application compatibility preserved or intentionally changed.
 - **Test obligations**: Query plan tests, cache invalidation tests, DLQ tests, migration tests.
 - **Observability**: Metrics (query latency, cache hit rate, queue depth, DLQ depth) and alert thresholds.

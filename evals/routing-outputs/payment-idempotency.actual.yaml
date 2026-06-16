@@ -75,6 +75,7 @@ actual:
       - validated inputs
       - released resources
       - minimal scope diff
+      - deleted or rejected complexity
     required_quality_gates:
       - requirement gate
       - domain gate

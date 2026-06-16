@@ -1,0 +1,43 @@
+id: complexity-delete-list-review
+category: structure
+complexity: L2
+focus:
+  - complexity delete list
+  - overengineering review
+  - behavior preservation
+  - cleanup governance
+route_hints:
+  skills:
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - minimal-correct-implementation
+    - code-clarity-maintainability
+    - cleanup-deletion-governance
+    - design-pattern-selection
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+expected_outcomes:
+  - Complexity findings are tagged as delete, shrink, stdlib, native, existing-code, or yagni.
+  - Wrapper-only delegation and one-implementation abstractions are rejected unless current force exists.
+  - Deletion recommendations include caller search and behavior-preservation evidence.
+  - Normal correctness and safety risks remain separate from line-count preference.
+required_qualities:
+  - Complexity Delete List explains why each item can be deleted, shrunk, reused, or retained.
+  - Minimal Correctness Decision records shortcut ceiling and upgrade trigger when shortcuts remain.
+  - Regression evidence protects the billing rule.
+  - Handoff includes residual risk and next gate.
+forbidden_shortcuts:
+  - Approving wrapper-only delegation without a real boundary.
+  - Keeping one-implementation interfaces for future proofing.
+  - Deleting behavior without caller search and regression evidence.
+  - Treating fewer lines as approval when boundaries would be lost.
+evidence:
+  - Complexity Delete List with tags.
+  - Caller search or no-runtime-consumer rationale.
+  - Regression test or behavior-preservation review evidence.
+  - Residual retained-complexity risk statement.

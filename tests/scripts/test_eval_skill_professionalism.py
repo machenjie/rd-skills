@@ -322,6 +322,51 @@ class EvalSkillProfessionalismTests(unittest.TestCase):
             score = module._score_anti_bloat(body, "professional-skill", "", sections, path)
         self.assertLessEqual(score, 2)
 
+    def test_minimal_correctness_terms_affect_anti_bloat_score(self) -> None:
+        module = _load_module()
+        strong = "\n".join(
+            [
+                "existence challenge",
+                "simplicity ladder",
+                "standard library native existing repository installed dependency local direct",
+                "new dependency one implementation delete shrink yagni",
+                "shortcut ceiling upgrade trigger validation evidence residual risk",
+            ]
+        )
+        weak = "minimal code with less text"
+        self.assertGreaterEqual(module._minimal_correctness_term_hits(strong), 15)
+        self.assertLess(module._minimal_correctness_term_hits(weak), 7)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "minimal-correct-implementation" / "SKILL.md"
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                "---\n"
+                "name: minimal-correct-implementation\n"
+                "description: Minimal correctness test fixture.\n"
+                "license: MIT\n"
+                "changeforge_kind: foundation-capability\n"
+                "changeforge_version: 0.1.0\n"
+                "---\n"
+                "# Minimal Correct Implementation\n",
+                encoding="utf-8",
+            )
+            sections = {"Reference Loading Policy": "", "Evidence Contract": ""}
+            strong_score = module._score_anti_bloat(
+                strong,
+                "foundation-capability",
+                "",
+                sections,
+                path,
+            )
+            weak_score = module._score_anti_bloat(
+                weak,
+                "foundation-capability",
+                "",
+                sections,
+                path,
+            )
+        self.assertGreater(strong_score, weak_score)
+
     def test_reference_file_without_loading_hint_warns(self) -> None:
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:

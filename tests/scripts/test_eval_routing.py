@@ -87,6 +87,7 @@ actual:
     required_evidence:
       - minimal diff
       - same-pattern scan record
+      - deleted or rejected complexity
       - regression test
       - blast-radius note
     required_quality_gates:
@@ -186,6 +187,7 @@ class EvalRoutingCandidateTests(unittest.TestCase):
             "    required_evidence:\n"
             "      - minimal diff\n"
             "      - same-pattern scan record\n"
+            "      - deleted or rejected complexity\n"
             "      - regression test\n"
             "      - blast-radius note\n"
             "    required_quality_gates:\n"

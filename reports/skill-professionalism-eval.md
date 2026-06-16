@@ -1,9 +1,9 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-16T03:15:49.424923+00:00
-- Skills/capabilities checked: 135
+- Generated: 2026-06-16T05:05:46.373694+00:00
+- Skills/capabilities checked: 136
 - Warning count: 4
-- Average score: 41.30/60
+- Average score: 41.45/60
 
 ## Scores
 
@@ -73,7 +73,6 @@
 | `src/foundation/capabilities/extensibility-design/SKILL.md` | foundation-capability | 37/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/language-runtime-selection/SKILL.md` | foundation-capability | 37/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/model-boundary-mapping/SKILL.md` | foundation-capability | 37/60 | needs-review | 0 | 0 |
-| `src/foundation/capabilities/cleanup-deletion-governance/SKILL.md` | foundation-capability | 38/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/profiling/SKILL.md` | foundation-capability | 38/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/project-initialization/SKILL.md` | foundation-capability | 38/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md` | foundation-capability | 39/60 | acceptable | 0 | 0 |
@@ -86,6 +85,7 @@
 | `src/foundation/capabilities/web-security/SKILL.md` | foundation-capability | 40/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/configuration-runtime-policy/SKILL.md` | foundation-capability | 41/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/module-boundary-design/SKILL.md` | foundation-capability | 41/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/cleanup-deletion-governance/SKILL.md` | foundation-capability | 42/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/design-pattern-selection/SKILL.md` | foundation-capability | 42/60 | acceptable | 0 | 1 |
 | `src/foundation/capabilities/context-packaging/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/message-queue-design/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
@@ -94,11 +94,11 @@
 | `src/foundation/capabilities/release-rollback/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/skill-authoring-expert/SKILL.md` | foundation-capability | 43/60 | needs-review | 1 | 1 |
 | `src/foundation/capabilities/solution-optimality-evaluation/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/testability-seam-design/SKILL.md` | foundation-capability | 43/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/async-job-design/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/contract-testing/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/integration-testing/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/logging-error-handling/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/testability-seam-design/SKILL.md` | foundation-capability | 44/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/transaction-consistency/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/unit-testing/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cache-design/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
@@ -130,6 +130,7 @@
 | `src/professional-skills/data-middleware-change-builder/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/domain-impact-modeler/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/task-dag-planner/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
+| `src/foundation/capabilities/minimal-correct-implementation/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/acceptance-criteria-builder/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/change-impact-analyzer/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/change-intake-compiler/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |

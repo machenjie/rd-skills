@@ -22,6 +22,7 @@ Do not use this capability for: trivial one-liner mechanical fixes with no desig
 # Non-Negotiable Rules
 
 - **The three-challenge rule**: Before locking any significant design decision, explicitly answer: (1) Why is this the right approach for this specific problem and context? (2) Is this the simplest design that satisfies all current requirements without speculation? (3) What is the strongest alternative, and why is it rejected with a specific, concrete reason? If none of these questions can be answered, the decision is not ready to implement.
+- **Deletion/reuse challenge**: Before optimizing or expanding a solution, ask whether the correct answer is to delete code, reuse existing code, use a standard-library or native platform feature, shrink scope, or keep a local direct implementation. A more elaborate solution is not optimal when a simpler current option satisfies the same requirement and safety gates.
 - **Measure before optimizing; never optimize by intuition alone**: A hypothesis that "this is slow" is the beginning of investigation, not the end. Profile first. The bottleneck revealed by measurement frequently differs from the initial hypothesis. Optimizing the wrong layer wastes time and introduces new defects.
 - **Hot path analysis precedes optimization**: Identify whether the code being evaluated is on the critical path (called thousands of times per second) or the cold path (called once per day). Optimization effort must be proportional to frequency and production impact — premature optimization of cold paths reduces readability without meaningful benefit.
 - **The deferred optimization trap is a production incident waiting to happen**: "We can optimize it later" is an escalation signal, not an acceptable resolution. If the current approach is known to be unacceptable at production scale, it must be fixed or the condition must be explicitly documented (the exact threshold at which it becomes unacceptable and who owns the remediation).
@@ -182,6 +183,7 @@ Apply this capability when an implementation choice is non-trivial (more than on
 
 Return an optimality evaluation that includes:
 - **Three-challenge answers**: (1) Why this approach — specific evidence. (2) Is it the simplest sufficient design — yes/no with rationale. (3) Strongest alternative rejected — name it, state the specific cost.
+- **Deletion/reuse answer**: delete, reuse, stdlib/native, existing dependency, local direct code, or new implementation decision, with the specific reason the simpler option is accepted or rejected.
 - **Ten-dimension assessment**: For each dimension: rating (✓ Satisfactory / ⚠ Risk / ✗ Unacceptable / N/A with one-line rationale), key evidence, and any required action.
 - **Additional considerations applied**: Which (if any) of the additional professional considerations apply and the finding.
 - **Cognitive complexity assessment**: ≤ 15 per function (pass) / > 15 and ≤ 25 (note decomposition opportunity) / > 25 (decomposition required before handoff).

@@ -50,6 +50,7 @@ Owns release-delivery; also serves infrastructure-deployment, kubernetes-helm, a
 - **Helm releases must document chart version, appVersion, values overlays, rendered manifest diff, CRD/hook behavior, upgrade flags, rollback scope, and post-upgrade verification.**
 - **Helm rollback must not be treated as full system rollback.** Database schema, external config, CRDs, secrets, cloud resources, and migrated data may need separate rollback or forward-fix.
 - **No repeated deploy retry without route repair.** After two failed pipeline or deployment attempts on the same signature, require inspected evidence, a new hypothesis, and a changed route before another attempt.
+- **Prefer existing release controls before new release machinery** — use current CI jobs, platform feature flags, staged rollout controls, rendered diff checks, config validation, and rollback paths before adding a new pipeline wrapper, deployment tool, environment switch, hook, or script.
 
 ## Industry Benchmarks
 - **DORA Metrics (Accelerate — Forsgren, Humble, Kim)**: Deployment frequency, Lead time for changes, Mean time to restore (MTTR), Change failure rate — the four metrics that measure delivery health. Elite teams: deployment frequency daily+, MTTR < 1 hour, change failure rate < 5%.
@@ -87,6 +88,7 @@ Evaluate the release plan against these dimensions:
 - **Post-release monitoring**: Which dashboards, metrics, error rates, and SLO burn rates are being watched? Who owns the watch? For how long?
 - **Communication plan**: Are API consumers, partner integrators, or on-call engineers notified of the change before deployment?
 - **Cloud governance**: Which cloud account/project, namespace, VPC/subnet, security group/NACL/WAF, DNS/CDN/gateway, KMS key, and IAM role boundaries are affected?
+- **Minimal correctness**: Existing CI/CD, release platform, flag service, config validation, and rollback mechanism considered before new tool, wrapper, script, hook, or runtime branch.
 - **Compliance evidence**: Which approval, artifact digest, SBOM, vulnerability scan, change ticket, and deploy audit event must be retained?
 - **Incident mitigation**: If this release is part of a SEV response, which action is mitigation, which action is resolution, and who owns customer-facing updates?
 
@@ -113,6 +115,7 @@ Select the release mode before approving deployment, migration, config, IaC, rol
 - **Signal:** release depends on architecture, generated-file, import, export, or forbidden-dependency rules that are only documented and not enforced in CI. **Hidden risk:** release quality depends on memory and review discipline, so drift reappears after deployment. **Required professional action:** make the rule enforceable or define a timeboxed report-only migration before release. **Route to:** `architecture-enforcement-tooling`, `ci-cd`, `quality-test-gate`. **Evidence required:** rule list, tool choice, CI command, representative failure, generated-code exceptions, owner, and migration path.
 - **Signal:** release lacks post-release owner, watch window, or dashboard. **Hidden risk:** regression discovered by users. **Required professional action:** assign operational watch. **Route to:** `reliability-observability-gate`. **Evidence required:** owner, duration, metrics, rollback trigger.
 - **Signal:** regulated release lacks approval, artifact digest, SBOM/scan, deploy audit event, or retention metadata. **Hidden risk:** missing evidence causes audit failure after release. **Required professional action:** block until the release evidence chain exists. **Route to:** `change-documentation-gate`, `security-privacy-gate`. **Evidence required:** audit packet with approval, artifact digest, scan report, deploy event, retention owner, and freshness date.
+- **Signal:** release work adds a new CI/CD wrapper, deploy script, hook, feature-flag branch, config switch, or IaC abstraction while the existing platform can express the rollout, validation, and rollback requirement. **Hidden risk:** release complexity becomes another failure surface and bypasses known audit paths. **Required professional action:** run minimal-correctness review and keep any shortcut tied to a rollback owner and cleanup trigger. **Route to:** `minimal-correct-implementation`, `configuration-runtime-policy`, `cleanup-deletion-governance`. **Evidence required:** existing release control considered, rejected new machinery or justification, rollback proof, cleanup owner, and validation command.
 
 ## Foundation Capability Support
 
@@ -216,6 +219,7 @@ Return a structured release plan with:
 - **Execution discipline evidence**: Deployment commands or pipeline links, exit status, failed-attempt ledger when applicable, route repair decision, and closure package.
 - **Validation evidence**: pipeline, staging, rollback, Helm/IaC, config, canary, post-release, or audit checks run, with outcomes tied to the release obligation.
 - **Reuse and placement rationale**: why migration, config, flag, Helm/IaC, pipeline, watch, and rollback responsibilities sit in the selected release boundary.
+- **Minimal Correctness Decision**: existing release control selected or rejected, new release machinery avoided or justified, stale flag/config/script deletion plan, and shortcut ceiling with rollback trigger.
 - **Behavior preservation**: old/new version compatibility, config defaults, feature flag off-state, public contract, and rollback behavior preserved or intentionally changed.
 - **Release notes**: Human-readable changelog entries (Keep a Changelog format) for affected audiences.
 - **Evidence limits**: what pipeline, staging, rollback, Helm/IaC, config, canary, and post-release evidence proves and what production, consumer, or data risks remain unproven.

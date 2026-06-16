@@ -1103,3 +1103,16 @@ capabilities:
       - cleanup deletion governance deletion path dead code caller search runtime generated reflection references feature flag removal fallback expiry compatibility branch deprecated API expand contract cleanup telemetry unused rollback cleanup issue
     risk_notes: [AI assisted work tends to add flags fallbacks compatibility branches and dead code without deletion path telemetry or rollback evidence]
     expected_outputs: [Cleanup Deletion Plan with target artifact owner removal condition callers searched telemetry evidence tests rollback path cleanup issue tracking and residual deletion risk]
+  - id: "117"
+    name: minimal-correct-implementation
+    group: engineering-workflow
+    path: src/foundation/capabilities/minimal-correct-implementation
+    status: implemented
+    used_by: [change-forge-router, backend-change-builder, frontend-change-builder, data-api-contract-changer, data-middleware-change-builder, integration-change-builder, delivery-release-gate, quality-test-gate, ai-code-review-refactor, code-review, refactoring, implementation-structure-design, code-clarity-maintainability, design-pattern-selection, package-dependency-management, cleanup-deletion-governance]
+    triggers:
+      - minimal correct implementation simplest solution shortest correct path YAGNI overengineering bloat boilerplate deletion first shrink code fewer lines
+      - standard library stdlib native platform feature framework feature browser feature database constraint existing dependency avoid new dependency
+      - one implementation interface abstract class factory strategy builder speculative abstraction scaffold for later unused config mode switch dead flexibility
+      - deliberate shortcut ceiling upgrade trigger changeforge-shortcut shortcut ledger
+    risk_notes: [Overengineered AI changes add dependencies abstractions files configuration and future-proof scaffolding that increase maintenance cost without improving correctness]
+    expected_outputs: [Minimal Correctness Decision with existence check simplicity ladder result delete or shrink findings dependency abstraction and file decisions shortcut ledger validation evidence residual risk and next gate]

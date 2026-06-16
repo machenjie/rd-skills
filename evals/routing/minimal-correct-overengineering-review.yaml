@@ -1,0 +1,44 @@
+---
+id: minimal-correct-overengineering-review
+description: |
+  Complexity-only review of overengineered generated code.
+prompt: |
+  Review this AI patch only for overengineering and bloat. It adds several
+  wrappers, future extension points, and boilerplate around one current rule.
+  Tell me what can be deleted or shrunk without changing behavior.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  skills:
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - minimal-correct-implementation
+    - code-clarity-maintainability
+    - implementation-structure-design
+    - design-pattern-selection
+    - refactoring
+  domain_extensions: []
+  quality_gates:
+    - AI review gate
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - data-api-contract-changer
+    - data-middleware-change-builder
+    - delivery-release-gate
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - payment-trading-extension
+    - web3-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  A complexity-only pass should produce delete/shrink findings without
+  replacing normal correctness review for substantive behavior.

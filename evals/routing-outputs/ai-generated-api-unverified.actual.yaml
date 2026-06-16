@@ -22,6 +22,6 @@ actual:
         reason: release-delivery is not launched during code-review
     context_budget_mode: staged-plan
     context_budget_rationale: L3 generated code review needs staged fix and test gates after findings
-    required_evidence: [findings with severity, evidence, impacted file, required fix, validation required, independent reviewer, repair and re-review result]
+    required_evidence: [findings with severity, evidence, impacted file, required fix, validation required, independent reviewer, repair and re-review result, complexity-only delete/shrink findings when selected]
     required_quality_gates: [implementation gate, security gate, test gate, AI review gate, execution discipline gate]
     handoff_target: bug-fix

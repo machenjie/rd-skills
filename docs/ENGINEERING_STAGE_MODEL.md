@@ -27,24 +27,25 @@ quality gates, and the allowed handoff target stage.
 ### architecture-design
 - Purpose: module boundaries, layering, dependency direction, data ownership, service boundaries, extensibility, reversibility.
 - Launch: `architecture-style-selection`, `module-boundary-design`, `layered-architecture-design`, `architecture-tradeoff-analysis`, `extensibility-design`, `solution-optimality-evaluation`.
+- Conditional launch: `minimal-correct-implementation` when extensibility, stack complexity, or future-proofing is proposed.
 - Do not launch by default: language idiom checks, coding, test authoring.
-- Required evidence: boundary owners, dependency direction, rejected alternatives, reversibility classification.
+- Required evidence: boundary owners, dependency direction, rejected alternatives, simplicity ladder result when extensibility or stack complexity is proposed, reversibility classification.
 - Required quality gates: architecture gate.
 - Handoff: implementation-planning.
 
 ### implementation-planning
 - Purpose: code placement, reuse decision, object/function/class/file/directory design, naming, readable main flow, public/private/internal boundaries.
-- Launch: `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` (naming only).
+- Launch: `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` (naming only); add `minimal-correct-implementation` when new structure, dependency, file, class, config, or abstraction is proposed.
 - Do not launch by default: full architecture review, release gate, deep performance profiling.
-- Required evidence: target boundaries inspected before plan, reuse candidates, placement rationale, visibility decisions, test placement, TDD or validation signal.
+- Required evidence: target boundaries inspected before plan, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal.
 - Required quality gates: implementation gate.
 - Handoff: coding.
 
 ### coding
 - Purpose: implement code with language idiom, error handling, resource cleanup, input validation, concurrency, minimal implementation.
-- Launch: matching language professional usage capability, `language-idiom-enforcement`, `input-validation`, `logging-error-handling`, relevant builder skill.
+- Launch: matching language professional usage capability, `language-idiom-enforcement`, `input-validation`, `logging-error-handling`, relevant builder skill; add `minimal-correct-implementation` when the implementation risks unnecessary scope.
 - Do not launch by default: architecture deep review, release gate, full regression suite design.
-- Required evidence: inspected implementation context, TDD or validation signal before code, idiomatic implementation, validated inputs, released resources, minimal scope diff.
+- Required evidence: inspected implementation context, TDD or validation signal before code, idiomatic implementation, validated inputs, released resources, minimal scope diff, deleted or rejected complexity when selected.
 - Required quality gates: implementation gate.
 - Handoff: testing or code-review.
 
@@ -58,41 +59,42 @@ quality gates, and the allowed handoff target stage.
 
 ### bug-fix
 - Purpose: minimal fix, same-pattern scan, regression test, compatibility, upstream/downstream impact.
-- Launch: relevant builder skill, `agent-execution-discipline`, `regression-testing`, `code-review`.
+- Launch: relevant builder skill, `agent-execution-discipline`, `regression-testing`, `code-review`, `minimal-correct-implementation`.
 - Do not launch by default: architecture redesign, release gate unless the fix ships directly.
-- Required evidence: minimal diff, same-pattern scan record, regression test, blast-radius note.
+- Required evidence: minimal diff, deleted or rejected complexity, same-pattern scan record, regression test, blast-radius note.
 - Required quality gates: implementation gate, test gate.
 - Handoff: testing, code-review, or release-delivery.
 
 ### code-review
 - Purpose: correctness, structure, naming, reuse, readability, security, reliability, test evidence, hallucinated-API check.
-- Launch: `code-review`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `ai-code-review-refactor` for generated code as a professional skill.
+- Launch: `code-review`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`, `minimal-correct-implementation`; add `ai-code-review-refactor` for generated code as a professional skill.
 - Do not launch by default: release gate, deployment, infrastructure capabilities.
-- Required evidence: findings with severity, evidence, impacted file, required fix, validation required, independent reviewer, repair and re-review result.
+- Required evidence: findings with severity, complexity-only delete/shrink findings when selected, evidence, impacted file, required fix, validation required, independent reviewer, repair and re-review result.
 - Required quality gates: implementation gate.
 - Handoff: refactoring, bug-fix, testing, or documentation-handoff.
 
 ### refactoring
 - Purpose: behavior-preserving structure change — extract, move, inline, merge, split, cleanup, readability, dependency direction, rollback.
-- Launch: `refactoring`, `implementation-structure-design`, `code-clarity-maintainability`, `code-review`, `regression-testing`.
+- Launch: `refactoring`, `implementation-structure-design`, `code-clarity-maintainability`, `code-review`, `regression-testing`; add `minimal-correct-implementation` for delete/shrink or speculative structure collapse.
 - Do not launch by default: feature design, release gate. Add `architecture-impact-reviewer` only when boundaries shift.
-- Required evidence: characterization tests, preserved behavior, selection rationale, rollback path.
+- Required evidence: characterization tests, preserved behavior, selection rationale, deleted or rejected complexity, rollback path.
 - Required quality gates: implementation gate, test gate.
 - Handoff: testing, code-review, or documentation-handoff.
 
 ### testing
 - Purpose: unit, integration, contract, e2e, regression, fixtures, mocks, concurrency, language-specific tests.
-- Launch: `test-strategy`, `language-testing-strategy`, the matching test capability (`unit-testing`, `integration-testing`, `contract-testing`, `e2e-testing`, `regression-testing`), `test-data-management`.
+- Launch: `test-strategy`, `language-testing-strategy`, the matching test capability (`unit-testing`, `integration-testing`, `contract-testing`, `e2e-testing`, `regression-testing`), `test-data-management`; add `minimal-correct-implementation` when lower-depth validation is proposed.
 - Do not launch by default: architecture redesign, coding of new features.
-- Required evidence: risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps.
+- Required evidence: risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected.
 - Required quality gates: test gate.
 - Handoff: code-review, release-delivery, or documentation-handoff.
 
 ### release-delivery
 - Purpose: CI/CD, configuration, migration, feature flag, canary, rollback, observability.
 - Launch: `ci-cd`, `release-rollback`, `containerization`, `kubernetes-gateway`, `observability`, `backup-recovery`.
+- Conditional launch: `minimal-correct-implementation` for new release machinery, shortcuts, stale flags, or config branches.
 - Do not launch by default: language deep checks and coding unless code still changes.
-- Required evidence: rollout sequence, rollback trigger, config compatibility, health checks, alert ownership.
+- Required evidence: rollout sequence, rollback trigger, config compatibility, health checks, alert ownership, shortcut ceiling and upgrade trigger when shortcuts remain.
 - Required quality gates: delivery gate.
 - Handoff: documentation-handoff or closed.
 
@@ -106,9 +108,9 @@ quality gates, and the allowed handoff target stage.
 
 ### skill-authoring
 - Purpose: author, review, slim, split, or maintain ChangeForge skills, capabilities, references, registry, or routing rules.
-- Launch: `skill-authoring-expert`, `documentation-generation`, `agent-execution-discipline`; pair with `change-documentation-gate`, `ai-code-review-refactor`, or `quality-test-gate` when those professional owners are selected by risk.
+- Launch: `skill-authoring-expert`, `documentation-generation`, `agent-execution-discipline`; add `minimal-correct-implementation` when skill source adds routing surface, references, benchmarks, shortcuts, or generated-review complexity; pair with `change-documentation-gate`, `ai-code-review-refactor`, or `quality-test-gate` when those professional owners are selected by risk.
 - Do not launch by default: product coding, language runtime, release capabilities.
-- Required evidence: boundary, trigger precision, output contract, registry/routing/validation impact.
+- Required evidence: boundary, trigger precision, output contract, registry/routing/validation impact, minimal scope diff, deleted or rejected complexity, shortcut ceiling and upgrade trigger when shortcuts remain.
 - Required quality gates: documentation gate, test gate.
 - Handoff: documentation-handoff or closed.
 
@@ -139,7 +141,7 @@ common risks, and gates likely needed. Launch only the matching set for the surf
 | sdk-library | `data-api-contract-changer` | `sdk-library-contract-design`, `version-compatibility`, `package-dependency-management` | API break, provenance | API/data, test |
 | cli-daemon | `backend-change-builder` | `cli-daemon-interface-design`, `logging-error-handling` | exit-code/IO contract | test |
 | documentation-only | `change-documentation-gate` | `documentation-generation` | stale or wrong docs | documentation |
-| skill-authoring | `change-forge-router` | `skill-authoring-expert`, `change-documentation-gate` | over/under routing, context bloat | documentation, test |
+| skill-authoring | `change-forge-router` | `skill-authoring-expert`, `minimal-correct-implementation`, `change-documentation-gate` | over/under routing, context bloat | documentation, test |
 
 ## 3. Language Surface Selector
 

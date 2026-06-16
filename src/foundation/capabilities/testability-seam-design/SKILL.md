@@ -26,9 +26,11 @@ Do not use when the change is a no-behavior edit and existing tests already prov
 # Non-Negotiable Rules
 
 - Test through observable public behavior by default.
+- Minimal checks must be risk-appropriate: choose the smallest test layer that proves the behavior, but do not reduce evidence below the affected trust boundary, contract, data, concurrency, security, accessibility, or release risk.
 - Mock only external boundaries or explicitly declared seams.
 - Do not mock private implementation details.
 - Do not make private code public, exported, or package-visible only for tests.
+- Do not split, export, or widen visibility of a private helper merely to make a smaller test possible; first test the public behavior or introduce a production-meaningful seam.
 - Every new seam must have production purpose or a clear test boundary.
 - Fixtures must have an owner and a reason to change.
 - Characterization tests must precede risky refactors.
@@ -89,6 +91,7 @@ Return a Testability Seam Plan:
 - Test data builder ownership and scope.
 - Deterministic input, time, randomness, UUID, concurrency, environment, and IO strategy.
 - Private-helper non-export decision.
+- Minimal verification decision: smallest sufficient public-boundary check, rejected heavier tests, and risk reason when broader integration/contract/E2E proof is still required.
 - Contract, integration, and unit test split.
 - Characterization test plan for risky refactors.
 - Mutation testing or property-based testing trigger decision.
@@ -103,12 +106,13 @@ Close the plan only when it names the behavior boundary under test, dependencies
 
 1. Public behavior tests exist or a no-test rationale is explicit.
 2. Private helpers are not exported only for testing.
-3. Mocks do not assert private call order unless no public boundary can expose behavior and that limitation is recorded.
-4. External systems have explicit fake, stub, or contract test strategy.
-5. Time, randomness, UUIDs, concurrency, environment, and IO are deterministic in tests.
-6. Fixture ownership and reason to change are explicit.
-7. Characterization tests exist before risky refactors.
-8. Flaky risks have mitigation or named residual risk.
+3. Minimal checks are explicitly matched to risk; higher-risk trust-boundary, contract, data, concurrency, security, accessibility, and release changes keep the necessary broader proof.
+4. Mocks do not assert private call order unless no public boundary can expose behavior and that limitation is recorded.
+5. External systems have explicit fake, stub, or contract test strategy.
+6. Time, randomness, UUIDs, concurrency, environment, and IO are deterministic in tests.
+7. Fixture ownership and reason to change are explicit.
+8. Characterization tests exist before risky refactors.
+9. Flaky risks have mitigation or named residual risk.
 
 # Used By
 

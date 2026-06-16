@@ -1,0 +1,44 @@
+id: minimal-correct-implementation-ladder
+category: devex
+complexity: L2
+focus:
+  - minimal correctness ladder
+  - reuse before new structure
+  - feature-local implementation
+  - validation evidence for small changes
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - minimal-correct-implementation
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - agent-execution-discipline
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+expected_outcomes:
+  - Existing order formatter and label ownership are searched before new code is accepted.
+  - The selected implementation is local/direct unless boundary evidence proves otherwise.
+  - Speculative service, factory, registry, config option, and shared utility paths are rejected.
+  - Public behavior tests prove active and archived label output.
+required_qualities:
+  - Minimal Correctness Decision answers existence, ladder result, and rejected complexity.
+  - Implementation Structure Plan records owner, placement, and public/private boundary.
+  - Tests exercise observable order label behavior rather than private helper internals.
+  - Validation output and residual risk are included in handoff.
+forbidden_shortcuts:
+  - Adding a service or factory for one order label rule.
+  - Moving order business terms into shared utils for future reuse.
+  - Adding a config switch or registry without current consumers.
+  - Claiming completion without runnable label tests.
+evidence:
+  - Search record for order formatter and label code.
+  - Minimal Correctness Decision with ladder result.
+  - Unit test output for active and archived order labels.
+  - Handoff with what evidence proves and does not prove.

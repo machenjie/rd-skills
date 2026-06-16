@@ -22,6 +22,6 @@ actual:
         reason: stage-model registry work is not product coding
     context_budget_mode: staged-plan
     context_budget_rationale: L3 registry drift prevention spans authoring and documentation validation
-    required_evidence: [boundary, trigger precision, output contract, registry/routing/validation impact]
+    required_evidence: [boundary, trigger precision, output contract, registry/routing/validation impact, minimal scope diff, deleted or rejected complexity, shortcut ceiling and upgrade trigger when shortcuts remain]
     required_quality_gates: [documentation gate, test gate]
     handoff_target: documentation-handoff

@@ -21,7 +21,7 @@ Do not use to approve packages "for convenience" when the standard library, an e
 
 # Non-Negotiable Rules
 
-- **New dependencies require justification against alternatives.** Standard library first; existing approved dependency second; small local code third; new dependency only if measurably better and the maintenance + supply-chain cost is accepted.
+- **New dependencies require justification against alternatives.** Standard library first, language/runtime/native platform feature second, existing repository utility third, already-installed dependency fourth, small local code fifth, and a new dependency only when measurably better with maintenance and supply-chain cost accepted.
 - **Lockfile is mandatory for applications and binaries.** `package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` / `Pipfile.lock` / `poetry.lock` / `uv.lock` / `go.sum` / `Cargo.lock` / `mvnw + dependency-lock` / `composer.lock` / `Gemfile.lock` / `mix.lock`. Libraries publish ranges; applications pin via lockfile.
 - **CI installs use reproducible commands**: `npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable`, `pip install --require-hashes` / `uv sync --frozen`, `cargo build --locked`, `go mod download` (with `go.sum` verification), `mvn -B verify`. Plain `npm install` / `cargo update` in CI is rejected.
 - **Supply-chain posture is verified before merge**: OpenSSF Scorecard ≥ 5 for new dependencies; install scripts inspected; maintainer count ≥ 2 (or vendor SLA); CVE disclosure process exists; recent release activity within 18 months.
@@ -75,9 +75,11 @@ Containers     | image digest (sha256:...)      | docker pull <image>@sha256:...
 
 ```
 1. Is the need already met by standard library? → use stdlib.
-2. Is it already met by an approved in-tree dependency? → use existing.
-3. Is the implementation < 50 LoC of clear code? → write it inline.
-4. Candidate package check:
+2. Is it already met by a native platform/runtime/framework feature? → use native.
+3. Is it already met by an existing repository utility? → reuse existing code.
+4. Is it already met by an approved installed dependency? → use existing dependency.
+5. Is the implementation < 50 LoC of clear code with low bug/security risk? → write it locally.
+6. Candidate package check:
    - Maintainer count ≥ 2 (or vendor SLA)
    - Last release within 18 months
    - OpenSSF Scorecard ≥ 5
@@ -86,8 +88,8 @@ Containers     | image digest (sha256:...)      | docker pull <image>@sha256:...
    - No install/postinstall script (or explicit review)
    - CVE history reviewed
    - Alternatives compared (≥ 2 candidates)
-5. Lockfile updated; CI install command verified reproducible.
-6. SBOM regenerated; vulnerability scan green or triaged.
+7. Lockfile updated; CI install command verified reproducible.
+8. SBOM regenerated; vulnerability scan green or triaged.
 ```
 
 # Risk Escalation Rules
@@ -132,7 +134,7 @@ Containers     | image digest (sha256:...)      | docker pull <image>@sha256:...
 
 Return a **Dependency Decision Record** containing:
 - **Change type** (add / upgrade-major / upgrade-minor / upgrade-patch / remove / replace / vendor)
-- **Need statement** and **alternatives considered** (stdlib / existing dep / inline code / candidate packages ≥ 2)
+- **Need statement** and **alternatives considered** (stdlib / native platform feature / existing repository utility / existing dependency / local code / candidate packages ≥ 2)
 - **Selected package(s)** with version pin
 - **Justification** against the rubric (rubric steps 1-5 explicitly answered)
 - **Lockfile impact** (added / removed / version delta) — link to lockfile diff
@@ -151,7 +153,7 @@ Return a **Dependency Decision Record** containing:
 # Quality Gate
 
 1. Lockfile present and updated; CI uses reproducible install command (no plain `install` / `update`).
-2. Rubric trace complete: stdlib / existing / inline / candidate-comparison answered.
+2. Rubric trace complete: stdlib / native platform feature / existing repository utility / existing dependency / local code / candidate-comparison answered.
 3. Transitive graph reviewed; `<tree>` command output attached.
 4. License compatibility verified per-transitive; no incompatible licenses introduced.
 5. Vulnerability scan green or every advisory triaged with documented compensating control and SLA.

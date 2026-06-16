@@ -1512,7 +1512,7 @@
   ],
   "expected_route_only_supplemental": 7,
   "findings": [],
-  "generated_at": "2026-06-16T03:16:13.530646+00:00",
+  "generated_at": "2026-06-16T05:06:03.184169+00:00",
   "hidden_risks_checked": 91,
   "hidden_risks_covered": 87,
   "hidden_risks_matched_by_expected_route_only": 7,
@@ -1524,7 +1524,7 @@
   "l1_anti_over_routing_count": 9,
   "matched_by_expected_route_only": 7,
   "needs_manual_review": 0,
-  "routing_cases_checked": 97,
+  "routing_cases_checked": 105,
   "status": "pass",
   "strong_matches": 87,
   "weak_matches": 6

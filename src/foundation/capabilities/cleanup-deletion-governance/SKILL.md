@@ -17,6 +17,8 @@ Use when removing or planning removal of dead code, feature flags, fallback path
 
 Use when new temporary behavior is introduced and needs an owner, expiry, telemetry, or cleanup issue.
 
+Use when an intentional shortcut is accepted and needs a `changeforge-shortcut` ledger entry with a ceiling, owner, and upgrade trigger.
+
 # Do Not Use When
 
 Do not use to delete code based only on intuition, line count, local tests, or absence of obvious callers.
@@ -30,9 +32,11 @@ Do not use to remove public contracts before consumer impact and compatibility a
 - Telemetry or release evidence must prove unused behavior when production consumers are possible.
 - Feature flag removal deletes both old and new dead branches as appropriate.
 - Fallback expiry and compatibility branch owner are explicit.
+- Intentional shortcuts are distinguished from stale debt by a `changeforge-shortcut` ledger entry or equivalent issue that names the ceiling, upgrade trigger, owner, and validation signal.
 - Deprecated API removal requires consumer impact review.
 - Rollback after deletion is planned.
 - Cleanup issue tracking exists when deletion cannot happen in the current change.
+- Missing shortcut ceiling or upgrade trigger is a cleanup defect, not an acceptable handoff.
 
 # Industry Benchmarks
 
@@ -54,6 +58,7 @@ Escalate to `data-api-contract-changer` when deleting API, schema, event, or gen
 - Rollback path may be revert, re-enable flag, redeploy compatibility branch, restore schema field, or forward-fix.
 - Expand/contract cleanup removes dual-write, dual-read, aliases, upcasters, temporary columns, and compatibility adapters only after old path is unused.
 - Cleanup issues need owner, due date, trigger condition, and validation command.
+- Shortcut ledgers need owner, accepted scope, ceiling, upgrade trigger, expiry or review date, validation command, and conversion/deletion path. A shortcut without those fields is stale debt.
 
 # Failure Modes
 
@@ -64,6 +69,7 @@ Escalate to `data-api-contract-changer` when deleting API, schema, event, or gen
 - Deprecated API is removed without telemetry or migration notice.
 - Expand/contract migration leaves dual-write code permanently.
 - Rollback after deletion is impossible because state or schema was removed first.
+- Shortcut comment remains after the ceiling is exceeded because no `changeforge-shortcut` ledger, trigger, or owner exists.
 
 # Reference Loading Policy
 
@@ -84,6 +90,7 @@ Return a Cleanup / Deletion Plan:
 - Runtime/generated/reflection/config references searched.
 - Telemetry evidence.
 - Feature flag, fallback, compatibility, or deprecated API lifecycle.
+- Shortcut ledger: `changeforge-shortcut` entry, ceiling, upgrade trigger, owner, review date, validation command, and conversion/deletion path.
 - Tests.
 - Rollback path.
 - Cleanup issue tracking.
@@ -103,6 +110,7 @@ Close the plan only when caller searches, telemetry or explicit no-telemetry rat
 6. Tests cover remaining behavior and absence of obsolete path.
 7. Rollback path exists.
 8. Deferred cleanup has issue owner and date.
+9. Intentional shortcuts have a `changeforge-shortcut` ledger entry or equivalent issue with ceiling, upgrade trigger, owner, and validation signal.
 
 # Used By
 

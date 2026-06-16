@@ -36,6 +36,7 @@ Design and review external integration changes so that every outbound call is bo
 - **Sandbox testing is required before production integration**: every integration must be validated against the provider's sandbox environment with realistic test cases before any live credentials are used.
 - **Reconciliation must be designed and scheduled**: any integration that transfers state, data, or money must have a reconciliation job that detects and alerts on drift between system state and provider state.
 - **Circuit breakers are required for integrations on the critical path**: an unavailable external provider must not cascade into the unavailability of the consuming service.
+- **Prefer provider and SDK primitives before custom integration machinery**: use official SDK clients, provider idempotency headers, webhook verification helpers, rate-limit headers, and existing retry/circuit policies before wrapper-only clients, custom retry loops, bespoke signature parsers, or generic provider abstractions.
 
 ## Industry Benchmarks
 - **Release It! (Michael Nygard)**: Stability patterns — circuit breaker, timeout, bulkhead, fail fast. The canonical reference for integration resilience design.
@@ -70,6 +71,7 @@ Evaluate every integration change against:
 - **Credential lifecycle**: How are credentials stored? What is the rotation schedule? Who is notified when rotation is due? Is the rotation automated?
 - **Sandbox parity**: Does the sandbox reproduce the provider's failure modes (rate limits, 5xx errors, timeout behavior) for testing?
 - **Reconciliation frequency**: How frequently is reconciliation run? What drift threshold triggers an alert? Who is paged when drift exceeds threshold?
+- **Minimal correctness**: Provider/SDK/native feature, existing integration boundary, or small adapter considered before new generic client, wrapper, retry/circuit component, config mode, or dependency.
 
 ## Mode Matrix
 Select the integration mode before changing outbound clients, webhooks, credentials, provider config, or reconciliation.
@@ -99,6 +101,7 @@ Select the integration mode before changing outbound clients, webhooks, credenti
 - **Signal:** sandbox config differs from production for auth, endpoints, rate limits, failures, or schema. **Hidden risk:** sandbox tests do not predict production behavior and leave release risk unverified. **Required professional action:** document parity gaps and compensating validation before release. **Route to:** `delivery-release-gate`, `quality-test-gate`. **Evidence required:** sandbox/prod matrix, compensating validation output, untestable residual risk, and owner.
 - **Signal:** state transfer integration has no reconciliation job or drift alert. **Hidden risk:** silent divergence after missed webhook or partial provider success. **Required professional action:** add reconciliation or accepted residual risk. **Route to:** `reliability-observability-gate`, `data-middleware-change-builder`. **Evidence required:** drift query, schedule, threshold, owner.
 - **Signal:** credentials have no rotation owner, expiry monitoring, or audit trail. **Hidden risk:** expired or leaked integration secret. **Required professional action:** define lifecycle before release. **Route to:** `secret-configuration-security`, `security-privacy-gate`. **Evidence required:** secret store path, rotation plan, expiry alert.
+- **Signal:** integration code adds a wrapper-only client, generic provider interface, custom retry/circuit breaker, signature verifier, polling framework, or extra dependency while provider SDK/runtime features already cover the need. **Hidden risk:** duplicate integration machinery drifts from provider semantics and hides failure behavior. **Required professional action:** run minimal-correctness review while preserving timeout, idempotency, webhook verification, and reconciliation obligations. **Route to:** `minimal-correct-implementation`, `package-dependency-management`, `reliability-observability-gate`. **Evidence required:** provider primitive considered, rejected wrapper/dependency path, sandbox test, and upgrade trigger if a shortcut remains.
 
 ### Decision Tree: Retry Policy
 
@@ -191,6 +194,7 @@ Return an integration design with:
 - **Consumer impact**: changed provider/API/SDK/schema/event contract, known and unknown consumers, generated client impact, compatibility, migration, telemetry, and rollback.
 - **Configuration runtime policy**: sandbox/prod config scope, typed config, safe defaults, validation, flag/kill switch owner, rollout/rollback, and cleanup path.
 - **Reuse and placement rationale**: integration client, webhook verifier, credential store, retry/circuit config, and reconciliation job ownership and placement.
+- **Minimal Correctness Decision**: provider/SDK/runtime primitive selected or rejected, wrapper/dependency avoided or justified, deleted/shrunk integration machinery, and shortcut ceiling with reconciliation or sandbox upgrade trigger.
 - **Behavior preservation**: old provider behavior, event semantics, retry behavior, and rollback/migration compatibility preserved or intentionally changed.
 - **Test obligations**: Sandbox tests (normal, timeout, rate-limit, signature-failure cases), idempotency tests, reconciliation tests.
 - **Observability**: Metrics (success rate, latency, retry rate, circuit state, reconciliation drift), alert thresholds, and on-call routing.

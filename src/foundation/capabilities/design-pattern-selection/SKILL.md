@@ -23,6 +23,7 @@ Do not use to justify speculative abstraction, one current implementation, simpl
 
 - Pattern follows problem, not aesthetics; prefer boring direct code when variation is not current.
 - Every pattern decision names the force it solves and the simpler alternative rejected.
+- Reject factory with one product, builder for a trivial DTO, strategy with one algorithm, abstract/interface layer for code sharing, singleton for convenience, facade/mediator as a generic dumping ground, and proxy/decorator that hides IO or side effects.
 - Every selected pattern declares object relationships, method placement, module/file impact, public API impact, lifecycle/ownership, side-effect visibility, invariant protection, and tests.
 - Every selected pattern declares performance, concurrency, IO, resource, cancellation, backpressure, and teardown impact, then routes to `language-performance-safety`, `concurrency-control`, `profiling`, `async-job-design`, `idempotency-retry-design`, `cache-design`, or `reliability-observability-gate` when those concerns are present.
 - Patterns must not bypass domain invariants, hide side effects, expand public API without current consumers, or create global mutable state without explicit lifecycle, synchronization, test reset, and shutdown cleanup.
@@ -89,7 +90,7 @@ Do not load deep references for L1/L2 direct-code decisions where the inline out
 
 ## Pattern Anti-Patterns
 
-Reject strategy with one implementation; abstract base class only for code reuse; singleton as hidden mutable state; factory hiding a simple constructor; builder for a trivial DTO; observer without unsubscribe, lifecycle cleanup, backpressure, and error isolation; decorator hiding side effects or order dependency; proxy hiding network IO; facade or mediator becoming a god object; visitor breaking encapsulation; object pool without measured allocation pressure; command without idempotency/retry model; state pattern without a real state machine; repository carrying business policy; and DI container service locator hiding dependencies.
+Reject strategy with one implementation; abstract base class or interface only for code reuse; singleton as hidden mutable state or convenience; factory hiding a simple constructor or one product; builder for a trivial DTO; observer without unsubscribe, lifecycle cleanup, backpressure, and error isolation; decorator hiding side effects or order dependency; proxy hiding network IO; facade or mediator becoming a god object; visitor breaking encapsulation; object pool without measured allocation pressure; command without idempotency/retry model; state pattern without a real state machine; repository carrying business policy; and DI container service locator hiding dependencies.
 
 ## Runtime Coupling
 

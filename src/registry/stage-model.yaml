@@ -46,6 +46,7 @@ stages:
       - architecture-enforcement-tooling
       - consumer-impact-analysis
       - dependency-wiring-lifecycle
+      - minimal-correct-implementation
     skip_by_default:
       - language idiom checks
       - coding
@@ -54,6 +55,7 @@ stages:
       - boundary owners
       - dependency direction
       - rejected alternatives
+      - simplicity ladder result when extensibility or stack complexity is proposed
       - reversibility classification
     required_quality_gates:
       - architecture gate
@@ -80,6 +82,7 @@ stages:
       - model-boundary-mapping
       - data-side-effect-flow-tracing
       - cleanup-deletion-governance
+      - minimal-correct-implementation
     skip_by_default:
       - full architecture review
       - release
@@ -87,6 +90,8 @@ stages:
     required_evidence:
       - target boundaries inspected before plan
       - reuse candidates
+      - simplicity ladder result
+      - deleted or rejected complexity
       - placement rationale
       - visibility decisions
       - test placement
@@ -112,6 +117,7 @@ stages:
       - failure-contract-design
       - configuration-runtime-policy
       - data-side-effect-flow-tracing
+      - minimal-correct-implementation
     skip_by_default:
       - architecture deep review
       - release
@@ -123,6 +129,7 @@ stages:
       - validated inputs
       - released resources
       - minimal scope diff
+      - deleted or rejected complexity
     required_quality_gates:
       - implementation gate
     allowed_next_stages:
@@ -164,11 +171,13 @@ stages:
       - agent-execution-discipline
       - regression-testing
       - code-review
+      - minimal-correct-implementation
     skip_by_default:
       - architecture redesign
       - release
     required_evidence:
       - minimal diff
+      - deleted or rejected complexity
       - same-pattern scan record
       - regression test
       - blast-radius note
@@ -190,12 +199,14 @@ stages:
       - implementation-structure-design
       - code-clarity-maintainability
       - language-idiom-enforcement
+      - minimal-correct-implementation
     skip_by_default:
       - release
       - deployment
       - infrastructure
     required_evidence:
       - findings with severity
+      - complexity-only delete/shrink findings when selected
       - evidence
       - impacted file
       - required fix
@@ -228,6 +239,7 @@ stages:
       - model-boundary-mapping
       - data-side-effect-flow-tracing
       - cleanup-deletion-governance
+      - minimal-correct-implementation
     skip_by_default:
       - feature design
       - release
@@ -235,6 +247,7 @@ stages:
       - characterization tests
       - preserved behavior
       - selection rationale
+      - deleted or rejected complexity
       - rollback path
     required_quality_gates:
       - implementation gate
@@ -264,6 +277,7 @@ stages:
       - failure-contract-design
       - model-boundary-mapping
       - data-side-effect-flow-tracing
+      - minimal-correct-implementation
     skip_by_default:
       - architecture redesign
       - coding of new features
@@ -272,6 +286,7 @@ stages:
       - deterministic data
       - observable-behavior assertions
       - evidence of gaps
+      - minimal check rationale when lower-depth validation is selected
     required_quality_gates:
       - test gate
     allowed_next_stages:
@@ -296,6 +311,7 @@ stages:
       - architecture-enforcement-tooling
       - consumer-impact-analysis
       - cleanup-deletion-governance
+      - minimal-correct-implementation
     skip_by_default:
       - language deep checks
       - coding
@@ -305,6 +321,7 @@ stages:
       - config compatibility
       - health checks
       - alert ownership
+      - shortcut ceiling and upgrade trigger when shortcuts remain
     required_quality_gates:
       - delivery gate
     allowed_next_stages:
@@ -342,6 +359,8 @@ stages:
       - skill-authoring-expert
       - documentation-generation
       - agent-execution-discipline
+    conditional_capabilities:
+      - minimal-correct-implementation
     skip_by_default:
       - product coding
       - language runtime
@@ -351,6 +370,9 @@ stages:
       - trigger precision
       - output contract
       - registry/routing/validation impact
+      - minimal scope diff
+      - deleted or rejected complexity
+      - shortcut ceiling and upgrade trigger when shortcuts remain
     required_quality_gates:
       - documentation gate
       - test gate
@@ -447,6 +469,7 @@ product_surfaces:
     signals: [skill, capability, registry, routing rule, stage model]
     required_skill: change-forge-router
     default_capabilities: [skill-authoring-expert, engineering-stage-professionalism]
+    conditional_capabilities: [minimal-correct-implementation]
 
 language_surfaces:
   - language: go

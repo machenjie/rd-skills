@@ -33,14 +33,14 @@ supported_change_types:
 runtime_profiles:
   - name: recommended
     top_level: 19 professional skills
-    foundation_mode: 116 foundation capabilities compiled into professional references
+    foundation_mode: 117 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 19 professional skills and 7 domain extensions
-    foundation_mode: 116 foundation capabilities compiled into professional references
+    foundation_mode: 117 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 19 professional skills, 116 foundation capabilities, and 7 domain extensions
+    top_level: 19 professional skills, 117 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -177,6 +177,21 @@ risk_escalation_triggers:
   - dependency surface
   - design pattern selection needed
   - pattern overengineering
+  - minimal implementation pressure
+  - overengineering risk
+  - dependency for simple code
+  - stdlib replacement available
+  - native feature replacement available
+  - existing code replacement available
+  - one implementation abstraction
+  - speculative abstraction
+  - scaffold for later
+  - unused configuration option
+  - wrapper only delegates
+  - future proofing without requirement
+  - shortcut without upgrade trigger
+  - complexity-only review requested
+  - repo-wide overengineering audit requested
   - pattern misuse
   - speculative abstraction pattern
   - strategy with one implementation
@@ -546,6 +561,51 @@ risk_trigger_rules:
   - trigger: pattern overengineering
     required_capabilities: [design-pattern-selection, code-clarity-maintainability]
     required_quality_gates: [implementation gate]
+  - trigger: minimal implementation pressure
+    required_capabilities: [minimal-correct-implementation, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: overengineering risk
+    required_capabilities: [minimal-correct-implementation, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: dependency for simple code
+    required_capabilities: [minimal-correct-implementation, package-dependency-management]
+    required_quality_gates: [implementation gate, security gate]
+  - trigger: stdlib replacement available
+    required_capabilities: [minimal-correct-implementation, package-dependency-management]
+    required_quality_gates: [implementation gate]
+  - trigger: native feature replacement available
+    required_capabilities: [minimal-correct-implementation, package-dependency-management]
+    required_quality_gates: [implementation gate]
+  - trigger: existing code replacement available
+    required_capabilities: [minimal-correct-implementation, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: one implementation abstraction
+    required_capabilities: [minimal-correct-implementation, design-pattern-selection, implementation-structure-design]
+    required_quality_gates: [implementation gate]
+  - trigger: speculative abstraction
+    required_capabilities: [minimal-correct-implementation, design-pattern-selection, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: scaffold for later
+    required_capabilities: [minimal-correct-implementation, cleanup-deletion-governance]
+    required_quality_gates: [implementation gate]
+  - trigger: unused configuration option
+    required_capabilities: [minimal-correct-implementation, configuration-runtime-policy, cleanup-deletion-governance]
+    required_quality_gates: [implementation gate]
+  - trigger: wrapper only delegates
+    required_capabilities: [minimal-correct-implementation, implementation-structure-design, code-clarity-maintainability]
+    required_quality_gates: [implementation gate]
+  - trigger: future proofing without requirement
+    required_capabilities: [minimal-correct-implementation, design-pattern-selection]
+    required_quality_gates: [implementation gate]
+  - trigger: shortcut without upgrade trigger
+    required_capabilities: [minimal-correct-implementation, cleanup-deletion-governance, agent-execution-discipline]
+    required_quality_gates: [implementation gate, test gate]
+  - trigger: complexity-only review requested
+    required_capabilities: [minimal-correct-implementation, code-review, code-clarity-maintainability]
+    required_quality_gates: [AI review gate]
+  - trigger: repo-wide overengineering audit requested
+    required_capabilities: [minimal-correct-implementation, code-review, agent-execution-discipline]
+    required_quality_gates: [AI review gate, test gate]
   - trigger: pattern misuse
     required_capabilities: [design-pattern-selection, implementation-structure-design]
     required_quality_gates: [implementation gate]
@@ -1174,6 +1234,13 @@ routing_rules:
       - design pattern selection pattern candidates selected pattern rejected pattern simpler alternative direct code decision factory builder singleton adapter facade decorator proxy composite bridge strategy state command observer pubsub mediator chain of responsibility template method visitor specification repository unit of work dependency injection object pool
       - pattern misuse pattern overengineering speculative abstraction pattern strategy with one implementation abstract base class for code reuse singleton global state risk factory hides simple construction builder for trivial DTO observer lifecycle leak decorator hides side effects proxy hides network IO facade god object risk mediator god object risk object pool without profile evidence command without idempotency state pattern without state machine visitor breaks encapsulation
       - producer consumer worker pool pipeline reactor proactor async task fan-out bounded concurrency backpressure circuit breaker bulkhead pattern performance risk pattern hides IO pattern hides side effects
+    priority: 60
+  - route_to: minimal-correct-implementation
+    triggers:
+      - simplest minimal minimum correct implementation smallest correct path YAGNI do less avoid overengineering avoid new dependency use stdlib use standard library use native platform feature delete shrink bloat boilerplate complexity only review
+      - dependency for simple code stdlib replacement available native feature replacement available existing code replacement available existing dependency before new dependency
+      - one implementation abstraction speculative abstraction interface abstract class factory strategy builder provider registry wrapper only delegates future proofing without requirement scaffold for later unused configuration option mode switch kind switch
+      - changeforge-shortcut shortcut without ceiling shortcut without upgrade trigger shortcut ledger deliberate shortcut ceiling upgrade trigger
     priority: 60
   - route_to: testability-seam-design
     triggers:

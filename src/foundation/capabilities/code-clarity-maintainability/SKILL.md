@@ -46,6 +46,7 @@ Do not use this as the primary placement or ownership designer. Use `implementat
 - If comments are needed to explain confusing structure, first consider renaming, extraction, parameter object, or simpler control flow.
 - Cognitive complexity is a maintenance risk. Functions above the local tool threshold, or obviously hard to trace without a tool, require decomposition or documented justification.
 - Readability must preserve change locality: a small rule change should have one owning location unless the product behavior truly crosses boundaries.
+- Complexity-only reviews must identify delete, shrink, reuse, stdlib/native, existing-code, and YAGNI opportunities before proposing rewrites. A net line-count reduction is required only when the requested review is explicitly complexity-only; normal feature, fix, and safety reviews optimize for correct maintainable behavior, not arbitrary fewer lines.
 - Excessive file splitting is a readability and maintainability defect when it creates one-function file, trivial helper file, pass-through glue, or navigation cost regression without a real boundary. Use anti-fragmentation evidence from file granularity review when deciding whether to keep in existing file, merge back, or split by a real boundary.
 - File count reduction is not automatically a clarity improvement; excessive splitting, excessive merging, reckless file merge, and small file merge without boundary evidence are maintainability defects.
 - Clarity review must assess navigation cost, next-change location, and main-flow readability before and after a file split or merge.
@@ -161,6 +162,7 @@ Return a Code Clarity Maintainability Review with:
 - **Change navigation assessment**: owning location for the next related change and deletion path for obsolete behavior.
 - **File navigation cost assessment**: files a maintainer must open before/after the change, and whether the split or merge improves or regresses readability.
 - **Split/merge readability decision**: keep together, keep in existing file, merge back, split by real boundary, or leave split as-is; include file granularity, small file merge, merge restraint, anti-fragmentation rationale, and the split merge decision evidence.
+- **Complexity Delete List**: for complexity-only review, findings tagged `delete`, `shrink`, `stdlib`, `native`, `existing-code`, or `yagni`, with validation impact and any safety reason a line-count reduction is not accepted.
 - **Next-change location before/after**: whether the next adjacent requirement has a clearer owner file/function/module after decomposition or consolidation.
 - **Main-flow readability before/after**: whether the primary behavior became easier to read, stayed no worse, or regressed.
 - **Next-change location**: the exact owner file/function/module where the next adjacent requirement should land.

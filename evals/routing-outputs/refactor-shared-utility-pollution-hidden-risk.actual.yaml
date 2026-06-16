@@ -22,6 +22,6 @@ actual:
         reason: behavior-preserving refactor does not launch release-delivery by default
     context_budget_mode: staged-plan
     context_budget_rationale: L3 shared utility refactor needs staged validation after refactoring
-    required_evidence: [characterization tests, preserved behavior, selection rationale, rollback path]
+    required_evidence: [characterization tests, preserved behavior, selection rationale, deleted or rejected complexity, rollback path]
     required_quality_gates: [architecture gate, implementation gate, test gate, AI review gate, execution discipline gate]
     handoff_target: testing

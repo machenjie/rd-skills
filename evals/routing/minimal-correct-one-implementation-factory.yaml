@@ -1,0 +1,43 @@
+---
+id: minimal-correct-one-implementation-factory
+description: |
+  Factory and strategy proposal with one current implementation.
+prompt: |
+  The patch adds a PaymentRuleFactory, PaymentRuleStrategy interface, and one
+  concrete implementation. Review whether the direct function is enough today.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: code-review
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  skills:
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - minimal-correct-implementation
+    - design-pattern-selection
+    - implementation-structure-design
+    - code-clarity-maintainability
+    - unit-testing
+  domain_extensions: []
+  quality_gates:
+    - AI review gate
+    - implementation gate
+    - test gate
+forbidden:
+  skills:
+    - data-api-contract-changer
+    - delivery-release-gate
+    - frontend-change-builder
+  capabilities:
+    - data-migration-design
+    - release-rollback
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  One-implementation patterns require current force or should collapse to the
+  smaller direct implementation.

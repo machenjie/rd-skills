@@ -36,6 +36,7 @@ Design, modify, and safely roll out changes to data models, schemas, API contrac
 - **Idempotency is required for all endpoints that accept payment, state transitions, or writes that can be retried**: idempotency key design must precede implementation.
 - **Deprecation requires a sunset timeline and migration alternative**: deprecated endpoints, fields, and schemas must document the removal date, the replacement, and the migration path before deprecation is announced.
 - **Never rely on application-layer enforcement for critical data constraints**: data integrity rules (uniqueness, foreign keys, non-null) must be enforced at the database level, not only in application code.
+- **Prefer contract-native constraints before app-only machinery**: database constraints, generated/schema validation, existing error taxonomy, and additive contract shape come before custom validators, DTO versions, schema shims, config switches, or compatibility layers, unless consumer evidence requires the extra surface.
 - **API contracts are public commitments**: once an API is documented and consumed externally, changing it requires the same discipline as a public release — stakeholder notification, versioning, and migration guide.
 
 ## Industry Benchmarks
@@ -70,6 +71,7 @@ Evaluate every proposed data or API contract change against:
 - **Migration sequencing**: What is the exact order of deploy steps (service A before B, migration before or after code deploy)?
 - **Idempotency design**: Can this endpoint be safely called multiple times with the same effect? What is the idempotency key scope and storage?
 - **Validation model**: What is valid input? What validation errors are returned and in what format? What happens to invalid input in existing records?
+- **Minimal correctness**: Additive/native/schema-level solution considered before new DTO version, compatibility layer, custom mapper, application-only constraint, or permanent config branch.
 - **Error code taxonomy**: Is there a stable, machine-readable error code for each failure mode? Does the new error map to the existing taxonomy or require an addition?
 - **Pagination design**: Cursor-based (stable ordering, no offset drift) or offset-based (simpler, inconsistent under writes)? Page size limits and defaults?
 - **Rollback safety**: If the new code is rolled back, does the old code still function with the new schema? Is the rollback migration executable?
@@ -99,6 +101,7 @@ Select the contract mode before changing schema, DTO, endpoint, error, migration
 - **Signal:** mutating endpoint lacks idempotency key or request identity semantics. **Hidden risk:** duplicate side effects under retry. **Required professional action:** design idempotency as part of the contract. **Route to:** `idempotency-retry-design`, `backend-change-builder`. **Evidence required:** key scope, TTL, duplicate response behavior, retry test.
 - **Signal:** schema migration removes/renames fields or contracts before consumers migrate. **Hidden risk:** rollback failure and version skew breakage. **Required professional action:** enforce expand/migrate/contract. **Route to:** `data-migration-design`, `delivery-release-gate`. **Evidence required:** EMC phases, rollback script, consumer readiness.
 - **Signal:** compatibility branch, deprecated field, old endpoint, or temporary expand/contract code has no removal condition. **Hidden risk:** stale contract surface and permanent dual behavior. **Required professional action:** create a cleanup/deletion plan. **Route to:** `cleanup-deletion-governance`, `change-documentation-gate`. **Evidence required:** removal condition, consumer telemetry, caller search, cleanup owner, and rollback path.
+- **Signal:** contract work adds a new DTO/schema version, mapper layer, app-only validator, generated client surface, compatibility switch, or wrapper when an additive field, database constraint, generated schema rule, or existing taxonomy entry would satisfy the current consumer need. **Hidden risk:** public contract complexity becomes permanent and rollback harder than the original requirement. **Required professional action:** run minimal-correctness review without weakening compatibility or consumer migration discipline. **Route to:** `minimal-correct-implementation`, `implementation-structure-design`, `cleanup-deletion-governance`. **Evidence required:** consumer evidence, rejected native/additive option, compatibility class, cleanup owner, and rollback path.
 - **Signal:** generated clients, SDKs, OpenAPI/Protobuf/GraphQL artifacts are not regenerated or diffed. **Hidden risk:** source contract and runtime clients diverge. **Required professional action:** regenerate or explain no-op. **Route to:** `sdk-library-contract-design`, `contract-testing`. **Evidence required:** generated diff, client tests, release note.
 
 ### Decision Tree: Breaking Change Handling
@@ -190,6 +193,7 @@ Return a structured contract change plan with:
 - **Cleanup/deletion governance**: removal condition, owner, telemetry proving old path unused, caller search, cleanup issue, and rollback after deletion.
 - **Rollback safety**: Whether rollback is safe without data intervention; required rollback script.
 - **Reuse and placement rationale**: schema/DTO/generated-client/API-doc ownership, mapper placement, expand/contract phase placement, and rejected breaking shortcut.
+- **Minimal Correctness Decision**: contract-native/additive/schema-level option, rejected extra compatibility surface, cleanup/deletion plan for temporary branches, and shortcut ceiling when any shortcut remains.
 - **Behavior preservation**: old wire shape, field semantics, validation behavior, pagination order, error codes, and generated client compatibility preserved or intentionally changed.
 - **Test obligations**: Consumer contract tests, migration tests, rollback tests, idempotency tests.
 - **Validation evidence**: commands/reports for schema diff, generated client diff, contract tests, migration/rollback tests, and residual risk.

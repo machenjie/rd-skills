@@ -59,7 +59,7 @@ router, the stage launcher, or other capabilities.
 
 The statuses above are intentionally conservative and must be read with the generated reports:
 
-- `reports/professional-coverage-matrix.*` reports 39 key foundation capabilities after adding
+- `reports/professional-coverage-matrix.*` reports 40 key foundation capabilities after adding
   the structured code correctness capabilities; the generated report is the source of truth for
   the current `needs-review` count.
 - `reports/skill-professionalism-eval.*` currently reports 21 professionalism warnings after the

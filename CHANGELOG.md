@@ -8,6 +8,10 @@ This project uses a simple release history format with an `Unreleased` section u
 
 ### Added
 
+- Added `minimal-correct-implementation` foundation capability with routing,
+  stage model, professional skill references, eval fixtures, and codegen
+  benchmarks for minimal correct implementation, dependency avoidance,
+  delete/shrink review, and shortcut ledger governance.
 - Added first-stage optional ChangeForge Hook Runtime source, validation, build
   output, tests, and documentation for Codex and Claude project-level warning
   hooks.

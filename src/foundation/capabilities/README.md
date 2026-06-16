@@ -2,7 +2,7 @@
 
 Foundation capabilities are mandatory source assets for ChangeForge professional skills. They capture reusable expert judgment for product-change engineering: selection rules, risk gates, benchmark expectations, output contracts, and handoff criteria.
 
-The library contains 116 implemented capabilities plus `_template`. Capabilities are not language primers, framework walkthroughs, tool catalogs, or source-installable runtime skills. They are compiled into professional skill references for the `recommended` and `full` runtime profiles.
+The library contains 117 implemented capabilities plus `_template`. Capabilities are not language primers, framework walkthroughs, tool catalogs, or source-installable runtime skills. They are compiled into professional skill references for the `recommended` and `full` runtime profiles.
 
 Language capabilities are professional engineering rules, not language tutorials or personal technical asset mappings.
 

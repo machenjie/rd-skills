@@ -39,6 +39,7 @@ Critically review, validate, and safely refactor AI-generated or AI-assisted cod
 - Security-sensitive paths (auth, permissions, payment, data access) cannot be accepted from AI output without adversarial review.
 - Type annotations from AI must be verified against the actual runtime types — AI generates plausible signatures, not necessarily correct ones.
 - Generated code that introduces `any`, `Object`, or untyped assertions in strongly-typed codebases must be explicitly justified.
+- Run a complexity-only review lane when AI-generated code may be bloated: use `delete`, `stdlib`, `native`, `existing-code`, `yagni`, and `shrink` tags from `minimal-correct-implementation`; this lane supplements normal correctness, security, dependency, architecture, and test review.
 - Reject any AI-generated file addition without same-directory and parent-module file naming evidence.
 - Reject any AI-generated helper/utility/common/shared code without a reuse ladder record.
 - Reject duplicated logic when existing code could be reused, extended, composed, wrapped, or extracted.
@@ -97,6 +98,7 @@ Select the AI review/refactor mode before approving or changing generated code. 
 | Behavior-preserving refactor | AI proposes move/extract/split/cleanup or reviewer requests cleanup. | Preserve behavior, public contract, errors, side effects, and tests. | Characterization/regression tests, before/after behavior, affected callers. | `refactoring`, `code-clarity-maintainability`, `quality-test-gate` | New behavior in same refactor. |
 | Bug-fix review | AI patch fixes one failure, lint error, test failure, or incident symptom. | Verify cause, same-pattern scan, local/broad fix boundary, regression proof. | Cause, pattern searched, related occurrences, failing/passing test. | `failure-diagnosis`, `regression-testing`, `agent-execution-discipline` | "Looks plausible" approval. |
 | Structure/reuse audit | New abstraction, helper, utility, shared component, file, directory, dependency. | Reject invented helpers, duplicate logic, wrong placement, speculative abstraction. | Reuse ladder, owner, dependency direction, deletion path. | `implementation-structure-design`, `architecture-impact-reviewer` when boundaries move | Shared/common placement without proof. |
+| Complexity-only review | Bloat, overengineering, wrapper-only delegation, unnecessary dependency, one-implementation abstraction, scaffold-for-later, or delete/shrink request. | Produce complexity tags without replacing normal AI review. | Tagged findings, simpler alternative, retained-risk decision, validation required. | `minimal-correct-implementation`, `code-clarity-maintainability`, `cleanup-deletion-governance` | Treating line count as the approval standard. |
 | Test/refactor quality review | Generated tests, fixtures, mocks, snapshots, golden files, or cleanup. | Behavior assertions, fixture ownership, no over-mocking private internals. | What tests prove/do not prove, mock contract, fixture owner. | `quality-test-gate`, `code-clarity-maintainability` | Mock-call-only approval. |
 | Security/performance-sensitive AI code | Generated auth, SQL, migration, secret, integration, retry, concurrency, or hot path. | Adversarial review, measured risk, no silent fallback or speculative optimization. | Security scan/tests, profile/benchmark, rollback/contract proof. | `security-privacy-gate`, `reliability-observability-gate`, `data-middleware-change-builder` | Trusting AI comments as proof. |
 
@@ -115,6 +117,11 @@ Select the AI review/refactor mode before approving or changing generated code. 
 - **Signal:** AI changes public API, SDK, schema, event payload, generated client, or package export without consumer inventory or migration plan. **Hidden risk:** generated code appears internally consistent while downstream consumers break. **Required professional action:** require consumer impact analysis. **Route to:** `consumer-impact-analysis`, `version-compatibility`. **Evidence required:** changed contract, consumer list, generated-client impact, compatibility, deprecation/migration, telemetry, and rollback.
 - **Signal:** AI introduces or bypasses module, import, export, generated-code, dead-code, complexity, or forbidden-dependency rules with no automated check. **Hidden risk:** hidden dependency leaks and wrong module boundaries are approved because the generated diff looks plausible. **Required professional action:** require enforceable architecture tooling or a staged baseline. **Route to:** `architecture-enforcement-tooling`, `architecture-impact-reviewer`. **Evidence required:** rule list, tool choice, CI command, failure example, exception policy, and owner.
 - **Signal:** AI adds dependency for simple parsing, date, utility, crypto, HTTP, or formatting task without scan/license/CVE. **Hidden risk:** dependency pollution and supply-chain risk. **Required professional action:** evaluate stdlib/local alternative. **Route to:** `package-dependency-management`, `security-privacy-gate`. **Evidence required:** CVE/license/size and alternative.
+- **Signal:** AI adds one-implementation abstraction, wrapper-only delegation, scaffold-for-later, unused config, or custom code where stdlib/native/existing code likely applies.
+  **Hidden risk:** duplicate wrapper, unused config, or custom parser/formatter hides generated behavior change and leaves unverified maintenance surface for future caller edits.
+  **Required professional action:** require reviewer to classify delete/shrink/reuse findings, scan current callers, and verify retained structure before approval.
+  **Route to:** `minimal-correct-implementation`, `code-clarity-maintainability`, `cleanup-deletion-governance`.
+  **Evidence required:** `delete` / `stdlib` / `native` / `existing-code` / `yagni` / `shrink` finding, current-caller scan, validation command output, or explicit no-finding rationale.
 - **Signal:** generated code catches and suppresses errors or returns default/null fallback. **Hidden risk:** silent failure. **Required professional action:** require typed error/log/metric or safe fallback rationale. **Route to:** `logging-error-handling`, `reliability-observability-gate`. **Evidence required:** negative test and observability.
 - **Signal:** AI expands scope from local fix to broad refactor, new abstraction, dependency, or architecture change without boundary statement. **Hidden risk:** unbounded scope means review cannot prove behavior preservation. **Required professional action:** split the change or document scope, unchanged boundaries, and evidence. **Route to:** `agent-execution-discipline`, `change-impact-analyzer`. **Evidence required:** boundary statement, changed/unchanged file list, validation command output, and residual risk owner.
 - **Signal:** completion claim lacks command output or uses stale validation from before generated changes. **Hidden risk:** unverified AI code. **Required professional action:** block approval until fresh evidence or not-verified disclosure. **Route to:** `agent-execution-discipline`. **Evidence required:** command, exit code, outcome, residual risk.
@@ -213,10 +220,6 @@ Do not load every reference by default. Treat references as targeted support sel
 - L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
 - Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
 
-Examples:
-- `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md`
-- `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-evaluation.md`
-
 ## Output Contract
 Return a structured review with:
 - **Mode selected**: generated review, behavior-preserving refactor, bug-fix review, structure/reuse audit, test quality review, or security/performance-sensitive AI code, with trigger signal.
@@ -284,6 +287,8 @@ Return a structured review with:
   speculative interface/factory/strategy findings;
   cleanup/deprecation/feature-flag removal findings;
   change-locality findings.
+- **Complexity-only delete list**:
+  `delete` / `stdlib` / `native` / `existing-code` / `yagni` / `shrink` findings when `minimal-correct-implementation` is selected; normal correctness, security, reliability, and test findings remain separate.
 - **Validation evidence**: commands run, outputs, what they prove/do not prove, stale/unrun validations, residual risk, and next gate.
 - **Evidence limits**: what API searches, typechecks, tests, scans, and review evidence prove and what they do not prove about edge behavior, performance, security, or broad refactor equivalence.
 

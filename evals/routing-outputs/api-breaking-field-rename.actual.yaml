@@ -65,6 +65,8 @@ actual:
     required_evidence:
       - target boundaries inspected before plan
       - reuse candidates
+      - simplicity ladder result
+      - deleted or rejected complexity
       - placement rationale
       - visibility decisions
       - test placement

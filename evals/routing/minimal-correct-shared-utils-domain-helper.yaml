@@ -1,0 +1,43 @@
+---
+id: minimal-correct-shared-utils-domain-helper
+description: |
+  Domain helper proposed for shared/common without ownership evidence.
+prompt: |
+  Move the tenant invoice permission helper into `shared/utils` so other teams
+  can use it later. There is only one current caller in the billing module.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  risk_triggers: []
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - minimal-correct-implementation
+    - implementation-structure-design
+    - module-boundary-design
+    - code-clarity-maintainability
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - AI review gate
+    - test gate
+forbidden:
+  skills:
+    - frontend-change-builder
+    - data-middleware-change-builder
+    - delivery-release-gate
+  capabilities:
+    - release-rollback
+    - data-migration-design
+  domain_extensions:
+    - web3-product-extension
+    - ai-product-extension
+  quality_gates:
+    - delivery gate
+notes: |
+  Business terms in shared utilities require ownership and boundary evidence;
+  future reuse alone is not enough.
