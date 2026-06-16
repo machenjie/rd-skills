@@ -156,7 +156,21 @@ SESSION_COMPACTION_ORDER = (
     "changeforge_compaction_reinject",
     "changeforge_professional_injector",
 )
-READ_MATCHER_TOKENS = ("Fetch", "fetch_pr_patch", "get_pr_diff")
+READ_MATCHER_TOKENS = (
+    "Fetch",
+    "fetch_pr_patch",
+    "get_pr_diff",
+    "mcp__filesystem__read_file",
+    "mcp__filesystem__list_directory",
+    "mcp__github__get_file_contents",
+    "mcp__github__pull_request_read",
+    "mcp__github__search_code",
+    "mcpfilesystemreadfile",
+    "mcpfilesystemlistdirectory",
+    "mcpgithubgetfilecontents",
+    "mcpgithubpullrequestread",
+    "mcpgithubsearchcode",
+)
 
 
 def main() -> int:
@@ -701,11 +715,58 @@ def _validate_hook_behavior(errors: list[str]) -> None:
     if question.get("stage") != "question" or question.get("surfaces") or question.get("should_inject"):
         errors.append("classifier: pure questions must be stage=question, surfaces=[], should_inject=False")
 
+    for prompt in (
+        "解释 hook runtime 是什么",
+        "capability 和 skill 的区别是什么",
+        "how to install hooks",
+        "release gate 是干嘛的",
+    ):
+        domain_question = classify_event({"hook_event_name": "UserPromptSubmit", "prompt": prompt})
+        if (
+            domain_question.get("stage") != "question"
+            or domain_question.get("surfaces")
+            or domain_question.get("should_inject")
+        ):
+            errors.append(
+                f"classifier: domain keyword question must not inject: {prompt!r}"
+            )
+
     review = classify_event(
         {"hook_event_name": "UserPromptSubmit", "prompt": "请仔细审查最新提交"}
     )
     if review.get("stage") != "review" or "review_intent" not in review.get("prompt_signals", []):
         errors.append("classifier: Chinese review intent must classify as review")
+
+    deployment_review = classify_event(
+        {"hook_event_name": "UserPromptSubmit", "prompt": "review deployment change"}
+    )
+    if deployment_review.get("stage") != "review" or "delivery" not in deployment_review.get("surfaces", []):
+        errors.append("classifier: review deployment change must be review stage with delivery surface")
+
+    chinese_release_review = classify_event(
+        {"hook_event_name": "UserPromptSubmit", "prompt": "审查发布流程"}
+    )
+    if (
+        chinese_release_review.get("stage") != "review"
+        or "delivery" not in chinese_release_review.get("surfaces", [])
+    ):
+        errors.append("classifier: Chinese release review must be review stage with delivery surface")
+
+    for prompt, expected_stage in (
+        ("阅读这个文件", "read"),
+        ("分析这个仓库", "read"),
+        ("修改这个问题", "edit"),
+        ("实现这个功能", "edit"),
+        ("优化 hook", "edit"),
+        ("重构目录", "refactor"),
+        ("测试一下", "test"),
+        ("验证一下", "test"),
+    ):
+        classified = classify_event({"hook_event_name": "UserPromptSubmit", "prompt": prompt})
+        if classified.get("stage") != expected_stage or not classified.get("should_inject"):
+            errors.append(
+                f"classifier: Chinese intent {prompt!r} must classify as {expected_stage}"
+            )
 
     repair = classify_event(
         {"hook_event_name": "UserPromptSubmit", "prompt": "修复已经提交，请审查"}

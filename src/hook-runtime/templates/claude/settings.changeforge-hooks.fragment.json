@@ -93,7 +93,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit|Bash|Read|Grep|Glob|LS|Search|View|Open|Fetch|fetch_file|fetch_pr_patch|get_pr_diff|MCP|GitHub",
+        "matcher": "Edit|Write|MultiEdit|Bash|Read|Grep|Glob|LS|Search|View|Open|Fetch|fetch_file|fetch_pr_patch|get_pr_diff|MCP|GitHub|mcp__filesystem__read_file|mcp__filesystem__list_directory|mcp__github__get_file_contents|mcp__github__pull_request_read|mcp__github__search_code|mcpfilesystemreadfile|mcpfilesystemlistdirectory|mcpgithubgetfilecontents|mcpgithubpullrequestread|mcpgithubsearchcode",
         "hooks": [
           {
             "type": "command",

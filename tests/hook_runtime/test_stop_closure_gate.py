@@ -444,6 +444,48 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertIn("review_artifact", result.stdout)
         self.assertIn("review_findings", result.stdout)
 
+    def test_stop_read_no_change_profile_is_silent_when_evidence_complete(self) -> None:
+        # Regression: read-only turns should not require edit-style route or changed-file closure.
+        event = {
+            "hook_event_name": "Stop",
+            "runtime": "claude",
+            "response": (
+                "Inspected src/hook-runtime/scripts/changeforge_action_classifier.py. "
+                "Found the classifier order. Residual risk: none. Next action: none."
+            ),
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(
+                cwd,
+                cache,
+                turn_stage="read",
+                read_evidence_seen=True,
+                read_paths=["src/hook-runtime/scripts/changeforge_action_classifier.py"],
+            )
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
+
+    def test_stop_review_no_change_profile_omits_edit_closure_groups(self) -> None:
+        # Regression: review-only turns need findings/risk, not changed files or validation proof.
+        event = {
+            "hook_event_name": "Stop",
+            "runtime": "claude",
+            "response": "Reviewed src/app.py.",
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, turn_stage="review", review_targets=["src/app.py"])
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("review_findings", result.stdout)
+        self.assertIn("risk", result.stdout)
+        self.assertNotIn("route_manifest", result.stdout)
+        self.assertNotIn("changeforge_route", result.stdout)
+        self.assertNotIn("changed files", result.stdout)
+        self.assertNotIn("validation commands", result.stdout)
+
     def test_closure_reminder_omits_missing_flag_when_manifest_present(self) -> None:
         manifest_text = (
             "Change prepared. Tests run: pytest -q passed.\n\n"

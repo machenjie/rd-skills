@@ -53,22 +53,36 @@ REVIEW_EN_RE = re.compile(
     r"\b(review|inspect|audit|pr\s+diff|code\s+review|latest commit)\b",
     re.I,
 )
-REVIEW_ZH_RE = re.compile(r"(审查|评审|检查|复查|仔细审查|详细审查|最新提交|修复已经提交)")
+REVIEW_ZH_RE = re.compile(r"(审查|评审|复查|仔细审查|详细审查|最新提交|修复已经提交)")
 REPAIR_EN_RE = re.compile(r"\b(fix|repair|address|resolve|remediate)\b", re.I)
 REPAIR_ZH_RE = re.compile(r"(修复|解决|修复已经提交|已修复提交|再审查)")
 REPAIR_FOLLOWUP_RE = re.compile(r"(修复已经提交|已修复提交|再审查|latest fix|fix is submitted)", re.I)
-RELEASE_RE = re.compile(r"\b(release|deploy|install|build|package|rollback|发布|部署)\b", re.I)
+QUESTION_INTENT_RE = re.compile(
+    r"\b(explain|what(?:'s| is| are)?|how(?: to| do| does| can| should)?|why|"
+    r"difference between|compare|overview|describe|tell me about)\b"
+    r"|为什么|是什么|什么是|解释|区别|介绍|怎么|如何|怎样|干嘛|做什么|概念",
+    re.I,
+)
+RELEASE_RE = re.compile(r"\b(release|deploy|deployment|install|build|package|rollback)\b|发布|部署", re.I)
 READ_INTENT_RE = re.compile(r"\b(read|grep|search|find|open|look at|inspect file)\b", re.I)
+READ_ZH_RE = re.compile(r"(阅读|查看|分析|理解|看看|检查代码)")
 EDIT_INTENT_RE = re.compile(r"\b(add|change|modify|update|implement|write|create)\b", re.I)
+EDIT_ZH_RE = re.compile(r"(修改|改动|实现|添加|新增|优化|调整|完善)")
 TEST_INTENT_RE = re.compile(r"\b(test|validate|verify|regression|coverage)\b", re.I)
+TEST_ZH_RE = re.compile(r"(测试|验证|跑一下|检查是否通过)")
 DEBUG_RE = re.compile(r"\b(debug|diagnose|root cause|reproduce|triage)\b", re.I)
 REFACTOR_RE = re.compile(r"\b(refactor|cleanup|split|merge|rename|move)\b", re.I)
+REFACTOR_ZH_RE = re.compile(r"(重构|拆分|合并|移动|重命名|抽取)")
 SKILL_AUTHORING_RE = re.compile(
     r"\b(SKILL\.md|skill author|capability|registry|routing rule|hook runtime)\b",
     re.I,
 )
 SCHEMA_RE = re.compile(r"\b(schema|dto|api|contract|openapi|graphql|proto|migration)\b", re.I)
 SECURITY_RE = re.compile(r"\b(auth|permission|secret|token|password|credential|security)\b", re.I)
+DELIVERY_SURFACE_RE = re.compile(
+    r"\b(kubectl|helm|terraform|release|deploy|deployment|rollback|install|build|package)\b|发布|部署",
+    re.I,
+)
 NO_INJECTION_STAGES = {"question", "unknown", "no_engineering_action", "compaction"}
 
 
@@ -188,26 +202,28 @@ def _stage_from_event(
     if command and TEST_COMMAND_RE.search(command):
         return "test"
     combined = "\n".join([command, text, *paths])
-    if RELEASE_RE.search(combined):
-        return "release"
-    if TEST_INTENT_RE.search(text):
+    if hook == "userpromptsubmit" and _question_intent(text) and not _engineering_action_intent(text):
+        return "question"
+    if _test_intent(text):
         return "test"
-    if SKILL_AUTHORING_RE.search(combined):
-        return "skill_authoring"
     if REPAIR_FOLLOWUP_RE.search(text):
         return "repair"
     if _review_intent(text):
         return "review"
     if _repair_intent(text):
         return "repair"
-    if REFACTOR_RE.search(text):
+    if _refactor_intent(text):
         return "refactor"
     if DEBUG_RE.search(text):
         return "repair"
-    if READ_INTENT_RE.search(text):
+    if _read_intent(text):
         return "read"
-    if EDIT_INTENT_RE.search(text):
+    if _edit_intent(text):
         return "edit"
+    if RELEASE_RE.search(combined):
+        return "release"
+    if SKILL_AUTHORING_RE.search(combined):
+        return "skill_authoring"
     if hook == "userpromptsubmit":
         return "question"
     if hook in {"sessionstart", "userpromptexpansion"}:
@@ -233,7 +249,9 @@ def _surfaces(paths: list[str], command: str, text: str) -> list[str]:
         values.append("data_api_contract")
     if SECURITY_RE.search(joined):
         values.append("security")
-    if re.search(r"\b(kubectl|helm|terraform|deploy|rollback|install)\b", joined, re.I):
+    if SKILL_AUTHORING_RE.search(joined):
+        values.append("skill_authoring")
+    if DELIVERY_SURFACE_RE.search(joined):
         values.append("delivery")
     return _unique(values) or ["general_engineering"]
 
@@ -262,6 +280,40 @@ def _review_intent(text: str) -> bool:
 
 def _repair_intent(text: str) -> bool:
     return bool(REPAIR_EN_RE.search(text) or REPAIR_ZH_RE.search(text))
+
+
+def _question_intent(text: str) -> bool:
+    return bool(QUESTION_INTENT_RE.search(text))
+
+
+def _engineering_action_intent(text: str) -> bool:
+    return any(
+        (
+            _review_intent(text),
+            _repair_intent(text),
+            _read_intent(text),
+            _edit_intent(text),
+            _test_intent(text),
+            _refactor_intent(text),
+            bool(DEBUG_RE.search(text)),
+        )
+    )
+
+
+def _read_intent(text: str) -> bool:
+    return bool(READ_INTENT_RE.search(text) or READ_ZH_RE.search(text))
+
+
+def _edit_intent(text: str) -> bool:
+    return bool(EDIT_INTENT_RE.search(text) or EDIT_ZH_RE.search(text))
+
+
+def _test_intent(text: str) -> bool:
+    return bool(TEST_INTENT_RE.search(text) or TEST_ZH_RE.search(text))
+
+
+def _refactor_intent(text: str) -> bool:
+    return bool(REFACTOR_RE.search(text) or REFACTOR_ZH_RE.search(text))
 
 
 def _tool_names(event: dict) -> list[str]:

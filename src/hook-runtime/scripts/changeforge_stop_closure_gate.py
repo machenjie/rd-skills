@@ -215,6 +215,19 @@ REVIEW_FINDING_KEYWORDS = [
     "无问题",
     "无发现",
 ]
+READ_REVIEW_RISK_KEYWORDS = CLOSURE_KEYWORDS["risk"] + [
+    "unknown",
+    "unknowns",
+    "limit",
+    "limits",
+    "limitation",
+    "limitations",
+    "not verified",
+    "not checked",
+    "未知",
+    "限制",
+    "未确认",
+]
 STAGE_HANDOFF_KEYWORDS = {
     "plan": ["plan", "scope", "validation", "risk", "计划", "范围"],
     "edit": ["changed", "validation", "risk", "修改", "验证", "风险"],
@@ -296,7 +309,10 @@ def main() -> int:
         if mode == "monitor":
             clear_state(repo, runtime)
             return 0
-        missing = _missing_keyword_groups(final_text, state, manifest) if final_text else []
+        missing = _missing_keyword_groups(final_text, state, manifest)
+        if _closure_profile(state) == "read_review" and not missing:
+            clear_state(repo, runtime)
+            return 0
         stop_hook_active = bool(event.get("stop_hook_active") or event.get("stopHookActive"))
         should_block = mode == "block" and bool(missing) and not stop_hook_active
         message = _closure_message(state, final_text, manifest)
@@ -339,6 +355,15 @@ def _has_closure_surface(state: dict) -> bool:
         or state.get("subagent_contracts")
         or state.get("compaction_snapshots")
     )
+
+
+def _closure_profile(state: dict) -> str:
+    stage = str(state.get("turn_stage") or "").strip()
+    if stage in {"question", "unknown", "no_engineering_action"}:
+        return "silent"
+    if stage in {"read", "review"} and not state.get("changed_paths"):
+        return "read_review"
+    return "engineering"
 
 
 def _closure_signals(final_text: str, state: dict, manifest: dict) -> dict[str, bool]:
@@ -393,7 +418,8 @@ def _stop_findings(state: dict) -> dict[str, list[str]]:
 
 
 def _closure_message(state: dict, final_text: str, manifest: dict | None = None) -> str:
-    missing = _missing_keyword_groups(final_text, state, manifest) if final_text else []
+    profile = _closure_profile(state)
+    missing = _missing_keyword_groups(final_text, state, manifest)
     route_present = bool(manifest and manifest.get("route_present"))
     details: list[str] = []
     if state.get("structure_findings"):
@@ -440,7 +466,7 @@ def _closure_message(state: dict, final_text: str, manifest: dict | None = None)
     evidence_text = _structure_evidence_block(state)
 
     headline = "ChangeForge Closure Gate reminder."
-    if not route_present:
+    if profile == "engineering" and not route_present:
         headline += (
             " MISSING: this handoff has no complete changeforge_route manifest."
             " Real changes were observed but the route was not emitted in"
@@ -465,9 +491,18 @@ def _closure_message(state: dict, final_text: str, manifest: dict | None = None)
             f" ({', '.join(stage_missing)})."
         )
 
+    if profile == "read_review":
+        return f"""{headline}
+{detail_text}
+This turn read code, reviewed artifacts, or triggered risk surfaces. Before final handoff, include:
+- read/review evidence: inspected files, searches, or reviewed artifact
+- findings, explicit no-findings, or unknowns/limits
+- residual risks and unverified items
+- next action or explicit no-next-action rationale{evidence_text}"""
+
     return f"""{headline}
 {detail_text}
-This turn changed files or triggered risk surfaces. Before final handoff, include:
+This turn changed files, read code, reviewed artifacts, or triggered risk surfaces. Before final handoff, include:
 - the changeforge_route manifest: selected skills, selected capabilities, required references, and required quality gates
 - for non-trivial engineering work, the changeforge_stage_route manifest: current stage, launched and explicitly skipped capabilities, and next-stage handoff
 - required references: the router self-use references plus the selected capability references
@@ -650,6 +685,18 @@ def _missing_keyword_groups(
 ) -> list[str]:
     lowered = text.casefold()
     missing: list[str] = []
+    profile = _closure_profile(state)
+    if profile == "silent":
+        return missing
+    if profile == "read_review":
+        for group in _stage_missing_groups(text, state):
+            if group not in missing:
+                missing.append(group)
+        if not _has_any_keyword(lowered, READ_REVIEW_RISK_KEYWORDS):
+            missing.append("risk")
+        if _unverified_completion(text, state) and "completion_evidence" not in missing:
+            missing.append("completion_evidence")
+        return missing
     parsed_manifest = manifest if manifest is not None else extract_manifest_fields(text)
     if not parsed_manifest.get("route_present"):
         missing.append("route_manifest")

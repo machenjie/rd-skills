@@ -204,6 +204,31 @@ class HookTemplateTests(unittest.TestCase):
             self.assertIn("changeforge_read_context_gate", batch_commands)
             self.assertIn("changeforge_review_gate", batch_commands)
 
+    def test_post_tool_use_matchers_include_lowercase_mcp_read_tools(self) -> None:
+        # Regression: real MCP tool names are lowercase and may be matched case-sensitively.
+        required_tokens = (
+            "mcp__filesystem__read_file",
+            "mcp__filesystem__list_directory",
+            "mcp__github__get_file_contents",
+            "mcp__github__pull_request_read",
+            "mcp__github__search_code",
+            "mcpfilesystemreadfile",
+            "mcpfilesystemlistdirectory",
+            "mcpgithubgetfilecontents",
+            "mcpgithubpullrequestread",
+            "mcpgithubsearchcode",
+        )
+        for template in (
+            HOOK_ROOT / "templates" / "codex" / "hooks.json",
+            HOOK_ROOT / "templates" / "codex-user" / "hooks.json",
+            HOOK_ROOT / "templates" / "claude" / "settings.changeforge-hooks.fragment.json",
+            HOOK_ROOT / "templates" / "claude-user" / "settings.changeforge-hooks.fragment.json",
+        ):
+            data = json.loads(template.read_text())
+            post_tool_use = json.dumps(data["hooks"]["PostToolUse"])
+            for token in required_tokens:
+                self.assertIn(token, post_tool_use, template.name)
+
     def test_compaction_snapshot_runs_before_reinject_without_overwriting_active_context(self) -> None:
         templates = (
             HOOK_ROOT / "templates" / "codex" / "hooks.json",
