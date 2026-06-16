@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import py_compile
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -54,7 +55,11 @@ RICH_EVENT_SCRIPTS = {
         "changeforge_professional_injector",
         "changeforge_review_gate",
     ),
-    "PreToolUse": ("changeforge_professional_injector", "changeforge_pre_tool_risk_preview"),
+    "PreToolUse": (
+        "changeforge_professional_injector",
+        "changeforge_pre_tool_risk_preview",
+        "changeforge_permission_policy_gate",
+    ),
     "PermissionRequest": ("changeforge_permission_policy_gate",),
     "PostToolUse": (
         "changeforge_professional_injector",
@@ -145,6 +150,13 @@ STATE_FINDING_FIELDS = (
     "advanced_refactor_findings",
     "comment_findings",
 )
+SESSION_COMPACTION_ORDER = (
+    "changeforge_compaction_snapshot",
+    "changeforge_session_bootstrap",
+    "changeforge_compaction_reinject",
+    "changeforge_professional_injector",
+)
+READ_MATCHER_TOKENS = ("Fetch", "fetch_pr_patch", "get_pr_diff")
 
 
 def main() -> int:
@@ -172,6 +184,7 @@ def main() -> int:
         _validate_copilot_template(copilot, COPILOT_TEMPLATE, errors=errors)
     if isinstance(copilot_user, dict):
         _validate_copilot_template(copilot_user, COPILOT_USER_TEMPLATE, errors=errors)
+    _validate_hook_behavior(errors)
 
     if errors:
         return fail_many("validate-hooks", errors)
@@ -430,6 +443,14 @@ def _validate_template(
         errors.append(
             f"{relpath(ROOT, path)}: SessionStart must invoke changeforge_session_bootstrap"
         )
+    else:
+        _validate_event_script_order(
+            hooks,
+            "SessionStart",
+            SESSION_COMPACTION_ORDER,
+            path,
+            errors,
+        )
 
     # Codex and Claude expose the lifecycle events the runtime uses to reinforce
     # routing and closure discipline. Require each one to invoke its dedicated
@@ -444,6 +465,12 @@ def _validate_template(
                     errors.append(
                         f"{relpath(ROOT, path)}: {agent_name} {event} must invoke {script}"
                     )
+        if path in CLAUDE_TEMPLATES and not _event_invokes(
+            hooks, "PostToolBatch", "changeforge_read_context_gate"
+        ):
+            errors.append(
+                f"{relpath(ROOT, path)}: Claude PostToolBatch must invoke changeforge_read_context_gate"
+            )
 
     matchers = _post_tool_matchers(hooks)
     if not any("edit" in matcher.casefold() for matcher in matchers):
@@ -458,6 +485,11 @@ def _validate_template(
         errors.append(
             f"{relpath(ROOT, path)}: Codex PostToolUse must include an apply_patch matcher"
         )
+    for token in READ_MATCHER_TOKENS:
+        if not any(token.casefold() in matcher.casefold() for matcher in matchers):
+            errors.append(
+                f"{relpath(ROOT, path)}: PostToolUse matcher must include {token}"
+            )
 
     for command, context in _commands(hooks):
         lowered = command.casefold()
@@ -527,6 +559,13 @@ def _validate_copilot_template(
         for script in scripts:
             if script not in rendered:
                 errors.append(f"{relpath(ROOT, path)}: {event} must invoke {script}")
+    _validate_event_script_order(
+        hooks,
+        "SessionStart",
+        SESSION_COMPACTION_ORDER,
+        path,
+        errors,
+    )
 
     for command, context in _commands(hooks):
         lowered = command.casefold()
@@ -617,6 +656,85 @@ def _event_invokes(hooks: dict[str, Any], event: str, script: str) -> bool:
     return any(
         script in command for command, _context in _commands({event: groups})
     )
+
+
+def _validate_event_script_order(
+    hooks: dict[str, Any],
+    event: str,
+    ordered_scripts: tuple[str, ...],
+    path: Path,
+    errors: list[str],
+) -> None:
+    groups = hooks.get(event)
+    if not isinstance(groups, list) or not groups:
+        return
+    rendered_commands = [command for command, _context in _commands({event: groups})]
+    positions: list[int] = []
+    for script in ordered_scripts:
+        matching = [index for index, command in enumerate(rendered_commands) if script in command]
+        if not matching:
+            errors.append(f"{relpath(ROOT, path)}: {event} must invoke {script}")
+            return
+        positions.append(matching[0])
+    if positions != sorted(positions):
+        errors.append(
+            f"{relpath(ROOT, path)}: {event} must order compaction snapshot before bootstrap, reinject, and professional injection"
+        )
+
+
+def _validate_hook_behavior(errors: list[str]) -> None:
+    sys.path.insert(0, str(HOOK_SCRIPTS_DIR))
+    try:
+        from changeforge_action_classifier import classify_event, is_read_tool, is_review_diff_tool
+    except Exception as exc:
+        errors.append(f"hook behavior import failed: {exc}")
+        return
+    finally:
+        try:
+            sys.path.remove(str(HOOK_SCRIPTS_DIR))
+        except ValueError:
+            pass
+
+    question = classify_event(
+        {"hook_event_name": "UserPromptSubmit", "prompt": "请解释一下这个概念"}
+    )
+    if question.get("stage") != "question" or question.get("surfaces") or question.get("should_inject"):
+        errors.append("classifier: pure questions must be stage=question, surfaces=[], should_inject=False")
+
+    review = classify_event(
+        {"hook_event_name": "UserPromptSubmit", "prompt": "请仔细审查最新提交"}
+    )
+    if review.get("stage") != "review" or "review_intent" not in review.get("prompt_signals", []):
+        errors.append("classifier: Chinese review intent must classify as review")
+
+    repair = classify_event(
+        {"hook_event_name": "UserPromptSubmit", "prompt": "修复已经提交，请审查"}
+    )
+    if repair.get("stage") != "repair" or "repair_followup" not in repair.get("prompt_signals", []):
+        errors.append("classifier: Chinese repair follow-up must classify as repair")
+
+    if not is_read_tool({"hook_event_name": "PostToolUse", "tool_name": "mcpfilesystemreadfile"}):
+        errors.append("read gate: READ_TOOLS must cover mcpfilesystemreadfile")
+    if not is_review_diff_tool({"hook_event_name": "PostToolUse", "tool_name": "get_pr_diff"}):
+        errors.append("read gate: review diff detection must cover get_pr_diff")
+
+    injector_text = (HOOK_SCRIPTS_DIR / "changeforge_professional_injector.py").read_text(
+        encoding="utf-8"
+    )
+    if "stage_route_present=True" in injector_text or "stage_route_present = True" in injector_text:
+        errors.append("professional injector must not set stage_route_present=True")
+
+    common_text = (HOOK_SCRIPTS_DIR / "changeforge_common.py").read_text(encoding="utf-8")
+    state_schema = (HOOK_SCHEMAS_DIR / "hook-state.v1.schema.json").read_text(encoding="utf-8")
+    telemetry_schema = (HOOK_SCHEMAS_DIR / "telemetry-event.v1.schema.json").read_text(
+        encoding="utf-8"
+    )
+    if '"prompt"' in state_schema or '"prompt_text"' in state_schema:
+        errors.append("hook state schema must not store raw prompt fields")
+    if '"prompt"' in telemetry_schema or '"prompt_text"' in telemetry_schema:
+        errors.append("telemetry schema must not store raw prompt fields")
+    if '"prompt_signals"' not in common_text:
+        errors.append("hook state must store compact prompt_signals instead of prompt text")
 
 
 def _timeouts(value: Any, context: str = "hooks") -> list[tuple[int, str]]:

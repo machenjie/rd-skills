@@ -5,22 +5,22 @@
         "hooks": [
           {
             "type": "command",
-            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_session_bootstrap.py\"",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_professional_injector.py\"",
-            "timeout": 10
-          },
-          {
-            "type": "command",
             "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_compaction_snapshot.py\"",
             "timeout": 10
           },
           {
             "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_session_bootstrap.py\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_compaction_reinject.py\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_professional_injector.py\"",
             "timeout": 10
           }
         ]
@@ -71,6 +71,11 @@
             "type": "command",
             "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_pre_tool_risk_preview.py\"",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_permission_policy_gate.py\"",
+            "timeout": 10
           }
         ]
       }
@@ -88,7 +93,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit|Bash|Read|Grep|Glob|LS|Search|View|Open",
+        "matcher": "Edit|Write|MultiEdit|Bash|Read|Grep|Glob|LS|Search|View|Open|Fetch|fetch_file|fetch_pr_patch|get_pr_diff|MCP|GitHub",
         "hooks": [
           {
             "type": "command",
@@ -124,6 +129,11 @@
           {
             "type": "command",
             "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_professional_injector.py\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/changeforge_read_context_gate.py\"",
             "timeout": 10
           },
           {

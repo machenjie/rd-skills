@@ -40,6 +40,8 @@ def main() -> int:
     repo = repo_root(cwd_from_event(event))
     state = load_state(repo)
     classification = classify_event(event)
+    if not classification.get("should_inject", True):
+        return 0
     context = build_active_skill_context(
         runtime=runtime,
         stage=classification["stage"],
@@ -65,7 +67,6 @@ def main() -> int:
         active_skill_context=context,
         owner_skill=context["owner_skill"],
         reviewer_skill=context["reviewer_skill"],
-        stage_route_present=True,
         professional_contract_seen=bool(contract_text),
     )
     write_telemetry_event(
@@ -102,4 +103,3 @@ def _contract_text(runtime: str) -> str:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

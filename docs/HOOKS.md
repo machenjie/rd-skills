@@ -17,7 +17,8 @@ The first-stage runtime provides these reminder gates:
   It only emits a route preflight; it never selects a full route and never reads
   every reference. It is wired as a `SessionStart` hook for Codex, Claude, and Copilot
   (Codex `SessionStart` also fires with the `compact` source after compaction,
-  so the route preflight is re-injected once context is compacted). Copilot
+  so the runtime snapshots active context before bootstrap/reinject and keeps
+  professional injection from overwriting compacted context). Copilot
   `SessionStart` and `SubagentStart` also inject the static ChangeForge skill
   summary as top-level `additionalContext`. The same guidance also ships as an
   install-time bootstrap fragment for users who prefer not to trust executable hooks.
@@ -26,14 +27,17 @@ The first-stage runtime provides these reminder gates:
   for any engineering change. It is advisory developer context, never reads or
   records the prompt text, and writes no telemetry. Copilot templates do not
   wire this event because Copilot does not process `userPromptSubmitted`
-  advisory output.
+  advisory output. Pure questions, explanations, and translations do not create
+  professional injection state and do not require a route manifest.
 - Pre-Edit Risk Preview (`PreToolUse`, Codex and Claude): before an edit or command runs,
   it previews ChangeForge risk surfaces (auth, data contract, cache, queue,
   Kubernetes, Helm, big data) and reminds the agent to route first. It reuses
   the Risk Surface Gate matching, is advisory only, never denies the tool call,
-  and never mutates per-turn state. Copilot templates do not wire this event
-  because Copilot `preToolUse` supports permission decisions and argument
-  modification, not advisory `additionalContext`.
+  and never mutates per-turn state. The Permission Policy Gate also runs on
+  Codex/Claude Bash `PreToolUse` as a warning-only check for destructive,
+  release-sensitive, migration, and dependency mutation commands. Copilot
+  templates do not wire this event because Copilot `preToolUse` supports
+  permission decisions and argument modification, not advisory `additionalContext`.
 
 - Post-Edit Structure Gate: runs after edit tools and warns when changed paths
   look like structural code, shared utilities, public interfaces, SDK/client
@@ -145,14 +149,17 @@ Copilot exposes several of the same events, but ChangeForge wires only the
 events whose advisory output Copilot actually consumes:
 
 - `SessionStart` (Codex also with the `compact` source) and `SubagentStart`
-  inject the route preflight. Copilot also injects the static ChangeForge skill
-  summary on these two events.
+  inject the route preflight. On compact sources the compaction snapshot runs
+  before bootstrap/reinject and the professional injector does not replace the
+  prior active context. Copilot also injects the static ChangeForge skill summary
+  on these two events.
 - `UserPromptSubmit` adds a per-prompt route reminder for Codex and Claude.
   Copilot templates omit the event because Copilot does not process its
   advisory output.
 - `PreToolUse` previews risk surfaces before an edit or command runs for Codex
-  and Claude. Copilot templates omit the event because Copilot `preToolUse`
-  does not consume advisory `additionalContext`.
+  and Claude, and runs the Permission Policy Gate for Bash warnings. Copilot
+  templates omit the event because Copilot `preToolUse` does not consume
+  advisory `additionalContext`.
 - `PostToolUse` runs the structure and risk-surface gates after edits and
   commands.
 - `Stop` runs the closure gate. Copilot Stop is strict by default and emits
@@ -481,16 +488,17 @@ original reminder gates.
 | --- | --- | --- |
 | Action classification | `changeforge_action_classifier.py`, `changeforge_skill_index.py` | Classify stage and select owner/reviewer skill context. |
 | Runtime output | `changeforge_runtime_adapters.py` | Keep Codex/Claude hook-specific context, Copilot top-level context, and generic text output separate. |
-| Professional context | `changeforge_professional_injector.py` | Emit compact active skill context and record selected gates/references. |
-| Read/review evidence | `changeforge_read_context_gate.py`, `changeforge_review_gate.py` | Preserve read/search and review-stage closure evidence. |
-| Permission policy | `changeforge_permission_policy_gate.py` | Warn or block high-risk permission/destructive commands according to hook mode. |
+| Professional context | `changeforge_professional_injector.py` | Emit compact active skill context for engineering stages only and record selected gates/references without marking a route manifest present. |
+| Read/review evidence | `changeforge_read_context_gate.py`, `changeforge_review_gate.py` | Preserve read/search, MCP/GitHub/Fetch/PR diff evidence, and separate review intent from artifact evidence. |
+| Permission policy | `changeforge_permission_policy_gate.py` | Warn on Bash `PreToolUse` and warn/block permission events for high-risk destructive, release, migration, and dependency commands according to hook mode. |
 | Compaction/subagent | `changeforge_compaction_snapshot.py`, `changeforge_compaction_reinject.py`, `changeforge_subagent_skill_contract.py` | Preserve active context across compaction and subagent starts. |
 
 Codex and Claude templates wire `PermissionRequest`, prompt, pre-tool,
 post-tool, subagent, stop, and session events. Claude templates also include
-`UserPromptExpansion` and `PostToolBatch` advisory entries. Copilot templates
-stay on supported flat events only: `SessionStart`, `PostToolUse`,
-`SubagentStart`, and `Stop`.
+`UserPromptExpansion` and `PostToolBatch` advisory entries, with `PostToolBatch`
+recording read context before review context. Copilot templates stay on
+supported flat events only: `SessionStart`, `PostToolUse`, `SubagentStart`, and
+`Stop`.
 
 The runtime support files are:
 

@@ -7,17 +7,21 @@ from typing import Any
 
 
 SKILL_INDEX = {
-    "planning": ("change-impact-analyzer", "task-dag-planner"),
-    "read": ("change-impact-analyzer", "quality-test-gate"),
+    "question": ("change-forge-router", "agent-execution-discipline"),
+    "plan": ("change-impact-analyzer", "task-dag-planner"),
+    "read": ("change-impact-analyzer", "ai-code-review-refactor"),
     "edit": ("backend-change-builder", "ai-code-review-refactor"),
     "review": ("ai-code-review-refactor", "agent-execution-discipline"),
     "repair": ("backend-change-builder", "ai-code-review-refactor"),
+    "refactor": ("ai-code-review-refactor", "quality-test-gate"),
     "test": ("quality-test-gate", "ai-code-review-refactor"),
+    "skill_authoring": ("change-forge-router", "quality-test-gate"),
+    "hook_runtime": ("backend-change-builder", "ai-code-review-refactor"),
     "permission": ("security-privacy-gate", "delivery-release-gate"),
     "release": ("delivery-release-gate", "security-privacy-gate"),
     "compaction": ("agent-execution-discipline", "change-forge-router"),
     "subagent": ("task-dag-planner", "agent-execution-discipline"),
-    "implementation": ("backend-change-builder", "ai-code-review-refactor"),
+    "unknown": ("change-forge-router", "agent-execution-discipline"),
 }
 
 SURFACE_CAPABILITIES = {
@@ -85,7 +89,7 @@ def build_active_skill_context(
     state: dict | None = None,
 ) -> dict[str, Any]:
     """Build a bounded active-skill context without loading reference bodies."""
-    owner, reviewer = SKILL_INDEX.get(stage, SKILL_INDEX["implementation"])
+    owner, reviewer = SKILL_INDEX.get(stage, SKILL_INDEX["unknown"])
     capabilities = _capabilities(stage, surfaces)
     references = [FOUNDATION_REFERENCES[item] for item in capabilities if item in FOUNDATION_REFERENCES]
     gates = _quality_gates(stage, surfaces)
@@ -127,11 +131,13 @@ def context_lines(context: dict[str, Any]) -> list[str]:
 
 
 def _capabilities(stage: str, surfaces: list[str]) -> list[str]:
-    values = ["agent-execution-discipline", "implementation-structure-design"]
-    if stage == "planning":
+    values = ["implementation-structure-design", "agent-execution-discipline"]
+    if stage == "plan":
         values.extend(["context-packaging", "task-dag-decomposition"])
     if stage == "subagent":
         values.extend(["task-dag-decomposition", "context-packaging"])
+    if stage in {"edit", "refactor", "hook_runtime", "skill_authoring"}:
+        values.extend(["code-clarity-maintainability"])
     for surface in surfaces:
         values.extend(SURFACE_CAPABILITIES.get(surface, []))
     return _unique(values)[:10]
@@ -168,4 +174,3 @@ def _unique(values: list[str]) -> list[str]:
             seen.add(value)
             out.append(value)
     return out
-

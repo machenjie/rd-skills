@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from changeforge_action_classifier import extract_read_evidence, is_read_tool
+from changeforge_action_classifier import extract_read_evidence, is_read_tool, is_review_diff_tool
 from changeforge_common import (
     cwd_from_event,
     detect_runtime,
@@ -31,6 +31,7 @@ def main() -> int:
     evidence = extract_read_evidence(event)
     paths = evidence["paths"]
     patterns = evidence["patterns"]
+    diff_seen = is_review_diff_tool(event)
     state = merge_state(
         repo,
         runtime,
@@ -38,7 +39,12 @@ def main() -> int:
         read_tools=[tool_name(event) or "read"],
         searched_patterns=patterns,
         turn_stage="read",
+        read_intent_seen=True,
         read_evidence_seen=True,
+        reviewed_diff_evidence_seen=diff_seen,
+        review_artifact_seen=diff_seen,
+        review_evidence_seen=diff_seen,
+        review_targets=paths if diff_seen else (),
         suggested_capabilities=["context-packaging"],
         suggested_gates=["quality-test-gate"],
     )
@@ -75,4 +81,3 @@ def _message(paths: list[str], patterns: list[str], state: dict) -> str:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

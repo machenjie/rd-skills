@@ -109,8 +109,11 @@ configuration is always preserved and hooks are never trusted automatically.
 The hook runtime now adds an action-aware layer around the original reminders:
 
 - `changeforge_action_classifier.py` classifies the current lifecycle stage
-  (planning, read, edit, review, repair, test, permission, release, compaction,
-  or subagent) and detects compact surface names only.
+  (`question`, `read`, `plan`, `edit`, `test`, `review`, `repair`, `refactor`,
+  `release`, `skill_authoring`, `hook_runtime`, `permission`, `subagent`,
+  `compaction`, or `unknown`) and detects compact source/reason/matcher names.
+  Pure questions, explanations, translations, and no-action lifecycle events do
+  not receive professional injection and do not create Stop closure surface.
 - `changeforge_skill_index.py` maps that stage and surface set to an owner
   professional skill, a separate reviewer skill, selected capability names,
   reference paths, and quality gates.
@@ -118,6 +121,8 @@ The hook runtime now adds an action-aware layer around the original reminders:
   Codex, Claude, Copilot, and generic text runtimes.
 - `changeforge_professional_injector.py`, read/review/permission/compaction,
   and subagent gates update bounded cache-side state and emit advisory context.
+  The injector never marks a route manifest as present; only parsed handoff text
+  can prove a `changeforge_route` manifest.
 
 The runtime stores only bounded facts such as stage, paths, skill names, gate
 names, and compact signal names. It does not persist prompt text, secrets,

@@ -104,6 +104,20 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout, "")
 
+    def test_stop_gate_ignores_professional_injection_for_question_stage(self) -> None:
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": "Here is the answer."}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(
+                cwd,
+                cache,
+                turn_stage="question",
+                professional_injections=["UserPromptSubmit:question"],
+            )
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
+
     def test_changed_paths_emit_closure_reminder(self) -> None:
         event = json.loads((FIXTURE_DIR / "claude_stop_with_changes.json").read_text())
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
@@ -403,6 +417,32 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertIn("MISSING", result.stdout)
         self.assertIn("no complete changeforge_route manifest", result.stdout)
+
+    def test_stop_review_requires_reviewed_files_and_findings(self) -> None:
+        response = (
+            "Review handoff. Changed files are unchanged. "
+            "Validation: ran pytest -q, 1 passed, exit 0. Residual risk: none. "
+            "Next steps: no deploy.\n\n"
+            "```yaml\n"
+            "changeforge_route:\n"
+            "  selected_skills:\n"
+            "    - ai-code-review-refactor\n"
+            "  selected_capabilities:\n"
+            "    - implementation-structure-design\n"
+            "  required_references:\n"
+            "    - references/routing-rules.md\n"
+            "  required_quality_gates:\n"
+            "    - quality-test-gate\n"
+            "```\n"
+        )
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": response}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, turn_stage="review", review_intent_seen=True)
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("review_artifact", result.stdout)
+        self.assertIn("review_findings", result.stdout)
 
     def test_closure_reminder_omits_missing_flag_when_manifest_present(self) -> None:
         manifest_text = (

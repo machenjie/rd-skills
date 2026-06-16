@@ -149,9 +149,27 @@ CONDITIONAL_GROUP_BY_STATE = {
     "comment_findings": "comments",
     "structure_quality_findings": "clarity",
 }
+NO_CLOSURE_STAGES = {"", "question", "unknown", "no_engineering_action"}
+ENGINEERING_STAGES = {
+    "read",
+    "plan",
+    "edit",
+    "test",
+    "review",
+    "repair",
+    "refactor",
+    "release",
+    "skill_authoring",
+    "hook_runtime",
+    "permission",
+    "subagent",
+}
 STAGE_REQUIRED_STATE = {
-    "read": ("read_evidence_seen", "read_paths"),
-    "review": ("review_evidence_seen", "review_targets"),
+    "plan": ("active_skill_context",),
+    "edit": ("changed_paths",),
+    "refactor": ("changed_paths",),
+    "skill_authoring": ("changed_paths",),
+    "hook_runtime": ("changed_paths",),
     "repair": ("review_evidence_seen", "review_findings"),
     "test": ("validation_command_seen",),
     "permission": ("permission_gate_seen", "permission_decisions"),
@@ -159,10 +177,52 @@ STAGE_REQUIRED_STATE = {
     "subagent": ("subagent_contracts",),
     "compaction": ("compaction_snapshots",),
 }
+READ_INSPECTION_KEYWORDS = [
+    "inspected",
+    "read",
+    "searched",
+    "reviewed",
+    "looked at",
+    "检查",
+    "读取",
+    "搜索",
+]
+READ_CONCLUSION_KEYWORDS = [
+    "conclusion",
+    "unknown",
+    "found",
+    "not found",
+    "remaining",
+    "limit",
+    "结论",
+    "未知",
+    "发现",
+    "未确认",
+    "限制",
+]
+REVIEW_FINDING_KEYWORDS = [
+    "finding",
+    "severity",
+    "no issues",
+    "no findings",
+    "p0",
+    "p1",
+    "p2",
+    "风险",
+    "发现",
+    "问题",
+    "严重",
+    "无问题",
+    "无发现",
+]
 STAGE_HANDOFF_KEYWORDS = {
-    "read": ["inspected", "read", "searched", "unknown", "context", "reviewed"],
+    "plan": ["plan", "scope", "validation", "risk", "计划", "范围"],
+    "edit": ["changed", "validation", "risk", "修改", "验证", "风险"],
     "review": ["finding", "severity", "no issues", "review", "risk"],
     "repair": ["fixed", "repaired", "re-review", "validated", "residual"],
+    "refactor": ["refactor", "behavior", "validation", "risk", "重构"],
+    "skill_authoring": ["skill", "capability", "registry", "validation", "技能"],
+    "hook_runtime": ["hook", "runtime", "validation", "risk", "钩子"],
     "test": ["command", "exit", "passed", "failed", "not run", "validation"],
     "permission": ["permission", "security", "approval", "rollback", "risk"],
     "release": ["rollback", "deploy", "release", "validation", "risk"],
@@ -258,6 +318,8 @@ def main() -> int:
 
 
 def _has_closure_surface(state: dict) -> bool:
+    stage = str(state.get("turn_stage") or "").strip()
+    explicit_engineering_stage = stage in ENGINEERING_STAGES
     return bool(
         state.get("changed_paths")
         or state.get("risk_surfaces")
@@ -270,9 +332,10 @@ def _has_closure_surface(state: dict) -> bool:
         or state.get("structure_quality_findings")
         or state.get("read_evidence_seen")
         or state.get("review_evidence_seen")
+        or state.get("reviewed_diff_evidence_seen")
         or state.get("repair_evidence_seen")
         or state.get("permission_gate_seen")
-        or state.get("professional_injections")
+        or explicit_engineering_stage
         or state.get("subagent_contracts")
         or state.get("compaction_snapshots")
     )
@@ -613,18 +676,52 @@ def _missing_keyword_groups(
 
 def _stage_missing_groups(text: str, state: dict) -> list[str]:
     stage = str(state.get("turn_stage") or "").strip()
-    if not stage:
+    if stage in NO_CLOSURE_STAGES:
         return []
+    lowered = text.casefold()
+    if stage == "read":
+        return _read_stage_missing_groups(lowered, state)
+    if stage == "review":
+        return _review_stage_missing_groups(lowered, state)
     missing: list[str] = []
     for state_key in STAGE_REQUIRED_STATE.get(stage, ()):
         if not state.get(state_key):
             missing.append(f"{stage}_state")
             break
-    lowered = text.casefold()
     keywords = STAGE_HANDOFF_KEYWORDS.get(stage, ())
     if keywords and not any(keyword.casefold() in lowered for keyword in keywords):
         missing.append(f"{stage}_handoff")
     return missing
+
+
+def _read_stage_missing_groups(lowered_text: str, state: dict) -> list[str]:
+    missing: list[str] = []
+    has_location = bool(state.get("read_paths") or state.get("searched_patterns"))
+    if not state.get("read_evidence_seen") or not has_location:
+        missing.append("read_state")
+    if not _has_any_keyword(lowered_text, READ_INSPECTION_KEYWORDS) or not _has_any_keyword(
+        lowered_text, READ_CONCLUSION_KEYWORDS
+    ):
+        missing.append("read_handoff")
+    return missing
+
+
+def _review_stage_missing_groups(lowered_text: str, state: dict) -> list[str]:
+    missing: list[str] = []
+    has_reviewed_artifact = bool(
+        state.get("review_artifact_seen")
+        or state.get("review_targets")
+        or state.get("reviewed_diff_evidence_seen")
+    )
+    if not has_reviewed_artifact:
+        missing.append("review_artifact")
+    if not _has_any_keyword(lowered_text, REVIEW_FINDING_KEYWORDS):
+        missing.append("review_findings")
+    return missing
+
+
+def _has_any_keyword(lowered_text: str, keywords: list[str]) -> bool:
+    return any(keyword.casefold() in lowered_text for keyword in keywords)
 
 
 def _unverified_completion(text: str, state: dict) -> bool:

@@ -9,5 +9,6 @@ support.
 4. Keep runtime state bounded and prompt-free.
 5. For read/review/repair/test/release work, state the action stage and closure
    evidence in the final handoff.
-6. Include validation evidence, rollback note, residual risk, and next gate.
-
+6. Do not route pure questions, explanations, translations, or no-action
+   lifecycle events.
+7. Include validation evidence, rollback note, residual risk, and next gate.

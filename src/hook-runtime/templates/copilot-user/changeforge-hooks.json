@@ -4,22 +4,22 @@
     "SessionStart": [
       {
         "type": "command",
-        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_session_bootstrap.py\"",
-        "timeoutSec": 10
-      },
-      {
-        "type": "command",
-        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_professional_injector.py\"",
-        "timeoutSec": 10
-      },
-      {
-        "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_compaction_snapshot.py\"",
         "timeoutSec": 10
       },
       {
         "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_session_bootstrap.py\"",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_compaction_reinject.py\"",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_professional_injector.py\"",
         "timeoutSec": 10
       }
     ],

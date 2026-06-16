@@ -44,6 +44,12 @@ class HookTemplateTests(unittest.TestCase):
         collect(value)
         return timeouts
 
+    def command_script_names(self, value: object) -> list[str]:
+        names: list[str] = []
+        for command in self.collect_commands(value):
+            names.append(command.split("/")[-1].split(".py")[0].strip('"'))
+        return names
+
     def test_codex_hooks_json_parses(self) -> None:
         data = json.loads((HOOK_ROOT / "templates" / "codex" / "hooks.json").read_text())
         self.assertIn("PostToolUse", data["hooks"])
@@ -186,6 +192,46 @@ class HookTemplateTests(unittest.TestCase):
         self.assertIn("CHANGEFORGE_AGENT=copilot", commands)
         self.assertIn("CHANGEFORGE_HOOK_MODE=block", json.dumps(data["hooks"]["Stop"]))
         self.assertNotIn("git rev-parse", commands)
+
+    def test_claude_post_tool_batch_invokes_read_context_gate(self) -> None:
+        for template in (
+            HOOK_ROOT / "templates" / "claude" / "settings.changeforge-hooks.fragment.json",
+            HOOK_ROOT / "templates" / "claude-user" / "settings.changeforge-hooks.fragment.json",
+        ):
+            data = json.loads(template.read_text())
+            batch_commands = json.dumps(data["hooks"]["PostToolBatch"])
+            self.assertIn("changeforge_professional_injector", batch_commands)
+            self.assertIn("changeforge_read_context_gate", batch_commands)
+            self.assertIn("changeforge_review_gate", batch_commands)
+
+    def test_compaction_snapshot_runs_before_reinject_without_overwriting_active_context(self) -> None:
+        templates = (
+            HOOK_ROOT / "templates" / "codex" / "hooks.json",
+            HOOK_ROOT / "templates" / "codex-user" / "hooks.json",
+            HOOK_ROOT / "templates" / "claude" / "settings.changeforge-hooks.fragment.json",
+            HOOK_ROOT / "templates" / "claude-user" / "settings.changeforge-hooks.fragment.json",
+            HOOK_ROOT / "templates" / "copilot" / "changeforge-hooks.json",
+            HOOK_ROOT / "templates" / "copilot-user" / "changeforge-hooks.json",
+        )
+        expected = [
+            "changeforge_compaction_snapshot",
+            "changeforge_session_bootstrap",
+            "changeforge_compaction_reinject",
+            "changeforge_professional_injector",
+        ]
+        for template in templates:
+            data = json.loads(template.read_text())
+            names = self.command_script_names(data["hooks"]["SessionStart"])
+            self.assertEqual(names[:4], expected)
+
+    def test_copilot_no_unsupported_advisory_events(self) -> None:
+        for template in (
+            HOOK_ROOT / "templates" / "copilot" / "changeforge-hooks.json",
+            HOOK_ROOT / "templates" / "copilot-user" / "changeforge-hooks.json",
+        ):
+            data = json.loads(template.read_text())
+            for event in ("UserPromptSubmit", "PreToolUse", "SubagentStop", "PostToolBatch"):
+                self.assertNotIn(event, data["hooks"])
 
     def test_bootstrap_fragment_exists_and_points_to_router(self) -> None:
         fragment = (
