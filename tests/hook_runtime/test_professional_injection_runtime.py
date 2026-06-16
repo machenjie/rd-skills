@@ -88,22 +88,33 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
         self.assertIn("security_or_permission", state["prompt_signals"])
 
     def test_question_prompt_does_not_create_closure_surface(self) -> None:
-        event = {"hook_event_name": "UserPromptSubmit", "prompt": "请解释一下这个概念"}
-        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
-            cwd, cache = Path(cwd_s), Path(cache_s)
-            result = run_hook(
-                "changeforge_professional_injector.py",
-                event,
-                cwd,
-                cache,
-                CHANGEFORGE_AGENT="codex",
-            )
-            state = load_state(cwd, cache)
+        prompts = (
+            "请解释一下这个概念",
+            "what is code review?",
+            "解释 code review 是什么",
+            "什么是 test gate？",
+            "fix 是什么意思？",
+            "read-before-plan 是什么？",
+            "review gate 是干嘛的？",
+        )
+        for prompt in prompts:
+            with self.subTest(prompt=prompt):
+                event = {"hook_event_name": "UserPromptSubmit", "prompt": prompt}
+                with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+                    cwd, cache = Path(cwd_s), Path(cache_s)
+                    result = run_hook(
+                        "changeforge_professional_injector.py",
+                        event,
+                        cwd,
+                        cache,
+                        CHANGEFORGE_AGENT="codex",
+                    )
+                    state = load_state(cwd, cache)
 
-        self.assertEqual(result.returncode, 0)
-        self.assertEqual(result.stdout, "")
-        self.assertEqual(state["turn_stage"], "")
-        self.assertEqual(state["professional_injections"], [])
+                self.assertEqual(result.returncode, 0)
+                self.assertEqual(result.stdout, "")
+                self.assertEqual(state["turn_stage"], "")
+                self.assertEqual(state["professional_injections"], [])
 
     def test_user_prompt_review_chinese_intent_detected(self) -> None:
         event = {"hook_event_name": "UserPromptSubmit", "prompt": "请仔细审查最新提交"}

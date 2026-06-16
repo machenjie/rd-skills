@@ -54,6 +54,7 @@ REVIEW_EN_RE = re.compile(
     re.I,
 )
 REVIEW_ZH_RE = re.compile(r"(审查|评审|复查|仔细审查|详细审查|最新提交|修复已经提交)")
+REVIEW_ZH_ARTIFACT_RE = re.compile(r"(检查|查看).*(修改|改动|提交|修复|diff|PR|文件)", re.I)
 REPAIR_EN_RE = re.compile(r"\b(fix|repair|address|resolve|remediate)\b", re.I)
 REPAIR_ZH_RE = re.compile(r"(修复|解决|修复已经提交|已修复提交|再审查)")
 REPAIR_FOLLOWUP_RE = re.compile(r"(修复已经提交|已修复提交|再审查|latest fix|fix is submitted)", re.I)
@@ -61,6 +62,28 @@ QUESTION_INTENT_RE = re.compile(
     r"\b(explain|what(?:'s| is| are)?|how(?: to| do| does| can| should)?|why|"
     r"difference between|compare|overview|describe|tell me about)\b"
     r"|为什么|是什么|什么是|解释|区别|介绍|怎么|如何|怎样|干嘛|做什么|概念",
+    re.I,
+)
+EXPLICIT_EXECUTION_RE = re.compile(
+    r"\b(review|inspect|audit|fix|repair|address|resolve|remediate|test|"
+    r"validate|verify|read|open|look at|implement|modify|update|refactor|debug)"
+    r"\s+(?:this|that|these|those|latest|current|the)\b",
+    re.I,
+)
+EXPLICIT_EXECUTION_ZH_RE = re.compile(
+    r"(?:请|帮我|帮忙|麻烦|需要|给我)?\s*"
+    r"(审查|评审|复查|仔细审查|详细审查|检查|查看|修复|解决|测试|验证|跑一下|"
+    r"阅读|分析|修改|改动|实现|添加|新增|优化|调整|完善|重构|调试)"
+    r".{0,12}(这个|这次|上面|上述|最新|文件|提交|修复|修改|改动|仓库|项目|PR|diff)",
+    re.I,
+)
+ARTIFACT_SIGNAL_RE = re.compile(
+    r"\b(file|files|repo|repository|commit|diff|patch|pr|pull request|"
+    r"changed files?|latest commit)\b"
+    r"|(?:^|[\s\"'`])[\w./-]+\."
+    r"(?:py|ts|tsx|js|jsx|go|rs|java|kt|rb|php|cs|cpp|c|h|hpp|md|yaml|yml|json|toml|sh)\b"
+    r"|最新提交|这次修改|这次改动|最新改动|上面的修复|上述修复|这个修复|"
+    r"这个文件|这个仓库|这个项目|文件|提交|仓库|项目|PR|diff",
     re.I,
 )
 RELEASE_RE = re.compile(r"\b(release|deploy|deployment|install|build|package|rollback)\b|发布|部署", re.I)
@@ -202,7 +225,7 @@ def _stage_from_event(
     if command and TEST_COMMAND_RE.search(command):
         return "test"
     combined = "\n".join([command, text, *paths])
-    if hook == "userpromptsubmit" and _question_intent(text) and not _engineering_action_intent(text):
+    if hook == "userpromptsubmit" and _educational_question(text):
         return "question"
     if _test_intent(text):
         return "test"
@@ -257,6 +280,8 @@ def _surfaces(paths: list[str], command: str, text: str) -> list[str]:
 
 
 def _prompt_signals(text: str) -> list[str]:
+    if _educational_question(text):
+        return []
     signals: list[str] = []
     for name, pattern in (
         ("release_intent", RELEASE_RE),
@@ -275,7 +300,11 @@ def _prompt_signals(text: str) -> list[str]:
 
 
 def _review_intent(text: str) -> bool:
-    return bool(REVIEW_EN_RE.search(text) or REVIEW_ZH_RE.search(text))
+    return bool(
+        REVIEW_EN_RE.search(text)
+        or REVIEW_ZH_RE.search(text)
+        or REVIEW_ZH_ARTIFACT_RE.search(text)
+    )
 
 
 def _repair_intent(text: str) -> bool:
@@ -284,6 +313,16 @@ def _repair_intent(text: str) -> bool:
 
 def _question_intent(text: str) -> bool:
     return bool(QUESTION_INTENT_RE.search(text))
+
+
+def _educational_question(text: str) -> bool:
+    return bool(_question_intent(text) and not _explicit_execution_request(text))
+
+
+def _explicit_execution_request(text: str) -> bool:
+    if EXPLICIT_EXECUTION_RE.search(text) or EXPLICIT_EXECUTION_ZH_RE.search(text):
+        return True
+    return bool(ARTIFACT_SIGNAL_RE.search(text) and _engineering_action_intent(text))
 
 
 def _engineering_action_intent(text: str) -> bool:

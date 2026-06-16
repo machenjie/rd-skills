@@ -720,12 +720,22 @@ def _validate_hook_behavior(errors: list[str]) -> None:
         "capability 和 skill 的区别是什么",
         "how to install hooks",
         "release gate 是干嘛的",
+        "what is code review?",
+        "解释 code review 是什么",
+        "什么是 test gate？",
+        "fix 是什么意思？",
+        "read-before-plan 是什么？",
+        "review gate 是干嘛的？",
     ):
         domain_question = classify_event({"hook_event_name": "UserPromptSubmit", "prompt": prompt})
         if (
             domain_question.get("stage") != "question"
             or domain_question.get("surfaces")
             or domain_question.get("should_inject")
+            or any(
+                signal in domain_question.get("prompt_signals", [])
+                for signal in ("review_intent", "repair_intent", "repair_followup")
+            )
         ):
             errors.append(
                 f"classifier: domain keyword question must not inject: {prompt!r}"
@@ -736,6 +746,29 @@ def _validate_hook_behavior(errors: list[str]) -> None:
     )
     if review.get("stage") != "review" or "review_intent" not in review.get("prompt_signals", []):
         errors.append("classifier: Chinese review intent must classify as review")
+
+    for prompt in ("检查这次修改", "检查最新改动", "检查上面的修复"):
+        artifact_review = classify_event({"hook_event_name": "UserPromptSubmit", "prompt": prompt})
+        if (
+            artifact_review.get("stage") != "review"
+            or not artifact_review.get("should_inject")
+            or "review_intent" not in artifact_review.get("prompt_signals", [])
+        ):
+            errors.append(
+                f"classifier: Chinese artifact review intent must classify as review: {prompt!r}"
+            )
+
+    for prompt, expected_stage in (
+        ("review latest commit", "review"),
+        ("请审查最新提交", "review"),
+        ("test this repo", "test"),
+        ("验证一下这个修复", "test"),
+    ):
+        action_request = classify_event({"hook_event_name": "UserPromptSubmit", "prompt": prompt})
+        if action_request.get("stage") != expected_stage or not action_request.get("should_inject"):
+            errors.append(
+                f"classifier: explicit execution request {prompt!r} must classify as {expected_stage}"
+            )
 
     deployment_review = classify_event(
         {"hook_event_name": "UserPromptSubmit", "prompt": "review deployment change"}
