@@ -14,6 +14,21 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
+try:
+    from changeforge_state_reducer import reduce_state_update
+except ModuleNotFoundError:  # pragma: no cover - importlib test loading fallback
+    import importlib.util
+
+    _reducer_path = Path(__file__).with_name("changeforge_state_reducer.py")
+    _reducer_spec = importlib.util.spec_from_file_location(
+        "changeforge_state_reducer", _reducer_path
+    )
+    if _reducer_spec is None or _reducer_spec.loader is None:
+        raise
+    _reducer_module = importlib.util.module_from_spec(_reducer_spec)
+    _reducer_spec.loader.exec_module(_reducer_module)
+    reduce_state_update = _reducer_module.reduce_state_update
+
 
 STATE_LIST_FIELDS = (
     "changed_paths",
@@ -41,6 +56,8 @@ STATE_LIST_FIELDS = (
     "suggested_capabilities",
     "suggested_domain_extensions",
     "suggested_gates",
+    "implementation_preflights",
+    "pre_edit_structure_findings",
 )
 STATE_SCALAR_STRING_FIELDS = (
     "turn_stage",
@@ -58,6 +75,16 @@ STATE_BOOL_FIELDS = (
     "repair_evidence_seen",
     "permission_gate_seen",
     "professional_contract_seen",
+    "implementation_preflight_seen",
+    "implementation_preflight_required",
+    "implementation_preflight_blocked",
+    "pre_edit_missing_read_evidence",
+    "pre_edit_missing_reuse_decision",
+    "pre_edit_missing_placement_decision",
+    "pre_edit_missing_test_plan",
+    "edit_without_preflight_seen",
+    "post_edit_confirmed_preflight_gap",
+    "route_preflight_emitted",
 )
 KNOWN_RUNTIMES = {"codex", "claude", "copilot", "generic"}
 # Runtimes that consume structured JSON stdout. Codex and Claude wrap
@@ -541,6 +568,8 @@ def merge_state(
     suggested_capabilities: Iterable[str] = (),
     suggested_domain_extensions: Iterable[str] = (),
     suggested_gates: Iterable[str] = (),
+    implementation_preflights: Iterable[str] = (),
+    pre_edit_structure_findings: Iterable[str] = (),
     validation_command_seen: bool | None = None,
     validation_seen: bool | None = None,
     turn_stage: str | None = None,
@@ -557,67 +586,78 @@ def merge_state(
     repair_evidence_seen: bool | None = None,
     permission_gate_seen: bool | None = None,
     professional_contract_seen: bool | None = None,
+    implementation_preflight_seen: bool | None = None,
+    implementation_preflight_required: bool | None = None,
+    implementation_preflight_blocked: bool | None = None,
+    pre_edit_missing_read_evidence: bool | None = None,
+    pre_edit_missing_reuse_decision: bool | None = None,
+    pre_edit_missing_placement_decision: bool | None = None,
+    pre_edit_missing_test_plan: bool | None = None,
+    edit_without_preflight_seen: bool | None = None,
+    post_edit_confirmed_preflight_gap: bool | None = None,
 ) -> dict:
     state = load_state(repo)
     state["runtime"] = runtime
     if not state.get("turn_id"):
         state["turn_id"] = _new_turn_id()
-    for key, values in (
-        ("changed_paths", changed_paths),
-        ("read_paths", read_paths),
-        ("read_tools", read_tools),
-        ("searched_patterns", searched_patterns),
-        ("structure_findings", structure_findings),
-        ("file_naming_findings", file_naming_findings),
-        ("reuse_findings", reuse_findings),
-        ("extension_reuse_findings", extension_reuse_findings),
-        ("advanced_refactor_findings", advanced_refactor_findings),
-        ("comment_findings", comment_findings),
-        ("structure_quality_findings", structure_quality_findings),
-        ("review_targets", review_targets),
-        ("review_findings", review_findings),
-        ("repair_findings", repair_findings),
-        ("risk_surfaces", risk_surfaces),
-        ("professional_injections", professional_injections),
-        ("permission_decisions", permission_decisions),
-        ("reference_loads", reference_loads),
-        ("subagent_contracts", subagent_contracts),
-        ("compaction_snapshots", compaction_snapshots),
-        ("prompt_signals", prompt_signals),
-        ("suggested_skills", suggested_skills),
-        ("suggested_capabilities", suggested_capabilities),
-        ("suggested_domain_extensions", suggested_domain_extensions),
-        ("suggested_gates", suggested_gates),
-    ):
-        state[key] = _unique([*state.get(key, []), *[str(value) for value in values if str(value)]])
-    if isinstance(active_skill_context, dict):
-        state["active_skill_context"] = _clean_state_mapping(active_skill_context)
-    for key, value in (
-        ("turn_stage", turn_stage),
-        ("owner_skill", owner_skill),
-        ("reviewer_skill", reviewer_skill),
-    ):
-        if value is not None:
-            state[key] = str(value).strip()[:MAX_STATE_VALUE_LEN]
-    for key, value in (
-        ("stage_route_present", stage_route_present),
-        ("read_intent_seen", read_intent_seen),
-        ("read_evidence_seen", read_evidence_seen),
-        ("reviewed_diff_evidence_seen", reviewed_diff_evidence_seen),
-        ("review_intent_seen", review_intent_seen),
-        ("review_artifact_seen", review_artifact_seen),
-        ("review_evidence_seen", review_evidence_seen),
-        ("repair_evidence_seen", repair_evidence_seen),
-        ("permission_gate_seen", permission_gate_seen),
-        ("professional_contract_seen", professional_contract_seen),
-    ):
-        if value is not None:
-            state[key] = bool(state.get(key)) or bool(value)
+    update = {
+        "changed_paths": changed_paths,
+        "read_paths": read_paths,
+        "read_tools": read_tools,
+        "searched_patterns": searched_patterns,
+        "structure_findings": structure_findings,
+        "file_naming_findings": file_naming_findings,
+        "reuse_findings": reuse_findings,
+        "extension_reuse_findings": extension_reuse_findings,
+        "advanced_refactor_findings": advanced_refactor_findings,
+        "comment_findings": comment_findings,
+        "structure_quality_findings": structure_quality_findings,
+        "review_targets": review_targets,
+        "review_findings": review_findings,
+        "repair_findings": repair_findings,
+        "risk_surfaces": risk_surfaces,
+        "professional_injections": professional_injections,
+        "permission_decisions": permission_decisions,
+        "reference_loads": reference_loads,
+        "subagent_contracts": subagent_contracts,
+        "compaction_snapshots": compaction_snapshots,
+        "prompt_signals": prompt_signals,
+        "suggested_skills": suggested_skills,
+        "suggested_capabilities": suggested_capabilities,
+        "suggested_domain_extensions": suggested_domain_extensions,
+        "suggested_gates": suggested_gates,
+        "implementation_preflights": implementation_preflights,
+        "pre_edit_structure_findings": pre_edit_structure_findings,
+        "active_skill_context": active_skill_context,
+        "turn_stage": turn_stage,
+        "owner_skill": owner_skill,
+        "reviewer_skill": reviewer_skill,
+        "stage_route_present": stage_route_present,
+        "read_intent_seen": read_intent_seen,
+        "read_evidence_seen": read_evidence_seen,
+        "reviewed_diff_evidence_seen": reviewed_diff_evidence_seen,
+        "review_intent_seen": review_intent_seen,
+        "review_artifact_seen": review_artifact_seen,
+        "review_evidence_seen": review_evidence_seen,
+        "repair_evidence_seen": repair_evidence_seen,
+        "permission_gate_seen": permission_gate_seen,
+        "professional_contract_seen": professional_contract_seen,
+        "implementation_preflight_seen": implementation_preflight_seen,
+        "implementation_preflight_required": implementation_preflight_required,
+        "implementation_preflight_blocked": implementation_preflight_blocked,
+        "pre_edit_missing_read_evidence": pre_edit_missing_read_evidence,
+        "pre_edit_missing_reuse_decision": pre_edit_missing_reuse_decision,
+        "pre_edit_missing_placement_decision": pre_edit_missing_placement_decision,
+        "pre_edit_missing_test_plan": pre_edit_missing_test_plan,
+        "edit_without_preflight_seen": edit_without_preflight_seen,
+        "post_edit_confirmed_preflight_gap": post_edit_confirmed_preflight_gap,
+    }
+    state = reduce_state_update(
+        state, {key: value for key, value in update.items() if value is not None}
+    )
     command_seen = validation_command_seen if validation_command_seen is not None else validation_seen
     if command_seen is not None:
-        state["validation_command_seen"] = (
-            bool(state.get("validation_command_seen")) or bool(command_seen)
-        )
+        state = reduce_state_update(state, {"validation_command_seen": bool(command_seen)})
         state["validation_seen"] = state["validation_command_seen"]
     save_state(repo, state)
     return state
@@ -862,6 +902,7 @@ def _telemetry_session_id(repo: Path, repo_hash: str, provided: str) -> str:
 # always fails open: a malformed manifest yields empty fields, never an error.
 ROUTE_MANIFEST_KEY = "changeforge_route"
 STAGE_MANIFEST_KEY = "changeforge_stage_route"
+IMPLEMENTATION_PREFLIGHT_KEY = "changeforge_implementation_preflight"
 _MANIFEST_LIST_KEYS = (
     "selected_skills",
     "selected_capabilities",
@@ -915,6 +956,48 @@ def extract_manifest_fields(text: str) -> dict:
         stage_block = _manifest_block(text, STAGE_MANIFEST_KEY)
         if stage_block:
             result["current_stage"] = _manifest_scalar_field(stage_block, "current_stage")
+    except Exception:
+        return result
+    return result
+
+
+def extract_implementation_preflight_fields(text: str) -> dict:
+    """Extract implementation preflight manifest facts from text. Fail open."""
+    result: dict[str, Any] = {
+        "present": False,
+        "read_evidence": [],
+        "placement_decision": False,
+        "reuse_decision": False,
+        "object_boundary": False,
+        "test_plan": False,
+        "risk": False,
+    }
+    if not isinstance(text, str) or not text:
+        return result
+    try:
+        block = _manifest_block(text, IMPLEMENTATION_PREFLIGHT_KEY)
+        if not block:
+            return result
+        result["present"] = f"{IMPLEMENTATION_PREFLIGHT_KEY}:" in block
+        if not result["present"]:
+            return result
+        read_values: list[str] = []
+        for key in (
+            "target_files",
+            "sibling_files",
+            "caller_callee_paths",
+            "nearby_tests",
+            "configs_or_docs",
+        ):
+            read_values.extend(_manifest_list_field(block, key))
+        result["read_evidence"] = _unique(read_values)
+        result["placement_decision"] = _manifest_section_has_value(
+            block, "placement_decision"
+        )
+        result["reuse_decision"] = _manifest_section_has_value(block, "reuse_decision")
+        result["object_boundary"] = _manifest_section_has_value(block, "object_boundary")
+        result["test_plan"] = _manifest_section_has_value(block, "test_plan")
+        result["risk"] = _manifest_section_has_value(block, "risk")
     except Exception:
         return result
     return result
@@ -993,6 +1076,32 @@ def _manifest_scalar_field(segment: str, key: str) -> str:
     pattern = re.compile(r"^\s*" + re.escape(key) + r":\s*(.+?)\s*$", re.MULTILINE)
     match = pattern.search(segment)
     return _manifest_unquote(match.group(1)) if match else ""
+
+
+def _manifest_section_has_value(segment: str, key: str) -> bool:
+    key_re = re.compile(r"^(\s*)" + re.escape(key) + r":\s*(.*)$")
+    capturing = False
+    key_indent = 0
+    for line in segment.splitlines():
+        if not capturing:
+            match = key_re.match(line)
+            if not match:
+                continue
+            inline = match.group(2).strip()
+            if inline and inline not in ("{}", "[]", "|", ">", "|-", ">-"):
+                return True
+            key_indent = len(match.group(1))
+            capturing = True
+            continue
+        if not line.strip():
+            continue
+        indent = len(line) - len(line.lstrip())
+        if indent <= key_indent:
+            return False
+        text = line.strip()
+        if text not in ("-", "[]", "{}"):
+            return True
+    return False
 
 
 def _manifest_skipped_gates(segment: str) -> list[str]:
@@ -1081,6 +1190,8 @@ def _empty_state() -> dict:
         "suggested_capabilities": [],
         "suggested_domain_extensions": [],
         "suggested_gates": [],
+        "implementation_preflights": [],
+        "pre_edit_structure_findings": [],
         "active_skill_context": {},
         "turn_stage": "",
         "owner_skill": "",
@@ -1095,6 +1206,15 @@ def _empty_state() -> dict:
         "repair_evidence_seen": False,
         "permission_gate_seen": False,
         "professional_contract_seen": False,
+        "implementation_preflight_seen": False,
+        "implementation_preflight_required": False,
+        "implementation_preflight_blocked": False,
+        "pre_edit_missing_read_evidence": False,
+        "pre_edit_missing_reuse_decision": False,
+        "pre_edit_missing_placement_decision": False,
+        "pre_edit_missing_test_plan": False,
+        "edit_without_preflight_seen": False,
+        "post_edit_confirmed_preflight_gap": False,
         "validation_command_seen": False,
         "validation_seen": False,
         "route_preflight_emitted": False,

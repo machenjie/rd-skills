@@ -115,6 +115,8 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
                 self.assertEqual(result.stdout, "")
                 self.assertEqual(state["turn_stage"], "")
                 self.assertEqual(state["professional_injections"], [])
+                self.assertFalse(state["implementation_preflight_required"])
+                self.assertFalse(state["implementation_preflight_seen"])
 
     def test_user_prompt_review_chinese_intent_detected(self) -> None:
         event = {"hook_event_name": "UserPromptSubmit", "prompt": "请仔细审查最新提交"}

@@ -14,8 +14,8 @@ from changeforge_common import (
     detect_runtime,
     emit_stop_reminder,
     event_name,
+    extract_implementation_preflight_fields,
     extract_manifest_fields,
-    hook_mode,
     is_stop,
     load_state,
     read_event,
@@ -23,6 +23,7 @@ from changeforge_common import (
     session_id_from_event,
     write_telemetry_event,
 )
+from changeforge_hook_policy import gate_mode
 
 
 MAX_TRANSCRIPT_BYTES = 1_000_000
@@ -251,7 +252,7 @@ def main() -> int:
     runtime = detect_runtime(event)
     if runtime == "unknown":
         return 0
-    mode = hook_mode()
+    mode = gate_mode("stop_closure")
     if mode == "off":
         return 0
     if not is_stop(event):
@@ -346,6 +347,11 @@ def _has_closure_surface(state: dict) -> bool:
         or state.get("advanced_refactor_findings")
         or state.get("comment_findings")
         or state.get("structure_quality_findings")
+        or state.get("implementation_preflight_required")
+        or state.get("implementation_preflight_seen")
+        or state.get("pre_edit_structure_findings")
+        or state.get("edit_without_preflight_seen")
+        or state.get("post_edit_confirmed_preflight_gap")
         or state.get("read_evidence_seen")
         or state.get("review_evidence_seen")
         or state.get("reviewed_diff_evidence_seen")
@@ -413,6 +419,8 @@ def _stop_findings(state: dict) -> dict[str, list[str]]:
             "reference_loads",
             "subagent_contracts",
             "compaction_snapshots",
+            "implementation_preflights",
+            "pre_edit_structure_findings",
         )
     }
 
@@ -436,6 +444,14 @@ def _closure_message(state: dict, final_text: str, manifest: dict | None = None)
         details.append("- comment quality gate fired")
     if state.get("structure_quality_findings"):
         details.append("- structure quality gate fired")
+    if state.get("implementation_preflight_required"):
+        details.append("- implementation preflight required")
+    if state.get("implementation_preflights"):
+        details.append(
+            f"- implementation preflights: {', '.join(state['implementation_preflights'][:4])}"
+        )
+    if state.get("edit_without_preflight_seen"):
+        details.append("- edit occurred without complete implementation preflight")
     if state.get("risk_surfaces"):
         details.append(f"- risk surfaces: {', '.join(state['risk_surfaces'])}")
     if state.get("turn_stage"):
@@ -483,6 +499,16 @@ def _closure_message(state: dict, final_text: str, manifest: dict | None = None)
             " replace the claim with a not-verified disclosure (status, why not run,"
             " residual risk, exact command)."
         )
+    if _implementation_preflight_required(state) and not _has_implementation_preflight_evidence(
+        final_text, state
+    ):
+        headline += (
+            " MISSING: implementation preflight evidence is incomplete."
+            " Before final handoff, include the changeforge_implementation_preflight"
+            " summary with read evidence, placement decision, reuse decision,"
+            " object/module boundary rationale when relevant, test plan, residual"
+            " risk, and rollback/revert path."
+        )
     stage_missing = _stage_missing_groups(final_text, state)
     if stage_missing:
         headline += (
@@ -507,6 +533,7 @@ This turn changed files, read code, reviewed artifacts, or triggered risk surfac
 - for non-trivial engineering work, the changeforge_stage_route manifest: current stage, launched and explicitly skipped capabilities, and next-stage handoff
 - required references: the router self-use references plus the selected capability references
 - changed files
+- changeforge_implementation_preflight summary when edits occurred: read evidence, placement decision, reuse ladder, object/module boundary, test plan, risk and rollback/revert path
 - structure/reuse/placement rationale if structure gate fired
 - validation commands and results
 - residual risks and unverified items
@@ -565,6 +592,17 @@ def _structure_evidence_block(state: dict) -> str:
             "  - side-effect boundary review\n"
             "  - cleanup/deprecation owner and expiry\n"
             "  - change locality or deletion-path review"
+        )
+    if _implementation_preflight_required(state):
+        blocks.append(
+            "- implementation preflight evidence:\n"
+            "  - changeforge_implementation_preflight summary\n"
+            "  - read evidence: target, sibling, caller/callee, tests, config/docs\n"
+            "  - placement decision and rejected locations\n"
+            "  - reuse ladder decision\n"
+            "  - object/module boundary rationale when relevant\n"
+            "  - test plan and validation command result\n"
+            "  - residual risk and rollback/revert path"
         )
     if not blocks:
         return ""
@@ -715,6 +753,10 @@ def _missing_keyword_groups(
             missing.append(group)
     if _unverified_completion(text, state) and "completion_evidence" not in missing:
         missing.append("completion_evidence")
+    if _implementation_preflight_required(state) and not _has_implementation_preflight_evidence(
+        text, state
+    ):
+        missing.append("implementation_preflight")
     for group in _stage_missing_groups(text, state):
         if group not in missing:
             missing.append(group)
@@ -769,6 +811,47 @@ def _review_stage_missing_groups(lowered_text: str, state: dict) -> list[str]:
 
 def _has_any_keyword(lowered_text: str, keywords: list[str]) -> bool:
     return any(keyword.casefold() in lowered_text for keyword in keywords)
+
+
+def _implementation_preflight_required(state: dict) -> bool:
+    profile = _closure_profile(state)
+    if profile in {"silent", "read_review"}:
+        return False
+    return bool(
+        state.get("implementation_preflight_required")
+        or state.get("edit_without_preflight_seen")
+        or state.get("post_edit_confirmed_preflight_gap")
+        or state.get("pre_edit_structure_findings")
+        or state.get("changed_paths")
+    )
+
+
+def _has_implementation_preflight_evidence(text: str, state: dict) -> bool:
+    if not text:
+        return False
+    manifest = extract_implementation_preflight_fields(text)
+    if manifest.get("present"):
+        return bool(
+            manifest.get("read_evidence")
+            and manifest.get("placement_decision")
+            and manifest.get("reuse_decision")
+            and manifest.get("test_plan")
+            and manifest.get("risk")
+        )
+    lowered = text.casefold()
+    required_terms = (
+        "preflight",
+        "read evidence",
+        "placement",
+        "reuse",
+        "test plan",
+        "risk",
+    )
+    if not all(term in lowered for term in required_terms):
+        return False
+    if state.get("advanced_refactor_findings") or state.get("pre_edit_structure_findings"):
+        return "object" in lowered or "boundary" in lowered or "module" in lowered
+    return True
 
 
 def _unverified_completion(text: str, state: dict) -> bool:

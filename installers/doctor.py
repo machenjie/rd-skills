@@ -333,6 +333,12 @@ def _check_project_hooks(target: Path | None, issues: list[str]) -> None:
                 issues.append(f"{agent}: missing {support_file}")
         if not (scripts_dir / "changeforge_professional_injector.py").is_file():
             issues.append(f"{agent}: missing professional injection hook")
+        if not (scripts_dir / "changeforge_pre_edit_structure_gate.py").is_file():
+            issues.append(f"{agent}: missing pre-edit structure gate")
+        if not (scripts_dir / "changeforge_hook_policy.py").is_file():
+            issues.append(f"{agent}: missing hook policy support")
+        if not (scripts_dir / "changeforge_state_reducer.py").is_file():
+            issues.append(f"{agent}: missing state reducer support")
         if not (scripts_dir / "changeforge_stop_closure_gate.py").is_file():
             issues.append(f"{agent}: missing stage-aware Stop closure hook")
         if config_path.is_file():
@@ -341,6 +347,13 @@ def _check_project_hooks(target: Path | None, issues: list[str]) -> None:
             print(f"- {agent}: {config_name} {state}")
             if not references:
                 issues.append(f"{agent}: {config_name} does not reference changeforge hook scripts")
+            config_text = config_path.read_text(encoding="utf-8", errors="replace")
+            if agent in {"codex", "claude"} and "changeforge_pre_edit_structure_gate" not in config_text:
+                issues.append(f"{agent}: {config_name} does not reference pre-edit structure gate")
+            if agent == "copilot" and (
+                '"PreToolUse"' in config_text or "changeforge_pre_edit_structure_gate" in config_text
+            ):
+                issues.append(f"{agent}: {config_name} wires unsupported PreToolUse advisory")
         else:
             print(f"- {agent}: {config_name} not found (manual merge may be pending)")
         bootstrap_path = aux_dir / "changeforge-route-preflight.md"

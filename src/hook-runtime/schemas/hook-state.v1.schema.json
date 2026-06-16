@@ -61,6 +61,11 @@
     "suggested_capabilities": { "$ref": "#/$defs/stringList" },
     "suggested_domain_extensions": { "$ref": "#/$defs/stringList" },
     "suggested_gates": { "$ref": "#/$defs/stringList" },
+    "implementation_preflights": {
+      "description": "Bounded summaries of implementation preflight manifests seen this turn; never raw assistant messages.",
+      "$ref": "#/$defs/stringList"
+    },
+    "pre_edit_structure_findings": { "$ref": "#/$defs/stringList" },
     "active_skill_context": {
       "type": "object",
       "additionalProperties": true,
@@ -100,6 +105,15 @@
     "repair_evidence_seen": { "type": "boolean" },
     "permission_gate_seen": { "type": "boolean" },
     "professional_contract_seen": { "type": "boolean" },
+    "implementation_preflight_seen": { "type": "boolean" },
+    "implementation_preflight_required": { "type": "boolean" },
+    "implementation_preflight_blocked": { "type": "boolean" },
+    "pre_edit_missing_read_evidence": { "type": "boolean" },
+    "pre_edit_missing_reuse_decision": { "type": "boolean" },
+    "pre_edit_missing_placement_decision": { "type": "boolean" },
+    "pre_edit_missing_test_plan": { "type": "boolean" },
+    "edit_without_preflight_seen": { "type": "boolean" },
+    "post_edit_confirmed_preflight_gap": { "type": "boolean" },
     "validation_seen": {
       "description": "Backward-compatible alias for validation_command_seen.",
       "type": "boolean"

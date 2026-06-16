@@ -22,7 +22,7 @@ DIST_COPILOT_HOOK_SUPPORT = (
     / "changeforge"
     / "changeforge_copilot_skill_summary.md"
 )
-EXPECTED_HOOK_SCRIPT_COUNT = 18
+EXPECTED_HOOK_SCRIPT_COUNT = 21
 EXPECTED_COMMON_SUPPORT_FILES = ["changeforge_professional_contract.md"]
 EXPECTED_COPILOT_SUPPORT_FILES = sorted(
     [

@@ -69,6 +69,11 @@
           },
           {
             "type": "command",
+            "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_pre_edit_structure_gate.py\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
             "command": "CHANGEFORGE_AGENT=claude /usr/bin/env python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/changeforge_pre_tool_risk_preview.py\"",
             "timeout": 10
           },

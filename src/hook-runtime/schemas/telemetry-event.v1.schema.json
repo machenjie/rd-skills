@@ -56,6 +56,7 @@
         "session_bootstrap",
         "user_prompt_route_reminder",
         "pre_tool_risk_preview",
+        "pre_edit_structure_gate",
         "professional_injector",
         "read_context_gate",
         "review_gate",

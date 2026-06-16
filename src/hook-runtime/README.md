@@ -34,6 +34,14 @@ The runtime provides these reminder hooks:
   before an edit or command runs. Advisory only; never denies the tool call.
   Copilot templates do not wire `PreToolUse` because Copilot only consumes
   permission decisions or argument modifications for that event.
+- Pre-Edit Implementation Structure Gate: at Codex and Claude `PreToolUse`,
+  check structural edit tools for read evidence and a
+  `changeforge_implementation_preflight` summary before the first edit lands.
+  It requires or reminds on placement, reuse, object/module boundary, test plan,
+  residual risk, and rollback/revert path. Default mode is warn; only
+  `CHANGEFORGE_PRE_EDIT_MODE=block` enables high-confidence blocking.
+  Copilot templates do not wire unsupported `PreToolUse` advisory, so PostToolUse
+  and Stop report preflight gaps for Copilot.
 - Post-Edit Structure Gate: after edit tools run, detect structural code changes
   that should preserve reuse, placement, ownership, dependency direction, public
   API decisions, same-pattern scans, and nearby tests.
@@ -41,8 +49,8 @@ The runtime provides these reminder hooks:
   surfaces such as auth, data contracts, cache, queue, Kubernetes, Helm, and big
   data work so the agent remembers the matching gate.
 - Stop Closure Gate: before final handoff, remind the agent to include the
-  ChangeForge path used, changed files, validation evidence, residual risk, and
-  next actions.
+  ChangeForge path used, implementation preflight evidence, changed files,
+  validation evidence, residual risk, and next actions.
 - Subagent Closure Reminder: at Codex and Claude `SubagentStop`, remind the
   subagent to carry closure evidence back to the parent. Advisory only; never
   forces continuation and never touches the parent turn's closure state. Copilot
@@ -128,6 +136,67 @@ The runtime stores only bounded facts such as stage, paths, skill names, gate
 names, and compact signal names. It does not persist prompt text, secrets,
 environment variables, full command arguments, command output, user archives, or
 personal content indexes.
+
+## Policy and State
+
+Global hook mode remains:
+
+```bash
+CHANGEFORGE_HOOK_MODE=off|monitor|warn|block
+```
+
+Gate-specific modes override it:
+
+```bash
+CHANGEFORGE_PRE_EDIT_MODE=off|monitor|warn|block
+CHANGEFORGE_PERMISSION_MODE=off|monitor|warn|block
+CHANGEFORGE_STOP_MODE=off|monitor|warn|block
+CHANGEFORGE_HOOK_FAILURE_MODE=fail_open|fail_closed
+```
+
+The default is `warn` and `fail_open`. `changeforge_hook_policy.py` also exposes
+timeout, retry, retry-delay, max-concurrency, and queue-limit policy fields for
+future lifecycle adapters, without changing the synchronous script behavior.
+
+`changeforge_state_reducer.py` owns state merge semantics. Lists are additive,
+deduped, and capped; booleans use OR semantics; scalar stage/owner fields keep
+the last non-empty value; and empty `active_skill_context` updates do not erase
+existing compacted context. The runtime never stores raw prompts, secrets,
+environment variables, full command output, or user-specific content corpora.
+
+Example preflight:
+
+```yaml
+changeforge_implementation_preflight:
+  stage: edit
+  read_evidence:
+    target_files:
+      - src/module/file.py
+    sibling_files:
+      - src/module/sibling.py
+    nearby_tests:
+      - tests/test_file.py
+  placement_decision:
+    target_file: src/module/file.py
+    owner_module: module
+    rejected_locations:
+      - path: src/common/utils.py
+        reason: wrong ownership
+  reuse_decision:
+    direct_reuse:
+      - symbol_or_path: src/module/existing.py
+        reason: existing behavior
+    new_code_justification: no compatible extension point
+  object_boundary:
+    artifact_type: module
+    owner: module
+    public_api_change: false
+  test_plan:
+    validation_commands:
+      - python3 -m unittest discover -s tests
+  risk:
+    rollback_or_revert_path: revert this patch
+```
 
 Additional install flags:
 

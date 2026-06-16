@@ -38,6 +38,15 @@ The first-stage runtime provides these reminder gates:
   release-sensitive, migration, and dependency mutation commands. Copilot
   templates do not wire this event because Copilot `preToolUse` supports
   permission decisions and argument modification, not advisory `additionalContext`.
+- Pre-Edit Implementation Structure Gate (`PreToolUse`, Codex and Claude):
+  before `apply_patch`, `Edit`, `Write`, or `MultiEdit`, it checks for read
+  evidence and a `changeforge_implementation_preflight` summary covering
+  placement, reuse, object/module boundary, test plan, risk, and rollback. This
+  moves the critical structure decision before the edit instead of relying only
+  on post-edit review. Default mode is warn; `CHANGEFORGE_PRE_EDIT_MODE=block`
+  can block high-confidence structural edits with no read evidence and no
+  preflight manifest. Copilot templates do not wire unsupported `PreToolUse`
+  advisory and instead rely on PostToolUse and Stop compensation.
 
 - Post-Edit Structure Gate: runs after edit tools and warns when changed paths
   look like structural code, shared utilities, public interfaces, SDK/client
@@ -54,8 +63,9 @@ The first-stage runtime provides these reminder gates:
   or big-data surfaces.
 - Stop Closure Gate: runs before final handoff and reminds the agent to include
   skill path, changed files, validation evidence, residual risk, next steps, and
-  the structure-evidence records (file naming, reuse ladder, extension safety,
-  advanced refactor, comment quality) for any structure sub-gate that fired.
+  the implementation preflight summary plus structure-evidence records (file
+  naming, reuse ladder, extension safety, advanced refactor, comment quality)
+  for any structure sub-gate that fired.
 - Subagent Closure Reminder (`SubagentStop`, Codex and Claude): reminds a stopping subagent
   to hand the parent the route manifest, validation evidence, and residual risk.
   It emits an advisory `systemMessage`, never forces the subagent to continue,
@@ -70,9 +80,108 @@ Stop closure gate but keeps SessionStart, SubagentStart, and PostToolUse context
 hooks advisory. A hook failure must fail open and must not interrupt normal
 agent execution.
 
+## Hook Policy
+
+The runtime still accepts the legacy global mode:
+
+```text
+CHANGEFORGE_HOOK_MODE=off|monitor|warn|block
+```
+
+It also accepts per-gate overrides:
+
+```text
+CHANGEFORGE_PRE_EDIT_MODE=off|monitor|warn|block
+CHANGEFORGE_PERMISSION_MODE=off|monitor|warn|block
+CHANGEFORGE_STOP_MODE=off|monitor|warn|block
+CHANGEFORGE_HOOK_FAILURE_MODE=fail_open|fail_closed
+```
+
+Precedence is gate-specific mode, then `CHANGEFORGE_HOOK_MODE`, then `warn`.
+Failure mode defaults to `fail_open`. The policy model also carries timeout,
+retry, retry delay, max concurrency, and queue-limit fields for richer lifecycle
+policy expression, while the shipped scripts remain synchronous and bounded.
+Only configured enforcement gates block; ordinary hook errors fail open.
+
+## State Reducer
+
+Hook state is merged through explicit reducers:
+
+- list fields such as `changed_paths`, `read_paths`, `risk_surfaces`, and
+  `implementation_preflights` are additive, deduped, and capped;
+- booleans such as `read_evidence_seen`, `review_evidence_seen`, and
+  `implementation_preflight_required` use OR semantics, so `False` cannot erase
+  a prior `True`;
+- stage and owner fields keep the last non-empty value;
+- `active_skill_context` is replaced only by a non-empty mapping, so compaction
+  reinjection cannot erase the previous active context with an empty update.
+
+State remains cache-side only and stores bounded facts, not raw prompts,
+environment variables, secrets, full command output, or personal archives.
+
+## Implementation Preflight Manifest
+
+For structural edits, the agent should emit a compact preflight before editing:
+
+```yaml
+changeforge_implementation_preflight:
+  stage: edit
+  target_change:
+    summary: "..."
+    intended_files:
+      - "src/module/file.py"
+  read_evidence:
+    target_files:
+      - "src/module/file.py"
+    sibling_files:
+      - "src/module/sibling.py"
+    caller_callee_paths:
+      - "src/app.py"
+    nearby_tests:
+      - "tests/test_file.py"
+    configs_or_docs:
+      - "README.md"
+  placement_decision:
+    target_file: "src/module/file.py"
+    owner_module: "module"
+    owner_object_or_function: "ExistingOwner"
+    reason: "..."
+    rejected_locations:
+      - path: "src/common/utils.py"
+        reason: "Would hide module ownership."
+  reuse_decision:
+    direct_reuse:
+      - symbol_or_path: "src/module/existing.py"
+        reason: "..."
+    extension_reuse:
+      - symbol_or_path: "src/module/base.py"
+        behavior_preservation: "..."
+    new_code_justification: "..."
+  object_boundary:
+    artifact_type: module
+    owner: "module"
+    state_or_invariant: "..."
+    public_api_change: false
+    compatibility_notes: "..."
+  test_plan:
+    test_files:
+      - "tests/test_file.py"
+    validation_commands:
+      - "python3 -m unittest discover -s tests"
+    regression_scope: "..."
+  risk:
+    compatibility_risk: "..."
+    rollback_or_revert_path: "revert this patch"
+    unverified_items:
+      - "..."
+```
+
+Read-only, review-only, and educational question turns do not require this
+manifest when no files changed.
+
 ## Telemetry
 
-In addition to their reminders, all three gates append a small telemetry record
+In addition to their reminders, runtime gates append a small telemetry record
 to the user cache after each watched event. Telemetry is a runtime fact log used
 for offline review; it is never written into project source or `dist/`, and it
 records no prompts, environment variables, secrets, or full command output. The
@@ -157,9 +266,10 @@ events whose advisory output Copilot actually consumes:
   Copilot templates omit the event because Copilot does not process its
   advisory output.
 - `PreToolUse` previews risk surfaces before an edit or command runs for Codex
-  and Claude, and runs the Permission Policy Gate for Bash warnings. Copilot
-  templates omit the event because Copilot `preToolUse` does not consume
-  advisory `additionalContext`.
+  and Claude, runs the Pre-Edit Implementation Structure Gate before edit tools,
+  and runs the Permission Policy Gate for Bash warnings. Copilot templates omit
+  the event because Copilot `preToolUse` does not consume advisory
+  `additionalContext`; PostToolUse and Stop report any preflight gap.
 - `PostToolUse` runs the structure and risk-surface gates after edits and
   commands.
 - `Stop` runs the closure gate. Copilot Stop is strict by default and emits
@@ -198,6 +308,8 @@ Hooks can:
   Copilot does not wire this unsupported advisory path);
 - preview risk surfaces before an edit or command runs (Codex and Claude
   `PreToolUse`; Copilot cannot consume advisory preview context);
+- require or remind on implementation preflight evidence before structural edits
+  (Codex and Claude `PreToolUse`; Copilot compensates after edit and at Stop);
 - remind on new file naming pattern mismatches;
 - remind on structural path changes;
 - remind on helper/common/utils/shared pollution risk;
@@ -227,6 +339,7 @@ Hooks cannot:
    `SessionStart`, `SubagentStart`, and `PostToolUse` advisory.
 3. Collect false positives with fixture-backed tests.
 4. Only enable broad `block` behavior for high-confidence violations:
+   - configured pre-edit enforcement with no read evidence and no preflight;
    - new common/utils/helper file without reuse evidence;
    - dependency file changes without dependency review;
    - Stop without validation evidence;

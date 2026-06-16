@@ -67,6 +67,12 @@
           },
           {
             "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_pre_edit_structure_gate.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking ChangeForge implementation preflight"
+          },
+          {
+            "type": "command",
             "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/changeforge_pre_tool_risk_preview.py\"",
             "timeout": 10,
             "statusMessage": "Previewing ChangeForge risk surface"

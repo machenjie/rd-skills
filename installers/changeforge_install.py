@@ -101,10 +101,13 @@ HOOK_MANIFEST_NAME = ".changeforge-hook-manifest.json"
 HOOK_SCRIPT_NAMES = (
     "changeforge_common.py",
     "changeforge_runtime_adapters.py",
+    "changeforge_hook_policy.py",
+    "changeforge_state_reducer.py",
     "changeforge_action_classifier.py",
     "changeforge_skill_index.py",
     "changeforge_session_bootstrap.py",
     "changeforge_user_prompt_route_reminder.py",
+    "changeforge_pre_edit_structure_gate.py",
     "changeforge_pre_tool_risk_preview.py",
     "changeforge_professional_injector.py",
     "changeforge_read_context_gate.py",

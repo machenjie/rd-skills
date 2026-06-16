@@ -575,8 +575,11 @@ def _write_hook_manifest(
     # changeforge_common.py and the templates, not in the manifest.
     hooks = [
         "changeforge_common",
+        "changeforge_hook_policy",
+        "changeforge_state_reducer",
         "changeforge_session_bootstrap",
         "changeforge_user_prompt_route_reminder",
+        "changeforge_pre_edit_structure_gate",
         "changeforge_pre_tool_risk_preview",
         "changeforge_professional_injector",
         "changeforge_runtime_adapters",

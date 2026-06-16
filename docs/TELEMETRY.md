@@ -75,11 +75,14 @@ be checked mechanically.
 
 ## Hooks Record, They Do Not Route
 
-The Post-Edit Structure Gate, Risk Surface Gate, and Stop Closure Gate write
-telemetry in addition to their warning-only reminders. The Stop Closure Gate
-records completeness facts only: whether a complete parseable
+The Pre-Edit Implementation Structure Gate, Post-Edit Structure Gate, Risk
+Surface Gate, and Stop Closure Gate write telemetry in addition to their
+warning-only reminders. The pre-edit gate records only bounded facts such as
+changed paths, added paths, missing preflight fields, and whether read evidence
+was seen. It does not record the assistant message or raw manifest body. The
+Stop Closure Gate records completeness facts only: whether a complete parseable
 `changeforge_route` manifest, changed files, validation evidence, residual risk,
-and required references were present.
+required references, and implementation preflight evidence were present.
 
 Hooks still cannot replace `change-forge-router`. They never call a model, never
 reach the network, never modify project source, and never load every compiled
@@ -228,9 +231,13 @@ The v1 telemetry schema is extended compatibly with action-aware hook facts:
 - `read_evidence_seen`, `review_evidence_seen`, `repair_evidence_seen`,
   `permission_gate_seen`, and `professional_contract_seen` record whether the
   corresponding lifecycle gate observed a bounded fact.
-- `professional_injector`, `read_context_gate`, `review_gate`,
-  `permission_policy_gate`, `subagent_skill_contract`, and compaction hooks are
-  accepted `hook_name` values.
+- `professional_injector`, `pre_edit_structure_gate`, `read_context_gate`,
+  `review_gate`, `permission_policy_gate`, `subagent_skill_contract`, and
+  compaction hooks are accepted `hook_name` values.
+- Implementation preflight state is stored as compact summaries and booleans:
+  `implementation_preflights`, `implementation_preflight_seen`,
+  `implementation_preflight_required`, `edit_without_preflight_seen`, and
+  `post_edit_confirmed_preflight_gap`.
 
 These fields are facts about hook behavior, not content capture. Telemetry still
 records only path-like facts, compact signal names, command program names, gate

@@ -11,7 +11,6 @@ from changeforge_common import (
     detect_runtime,
     event_name,
     extract_bash_command,
-    hook_mode,
     is_permission_request,
     is_pre_tool_use,
     merge_state,
@@ -22,6 +21,7 @@ from changeforge_common import (
     tool_name,
     write_telemetry_event,
 )
+from changeforge_hook_policy import gate_mode
 from changeforge_runtime_adapters import adapter_for
 
 
@@ -53,7 +53,7 @@ def main() -> int:
     if not event:
         return 0
     runtime = detect_runtime(event)
-    mode = hook_mode()
+    mode = gate_mode("permission_policy")
     if mode == "off":
         return 0
     permission_event = is_permission_request(event)

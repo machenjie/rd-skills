@@ -107,6 +107,24 @@ class HookTemplateTests(unittest.TestCase):
         # SessionStart matcher covers the post-compaction compact source.
         self.assertIn("compact", json.dumps(hooks["SessionStart"]))
 
+    def test_codex_and_claude_pretooluse_order_includes_pre_edit_gate(self) -> None:
+        expected = [
+            "changeforge_professional_injector",
+            "changeforge_pre_edit_structure_gate",
+            "changeforge_pre_tool_risk_preview",
+            "changeforge_permission_policy_gate",
+        ]
+        for template in (
+            HOOK_ROOT / "templates" / "codex" / "hooks.json",
+            HOOK_ROOT / "templates" / "codex-user" / "hooks.json",
+            HOOK_ROOT / "templates" / "claude" / "settings.changeforge-hooks.fragment.json",
+            HOOK_ROOT / "templates" / "claude-user" / "settings.changeforge-hooks.fragment.json",
+        ):
+            data = json.loads(template.read_text())
+            names = self.command_script_names(data["hooks"]["PreToolUse"])
+            positions = [names.index(name) for name in expected]
+            self.assertEqual(positions, sorted(positions), template.name)
+
     def test_codex_user_template_resolves_from_codex_home(self) -> None:
         # The user template mirrors the project events but resolves its command
         # path from CODEX_HOME (with a $HOME/.codex fallback), never the git root.
@@ -257,6 +275,16 @@ class HookTemplateTests(unittest.TestCase):
             data = json.loads(template.read_text())
             for event in ("UserPromptSubmit", "PreToolUse", "SubagentStop", "PostToolBatch"):
                 self.assertNotIn(event, data["hooks"])
+            self.assertNotIn("changeforge_pre_edit_structure_gate", json.dumps(data))
+
+    def test_new_hook_runtime_scripts_listed_in_build_manifest(self) -> None:
+        build_text = (ROOT / "scripts" / "build.py").read_text(encoding="utf-8")
+        for script in (
+            "changeforge_hook_policy",
+            "changeforge_state_reducer",
+            "changeforge_pre_edit_structure_gate",
+        ):
+            self.assertIn(script, build_text)
 
     def test_bootstrap_fragment_exists_and_points_to_router(self) -> None:
         fragment = (

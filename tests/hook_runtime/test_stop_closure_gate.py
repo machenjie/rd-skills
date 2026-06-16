@@ -96,6 +96,30 @@ def read_telemetry(cache: Path) -> list[dict]:
     return records
 
 
+PREFLIGHT_MANIFEST = (
+    "```yaml\n"
+    "changeforge_implementation_preflight:\n"
+    "  read_evidence:\n"
+    "    target_files:\n"
+    "      - a.go\n"
+    "    sibling_files:\n"
+    "      - b.go\n"
+    "  placement_decision:\n"
+    "    target_file: a.go\n"
+    "  reuse_decision:\n"
+    "    direct_reuse:\n"
+    "      - symbol_or_path: b.go\n"
+    "  object_boundary:\n"
+    "    artifact_type: module\n"
+    "  test_plan:\n"
+    "    validation_commands:\n"
+    "      - go test ./...\n"
+    "  risk:\n"
+    "    rollback_or_revert_path: revert patch\n"
+    "```\n"
+)
+
+
 class StopClosureGateTests(unittest.TestCase):
     def test_empty_state_is_silent(self) -> None:
         event = json.loads((FIXTURE_DIR / "codex_stop_with_changes.json").read_text())
@@ -134,6 +158,38 @@ class StopClosureGateTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertIn("ChangeForge Closure Gate reminder", payload["systemMessage"])
         self.assertIn("changed files", payload["systemMessage"])
+
+    def test_changed_paths_without_implementation_preflight_warns(self) -> None:
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": "Changed files. Risk noted."}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, changed_paths=["a.go"])
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("implementation preflight evidence is incomplete", result.stdout)
+        self.assertIn("implementation_preflight", result.stdout)
+
+    def test_edit_without_preflight_seen_requests_preflight_evidence(self) -> None:
+        event = {"hook_event_name": "Stop", "runtime": "claude", "response": "Changed files. Risk noted."}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, edit_without_preflight_seen=True, changed_paths=["a.go"])
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("changeforge_implementation_preflight", result.stdout)
+
+    def test_read_review_profile_no_changed_paths_does_not_require_preflight(self) -> None:
+        event = {
+            "hook_event_name": "Stop",
+            "runtime": "claude",
+            "response": "Reviewed a.go. Finding: none. Risk: none.",
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(cwd, cache, turn_stage="review", review_targets=["a.go"])
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("implementation_preflight", result.stdout)
 
     def test_file_naming_findings_request_naming_evidence(self) -> None:
         event = {"hook_event_name": "Stop", "runtime": "claude", "response": "done"}
@@ -296,6 +352,7 @@ class StopClosureGateTests(unittest.TestCase):
                 "I used the ChangeForge skill path. Changed files are listed. "
                 "Validation: ran pytest -q, 12 passed, exit 0. Residual risk is none. "
                 "Next steps: deploy.\n\n"
+                f"{PREFLIGHT_MANIFEST}\n"
                 "```yaml\n"
                 "changeforge_route:\n"
                 "  selected_skills:\n"
@@ -317,6 +374,44 @@ class StopClosureGateTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertNotEqual(payload.get("decision"), "block")
         self.assertIn("systemMessage", payload)
+
+    def test_complete_preflight_validation_and_route_does_not_block(self) -> None:
+        event = {
+            "hook_event_name": "Stop",
+            "runtime": "codex",
+            "stop_hook_active": False,
+            "last_assistant_message": (
+                "I used the ChangeForge skill path. Changed files are listed. "
+                "Validation: ran go test ./..., exit 0. Residual risk is none. "
+                "Next steps: review.\n\n"
+                f"{PREFLIGHT_MANIFEST}\n"
+                "```yaml\n"
+                "changeforge_route:\n"
+                "  selected_skills:\n"
+                "    - backend-change-builder\n"
+                "  selected_capabilities:\n"
+                "    - implementation-structure-design\n"
+                "  required_references:\n"
+                "    - references/routing-rules.md\n"
+                "  required_quality_gates:\n"
+                "    - quality-test-gate\n"
+                "```\n"
+            ),
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(
+                cwd,
+                cache,
+                runtime="codex",
+                changed_paths=["a.go"],
+                implementation_preflight_required=True,
+                implementation_preflight_seen=True,
+            )
+            result = run_stop(event, cwd, cache, mode="block", agent="codex")
+        self.assertEqual(result.returncode, 0)
+        payload = json.loads(result.stdout)
+        self.assertNotEqual(payload.get("decision"), "block")
 
     def test_block_mode_blocks_when_route_manifest_missing_despite_keywords(self) -> None:
         event = {

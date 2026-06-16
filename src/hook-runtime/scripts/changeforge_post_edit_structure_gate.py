@@ -24,6 +24,7 @@ from changeforge_common import (
     extract_changed_paths,
     hook_mode,
     is_post_tool_use,
+    load_state,
     merge_state,
     normalize_path,
     read_event,
@@ -383,6 +384,7 @@ def main() -> int:
 
     try:
         repo = repo_root(cwd_from_event(event))
+        state_before = load_state(repo)
         paths = extract_changed_paths(event)
         if not paths:
             return 0
@@ -411,6 +413,10 @@ def main() -> int:
             or comment_findings
             or structure_quality_findings
         )
+        preflight_gap = bool(
+            state_before.get("implementation_preflight_required")
+            and not state_before.get("implementation_preflight_seen")
+        )
         debug_log(
             repo,
             "structure gate runtime={runtime} event={event} tool={tool} paths={paths} "
@@ -438,6 +444,13 @@ def main() -> int:
             advanced_refactor_findings=advanced_refactor_findings,
             comment_findings=comment_findings,
             structure_quality_findings=structure_quality_findings,
+            edit_without_preflight_seen=preflight_gap,
+            post_edit_confirmed_preflight_gap=preflight_gap,
+            pre_edit_structure_findings=[
+                "post-edit confirmed edit without implementation preflight"
+            ]
+            if preflight_gap
+            else [],
             suggested_skills=_suggested_skills(any_findings),
             suggested_capabilities=_suggested_capabilities(
                 structure_findings,

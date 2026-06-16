@@ -57,6 +57,7 @@ RICH_EVENT_SCRIPTS = {
     ),
     "PreToolUse": (
         "changeforge_professional_injector",
+        "changeforge_pre_edit_structure_gate",
         "changeforge_pre_tool_risk_preview",
         "changeforge_permission_policy_gate",
     ),
@@ -113,10 +114,13 @@ COPILOT_PROFESSIONAL_CONTRACT = (
 REQUIRED_HOOK_SCRIPTS = (
     "changeforge_common.py",
     "changeforge_runtime_adapters.py",
+    "changeforge_hook_policy.py",
+    "changeforge_state_reducer.py",
     "changeforge_action_classifier.py",
     "changeforge_skill_index.py",
     "changeforge_session_bootstrap.py",
     "changeforge_user_prompt_route_reminder.py",
+    "changeforge_pre_edit_structure_gate.py",
     "changeforge_pre_tool_risk_preview.py",
     "changeforge_professional_injector.py",
     "changeforge_read_context_gate.py",
@@ -326,10 +330,41 @@ def _validate_python_files(errors: list[str]) -> None:
                 errors.append(
                     f"changeforge_post_edit_structure_gate.py: structure gate must populate {field}"
                 )
+        if "post_edit_confirmed_preflight_gap" not in structure_text:
+            errors.append(
+                "changeforge_post_edit_structure_gate.py: must record post-edit preflight gaps"
+            )
+
+    pre_edit_script = HOOK_SCRIPTS_DIR / "changeforge_pre_edit_structure_gate.py"
+    if pre_edit_script.is_file():
+        pre_edit_text = pre_edit_script.read_text(encoding="utf-8")
+        for token in (
+            "implementation_preflight_required",
+            "pre_edit_missing_read_evidence",
+            "pre_edit_missing_reuse_decision",
+            "pre_edit_missing_placement_decision",
+            "pre_edit_missing_test_plan",
+            "extract_implementation_preflight_fields",
+            "should_block",
+        ):
+            if token not in pre_edit_text:
+                errors.append(f"changeforge_pre_edit_structure_gate.py: missing {token}")
+        forbidden_tokens = ("requests.", "httpx.", "urllib.", "subprocess.run")
+        for token in forbidden_tokens:
+            if token in pre_edit_text:
+                errors.append(
+                    f"changeforge_pre_edit_structure_gate.py: forbidden operation token {token!r}"
+                )
+        if "prompt_signals" in pre_edit_text or "prompt_text" in pre_edit_text:
+            errors.append("changeforge_pre_edit_structure_gate.py: must not write raw prompt state")
 
     common_script = HOOK_SCRIPTS_DIR / "changeforge_common.py"
     if common_script.is_file():
         common_text = common_script.read_text(encoding="utf-8")
+        if "reduce_state_update" not in common_text:
+            errors.append("changeforge_common.py: merge_state must use changeforge_state_reducer")
+        if "extract_implementation_preflight_fields" not in common_text:
+            errors.append("changeforge_common.py: must parse implementation preflight manifests")
         if "hookSpecificOutput" not in common_text or "additionalContext" not in common_text:
             errors.append(
                 "changeforge_common.py: Codex and Claude warnings must use hookSpecificOutput.additionalContext"
@@ -479,6 +514,13 @@ def _validate_template(
                     errors.append(
                         f"{relpath(ROOT, path)}: {agent_name} {event} must invoke {script}"
                     )
+        _validate_event_script_order(
+            hooks,
+            "PreToolUse",
+            RICH_EVENT_SCRIPTS["PreToolUse"],
+            path,
+            errors,
+        )
         if path in CLAUDE_TEMPLATES and not _event_invokes(
             hooks, "PostToolBatch", "changeforge_read_context_gate"
         ):
@@ -692,7 +734,7 @@ def _validate_event_script_order(
         positions.append(matching[0])
     if positions != sorted(positions):
         errors.append(
-            f"{relpath(ROOT, path)}: {event} must order compaction snapshot before bootstrap, reinject, and professional injection"
+            f"{relpath(ROOT, path)}: {event} must order scripts as {', '.join(ordered_scripts)}"
         )
 
 
@@ -700,6 +742,7 @@ def _validate_hook_behavior(errors: list[str]) -> None:
     sys.path.insert(0, str(HOOK_SCRIPTS_DIR))
     try:
         from changeforge_action_classifier import classify_event, is_read_tool, is_review_diff_tool
+        from changeforge_pre_edit_structure_gate import evaluate_pre_edit
     except Exception as exc:
         errors.append(f"hook behavior import failed: {exc}")
         return
@@ -812,6 +855,48 @@ def _validate_hook_behavior(errors: list[str]) -> None:
     if not is_review_diff_tool({"hook_event_name": "PostToolUse", "tool_name": "get_pr_diff"}):
         errors.append("read gate: review diff detection must cover get_pr_diff")
 
+    edit_without_read = evaluate_pre_edit(
+        {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "apply_patch",
+            "tool_input": {
+                "patch": "*** Begin Patch\n*** Add File: src/services/order_service.py\n+class OrderService:\n+    pass\n*** End Patch\n"
+            },
+        },
+        {},
+    )
+    if "read_evidence" not in edit_without_read.get("missing", []):
+        errors.append("pre-edit gate: edit without read evidence must miss read_evidence")
+    if "placement_decision" not in edit_without_read.get("missing", []):
+        errors.append("pre-edit gate: new file must miss placement_decision")
+    if "reuse_decision" not in edit_without_read.get("missing", []):
+        errors.append("pre-edit gate: helper/service path must miss reuse_decision")
+    if "object_boundary" not in edit_without_read.get("missing", []):
+        errors.append("pre-edit gate: class patch must miss object_boundary")
+
+    helper_edit = evaluate_pre_edit(
+        {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": "src/common/utils/token_helper.py",
+                "content": "def token_helper(value):\n    return value\n",
+            },
+        },
+        {"read_evidence_seen": True},
+    )
+    if "reuse_decision" not in helper_edit.get("missing", []):
+        errors.append("pre-edit gate: new helper path must miss reuse_decision")
+
+    for event in (
+        {"hook_event_name": "PreToolUse", "tool_name": "Read", "tool_input": {"file_path": "a.py"}},
+        {"hook_event_name": "UserPromptSubmit", "prompt": "review this file"},
+        {"hook_event_name": "UserPromptSubmit", "prompt": "what is code review?"},
+    ):
+        result = evaluate_pre_edit(event, {}, ROOT)
+        if result.get("required"):
+            errors.append("pre-edit gate: read/review/question events must not require preflight")
+
     injector_text = (HOOK_SCRIPTS_DIR / "changeforge_professional_injector.py").read_text(
         encoding="utf-8"
     )
@@ -829,6 +914,19 @@ def _validate_hook_behavior(errors: list[str]) -> None:
         errors.append("telemetry schema must not store raw prompt fields")
     if '"prompt_signals"' not in common_text:
         errors.append("hook state must store compact prompt_signals instead of prompt text")
+    for field in (
+        "implementation_preflights",
+        "implementation_preflight_seen",
+        "implementation_preflight_required",
+        "edit_without_preflight_seen",
+        "post_edit_confirmed_preflight_gap",
+    ):
+        if f'"{field}"' not in state_schema:
+            errors.append(f"hook state schema must include {field}")
+        if f'"{field}"' not in common_text:
+            errors.append(f"hook state defaults must include {field}")
+    if '"pre_edit_structure_gate"' not in telemetry_schema:
+        errors.append("telemetry schema must include pre_edit_structure_gate hook name")
 
 
 def _timeouts(value: Any, context: str = "hooks") -> list[tuple[int, str]]:
