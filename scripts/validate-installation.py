@@ -45,102 +45,82 @@ REQUIRED_DIST_DIRS = (
     "openai-api/zips",
 )
 
+HOOK_SCRIPT_FILENAMES = (
+    "changeforge_common.py",
+    "changeforge_runtime_adapters.py",
+    "changeforge_action_classifier.py",
+    "changeforge_skill_index.py",
+    "changeforge_session_bootstrap.py",
+    "changeforge_user_prompt_route_reminder.py",
+    "changeforge_pre_tool_risk_preview.py",
+    "changeforge_professional_injector.py",
+    "changeforge_read_context_gate.py",
+    "changeforge_review_gate.py",
+    "changeforge_permission_policy_gate.py",
+    "changeforge_compaction_snapshot.py",
+    "changeforge_compaction_reinject.py",
+    "changeforge_subagent_skill_contract.py",
+    "changeforge_post_edit_structure_gate.py",
+    "changeforge_risk_surface_gate.py",
+    "changeforge_subagent_stop_reminder.py",
+    "changeforge_stop_closure_gate.py",
+)
+COMMON_HOOK_SUPPORT_FILES = ("changeforge_professional_contract.md",)
+COPILOT_HOOK_SUPPORT_FILES = (
+    "changeforge_copilot_skill_summary.md",
+    "changeforge_copilot_professional_contract.md",
+)
 REQUIRED_HOOK_DIST_FILES = (
     "codex/project/.codex/hooks.json",
     "codex/project/.codex/.changeforge-hook-manifest.json",
     "codex/project/.codex/changeforge-route-preflight.md",
-    "codex/project/.codex/hooks/changeforge_common.py",
-    "codex/project/.codex/hooks/changeforge_session_bootstrap.py",
-    "codex/project/.codex/hooks/changeforge_user_prompt_route_reminder.py",
-    "codex/project/.codex/hooks/changeforge_pre_tool_risk_preview.py",
-    "codex/project/.codex/hooks/changeforge_post_edit_structure_gate.py",
-    "codex/project/.codex/hooks/changeforge_risk_surface_gate.py",
-    "codex/project/.codex/hooks/changeforge_subagent_stop_reminder.py",
-    "codex/project/.codex/hooks/changeforge_stop_closure_gate.py",
+    "codex/project/.codex/hooks/changeforge_professional_contract.md",
+    *(f"codex/project/.codex/hooks/{name}" for name in HOOK_SCRIPT_FILENAMES),
     "codex/user/.codex/hooks.json",
     "codex/user/.codex/.changeforge-hook-manifest.json",
     "codex/user/.codex/changeforge-route-preflight.md",
-    "codex/user/.codex/hooks/changeforge_common.py",
-    "codex/user/.codex/hooks/changeforge_session_bootstrap.py",
-    "codex/user/.codex/hooks/changeforge_user_prompt_route_reminder.py",
-    "codex/user/.codex/hooks/changeforge_pre_tool_risk_preview.py",
-    "codex/user/.codex/hooks/changeforge_post_edit_structure_gate.py",
-    "codex/user/.codex/hooks/changeforge_risk_surface_gate.py",
-    "codex/user/.codex/hooks/changeforge_subagent_stop_reminder.py",
-    "codex/user/.codex/hooks/changeforge_stop_closure_gate.py",
+    "codex/user/.codex/hooks/changeforge_professional_contract.md",
+    *(f"codex/user/.codex/hooks/{name}" for name in HOOK_SCRIPT_FILENAMES),
     "claude/project/.claude/settings.changeforge-hooks.fragment.json",
     "claude/project/.claude/.changeforge-hook-manifest.json",
     "claude/project/.claude/changeforge-route-preflight.md",
-    "claude/project/.claude/hooks/changeforge_common.py",
-    "claude/project/.claude/hooks/changeforge_session_bootstrap.py",
-    "claude/project/.claude/hooks/changeforge_user_prompt_route_reminder.py",
-    "claude/project/.claude/hooks/changeforge_pre_tool_risk_preview.py",
-    "claude/project/.claude/hooks/changeforge_post_edit_structure_gate.py",
-    "claude/project/.claude/hooks/changeforge_risk_surface_gate.py",
-    "claude/project/.claude/hooks/changeforge_subagent_stop_reminder.py",
-    "claude/project/.claude/hooks/changeforge_stop_closure_gate.py",
+    "claude/project/.claude/hooks/changeforge_professional_contract.md",
+    *(f"claude/project/.claude/hooks/{name}" for name in HOOK_SCRIPT_FILENAMES),
     "claude/user/.claude/settings.changeforge-hooks.fragment.json",
     "claude/user/.claude/.changeforge-hook-manifest.json",
     "claude/user/.claude/changeforge-route-preflight.md",
-    "claude/user/.claude/hooks/changeforge_common.py",
-    "claude/user/.claude/hooks/changeforge_session_bootstrap.py",
-    "claude/user/.claude/hooks/changeforge_user_prompt_route_reminder.py",
-    "claude/user/.claude/hooks/changeforge_pre_tool_risk_preview.py",
-    "claude/user/.claude/hooks/changeforge_post_edit_structure_gate.py",
-    "claude/user/.claude/hooks/changeforge_risk_surface_gate.py",
-    "claude/user/.claude/hooks/changeforge_subagent_stop_reminder.py",
-    "claude/user/.claude/hooks/changeforge_stop_closure_gate.py",
+    "claude/user/.claude/hooks/changeforge_professional_contract.md",
+    *(f"claude/user/.claude/hooks/{name}" for name in HOOK_SCRIPT_FILENAMES),
     "copilot/project/.github/hooks/changeforge-hooks.json",
     "copilot/project/.github/hooks/changeforge/.changeforge-hook-manifest.json",
     "copilot/project/.github/hooks/changeforge/changeforge-route-preflight.md",
-    "copilot/project/.github/hooks/changeforge/changeforge_copilot_skill_summary.md",
-    "copilot/project/.github/hooks/changeforge/changeforge_common.py",
-    "copilot/project/.github/hooks/changeforge/changeforge_session_bootstrap.py",
-    "copilot/project/.github/hooks/changeforge/changeforge_user_prompt_route_reminder.py",
-    "copilot/project/.github/hooks/changeforge/changeforge_pre_tool_risk_preview.py",
-    "copilot/project/.github/hooks/changeforge/changeforge_post_edit_structure_gate.py",
-    "copilot/project/.github/hooks/changeforge/changeforge_risk_surface_gate.py",
-    "copilot/project/.github/hooks/changeforge/changeforge_subagent_stop_reminder.py",
-    "copilot/project/.github/hooks/changeforge/changeforge_stop_closure_gate.py",
+    *(f"copilot/project/.github/hooks/changeforge/{name}" for name in HOOK_SCRIPT_FILENAMES),
+    *(
+        f"copilot/project/.github/hooks/changeforge/{name}"
+        for name in (*COMMON_HOOK_SUPPORT_FILES, *COPILOT_HOOK_SUPPORT_FILES)
+    ),
     "copilot/user/.copilot/hooks/changeforge-hooks.json",
     "copilot/user/.copilot/hooks/changeforge/.changeforge-hook-manifest.json",
     "copilot/user/.copilot/hooks/changeforge/changeforge-route-preflight.md",
-    "copilot/user/.copilot/hooks/changeforge/changeforge_copilot_skill_summary.md",
-    "copilot/user/.copilot/hooks/changeforge/changeforge_common.py",
-    "copilot/user/.copilot/hooks/changeforge/changeforge_session_bootstrap.py",
-    "copilot/user/.copilot/hooks/changeforge/changeforge_user_prompt_route_reminder.py",
-    "copilot/user/.copilot/hooks/changeforge/changeforge_pre_tool_risk_preview.py",
-    "copilot/user/.copilot/hooks/changeforge/changeforge_post_edit_structure_gate.py",
-    "copilot/user/.copilot/hooks/changeforge/changeforge_risk_surface_gate.py",
-    "copilot/user/.copilot/hooks/changeforge/changeforge_subagent_stop_reminder.py",
-    "copilot/user/.copilot/hooks/changeforge/changeforge_stop_closure_gate.py",
+    *(f"copilot/user/.copilot/hooks/changeforge/{name}" for name in HOOK_SCRIPT_FILENAMES),
+    *(
+        f"copilot/user/.copilot/hooks/changeforge/{name}"
+        for name in (*COMMON_HOOK_SUPPORT_FILES, *COPILOT_HOOK_SUPPORT_FILES)
+    ),
     "universal/bootstrap/changeforge-route-preflight.md",
+    "universal/bootstrap/changeforge-professional-contract.md",
 )
 BASE_HOOK_NAMES = {
-    "changeforge_post_edit_structure_gate",
-    "changeforge_risk_surface_gate",
-    "changeforge_stop_closure_gate",
+    name.removesuffix(".py")
+    for name in HOOK_SCRIPT_FILENAMES
 }
-# Each runtime wires the route-preflight bootstrap as a SessionStart hook and
-# ships the install-time bootstrap fragment. Codex, Claude, and Copilot also
-# ship the per-prompt route reminder, pre-edit risk preview, and subagent
-# closure reminder scripts for their richer hook events.
-RICH_HOOK_NAMES = frozenset(
-    BASE_HOOK_NAMES
-    | {
-        "changeforge_session_bootstrap",
-        "changeforge_user_prompt_route_reminder",
-        "changeforge_pre_tool_risk_preview",
-        "changeforge_subagent_stop_reminder",
-    }
-)
+RICH_HOOK_NAMES = frozenset(BASE_HOOK_NAMES)
 EXPECTED_HOOK_NAMES_BY_AGENT = {
     "codex": RICH_HOOK_NAMES,
     "claude": RICH_HOOK_NAMES,
     "copilot": RICH_HOOK_NAMES,
 }
 BOOTSTRAP_FRAGMENT_NAME = "changeforge-route-preflight.md"
-COPILOT_HOOK_SUPPORT_FILES = ("changeforge_copilot_skill_summary.md",)
 
 PROFILE_SKILL_ROOTS = (
     DIST_DIR / "universal" / "skills",
@@ -467,7 +447,9 @@ def _validate_hook_manifest(path: Path, *, agent: str, scope: str, errors: list[
             f"{relpath(ROOT, path)}: bootstrap_fragment must be {BOOTSTRAP_FRAGMENT_NAME}"
         )
     support_files = data.get("support_files")
-    expected_support_files = set(COPILOT_HOOK_SUPPORT_FILES) if agent == "copilot" else set()
+    expected_support_files = set(COMMON_HOOK_SUPPORT_FILES)
+    if agent == "copilot":
+        expected_support_files.update(COPILOT_HOOK_SUPPORT_FILES)
     if (
         not isinstance(support_files, list)
         or not all(isinstance(file_name, str) for file_name in support_files)

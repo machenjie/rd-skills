@@ -6,9 +6,39 @@
         "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_session_bootstrap.py\"",
         "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_professional_injector.py\"",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_compaction_snapshot.py\"",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_compaction_reinject.py\"",
+        "timeoutSec": 10
       }
     ],
     "PostToolUse": [
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_professional_injector.py\"",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_read_context_gate.py\"",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_review_gate.py\"",
+        "timeoutSec": 10
+      },
       {
         "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_post_edit_structure_gate.py\"",
@@ -24,6 +54,16 @@
       {
         "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_session_bootstrap.py\"",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_professional_injector.py\"",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"${HOME}/.copilot/hooks/changeforge/changeforge_subagent_skill_contract.py\"",
         "timeoutSec": 10
       }
     ],

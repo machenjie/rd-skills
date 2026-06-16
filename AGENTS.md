@@ -80,3 +80,14 @@ Every agent-assisted change must obey these execution rules:
 6. No handoff without risk, boundary, and validation result.
 
 These rules are behavior constraints only. Do not add entertainment rhetoric, corporate-flavor narration, user-shaming language, or runtime-specific PUA state files. Optional hook runtime state, when present, must stay outside the project source tree and remain warning-only unless a maintainer explicitly enables stricter behavior.
+
+## Hook Runtime Professional Injection
+
+The optional hook runtime may inject action-aware professional context for
+planning, read, edit, review, repair, test, permission, release, compaction, and
+subagent stages. This context is a runtime support artifact, not skill content.
+It must be built into `dist/` before installation and must keep state outside
+project source. It may store bounded facts such as stage, selected skill names,
+capability names, gate names, compact signal names, and paths; it must not store
+raw prompts, secrets, environment variables, full command output, personal
+archives, or toolbox mappings.

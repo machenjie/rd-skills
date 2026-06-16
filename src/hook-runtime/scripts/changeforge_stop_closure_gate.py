@@ -149,6 +149,26 @@ CONDITIONAL_GROUP_BY_STATE = {
     "comment_findings": "comments",
     "structure_quality_findings": "clarity",
 }
+STAGE_REQUIRED_STATE = {
+    "read": ("read_evidence_seen", "read_paths"),
+    "review": ("review_evidence_seen", "review_targets"),
+    "repair": ("review_evidence_seen", "review_findings"),
+    "test": ("validation_command_seen",),
+    "permission": ("permission_gate_seen", "permission_decisions"),
+    "release": ("risk_surfaces", "suggested_gates"),
+    "subagent": ("subagent_contracts",),
+    "compaction": ("compaction_snapshots",),
+}
+STAGE_HANDOFF_KEYWORDS = {
+    "read": ["inspected", "read", "searched", "unknown", "context", "reviewed"],
+    "review": ["finding", "severity", "no issues", "review", "risk"],
+    "repair": ["fixed", "repaired", "re-review", "validated", "residual"],
+    "test": ["command", "exit", "passed", "failed", "not run", "validation"],
+    "permission": ["permission", "security", "approval", "rollback", "risk"],
+    "release": ["rollback", "deploy", "release", "validation", "risk"],
+    "subagent": ["subagent", "owner", "reviewer", "handoff"],
+    "compaction": ["compaction", "context", "resume", "stage"],
+}
 
 
 def main() -> int:
@@ -204,6 +224,14 @@ def main() -> int:
             manifest_required_references=manifest.get("required_references", []),
             manifest_required_quality_gates=manifest.get("required_quality_gates", []),
             manifest_skipped_quality_gates=manifest.get("skipped_quality_gates", []),
+            turn_stage=state.get("turn_stage", ""),
+            owner_skill=state.get("owner_skill", ""),
+            reviewer_skill=state.get("reviewer_skill", ""),
+            read_evidence_seen=bool(state.get("read_evidence_seen")),
+            review_evidence_seen=bool(state.get("review_evidence_seen")),
+            repair_evidence_seen=bool(state.get("repair_evidence_seen")),
+            permission_gate_seen=bool(state.get("permission_gate_seen")),
+            professional_contract_seen=bool(state.get("professional_contract_seen")),
         )
         if mode == "monitor":
             clear_state(repo, runtime)
@@ -240,6 +268,13 @@ def _has_closure_surface(state: dict) -> bool:
         or state.get("advanced_refactor_findings")
         or state.get("comment_findings")
         or state.get("structure_quality_findings")
+        or state.get("read_evidence_seen")
+        or state.get("review_evidence_seen")
+        or state.get("repair_evidence_seen")
+        or state.get("permission_gate_seen")
+        or state.get("professional_injections")
+        or state.get("subagent_contracts")
+        or state.get("compaction_snapshots")
     )
 
 
@@ -280,6 +315,16 @@ def _stop_findings(state: dict) -> dict[str, list[str]]:
             "advanced_refactor_findings",
             "comment_findings",
             "structure_quality_findings",
+            "read_paths",
+            "searched_patterns",
+            "review_targets",
+            "review_findings",
+            "repair_findings",
+            "professional_injections",
+            "permission_decisions",
+            "reference_loads",
+            "subagent_contracts",
+            "compaction_snapshots",
         )
     }
 
@@ -304,6 +349,18 @@ def _closure_message(state: dict, final_text: str, manifest: dict | None = None)
         details.append("- structure quality gate fired")
     if state.get("risk_surfaces"):
         details.append(f"- risk surfaces: {', '.join(state['risk_surfaces'])}")
+    if state.get("turn_stage"):
+        details.append(f"- active stage: {state['turn_stage']}")
+    if state.get("owner_skill") or state.get("reviewer_skill"):
+        details.append(
+            f"- owner/reviewer: {state.get('owner_skill', 'unknown')} / {state.get('reviewer_skill', 'unknown')}"
+        )
+    if state.get("read_paths"):
+        details.append(f"- read paths: {', '.join(state['read_paths'][:8])}")
+    if state.get("review_targets"):
+        details.append(f"- review targets: {', '.join(state['review_targets'][:8])}")
+    if state.get("permission_decisions"):
+        details.append(f"- permission decisions: {', '.join(state['permission_decisions'][:8])}")
     if state.get("changed_paths"):
         details.append(f"- changed paths: {', '.join(state['changed_paths'])}")
     if state.get("validation_command_seen") or state.get("validation_seen"):
@@ -336,6 +393,13 @@ def _closure_message(state: dict, final_text: str, manifest: dict | None = None)
             " evidence. State the fresh command and outcome that back the claim, or"
             " replace the claim with a not-verified disclosure (status, why not run,"
             " residual risk, exact command)."
+        )
+    stage_missing = _stage_missing_groups(final_text, state)
+    if stage_missing:
+        headline += (
+            " MISSING: stage-aware handoff evidence is incomplete for"
+            f" {state.get('turn_stage') or 'current'} stage"
+            f" ({', '.join(stage_missing)})."
         )
 
     return f"""{headline}
@@ -541,6 +605,25 @@ def _missing_keyword_groups(
             missing.append(group)
     if _unverified_completion(text, state) and "completion_evidence" not in missing:
         missing.append("completion_evidence")
+    for group in _stage_missing_groups(text, state):
+        if group not in missing:
+            missing.append(group)
+    return missing
+
+
+def _stage_missing_groups(text: str, state: dict) -> list[str]:
+    stage = str(state.get("turn_stage") or "").strip()
+    if not stage:
+        return []
+    missing: list[str] = []
+    for state_key in STAGE_REQUIRED_STATE.get(stage, ()):
+        if not state.get(state_key):
+            missing.append(f"{stage}_state")
+            break
+    lowered = text.casefold()
+    keywords = STAGE_HANDOFF_KEYWORDS.get(stage, ())
+    if keywords and not any(keyword.casefold() in lowered for keyword in keywords):
+        missing.append(f"{stage}_handoff")
     return missing
 
 

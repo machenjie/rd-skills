@@ -52,8 +52,16 @@ HOOK_OUTPUT_ROOTS = {
 BOOTSTRAP_TEMPLATE = (
     HOOK_RUNTIME_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"
 )
+PROFESSIONAL_BOOTSTRAP_TEMPLATE = (
+    HOOK_RUNTIME_ROOT / "templates" / "bootstrap" / "changeforge-professional-contract.md"
+)
 BOOTSTRAP_FRAGMENT_NAME = "changeforge-route-preflight.md"
-COPILOT_HOOK_SUPPORT_FILES = ("changeforge_copilot_skill_summary.md",)
+PROFESSIONAL_BOOTSTRAP_FRAGMENT_NAME = "changeforge-professional-contract.md"
+COMMON_HOOK_SUPPORT_FILES = ("changeforge_professional_contract.md",)
+COPILOT_HOOK_SUPPORT_FILES = (
+    "changeforge_copilot_skill_summary.md",
+    "changeforge_copilot_professional_contract.md",
+)
 UNIVERSAL_BOOTSTRAP_ROOT = DIST_DIR / "universal" / "bootstrap"
 
 
@@ -398,6 +406,10 @@ def _build_hook_runtime() -> None:
         raise BuildError(f"missing hook runtime source: {HOOK_RUNTIME_ROOT.relative_to(ROOT)}")
     if not BOOTSTRAP_TEMPLATE.is_file():
         raise BuildError(f"missing bootstrap template: {BOOTSTRAP_TEMPLATE.relative_to(ROOT)}")
+    if not PROFESSIONAL_BOOTSTRAP_TEMPLATE.is_file():
+        raise BuildError(
+            f"missing professional bootstrap template: {PROFESSIONAL_BOOTSTRAP_TEMPLATE.relative_to(ROOT)}"
+        )
     _build_codex_hook_runtime()
     _build_codex_user_hook_runtime()
     _build_claude_hook_runtime()
@@ -412,12 +424,18 @@ def _build_codex_hook_runtime() -> None:
     hooks_dir = target / "hooks"
     _reset_dir(hooks_dir)
     _copy_hook_scripts(hooks_dir)
+    _copy_hook_support_files(hooks_dir, COMMON_HOOK_SUPPORT_FILES)
     shutil.copy2(
         HOOK_RUNTIME_ROOT / "templates" / "codex" / "hooks.json",
         target / "hooks.json",
     )
     _copy_bootstrap_fragment(target)
-    _write_hook_manifest(target, agent="codex", scope="project")
+    _write_hook_manifest(
+        target,
+        agent="codex",
+        scope="project",
+        support_files=COMMON_HOOK_SUPPORT_FILES,
+    )
 
 
 def _build_codex_user_hook_runtime() -> None:
@@ -425,12 +443,18 @@ def _build_codex_user_hook_runtime() -> None:
     hooks_dir = target / "hooks"
     _reset_dir(hooks_dir)
     _copy_hook_scripts(hooks_dir)
+    _copy_hook_support_files(hooks_dir, COMMON_HOOK_SUPPORT_FILES)
     shutil.copy2(
         HOOK_RUNTIME_ROOT / "templates" / "codex-user" / "hooks.json",
         target / "hooks.json",
     )
     _copy_bootstrap_fragment(target)
-    _write_hook_manifest(target, agent="codex", scope="user")
+    _write_hook_manifest(
+        target,
+        agent="codex",
+        scope="user",
+        support_files=COMMON_HOOK_SUPPORT_FILES,
+    )
 
 
 def _build_claude_hook_runtime() -> None:
@@ -438,6 +462,7 @@ def _build_claude_hook_runtime() -> None:
     hooks_dir = target / "hooks"
     _reset_dir(hooks_dir)
     _copy_hook_scripts(hooks_dir)
+    _copy_hook_support_files(hooks_dir, COMMON_HOOK_SUPPORT_FILES)
     shutil.copy2(
         HOOK_RUNTIME_ROOT
         / "templates"
@@ -446,7 +471,12 @@ def _build_claude_hook_runtime() -> None:
         target / "settings.changeforge-hooks.fragment.json",
     )
     _copy_bootstrap_fragment(target)
-    _write_hook_manifest(target, agent="claude", scope="project")
+    _write_hook_manifest(
+        target,
+        agent="claude",
+        scope="project",
+        support_files=COMMON_HOOK_SUPPORT_FILES,
+    )
 
 
 def _build_claude_user_hook_runtime() -> None:
@@ -454,6 +484,7 @@ def _build_claude_user_hook_runtime() -> None:
     hooks_dir = target / "hooks"
     _reset_dir(hooks_dir)
     _copy_hook_scripts(hooks_dir)
+    _copy_hook_support_files(hooks_dir, COMMON_HOOK_SUPPORT_FILES)
     shutil.copy2(
         HOOK_RUNTIME_ROOT
         / "templates"
@@ -462,7 +493,12 @@ def _build_claude_user_hook_runtime() -> None:
         target / "settings.changeforge-hooks.fragment.json",
     )
     _copy_bootstrap_fragment(target)
-    _write_hook_manifest(target, agent="claude", scope="user")
+    _write_hook_manifest(
+        target,
+        agent="claude",
+        scope="user",
+        support_files=COMMON_HOOK_SUPPORT_FILES,
+    )
 
 
 def _build_copilot_hook_runtime(scope: str) -> None:
@@ -477,7 +513,7 @@ def _build_copilot_hook_runtime(scope: str) -> None:
     scripts_dir = hooks_root / "changeforge"
     scripts_dir.mkdir(parents=True, exist_ok=True)
     _copy_hook_scripts(scripts_dir)
-    _copy_hook_support_files(scripts_dir, COPILOT_HOOK_SUPPORT_FILES)
+    _copy_hook_support_files(scripts_dir, (*COMMON_HOOK_SUPPORT_FILES, *COPILOT_HOOK_SUPPORT_FILES))
     template_dir = "copilot" if scope == "project" else "copilot-user"
     shutil.copy2(
         HOOK_RUNTIME_ROOT / "templates" / template_dir / "changeforge-hooks.json",
@@ -488,7 +524,7 @@ def _build_copilot_hook_runtime(scope: str) -> None:
         scripts_dir,
         agent="copilot",
         scope=scope,
-        support_files=COPILOT_HOOK_SUPPORT_FILES,
+        support_files=(*COMMON_HOOK_SUPPORT_FILES, *COPILOT_HOOK_SUPPORT_FILES),
     )
 
 
@@ -497,6 +533,10 @@ def _build_universal_bootstrap() -> None:
     shutil.copy2(
         BOOTSTRAP_TEMPLATE,
         UNIVERSAL_BOOTSTRAP_ROOT / BOOTSTRAP_FRAGMENT_NAME,
+    )
+    shutil.copy2(
+        PROFESSIONAL_BOOTSTRAP_TEMPLATE,
+        UNIVERSAL_BOOTSTRAP_ROOT / PROFESSIONAL_BOOTSTRAP_FRAGMENT_NAME,
     )
 
 
@@ -534,9 +574,20 @@ def _write_hook_manifest(
     # same lifecycle hook scripts. Runtime-specific output differences stay in
     # changeforge_common.py and the templates, not in the manifest.
     hooks = [
+        "changeforge_common",
         "changeforge_session_bootstrap",
         "changeforge_user_prompt_route_reminder",
         "changeforge_pre_tool_risk_preview",
+        "changeforge_professional_injector",
+        "changeforge_runtime_adapters",
+        "changeforge_action_classifier",
+        "changeforge_skill_index",
+        "changeforge_read_context_gate",
+        "changeforge_review_gate",
+        "changeforge_permission_policy_gate",
+        "changeforge_compaction_snapshot",
+        "changeforge_compaction_reinject",
+        "changeforge_subagent_skill_contract",
         "changeforge_post_edit_structure_gate",
         "changeforge_risk_surface_gate",
         "changeforge_subagent_stop_reminder",

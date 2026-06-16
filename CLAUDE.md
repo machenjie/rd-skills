@@ -58,3 +58,12 @@ Every agent-assisted change must obey these execution rules:
 6. No handoff without risk, boundary, and validation result.
 
 These rules are behavior constraints only. Do not add entertainment rhetoric, corporate-flavor narration, user-shaming language, or runtime-specific PUA state files.
+
+## Hook Runtime Professional Injection
+
+Optional hooks may inject action-aware ChangeForge context for planning, read,
+edit, review, repair, test, permission, release, compaction, and subagent
+stages. This is support runtime behavior only. Build hook artifacts into
+`dist/` before installation, keep state outside project source, and never
+persist raw prompts, secrets, environment variables, full command output,
+personal archives, or toolbox mappings.

@@ -17,6 +17,9 @@ from typing import Any, Iterable
 
 STATE_LIST_FIELDS = (
     "changed_paths",
+    "read_paths",
+    "read_tools",
+    "searched_patterns",
     "structure_findings",
     "file_naming_findings",
     "reuse_findings",
@@ -24,13 +27,35 @@ STATE_LIST_FIELDS = (
     "advanced_refactor_findings",
     "comment_findings",
     "structure_quality_findings",
+    "review_targets",
+    "review_findings",
+    "repair_findings",
     "risk_surfaces",
+    "professional_injections",
+    "permission_decisions",
+    "reference_loads",
+    "subagent_contracts",
+    "compaction_snapshots",
+    "prompt_signals",
     "suggested_skills",
     "suggested_capabilities",
     "suggested_domain_extensions",
     "suggested_gates",
 )
-KNOWN_RUNTIMES = {"codex", "claude", "copilot"}
+STATE_SCALAR_STRING_FIELDS = (
+    "turn_stage",
+    "owner_skill",
+    "reviewer_skill",
+)
+STATE_BOOL_FIELDS = (
+    "stage_route_present",
+    "read_evidence_seen",
+    "review_evidence_seen",
+    "repair_evidence_seen",
+    "permission_gate_seen",
+    "professional_contract_seen",
+)
+KNOWN_RUNTIMES = {"codex", "claude", "copilot", "generic"}
 # Runtimes that consume structured JSON stdout. Codex and Claude wrap
 # event-specific context in hookSpecificOutput; Copilot command hooks consume
 # top-level additionalContext only for context-capable events and top-level
@@ -47,6 +72,8 @@ TELEMETRY_DISABLED_VALUES = {"0", "off", "false", "no"}
 TELEMETRY_SUBDIRS = ("sessions", "reports", "suggestions", "promoted")
 MAX_TELEMETRY_ITEMS = 50
 MAX_TELEMETRY_VALUE_LEN = 300
+MAX_STATE_ITEMS = 50
+MAX_STATE_VALUE_LEN = 300
 MAX_COMMAND_PROGRAM_LEN = 40
 ENV_ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 PATH_KEYS = {
@@ -116,6 +143,8 @@ def detect_runtime(event: dict) -> str:
             return "codex"
         if "claude" in runtime:
             return "claude"
+        if "generic" in runtime:
+            return "generic"
 
     if "hook_event_name" in event or "tool_name" in event or "tool_input" in event:
         return "codex"
@@ -251,6 +280,14 @@ def load_state(repo: Path) -> dict:
     for key in STATE_LIST_FIELDS:
         if not isinstance(state.get(key), list):
             state[key] = []
+    if not isinstance(state.get("active_skill_context"), dict):
+        state["active_skill_context"] = {}
+    for key in STATE_SCALAR_STRING_FIELDS:
+        if not isinstance(state.get(key), str):
+            state[key] = ""
+    for key in STATE_BOOL_FIELDS:
+        if not isinstance(state.get(key), bool):
+            state[key] = bool(state.get(key))
     legacy_validation_seen = state.get("validation_seen")
     if not isinstance(state.get("validation_command_seen"), bool):
         state["validation_command_seen"] = bool(legacy_validation_seen)
@@ -267,7 +304,17 @@ def save_state(repo: Path, state: dict) -> None:
     next_state = _empty_state()
     next_state.update({key: value for key, value in state.items() if key in next_state})
     for key in STATE_LIST_FIELDS:
-        next_state[key] = _unique(str(item) for item in next_state.get(key, []) if str(item))
+        next_state[key] = _capped_state_items(next_state.get(key, []))
+    if not isinstance(next_state.get("active_skill_context"), dict):
+        next_state["active_skill_context"] = {}
+    else:
+        next_state["active_skill_context"] = _clean_state_mapping(
+            next_state["active_skill_context"]
+        )
+    for key in STATE_SCALAR_STRING_FIELDS:
+        next_state[key] = str(next_state.get(key, "")).strip()[:MAX_STATE_VALUE_LEN]
+    for key in STATE_BOOL_FIELDS:
+        next_state[key] = bool(next_state.get(key))
     if "validation_command_seen" not in next_state:
         next_state["validation_command_seen"] = bool(next_state.get("validation_seen"))
     next_state["validation_command_seen"] = bool(next_state.get("validation_command_seen"))
@@ -346,6 +393,7 @@ def emit_session_context(runtime: str, message: str, event_name: str = "SessionS
     if runtime in {"codex", "claude"}:
         _emit_hook_specific_context(event_name, text)
         return
+    print(text)
 
 
 def emit_subagent_stop_reminder(runtime: str, message: str) -> None:
@@ -446,11 +494,28 @@ def is_subagent_stop(event: dict) -> bool:
     return _compact(event_name(event)) == "subagentstop"
 
 
+def is_permission_request(event: dict) -> bool:
+    """Return true for runtime permission lifecycle events."""
+    return _compact(event_name(event)) == "permissionrequest"
+
+
+def is_compaction_event(event: dict) -> bool:
+    """Detect context-compaction events without depending on one vendor field."""
+    name = _compact(event_name(event))
+    if name in {"compact", "compaction", "contextcompact"}:
+        return True
+    source = event.get("source") or event.get("reason") or event.get("matcher")
+    return isinstance(source, str) and "compact" in source.casefold()
+
+
 def merge_state(
     repo: Path,
     runtime: str,
     *,
     changed_paths: Iterable[str] = (),
+    read_paths: Iterable[str] = (),
+    read_tools: Iterable[str] = (),
+    searched_patterns: Iterable[str] = (),
     structure_findings: Iterable[str] = (),
     file_naming_findings: Iterable[str] = (),
     reuse_findings: Iterable[str] = (),
@@ -458,13 +523,32 @@ def merge_state(
     advanced_refactor_findings: Iterable[str] = (),
     comment_findings: Iterable[str] = (),
     structure_quality_findings: Iterable[str] = (),
+    review_targets: Iterable[str] = (),
+    review_findings: Iterable[str] = (),
+    repair_findings: Iterable[str] = (),
     risk_surfaces: Iterable[str] = (),
+    professional_injections: Iterable[str] = (),
+    permission_decisions: Iterable[str] = (),
+    reference_loads: Iterable[str] = (),
+    subagent_contracts: Iterable[str] = (),
+    compaction_snapshots: Iterable[str] = (),
+    prompt_signals: Iterable[str] = (),
     suggested_skills: Iterable[str] = (),
     suggested_capabilities: Iterable[str] = (),
     suggested_domain_extensions: Iterable[str] = (),
     suggested_gates: Iterable[str] = (),
     validation_command_seen: bool | None = None,
     validation_seen: bool | None = None,
+    turn_stage: str | None = None,
+    active_skill_context: dict | None = None,
+    owner_skill: str | None = None,
+    reviewer_skill: str | None = None,
+    stage_route_present: bool | None = None,
+    read_evidence_seen: bool | None = None,
+    review_evidence_seen: bool | None = None,
+    repair_evidence_seen: bool | None = None,
+    permission_gate_seen: bool | None = None,
+    professional_contract_seen: bool | None = None,
 ) -> dict:
     state = load_state(repo)
     state["runtime"] = runtime
@@ -472,6 +556,9 @@ def merge_state(
         state["turn_id"] = _new_turn_id()
     for key, values in (
         ("changed_paths", changed_paths),
+        ("read_paths", read_paths),
+        ("read_tools", read_tools),
+        ("searched_patterns", searched_patterns),
         ("structure_findings", structure_findings),
         ("file_naming_findings", file_naming_findings),
         ("reuse_findings", reuse_findings),
@@ -479,13 +566,41 @@ def merge_state(
         ("advanced_refactor_findings", advanced_refactor_findings),
         ("comment_findings", comment_findings),
         ("structure_quality_findings", structure_quality_findings),
+        ("review_targets", review_targets),
+        ("review_findings", review_findings),
+        ("repair_findings", repair_findings),
         ("risk_surfaces", risk_surfaces),
+        ("professional_injections", professional_injections),
+        ("permission_decisions", permission_decisions),
+        ("reference_loads", reference_loads),
+        ("subagent_contracts", subagent_contracts),
+        ("compaction_snapshots", compaction_snapshots),
+        ("prompt_signals", prompt_signals),
         ("suggested_skills", suggested_skills),
         ("suggested_capabilities", suggested_capabilities),
         ("suggested_domain_extensions", suggested_domain_extensions),
         ("suggested_gates", suggested_gates),
     ):
         state[key] = _unique([*state.get(key, []), *[str(value) for value in values if str(value)]])
+    if isinstance(active_skill_context, dict):
+        state["active_skill_context"] = _clean_state_mapping(active_skill_context)
+    for key, value in (
+        ("turn_stage", turn_stage),
+        ("owner_skill", owner_skill),
+        ("reviewer_skill", reviewer_skill),
+    ):
+        if value is not None:
+            state[key] = str(value).strip()[:MAX_STATE_VALUE_LEN]
+    for key, value in (
+        ("stage_route_present", stage_route_present),
+        ("read_evidence_seen", read_evidence_seen),
+        ("review_evidence_seen", review_evidence_seen),
+        ("repair_evidence_seen", repair_evidence_seen),
+        ("permission_gate_seen", permission_gate_seen),
+        ("professional_contract_seen", professional_contract_seen),
+    ):
+        if value is not None:
+            state[key] = bool(state.get(key)) or bool(value)
     command_seen = validation_command_seen if validation_command_seen is not None else validation_seen
     if command_seen is not None:
         state["validation_command_seen"] = (
@@ -582,6 +697,14 @@ def write_telemetry_event(
     manifest_required_references: Iterable[str] = (),
     manifest_required_quality_gates: Iterable[str] = (),
     manifest_skipped_quality_gates: Iterable[str] = (),
+    turn_stage: str = "",
+    owner_skill: str = "",
+    reviewer_skill: str = "",
+    read_evidence_seen: bool = False,
+    review_evidence_seen: bool = False,
+    repair_evidence_seen: bool = False,
+    permission_gate_seen: bool = False,
+    professional_contract_seen: bool = False,
 ) -> None:
     """Append one telemetry record as JSONL. Fails open on any error.
 
@@ -631,6 +754,14 @@ def write_telemetry_event(
             "manifest_required_references": _capped_items(manifest_required_references),
             "manifest_required_quality_gates": _capped_items(manifest_required_quality_gates),
             "manifest_skipped_quality_gates": _capped_items(manifest_skipped_quality_gates),
+            "turn_stage": str(turn_stage).strip()[:MAX_TELEMETRY_VALUE_LEN],
+            "owner_skill": str(owner_skill).strip()[:MAX_TELEMETRY_VALUE_LEN],
+            "reviewer_skill": str(reviewer_skill).strip()[:MAX_TELEMETRY_VALUE_LEN],
+            "read_evidence_seen": bool(read_evidence_seen),
+            "review_evidence_seen": bool(review_evidence_seen),
+            "repair_evidence_seen": bool(repair_evidence_seen),
+            "permission_gate_seen": bool(permission_gate_seen),
+            "professional_contract_seen": bool(professional_contract_seen),
         }
         target = root / "sessions" / f"{_utc_date()}.jsonl"
         line = json.dumps(record, sort_keys=True)
@@ -914,6 +1045,9 @@ def _empty_state() -> dict:
     return {
         "runtime": "unknown",
         "changed_paths": [],
+        "read_paths": [],
+        "read_tools": [],
+        "searched_patterns": [],
         "structure_findings": [],
         "file_naming_findings": [],
         "reuse_findings": [],
@@ -921,11 +1055,30 @@ def _empty_state() -> dict:
         "advanced_refactor_findings": [],
         "comment_findings": [],
         "structure_quality_findings": [],
+        "review_targets": [],
+        "review_findings": [],
+        "repair_findings": [],
         "risk_surfaces": [],
+        "professional_injections": [],
+        "permission_decisions": [],
+        "reference_loads": [],
+        "subagent_contracts": [],
+        "compaction_snapshots": [],
+        "prompt_signals": [],
         "suggested_skills": [],
         "suggested_capabilities": [],
         "suggested_domain_extensions": [],
         "suggested_gates": [],
+        "active_skill_context": {},
+        "turn_stage": "",
+        "owner_skill": "",
+        "reviewer_skill": "",
+        "stage_route_present": False,
+        "read_evidence_seen": False,
+        "review_evidence_seen": False,
+        "repair_evidence_seen": False,
+        "permission_gate_seen": False,
+        "professional_contract_seen": False,
         "validation_command_seen": False,
         "validation_seen": False,
         "route_preflight_emitted": False,
@@ -987,3 +1140,36 @@ def _unique(values: Iterable[str]) -> list[str]:
         seen.add(item)
         result.append(item)
     return result
+
+
+def _capped_state_items(values: Iterable[str]) -> list[str]:
+    """Sanitize state list entries so hook state cannot become a corpus."""
+    out: list[str] = []
+    for raw in values:
+        text = str(raw).strip()
+        if not text:
+            continue
+        out.append(text[:MAX_STATE_VALUE_LEN])
+        if len(out) >= MAX_STATE_ITEMS:
+            break
+    return _unique(out)
+
+
+def _clean_state_mapping(value: dict) -> dict:
+    """Keep active context compact, scalar, and prompt-free."""
+    cleaned: dict[str, Any] = {}
+    for key, raw in value.items():
+        name = str(key).strip()[:80]
+        if not name:
+            continue
+        if isinstance(raw, (list, tuple)):
+            cleaned[name] = _capped_state_items(str(item) for item in raw)
+        elif isinstance(raw, dict):
+            cleaned[name] = {
+                str(child_key).strip()[:80]: str(child_value).strip()[:MAX_STATE_VALUE_LEN]
+                for child_key, child_value in raw.items()
+                if str(child_key).strip()
+            }
+        else:
+            cleaned[name] = str(raw).strip()[:MAX_STATE_VALUE_LEN]
+    return cleaned

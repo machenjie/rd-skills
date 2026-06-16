@@ -218,3 +218,21 @@ never fixes telemetry and never promotes anything.
 - enabling hook block mode.
 
 Telemetry makes the loop observable. Humans keep the authority.
+
+## Action-Aware Fields
+
+The v1 telemetry schema is extended compatibly with action-aware hook facts:
+
+- `turn_stage`, `owner_skill`, and `reviewer_skill` identify the active stage
+  and skill handoff selected by the runtime.
+- `read_evidence_seen`, `review_evidence_seen`, `repair_evidence_seen`,
+  `permission_gate_seen`, and `professional_contract_seen` record whether the
+  corresponding lifecycle gate observed a bounded fact.
+- `professional_injector`, `read_context_gate`, `review_gate`,
+  `permission_policy_gate`, `subagent_skill_contract`, and compaction hooks are
+  accepted `hook_name` values.
+
+These fields are facts about hook behavior, not content capture. Telemetry still
+records only path-like facts, compact signal names, command program names, gate
+names, and booleans. It must not record prompt text, environment variables,
+secrets, full command arguments, command output, or user-specific archives.

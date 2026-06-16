@@ -22,6 +22,15 @@ DIST_COPILOT_HOOK_SUPPORT = (
     / "changeforge"
     / "changeforge_copilot_skill_summary.md"
 )
+EXPECTED_HOOK_SCRIPT_COUNT = 18
+EXPECTED_COMMON_SUPPORT_FILES = ["changeforge_professional_contract.md"]
+EXPECTED_COPILOT_SUPPORT_FILES = sorted(
+    [
+        *EXPECTED_COMMON_SUPPORT_FILES,
+        "changeforge_copilot_professional_contract.md",
+        "changeforge_copilot_skill_summary.md",
+    ]
+)
 
 
 def _build_recommended() -> None:
@@ -81,8 +90,9 @@ class InstallHooksTests(unittest.TestCase):
             manifest = codex_dir / ".changeforge-hook-manifest.json"
             hooks_json = codex_dir / "hooks.json"
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(len(scripts), 8)
+            self.assertEqual(len(scripts), EXPECTED_HOOK_SCRIPT_COUNT)
             self.assertTrue((codex_dir / "hooks" / "changeforge_session_bootstrap.py").is_file())
+            self.assertTrue((codex_dir / "hooks" / "changeforge_professional_injector.py").is_file())
             self.assertTrue(
                 (codex_dir / "hooks" / "changeforge_user_prompt_route_reminder.py").is_file()
             )
@@ -93,6 +103,7 @@ class InstallHooksTests(unittest.TestCase):
                 (codex_dir / "hooks" / "changeforge_subagent_stop_reminder.py").is_file()
             )
             self.assertTrue((codex_dir / "changeforge-route-preflight.md").is_file())
+            self.assertTrue((codex_dir / "hooks" / "changeforge_professional_contract.md").is_file())
             self.assertTrue(manifest.is_file())
             self.assertTrue(hooks_json.is_file())
 
@@ -151,13 +162,14 @@ class InstallHooksTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             codex_dir = Path(home) / ".codex"
             scripts = sorted((codex_dir / "hooks").glob("changeforge_*.py"))
-            self.assertEqual(len(scripts), 8)
+            self.assertEqual(len(scripts), EXPECTED_HOOK_SCRIPT_COUNT)
             self.assertTrue((codex_dir / "hooks.json").is_file())
             manifest = json.loads(
                 (codex_dir / ".changeforge-hook-manifest.json").read_text(encoding="utf-8")
             )
             self.assertEqual(manifest["scope"], "user")
             self.assertEqual(manifest["agent"], "codex")
+            self.assertEqual(manifest["support_files"], EXPECTED_COMMON_SUPPORT_FILES)
 
 
 class InstallCopilotHooksTests(unittest.TestCase):
@@ -197,13 +209,17 @@ class InstallCopilotHooksTests(unittest.TestCase):
             scripts_dir = hooks_dir / "changeforge"
             self.assertTrue(config.is_file())
             scripts = sorted(scripts_dir.glob("changeforge_*.py"))
-            self.assertEqual(len(scripts), 8)
+            self.assertEqual(len(scripts), EXPECTED_HOOK_SCRIPT_COUNT)
+            self.assertTrue((scripts_dir / "changeforge_professional_contract.md").is_file())
             self.assertTrue((scripts_dir / "changeforge_copilot_skill_summary.md").is_file())
+            self.assertTrue(
+                (scripts_dir / "changeforge_copilot_professional_contract.md").is_file()
+            )
             self.assertTrue((scripts_dir / ".changeforge-hook-manifest.json").is_file())
             manifest = json.loads(
                 (scripts_dir / ".changeforge-hook-manifest.json").read_text(encoding="utf-8")
             )
-            self.assertEqual(manifest["support_files"], ["changeforge_copilot_skill_summary.md"])
+            self.assertEqual(sorted(manifest["support_files"]), EXPECTED_COPILOT_SUPPORT_FILES)
             # The manifest is nested so VS Code does not parse it as a hook config.
             self.assertFalse((hooks_dir / ".changeforge-hook-manifest.json").exists())
             payload = json.loads(config.read_text(encoding="utf-8"))
@@ -272,9 +288,19 @@ class InstallCopilotHooksTests(unittest.TestCase):
             hooks_dir = Path(home) / ".copilot" / "hooks"
             self.assertTrue((hooks_dir / "changeforge-hooks.json").is_file())
             scripts = sorted((hooks_dir / "changeforge").glob("changeforge_*.py"))
-            self.assertEqual(len(scripts), 8)
+            self.assertEqual(len(scripts), EXPECTED_HOOK_SCRIPT_COUNT)
+            self.assertTrue(
+                (hooks_dir / "changeforge" / "changeforge_professional_contract.md").is_file()
+            )
             self.assertTrue(
                 (hooks_dir / "changeforge" / "changeforge_copilot_skill_summary.md").is_file()
+            )
+            self.assertTrue(
+                (
+                    hooks_dir
+                    / "changeforge"
+                    / "changeforge_copilot_professional_contract.md"
+                ).is_file()
             )
             manifest = json.loads(
                 (hooks_dir / "changeforge" / ".changeforge-hook-manifest.json").read_text(
@@ -283,7 +309,7 @@ class InstallCopilotHooksTests(unittest.TestCase):
             )
             self.assertEqual(manifest["scope"], "user")
             self.assertEqual(manifest["agent"], "copilot")
-            self.assertEqual(manifest["support_files"], ["changeforge_copilot_skill_summary.md"])
+            self.assertEqual(sorted(manifest["support_files"]), EXPECTED_COPILOT_SUPPORT_FILES)
 
 
 class InstallBootstrapTests(unittest.TestCase):
@@ -316,6 +342,15 @@ class InstallBootstrapTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             # The advisory fragment must never pull in executable hook scripts.
             self.assertFalse((project / ".codex" / "hooks").exists())
+
+    def test_with_universal_bootstrap_installs_professional_fragment(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            result = _run_install(project, "--with-universal-bootstrap")
+            professional = project / ".changeforge" / "changeforge-professional-contract.md"
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue(professional.is_file())
+            self.assertIn("owner skill", professional.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

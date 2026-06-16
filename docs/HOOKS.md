@@ -471,3 +471,37 @@ Future phases may add installer, upgrade, doctor, and plugin packaging support.
 Those phases must merge hook configuration rather than overwrite it, preserve
 user hooks, and keep project scope separate from user/admin scopes unless a
 maintainer explicitly accepts the broader blast radius.
+
+## Action-Aware Injection Runtime
+
+The hook runtime includes a professional injection layer in addition to the
+original reminder gates.
+
+| Lifecycle area | Scripts | Purpose |
+| --- | --- | --- |
+| Action classification | `changeforge_action_classifier.py`, `changeforge_skill_index.py` | Classify stage and select owner/reviewer skill context. |
+| Runtime output | `changeforge_runtime_adapters.py` | Keep Codex/Claude hook-specific context, Copilot top-level context, and generic text output separate. |
+| Professional context | `changeforge_professional_injector.py` | Emit compact active skill context and record selected gates/references. |
+| Read/review evidence | `changeforge_read_context_gate.py`, `changeforge_review_gate.py` | Preserve read/search and review-stage closure evidence. |
+| Permission policy | `changeforge_permission_policy_gate.py` | Warn or block high-risk permission/destructive commands according to hook mode. |
+| Compaction/subagent | `changeforge_compaction_snapshot.py`, `changeforge_compaction_reinject.py`, `changeforge_subagent_skill_contract.py` | Preserve active context across compaction and subagent starts. |
+
+Codex and Claude templates wire `PermissionRequest`, prompt, pre-tool,
+post-tool, subagent, stop, and session events. Claude templates also include
+`UserPromptExpansion` and `PostToolBatch` advisory entries. Copilot templates
+stay on supported flat events only: `SessionStart`, `PostToolUse`,
+`SubagentStart`, and `Stop`.
+
+The runtime support files are:
+
+- `changeforge_professional_contract.md` for common professional injection
+  guidance;
+- `changeforge_copilot_professional_contract.md` for Copilot fallback guidance;
+- `templates/bootstrap/changeforge-professional-contract.md` for runtimes where
+  executable hooks are not enabled.
+
+Hook state remains cache-local and bounded. It records stage, owner/reviewer
+skill, selected capability/gate names, paths, compact signals, and closure
+booleans. It must not contain prompts, secrets, environment variables, full
+command arguments, command output, user archive indexes, or personal corpus
+content.

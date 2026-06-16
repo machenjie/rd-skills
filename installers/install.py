@@ -52,6 +52,11 @@ def main() -> int:
         help="Also install optional hooks (codex/claude/copilot project or user).",
     )
     parser.add_argument(
+        "--professional-injection",
+        action="store_true",
+        help="Install the action-aware professional injection hook runtime.",
+    )
+    parser.add_argument(
         "--hooks-dry-run",
         action="store_true",
         help="Show the hook install plan without writing hook files.",
@@ -62,11 +67,25 @@ def main() -> int:
         help="Also install the advisory route-preflight bootstrap fragment (any project install).",
     )
     parser.add_argument(
+        "--with-universal-bootstrap",
+        action="store_true",
+        help="Install route-preflight plus professional bootstrap fragments.",
+    )
+    parser.add_argument(
         "--bootstrap-dry-run",
         action="store_true",
         help="Show the bootstrap install plan without writing the fragment.",
     )
+    parser.add_argument(
+        "--with-copilot-instructions",
+        action="store_true",
+        help="Create .github/copilot-instructions.md when absent.",
+    )
     args = parser.parse_args()
+    if args.professional_injection:
+        args.with_hooks = True
+    if args.with_universal_bootstrap:
+        args.with_bootstrap = True
 
     try:
         scope = args.scope or ("project" if args.agent == "openai-api" else None)
@@ -122,6 +141,8 @@ def main() -> int:
                 _install_hooks(args, scope)
             if args.with_bootstrap:
                 _install_bootstrap(args, scope)
+            if args.with_copilot_instructions:
+                _install_copilot_instructions(args, scope)
             return 0
 
         replace_with_source(source_dir, target_dir, source_names | old_managed, dry_run=False)
@@ -136,6 +157,8 @@ def main() -> int:
             _install_hooks(args, scope)
         if args.with_bootstrap:
             _install_bootstrap(args, scope)
+        if args.with_copilot_instructions:
+            _install_copilot_instructions(args, scope)
         return 0
     except InstallError as exc:
         print(f"install: ERROR: {exc}", file=sys.stderr)
@@ -181,7 +204,12 @@ def _install_bootstrap(args: argparse.Namespace, scope: str) -> None:
     if args.target is None:
         raise InstallError("--with-bootstrap requires --target (the project root)")
 
-    plan = plan_bootstrap_install(args.agent, scope, args.target)
+    plan = plan_bootstrap_install(
+        args.agent,
+        scope,
+        args.target,
+        include_professional=args.with_universal_bootstrap,
+    )
     for line in render_bootstrap_plan(plan):
         print(f"install: {line}")
 
@@ -190,6 +218,39 @@ def _install_bootstrap(args: argparse.Namespace, scope: str) -> None:
         return
     apply_bootstrap_install(plan, dry_run=False)
     print("install: bootstrap: installed advisory route-preflight fragment")
+
+
+def _install_copilot_instructions(args: argparse.Namespace, scope: str) -> None:
+    """Create Copilot instructions from the professional contract when absent."""
+    if args.agent != "copilot" or scope != "project":
+        raise InstallError("--with-copilot-instructions is only supported for copilot project installs")
+    if args.target is None:
+        raise InstallError("--with-copilot-instructions requires --target")
+    source = (
+        Path(__file__).resolve().parents[1]
+        / "dist"
+        / "copilot"
+        / "project"
+        / ".github"
+        / "hooks"
+        / "changeforge"
+        / "changeforge_copilot_professional_contract.md"
+    )
+    if not source.is_file():
+        raise InstallError(
+            "missing built Copilot professional contract; run python3 scripts/build.py --profile <profile>"
+        )
+    target = args.target.expanduser().resolve() / ".github" / "copilot-instructions.md"
+    print(f"install: copilot-instructions: target {target}")
+    if target.exists():
+        print("install: copilot-instructions: exists; not overwritten, merge manually if desired")
+        return
+    if args.dry_run:
+        print("install: copilot-instructions: dry run; no file written")
+        return
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+    print("install: copilot-instructions: created")
 
 
 if __name__ == "__main__":

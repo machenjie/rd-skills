@@ -25,11 +25,15 @@
     "validation_evidence_detected",
     "residual_risk_detected"
   ],
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "type": "string", "maxLength": 300 }
+    }
+  },
   "properties": {
-    "schema_version": {
-      "type": "string",
-      "const": "1"
-    },
+    "schema_version": { "type": "string", "const": "1" },
     "timestamp_utc": {
       "type": "string",
       "description": "UTC ISO 8601 timestamp."
@@ -44,13 +48,24 @@
     },
     "runtime": {
       "type": "string",
-      "enum": ["codex", "claude", "unknown"]
+      "enum": ["codex", "claude", "copilot", "generic", "unknown"]
     },
     "hook_name": {
       "type": "string",
       "enum": [
+        "session_bootstrap",
+        "user_prompt_route_reminder",
+        "pre_tool_risk_preview",
+        "professional_injector",
+        "read_context_gate",
+        "review_gate",
+        "permission_policy_gate",
+        "compaction_snapshot",
+        "compaction_reinject",
+        "subagent_skill_contract",
         "post_edit_structure_gate",
         "risk_surface_gate",
+        "subagent_stop_reminder",
         "stop_closure_gate"
       ]
     },
@@ -62,59 +77,46 @@
       "type": "string",
       "description": "Session or turn identifier, or a repo+date fallback. Never a prompt."
     },
-    "mode": {
-      "type": "string",
-      "enum": ["off", "monitor", "warn", "block"]
-    },
-    "tool_name": {
-      "type": "string"
-    },
-    "changed_paths": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "added_paths": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
+    "mode": { "type": "string", "enum": ["off", "monitor", "warn", "block"] },
+    "tool_name": { "type": "string" },
+    "changed_paths": { "$ref": "#/$defs/stringList" },
+    "added_paths": { "$ref": "#/$defs/stringList" },
     "command_program": {
       "type": "string",
       "description": "Only the leading executable name of an observed command, truncated. Never full arguments."
     },
     "hook_findings": {
       "type": "object",
-      "additionalProperties": {
-        "type": "array",
-        "items": { "type": "string" }
-      }
+      "additionalProperties": { "$ref": "#/$defs/stringList" }
     },
-    "suggested_skills": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "suggested_capabilities": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "suggested_gates": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "suggested_domain_extensions": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "risk_surfaces": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
+    "suggested_skills": { "$ref": "#/$defs/stringList" },
+    "suggested_capabilities": { "$ref": "#/$defs/stringList" },
+    "suggested_gates": { "$ref": "#/$defs/stringList" },
+    "suggested_domain_extensions": { "$ref": "#/$defs/stringList" },
+    "risk_surfaces": { "$ref": "#/$defs/stringList" },
     "route_manifest_detected": { "type": "boolean" },
     "required_references_detected": { "type": "boolean" },
     "validation_evidence_detected": { "type": "boolean" },
     "residual_risk_detected": { "type": "boolean" },
     "completion_language_detected": {
       "type": "boolean",
-      "description": "Whether the final handoff text used success-implying completion language (done, fixed, should pass). Presence detection only; combine with validation_evidence_detected to spot unverified completion claims."
-    }
+      "description": "Whether the final handoff text used success-implying completion language. Presence detection only."
+    },
+    "stage_manifest_detected": { "type": "boolean" },
+    "manifest_current_stage": { "type": "string", "maxLength": 300 },
+    "manifest_selected_skills": { "$ref": "#/$defs/stringList" },
+    "manifest_selected_capabilities": { "$ref": "#/$defs/stringList" },
+    "manifest_selected_domain_extensions": { "$ref": "#/$defs/stringList" },
+    "manifest_required_references": { "$ref": "#/$defs/stringList" },
+    "manifest_required_quality_gates": { "$ref": "#/$defs/stringList" },
+    "manifest_skipped_quality_gates": { "$ref": "#/$defs/stringList" },
+    "turn_stage": { "type": "string", "maxLength": 300 },
+    "owner_skill": { "type": "string", "maxLength": 300 },
+    "reviewer_skill": { "type": "string", "maxLength": 300 },
+    "read_evidence_seen": { "type": "boolean" },
+    "review_evidence_seen": { "type": "boolean" },
+    "repair_evidence_seen": { "type": "boolean" },
+    "permission_gate_seen": { "type": "boolean" },
+    "professional_contract_seen": { "type": "boolean" }
   }
 }

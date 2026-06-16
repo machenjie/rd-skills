@@ -2,105 +2,79 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://changeforge.dev/schemas/hook-state.v1.schema.json",
   "title": "ChangeForge Hook State",
+  "description": "Bounded per-turn hook state stored in the user cache. It must not contain prompt text, secrets, environment variables, full command output, or user-specific corpora.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "runtime",
     "changed_paths",
-    "structure_findings",
-    "structure_quality_findings",
     "risk_surfaces",
     "suggested_skills",
     "suggested_capabilities",
     "suggested_domain_extensions",
     "suggested_gates",
+    "active_skill_context",
+    "turn_stage",
+    "owner_skill",
+    "reviewer_skill",
     "validation_command_seen",
     "validation_seen",
     "updated_at"
   ],
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "type": "string", "maxLength": 300 }
+    }
+  },
   "properties": {
     "runtime": {
       "type": "string",
-      "enum": ["codex", "claude", "unknown"]
+      "enum": ["codex", "claude", "copilot", "generic", "unknown"]
     },
-    "changed_paths": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+    "changed_paths": { "$ref": "#/$defs/stringList" },
+    "read_paths": { "$ref": "#/$defs/stringList" },
+    "read_tools": { "$ref": "#/$defs/stringList" },
+    "searched_patterns": { "$ref": "#/$defs/stringList" },
+    "structure_findings": { "$ref": "#/$defs/stringList" },
+    "file_naming_findings": { "$ref": "#/$defs/stringList" },
+    "reuse_findings": { "$ref": "#/$defs/stringList" },
+    "extension_reuse_findings": { "$ref": "#/$defs/stringList" },
+    "advanced_refactor_findings": { "$ref": "#/$defs/stringList" },
+    "comment_findings": { "$ref": "#/$defs/stringList" },
+    "structure_quality_findings": { "$ref": "#/$defs/stringList" },
+    "review_targets": { "$ref": "#/$defs/stringList" },
+    "review_findings": { "$ref": "#/$defs/stringList" },
+    "repair_findings": { "$ref": "#/$defs/stringList" },
+    "risk_surfaces": { "$ref": "#/$defs/stringList" },
+    "professional_injections": { "$ref": "#/$defs/stringList" },
+    "permission_decisions": { "$ref": "#/$defs/stringList" },
+    "reference_loads": { "$ref": "#/$defs/stringList" },
+    "subagent_contracts": { "$ref": "#/$defs/stringList" },
+    "compaction_snapshots": { "$ref": "#/$defs/stringList" },
+    "prompt_signals": {
+      "description": "Compact signal names only; never raw prompt text.",
+      "$ref": "#/$defs/stringList"
     },
-    "structure_findings": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+    "suggested_skills": { "$ref": "#/$defs/stringList" },
+    "suggested_capabilities": { "$ref": "#/$defs/stringList" },
+    "suggested_domain_extensions": { "$ref": "#/$defs/stringList" },
+    "suggested_gates": { "$ref": "#/$defs/stringList" },
+    "active_skill_context": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Bounded active skill context: stage, owner/reviewer, selected capabilities, gates, and reference paths."
     },
-    "file_naming_findings": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "reuse_findings": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "extension_reuse_findings": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "advanced_refactor_findings": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "comment_findings": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "structure_quality_findings": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "risk_surfaces": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "suggested_skills": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "suggested_capabilities": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "suggested_domain_extensions": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "suggested_gates": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
+    "turn_stage": { "type": "string", "maxLength": 300 },
+    "owner_skill": { "type": "string", "maxLength": 300 },
+    "reviewer_skill": { "type": "string", "maxLength": 300 },
+    "stage_route_present": { "type": "boolean" },
+    "read_evidence_seen": { "type": "boolean" },
+    "review_evidence_seen": { "type": "boolean" },
+    "repair_evidence_seen": { "type": "boolean" },
+    "permission_gate_seen": { "type": "boolean" },
+    "professional_contract_seen": { "type": "boolean" },
     "validation_seen": {
       "description": "Backward-compatible alias for validation_command_seen.",
       "type": "boolean"
@@ -110,14 +84,10 @@
       "type": "boolean"
     },
     "route_preflight_emitted": {
-      "description": "Whether the route-preflight reminder was already emitted this turn, so the risk gate nudges routing once instead of on every observed risk surface.",
+      "description": "Whether the route-preflight reminder was already emitted this turn.",
       "type": "boolean"
     },
-    "turn_id": {
-      "type": "string"
-    },
-    "updated_at": {
-      "type": "string"
-    }
+    "turn_id": { "type": "string" },
+    "updated_at": { "type": "string" }
   }
 }

@@ -23,7 +23,11 @@ from changeforge_install import (
 )
 
 
-COPILOT_HOOK_SUPPORT_FILES = ("changeforge_copilot_skill_summary.md",)
+COMMON_HOOK_SUPPORT_FILES = ("changeforge_professional_contract.md",)
+COPILOT_HOOK_SUPPORT_FILES = (
+    "changeforge_copilot_skill_summary.md",
+    "changeforge_copilot_professional_contract.md",
+)
 
 
 def main() -> int:
@@ -318,13 +322,19 @@ def _check_project_hooks(target: Path | None, issues: list[str]) -> None:
             print(f"- {agent}: manifest present")
         else:
             issues.append(f"{agent}: missing {manifest_path.name}")
+        expected_support = list(COMMON_HOOK_SUPPORT_FILES)
         if agent == "copilot":
-            for support_file in COPILOT_HOOK_SUPPORT_FILES:
-                support_path = scripts_dir / support_file
-                if support_path.is_file():
-                    print(f"- {agent}: support file present: {support_file}")
-                else:
-                    issues.append(f"{agent}: missing {support_file}")
+            expected_support.extend(COPILOT_HOOK_SUPPORT_FILES)
+        for support_file in expected_support:
+            support_path = scripts_dir / support_file
+            if support_path.is_file():
+                print(f"- {agent}: support file present: {support_file}")
+            else:
+                issues.append(f"{agent}: missing {support_file}")
+        if not (scripts_dir / "changeforge_professional_injector.py").is_file():
+            issues.append(f"{agent}: missing professional injection hook")
+        if not (scripts_dir / "changeforge_stop_closure_gate.py").is_file():
+            issues.append(f"{agent}: missing stage-aware Stop closure hook")
         if config_path.is_file():
             references = _config_references_hooks(config_path)
             state = "references generated hooks" if references else "does NOT reference changeforge hooks"
@@ -340,6 +350,9 @@ def _check_project_hooks(target: Path | None, issues: list[str]) -> None:
             print(f"- {agent}: route-preflight bootstrap fragment present ({detail})")
         else:
             print(f"- {agent}: route-preflight bootstrap fragment not found (optional)")
+        professional_path = scripts_dir / "changeforge_professional_contract.md"
+        if professional_path.is_file():
+            print(f"- {agent}: professional contract support present")
     if not any_present:
         print("- no project hooks installed (this is fine; hooks are optional)")
 
@@ -353,6 +366,7 @@ def _check_project_bootstrap(target: Path | None, issues: list[str]) -> None:
     """
     project_root = (target.expanduser().resolve() if target is not None else Path.cwd().resolve())
     fragment = project_root / ".changeforge" / "changeforge-route-preflight.md"
+    professional = project_root / ".changeforge" / "changeforge-professional-contract.md"
     print(f"doctor: route-preflight bootstrap ({project_root})")
     if fragment.is_file():
         print(f"- advisory fragment present: {fragment}")
@@ -362,6 +376,14 @@ def _check_project_bootstrap(target: Path | None, issues: list[str]) -> None:
             )
     else:
         print("- no advisory bootstrap fragment installed (this is fine; bootstrap is optional)")
+    if professional.is_file():
+        print(f"- professional bootstrap fragment present: {professional}")
+        if "owner skill" not in _safe_read(professional):
+            issues.append(
+                "professional bootstrap fragment present but does not reference owner skill"
+            )
+    else:
+        print("- no professional bootstrap fragment installed (this is fine; bootstrap is optional)")
 
 
 def _safe_read(path: Path) -> str:

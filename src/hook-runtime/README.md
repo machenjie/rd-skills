@@ -103,3 +103,36 @@ validation can prove which hook scripts and scope were emitted.
 The installer can place these hooks for Codex, Claude, and Copilot project or
 user scope with `installers/install.py --with-hooks`; existing hook
 configuration is always preserved and hooks are never trusted automatically.
+
+## Action-Aware Professional Injection
+
+The hook runtime now adds an action-aware layer around the original reminders:
+
+- `changeforge_action_classifier.py` classifies the current lifecycle stage
+  (planning, read, edit, review, repair, test, permission, release, compaction,
+  or subagent) and detects compact surface names only.
+- `changeforge_skill_index.py` maps that stage and surface set to an owner
+  professional skill, a separate reviewer skill, selected capability names,
+  reference paths, and quality gates.
+- `changeforge_runtime_adapters.py` isolates output protocol differences across
+  Codex, Claude, Copilot, and generic text runtimes.
+- `changeforge_professional_injector.py`, read/review/permission/compaction,
+  and subagent gates update bounded cache-side state and emit advisory context.
+
+The runtime stores only bounded facts such as stage, paths, skill names, gate
+names, and compact signal names. It does not persist prompt text, secrets,
+environment variables, full command arguments, command output, user archives, or
+personal content indexes.
+
+Additional install flags:
+
+```bash
+python3 installers/install.py --agent codex --scope project --target <repo> --with-hooks --professional-injection
+python3 installers/install.py --agent codex --scope project --target <repo> --with-universal-bootstrap
+python3 installers/install.py --agent copilot --scope project --target <repo> --with-hooks --with-copilot-instructions
+```
+
+`--professional-injection` implies hook installation. `--with-universal-bootstrap`
+installs both the route preflight and professional bootstrap fragments under
+`.changeforge/`. `--with-copilot-instructions` creates
+`.github/copilot-instructions.md` only when that file does not already exist.

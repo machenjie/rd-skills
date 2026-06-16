@@ -100,23 +100,41 @@ HOOK_AUX_SUBDIR = {
 HOOK_MANIFEST_NAME = ".changeforge-hook-manifest.json"
 HOOK_SCRIPT_NAMES = (
     "changeforge_common.py",
+    "changeforge_runtime_adapters.py",
+    "changeforge_action_classifier.py",
+    "changeforge_skill_index.py",
     "changeforge_session_bootstrap.py",
     "changeforge_user_prompt_route_reminder.py",
     "changeforge_pre_tool_risk_preview.py",
+    "changeforge_professional_injector.py",
+    "changeforge_read_context_gate.py",
+    "changeforge_review_gate.py",
+    "changeforge_permission_policy_gate.py",
+    "changeforge_compaction_snapshot.py",
+    "changeforge_compaction_reinject.py",
+    "changeforge_subagent_skill_contract.py",
     "changeforge_post_edit_structure_gate.py",
     "changeforge_risk_surface_gate.py",
     "changeforge_subagent_stop_reminder.py",
     "changeforge_stop_closure_gate.py",
 )
-COPILOT_HOOK_SUPPORT_FILES = ("changeforge_copilot_skill_summary.md",)
+COMMON_HOOK_SUPPORT_FILES = ("changeforge_professional_contract.md",)
+COPILOT_HOOK_SUPPORT_FILES = (
+    "changeforge_copilot_skill_summary.md",
+    "changeforge_copilot_professional_contract.md",
+)
 
 # Advisory route-preflight bootstrap. The fragment is plain guidance text, not an
 # executable hook, so it can be installed for any project scope and never needs
 # to be trusted. It is also the bootstrap path for users who prefer not to trust
 # executable hooks.
 BOOTSTRAP_FRAGMENT_NAME = "changeforge-route-preflight.md"
+PROFESSIONAL_BOOTSTRAP_FRAGMENT_NAME = "changeforge-professional-contract.md"
 UNIVERSAL_BOOTSTRAP_SOURCE = (
     ROOT / "dist" / "universal" / "bootstrap" / BOOTSTRAP_FRAGMENT_NAME
+)
+UNIVERSAL_PROFESSIONAL_BOOTSTRAP_SOURCE = (
+    ROOT / "dist" / "universal" / "bootstrap" / PROFESSIONAL_BOOTSTRAP_FRAGMENT_NAME
 )
 BOOTSTRAP_PROJECT_SUBPATH = Path(".changeforge")
 BOOTSTRAP_AGENTS = ("codex", "claude", "copilot")
@@ -483,14 +501,16 @@ def plan_hook_install(agent: str, scope: str, target: Path | None) -> HookPlan:
         action = "overwrite" if destination.exists() else "create"
         plan.script_actions.append((source_script, destination, action))
 
+    support_files = list(COMMON_HOOK_SUPPORT_FILES)
     if agent == "copilot":
-        for file_name in COPILOT_HOOK_SUPPORT_FILES:
-            source_file = source_root / scripts_subdir / file_name
-            if not source_file.is_file():
-                raise InstallError(f"missing built hook support file {source_file.relative_to(ROOT)}")
-            destination = target_root / scripts_subdir / file_name
-            action = "overwrite" if destination.exists() else "create"
-            plan.support_actions.append((source_file, destination, action))
+        support_files.extend(COPILOT_HOOK_SUPPORT_FILES)
+    for file_name in support_files:
+        source_file = source_root / scripts_subdir / file_name
+        if not source_file.is_file():
+            raise InstallError(f"missing built hook support file {source_file.relative_to(ROOT)}")
+        destination = target_root / scripts_subdir / file_name
+        action = "overwrite" if destination.exists() else "create"
+        plan.support_actions.append((source_file, destination, action))
 
     manifest_source = source_root / aux_subdir / HOOK_MANIFEST_NAME
     manifest_target = target_root / aux_subdir / HOOK_MANIFEST_NAME
@@ -716,6 +736,9 @@ class BootstrapPlan:
     source: Path
     target: Path
     action: str
+    professional_source: Path | None = None
+    professional_target: Path | None = None
+    professional_action: str = ""
     notes: list[str] = field(default_factory=list)
 
 
@@ -724,7 +747,13 @@ def bootstrap_supported(agent: str, scope: str) -> bool:
     return scope == "project" and agent in BOOTSTRAP_AGENTS
 
 
-def plan_bootstrap_install(agent: str, scope: str, project_root: Path) -> BootstrapPlan:
+def plan_bootstrap_install(
+    agent: str,
+    scope: str,
+    project_root: Path,
+    *,
+    include_professional: bool = False,
+) -> BootstrapPlan:
     """Plan a standalone advisory bootstrap install without writing anything.
 
     This installs only the route-preflight guidance fragment. It is the
@@ -744,6 +773,23 @@ def plan_bootstrap_install(agent: str, scope: str, project_root: Path) -> Bootst
         / BOOTSTRAP_FRAGMENT_NAME
     )
     action = "overwrite" if target.exists() else "create"
+    professional_source: Path | None = None
+    professional_target: Path | None = None
+    professional_action = ""
+    if include_professional:
+        if not UNIVERSAL_PROFESSIONAL_BOOTSTRAP_SOURCE.is_file():
+            raise InstallError(
+                "missing built professional bootstrap fragment "
+                f"{UNIVERSAL_PROFESSIONAL_BOOTSTRAP_SOURCE.relative_to(ROOT)}; "
+                "run python3 scripts/build.py --profile <profile>"
+            )
+        professional_source = UNIVERSAL_PROFESSIONAL_BOOTSTRAP_SOURCE
+        professional_target = (
+            project_root.expanduser().resolve()
+            / BOOTSTRAP_PROJECT_SUBPATH
+            / PROFESSIONAL_BOOTSTRAP_FRAGMENT_NAME
+        )
+        professional_action = "overwrite" if professional_target.exists() else "create"
     notes = [
         "bootstrap is advisory route-preflight guidance, not an executable hook",
         "reference this file from your agent instructions (for example AGENTS.md) to enable it",
@@ -763,6 +809,9 @@ def plan_bootstrap_install(agent: str, scope: str, project_root: Path) -> Bootst
         source=UNIVERSAL_BOOTSTRAP_SOURCE,
         target=target,
         action=action,
+        professional_source=professional_source,
+        professional_target=professional_target,
+        professional_action=professional_action,
         notes=notes,
     )
 
@@ -773,6 +822,9 @@ def apply_bootstrap_install(plan: BootstrapPlan, dry_run: bool) -> None:
         return
     plan.target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(plan.source, plan.target)
+    if plan.professional_source is not None and plan.professional_target is not None:
+        plan.professional_target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(plan.professional_source, plan.professional_target)
 
 
 def render_bootstrap_plan(plan: BootstrapPlan) -> list[str]:
@@ -782,6 +834,10 @@ def render_bootstrap_plan(plan: BootstrapPlan) -> list[str]:
         f"bootstrap: target {plan.target}",
         f"bootstrap: {plan.action} {BOOTSTRAP_FRAGMENT_NAME}",
     ]
+    if plan.professional_target is not None:
+        lines.append(
+            f"bootstrap: {plan.professional_action} {PROFESSIONAL_BOOTSTRAP_FRAGMENT_NAME}"
+        )
     for note in plan.notes:
         lines.append(f"bootstrap: note: {note}")
     return lines

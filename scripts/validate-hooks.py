@@ -43,31 +43,83 @@ COPILOT_USER_TEMPLATE = (
 )
 COPILOT_TEMPLATES = (COPILOT_TEMPLATE, COPILOT_USER_TEMPLATE)
 RICH_EVENT_SCRIPTS = {
-    "SessionStart": ("changeforge_session_bootstrap",),
-    "UserPromptSubmit": ("changeforge_user_prompt_route_reminder",),
-    "PreToolUse": ("changeforge_pre_tool_risk_preview",),
-    "PostToolUse": ("changeforge_post_edit_structure_gate", "changeforge_risk_surface_gate"),
-    "SubagentStart": ("changeforge_session_bootstrap",),
+    "SessionStart": (
+        "changeforge_session_bootstrap",
+        "changeforge_professional_injector",
+        "changeforge_compaction_snapshot",
+        "changeforge_compaction_reinject",
+    ),
+    "UserPromptSubmit": (
+        "changeforge_user_prompt_route_reminder",
+        "changeforge_professional_injector",
+        "changeforge_review_gate",
+    ),
+    "PreToolUse": ("changeforge_professional_injector", "changeforge_pre_tool_risk_preview"),
+    "PermissionRequest": ("changeforge_permission_policy_gate",),
+    "PostToolUse": (
+        "changeforge_professional_injector",
+        "changeforge_read_context_gate",
+        "changeforge_review_gate",
+        "changeforge_post_edit_structure_gate",
+        "changeforge_risk_surface_gate",
+    ),
+    "SubagentStart": (
+        "changeforge_session_bootstrap",
+        "changeforge_professional_injector",
+        "changeforge_subagent_skill_contract",
+    ),
     "SubagentStop": ("changeforge_subagent_stop_reminder",),
     "Stop": ("changeforge_stop_closure_gate",),
 }
 # Copilot event -> the hook script(s) each event must invoke.
 COPILOT_EVENT_SCRIPTS = {
-    "SessionStart": ("changeforge_session_bootstrap",),
-    "PostToolUse": ("changeforge_post_edit_structure_gate", "changeforge_risk_surface_gate"),
-    "SubagentStart": ("changeforge_session_bootstrap",),
+    "SessionStart": (
+        "changeforge_session_bootstrap",
+        "changeforge_professional_injector",
+        "changeforge_compaction_snapshot",
+        "changeforge_compaction_reinject",
+    ),
+    "PostToolUse": (
+        "changeforge_professional_injector",
+        "changeforge_read_context_gate",
+        "changeforge_review_gate",
+        "changeforge_post_edit_structure_gate",
+        "changeforge_risk_surface_gate",
+    ),
+    "SubagentStart": (
+        "changeforge_session_bootstrap",
+        "changeforge_professional_injector",
+        "changeforge_subagent_skill_contract",
+    ),
     "Stop": ("changeforge_stop_closure_gate",),
 }
 COPILOT_UNSUPPORTED_ADVISORY_EVENTS = ("UserPromptSubmit", "PreToolUse", "SubagentStop")
 BOOTSTRAP_TEMPLATE = (
     HOOK_RUNTIME_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"
 )
+PROFESSIONAL_BOOTSTRAP_TEMPLATE = (
+    HOOK_RUNTIME_ROOT / "templates" / "bootstrap" / "changeforge-professional-contract.md"
+)
 COPILOT_SKILL_SUMMARY = HOOK_SCRIPTS_DIR / "changeforge_copilot_skill_summary.md"
+PROFESSIONAL_CONTRACT = HOOK_SCRIPTS_DIR / "changeforge_professional_contract.md"
+COPILOT_PROFESSIONAL_CONTRACT = (
+    HOOK_SCRIPTS_DIR / "changeforge_copilot_professional_contract.md"
+)
 REQUIRED_HOOK_SCRIPTS = (
     "changeforge_common.py",
+    "changeforge_runtime_adapters.py",
+    "changeforge_action_classifier.py",
+    "changeforge_skill_index.py",
     "changeforge_session_bootstrap.py",
     "changeforge_user_prompt_route_reminder.py",
     "changeforge_pre_tool_risk_preview.py",
+    "changeforge_professional_injector.py",
+    "changeforge_read_context_gate.py",
+    "changeforge_review_gate.py",
+    "changeforge_permission_policy_gate.py",
+    "changeforge_compaction_snapshot.py",
+    "changeforge_compaction_reinject.py",
+    "changeforge_subagent_skill_contract.py",
     "changeforge_post_edit_structure_gate.py",
     "changeforge_risk_surface_gate.py",
     "changeforge_subagent_stop_reminder.py",
@@ -137,6 +189,12 @@ def _validate_required_files(errors: list[str]) -> None:
             errors.append(f"missing hook script: {relpath(ROOT, path)}")
     if not COPILOT_SKILL_SUMMARY.is_file():
         errors.append(f"missing Copilot hook support file: {relpath(ROOT, COPILOT_SKILL_SUMMARY)}")
+    if not PROFESSIONAL_CONTRACT.is_file():
+        errors.append(f"missing hook support file: {relpath(ROOT, PROFESSIONAL_CONTRACT)}")
+    if not COPILOT_PROFESSIONAL_CONTRACT.is_file():
+        errors.append(
+            f"missing Copilot hook support file: {relpath(ROOT, COPILOT_PROFESSIONAL_CONTRACT)}"
+        )
     for path in (
         CODEX_TEMPLATE,
         CODEX_USER_TEMPLATE,
@@ -291,6 +349,34 @@ def _validate_bootstrap_fragment(errors: list[str]) -> None:
         errors.append(
             f"{relpath(ROOT, BOOTSTRAP_TEMPLATE)}: bootstrap fragment must reference agent-execution-discipline"
         )
+    if not PROFESSIONAL_BOOTSTRAP_TEMPLATE.is_file():
+        errors.append(
+            f"missing professional bootstrap fragment: {relpath(ROOT, PROFESSIONAL_BOOTSTRAP_TEMPLATE)}"
+        )
+    else:
+        professional = PROFESSIONAL_BOOTSTRAP_TEMPLATE.read_text(encoding="utf-8")
+        if USER_ABSOLUTE_PATH_RE.search(professional):
+            errors.append(
+                f"{relpath(ROOT, PROFESSIONAL_BOOTSTRAP_TEMPLATE)}: professional bootstrap must not contain a user absolute path"
+            )
+        for required in ("owner skill", "reviewer skill", "prompt-free", "validation evidence"):
+            if required not in professional:
+                errors.append(
+                    f"{relpath(ROOT, PROFESSIONAL_BOOTSTRAP_TEMPLATE)}: professional bootstrap must reference {required}"
+                )
+    for support_path in (PROFESSIONAL_CONTRACT, COPILOT_PROFESSIONAL_CONTRACT):
+        if not support_path.is_file():
+            continue
+        support = support_path.read_text(encoding="utf-8")
+        if USER_ABSOLUTE_PATH_RE.search(support):
+            errors.append(
+                f"{relpath(ROOT, support_path)}: support file must not contain a user absolute path"
+            )
+        for required in ("prompt", "validation evidence", "residual risk"):
+            if required not in support:
+                errors.append(
+                    f"{relpath(ROOT, support_path)}: support file must reference {required}"
+                )
     if COPILOT_SKILL_SUMMARY.is_file():
         summary = COPILOT_SKILL_SUMMARY.read_text(encoding="utf-8")
         if USER_ABSOLUTE_PATH_RE.search(summary):
@@ -351,7 +437,7 @@ def _validate_template(
     if path in CODEX_TEMPLATES or path in CLAUDE_TEMPLATES:
         agent_name = "Codex" if path in CODEX_TEMPLATES else "Claude"
         for event, scripts in RICH_EVENT_SCRIPTS.items():
-            if event == "PostToolUse" or event == "Stop" or event == "SessionStart":
+            if event == "Stop":
                 continue
             for script in scripts:
                 if not _event_invokes(hooks, event, script):
