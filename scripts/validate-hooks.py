@@ -925,6 +925,17 @@ def _validate_hook_behavior(errors: list[str]) -> None:
             errors.append(f"hook state schema must include {field}")
         if f'"{field}"' not in common_text:
             errors.append(f"hook state defaults must include {field}")
+    for field in (
+        "implementation_preflight_required",
+        "implementation_preflight_seen",
+        "implementation_preflight_blocked",
+        "edit_without_preflight_seen",
+        "post_edit_confirmed_preflight_gap",
+    ):
+        if f'"{field}"' not in telemetry_schema:
+            errors.append(f"telemetry schema must include {field}")
+        if f'"{field}"' not in common_text:
+            errors.append(f"telemetry writer must include {field}")
     if '"pre_edit_structure_gate"' not in telemetry_schema:
         errors.append("telemetry schema must include pre_edit_structure_gate hook name")
 

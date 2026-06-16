@@ -248,6 +248,7 @@ class CopilotRuntimeTests(unittest.TestCase):
                 "      - src/hook-runtime/scripts/changeforge_common.py\n"
                 "  placement_decision:\n"
                 "    target_file: src/hook-runtime/scripts/example.py\n"
+                "    reason: hook runtime script directory owns hook behavior\n"
                 "  reuse_decision:\n"
                 "    direct_reuse:\n"
                 "      - symbol_or_path: src/hook-runtime/scripts/changeforge_common.py\n"

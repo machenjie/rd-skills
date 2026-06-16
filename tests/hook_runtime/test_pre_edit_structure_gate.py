@@ -7,7 +7,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -118,6 +121,27 @@ def patch_event(path: str = "src/services/order_service.py") -> dict:
     }
 
 
+def write_event(path: str, content: str) -> dict:
+    return {
+        "runtime": "codex",
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Write",
+        "tool_input": {"file_path": path, "content": content},
+    }
+
+
+def multiedit_event(path: str, replacement: str) -> dict:
+    return {
+        "runtime": "codex",
+        "hook_event_name": "PreToolUse",
+        "tool_name": "MultiEdit",
+        "tool_input": {
+            "file_path": path,
+            "edits": [{"old_string": "pass", "replacement": replacement}],
+        },
+    }
+
+
 class PreEditStructureGateTests(unittest.TestCase):
     def test_edit_without_read_evidence_warns_and_records_state(self) -> None:
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
@@ -171,6 +195,7 @@ class PreEditStructureGateTests(unittest.TestCase):
             "      - src/services/user_service.py\n"
             "  placement_decision:\n"
             "    target_file: src/services/order_service.py\n"
+            "    reason: service module owns order orchestration\n"
             "  reuse_decision:\n"
             "    direct_reuse:\n"
             "      - symbol_or_path: src/services/base.py\n"
@@ -191,6 +216,102 @@ class PreEditStructureGateTests(unittest.TestCase):
         self.assertEqual(result.stdout, "")
         self.assertTrue(state["implementation_preflight_seen"])
         self.assertTrue(state["implementation_preflights"])
+
+    def test_write_plain_class_content_requires_object_boundary(self) -> None:
+        event = write_event("src/domain/order.py", "class OrderService:\n    pass\n")
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_read_state(cwd, cache)
+            result = run_gate(event, cwd, cache)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("object_boundary", result.stdout)
+
+    def test_write_plain_export_function_requires_public_api_rationale(self) -> None:
+        event = write_event("web/src/api/orders.ts", "export function x() {\n  return 1;\n}\n")
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_read_state(cwd, cache)
+            result = run_gate(event, cwd, cache)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("object_boundary", result.stdout)
+
+    def test_multiedit_replacement_class_requires_object_boundary(self) -> None:
+        event = multiedit_event("src/domain/order.py", "class OrderService:\n    pass\n")
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_read_state(cwd, cache)
+            result = run_gate(event, cwd, cache)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("object_boundary", result.stdout)
+
+    def test_block_mode_blocks_existing_code_edit_without_read_or_preflight(self) -> None:
+        event = {
+            "runtime": "codex",
+            "hook_event_name": "PreToolUse",
+            "tool_name": "apply_patch",
+            "tool_input": {
+                "patch": (
+                    "*** Begin Patch\n"
+                    "*** Update File: src/domain/order.py\n"
+                    "@@\n"
+                    "+def calculate_total():\n"
+                    "+    return 1\n"
+                    "*** End Patch\n"
+                )
+            },
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            result = run_gate(event, Path(cwd_s), Path(cache_s), mode="block")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["decision"], "block")
+
+    def test_weak_preflight_manifest_does_not_satisfy_required_fields(self) -> None:
+        common = load_common()
+        manifest = (
+            "```yaml\n"
+            "changeforge_implementation_preflight:\n"
+            "  placement_decision: yes\n"
+            "  reuse_decision: yes\n"
+            "  test_plan: yes\n"
+            "  risk: yes\n"
+            "```\n"
+        )
+        result = common.extract_implementation_preflight_fields(manifest)
+        self.assertTrue(result["present"])
+        self.assertFalse(result["placement_decision"])
+        self.assertFalse(result["reuse_decision"])
+        self.assertFalse(result["test_plan"])
+        self.assertFalse(result["risk"])
+
+    def test_fail_closed_blocks_on_unhandled_exception(self) -> None:
+        gate = load_gate()
+        output = StringIO()
+        with patch.dict(
+            os.environ,
+            {
+                "CHANGEFORGE_AGENT": "codex",
+                "CHANGEFORGE_PRE_EDIT_STRUCTURE_FAILURE_MODE": "fail_closed",
+            },
+            clear=True,
+        ), patch.object(gate, "_main", side_effect=RuntimeError("boom")), redirect_stdout(output):
+            self.assertEqual(gate.main(), 0)
+        payload = json.loads(output.getvalue())
+        self.assertEqual(payload["decision"], "block")
+        self.assertIn("failed closed", payload["reason"])
+
+    def test_transcript_tail_reads_bounded_tail(self) -> None:
+        gate = load_gate()
+        with tempfile.TemporaryDirectory() as cwd_s:
+            transcript = Path(cwd_s) / "transcript.jsonl"
+            transcript.write_text(
+                ("x" * (gate.MAX_TRANSCRIPT_BYTES + 100))
+                + "\n"
+                + json.dumps({"role": "assistant", "content": "tail content"})
+                + "\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(gate._transcript_tail(str(transcript)), "tail content")
 
     def test_non_edit_events_do_not_require_preflight(self) -> None:
         gate = load_gate()

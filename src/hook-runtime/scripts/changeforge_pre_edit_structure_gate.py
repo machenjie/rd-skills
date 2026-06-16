@@ -25,7 +25,7 @@ from changeforge_common import (
     tool_name,
     write_telemetry_event,
 )
-from changeforge_hook_policy import gate_mode, should_block, should_emit_context
+from changeforge_hook_policy import failure_mode, gate_mode, should_block, should_emit_context
 from changeforge_runtime_adapters import adapter_for
 
 
@@ -68,21 +68,48 @@ CODE_EXTENSIONS = {
     ".ts",
     ".tsx",
 }
-CLASS_OR_OBJECT_RE = re.compile(
+EDIT_CONTENT_KEYS = {"content", "new_string", "replacement", "text", "file_content"}
+MAX_TRANSCRIPT_BYTES = 1_000_000
+CLASS_OR_OBJECT_PATCH_RE = re.compile(
     r"^\+.*\b(class|interface|struct|trait|abstract|extends|implements|inheritance|reflection)\b",
     re.IGNORECASE | re.MULTILINE,
 )
-PUBLIC_API_RE = re.compile(
+CLASS_OR_OBJECT_CONTENT_RE = re.compile(
+    r"^\s*.*\b(class|interface|struct|trait|abstract|extends|implements|inheritance|reflection)\b",
+    re.IGNORECASE | re.MULTILINE,
+)
+PUBLIC_API_PATCH_RE = re.compile(
     r"^\+.*\b(export|public|pub|interface|class|def|func|function)\b",
     re.IGNORECASE | re.MULTILINE,
 )
-EXISTING_EXTENSION_RE = re.compile(
+PUBLIC_API_CONTENT_RE = re.compile(
+    r"^\s*.*\b(export|public|pub|interface|class|def|func|function)\b",
+    re.IGNORECASE | re.MULTILINE,
+)
+EXISTING_EXTENSION_PATCH_RE = re.compile(
     r"^\+.*\b(case|elif|else if|switch|if|strategy|adapter|extends|implements|fallback|compat)\b",
+    re.IGNORECASE | re.MULTILINE,
+)
+EXISTING_EXTENSION_CONTENT_RE = re.compile(
+    r"^\s*.*\b(case|elif|else if|switch|if|strategy|adapter|extends|implements|fallback|compat)\b",
     re.IGNORECASE | re.MULTILINE,
 )
 
 
 def main() -> int:
+    try:
+        return _main()
+    except Exception as exc:
+        runtime = detect_runtime({})
+        if failure_mode("pre_edit_structure") == "fail_closed":
+            adapter_for(runtime).emit_permission_decision(
+                "block",
+                f"ChangeForge Pre-Edit gate failed closed: {exc}",
+            )
+        return 0
+
+
+def _main() -> int:
     event = read_event()
     if not event:
         return 0
@@ -130,6 +157,10 @@ def main() -> int:
         suggested_capabilities=["implementation-structure-design", "test-strategy"],
         suggested_gates=["quality-test-gate"],
         read_evidence_seen=bool(result["has_read_evidence"]),
+        implementation_preflight_required=True,
+        implementation_preflight_seen=bool(manifest.get("present")),
+        implementation_preflight_blocked=bool(result["block"]),
+        edit_without_preflight_seen="implementation_preflight" in missing,
     )
     if not missing or mode == "monitor":
         return 0
@@ -146,13 +177,16 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
     """Evaluate a PreToolUse edit event without emitting output."""
     state = state if isinstance(state, dict) else {}
     patch_text = extract_patch_text(event)
+    content_text = extract_edit_content_text(event)
     changed_paths = [normalize_path(path) for path in extract_changed_paths(event)]
     added_paths = extract_added_paths(event, repo=repo)
     helper_paths = detect_new_helper_like_paths([*changed_paths, *added_paths])
     assistant_text = _assistant_text_from_event(event)
     manifest = extract_implementation_preflight_fields(assistant_text)
     has_read_evidence = _has_read_evidence(state, manifest)
-    structural = _is_structural_edit(changed_paths, added_paths, helper_paths, patch_text)
+    structural = _is_structural_edit(
+        changed_paths, added_paths, helper_paths, patch_text, content_text
+    )
     required = _is_pre_edit_event(event) and structural
     missing: list[str] = []
     findings: list[str] = []
@@ -180,7 +214,9 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
     if helper_paths and not manifest.get("reuse_decision"):
         missing.append("reuse_decision")
         findings.append("helper/common/service-like path lacks reuse ladder")
-    if _needs_object_boundary(patch_text, helper_paths) and not manifest.get("object_boundary"):
+    if _needs_object_boundary(patch_text, content_text, helper_paths) and not manifest.get(
+        "object_boundary"
+    ):
         missing.append("object_boundary")
         findings.append("object or public boundary lacks rationale")
     if structural and not manifest.get("test_plan"):
@@ -189,10 +225,16 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
     if structural and not manifest.get("risk"):
         missing.append("risk")
         findings.append("structural edit lacks rollback or residual-risk note")
+    code_edit_without_read_preflight = (
+        compact_name(tool_name(event)) in EDIT_TOOLS
+        and any(Path(path).suffix in CODE_EXTENSIONS for path in changed_paths)
+        and "read_evidence" in missing
+        and "implementation_preflight" in missing
+    )
     high_confidence = (
         "read_evidence" in missing
         and "implementation_preflight" in missing
-        and bool(added_paths or helper_paths)
+        and bool(added_paths or helper_paths or code_edit_without_read_preflight)
     )
     block = should_block(
         "pre_edit_structure", confidence="high" if high_confidence else "medium"
@@ -254,6 +296,45 @@ def extract_patch_text(event: dict) -> str:
     return "\n".join(parts)
 
 
+def extract_edit_content_text(event: dict) -> str:
+    parts: list[str] = []
+    roots = [
+        event.get("tool_input"),
+        event.get("toolInput"),
+        event.get("input"),
+        event.get("arguments"),
+        event.get("parameters"),
+        event.get("params"),
+    ]
+    roots = [root for root in roots if isinstance(root, dict)]
+    if not roots:
+        roots = [event]
+
+    def visit(value: Any, key: str | None = None) -> None:
+        if isinstance(value, dict):
+            for child_key, child_value in value.items():
+                visit(child_value, str(child_key))
+            return
+        if isinstance(value, list):
+            for child in value:
+                visit(child, key)
+            return
+        if not isinstance(value, str):
+            return
+        normalized_key = str(key or "").strip()
+        if normalized_key not in EDIT_CONTENT_KEYS:
+            return
+        if "*** Begin Patch" in value or "diff --git" in value:
+            return
+        text = value.strip()
+        if text:
+            parts.append(text)
+
+    for root in roots:
+        visit(root)
+    return "\n".join(parts)
+
+
 def extract_added_paths(event: dict, repo: Path | None = None) -> list[str]:
     patch_text = extract_patch_text(event)
     added: list[str] = []
@@ -283,16 +364,30 @@ def detect_new_helper_like_paths(paths: list[str]) -> list[str]:
     return _unique(matches)
 
 
-def detect_public_api_patch(patch_text: str) -> bool:
-    return bool(PUBLIC_API_RE.search(patch_text or ""))
+def detect_public_api_patch(*texts: str) -> bool:
+    return _detect_edit_text(PUBLIC_API_PATCH_RE, PUBLIC_API_CONTENT_RE, *texts)
 
 
-def detect_class_or_object_patch(patch_text: str) -> bool:
-    return bool(CLASS_OR_OBJECT_RE.search(patch_text or ""))
+def detect_class_or_object_patch(*texts: str) -> bool:
+    return _detect_edit_text(CLASS_OR_OBJECT_PATCH_RE, CLASS_OR_OBJECT_CONTENT_RE, *texts)
 
 
-def detect_existing_logic_extension(patch_text: str) -> bool:
-    return bool(EXISTING_EXTENSION_RE.search(patch_text or ""))
+def detect_existing_logic_extension(*texts: str) -> bool:
+    return _detect_edit_text(EXISTING_EXTENSION_PATCH_RE, EXISTING_EXTENSION_CONTENT_RE, *texts)
+
+
+def _detect_edit_text(patch_pattern: re.Pattern, content_pattern: re.Pattern, *texts: str) -> bool:
+    for text in texts:
+        value = text or ""
+        if not value:
+            continue
+        if "*** Begin Patch" in value or "diff --git" in value:
+            if patch_pattern.search(value):
+                return True
+            continue
+        if content_pattern.search(value):
+            return True
+    return False
 
 
 def _is_pre_edit_event(event: dict) -> bool:
@@ -311,7 +406,11 @@ def _has_read_evidence(state: dict, manifest: dict) -> bool:
 
 
 def _is_structural_edit(
-    changed_paths: list[str], added_paths: list[str], helper_paths: list[str], patch_text: str
+    changed_paths: list[str],
+    added_paths: list[str],
+    helper_paths: list[str],
+    patch_text: str,
+    content_text: str,
 ) -> bool:
     if added_paths or helper_paths:
         return True
@@ -319,15 +418,17 @@ def _is_structural_edit(
         return True
     return any(
         (
-            detect_public_api_patch(patch_text),
-            detect_class_or_object_patch(patch_text),
-            detect_existing_logic_extension(patch_text),
+            detect_public_api_patch(patch_text, content_text),
+            detect_class_or_object_patch(patch_text, content_text),
+            detect_existing_logic_extension(patch_text, content_text),
         )
     )
 
 
-def _needs_object_boundary(patch_text: str, helper_paths: list[str]) -> bool:
-    if detect_class_or_object_patch(patch_text) or detect_public_api_patch(patch_text):
+def _needs_object_boundary(patch_text: str, content_text: str, helper_paths: list[str]) -> bool:
+    if detect_class_or_object_patch(patch_text, content_text) or detect_public_api_patch(
+        patch_text, content_text
+    ):
         return True
     for path in helper_paths:
         if _path_tokens(path) & OBJECT_BOUNDARY_TOKENS:
@@ -359,7 +460,15 @@ def _assistant_text_from_event(event: dict) -> str:
 
 def _transcript_tail(path: str) -> str:
     try:
-        lines = Path(path).expanduser().read_text(encoding="utf-8").splitlines()
+        transcript_path = Path(path).expanduser()
+        with transcript_path.open("rb") as file:
+            try:
+                file.seek(0, 2)
+                size = file.tell()
+                file.seek(max(size - MAX_TRANSCRIPT_BYTES, 0))
+            except OSError:
+                pass
+            lines = file.read().decode("utf-8", errors="replace").splitlines()
     except Exception:
         return ""
     for line in reversed(lines[-80:]):

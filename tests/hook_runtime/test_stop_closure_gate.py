@@ -7,7 +7,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -24,6 +27,24 @@ def load_common():
     assert spec.loader is not None
     spec.loader.exec_module(module)
     return module
+
+
+def load_stop_gate():
+    sys.path.insert(0, str(SCRIPT_DIR))
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "changeforge_stop_closure_gate_for_test",
+            SCRIPT_DIR / "changeforge_stop_closure_gate.py",
+        )
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(module)
+        return module
+    finally:
+        try:
+            sys.path.remove(str(SCRIPT_DIR))
+        except ValueError:
+            pass
 
 
 def run_stop(
@@ -106,6 +127,7 @@ PREFLIGHT_MANIFEST = (
     "      - b.go\n"
     "  placement_decision:\n"
     "    target_file: a.go\n"
+    "    reason: existing package owns the changed behavior\n"
     "  reuse_decision:\n"
     "    direct_reuse:\n"
     "      - symbol_or_path: b.go\n"
@@ -727,6 +749,22 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertNotIn("completion language but shows no validation", result.stdout)
         self.assertNotIn("completion_evidence", result.stdout)
+
+    def test_fail_closed_blocks_on_unhandled_exception(self) -> None:
+        gate = load_stop_gate()
+        output = StringIO()
+        with patch.dict(
+            os.environ,
+            {
+                "CHANGEFORGE_AGENT": "codex",
+                "CHANGEFORGE_STOP_CLOSURE_FAILURE_MODE": "fail_closed",
+            },
+            clear=True,
+        ), patch.object(gate, "_main", side_effect=RuntimeError("boom")), redirect_stdout(output):
+            self.assertEqual(gate.main(), 0)
+        payload = json.loads(output.getvalue())
+        self.assertEqual(payload["decision"], "block")
+        self.assertIn("failed closed", payload["reason"])
 
 
 if __name__ == "__main__":

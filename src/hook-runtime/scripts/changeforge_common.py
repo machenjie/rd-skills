@@ -757,6 +757,11 @@ def write_telemetry_event(
     repair_evidence_seen: bool = False,
     permission_gate_seen: bool = False,
     professional_contract_seen: bool = False,
+    implementation_preflight_required: bool = False,
+    implementation_preflight_seen: bool = False,
+    implementation_preflight_blocked: bool = False,
+    edit_without_preflight_seen: bool = False,
+    post_edit_confirmed_preflight_gap: bool = False,
 ) -> None:
     """Append one telemetry record as JSONL. Fails open on any error.
 
@@ -814,6 +819,11 @@ def write_telemetry_event(
             "repair_evidence_seen": bool(repair_evidence_seen),
             "permission_gate_seen": bool(permission_gate_seen),
             "professional_contract_seen": bool(professional_contract_seen),
+            "implementation_preflight_required": bool(implementation_preflight_required),
+            "implementation_preflight_seen": bool(implementation_preflight_seen),
+            "implementation_preflight_blocked": bool(implementation_preflight_blocked),
+            "edit_without_preflight_seen": bool(edit_without_preflight_seen),
+            "post_edit_confirmed_preflight_gap": bool(post_edit_confirmed_preflight_gap),
         }
         target = root / "sessions" / f"{_utc_date()}.jsonl"
         line = json.dumps(record, sort_keys=True)
@@ -982,6 +992,7 @@ def extract_implementation_preflight_fields(text: str) -> dict:
         if not result["present"]:
             return result
         read_values: list[str] = []
+        read_section = _manifest_section_block(block, "read_evidence")
         for key in (
             "target_files",
             "sibling_files",
@@ -989,15 +1000,23 @@ def extract_implementation_preflight_fields(text: str) -> dict:
             "nearby_tests",
             "configs_or_docs",
         ):
-            read_values.extend(_manifest_list_field(block, key))
+            read_values.extend(_manifest_list_field(read_section, key))
         result["read_evidence"] = _unique(read_values)
-        result["placement_decision"] = _manifest_section_has_value(
-            block, "placement_decision"
+        result["placement_decision"] = _manifest_section_has_required_values(
+            block, "placement_decision", ("target_file", "reason")
         )
-        result["reuse_decision"] = _manifest_section_has_value(block, "reuse_decision")
+        result["reuse_decision"] = _manifest_section_has_any_value(
+            block,
+            "reuse_decision",
+            ("direct_reuse", "extension_reuse", "new_code_justification"),
+        )
         result["object_boundary"] = _manifest_section_has_value(block, "object_boundary")
-        result["test_plan"] = _manifest_section_has_value(block, "test_plan")
-        result["risk"] = _manifest_section_has_value(block, "risk")
+        result["test_plan"] = _manifest_section_has_any_value(
+            block, "test_plan", ("validation_commands",)
+        )
+        result["risk"] = _manifest_section_has_any_value(
+            block, "risk", ("rollback_or_revert_path", "compatibility_risk")
+        )
     except Exception:
         return result
     return result
@@ -1078,6 +1097,27 @@ def _manifest_scalar_field(segment: str, key: str) -> str:
     return _manifest_unquote(match.group(1)) if match else ""
 
 
+def _manifest_section_block(segment: str, key: str) -> str:
+    key_re = re.compile(r"^(\s*)" + re.escape(key) + r":\s*(.*)$")
+    lines = segment.splitlines()
+    for index, line in enumerate(lines):
+        match = key_re.match(line)
+        if not match:
+            continue
+        key_indent = len(match.group(1))
+        block_lines: list[str] = []
+        for child in lines[index + 1 :]:
+            if not child.strip():
+                block_lines.append(child)
+                continue
+            indent = len(child) - len(child.lstrip())
+            if indent <= key_indent:
+                break
+            block_lines.append(child)
+        return "\n".join(block_lines)
+    return ""
+
+
 def _manifest_section_has_value(segment: str, key: str) -> bool:
     key_re = re.compile(r"^(\s*)" + re.escape(key) + r":\s*(.*)$")
     capturing = False
@@ -1102,6 +1142,42 @@ def _manifest_section_has_value(segment: str, key: str) -> bool:
         if text not in ("-", "[]", "{}"):
             return True
     return False
+
+
+def _manifest_section_has_required_values(
+    segment: str,
+    section_key: str,
+    child_keys: tuple[str, ...],
+) -> bool:
+    section = _manifest_section_block(segment, section_key)
+    if not section:
+        return False
+    return all(_manifest_child_has_meaningful_value(section, key) for key in child_keys)
+
+
+def _manifest_section_has_any_value(
+    segment: str,
+    section_key: str,
+    child_keys: tuple[str, ...],
+) -> bool:
+    section = _manifest_section_block(segment, section_key)
+    if not section:
+        return False
+    return any(_manifest_child_has_meaningful_value(section, key) for key in child_keys)
+
+
+def _manifest_child_has_meaningful_value(segment: str, key: str) -> bool:
+    scalar = _manifest_scalar_field(segment, key)
+    if _manifest_meaningful_value(scalar):
+        return True
+    return any(_manifest_meaningful_value(value) for value in _manifest_list_field(segment, key))
+
+
+def _manifest_meaningful_value(value: str) -> bool:
+    text = _manifest_unquote(str(value or ""))
+    if not text:
+        return False
+    return text.casefold() not in {"yes", "true", "ok", "n/a", "na", "none", "{}", "[]"}
 
 
 def _manifest_skipped_gates(segment: str) -> list[str]:

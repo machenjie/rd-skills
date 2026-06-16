@@ -179,6 +179,7 @@ changeforge_implementation_preflight:
   placement_decision:
     target_file: src/module/file.py
     owner_module: module
+    reason: existing module owns this behavior and test boundary
     rejected_locations:
       - path: src/common/utils.py
         reason: wrong ownership

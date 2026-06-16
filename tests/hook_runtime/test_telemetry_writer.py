@@ -357,6 +357,32 @@ class TelemetryWriterTests(unittest.TestCase):
         )
         self.assertEqual(record["manifest_skipped_quality_gates"], ["delivery gate"])
 
+    def test_implementation_preflight_telemetry_fields_recorded(self) -> None:
+        common = load_common()
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            os.environ["XDG_CACHE_HOME"] = cache
+            os.environ.pop("CHANGEFORGE_TELEMETRY", None)
+            common.write_telemetry_event(
+                Path(cwd),
+                runtime="codex",
+                hook_name="pre_edit_structure_gate",
+                event_name="PreToolUse",
+                mode="block",
+                implementation_preflight_required=True,
+                implementation_preflight_seen=False,
+                implementation_preflight_blocked=True,
+                edit_without_preflight_seen=True,
+                post_edit_confirmed_preflight_gap=True,
+            )
+            records = read_records(Path(cache))
+        self.assertEqual(len(records), 1)
+        record = records[0]
+        self.assertTrue(record["implementation_preflight_required"])
+        self.assertFalse(record["implementation_preflight_seen"])
+        self.assertTrue(record["implementation_preflight_blocked"])
+        self.assertTrue(record["edit_without_preflight_seen"])
+        self.assertTrue(record["post_edit_confirmed_preflight_gap"])
+
 
 if __name__ == "__main__":
     unittest.main()

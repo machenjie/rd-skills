@@ -23,7 +23,7 @@ from changeforge_common import (
     session_id_from_event,
     write_telemetry_event,
 )
-from changeforge_hook_policy import gate_mode
+from changeforge_hook_policy import failure_mode, gate_mode
 
 
 MAX_TRANSCRIPT_BYTES = 1_000_000
@@ -246,6 +246,26 @@ STAGE_HANDOFF_KEYWORDS = {
 
 
 def main() -> int:
+    try:
+        return _main()
+    except Exception as exc:
+        runtime = detect_runtime({})
+        if failure_mode("stop_closure") == "fail_closed":
+            emit_stop_reminder(
+                runtime,
+                f"ChangeForge Stop Closure gate failed closed: {exc}",
+                continue_turn=True,
+            )
+        else:
+            emit_stop_reminder(
+                runtime,
+                f"ChangeForge Hook Runtime warning: closure gate failed open: {exc}",
+                continue_turn=False,
+            )
+        return 0
+
+
+def _main() -> int:
     event = read_event()
     if not event:
         return 0
@@ -306,6 +326,17 @@ def main() -> int:
             repair_evidence_seen=bool(state.get("repair_evidence_seen")),
             permission_gate_seen=bool(state.get("permission_gate_seen")),
             professional_contract_seen=bool(state.get("professional_contract_seen")),
+            implementation_preflight_required=bool(
+                state.get("implementation_preflight_required")
+            ),
+            implementation_preflight_seen=bool(state.get("implementation_preflight_seen")),
+            implementation_preflight_blocked=bool(
+                state.get("implementation_preflight_blocked")
+            ),
+            edit_without_preflight_seen=bool(state.get("edit_without_preflight_seen")),
+            post_edit_confirmed_preflight_gap=bool(
+                state.get("post_edit_confirmed_preflight_gap")
+            ),
         )
         if mode == "monitor":
             clear_state(repo, runtime)
@@ -324,11 +355,18 @@ def main() -> int:
             emit_stop_reminder(runtime, message, continue_turn=False)
         return 0
     except Exception as exc:
-        emit_stop_reminder(
-            runtime,
-            f"ChangeForge Hook Runtime warning: closure gate failed open: {exc}",
-            continue_turn=False,
-        )
+        if failure_mode("stop_closure") == "fail_closed":
+            emit_stop_reminder(
+                runtime,
+                f"ChangeForge Stop Closure gate failed closed: {exc}",
+                continue_turn=True,
+            )
+        else:
+            emit_stop_reminder(
+                runtime,
+                f"ChangeForge Hook Runtime warning: closure gate failed open: {exc}",
+                continue_turn=False,
+            )
         return 0
 
 

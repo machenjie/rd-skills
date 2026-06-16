@@ -494,6 +494,15 @@ def main() -> int:
                 structure_quality_findings,
             ),
             suggested_gates=["code-review"] if any_findings else [],
+            implementation_preflight_required=bool(
+                state_before.get("implementation_preflight_required")
+            ),
+            implementation_preflight_seen=bool(state_before.get("implementation_preflight_seen")),
+            implementation_preflight_blocked=bool(
+                state_before.get("implementation_preflight_blocked")
+            ),
+            edit_without_preflight_seen=preflight_gap,
+            post_edit_confirmed_preflight_gap=preflight_gap,
         )
         if not any_findings or mode == "monitor":
             return 0

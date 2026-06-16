@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import re
+import sys
 
 from changeforge_common import (
     compact_name,
@@ -21,7 +22,7 @@ from changeforge_common import (
     tool_name,
     write_telemetry_event,
 )
-from changeforge_hook_policy import gate_mode
+from changeforge_hook_policy import failure_mode, gate_mode
 from changeforge_runtime_adapters import adapter_for
 
 
@@ -49,6 +50,24 @@ PRETOOL_BASH_TOOLS = {"bash", "runterminalcommand", "runinterminal"}
 
 
 def main() -> int:
+    try:
+        return _main()
+    except Exception as exc:
+        runtime = detect_runtime({})
+        if failure_mode("permission_policy") == "fail_closed":
+            adapter_for(runtime).emit_permission_decision(
+                "block",
+                f"ChangeForge Permission Policy gate failed closed: {exc}",
+            )
+        else:
+            print(
+                f"ChangeForge Hook Runtime warning: permission policy gate failed open: {exc}",
+                file=sys.stderr,
+            )
+        return 0
+
+
+def _main() -> int:
     event = read_event()
     if not event:
         return 0

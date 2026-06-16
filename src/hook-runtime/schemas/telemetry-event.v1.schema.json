@@ -118,6 +118,11 @@
     "review_evidence_seen": { "type": "boolean" },
     "repair_evidence_seen": { "type": "boolean" },
     "permission_gate_seen": { "type": "boolean" },
-    "professional_contract_seen": { "type": "boolean" }
+    "professional_contract_seen": { "type": "boolean" },
+    "implementation_preflight_required": { "type": "boolean" },
+    "implementation_preflight_seen": { "type": "boolean" },
+    "implementation_preflight_blocked": { "type": "boolean" },
+    "edit_without_preflight_seen": { "type": "boolean" },
+    "post_edit_confirmed_preflight_gap": { "type": "boolean" }
   }
 }
