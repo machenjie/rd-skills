@@ -23,6 +23,9 @@ from changeforge_install import (
 )
 
 
+COPILOT_HOOK_SUPPORT_FILES = ("changeforge_copilot_skill_summary.md",)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Check ChangeForge runtime installation health.")
     parser.add_argument("--agent", choices=AGENTS)
@@ -315,6 +318,13 @@ def _check_project_hooks(target: Path | None, issues: list[str]) -> None:
             print(f"- {agent}: manifest present")
         else:
             issues.append(f"{agent}: missing {manifest_path.name}")
+        if agent == "copilot":
+            for support_file in COPILOT_HOOK_SUPPORT_FILES:
+                support_path = scripts_dir / support_file
+                if support_path.is_file():
+                    print(f"- {agent}: support file present: {support_file}")
+                else:
+                    issues.append(f"{agent}: missing {support_file}")
         if config_path.is_file():
             references = _config_references_hooks(config_path)
             state = "references generated hooks" if references else "does NOT reference changeforge hooks"

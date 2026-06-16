@@ -10,10 +10,11 @@ It is advisory only: it adds developer context where the runtime supports that
 output, never denies the tool call, never mutates per-turn hook state, never
 writes telemetry, never reads compiled references, never calls an LLM, never
 touches the network, and never writes project source. Copilot preToolUse only
-consumes permission decisions or argument modifications, so Copilot warning-only
-preview output is suppressed. It fails open. The PostToolUse risk gate remains
-the authority that records findings and the closure gate checks; this preview
-only nudges the agent to route before the change lands.
+consumes permission decisions or argument modifications, so the maintained
+Copilot templates do not wire it and Copilot warning-only preview output is
+suppressed if the script is invoked manually. It fails open. The PostToolUse risk
+gate remains the authority that records findings and the closure gate checks;
+this preview only nudges the agent to route before the change lands.
 """
 
 from __future__ import annotations

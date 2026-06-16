@@ -3,8 +3,9 @@
 
 UserPromptSubmit fires once per new prompt, so this is the per-task nudge that
 keeps route-manifest discipline visible across a long session, not only at
-session start. Copilot fires this event but does not process its output, so the
-shared emitter suppresses Copilot stdout for this hook. It is advisory developer
+session start. Copilot does not process this event's advisory output, so the
+maintained Copilot templates do not wire it and the shared emitter suppresses
+Copilot stdout if the script is invoked manually. It is advisory developer
 context, not a router: it never selects a route, never blocks the prompt, never
 reads the prompt content for storage, never reads compiled references, never
 calls an LLM, never touches the network, and never writes project source. It

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import subprocess
@@ -11,6 +12,45 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT_DIR = ROOT / "src" / "hook-runtime" / "scripts"
+
+
+def _load_common():
+    spec = importlib.util.spec_from_file_location(
+        "changeforge_common_for_copilot_test",
+        SCRIPT_DIR / "changeforge_common.py",
+    )
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+def _seed_state(cwd: Path, cache: Path, **fields: object) -> None:
+    common = _load_common()
+    previous_cache = os.environ.get("XDG_CACHE_HOME")
+    os.environ["XDG_CACHE_HOME"] = str(cache)
+    try:
+        state: dict[str, object] = {"runtime": "copilot"}
+        state.update(fields)
+        common.save_state(cwd, state)
+    finally:
+        if previous_cache is None:
+            os.environ.pop("XDG_CACHE_HOME", None)
+        else:
+            os.environ["XDG_CACHE_HOME"] = previous_cache
+
+
+def _load_state(cwd: Path, cache: Path) -> dict:
+    common = _load_common()
+    previous_cache = os.environ.get("XDG_CACHE_HOME")
+    os.environ["XDG_CACHE_HOME"] = str(cache)
+    try:
+        return common.load_state(cwd)
+    finally:
+        if previous_cache is None:
+            os.environ.pop("XDG_CACHE_HOME", None)
+        else:
+            os.environ["XDG_CACHE_HOME"] = previous_cache
 
 
 def _run(script: str, event: dict, *, mode: str | None = None) -> subprocess.CompletedProcess[str]:
@@ -41,7 +81,21 @@ class CopilotRuntimeTests(unittest.TestCase):
         result = _run("changeforge_session_bootstrap.py", event)
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout)
-        self.assertIn("route preflight", payload["additionalContext"].casefold())
+        context = payload["additionalContext"]
+        self.assertIn("route preflight", context.casefold())
+        self.assertIn("ChangeForge Copilot Skill Summary", context)
+        self.assertIn("change-impact-analyzer", context)
+        self.assertIn("security-privacy-gate", context)
+        self.assertNotIn("hookSpecificOutput", payload)
+
+    def test_subagent_start_emits_skill_summary_context(self) -> None:
+        event = {"hook_event_name": "SubagentStart"}
+        result = _run("changeforge_session_bootstrap.py", event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        context = payload["additionalContext"]
+        self.assertIn("ChangeForge Copilot Skill Summary", context)
+        self.assertIn("quality-test-gate", context)
         self.assertNotIn("hookSpecificOutput", payload)
 
     def test_risk_gate_matches_vscode_replace_string_tool(self) -> None:
@@ -57,6 +111,7 @@ class CopilotRuntimeTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         context = payload["additionalContext"]
         self.assertIn("security", context)
+        self.assertNotIn("decision", payload)
 
     def test_risk_gate_matches_vscode_run_terminal_command(self) -> None:
         event = {
@@ -68,6 +123,7 @@ class CopilotRuntimeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout)
         self.assertIn("data-api", payload["additionalContext"])
+        self.assertNotIn("decision", payload)
 
     def test_structure_gate_matches_vscode_create_file(self) -> None:
         # create_file with a service path should trigger the structure gate.
@@ -82,6 +138,7 @@ class CopilotRuntimeTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertIn("ChangeForge Structure Gate triggered", payload["additionalContext"])
         self.assertNotIn("hookSpecificOutput", payload)
+        self.assertNotIn("decision", payload)
 
     def test_pre_tool_preview_does_not_emit_unsupported_context(self) -> None:
         event = {
@@ -169,6 +226,51 @@ class CopilotRuntimeTests(unittest.TestCase):
             self.assertEqual(payload["decision"], "block")
             self.assertIn("changeforge_route", payload["reason"])
             self.assertNotIn("hookSpecificOutput", payload)
+
+    def test_stop_block_mode_does_not_block_when_closure_evidence_is_complete(self) -> None:
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            _seed_state(cwd, cache, changed_paths=["src/hook-runtime/scripts/example.py"])
+            env = os.environ.copy()
+            env["XDG_CACHE_HOME"] = str(cache)
+            env["CHANGEFORGE_AGENT"] = "copilot"
+            env["CHANGEFORGE_HOOK_MODE"] = "block"
+            response = (
+                "I used the ChangeForge skill path. Changed files: example.py. "
+                "Validation: ran python3 -m unittest tests.hook_runtime.test_copilot_runtime, "
+                "1 passed, exit 0. Residual risk: none. Next steps: review.\n\n"
+                "```yaml\n"
+                "changeforge_route:\n"
+                "  selected_skills:\n"
+                "    - quality-test-gate\n"
+                "  selected_capabilities:\n"
+                "    - regression-testing\n"
+                "  required_references:\n"
+                "    - references/routing-rules.md\n"
+                "  required_quality_gates:\n"
+                "    - regression gate\n"
+                "```\n"
+            )
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT_DIR / "changeforge_stop_closure_gate.py")],
+                input=json.dumps(
+                    {
+                        "hook_event_name": "Stop",
+                        "cwd": str(cwd),
+                        "stop_hook_active": False,
+                        "response": response,
+                    }
+                ),
+                text=True,
+                capture_output=True,
+                cwd=str(cwd),
+                env=env,
+                check=False,
+            )
+            state = _load_state(cwd, cache)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "")
+        self.assertEqual(state["changed_paths"], [])
 
 
 if __name__ == "__main__":

@@ -15,24 +15,25 @@ The first-stage runtime provides these reminder gates:
   engineering work, to require `implementation-structure-design` before new
   structure, and to bind any completion claim to `agent-execution-discipline`.
   It only emits a route preflight; it never selects a full route and never reads
-  It is wired as a `SessionStart` hook for Codex, Claude, and Copilot
+  every reference. It is wired as a `SessionStart` hook for Codex, Claude, and Copilot
   (Codex `SessionStart` also fires with the `compact` source after compaction,
-  so the route preflight is re-injected once context is compacted). The same
-  guidance also ships as an install-time bootstrap fragment for users who prefer
-  not to trust executable hooks.
+  so the route preflight is re-injected once context is compacted). Copilot
+  `SessionStart` and `SubagentStart` also inject the static ChangeForge skill
+  summary as top-level `additionalContext`. The same guidance also ships as an
+  install-time bootstrap fragment for users who prefer not to trust executable hooks.
 - Route Reminder (`UserPromptSubmit`, Codex and Claude): adds a concise per-prompt
   reminder to run `change-forge-router` and emit a `changeforge_route` manifest
   for any engineering change. It is advisory developer context, never reads or
-  records the prompt text, and writes no telemetry. Copilot also wires the event
-  for lifecycle coverage, but Copilot does not process `userPromptSubmitted`
-  output, so it is not a reliable context-injection point.
+  records the prompt text, and writes no telemetry. Copilot templates do not
+  wire this event because Copilot does not process `userPromptSubmitted`
+  advisory output.
 - Pre-Edit Risk Preview (`PreToolUse`, Codex and Claude): before an edit or command runs,
   it previews ChangeForge risk surfaces (auth, data contract, cache, queue,
   Kubernetes, Helm, big data) and reminds the agent to route first. It reuses
   the Risk Surface Gate matching, is advisory only, never denies the tool call,
-  and never mutates per-turn state. Copilot `preToolUse` supports permission
-  decisions and argument modification, not advisory `additionalContext`, so the
-  Copilot runtime stays silent for warning-only preview output.
+  and never mutates per-turn state. Copilot templates do not wire this event
+  because Copilot `preToolUse` supports permission decisions and argument
+  modification, not advisory `additionalContext`.
 
 - Post-Edit Structure Gate: runs after edit tools and warns when changed paths
   look like structural code, shared utilities, public interfaces, SDK/client
@@ -54,13 +55,16 @@ The first-stage runtime provides these reminder gates:
 - Subagent Closure Reminder (`SubagentStop`, Codex and Claude): reminds a stopping subagent
   to hand the parent the route manifest, validation evidence, and residual risk.
   It emits an advisory `systemMessage`, never forces the subagent to continue,
-  and never touches the parent turn's closure state. Copilot `subagentStop`
-  supports block/allow decision control, not advisory `systemMessage`, so the
-  Copilot runtime stays silent in warning-only mode. The Session Bootstrap also
-  runs at `SubagentStart` so a spawned subagent inherits the route preflight.
+  and never touches the parent turn's closure state. Copilot templates do not
+  wire this event because Copilot `subagentStop` supports block/allow decision
+  control, not advisory `systemMessage`. The Session Bootstrap runs at
+  `SubagentStart` so a spawned subagent inherits the route preflight and skill
+  summary.
 
-The default behavior is warning-only. A hook failure must fail open and must not
-interrupt normal agent execution.
+Codex and Claude default to warning-only behavior. Copilot defaults to a strict
+Stop closure gate but keeps SessionStart, SubagentStart, and PostToolUse context
+hooks advisory. A hook failure must fail open and must not interrupt normal
+agent execution.
 
 ## Telemetry
 
@@ -136,23 +140,24 @@ Runtime support:
 
 ## Agent Event Coverage
 
-Codex, Claude, and VS Code Copilot expose the lifecycle events ChangeForge
-needs, so their hooks reinforce routing and closure discipline at every stage,
-not only after edits:
+Codex and Claude expose the full lifecycle set ChangeForge uses. VS Code
+Copilot exposes several of the same events, but ChangeForge wires only the
+events whose advisory output Copilot actually consumes:
 
 - `SessionStart` (Codex also with the `compact` source) and `SubagentStart`
-  inject the route preflight.
+  inject the route preflight. Copilot also injects the static ChangeForge skill
+  summary on these two events.
 - `UserPromptSubmit` adds a per-prompt route reminder for Codex and Claude.
-  Copilot wires the event, but Copilot does not process its output.
+  Copilot templates omit the event because Copilot does not process its
+  advisory output.
 - `PreToolUse` previews risk surfaces before an edit or command runs for Codex
-  and Claude. Copilot wires the event, but warning-only preview output is
-  suppressed because Copilot `preToolUse` does not consume advisory
-  `additionalContext`.
+  and Claude. Copilot templates omit the event because Copilot `preToolUse`
+  does not consume advisory `additionalContext`.
 - `PostToolUse` runs the structure and risk-surface gates after edits and
   commands.
-- `Stop` runs the closure gate. In Copilot block mode it emits top-level
-  `decision`/`reason` so the agent is forced to continue with the missing
-  evidence. `SubagentStop` emits an advisory reminder only where supported.
+- `Stop` runs the closure gate. Copilot Stop is strict by default and emits
+  top-level `decision`/`reason` only when evidence is missing. `SubagentStop`
+  emits an advisory reminder only where supported by Codex and Claude.
 
 The shared hook scripts recognize both Codex/Claude tool names
 (`edit`, `write`, `apply_patch`, `bash`) and VS Code Copilot tool names
@@ -162,24 +167,28 @@ VS Code Copilot uses the flat (matcher-less) hook config format with
 `version: 1` and `timeoutSec`. It uses PascalCase event names so payloads carry
 VS Code-compatible snake_case fields. ChangeForge emits top-level
 `additionalContext` only for Copilot context-capable events such as
-`SessionStart`, `SubagentStart`, and `PostToolUse`; Stop block output uses
-top-level `decision`/`reason`. Codex and Claude use
+`SessionStart`, `SubagentStart`, and `PostToolUse`; Copilot Stop uses top-level
+`decision`/`reason` in strict mode. Codex and Claude use
 `hookSpecificOutput.additionalContext` for context hooks and `systemMessage` for
 warning-only Stop/SubagentStop output; Stop block output uses top-level
 `decision`/`reason` for both.
 
 These remain execution-time guardrails. They detect edited paths, patch signals,
 risk surfaces, and missing closure evidence, and they remind the agent to route;
-they never select a complete route, never block by default, and never replace
-`change-forge-router` or `implementation-structure-design`.
+they never select a complete route and never replace `change-forge-router` or
+`implementation-structure-design`. Codex and Claude do not block by default;
+Copilot's default block behavior is limited to Stop-stage missing closure
+evidence.
 
 ## Hook Capability Boundary
 
 Hooks can:
 - remind on route preflight at session start, subagent start, and after
   compaction (`SessionStart`/`SubagentStart`);
+- inject the static Copilot skill summary at Copilot `SessionStart` and
+  `SubagentStart`;
 - remind on routing per user prompt (Codex and Claude `UserPromptSubmit`;
-  Copilot wires the event but its output is not processed);
+  Copilot does not wire this unsupported advisory path);
 - preview risk surfaces before an edit or command runs (Codex and Claude
   `PreToolUse`; Copilot cannot consume advisory preview context);
 - remind on new file naming pattern mismatches;
@@ -191,7 +200,7 @@ Hooks can:
 - remind on comment quality evidence;
 - remind on Stop-stage closure evidence;
 - remind a stopping subagent to carry closure evidence (`SubagentStop`, Codex
-  and Claude; Copilot warning-only advisory output is not emitted).
+  and Claude; Copilot does not wire this unsupported advisory path).
 
 Hooks cannot:
 - replace `change-forge-router`;
@@ -206,15 +215,17 @@ Hooks cannot:
 
 ## Recommended Hook Rollout
 
-1. Start with `CHANGEFORGE_HOOK_MODE=warn`.
-2. Collect false positives with fixture-backed tests.
-3. Only enable `block` for high-confidence violations:
+1. Start Codex and Claude with `CHANGEFORGE_HOOK_MODE=warn`.
+2. Use Copilot's default strict Stop gate only for closure evidence; keep
+   `SessionStart`, `SubagentStart`, and `PostToolUse` advisory.
+3. Collect false positives with fixture-backed tests.
+4. Only enable broad `block` behavior for high-confidence violations:
    - new common/utils/helper file without reuse evidence;
    - dependency file changes without dependency review;
    - Stop without validation evidence;
    - Stop without residual risk.
-4. Keep fail-open behavior for hook runtime errors.
-5. Do not enable broad block mode until warning behavior is stable.
+5. Keep fail-open behavior for hook runtime errors.
+6. Do not enable broad block mode until warning behavior is stable.
 
 ## Supported Runtimes
 
@@ -242,9 +253,10 @@ Set `CHANGEFORGE_HOOK_MODE` to control runtime behavior:
 
 - `off`: do nothing.
 - `monitor`: update per-turn state without emitting reminders.
-- `warn`: emit reminders and continue. This is the default.
+- `warn`: emit reminders and continue. This is the Codex and Claude default.
 - `block`: emit a block decision. This mode is reserved for controlled rollout
-  after warning behavior is stable.
+  after warning behavior is stable, except that Copilot Stop uses block by
+  default for missing closure evidence.
 
 ## Build Hooks
 
@@ -290,23 +302,25 @@ dist/claude/user/.claude/...      # same Claude layout, CLAUDE_CONFIG_DIR-resolv
 
 dist/copilot/project/.github/hooks/changeforge-hooks.json
 dist/copilot/project/.github/hooks/changeforge/changeforge_common.py
+dist/copilot/project/.github/hooks/changeforge/changeforge_copilot_skill_summary.md
 dist/copilot/project/.github/hooks/changeforge/...   # scripts, manifest, bootstrap
 
 dist/copilot/user/.copilot/hooks/changeforge-hooks.json
+dist/copilot/user/.copilot/hooks/changeforge/changeforge_copilot_skill_summary.md
 dist/copilot/user/.copilot/hooks/changeforge/...     # $HOME/.copilot-resolved paths
 
 dist/universal/bootstrap/changeforge-route-preflight.md
 ```
 
 Codex, Claude, and Copilot all wire the session bootstrap as a `SessionStart`
-hook and ship the same lifecycle scripts in the project and user layouts. Codex
+hook and ship the hook runtime scripts in the project and user layouts. Codex
 and Claude emit `hookSpecificOutput.additionalContext` for context-bearing
 events; Claude commands explicitly set `CHANGEFORGE_AGENT=claude` because Claude
 Code hook input also uses snake_case fields. Claude `timeout` values are seconds
-and stay within the 10-second budget. The Copilot layout wires the same
-lifecycle events, but only emits JSON for outputs Copilot consumes: top-level
-`additionalContext` for session/subagent start and post-tool gates, and
-top-level `decision`/`reason` for Stop block mode. VS Code Copilot loads every
+and stay within the 10-second budget. The Copilot layout wires only
+`SessionStart`, `SubagentStart`, `PostToolUse`, and `Stop`; it emits top-level
+`additionalContext` for session/subagent start and post-tool gates, and the Stop
+command sets `CHANGEFORGE_HOOK_MODE=block` for missing closure evidence. VS Code Copilot loads every
 `*.json` in the hook folder, so its managed config is the dedicated
 `changeforge-hooks.json` and the scripts plus manifest live in a `changeforge/`
 subfolder VS Code does not scan for config. Do not install `src/hook-runtime`
@@ -314,8 +328,8 @@ directly.
 
 ## Manually Enable Hooks
 
-First-stage hook support is build-only. Installer integration is deferred, so
-manual enablement must be deliberate:
+Manual enablement remains supported for users who do not want the installer to
+write hook files:
 
 1. Build the selected profile.
 2. Review the generated files under `dist/codex/project/.codex` or

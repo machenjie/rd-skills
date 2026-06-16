@@ -53,6 +53,7 @@ BOOTSTRAP_TEMPLATE = (
     HOOK_RUNTIME_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"
 )
 BOOTSTRAP_FRAGMENT_NAME = "changeforge-route-preflight.md"
+COPILOT_HOOK_SUPPORT_FILES = ("changeforge_copilot_skill_summary.md",)
 UNIVERSAL_BOOTSTRAP_ROOT = DIST_DIR / "universal" / "bootstrap"
 
 
@@ -476,13 +477,19 @@ def _build_copilot_hook_runtime(scope: str) -> None:
     scripts_dir = hooks_root / "changeforge"
     scripts_dir.mkdir(parents=True, exist_ok=True)
     _copy_hook_scripts(scripts_dir)
+    _copy_hook_support_files(scripts_dir, COPILOT_HOOK_SUPPORT_FILES)
     template_dir = "copilot" if scope == "project" else "copilot-user"
     shutil.copy2(
         HOOK_RUNTIME_ROOT / "templates" / template_dir / "changeforge-hooks.json",
         hooks_root / "changeforge-hooks.json",
     )
     _copy_bootstrap_fragment(scripts_dir)
-    _write_hook_manifest(scripts_dir, agent="copilot", scope=scope)
+    _write_hook_manifest(
+        scripts_dir,
+        agent="copilot",
+        scope=scope,
+        support_files=COPILOT_HOOK_SUPPORT_FILES,
+    )
 
 
 def _build_universal_bootstrap() -> None:
@@ -508,7 +515,21 @@ def _copy_hook_scripts(target: Path) -> None:
         destination.chmod(0o755)
 
 
-def _write_hook_manifest(target: Path, agent: str, scope: str) -> None:
+def _copy_hook_support_files(target: Path, support_files: tuple[str, ...]) -> None:
+    scripts_dir = HOOK_RUNTIME_ROOT / "scripts"
+    for file_name in support_files:
+        source = scripts_dir / file_name
+        if not source.is_file():
+            raise BuildError(f"missing hook support file: {source.relative_to(ROOT)}")
+        shutil.copy2(source, target / file_name)
+
+
+def _write_hook_manifest(
+    target: Path,
+    agent: str,
+    scope: str,
+    support_files: tuple[str, ...] = (),
+) -> None:
     # Each interactive runtime wires the route-preflight bootstrap and ships the
     # same lifecycle hook scripts. Runtime-specific output differences stay in
     # changeforge_common.py and the templates, not in the manifest.
@@ -527,6 +548,7 @@ def _write_hook_manifest(target: Path, agent: str, scope: str) -> None:
         "scope": scope,
         "source_version": _source_version(),
         "hooks": hooks,
+        "support_files": list(support_files),
         "bootstrap_fragment": BOOTSTRAP_FRAGMENT_NAME,
         "session_bootstrap_hook": True,
     }

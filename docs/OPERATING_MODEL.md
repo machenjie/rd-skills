@@ -10,7 +10,7 @@ The source repo contains authored material:
 - `src/foundation/capabilities`: 116 implemented foundation capabilities plus `_template`.
 - `src/domain-extensions`: 7 optional domain extension skills.
 - `src/registry`: `skills.yaml`, `capabilities.yaml`, `domain-extensions.yaml`, and `routing-rules.yaml`.
-- `src/hook-runtime`: optional project-level hook runtime source for warning-only execution reminders.
+- `src/hook-runtime`: optional project-level hook runtime source for execution reminders.
 
 Runtime installs consume only generated outputs under `dist/`. Installed skill directories must contain `SKILL.md` at their root. Raw `src/`, raw registry folders, foundation capability source trees, and raw hook runtime source are not installed.
 
@@ -73,9 +73,9 @@ It is a foundation capability, not a top-level professional skill. The router se
 
 ## Optional Hook Runtime
 
-The optional ChangeForge Hook Runtime is a project-level support artifact, not a skill and not a replacement for `change-forge-router`. It may emit warning-only reminders after tool use or before handoff, but it must not select a complete route, read every compiled reference, ingest personal content, or install raw `src/hook-runtime`.
+The optional ChangeForge Hook Runtime is a project-level support artifact, not a skill and not a replacement for `change-forge-router`. Codex and Claude hooks may emit warning-only reminders after tool use or before handoff. Copilot local hooks use advisory context where Copilot consumes it and a strict Stop closure gate for missing evidence. The runtime must not select a complete route, read every compiled reference, ingest personal content, or install raw `src/hook-runtime`.
 
-Hook runtime state is operational cache stored outside the project source tree under the user's cache directory. It is not a PUA state file, not runtime skill content, and not a user-specific corpus mapping. Hooks are built into `dist/` and may be placed into a Codex or Claude project with `installers/install.py --with-hooks` (project scope only), which preserves existing project hook configuration and never auto-trusts hooks.
+Hook runtime state is operational cache stored outside the project source tree under the user's cache directory. It is not a PUA state file, not runtime skill content, and not a user-specific corpus mapping. Hooks are built into `dist/` and may be placed into Codex, Claude, or Copilot project/user scopes with `installers/install.py --with-hooks`, which preserves existing hook configuration and never auto-trusts hooks.
 
 ## Telemetry, Review, And Human Promotion
 

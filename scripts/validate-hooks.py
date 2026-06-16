@@ -52,10 +52,17 @@ RICH_EVENT_SCRIPTS = {
     "Stop": ("changeforge_stop_closure_gate",),
 }
 # Copilot event -> the hook script(s) each event must invoke.
-COPILOT_EVENT_SCRIPTS = RICH_EVENT_SCRIPTS
+COPILOT_EVENT_SCRIPTS = {
+    "SessionStart": ("changeforge_session_bootstrap",),
+    "PostToolUse": ("changeforge_post_edit_structure_gate", "changeforge_risk_surface_gate"),
+    "SubagentStart": ("changeforge_session_bootstrap",),
+    "Stop": ("changeforge_stop_closure_gate",),
+}
+COPILOT_UNSUPPORTED_ADVISORY_EVENTS = ("UserPromptSubmit", "PreToolUse", "SubagentStop")
 BOOTSTRAP_TEMPLATE = (
     HOOK_RUNTIME_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"
 )
+COPILOT_SKILL_SUMMARY = HOOK_SCRIPTS_DIR / "changeforge_copilot_skill_summary.md"
 REQUIRED_HOOK_SCRIPTS = (
     "changeforge_common.py",
     "changeforge_session_bootstrap.py",
@@ -128,6 +135,8 @@ def _validate_required_files(errors: list[str]) -> None:
         path = HOOK_SCRIPTS_DIR / file_name
         if not path.is_file():
             errors.append(f"missing hook script: {relpath(ROOT, path)}")
+    if not COPILOT_SKILL_SUMMARY.is_file():
+        errors.append(f"missing Copilot hook support file: {relpath(ROOT, COPILOT_SKILL_SUMMARY)}")
     for path in (
         CODEX_TEMPLATE,
         CODEX_USER_TEMPLATE,
@@ -200,6 +209,10 @@ def _validate_python_files(errors: list[str]) -> None:
         if '"decision"' in bootstrap_text or "'decision'" in bootstrap_text:
             errors.append(
                 "changeforge_session_bootstrap.py: bootstrap must not emit a block decision"
+            )
+        if "changeforge_copilot_skill_summary.md" not in bootstrap_text:
+            errors.append(
+                "changeforge_session_bootstrap.py: Copilot bootstrap must load the skill summary"
             )
 
     # The context-injecting and reminder hooks are advisory only. They add
@@ -278,6 +291,17 @@ def _validate_bootstrap_fragment(errors: list[str]) -> None:
         errors.append(
             f"{relpath(ROOT, BOOTSTRAP_TEMPLATE)}: bootstrap fragment must reference agent-execution-discipline"
         )
+    if COPILOT_SKILL_SUMMARY.is_file():
+        summary = COPILOT_SKILL_SUMMARY.read_text(encoding="utf-8")
+        if USER_ABSOLUTE_PATH_RE.search(summary):
+            errors.append(
+                f"{relpath(ROOT, COPILOT_SKILL_SUMMARY)}: support file must not contain a user absolute path"
+            )
+        for required in ("change-forge-router", "quality-test-gate", "security-privacy-gate"):
+            if required not in summary:
+                errors.append(
+                    f"{relpath(ROOT, COPILOT_SKILL_SUMMARY)}: support file must reference {required}"
+                )
 
 
 def _load_json(path: Path, errors: list[str]) -> Any:
@@ -402,6 +426,12 @@ def _validate_copilot_template(
         errors.append(f"{relpath(ROOT, path)}: hooks must be a JSON object")
         return
 
+    for event in COPILOT_UNSUPPORTED_ADVISORY_EVENTS:
+        if event in hooks:
+            errors.append(
+                f"{relpath(ROOT, path)}: Copilot must not wire unsupported advisory {event}"
+            )
+
     for event, scripts in COPILOT_EVENT_SCRIPTS.items():
         entries = hooks.get(event)
         if not isinstance(entries, list) or not entries:
@@ -427,6 +457,15 @@ def _validate_copilot_template(
         if "/usr/bin/env python3" not in command:
             errors.append(
                 f"{relpath(ROOT, path)}:{context}: Copilot hook command should use /usr/bin/env python3"
+            )
+        if ".Stop" in context:
+            if "CHANGEFORGE_HOOK_MODE=block" not in command:
+                errors.append(
+                    f"{relpath(ROOT, path)}:{context}: Copilot Stop must set CHANGEFORGE_HOOK_MODE=block"
+                )
+        elif "CHANGEFORGE_HOOK_MODE=block" in command:
+            errors.append(
+                f"{relpath(ROOT, path)}:{context}: only Copilot Stop may set CHANGEFORGE_HOOK_MODE=block"
             )
 
     for entry, context in _command_entries(hooks):

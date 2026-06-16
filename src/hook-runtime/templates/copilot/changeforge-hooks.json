@@ -8,20 +8,6 @@
         "timeoutSec": 10
       }
     ],
-    "UserPromptSubmit": [
-      {
-        "type": "command",
-        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_user_prompt_route_reminder.py\"",
-        "timeoutSec": 10
-      }
-    ],
-    "PreToolUse": [
-      {
-        "type": "command",
-        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_pre_tool_risk_preview.py\"",
-        "timeoutSec": 10
-      }
-    ],
     "PostToolUse": [
       {
         "type": "command",
@@ -41,17 +27,10 @@
         "timeoutSec": 10
       }
     ],
-    "SubagentStop": [
-      {
-        "type": "command",
-        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_subagent_stop_reminder.py\"",
-        "timeoutSec": 10
-      }
-    ],
     "Stop": [
       {
         "type": "command",
-        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_stop_closure_gate.py\"",
+        "command": "CHANGEFORGE_AGENT=copilot CHANGEFORGE_HOOK_MODE=block /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_stop_closure_gate.py\"",
         "timeoutSec": 10
       }
     ]

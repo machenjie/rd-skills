@@ -151,11 +151,8 @@ class HookTemplateTests(unittest.TestCase):
         hooks = data["hooks"]
         for event, script in (
             ("SessionStart", "changeforge_session_bootstrap"),
-            ("UserPromptSubmit", "changeforge_user_prompt_route_reminder"),
-            ("PreToolUse", "changeforge_pre_tool_risk_preview"),
             ("PostToolUse", "changeforge_post_edit_structure_gate"),
             ("SubagentStart", "changeforge_session_bootstrap"),
-            ("SubagentStop", "changeforge_subagent_stop_reminder"),
             ("Stop", "changeforge_stop_closure_gate"),
         ):
             self.assertIn(event, hooks)
@@ -166,9 +163,15 @@ class HookTemplateTests(unittest.TestCase):
             self.assertFalse(any("timeout" in entry for entry in entries))
             self.assertNotIn("matcher", json.dumps(entries))
             self.assertIn(script, json.dumps(entries))
+        self.assertNotIn("UserPromptSubmit", hooks)
+        self.assertNotIn("PreToolUse", hooks)
+        self.assertNotIn("SubagentStop", hooks)
         commands = json.dumps(hooks)
         self.assertIn("CHANGEFORGE_AGENT=copilot", commands)
         self.assertIn("/.github/hooks/changeforge/", commands)
+        self.assertIn("CHANGEFORGE_HOOK_MODE=block", json.dumps(hooks["Stop"]))
+        for event in ("SessionStart", "PostToolUse", "SubagentStart"):
+            self.assertNotIn("CHANGEFORGE_HOOK_MODE=block", json.dumps(hooks[event]))
 
     def test_copilot_user_template_resolves_from_home(self) -> None:
         data = json.loads(
@@ -176,8 +179,12 @@ class HookTemplateTests(unittest.TestCase):
         )
         self.assertEqual(data["version"], 1)
         commands = json.dumps(data["hooks"])
+        self.assertNotIn("UserPromptSubmit", data["hooks"])
+        self.assertNotIn("PreToolUse", data["hooks"])
+        self.assertNotIn("SubagentStop", data["hooks"])
         self.assertIn("${HOME}/.copilot/hooks/changeforge/", commands)
         self.assertIn("CHANGEFORGE_AGENT=copilot", commands)
+        self.assertIn("CHANGEFORGE_HOOK_MODE=block", json.dumps(data["hooks"]["Stop"]))
         self.assertNotIn("git rev-parse", commands)
 
     def test_bootstrap_fragment_exists_and_points_to_router(self) -> None:

@@ -12,6 +12,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 INSTALL_SCRIPT = ROOT / "installers" / "install.py"
 DIST_CODEX_HOOKS = ROOT / "dist" / "codex" / "project" / ".codex"
+DIST_COPILOT_HOOK_SUPPORT = (
+    ROOT
+    / "dist"
+    / "copilot"
+    / "project"
+    / ".github"
+    / "hooks"
+    / "changeforge"
+    / "changeforge_copilot_skill_summary.md"
+)
 
 
 def _build_recommended() -> None:
@@ -153,7 +163,7 @@ class InstallHooksTests(unittest.TestCase):
 class InstallCopilotHooksTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        if not (DIST_CODEX_HOOKS / "hooks.json").is_file():
+        if not (DIST_CODEX_HOOKS / "hooks.json").is_file() or not DIST_COPILOT_HOOK_SUPPORT.is_file():
             _build_recommended()
 
     def test_copilot_project_hooks_install_to_github(self) -> None:
@@ -188,7 +198,12 @@ class InstallCopilotHooksTests(unittest.TestCase):
             self.assertTrue(config.is_file())
             scripts = sorted(scripts_dir.glob("changeforge_*.py"))
             self.assertEqual(len(scripts), 8)
+            self.assertTrue((scripts_dir / "changeforge_copilot_skill_summary.md").is_file())
             self.assertTrue((scripts_dir / ".changeforge-hook-manifest.json").is_file())
+            manifest = json.loads(
+                (scripts_dir / ".changeforge-hook-manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(manifest["support_files"], ["changeforge_copilot_skill_summary.md"])
             # The manifest is nested so VS Code does not parse it as a hook config.
             self.assertFalse((hooks_dir / ".changeforge-hook-manifest.json").exists())
             payload = json.loads(config.read_text(encoding="utf-8"))
@@ -258,6 +273,9 @@ class InstallCopilotHooksTests(unittest.TestCase):
             self.assertTrue((hooks_dir / "changeforge-hooks.json").is_file())
             scripts = sorted((hooks_dir / "changeforge").glob("changeforge_*.py"))
             self.assertEqual(len(scripts), 8)
+            self.assertTrue(
+                (hooks_dir / "changeforge" / "changeforge_copilot_skill_summary.md").is_file()
+            )
             manifest = json.loads(
                 (hooks_dir / "changeforge" / ".changeforge-hook-manifest.json").read_text(
                     encoding="utf-8"
@@ -265,6 +283,7 @@ class InstallCopilotHooksTests(unittest.TestCase):
             )
             self.assertEqual(manifest["scope"], "user")
             self.assertEqual(manifest["agent"], "copilot")
+            self.assertEqual(manifest["support_files"], ["changeforge_copilot_skill_summary.md"])
 
 
 class InstallBootstrapTests(unittest.TestCase):

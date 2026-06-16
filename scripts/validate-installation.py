@@ -93,6 +93,7 @@ REQUIRED_HOOK_DIST_FILES = (
     "copilot/project/.github/hooks/changeforge-hooks.json",
     "copilot/project/.github/hooks/changeforge/.changeforge-hook-manifest.json",
     "copilot/project/.github/hooks/changeforge/changeforge-route-preflight.md",
+    "copilot/project/.github/hooks/changeforge/changeforge_copilot_skill_summary.md",
     "copilot/project/.github/hooks/changeforge/changeforge_common.py",
     "copilot/project/.github/hooks/changeforge/changeforge_session_bootstrap.py",
     "copilot/project/.github/hooks/changeforge/changeforge_user_prompt_route_reminder.py",
@@ -104,6 +105,7 @@ REQUIRED_HOOK_DIST_FILES = (
     "copilot/user/.copilot/hooks/changeforge-hooks.json",
     "copilot/user/.copilot/hooks/changeforge/.changeforge-hook-manifest.json",
     "copilot/user/.copilot/hooks/changeforge/changeforge-route-preflight.md",
+    "copilot/user/.copilot/hooks/changeforge/changeforge_copilot_skill_summary.md",
     "copilot/user/.copilot/hooks/changeforge/changeforge_common.py",
     "copilot/user/.copilot/hooks/changeforge/changeforge_session_bootstrap.py",
     "copilot/user/.copilot/hooks/changeforge/changeforge_user_prompt_route_reminder.py",
@@ -138,6 +140,7 @@ EXPECTED_HOOK_NAMES_BY_AGENT = {
     "copilot": RICH_HOOK_NAMES,
 }
 BOOTSTRAP_FRAGMENT_NAME = "changeforge-route-preflight.md"
+COPILOT_HOOK_SUPPORT_FILES = ("changeforge_copilot_skill_summary.md",)
 
 PROFILE_SKILL_ROOTS = (
     DIST_DIR / "universal" / "skills",
@@ -463,6 +466,15 @@ def _validate_hook_manifest(path: Path, *, agent: str, scope: str, errors: list[
         errors.append(
             f"{relpath(ROOT, path)}: bootstrap_fragment must be {BOOTSTRAP_FRAGMENT_NAME}"
         )
+    support_files = data.get("support_files")
+    expected_support_files = set(COPILOT_HOOK_SUPPORT_FILES) if agent == "copilot" else set()
+    if (
+        not isinstance(support_files, list)
+        or not all(isinstance(file_name, str) for file_name in support_files)
+        or set(support_files) != expected_support_files
+    ):
+        expected = ", ".join(sorted(expected_support_files)) or "(none)"
+        errors.append(f"{relpath(ROOT, path)}: support_files must be {expected}")
     if data.get("session_bootstrap_hook") is not True:
         errors.append(
             f"{relpath(ROOT, path)}: session_bootstrap_hook must be True"

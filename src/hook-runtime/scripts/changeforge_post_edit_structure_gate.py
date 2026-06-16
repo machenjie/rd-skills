@@ -4,8 +4,8 @@
 This gate runs after edit tools. It is intentionally lightweight: it inspects
 changed paths, sibling file names, and patch text with simple heuristics. It does
 not parse a full AST, does not call any model, does not access the network, and
-does not modify project source. Every gate is warning-only by default and fails
-open on any error.
+does not modify project source. This post-tool gate is advisory and fails open
+on any error.
 """
 
 from __future__ import annotations

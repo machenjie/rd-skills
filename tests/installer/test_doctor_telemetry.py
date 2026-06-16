@@ -14,6 +14,42 @@ DOCTOR_SCRIPT = ROOT / "installers" / "doctor.py"
 
 
 class DoctorTelemetryTests(unittest.TestCase):
+    def test_doctor_reports_missing_copilot_support_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_s:
+            project = Path(tmp_s)
+            hooks_dir = project / ".github" / "hooks"
+            scripts_dir = hooks_dir / "changeforge"
+            scripts_dir.mkdir(parents=True)
+            (scripts_dir / "changeforge_common.py").write_text("# test hook\n", encoding="utf-8")
+            (scripts_dir / ".changeforge-hook-manifest.json").write_text(
+                json.dumps({"kind": "changeforge-hook-runtime"}),
+                encoding="utf-8",
+            )
+            (hooks_dir / "changeforge-hooks.json").write_text(
+                json.dumps({"hooks": {"PostToolUse": [{"command": "changeforge_common.py"}]}}),
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(DOCTOR_SCRIPT),
+                    "--agent",
+                    "copilot",
+                    "--scope",
+                    "project",
+                    "--target",
+                    str(project),
+                    "--check-hooks",
+                ],
+                text=True,
+                capture_output=True,
+                cwd=str(ROOT),
+                env=os.environ.copy(),
+                check=False,
+            )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("missing changeforge_copilot_skill_summary.md", result.stdout)
+
     def test_telemetry_summary_includes_unverified_completion_claims(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_s:
             tmp = Path(tmp_s)

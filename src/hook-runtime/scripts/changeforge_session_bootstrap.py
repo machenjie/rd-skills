@@ -14,6 +14,8 @@ discipline as the parent session.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from changeforge_common import (
     cwd_from_event,
     debug_log,
@@ -27,6 +29,8 @@ from changeforge_common import (
     repo_root,
 )
 
+
+COPILOT_SKILL_SUMMARY = Path(__file__).with_name("changeforge_copilot_skill_summary.md")
 
 PREFLIGHT_MESSAGE = (
     "ChangeForge route preflight (bootstrap reminder, not a route): classify the "
@@ -54,6 +58,18 @@ PREFLIGHT_MESSAGE = (
 )
 
 
+def _context_message(runtime: str, target_event: str) -> str:
+    if runtime != "copilot" or target_event not in {"SessionStart", "SubagentStart"}:
+        return PREFLIGHT_MESSAGE
+    try:
+        summary = COPILOT_SKILL_SUMMARY.read_text(encoding="utf-8").strip()
+    except OSError:
+        return PREFLIGHT_MESSAGE
+    if not summary:
+        return PREFLIGHT_MESSAGE
+    return f"{PREFLIGHT_MESSAGE}\n\n{summary}"
+
+
 def main() -> int:
     event = read_event()
     if not event:
@@ -76,7 +92,7 @@ def main() -> int:
         if mode == "monitor":
             return 0
         target_event = "SubagentStart" if is_subagent else "SessionStart"
-        emit_session_context(runtime, PREFLIGHT_MESSAGE, event_name=target_event)
+        emit_session_context(runtime, _context_message(runtime, target_event), event_name=target_event)
     except Exception as exc:  # noqa: BLE001 - bootstrap must fail open
         if repo is not None:
             debug_log(repo, f"session bootstrap failed open: {exc}")

@@ -49,7 +49,7 @@ def main() -> int:
     parser.add_argument(
         "--with-hooks",
         action="store_true",
-        help="Also install warning-only hooks (codex/claude/copilot project or user).",
+        help="Also install optional hooks (codex/claude/copilot project or user).",
     )
     parser.add_argument(
         "--hooks-dry-run",
@@ -143,7 +143,7 @@ def main() -> int:
 
 
 def _install_hooks(args: argparse.Namespace, scope: str) -> None:
-    """Install warning-only hooks, preserving existing hook config.
+    """Install optional hooks, preserving existing hook config.
 
     Hooks are never installed unless --with-hooks is passed, and they are only
     supported for Codex, Claude, and Copilot project and user scopes. Project

@@ -56,10 +56,10 @@ FOUNDATION_MODES = {
     "dev": "top-level-and-compiled-references",
 }
 
-# Optional project and user hook runtime. Hooks are warning-only execution
-# reminders and are never installed by default. Codex, Claude, and Copilot
-# support both project and user scope; existing hook configuration is always
-# preserved.
+# Optional project and user hook runtime. Hooks are never installed by default.
+# Codex and Claude default to warning-only reminders. Copilot installs advisory
+# context hooks plus a strict Stop closure gate. Existing hook configuration is
+# always preserved.
 HOOK_SOURCE_ROOTS = {
     ("codex", "project"): ROOT / "dist" / "codex" / "project" / ".codex",
     ("codex", "user"): ROOT / "dist" / "codex" / "user" / ".codex",
@@ -108,6 +108,7 @@ HOOK_SCRIPT_NAMES = (
     "changeforge_subagent_stop_reminder.py",
     "changeforge_stop_closure_gate.py",
 )
+COPILOT_HOOK_SUPPORT_FILES = ("changeforge_copilot_skill_summary.md",)
 
 # Advisory route-preflight bootstrap. The fragment is plain guidance text, not an
 # executable hook, so it can be installed for any project scope and never needs
@@ -133,6 +134,7 @@ class HookPlan:
     source_root: Path
     target_root: Path
     script_actions: list[tuple[Path, Path, str]] = field(default_factory=list)
+    support_actions: list[tuple[Path, Path, str]] = field(default_factory=list)
     manifest_action: tuple[Path, Path, str] | None = None
     bootstrap_action: tuple[Path, Path, str] | None = None
     config_target: Path | None = None
@@ -481,6 +483,15 @@ def plan_hook_install(agent: str, scope: str, target: Path | None) -> HookPlan:
         action = "overwrite" if destination.exists() else "create"
         plan.script_actions.append((source_script, destination, action))
 
+    if agent == "copilot":
+        for file_name in COPILOT_HOOK_SUPPORT_FILES:
+            source_file = source_root / scripts_subdir / file_name
+            if not source_file.is_file():
+                raise InstallError(f"missing built hook support file {source_file.relative_to(ROOT)}")
+            destination = target_root / scripts_subdir / file_name
+            action = "overwrite" if destination.exists() else "create"
+            plan.support_actions.append((source_file, destination, action))
+
     manifest_source = source_root / aux_subdir / HOOK_MANIFEST_NAME
     manifest_target = target_root / aux_subdir / HOOK_MANIFEST_NAME
     plan.manifest_action = (
@@ -621,16 +632,18 @@ def _group_with_new_commands(group: Any, known_commands: set[str]) -> dict[str, 
 
 
 def _hook_activation_notes(agent: str, scope: str) -> list[str]:
-    notes = [
-        "hooks are warning-only; default mode is CHANGEFORGE_HOOK_MODE=warn",
-        "hooks are not auto-trusted",
-    ]
+    notes = ["hooks are not auto-trusted"]
     hook_label = "user hook" if scope == "user" else "project hook"
     if agent == "codex":
+        notes.insert(0, "hooks are warning-only; default mode is CHANGEFORGE_HOOK_MODE=warn")
         notes.append(f"run /hooks in Codex and trust the {hook_label} after reviewing the command")
         if scope == "user":
             notes.append("user hooks were written to ~/.codex; they apply to every Codex project")
     elif agent == "copilot":
+        notes.insert(
+            0,
+            "Copilot Stop gate is strict by default; context hooks stay advisory",
+        )
         notes.append("VS Code loads .json hook files automatically; review them before enabling")
         notes.append("use /hooks or 'Chat: Configure Hooks' in VS Code to inspect loaded hooks")
         if scope == "project":
@@ -638,6 +651,7 @@ def _hook_activation_notes(agent: str, scope: str) -> list[str]:
         else:
             notes.append("user hooks live in ~/.copilot/hooks; they apply to every workspace")
     else:
+        notes.insert(0, "hooks are warning-only; default mode is CHANGEFORGE_HOOK_MODE=warn")
         notes.append("merge settings.changeforge-hooks.fragment.json into settings.json")
         if scope == "user":
             notes.append(
@@ -656,6 +670,9 @@ def apply_hook_install(plan: HookPlan, dry_run: bool) -> None:
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source_script, destination)
         destination.chmod(0o755)
+    for source_file, destination, _action in plan.support_actions:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_file, destination)
     if plan.manifest_action is not None:
         manifest_source, manifest_target, _ = plan.manifest_action
         manifest_target.parent.mkdir(parents=True, exist_ok=True)
@@ -677,6 +694,8 @@ def render_hook_plan(plan: HookPlan) -> list[str]:
     ]
     for _source, destination, action in plan.script_actions:
         lines.append(f"hooks: {action} script {destination.name}")
+    for _source, destination, action in plan.support_actions:
+        lines.append(f"hooks: {action} support {destination.name}")
     if plan.manifest_action is not None:
         lines.append(f"hooks: {plan.manifest_action[2]} {HOOK_MANIFEST_NAME}")
     if plan.bootstrap_action is not None:
@@ -766,5 +785,3 @@ def render_bootstrap_plan(plan: BootstrapPlan) -> list[str]:
     for note in plan.notes:
         lines.append(f"bootstrap: note: {note}")
     return lines
-
-

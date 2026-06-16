@@ -5,7 +5,8 @@ It does not replace change-forge-router.
 It adds execution-time reminders across the agent lifecycle: at session and
 subagent start, per user prompt, before and after tools run, and before the
 agent or a subagent stops.
-Default mode is warn, not block.
+Codex and Claude default to warn, not block. Copilot local hooks default to a
+strict Stop closure gate while keeping context hooks advisory.
 
 The hook runtime is a small project-level reminder layer for agent execution. It
 does not route work, does not read all skill references, and does not become a
@@ -18,8 +19,9 @@ The runtime provides these reminder hooks:
 
 - Session Bootstrap: at `SessionStart` (Codex, Claude, and Copilot, including
   the Codex `compact` source) and `SubagentStart`, remind the agent to run a
-  `change-forge-router` preflight before engineering work. Also ships as an
-  advisory install-time fragment.
+  `change-forge-router` preflight before engineering work. Copilot also receives
+  the static ChangeForge skill summary as top-level `additionalContext` for
+  these two events. Also ships as an advisory install-time fragment.
 - Route Reminder: at Codex and Claude `UserPromptSubmit`, add a concise
   per-prompt reminder to route and emit a `changeforge_route` manifest. It
   reminds the agent to
@@ -30,9 +32,8 @@ The runtime provides these reminder hooks:
   the prompt text.
 - Pre-Edit Risk Preview: at Codex and Claude `PreToolUse`, preview risk surfaces
   before an edit or command runs. Advisory only; never denies the tool call.
-  Copilot wires `PreToolUse`, but warning-only advisory output is suppressed
-  because Copilot only consumes permission decisions or argument modifications
-  for that event.
+  Copilot templates do not wire `PreToolUse` because Copilot only consumes
+  permission decisions or argument modifications for that event.
 - Post-Edit Structure Gate: after edit tools run, detect structural code changes
   that should preserve reuse, placement, ownership, dependency direction, public
   API decisions, same-pattern scans, and nearby tests.
@@ -45,8 +46,8 @@ The runtime provides these reminder hooks:
 - Subagent Closure Reminder: at Codex and Claude `SubagentStop`, remind the
   subagent to carry closure evidence back to the parent. Advisory only; never
   forces continuation and never touches the parent turn's closure state. Copilot
-  wires `SubagentStop`, but warning-only advisory output is suppressed because
-  Copilot only consumes block/allow decision output for that event.
+  templates do not wire `SubagentStop` because Copilot only consumes block/allow
+  decision output for that event.
 
 ## Non-Goals
 
@@ -55,7 +56,8 @@ The runtime provides these reminder hooks:
 - Do not read every `references/` file.
 - Do not read, record, log, or echo user prompt text.
 - Do not choose the full route; the router remains the semantic source of truth.
-- Do not block agents by default.
+- Do not block Codex or Claude by default. Copilot's strict Stop gate is an
+  explicit local-hook policy for missing closure evidence.
 - Do not install `src/hook-runtime` directly.
 - Do not install `src/` or `src/registry` as runtime content.
 
@@ -90,8 +92,9 @@ the flat (matcher-less) hook config format with `version: 1` and `timeoutSec`
 and loads every `*.json` in its hook folder, so its config is the dedicated
 `changeforge-hooks.json` and the scripts, manifest, and bootstrap fragment live
 in a `changeforge/` subfolder. Copilot context output is top-level
-`additionalContext` for supported events; Stop block output is top-level
-`decision`/`reason`. Claude commands set `CHANGEFORGE_AGENT=claude` explicitly,
+`additionalContext` for supported events; the Copilot Stop command sets
+`CHANGEFORGE_HOOK_MODE=block` and emits top-level `decision`/`reason` only when
+closure evidence is missing. Claude commands set `CHANGEFORGE_AGENT=claude` explicitly,
 emit `hookSpecificOutput.additionalContext` for context-bearing events, and use
 10-second `timeout` values because Claude Code measures timeout in seconds.
 Each layout includes `.changeforge-hook-manifest.json` so installation
