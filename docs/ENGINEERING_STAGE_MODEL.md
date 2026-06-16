@@ -59,15 +59,17 @@ quality gates, and the allowed handoff target stage.
 
 ### bug-fix
 - Purpose: minimal fix, same-pattern scan, regression test, compatibility, upstream/downstream impact.
-- Launch: relevant builder skill, `agent-execution-discipline`, `regression-testing`, `code-review`, `minimal-correct-implementation`.
+- Launch: relevant builder skill, `agent-execution-discipline`, `regression-testing`, `code-review`.
+- Conditional launch: `minimal-correct-implementation` when minimal fix, delete/shrink, dependency, abstraction, wrapper-only delegation, shortcut, or overengineering review signal exists.
 - Do not launch by default: architecture redesign, release gate unless the fix ships directly.
-- Required evidence: minimal diff, deleted or rejected complexity, same-pattern scan record, regression test, blast-radius note.
+- Required evidence: minimal diff, deleted or rejected complexity when selected, same-pattern scan record, regression test, blast-radius note.
 - Required quality gates: implementation gate, test gate.
 - Handoff: testing, code-review, or release-delivery.
 
 ### code-review
 - Purpose: correctness, structure, naming, reuse, readability, security, reliability, test evidence, hallucinated-API check.
-- Launch: `code-review`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`, `minimal-correct-implementation`; add `ai-code-review-refactor` for generated code as a professional skill.
+- Launch: `code-review`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `ai-code-review-refactor` for generated code as a professional skill.
+- Conditional launch: `minimal-correct-implementation` when minimal fix, delete/shrink, dependency, abstraction, wrapper-only delegation, shortcut, or overengineering review signal exists.
 - Do not launch by default: release gate, deployment, infrastructure capabilities.
 - Required evidence: findings with severity, complexity-only delete/shrink findings when selected, evidence, impacted file, required fix, validation required, independent reviewer, repair and re-review result.
 - Required quality gates: implementation gate.

@@ -171,13 +171,14 @@ stages:
       - agent-execution-discipline
       - regression-testing
       - code-review
+    conditional_capabilities:
       - minimal-correct-implementation
     skip_by_default:
       - architecture redesign
       - release
     required_evidence:
       - minimal diff
-      - deleted or rejected complexity
+      - deleted or rejected complexity when selected
       - same-pattern scan record
       - regression test
       - blast-radius note
@@ -199,6 +200,7 @@ stages:
       - implementation-structure-design
       - code-clarity-maintainability
       - language-idiom-enforcement
+    conditional_capabilities:
       - minimal-correct-implementation
     skip_by_default:
       - release

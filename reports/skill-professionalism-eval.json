@@ -1,7 +1,7 @@
 {
   "average_score": 41.45,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-16T05:05:46.373694+00:00",
+  "generated_at": "2026-06-16T05:31:51.571690+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -2244,7 +2244,7 @@
       "warnings": []
     },
     {
-      "body_lines": 191,
+      "body_lines": 193,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,

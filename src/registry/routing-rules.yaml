@@ -769,6 +769,14 @@ failure_routing:
     route_to: design-pattern-selection
   - condition: pattern hides side effects or lifecycle
     route_to: design-pattern-selection
+  - condition: implementation may be overengineered
+    route_to: minimal-correct-implementation
+  - condition: simpler existing stdlib native or installed dependency path may exist
+    route_to: minimal-correct-implementation
+  - condition: complexity-only review requested
+    route_to: minimal-correct-implementation
+  - condition: shortcut lacks ceiling or upgrade trigger
+    route_to: minimal-correct-implementation
   - condition: test seam unclear
     route_to: testability-seam-design
   - condition: private helper exported for tests

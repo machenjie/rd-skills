@@ -175,7 +175,7 @@ Suggested-action distribution:
 | `refactoring` | 224 | 3765 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `async-job-design` | 222 | 2987 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `module-boundary-design` | 222 | 3105 | 100 | 82 | 100 | 14 | KEEP_AS_IS | - | low |
-| `engineering-stage-professionalism` | 214 | 2242 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `engineering-stage-professionalism` | 214 | 2261 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `authentication-security` | 210 | 2779 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `code-clarity-maintainability` | 210 | 2647 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `concurrency-control` | 210 | 2872 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
@@ -195,10 +195,10 @@ Suggested-action distribution:
 | `contract-testing` | 197 | 2651 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `data-model-design` | 197 | 2982 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `event-driven-architecture` | 193 | 2631 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
+| `minimal-correct-implementation` | 193 | 2472 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `dto-schema-design` | 191 | 2706 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `frontend-api-integration` | 191 | 2455 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `language-performance-safety` | 191 | 2900 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `minimal-correct-implementation` | 191 | 2352 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `observability` | 191 | 2602 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `api-contract-design` | 190 | 2414 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `message-queue-design` | 190 | 2618 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -312,18 +312,18 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 
 | Files | Excerpt |
 | --- | --- |
-| 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
+| 19 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
+| 19 | do not load every reference by default. treat references as targeted support selected by t |
 | 19 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 19 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 19 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
-| 19 | do not load every reference by default. treat references as targeted support selected by t |
-| 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
+| 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 9 | these triggers are hidden-risk escalators, not ordinary checklist items. |
-| 8 | **accepted exceptions** with owner / scope / expiration |
 | 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
+| 8 | **accepted exceptions** with owner / scope / expiration |
 | 7 | **residual risk**: untested runtime behavior, owner, and next gate. |
 | 7 | **block/pass decision** with required conditions for approval. |
 

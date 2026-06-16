@@ -70,8 +70,8 @@ Map the stage to its launch set using the compact matrix below:
 | implementation-planning | `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` | full architecture review, release, deep performance profiling |
 | coding | matching language professional usage capability, `language-idiom-enforcement`, `input-validation`, `logging-error-handling` | architecture deep review, release, full regression suite design |
 | debugging-diagnosis | `failure-diagnosis`, `agent-execution-discipline`, `observability` | refactoring, new design |
-| bug-fix | `agent-execution-discipline`, `regression-testing`, `code-review`, `minimal-correct-implementation` | architecture redesign |
-| code-review | `code-review`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`, `minimal-correct-implementation`; add `ai-code-review-refactor` as the professional owner for generated code | release, deployment, infrastructure |
+| bug-fix | `agent-execution-discipline`, `regression-testing`, `code-review`; add `minimal-correct-implementation` only for minimal fix, delete/shrink, dependency, abstraction, wrapper-only delegation, shortcut, or overengineering signals | architecture redesign |
+| code-review | `code-review`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `minimal-correct-implementation` only for complexity/delete/shrink/dependency/abstraction/wrapper/shortcut signals; add `ai-code-review-refactor` as the professional owner for generated code | release, deployment, infrastructure |
 | refactoring | `refactoring`, `implementation-structure-design`, `code-clarity-maintainability`, `code-review`, `regression-testing` | feature design, release |
 | testing | `test-strategy`, `language-testing-strategy`, `test-data-management`, matching test capability | architecture redesign, new feature coding |
 | release-delivery | `ci-cd`, `release-rollback`, `containerization`, `kubernetes-gateway`, `observability`, `backup-recovery` | language deep checks, coding |

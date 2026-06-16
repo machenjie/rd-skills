@@ -2484,7 +2484,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
       "used_by_count": 8,
-      "word_count": 2242
+      "word_count": 2261
     },
     {
       "anti_example_section_length": 14,
@@ -3549,7 +3549,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 78,
+      "bullet_count": 80,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -3563,7 +3563,7 @@
       "largest_section_lines": 24,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 8,
-      "line_count": 191,
+      "line_count": 193,
       "name": "minimal-correct-implementation",
       "optimality_section_length": 0,
       "output_contract_length": 24,
@@ -3579,8 +3579,8 @@
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 1,
-      "used_by_count": 16,
-      "word_count": 2352
+      "used_by_count": 17,
+      "word_count": 2472
     },
     {
       "anti_example_section_length": 0,

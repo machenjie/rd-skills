@@ -26,6 +26,7 @@ def _load_eval_routing() -> ModuleType:
 
 
 EVAL_ROUTING = _load_eval_routing()
+ROUTING_RULES = ROOT / "src" / "registry" / "routing-rules.yaml"
 
 
 VALID_BACKEND_AUTH_IDOR = """case_id: backend-auth-idor
@@ -308,6 +309,29 @@ class EvalRoutingCandidateTests(unittest.TestCase):
             "does not map to any actual selected skill or domain extension through used_by",
             errors,
         )
+
+
+class FailureRoutingCoverageTests(unittest.TestCase):
+    def test_minimal_correct_failure_routing_conditions_are_declared(self) -> None:
+        data = EVAL_ROUTING.load_yaml_file(ROUTING_RULES)
+        failure_routing = data.get("failure_routing")
+        self.assertIsInstance(failure_routing, list)
+        route_by_condition = {
+            entry.get("condition"): entry.get("route_to")
+            for entry in failure_routing
+            if isinstance(entry, dict)
+        }
+        for condition in (
+            "implementation may be overengineered",
+            "simpler existing stdlib native or installed dependency path may exist",
+            "complexity-only review requested",
+            "shortcut lacks ceiling or upgrade trigger",
+        ):
+            self.assertEqual(
+                route_by_condition.get(condition),
+                "minimal-correct-implementation",
+                condition,
+            )
 
 
 if __name__ == "__main__":

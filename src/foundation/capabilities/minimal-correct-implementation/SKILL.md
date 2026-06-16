@@ -37,7 +37,7 @@ Owns implementation-planning, coding, code-review, refactoring, testing, and ski
 
 - Challenge existence before implementation. If the work is speculative, skip it and record why.
 - Existing repository code comes before new code. Search owning modules and adjacent patterns before adding a helper or abstraction.
-- Standard library comes before custom code for parsing, formatting, date/time, math, HTTP, CSV, JSON, validation, debounce, and simple collection behavior.
+- Standard library, runtime primitive, framework utility, browser/native API, or existing dependency comes before custom code for parsing, formatting, date/time, math, HTTP, CSV, JSON, validation, debounce/throttle, and simple collection behavior.
 - Native platform/framework/database/browser/runtime features come before custom code or dependencies when they express the behavior correctly.
 - Already-installed dependencies come before adding a dependency, and only when they are already approved for the owning module.
 - Local direct code comes before abstraction. One current implementation does not justify an interface, abstract class, factory, strategy, provider, registry, or plugin point.
@@ -76,6 +76,25 @@ Escalate to `data-middleware-change-builder` and `reliability-observability-gate
 Escalate to `delivery-release-gate` when minimal release machinery, feature flags, configuration branches, migrations, rollback, or deployment scripts are proposed or removed.
 
 Escalate to `quality-test-gate` when the proposed minimal validation is the only evidence for a non-trivial behavior, deletion, shortcut, or retained abstraction.
+
+# Reference Loading Policy
+
+- L1 inline-only: use this body only for a low-risk local decision when no dependency, abstraction, new structure, deletion, or shortcut signal exists.
+- L2 deep reference loading: load [references/simplicity-ladder.md](references/simplicity-ladder.md) when a change adds a dependency, abstraction, function, class, file, directory, helper, wrapper, configuration option, or other new structure.
+- L2 deep reference loading: load [references/complexity-review.md](references/complexity-review.md) for a complexity-only pass, AI-generated code bloat review, delete/shrink audit, or overengineering review.
+- L2 deep reference loading: load [references/shortcut-ledger.md](references/shortcut-ledger.md) when a deliberate shortcut, shortcut marker, temporary debt, or cleanup ledger remains.
+- L3 and higher: load every selected deep reference above that matches the route, plus the owning professional skill's normal risk references; do not use minimal correctness to skip security, data, reliability, release, or test gates.
+- The output contract must state which reference was loaded, which ladder level was selected, and what evidence the chosen minimal path does and does not prove.
+
+# Critical Details
+
+The simplicity ladder is an evidence order, not a blanket ban on new code. A new file, class, dependency, or abstraction is acceptable when it is the first option that remains correct after current requirements, owner boundaries, safety gates, and validation are considered.
+
+Minimal correctness is different from underengineering. It does not weaken authorization, validation, accessibility, money movement, data integrity, migration safety, rollback, observability, or incident diagnostics. When those risks exist, the smallest correct implementation includes the corresponding gate.
+
+Deletion and shrink decisions require caller search and behavior-preservation evidence. A wrapper that protects timeout, retry, auth, logging, translation, lifecycle, or public contract behavior may be retained, but wrapper-only delegation without a boundary should be collapsed.
+
+Shortcut ledgers are temporary ownership records. A `changeforge-shortcut` marker without `ceiling:` and `upgrade when:` is incomplete and must be repaired or converted into a cleanup issue before handoff.
 
 # Mode Matrix
 
@@ -126,16 +145,6 @@ Return a **Minimal Correctness Decision**:
 - **Residual risk**:
 - **Next gate**:
 
-# Critical Details
-
-The simplicity ladder is an evidence order, not a blanket ban on new code. A new file, class, dependency, or abstraction is acceptable when it is the first option that remains correct after current requirements, owner boundaries, safety gates, and validation are considered.
-
-Minimal correctness is different from underengineering. It does not weaken authorization, validation, accessibility, money movement, data integrity, migration safety, rollback, observability, or incident diagnostics. When those risks exist, the smallest correct implementation includes the corresponding gate.
-
-Deletion and shrink decisions require caller search and behavior-preservation evidence. A wrapper that protects timeout, retry, auth, logging, translation, lifecycle, or public contract behavior may be retained, but wrapper-only delegation without a boundary should be collapsed.
-
-Shortcut ledgers are temporary ownership records. A `changeforge-shortcut` marker without `ceiling:` and `upgrade when:` is incomplete and must be repaired or converted into a cleanup issue before handoff.
-
 # Evidence Contract
 
 Close only when the output names the selected mode, current requirement or non-goal, files and boundaries searched for reuse, stdlib/native/installed dependency alternatives considered, direct-code alternative, deleted or retained complexity, shortcut ceiling and upgrade trigger when applicable, validation command or review artifact, what the evidence proves and does not prove, residual risk, rollback or deletion note, and next gate.
@@ -151,13 +160,6 @@ Close only when the output names the selected mode, current requirement or non-g
 7. Shortcut markers include `ceiling:` and `upgrade when:`.
 8. Minimal validation is proportional to risk and does not replace high-risk evidence.
 9. Security, reliability, accessibility, auth, data, money, migration, and explicit full-scope requirements are not weakened.
-
-# Reference Loading Policy
-
-- L1 low-risk local change: body only.
-- Dependency, abstraction, new structure, or file/class/config decision: load [references/simplicity-ladder.md](references/simplicity-ladder.md).
-- Review, audit, AI-generated code bloat, or delete/shrink pass: load [references/complexity-review.md](references/complexity-review.md).
-- Deliberate shortcut, shortcut marker, temporary debt, or cleanup ledger: load [references/shortcut-ledger.md](references/shortcut-ledger.md).
 
 # Handoff
 
