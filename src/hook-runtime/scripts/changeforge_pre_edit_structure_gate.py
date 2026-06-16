@@ -25,7 +25,7 @@ from changeforge_common import (
     tool_name,
     write_telemetry_event,
 )
-from changeforge_hook_policy import failure_mode, gate_mode, should_block, should_emit_context
+from changeforge_hook_policy import gate_mode, run_gate_with_policy, should_block, should_emit_context
 from changeforge_runtime_adapters import adapter_for
 
 
@@ -97,16 +97,19 @@ EXISTING_EXTENSION_CONTENT_RE = re.compile(
 
 
 def main() -> int:
-    try:
-        return _main()
-    except Exception as exc:
-        runtime = detect_runtime({})
-        if failure_mode("pre_edit_structure") == "fail_closed":
-            adapter_for(runtime).emit_permission_decision(
-                "block",
-                f"ChangeForge Pre-Edit gate failed closed: {exc}",
-            )
-        return 0
+    return run_gate_with_policy(
+        "pre_edit_structure",
+        _main,
+        fail_closed=_fail_closed,
+    )
+
+
+def _fail_closed(exc: Exception) -> None:
+    runtime = detect_runtime({})
+    adapter_for(runtime).emit_permission_decision(
+        "block",
+        f"ChangeForge Pre-Edit gate failed closed: {exc}",
+    )
 
 
 def _main() -> int:
@@ -134,6 +137,7 @@ def _main() -> int:
         pre_edit_structure_findings=result["findings"],
         implementation_preflight_required=True,
         implementation_preflight_seen=bool(manifest.get("present")),
+        implementation_preflight_complete=bool(result["preflight_complete"]),
         implementation_preflight_blocked=bool(result["block"]),
         pre_edit_missing_read_evidence="read_evidence" in missing,
         pre_edit_missing_reuse_decision="reuse_decision" in missing,
@@ -159,6 +163,7 @@ def _main() -> int:
         read_evidence_seen=bool(result["has_read_evidence"]),
         implementation_preflight_required=True,
         implementation_preflight_seen=bool(manifest.get("present")),
+        implementation_preflight_complete=bool(result["preflight_complete"]),
         implementation_preflight_blocked=bool(result["block"]),
         edit_without_preflight_seen="implementation_preflight" in missing,
     )
@@ -225,6 +230,7 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
     if structural and not manifest.get("risk"):
         missing.append("risk")
         findings.append("structural edit lacks rollback or residual-risk note")
+    preflight_complete = bool(manifest.get("present")) and not missing
     code_edit_without_read_preflight = (
         compact_name(tool_name(event)) in EDIT_TOOLS
         and any(Path(path).suffix in CODE_EXTENSIONS for path in changed_paths)
@@ -249,6 +255,7 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
         helper_paths=helper_paths,
         has_read_evidence=has_read_evidence,
         block=block,
+        preflight_complete=preflight_complete,
     )
 
 
@@ -512,6 +519,7 @@ def _result(
     helper_paths: list[str],
     has_read_evidence: bool,
     block: bool,
+    preflight_complete: bool = False,
 ) -> dict:
     fields = []
     if manifest.get("present"):
@@ -537,6 +545,7 @@ def _result(
         "helper_paths": _unique(helper_paths),
         "has_read_evidence": has_read_evidence,
         "block": block,
+        "preflight_complete": bool(preflight_complete),
         "preflight_summaries": [
             f"paths={','.join(_unique(changed_paths)[:5])}; fields={','.join(fields)}"
         ]

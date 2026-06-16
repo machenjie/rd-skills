@@ -106,6 +106,10 @@
     "permission_gate_seen": { "type": "boolean" },
     "professional_contract_seen": { "type": "boolean" },
     "implementation_preflight_seen": { "type": "boolean" },
+    "implementation_preflight_complete": {
+      "description": "Whether a required implementation preflight manifest was present and satisfied the fields required for the observed edit. implementation_preflight_seen only means the manifest was present.",
+      "type": "boolean"
+    },
     "implementation_preflight_required": { "type": "boolean" },
     "implementation_preflight_blocked": { "type": "boolean" },
     "pre_edit_missing_read_evidence": { "type": "boolean" },

@@ -415,7 +415,7 @@ def main() -> int:
         )
         preflight_gap = bool(
             state_before.get("implementation_preflight_required")
-            and not state_before.get("implementation_preflight_seen")
+            and not state_before.get("implementation_preflight_complete")
         )
         debug_log(
             repo,
@@ -498,6 +498,9 @@ def main() -> int:
                 state_before.get("implementation_preflight_required")
             ),
             implementation_preflight_seen=bool(state_before.get("implementation_preflight_seen")),
+            implementation_preflight_complete=bool(
+                state_before.get("implementation_preflight_complete")
+            ),
             implementation_preflight_blocked=bool(
                 state_before.get("implementation_preflight_blocked")
             ),

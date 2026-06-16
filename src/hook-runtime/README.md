@@ -191,7 +191,9 @@ changeforge_implementation_preflight:
   object_boundary:
     artifact_type: module
     owner: module
+    state_or_invariant: module owns the changed behavior boundary
     public_api_change: false
+    compatibility_notes: no public API change
   test_plan:
     validation_commands:
       - python3 -m unittest discover -s tests

@@ -917,6 +917,7 @@ def _validate_hook_behavior(errors: list[str]) -> None:
     for field in (
         "implementation_preflights",
         "implementation_preflight_seen",
+        "implementation_preflight_complete",
         "implementation_preflight_required",
         "edit_without_preflight_seen",
         "post_edit_confirmed_preflight_gap",
@@ -928,6 +929,7 @@ def _validate_hook_behavior(errors: list[str]) -> None:
     for field in (
         "implementation_preflight_required",
         "implementation_preflight_seen",
+        "implementation_preflight_complete",
         "implementation_preflight_blocked",
         "edit_without_preflight_seen",
         "post_edit_confirmed_preflight_gap",

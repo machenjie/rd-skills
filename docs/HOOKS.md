@@ -179,6 +179,11 @@ changeforge_implementation_preflight:
 Read-only, review-only, and educational question turns do not require this
 manifest when no files changed.
 
+`object_boundary` is considered complete only when it names at least
+`artifact_type` and `owner`, plus either `state_or_invariant` or
+`compatibility_notes`. Scalar placeholders such as `object_boundary: yes` do
+not satisfy the pre-edit gate.
+
 ## Telemetry
 
 In addition to their reminders, runtime gates append a small telemetry record

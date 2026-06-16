@@ -201,6 +201,8 @@ class PreEditStructureGateTests(unittest.TestCase):
             "      - symbol_or_path: src/services/base.py\n"
             "  object_boundary:\n"
             "    artifact_type: class\n"
+            "    owner: src/services/order_service.py\n"
+            "    state_or_invariant: service class owns order orchestration boundary\n"
             "  test_plan:\n"
             "    validation_commands:\n"
             "      - pytest tests/test_order_service.py\n"
@@ -215,6 +217,7 @@ class PreEditStructureGateTests(unittest.TestCase):
             state = load_state(cwd, cache)
         self.assertEqual(result.stdout, "")
         self.assertTrue(state["implementation_preflight_seen"])
+        self.assertTrue(state["implementation_preflight_complete"])
         self.assertTrue(state["implementation_preflights"])
 
     def test_write_plain_class_content_requires_object_boundary(self) -> None:
@@ -273,6 +276,7 @@ class PreEditStructureGateTests(unittest.TestCase):
             "changeforge_implementation_preflight:\n"
             "  placement_decision: yes\n"
             "  reuse_decision: yes\n"
+            "  object_boundary: yes\n"
             "  test_plan: yes\n"
             "  risk: yes\n"
             "```\n"
@@ -281,8 +285,39 @@ class PreEditStructureGateTests(unittest.TestCase):
         self.assertTrue(result["present"])
         self.assertFalse(result["placement_decision"])
         self.assertFalse(result["reuse_decision"])
+        self.assertFalse(result["object_boundary"])
         self.assertFalse(result["test_plan"])
         self.assertFalse(result["risk"])
+
+    def test_incomplete_manifest_records_seen_but_not_complete(self) -> None:
+        manifest = (
+            "```yaml\n"
+            "changeforge_implementation_preflight:\n"
+            "  read_evidence:\n"
+            "    target_files:\n"
+            "      - src/services/order_service.py\n"
+            "  placement_decision:\n"
+            "    target_file: src/services/order_service.py\n"
+            "    reason: service module owns order orchestration\n"
+            "  reuse_decision:\n"
+            "    new_code_justification: no compatible extension point\n"
+            "  object_boundary:\n"
+            "    artifact_type: class\n"
+            "  test_plan:\n"
+            "    validation_commands:\n"
+            "      - pytest tests/test_order_service.py\n"
+            "  risk:\n"
+            "    rollback_or_revert_path: revert patch\n"
+            "```\n"
+        )
+        event = {**patch_event(), "last_assistant_message": manifest}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            result = run_gate(event, cwd, cache)
+            state = load_state(cwd, cache)
+        self.assertIn("object_boundary", result.stdout)
+        self.assertTrue(state["implementation_preflight_seen"])
+        self.assertFalse(state["implementation_preflight_complete"])
 
     def test_fail_closed_blocks_on_unhandled_exception(self) -> None:
         gate = load_gate()

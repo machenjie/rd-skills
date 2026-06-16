@@ -83,6 +83,44 @@ class HookPolicyTests(unittest.TestCase):
         ):
             self.assertEqual(self.policy.failure_mode("pre_edit_structure"), "fail_closed")
 
+    def test_run_gate_with_policy_defaults_to_fail_open(self) -> None:
+        calls: list[str] = []
+
+        def fail_closed(exc: Exception) -> None:
+            calls.append(f"closed:{exc}")
+
+        def fail_open(exc: Exception) -> None:
+            calls.append(f"open:{exc}")
+
+        with patch.dict(os.environ, {}, clear=True):
+            result = self.policy.run_gate_with_policy(
+                "permission_policy",
+                lambda: (_ for _ in ()).throw(RuntimeError("boom")),
+                fail_closed=fail_closed,
+                fail_open=fail_open,
+            )
+        self.assertEqual(result, 0)
+        self.assertEqual(calls, ["open:boom"])
+
+    def test_run_gate_with_policy_uses_fail_closed(self) -> None:
+        calls: list[str] = []
+
+        def fail_closed(exc: Exception) -> None:
+            calls.append(f"closed:{exc}")
+
+        with patch.dict(
+            os.environ,
+            {"CHANGEFORGE_PERMISSION_POLICY_FAILURE_MODE": "fail_closed"},
+            clear=True,
+        ):
+            result = self.policy.run_gate_with_policy(
+                "permission_policy",
+                lambda: (_ for _ in ()).throw(RuntimeError("boom")),
+                fail_closed=fail_closed,
+            )
+        self.assertEqual(result, 0)
+        self.assertEqual(calls, ["closed:boom"])
+
     def test_invalid_mode_falls_back_to_warn(self) -> None:
         with patch.dict(os.environ, {"CHANGEFORGE_HOOK_MODE": "explode"}, clear=True):
             self.assertEqual(self.policy.gate_mode("pre_edit_structure"), "warn")

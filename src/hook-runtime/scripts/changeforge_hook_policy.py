@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from typing import Any
 
 
@@ -69,6 +70,25 @@ def failure_mode(gate_name: str) -> str:
     return global_failure or "fail_open"
 
 
+def run_gate_with_policy(
+    gate_name: str,
+    main_fn: Callable[[], int],
+    *,
+    fail_closed: Callable[[Exception], None],
+    fail_open: Callable[[Exception], None] | None = None,
+) -> int:
+    """Run one gate and apply its configured exception strategy."""
+    try:
+        result = main_fn()
+    except Exception as exc:
+        if failure_mode(gate_name) == "fail_closed":
+            fail_closed(exc)
+        elif fail_open is not None:
+            fail_open(exc)
+        return 0
+    return result if isinstance(result, int) else 0
+
+
 def should_block(gate_name: str, confidence: str = "high") -> bool:
     """Block only when the gate is configured to block and confidence is high."""
     return (
@@ -108,6 +128,7 @@ __all__ = [
     "failure_mode",
     "gate_mode",
     "policy_for",
+    "run_gate_with_policy",
     "should_block",
     "should_emit_context",
 ]

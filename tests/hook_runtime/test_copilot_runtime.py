@@ -254,6 +254,8 @@ class CopilotRuntimeTests(unittest.TestCase):
                 "      - symbol_or_path: src/hook-runtime/scripts/changeforge_common.py\n"
                 "  object_boundary:\n"
                 "    artifact_type: module\n"
+                "    owner: src/hook-runtime/scripts/example.py\n"
+                "    state_or_invariant: hook script owns its runtime behavior boundary\n"
                 "  test_plan:\n"
                 "    validation_commands:\n"
                 "      - python3 -m unittest tests.hook_runtime.test_copilot_runtime\n"

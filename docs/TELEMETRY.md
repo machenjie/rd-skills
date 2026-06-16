@@ -236,8 +236,11 @@ The v1 telemetry schema is extended compatibly with action-aware hook facts:
   compaction hooks are accepted `hook_name` values.
 - Implementation preflight state is stored as compact summaries and booleans:
   `implementation_preflights`, `implementation_preflight_seen`,
-  `implementation_preflight_required`, `edit_without_preflight_seen`, and
-  `post_edit_confirmed_preflight_gap`.
+  `implementation_preflight_complete`, `implementation_preflight_required`,
+  `edit_without_preflight_seen`, and `post_edit_confirmed_preflight_gap`.
+  `implementation_preflight_seen` only means the manifest appeared;
+  `implementation_preflight_complete` means the manifest satisfied the fields
+  required for the observed edit.
 
 These fields are facts about hook behavior, not content capture. Telemetry still
 records only path-like facts, compact signal names, command program names, gate

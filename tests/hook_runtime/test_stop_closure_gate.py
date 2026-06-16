@@ -133,6 +133,8 @@ PREFLIGHT_MANIFEST = (
     "      - symbol_or_path: b.go\n"
     "  object_boundary:\n"
     "    artifact_type: module\n"
+    "    owner: a.go\n"
+    "    state_or_invariant: module owns the changed behavior boundary\n"
     "  test_plan:\n"
     "    validation_commands:\n"
     "      - go test ./...\n"
@@ -429,6 +431,7 @@ class StopClosureGateTests(unittest.TestCase):
                 changed_paths=["a.go"],
                 implementation_preflight_required=True,
                 implementation_preflight_seen=True,
+                implementation_preflight_complete=True,
             )
             result = run_stop(event, cwd, cache, mode="block", agent="codex")
         self.assertEqual(result.returncode, 0)

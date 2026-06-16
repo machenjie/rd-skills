@@ -50,6 +50,7 @@ STATE_REDUCERS = {
     "validation_command_seen": "bool_or",
     "validation_seen": "bool_or",
     "implementation_preflight_seen": "bool_or",
+    "implementation_preflight_complete": "bool_or",
     "implementation_preflight_required": "bool_or",
     "implementation_preflight_blocked": "bool_or",
     "pre_edit_missing_read_evidence": "bool_or",

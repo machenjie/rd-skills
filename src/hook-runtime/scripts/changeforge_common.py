@@ -76,6 +76,7 @@ STATE_BOOL_FIELDS = (
     "permission_gate_seen",
     "professional_contract_seen",
     "implementation_preflight_seen",
+    "implementation_preflight_complete",
     "implementation_preflight_required",
     "implementation_preflight_blocked",
     "pre_edit_missing_read_evidence",
@@ -587,6 +588,7 @@ def merge_state(
     permission_gate_seen: bool | None = None,
     professional_contract_seen: bool | None = None,
     implementation_preflight_seen: bool | None = None,
+    implementation_preflight_complete: bool | None = None,
     implementation_preflight_required: bool | None = None,
     implementation_preflight_blocked: bool | None = None,
     pre_edit_missing_read_evidence: bool | None = None,
@@ -643,6 +645,7 @@ def merge_state(
         "permission_gate_seen": permission_gate_seen,
         "professional_contract_seen": professional_contract_seen,
         "implementation_preflight_seen": implementation_preflight_seen,
+        "implementation_preflight_complete": implementation_preflight_complete,
         "implementation_preflight_required": implementation_preflight_required,
         "implementation_preflight_blocked": implementation_preflight_blocked,
         "pre_edit_missing_read_evidence": pre_edit_missing_read_evidence,
@@ -759,6 +762,7 @@ def write_telemetry_event(
     professional_contract_seen: bool = False,
     implementation_preflight_required: bool = False,
     implementation_preflight_seen: bool = False,
+    implementation_preflight_complete: bool = False,
     implementation_preflight_blocked: bool = False,
     edit_without_preflight_seen: bool = False,
     post_edit_confirmed_preflight_gap: bool = False,
@@ -821,6 +825,7 @@ def write_telemetry_event(
             "professional_contract_seen": bool(professional_contract_seen),
             "implementation_preflight_required": bool(implementation_preflight_required),
             "implementation_preflight_seen": bool(implementation_preflight_seen),
+            "implementation_preflight_complete": bool(implementation_preflight_complete),
             "implementation_preflight_blocked": bool(implementation_preflight_blocked),
             "edit_without_preflight_seen": bool(edit_without_preflight_seen),
             "post_edit_confirmed_preflight_gap": bool(post_edit_confirmed_preflight_gap),
@@ -1010,7 +1015,7 @@ def extract_implementation_preflight_fields(text: str) -> dict:
             "reuse_decision",
             ("direct_reuse", "extension_reuse", "new_code_justification"),
         )
-        result["object_boundary"] = _manifest_section_has_value(block, "object_boundary")
+        result["object_boundary"] = _manifest_object_boundary_complete(block)
         result["test_plan"] = _manifest_section_has_any_value(
             block, "test_plan", ("validation_commands",)
         )
@@ -1166,6 +1171,20 @@ def _manifest_section_has_any_value(
     return any(_manifest_child_has_meaningful_value(section, key) for key in child_keys)
 
 
+def _manifest_object_boundary_complete(segment: str) -> bool:
+    if not _manifest_section_has_required_values(
+        segment,
+        "object_boundary",
+        ("artifact_type", "owner"),
+    ):
+        return False
+    return _manifest_section_has_any_value(
+        segment,
+        "object_boundary",
+        ("state_or_invariant", "compatibility_notes"),
+    )
+
+
 def _manifest_child_has_meaningful_value(segment: str, key: str) -> bool:
     scalar = _manifest_scalar_field(segment, key)
     if _manifest_meaningful_value(scalar):
@@ -1283,6 +1302,7 @@ def _empty_state() -> dict:
         "permission_gate_seen": False,
         "professional_contract_seen": False,
         "implementation_preflight_seen": False,
+        "implementation_preflight_complete": False,
         "implementation_preflight_required": False,
         "implementation_preflight_blocked": False,
         "pre_edit_missing_read_evidence": False,

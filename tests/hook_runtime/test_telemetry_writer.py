@@ -370,6 +370,7 @@ class TelemetryWriterTests(unittest.TestCase):
                 mode="block",
                 implementation_preflight_required=True,
                 implementation_preflight_seen=False,
+                implementation_preflight_complete=False,
                 implementation_preflight_blocked=True,
                 edit_without_preflight_seen=True,
                 post_edit_confirmed_preflight_gap=True,
@@ -379,6 +380,7 @@ class TelemetryWriterTests(unittest.TestCase):
         record = records[0]
         self.assertTrue(record["implementation_preflight_required"])
         self.assertFalse(record["implementation_preflight_seen"])
+        self.assertFalse(record["implementation_preflight_complete"])
         self.assertTrue(record["implementation_preflight_blocked"])
         self.assertTrue(record["edit_without_preflight_seen"])
         self.assertTrue(record["post_edit_confirmed_preflight_gap"])

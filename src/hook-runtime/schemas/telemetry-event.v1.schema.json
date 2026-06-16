@@ -121,6 +121,10 @@
     "professional_contract_seen": { "type": "boolean" },
     "implementation_preflight_required": { "type": "boolean" },
     "implementation_preflight_seen": { "type": "boolean" },
+    "implementation_preflight_complete": {
+      "description": "Whether a required implementation preflight manifest was present and satisfied the fields required for the observed edit. implementation_preflight_seen only means the manifest was present.",
+      "type": "boolean"
+    },
     "implementation_preflight_blocked": { "type": "boolean" },
     "edit_without_preflight_seen": { "type": "boolean" },
     "post_edit_confirmed_preflight_gap": { "type": "boolean" }

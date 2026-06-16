@@ -23,10 +23,11 @@ from changeforge_common import (
     session_id_from_event,
     write_telemetry_event,
 )
-from changeforge_hook_policy import failure_mode, gate_mode
+from changeforge_hook_policy import gate_mode, run_gate_with_policy
 
 
 MAX_TRANSCRIPT_BYTES = 1_000_000
+_GATE_RUNTIME = ""
 
 CLOSURE_KEYWORDS = {
     "skills": ["skill", "ChangeForge", "router", "路由", "技能"],
@@ -246,30 +247,41 @@ STAGE_HANDOFF_KEYWORDS = {
 
 
 def main() -> int:
-    try:
-        return _main()
-    except Exception as exc:
-        runtime = detect_runtime({})
-        if failure_mode("stop_closure") == "fail_closed":
-            emit_stop_reminder(
-                runtime,
-                f"ChangeForge Stop Closure gate failed closed: {exc}",
-                continue_turn=True,
-            )
-        else:
-            emit_stop_reminder(
-                runtime,
-                f"ChangeForge Hook Runtime warning: closure gate failed open: {exc}",
-                continue_turn=False,
-            )
-        return 0
+    return run_gate_with_policy(
+        "stop_closure",
+        _main,
+        fail_closed=_fail_closed,
+        fail_open=_fail_open,
+    )
+
+
+def _failure_runtime() -> str:
+    return _GATE_RUNTIME or detect_runtime({})
+
+
+def _fail_closed(exc: Exception) -> None:
+    emit_stop_reminder(
+        _failure_runtime(),
+        f"ChangeForge Stop Closure gate failed closed: {exc}",
+        continue_turn=True,
+    )
+
+
+def _fail_open(exc: Exception) -> None:
+    emit_stop_reminder(
+        _failure_runtime(),
+        f"ChangeForge Hook Runtime warning: closure gate failed open: {exc}",
+        continue_turn=False,
+    )
 
 
 def _main() -> int:
+    global _GATE_RUNTIME
     event = read_event()
     if not event:
         return 0
     runtime = detect_runtime(event)
+    _GATE_RUNTIME = runtime
     if runtime == "unknown":
         return 0
     mode = gate_mode("stop_closure")
@@ -278,96 +290,84 @@ def _main() -> int:
     if not is_stop(event):
         return 0
 
-    try:
-        repo = repo_root(cwd_from_event(event))
-        state = load_state(repo)
-        debug_log(
-            repo,
-            f"stop gate runtime={runtime} event={event_name(event)} has_surface={_has_closure_surface(state)} validation_command_seen={state.get('validation_command_seen')}",
-        )
-        if not _has_closure_surface(state):
-            return 0
-        final_text = _final_text(event)
-        manifest = extract_manifest_fields(final_text)
-        signals = _closure_signals(final_text, state, manifest)
-        write_telemetry_event(
-            repo,
-            runtime=runtime,
-            hook_name="stop_closure_gate",
-            event_name=event_name(event),
-            mode=mode,
-            session_id=session_id_from_event(event),
-            cwd=cwd_from_event(event),
-            changed_paths=state.get("changed_paths", []),
-            hook_findings=_stop_findings(state),
-            suggested_skills=state.get("suggested_skills", []),
-            suggested_capabilities=state.get("suggested_capabilities", []),
-            suggested_gates=state.get("suggested_gates", []),
-            suggested_domain_extensions=state.get("suggested_domain_extensions", []),
-            risk_surfaces=state.get("risk_surfaces", []),
-            route_manifest_detected=signals["route_manifest"],
-            required_references_detected=signals["references"],
-            validation_evidence_detected=signals["validation"],
-            residual_risk_detected=signals["risk"],
-            completion_language_detected=signals["completion_language"],
-            stage_manifest_detected=bool(manifest.get("stage_present")),
-            manifest_current_stage=manifest.get("current_stage", ""),
-            manifest_selected_skills=manifest.get("selected_skills", []),
-            manifest_selected_capabilities=manifest.get("selected_capabilities", []),
-            manifest_selected_domain_extensions=manifest.get("selected_domain_extensions", []),
-            manifest_required_references=manifest.get("required_references", []),
-            manifest_required_quality_gates=manifest.get("required_quality_gates", []),
-            manifest_skipped_quality_gates=manifest.get("skipped_quality_gates", []),
-            turn_stage=state.get("turn_stage", ""),
-            owner_skill=state.get("owner_skill", ""),
-            reviewer_skill=state.get("reviewer_skill", ""),
-            read_evidence_seen=bool(state.get("read_evidence_seen")),
-            review_evidence_seen=bool(state.get("review_evidence_seen")),
-            repair_evidence_seen=bool(state.get("repair_evidence_seen")),
-            permission_gate_seen=bool(state.get("permission_gate_seen")),
-            professional_contract_seen=bool(state.get("professional_contract_seen")),
-            implementation_preflight_required=bool(
-                state.get("implementation_preflight_required")
-            ),
-            implementation_preflight_seen=bool(state.get("implementation_preflight_seen")),
-            implementation_preflight_blocked=bool(
-                state.get("implementation_preflight_blocked")
-            ),
-            edit_without_preflight_seen=bool(state.get("edit_without_preflight_seen")),
-            post_edit_confirmed_preflight_gap=bool(
-                state.get("post_edit_confirmed_preflight_gap")
-            ),
-        )
-        if mode == "monitor":
-            clear_state(repo, runtime)
-            return 0
-        missing = _missing_keyword_groups(final_text, state, manifest)
-        if _closure_profile(state) == "read_review" and not missing:
-            clear_state(repo, runtime)
-            return 0
-        stop_hook_active = bool(event.get("stop_hook_active") or event.get("stopHookActive"))
-        should_block = mode == "block" and bool(missing) and not stop_hook_active
-        message = _closure_message(state, final_text, manifest)
-        if should_block:
-            emit_stop_reminder(runtime, message, continue_turn=True)
-        else:
-            clear_state(repo, runtime)
-            emit_stop_reminder(runtime, message, continue_turn=False)
+    repo = repo_root(cwd_from_event(event))
+    state = load_state(repo)
+    debug_log(
+        repo,
+        f"stop gate runtime={runtime} event={event_name(event)} has_surface={_has_closure_surface(state)} validation_command_seen={state.get('validation_command_seen')}",
+    )
+    if not _has_closure_surface(state):
         return 0
-    except Exception as exc:
-        if failure_mode("stop_closure") == "fail_closed":
-            emit_stop_reminder(
-                runtime,
-                f"ChangeForge Stop Closure gate failed closed: {exc}",
-                continue_turn=True,
-            )
-        else:
-            emit_stop_reminder(
-                runtime,
-                f"ChangeForge Hook Runtime warning: closure gate failed open: {exc}",
-                continue_turn=False,
-            )
+    final_text = _final_text(event)
+    manifest = extract_manifest_fields(final_text)
+    signals = _closure_signals(final_text, state, manifest)
+    write_telemetry_event(
+        repo,
+        runtime=runtime,
+        hook_name="stop_closure_gate",
+        event_name=event_name(event),
+        mode=mode,
+        session_id=session_id_from_event(event),
+        cwd=cwd_from_event(event),
+        changed_paths=state.get("changed_paths", []),
+        hook_findings=_stop_findings(state),
+        suggested_skills=state.get("suggested_skills", []),
+        suggested_capabilities=state.get("suggested_capabilities", []),
+        suggested_gates=state.get("suggested_gates", []),
+        suggested_domain_extensions=state.get("suggested_domain_extensions", []),
+        risk_surfaces=state.get("risk_surfaces", []),
+        route_manifest_detected=signals["route_manifest"],
+        required_references_detected=signals["references"],
+        validation_evidence_detected=signals["validation"],
+        residual_risk_detected=signals["risk"],
+        completion_language_detected=signals["completion_language"],
+        stage_manifest_detected=bool(manifest.get("stage_present")),
+        manifest_current_stage=manifest.get("current_stage", ""),
+        manifest_selected_skills=manifest.get("selected_skills", []),
+        manifest_selected_capabilities=manifest.get("selected_capabilities", []),
+        manifest_selected_domain_extensions=manifest.get("selected_domain_extensions", []),
+        manifest_required_references=manifest.get("required_references", []),
+        manifest_required_quality_gates=manifest.get("required_quality_gates", []),
+        manifest_skipped_quality_gates=manifest.get("skipped_quality_gates", []),
+        turn_stage=state.get("turn_stage", ""),
+        owner_skill=state.get("owner_skill", ""),
+        reviewer_skill=state.get("reviewer_skill", ""),
+        read_evidence_seen=bool(state.get("read_evidence_seen")),
+        review_evidence_seen=bool(state.get("review_evidence_seen")),
+        repair_evidence_seen=bool(state.get("repair_evidence_seen")),
+        permission_gate_seen=bool(state.get("permission_gate_seen")),
+        professional_contract_seen=bool(state.get("professional_contract_seen")),
+        implementation_preflight_required=bool(
+            state.get("implementation_preflight_required")
+        ),
+        implementation_preflight_seen=bool(state.get("implementation_preflight_seen")),
+        implementation_preflight_complete=bool(
+            state.get("implementation_preflight_complete")
+        ),
+        implementation_preflight_blocked=bool(
+            state.get("implementation_preflight_blocked")
+        ),
+        edit_without_preflight_seen=bool(state.get("edit_without_preflight_seen")),
+        post_edit_confirmed_preflight_gap=bool(
+            state.get("post_edit_confirmed_preflight_gap")
+        ),
+    )
+    if mode == "monitor":
+        clear_state(repo, runtime)
         return 0
+    missing = _missing_keyword_groups(final_text, state, manifest)
+    if _closure_profile(state) == "read_review" and not missing:
+        clear_state(repo, runtime)
+        return 0
+    stop_hook_active = bool(event.get("stop_hook_active") or event.get("stopHookActive"))
+    should_block = mode == "block" and bool(missing) and not stop_hook_active
+    message = _closure_message(state, final_text, manifest)
+    if should_block:
+        emit_stop_reminder(runtime, message, continue_turn=True)
+    else:
+        clear_state(repo, runtime)
+        emit_stop_reminder(runtime, message, continue_turn=False)
+    return 0
 
 
 
@@ -387,6 +387,7 @@ def _has_closure_surface(state: dict) -> bool:
         or state.get("structure_quality_findings")
         or state.get("implementation_preflight_required")
         or state.get("implementation_preflight_seen")
+        or state.get("implementation_preflight_complete")
         or state.get("pre_edit_structure_findings")
         or state.get("edit_without_preflight_seen")
         or state.get("post_edit_confirmed_preflight_gap")
@@ -869,13 +870,16 @@ def _has_implementation_preflight_evidence(text: str, state: dict) -> bool:
         return False
     manifest = extract_implementation_preflight_fields(text)
     if manifest.get("present"):
-        return bool(
+        complete = bool(
             manifest.get("read_evidence")
             and manifest.get("placement_decision")
             and manifest.get("reuse_decision")
             and manifest.get("test_plan")
             and manifest.get("risk")
         )
+        if state.get("advanced_refactor_findings") or state.get("pre_edit_structure_findings"):
+            complete = complete and bool(manifest.get("object_boundary"))
+        return complete
     lowered = text.casefold()
     required_terms = (
         "preflight",
