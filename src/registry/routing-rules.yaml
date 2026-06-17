@@ -233,6 +233,20 @@ risk_escalation_triggers:
   - object allocation regression
   - GC pressure risk
   - design pattern performance risk
+quality_gates:
+  - requirement gate
+  - impact gate
+  - domain gate
+  - architecture gate
+  - API/data gate
+  - implementation gate
+  - security gate
+  - test gate
+  - reliability gate
+  - delivery gate
+  - documentation gate
+  - AI review gate
+  - execution discipline gate
 risk_trigger_rules:
   - trigger: auth
     required_skills: [security-privacy-gate]
@@ -945,20 +959,6 @@ engineering_stage_signals:
     signals: documentation handoff change boundary validation evidence residual risk runbook changelog next action
   - stage: skill-authoring
     signals: SKILL.md capability reference registry routing rule skill authoring
-quality_gates:
-  - requirement gate
-  - impact gate
-  - domain gate
-  - architecture gate
-  - API/data gate
-  - implementation gate
-  - security gate
-  - test gate
-  - reliability gate
-  - delivery gate
-  - documentation gate
-  - AI review gate
-  - execution discipline gate
 routing_rules:
   - route_to: change-forge-router
     triggers:

@@ -6,10 +6,16 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from validation_utils import NAME_RE
+from validation_utils import (
+    EXPECTED_DOMAIN_EXTENSION_COUNT,
+    EXPECTED_FOUNDATION_CAPABILITY_COUNT,
+    EXPECTED_PROFESSIONAL_SKILL_COUNT,
+    NAME_RE,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,6 +43,12 @@ STRING_LIST_FIELDS = (
     "used_by",
     "required_quality_gates",
 )
+EXPECTED_ITEM_COUNTS = {
+    "professional_skill": EXPECTED_PROFESSIONAL_SKILL_COUNT,
+    "foundation_capability": EXPECTED_FOUNDATION_CAPABILITY_COUNT,
+    "domain_extension": EXPECTED_DOMAIN_EXTENSION_COUNT,
+}
+EXPECTED_TOTAL_ITEM_COUNT = sum(EXPECTED_ITEM_COUNTS.values())
 
 
 def _load_exporter():
@@ -90,7 +102,34 @@ def _validate_profile_policy(
     return errors
 
 
-def validate_payload(root: Path, payload: dict[str, Any], profile: str) -> list[str]:
+def _item_count_errors(items: list[Any]) -> list[str]:
+    """Return profile-independent marketplace item count errors."""
+    errors: list[str] = []
+    if len(items) != EXPECTED_TOTAL_ITEM_COUNT:
+        errors.append(
+            f"items must contain {EXPECTED_TOTAL_ITEM_COUNT} total item(s), found {len(items)}"
+        )
+    counts = Counter(
+        item.get("type")
+        for item in items
+        if isinstance(item, dict)
+    )
+    for item_type, expected_count in EXPECTED_ITEM_COUNTS.items():
+        actual_count = counts.get(item_type, 0)
+        if actual_count != expected_count:
+            errors.append(
+                f"items must contain {expected_count} {item_type} item(s), found {actual_count}"
+            )
+    return errors
+
+
+def validate_payload(
+    root: Path,
+    payload: dict[str, Any],
+    profile: str,
+    *,
+    enforce_counts: bool = True,
+) -> list[str]:
     """Return schema/profile/runtime-path errors for a marketplace payload."""
     errors: list[str] = []
     if set(payload) != TOP_LEVEL_KEYS:
@@ -110,6 +149,8 @@ def validate_payload(root: Path, payload: dict[str, Any], profile: str) -> list[
     if not isinstance(items, list):
         errors.append("items must be a list")
         return errors
+    if enforce_counts:
+        errors.extend(_item_count_errors(items))
 
     for index, item in enumerate(items):
         label = f"items[{index}]"

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import sys
 import tomllib
@@ -209,6 +210,27 @@ def productization_assets_status(root: Path) -> tuple[str, str]:
     return "pass", "required productization assets present"
 
 
+def _load_validate_examples():
+    spec = importlib.util.spec_from_file_location(
+        "validate_examples",
+        ROOT / "scripts" / "validate-examples.py",
+    )
+    if spec is None or spec.loader is None:
+        raise RuntimeError("unable to load validate-examples.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def examples_status(root: Path) -> tuple[str, str]:
+    """Return status/detail from the same validator used by CI."""
+    errors = _load_validate_examples().validate_examples(root)
+    if errors:
+        return "fail", "; ".join(errors[:5])
+    return "pass", "showcase examples validate"
+
+
 def _summary_status(name: str, value: dict[str, Any]) -> str:
     if name == "Routing coverage":
         if value.get("hidden_risks_needing_manual_review", 0) or value.get("cases_without_forbidden", 0):
@@ -352,24 +374,15 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
         ]
     )
 
-    examples_ready = (root / "examples").is_dir() and all(
-        (root / "examples" / name).is_dir()
-        for name in [
-            "01-backend-permission-change",
-            "02-frontend-form-state-change",
-            "03-data-migration-review",
-            "04-structure-refactor-placement",
-            "05-hook-closure-gate",
-        ]
-    )
+    example_status, example_detail = examples_status(root)
     dimensions.append(
         Dimension(
             "Example coverage",
-            "pass" if examples_ready else "fail",
-            "examples/",
+            example_status,
+            "examples/ and scripts/validate-examples.py",
             "python3 scripts/validate-examples.py",
-            "Add missing scenario directories and required prompt/route/evidence files.",
-            "required showcase examples present" if examples_ready else "required showcase examples missing",
+            "Repair showcase scenario prompts, expected routes, evidence files, or routing fixture links.",
+            example_detail,
         )
     )
 

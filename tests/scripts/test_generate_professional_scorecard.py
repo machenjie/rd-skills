@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -96,6 +97,19 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
             ]
         }
         self.assertEqual(module.strict_profile_build_errors(payload), [])
+
+    def test_example_coverage_uses_validate_examples_result(self) -> None:
+        module = _load_module()
+        module._load_validate_examples = lambda: SimpleNamespace(
+            validate_examples=lambda root: ["examples/01 broken"]
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            dimensions, _metadata = module.collect_dimensions(ROOT, Path(tmp))
+        example_dimension = next(
+            dimension for dimension in dimensions if dimension.name == "Example coverage"
+        )
+        self.assertEqual(example_dimension.status, "fail")
+        self.assertIn("examples/01 broken", example_dimension.detail)
 
     def test_open_source_readiness_no_license_is_partial(self) -> None:
         module = _load_module()

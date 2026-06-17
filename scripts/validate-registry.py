@@ -30,6 +30,7 @@ REGISTRY_DIR = ROOT / "src" / "registry"
 PROFESSIONAL_SKILLS_DIR = ROOT / "src" / "professional-skills"
 CAPABILITIES_DIR = ROOT / "src" / "foundation" / "capabilities"
 DOMAIN_EXTENSIONS_DIR = ROOT / "src" / "domain-extensions"
+STAGE_MODEL_REGISTRY = REGISTRY_DIR / "stage-model.yaml"
 REQUIRED_REGISTRIES = (
     "skills.yaml",
     "capabilities.yaml",
@@ -216,6 +217,115 @@ def _validate_optional_status(
         errors.append(f"{registry_name}[{index}]: status must be implemented when present")
 
 
+def _string_list(value: object, context: str, errors: list[str]) -> list[str]:
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        errors.append(f"{context}: must be a list")
+        return []
+    values: list[str] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, str) or not item.strip():
+            errors.append(f"{context}[{index}]: must be a non-empty string")
+            continue
+        values.append(item.strip())
+    return values
+
+
+def _required_string_list(value: object, context: str, errors: list[str]) -> list[str]:
+    if value is None:
+        errors.append(f"{context}: must be a list")
+        return []
+    return _string_list(value, context, errors)
+
+
+def _validate_unique_strings(values: list[str], context: str, errors: list[str]) -> None:
+    seen: set[str] = set()
+    for value in values:
+        if value in seen:
+            errors.append(f"{context}: duplicate entry '{value}'")
+        seen.add(value)
+
+
+def _validate_quality_gate_membership(
+    values: list[str],
+    known_quality_gates: set[str],
+    context: str,
+    errors: list[str],
+) -> None:
+    for value in values:
+        if value not in known_quality_gates:
+            errors.append(f"{context}: references unknown quality gate '{value}'")
+
+
+def _validate_quality_gate_references(
+    registry_data: dict[str, object],
+    errors: list[str],
+) -> None:
+    routing_rules = registry_data.get("routing-rules.yaml")
+    if not isinstance(routing_rules, dict):
+        errors.append("routing-rules.yaml: registry must be a mapping")
+        return
+
+    quality_gates = _required_string_list(
+        routing_rules.get("quality_gates"),
+        "routing-rules.yaml:quality_gates",
+        errors,
+    )
+    if not quality_gates:
+        errors.append("routing-rules.yaml:quality_gates must be non-empty")
+    _validate_unique_strings(quality_gates, "routing-rules.yaml:quality_gates", errors)
+    known_quality_gates = set(quality_gates)
+
+    risk_rules = routing_rules.get("risk_trigger_rules")
+    if isinstance(risk_rules, list):
+        for index, entry in enumerate(risk_rules):
+            if not isinstance(entry, dict):
+                continue
+            gates = _string_list(
+                entry.get("required_quality_gates"),
+                f"routing-rules.yaml:risk_trigger_rules[{index}].required_quality_gates",
+                errors,
+            )
+            _validate_quality_gate_membership(
+                gates,
+                known_quality_gates,
+                f"routing-rules.yaml:risk_trigger_rules[{index}].required_quality_gates",
+                errors,
+            )
+
+    if not STAGE_MODEL_REGISTRY.is_file():
+        errors.append(f"missing registry file: {relpath(ROOT, STAGE_MODEL_REGISTRY)}")
+        return
+    try:
+        stage_model = load_yaml_file(STAGE_MODEL_REGISTRY)
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+        return
+    if not isinstance(stage_model, dict):
+        errors.append(f"{relpath(ROOT, STAGE_MODEL_REGISTRY)}: registry must be a mapping")
+        return
+
+    stages = stage_model.get("stages")
+    if not isinstance(stages, list):
+        errors.append(f"{relpath(ROOT, STAGE_MODEL_REGISTRY)}:stages must be a list")
+        return
+    for index, entry in enumerate(stages):
+        if not isinstance(entry, dict):
+            continue
+        gates = _string_list(
+            entry.get("required_quality_gates"),
+            f"{relpath(ROOT, STAGE_MODEL_REGISTRY)}:stages[{index}].required_quality_gates",
+            errors,
+        )
+        _validate_quality_gate_membership(
+            gates,
+            known_quality_gates,
+            f"{relpath(ROOT, STAGE_MODEL_REGISTRY)}:stages[{index}].required_quality_gates",
+            errors,
+        )
+
+
 def main() -> int:
     errors: list[str] = []
 
@@ -360,6 +470,8 @@ def main() -> int:
                 errors.append(
                     f"routing-rules.yaml:routing_rules[{index}]: broken reference '{ref}'"
                 )
+
+    _validate_quality_gate_references(registry_data, errors)
 
     for registry_name, data in registry_data.items():
         for ref in collect_reference_values(data, HANDOFF_KEYS):
