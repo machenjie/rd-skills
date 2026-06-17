@@ -43,6 +43,9 @@ python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
 python3 scripts/validate-runtime-reference-links.py
 python3 scripts/validate-installation.py
+python3 scripts/validate-marketplace-index.py --profile recommended
+python3 scripts/validate-marketplace-index.py --profile full
+python3 scripts/validate-marketplace-index.py --profile dev
 python3 scripts/generate-professional-scorecard.py --out reports/professional-scorecard.md --json-out reports/professional-scorecard.json
 ```
 

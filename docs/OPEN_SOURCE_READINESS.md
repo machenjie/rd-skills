@@ -18,7 +18,7 @@ This audit tracks the repository work needed to meet common open-source project 
 | Governance | Ready | [GOVERNANCE.md](../GOVERNANCE.md) defines maintainer responsibilities and decision authority. |
 | Changelog | Ready | [CHANGELOG.md](../CHANGELOG.md) now tracks contributor-facing and release-facing changes. |
 | GitHub templates | Ready | Issue and pull request templates capture repro details, boundaries, validation, and risk. |
-| CI | Ready | `.github/workflows/ci.yml` runs lightweight core validation, productization smoke checks, and unit tests. Full profile builds and installation validation remain release gates, not default PR blockers. |
+| CI | Ready | `.github/workflows/ci.yml` runs core validation, profile builds for `recommended`, `full`, and `dev`, runtime reference validation, installation validation, marketplace export/validation, strict profile-build scorecard smoke, and unit tests. Heavy evals and benchmark comparisons remain release gates. |
 | Package metadata | Partial | `pyproject.toml` has project URLs, keywords, and classifiers. License metadata remains proprietary pending owner decision. |
 | License | Blocked | No open-source license file exists. Maintainers must choose the license. |
 
@@ -50,7 +50,7 @@ Security contact also requires an owner-controlled private path. [SECURITY.md](.
 | Clear purpose | README explains this is a ChangeForge skill-authoring, build, package, and install repository. |
 | Reproducible build | Runtime outputs are generated deterministically through `scripts/build.py`. |
 | Safe install model | Installers consume `dist/` only and write manifests for managed install/uninstall. |
-| Validation gate | Contributors and CI run validators, routing evals, codegen benchmark smoke checks, all profile builds, and installation validation. |
+| Validation gate | Contributors run the full validation suite before release handoff. CI runs core validators, productization smoke, all profile builds, runtime reference validation, installation validation, marketplace validation, strict profile-build scorecard smoke, and unit tests; heavy evals and codegen benchmarks remain release-gate commands. |
 | Security posture | Vulnerabilities are handled privately, with targeted regression coverage before release. |
 | Contribution path | Issues and pull requests ask for scope, evidence, validation output, and boundary checks. |
 | Release hygiene | Release runbook defines versioning, packaging, validation, smoke checks, and handoff requirements. |
@@ -88,7 +88,10 @@ python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
 python3 scripts/validate-runtime-reference-links.py
 python3 scripts/validate-installation.py
-python3 scripts/generate-professional-scorecard.py --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
+python3 scripts/validate-marketplace-index.py --profile recommended
+python3 scripts/validate-marketplace-index.py --profile full
+python3 scripts/validate-marketplace-index.py --profile dev
+python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
 python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json
 ```
 

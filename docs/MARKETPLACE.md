@@ -24,6 +24,14 @@ python3 scripts/export-marketplace-index.py --profile dev --out dist/indexes/dev
 python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json
 ```
 
+Validate the generated contract after the corresponding runtime profile has been built:
+
+```bash
+python3 scripts/validate-marketplace-index.py --profile recommended
+python3 scripts/validate-marketplace-index.py --profile full
+python3 scripts/validate-marketplace-index.py --profile dev
+```
+
 ## Fields
 
 The schema lives at [../schemas/marketplace-index.schema.json](../schemas/marketplace-index.schema.json). Each item includes:
@@ -51,3 +59,4 @@ Use the index to filter by:
 - runtime exposure through `profile_visibility.top_level`
 
 The exporter reads source registries and frontmatter. Do not hand-author a second marketplace catalog.
+The validator checks schema shape, profile visibility, runtime paths, and foundation capability exposure rules against built `dist/` artifacts.

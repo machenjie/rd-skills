@@ -1,6 +1,7 @@
 # Expected Route
 
 ```yaml
+scenario_id: l4-db-migration-api-compat
 selected_skills:
   - change-forge-router
   - data-api-contract-changer

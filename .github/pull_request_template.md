@@ -38,8 +38,13 @@ Required for skill-system changes:
 - [ ] `python3 scripts/build.py --profile dev`
 - [ ] `python3 scripts/validate-runtime-reference-links.py`
 - [ ] `python3 scripts/validate-installation.py`
-- [ ] `python3 scripts/generate-professional-scorecard.py --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json`
 - [ ] `python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json`
+- [ ] `python3 scripts/export-marketplace-index.py --profile full --out /tmp/full-marketplace-index.json`
+- [ ] `python3 scripts/export-marketplace-index.py --profile dev --out /tmp/dev-marketplace-index.json`
+- [ ] `python3 scripts/validate-marketplace-index.py --profile recommended`
+- [ ] `python3 scripts/validate-marketplace-index.py --profile full`
+- [ ] `python3 scripts/validate-marketplace-index.py --profile dev`
+- [ ] `python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json`
 
 ## Evidence And Review
 

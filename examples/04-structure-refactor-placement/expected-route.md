@@ -1,6 +1,7 @@
 # Expected Route
 
 ```yaml
+scenario_id: implementation-structure-shared-utils-pollution
 selected_skills:
   - change-forge-router
   - architecture-impact-reviewer

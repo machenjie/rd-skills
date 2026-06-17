@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import tomllib
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any
@@ -22,6 +23,26 @@ from validation_utils import (
 ROOT = Path(__file__).resolve().parents[1]
 PROFILES = ("recommended", "full", "dev")
 STATUSES = ("pass", "partial", "fail", "unknown", "not_collected")
+STRICT_PROFILE_BUILD_DIMENSIONS = (
+    "Registry source counts",
+    "Profile build reproducibility",
+    "Example coverage",
+    "Productization assets",
+)
+PRODUCTIZATION_ASSETS = (
+    "docs/QUICKSTART.md",
+    "docs/BENCHMARKS.md",
+    "docs/SCORECARD.md",
+    "docs/MARKETPLACE.md",
+    "docs/COMPARISON.md",
+    "docs/OPEN_SOURCE_READINESS.md",
+    "reports/README.md",
+    "schemas/marketplace-index.schema.json",
+    "scripts/generate-professional-scorecard.py",
+    "scripts/export-marketplace-index.py",
+    "scripts/validate-marketplace-index.py",
+    "scripts/validate-examples.py",
+)
 
 
 VALIDATION_COMMANDS = [
@@ -51,6 +72,9 @@ VALIDATION_COMMANDS = [
     "python3 scripts/build.py --profile dev",
     "python3 scripts/validate-runtime-reference-links.py",
     "python3 scripts/validate-installation.py",
+    "python3 scripts/validate-marketplace-index.py --profile recommended",
+    "python3 scripts/validate-marketplace-index.py --profile full",
+    "python3 scripts/validate-marketplace-index.py --profile dev",
     "python3 scripts/validate-examples.py",
     "python3 scripts/validate-productization-assets.py",
 ]
@@ -110,6 +134,79 @@ def profile_manifest_status(manifest: dict[str, Any] | None, profile: str) -> tu
 
 def _build_manifest(root: Path, profile: str) -> dict[str, Any] | None:
     return _read_json(root / "dist" / "universal" / "skills" / profile / ".changeforge-build-manifest.json")
+
+
+def _pyproject_license_text(root: Path) -> str:
+    path = root / "pyproject.toml"
+    if not path.exists():
+        return ""
+    try:
+        parsed = tomllib.loads(path.read_text(encoding="utf-8"))
+    except tomllib.TOMLDecodeError:
+        return ""
+    project = parsed.get("project", parsed)
+    license_value = project.get("license") if isinstance(project, dict) else None
+    if isinstance(license_value, dict):
+        return str(license_value.get("text") or license_value.get("file") or "").strip()
+    if isinstance(license_value, str):
+        return license_value.strip()
+    return ""
+
+
+def _contribution_licensing_confirmed(root: Path) -> bool:
+    path = root / "CONTRIBUTING.md"
+    if not path.exists():
+        return False
+    text = path.read_text(encoding="utf-8").casefold()
+    unresolved_markers = (
+        "proprietary license metadata",
+        "maintainers must choose",
+        "before accepting external contributions",
+        "pending owner decision",
+    )
+    return "contribution licensing" in text and "repository license" in text and not any(
+        marker in text for marker in unresolved_markers
+    )
+
+
+def _security_contact_confirmed(root: Path) -> bool:
+    path = root / "SECURITY.md"
+    if not path.exists():
+        return False
+    text = path.read_text(encoding="utf-8").casefold()
+    return (
+        "private vulnerability reporting is enabled" in text
+        or "mailto:" in text
+        or "security@" in text
+    )
+
+
+def open_source_readiness_status(root: Path) -> tuple[str, str]:
+    """Return conservative open-source readiness status and check details."""
+    license_text = _pyproject_license_text(root)
+    checks = {
+        "license_file": (root / "LICENSE").exists(),
+        "pyproject_license_not_proprietary": bool(license_text)
+        and "proprietary" not in license_text.casefold(),
+        "contribution_licensing_confirmed": _contribution_licensing_confirmed(root),
+        "security_contact_confirmed": _security_contact_confirmed(root),
+    }
+    detail = ", ".join(f"{name}={passed}" for name, passed in checks.items())
+    if not checks["license_file"]:
+        return "partial", detail
+    if not checks["pyproject_license_not_proprietary"]:
+        return "fail", detail
+    if all(checks.values()):
+        return "pass", detail
+    return "partial", detail
+
+
+def productization_assets_status(root: Path) -> tuple[str, str]:
+    """Return status/detail for productization assets the scorecard depends on."""
+    missing = [rel_path for rel_path in PRODUCTIZATION_ASSETS if not (root / rel_path).is_file()]
+    if missing:
+        return "fail", "missing: " + ", ".join(missing)
+    return "pass", "required productization assets present"
 
 
 def _summary_status(name: str, value: dict[str, Any]) -> str:
@@ -276,15 +373,27 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
         )
     )
 
-    license_ready = (root / "LICENSE").exists()
+    productization_status, productization_detail = productization_assets_status(root)
+    dimensions.append(
+        Dimension(
+            "Productization assets",
+            productization_status,
+            "docs/productization assets, schemas, and scripts",
+            "python3 scripts/validate-productization-assets.py",
+            "Restore required productization docs, schema, or scripts.",
+            productization_detail,
+        )
+    )
+
+    open_source_status, open_source_detail = open_source_readiness_status(root)
     dimensions.append(
         Dimension(
             "Open-source readiness",
-            "partial" if not license_ready else "pass",
-            "docs/OPEN_SOURCE_READINESS.md and pyproject.toml",
+            open_source_status,
+            "docs/OPEN_SOURCE_READINESS.md, pyproject.toml, CONTRIBUTING.md, SECURITY.md, LICENSE",
             "python3 scripts/validate-productization-assets.py",
-            "Owner must select an OSI license and configure private vulnerability reporting before open-source publication.",
-            "OWNER_DECISION_REQUIRED: license/security contact" if not license_ready else "root LICENSE present",
+            "Owner must select an OSI license, update package metadata, confirm contribution licensing, and configure private vulnerability reporting before open-source publication.",
+            open_source_detail,
         )
     )
 
@@ -372,12 +481,32 @@ def generate_scorecard(root: Path, reports_dir: Path) -> dict[str, Any]:
     }
 
 
+def strict_profile_build_errors(payload: dict[str, Any]) -> list[str]:
+    """Return strict profile-build smoke errors without requiring release-only reports."""
+    dimensions = {
+        str(dimension.get("name")): str(dimension.get("status"))
+        for dimension in payload.get("dimensions", [])
+        if isinstance(dimension, dict)
+    }
+    errors: list[str] = []
+    for name in STRICT_PROFILE_BUILD_DIMENSIONS:
+        status = dimensions.get(name)
+        if status != "pass":
+            errors.append(f"{name} must be pass for --strict-profile-builds, got {status or 'missing'}")
+    return errors
+
+
 def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint for writing Markdown and JSON scorecards."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", required=True, help="Markdown output path.")
     parser.add_argument("--json-out", required=True, help="JSON output path.")
     parser.add_argument("--reports-dir", default=str(ROOT / "reports"))
+    parser.add_argument(
+        "--strict-profile-builds",
+        action="store_true",
+        help="Fail when build/profile/productization smoke dimensions are missing or not passing.",
+    )
     args = parser.parse_args(argv)
 
     payload = generate_scorecard(ROOT, Path(args.reports_dir))
@@ -388,6 +517,12 @@ def main(argv: list[str] | None = None) -> int:
     json_out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     md_out.write_text(render_markdown(payload), encoding="utf-8")
     print(f"wrote professional scorecard to {md_out} and {json_out}")
+    if args.strict_profile_builds:
+        errors = strict_profile_build_errors(payload)
+        if errors:
+            for error in errors:
+                print(f"generate-professional-scorecard: ERROR: {error}", file=sys.stderr)
+            return 1
     return 0
 
 

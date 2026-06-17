@@ -21,6 +21,7 @@ REQUIRED_FILES = (
     "schemas/marketplace-index.schema.json",
     "scripts/generate-professional-scorecard.py",
     "scripts/export-marketplace-index.py",
+    "scripts/validate-marketplace-index.py",
     "scripts/validate-examples.py",
 )
 DOC_LINK_FILES = (

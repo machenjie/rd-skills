@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -65,6 +66,35 @@ class ExportMarketplaceIndexTests(unittest.TestCase):
         extensions = [item for item in payload["items"] if item["type"] == "domain_extension"]
         self.assertEqual(len(extensions), 7)
         self.assertTrue(all(item["profile_visibility"]["top_level"] for item in extensions))
+
+    def test_frontmatter_missing_skill_raises(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(module.MarketplaceExportError):
+                module._frontmatter_summary(Path(tmp), "src/professional-skills/missing")
+
+    def test_frontmatter_missing_description_raises(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skill_dir = root / "src" / "professional-skills" / "sample"
+            skill_dir.mkdir(parents=True)
+            (skill_dir / "SKILL.md").write_text(
+                "---\nname: sample\nlicense: MIT\n---\n# Sample\n",
+                encoding="utf-8",
+            )
+            with self.assertRaises(module.MarketplaceExportError):
+                module._frontmatter_summary(root, "src/professional-skills/sample")
+
+    def test_frontmatter_parse_error_raises(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skill_dir = root / "src" / "professional-skills" / "sample"
+            skill_dir.mkdir(parents=True)
+            (skill_dir / "SKILL.md").write_text("---\nname: sample\n", encoding="utf-8")
+            with self.assertRaises(module.MarketplaceExportError):
+                module._frontmatter_summary(root, "src/professional-skills/sample")
 
 
 if __name__ == "__main__":

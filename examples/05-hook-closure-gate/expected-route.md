@@ -1,6 +1,7 @@
 # Expected Route
 
 ```yaml
+scenario_id: completion-evidence-unverified-fix
 selected_skills:
   - change-forge-router
   - quality-test-gate

@@ -40,6 +40,22 @@ def _known_names(root: Path) -> tuple[set[str], set[str]]:
     return skill_names, capability_names
 
 
+def _known_quality_gates(root: Path) -> set[str]:
+    path = root / "src" / "registry" / "routing-rules.yaml"
+    if not path.exists():
+        return set()
+    return {str(item) for item in load_yaml_file(path).get("quality_gates", [])}
+
+
+def _routing_fixtures(root: Path) -> dict[str, dict[str, object]]:
+    fixtures: dict[str, dict[str, object]] = {}
+    for path in sorted((root / "evals" / "routing").glob("*.yaml")):
+        loaded = load_yaml_file(path)
+        if isinstance(loaded, dict) and loaded.get("id"):
+            fixtures[str(loaded["id"])] = loaded
+    return fixtures
+
+
 def _route_payload(route_text: str, path: Path) -> dict[str, object]:
     match = ROUTE_BLOCK_RE.search(route_text)
     if not match:
@@ -53,10 +69,34 @@ def _list_value(payload: dict[str, object], key: str) -> list[str]:
     return [str(item) for item in value] if isinstance(value, list) else []
 
 
+def _expected_fixture_values(fixture: dict[str, object], key: str) -> list[str]:
+    expected = fixture.get("expected")
+    if not isinstance(expected, dict):
+        return []
+    value = expected.get(key)
+    return [str(item) for item in value] if isinstance(value, list) else []
+
+
+def _append_overlap_error(
+    errors: list[str],
+    scenario: Path,
+    root: Path,
+    field: str,
+    actual: list[str],
+    expected: list[str],
+) -> None:
+    if actual and expected and not (set(actual) & set(expected)):
+        errors.append(
+            f"{scenario.relative_to(root)}/expected-route.md has no {field} overlap with routing fixture"
+        )
+
+
 def validate_examples(root: Path) -> list[str]:
     """Return validation errors for showcase scenario structure and evidence."""
     errors: list[str] = []
     known_skills, known_capabilities = _known_names(root)
+    known_quality_gates = _known_quality_gates(root)
+    routing_fixtures = _routing_fixtures(root)
     examples_root = root / "examples"
     if not (examples_root / "README.md").is_file():
         errors.append("examples/README.md is missing")
@@ -88,6 +128,40 @@ def validate_examples(root: Path) -> list[str]:
         for capability in _list_value(payload, "selected_capabilities"):
             if capability not in known_capabilities:
                 errors.append(f"{scenario.relative_to(root)}/expected-route.md references unknown capability: {capability}")
+        for gate in _list_value(payload, "required_quality_gates"):
+            if gate not in known_quality_gates:
+                errors.append(f"{scenario.relative_to(root)}/expected-route.md references unknown quality gate: {gate}")
+        scenario_id = str(payload.get("scenario_id", "")).strip()
+        if not scenario_id:
+            errors.append(f"{scenario.relative_to(root)}/expected-route.md missing scenario_id")
+        elif scenario_id not in routing_fixtures:
+            errors.append(f"{scenario.relative_to(root)}/expected-route.md has no routing eval fixture: {scenario_id}")
+        else:
+            fixture = routing_fixtures[scenario_id]
+            _append_overlap_error(
+                errors,
+                scenario,
+                root,
+                "selected_skills",
+                _list_value(payload, "selected_skills"),
+                _expected_fixture_values(fixture, "skills"),
+            )
+            _append_overlap_error(
+                errors,
+                scenario,
+                root,
+                "selected_capabilities",
+                _list_value(payload, "selected_capabilities"),
+                _expected_fixture_values(fixture, "capabilities"),
+            )
+            _append_overlap_error(
+                errors,
+                scenario,
+                root,
+                "required_quality_gates",
+                _list_value(payload, "required_quality_gates"),
+                _expected_fixture_values(fixture, "quality_gates"),
+            )
         for term in REQUIRED_EVIDENCE_TERMS:
             if term not in evidence:
                 errors.append(f"{scenario.relative_to(root)}/expected-evidence.md missing {term}")

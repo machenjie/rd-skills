@@ -21,6 +21,10 @@ ITEM_TYPES = {
 }
 
 
+class MarketplaceExportError(RuntimeError):
+    """Raised when source data cannot produce a trustworthy marketplace index."""
+
+
 def _as_list(value: Any) -> list[Any]:
     if value is None:
         return []
@@ -32,13 +36,16 @@ def _as_list(value: Any) -> list[Any]:
 def _frontmatter_summary(root: Path, source_path: str) -> str:
     skill_path = root / source_path / "SKILL.md"
     if not skill_path.exists():
-        return ""
+        raise MarketplaceExportError(f"{skill_path.relative_to(root)} is missing")
     try:
         frontmatter, _, _ = parse_frontmatter(skill_path)
-    except Exception:
-        return ""
+    except Exception as exc:
+        raise MarketplaceExportError(f"{skill_path.relative_to(root)} frontmatter is invalid: {exc}") from exc
     description = frontmatter.get("description")
-    return str(description).strip() if description else ""
+    summary = str(description).strip() if description is not None else ""
+    if not summary:
+        raise MarketplaceExportError(f"{skill_path.relative_to(root)} frontmatter missing description")
+    return summary
 
 
 def _runtime_path(profile: str, item_type: str, name: str) -> str | None:
@@ -208,7 +215,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", required=True, help="JSON output path.")
     args = parser.parse_args(argv)
 
-    payload = export_index(ROOT, args.profile)
+    try:
+        payload = export_index(ROOT, args.profile)
+    except MarketplaceExportError as exc:
+        print(f"export-marketplace-index: ERROR: {exc}", file=sys.stderr)
+        return 1
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")

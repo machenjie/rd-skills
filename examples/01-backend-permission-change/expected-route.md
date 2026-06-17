@@ -1,6 +1,7 @@
 # Expected Route
 
 ```yaml
+scenario_id: backend-auth-idor
 selected_skills:
   - change-forge-router
   - change-intake-compiler

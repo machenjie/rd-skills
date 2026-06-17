@@ -68,6 +68,90 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
             self.assertIn("not_collected", payload["status_summary"])
             self.assertIn("# Professional Scorecard", md_path.read_text(encoding="utf-8"))
 
+    def test_strict_profile_builds_rejects_unknown_manifest_dimension(self) -> None:
+        module = _load_module()
+        payload = {
+            "dimensions": [
+                {"name": "Registry source counts", "status": "pass"},
+                {"name": "Profile build reproducibility", "status": "unknown"},
+                {"name": "Example coverage", "status": "pass"},
+                {"name": "Productization assets", "status": "pass"},
+                {"name": "Hook safety", "status": "not_collected"},
+                {"name": "Installation validation", "status": "not_collected"},
+            ]
+        }
+        errors = module.strict_profile_build_errors(payload)
+        self.assertTrue(any("Profile build reproducibility" in error for error in errors))
+
+    def test_strict_profile_builds_allows_not_collected_release_dimensions(self) -> None:
+        module = _load_module()
+        payload = {
+            "dimensions": [
+                {"name": "Registry source counts", "status": "pass"},
+                {"name": "Profile build reproducibility", "status": "pass"},
+                {"name": "Example coverage", "status": "pass"},
+                {"name": "Productization assets", "status": "pass"},
+                {"name": "Hook safety", "status": "not_collected"},
+                {"name": "Installation validation", "status": "not_collected"},
+            ]
+        }
+        self.assertEqual(module.strict_profile_build_errors(payload), [])
+
+    def test_open_source_readiness_no_license_is_partial(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text('license = { text = "Proprietary" }\n', encoding="utf-8")
+            status, detail = module.open_source_readiness_status(root)
+        self.assertEqual(status, "partial")
+        self.assertIn("license_file=False", detail)
+
+    def test_open_source_readiness_license_only_with_proprietary_metadata_fails(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "LICENSE").write_text("MIT\n", encoding="utf-8")
+            (root / "pyproject.toml").write_text('license = { text = "Proprietary" }\n', encoding="utf-8")
+            status, detail = module.open_source_readiness_status(root)
+        self.assertEqual(status, "fail")
+        self.assertIn("pyproject_license_not_proprietary=False", detail)
+
+    def test_open_source_readiness_license_and_metadata_without_security_is_partial(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "LICENSE").write_text("MIT\n", encoding="utf-8")
+            (root / "pyproject.toml").write_text('license = { text = "MIT" }\n', encoding="utf-8")
+            (root / "CONTRIBUTING.md").write_text(
+                "## Contribution Licensing\nContributions are accepted under the repository license.\n",
+                encoding="utf-8",
+            )
+            (root / "SECURITY.md").write_text(
+                "Use GitHub private vulnerability reporting when it is enabled.\n",
+                encoding="utf-8",
+            )
+            status, detail = module.open_source_readiness_status(root)
+        self.assertEqual(status, "partial")
+        self.assertIn("security_contact_confirmed=False", detail)
+
+    def test_open_source_readiness_license_pyproject_and_security_pass(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "LICENSE").write_text("MIT\n", encoding="utf-8")
+            (root / "pyproject.toml").write_text('license = { text = "MIT" }\n', encoding="utf-8")
+            (root / "CONTRIBUTING.md").write_text(
+                "## Contribution Licensing\nContributions are accepted under the repository license.\n",
+                encoding="utf-8",
+            )
+            (root / "SECURITY.md").write_text(
+                "GitHub private vulnerability reporting is enabled for this repository.\n",
+                encoding="utf-8",
+            )
+            status, detail = module.open_source_readiness_status(root)
+        self.assertEqual(status, "pass")
+        self.assertIn("security_contact_confirmed=True", detail)
+
 
 if __name__ == "__main__":
     unittest.main()
