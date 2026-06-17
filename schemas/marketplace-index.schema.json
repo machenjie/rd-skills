@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/changeforge/marketplace-index.schema.json",
+  "title": "ChangeForge Marketplace Index",
+  "type": "object",
+  "required": ["schema_version", "profile", "generated_by", "source_of_truth", "items"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "profile": { "enum": ["recommended", "full", "dev"] },
+    "generated_by": { "type": "string" },
+    "source_of_truth": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/item" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "visibility": {
+      "type": "object",
+      "required": ["top_level", "compiled_reference", "router_index", "authoring_visibility"],
+      "properties": {
+        "top_level": { "type": "boolean" },
+        "compiled_reference": { "type": "boolean" },
+        "router_index": { "type": "boolean" },
+        "authoring_visibility": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "item": {
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "profile_visibility",
+        "summary",
+        "triggers",
+        "risk_notes",
+        "expected_outputs",
+        "used_by",
+        "required_quality_gates",
+        "runtime_path",
+        "source_path"
+      ],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "type": {
+          "enum": ["professional_skill", "foundation_capability", "domain_extension"]
+        },
+        "profile_visibility": { "$ref": "#/$defs/visibility" },
+        "summary": { "type": "string" },
+        "triggers": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "risk_notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "expected_outputs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "used_by": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "required_quality_gates": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "runtime_path": {
+          "type": ["string", "null"]
+        },
+        "source_path": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

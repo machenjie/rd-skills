@@ -1,13 +1,15 @@
 # Open Source Readiness
 
-This audit tracks the repository work needed to meet common open-source project expectations. The repository is structurally close to open-source-ready after the governance and CI additions, but it is not publishable as an open-source project until maintainers choose and declare an OSI-approved license.
+This audit tracks the repository work needed to meet common open-source project expectations. The repository is structurally close to open-source-ready after the governance, CI, quickstart, scorecard, examples, and discovery-index additions, but it is not publishable as an open-source project until maintainers choose and declare an OSI-approved license.
 
 ## Current Status
 
 | Area | Status | Notes |
 | --- | --- | --- |
 | README | Ready | Describes project purpose, usage, runtime profiles, validation, guardrails, and governance links. |
-| Usage docs | Ready | [docs/USAGE.md](USAGE.md) covers build, install, agent usage, OpenAI API zips, upgrade, uninstall, and troubleshooting. |
+| Quickstart / usage docs | Ready | [docs/QUICKSTART.md](QUICKSTART.md) covers first-run usage; [docs/USAGE.md](USAGE.md) covers build, install, agent usage, OpenAI API zips, upgrade, uninstall, and troubleshooting. |
+| Benchmarks / scorecard | Ready | [docs/BENCHMARKS.md](BENCHMARKS.md) and [docs/SCORECARD.md](SCORECARD.md) explain generated evidence without hardcoded claims. |
+| Examples / comparison / index | Ready | [../examples/README.md](../examples/README.md), [MARKETPLACE.md](MARKETPLACE.md), and [COMPARISON.md](COMPARISON.md) make capabilities discoverable and explain positioning. |
 | Install/release docs | Ready | Existing installation, packaging, operating model, runtime profile, quality, and release docs are present. |
 | Contribution guide | Ready | [CONTRIBUTING.md](../CONTRIBUTING.md) defines workflow, boundaries, validation, and PR expectations. |
 | Code of conduct | Ready | [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) defines project participation standards. |
@@ -16,7 +18,7 @@ This audit tracks the repository work needed to meet common open-source project 
 | Governance | Ready | [GOVERNANCE.md](../GOVERNANCE.md) defines maintainer responsibilities and decision authority. |
 | Changelog | Ready | [CHANGELOG.md](../CHANGELOG.md) now tracks contributor-facing and release-facing changes. |
 | GitHub templates | Ready | Issue and pull request templates capture repro details, boundaries, validation, and risk. |
-| CI | Ready | `.github/workflows/ci.yml` runs the repository validation, benchmark smoke checks, profile builds, and installation validation. |
+| CI | Ready | `.github/workflows/ci.yml` runs lightweight core validation, productization smoke checks, and unit tests. Full profile builds and installation validation remain release gates, not default PR blockers. |
 | Package metadata | Partial | `pyproject.toml` has project URLs, keywords, and classifiers. License metadata remains proprietary pending owner decision. |
 | License | Blocked | No open-source license file exists. Maintainers must choose the license. |
 
@@ -29,6 +31,17 @@ This audit tracks the repository work needed to meet common open-source project 
 5. Enable GitHub private vulnerability reporting or publish a private security contact path in [SECURITY.md](../SECURITY.md).
 6. Confirm whether generated `dist/` artifacts should remain ignored or be attached only to releases.
 7. Run the full validation suite and confirm CI passes on a pull request.
+
+## Owner Decision Required
+
+The maintainer has not supplied a selected OSI license for this change. Until that decision is made:
+
+- Do not add a root `LICENSE` file.
+- Do not change `pyproject.toml` from proprietary license metadata.
+- Do not describe the repository as open-source-ready.
+- Treat outside contribution acceptance as blocked or maintainer-reviewed under the existing proprietary metadata.
+
+Security contact also requires an owner-controlled private path. [SECURITY.md](../SECURITY.md) describes GitHub private vulnerability reporting when enabled, but the maintainer must either enable that feature or provide a private security contact channel before public release.
 
 ## Recommended Repository Standards
 
@@ -54,6 +67,8 @@ python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
 python3 scripts/validate-skill-content-size.py
+python3 scripts/validate-examples.py
+python3 scripts/validate-productization-assets.py
 python3 scripts/audit-skill-content.py
 python3 scripts/eval-routing.py
 python3 scripts/eval-agent-behavior.py
@@ -73,6 +88,8 @@ python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
 python3 scripts/validate-runtime-reference-links.py
 python3 scripts/validate-installation.py
+python3 scripts/generate-professional-scorecard.py --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
+python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json
 ```
 
 The release handoff should include validation output, profile counts, installer smoke evidence, license decision, security contact status, and unresolved assumptions.

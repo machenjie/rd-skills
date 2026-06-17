@@ -10,6 +10,9 @@ labels: enhancement
 ## Proposed Change
 
 
+## Non-Goals
+
+
 ## Affected Area
 
 - [ ] Professional skill
@@ -29,6 +32,12 @@ labels: enhancement
 
 ## Evidence Or Examples
 
+
+## Risk And Validation
+
+- Expected risk reduced:
+- Validation evidence expected:
+- Compatibility or release risk:
 
 ## Boundary Check
 

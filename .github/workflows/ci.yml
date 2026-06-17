@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Core validation
+        run: |
+          python3 scripts/validate-skills.py
+          python3 scripts/validate-capabilities.py
+          python3 scripts/validate-domain-extensions.py
+          python3 scripts/validate-registry.py
+          python3 scripts/validate-skill-body-links.py
+          python3 scripts/validate-skill-content-size.py
+          python3 scripts/validate-examples.py
+          python3 scripts/validate-productization-assets.py
+      - name: Productization smoke
+        run: |
+          python3 scripts/generate-professional-scorecard.py --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
+          python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json
+          python3 scripts/export-marketplace-index.py --profile full --out /tmp/full-marketplace-index.json
+          python3 scripts/export-marketplace-index.py --profile dev --out /tmp/dev-marketplace-index.json
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests

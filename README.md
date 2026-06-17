@@ -6,6 +6,28 @@ This repository is an authoring/build/install repository. Runtime skills are gen
 
 ChangeForge is self-contained. It does not ingest, scan, index, summarize, map, package, or install any personal technical asset library. It does not create external asset mappings or assume user-specific knowledge sources are available at runtime.
 
+## Why This Exists
+
+General agent rules can remind an agent to be careful. ChangeForge turns that reminder into a routed engineering workflow: clarify requirements, inspect the target code before planning, define TDD or validation evidence, assign the right professional skill owner, run independent review, repair and re-review when needed, then hand off with evidence and residual risk.
+
+## What Makes It Different
+
+- It is not a prompt dump: `change-forge-router` selects skills, capabilities, and quality gates by change risk.
+- It avoids context bloat: foundation capabilities are compiled into professional skill `references/` and loaded precisely by route.
+- It is buildable and installable: runtime skills are generated into `dist/`, then managed by installers, doctor checks, and uninstall manifests.
+- It is evidence-oriented: validation, eval, benchmark, example, and scorecard assets make the system auditable.
+- It keeps hooks in their lane: optional hooks are advisory guardrails, not a replacement for `change-forge-router`.
+
+## 3-Step Quickstart
+
+```bash
+python3 scripts/build.py --profile recommended
+python3 installers/install.py --agent codex --scope user --profile recommended
+python3 installers/doctor.py --agent codex --scope user --profile recommended
+```
+
+Use `recommended` for global installs, `full` for project installs that should expose domain extensions, and `dev` only for ChangeForge authoring/debugging. See [docs/QUICKSTART.md](docs/QUICKSTART.md) for Codex, Claude Code, GitHub Copilot, OpenAI API, and first-prompt examples.
+
 ## Usage
 
 For day-to-day use, build a runtime profile, install the generated skills into the target agent runtime, then ask the agent to use the relevant ChangeForge skill for the change you are making.
@@ -33,6 +55,14 @@ manifests. Pure explanation or translation prompts with no engineering action ca
 skip the full engineering flow after saying no engineering action is being taken.
 
 See [docs/USAGE.md](docs/USAGE.md) for the full usage guide, including profile selection, agent-specific install examples, OpenAI API zip output, upgrade, uninstall, and authoring workflows.
+
+## Professional Evidence
+
+- [docs/BENCHMARKS.md](docs/BENCHMARKS.md): explains routing, professionalism, hook, profile, install, and codegen benchmark evidence.
+- [docs/SCORECARD.md](docs/SCORECARD.md): documents conservative scorecard dimensions and status rules.
+- [docs/MARKETPLACE.md](docs/MARKETPLACE.md): describes the source-derived discovery index for skills, capabilities, and domain extensions.
+- [examples/README.md](examples/README.md): provides copyable engineering scenarios with expected routes and evidence.
+- [docs/COMPARISON.md](docs/COMPARISON.md): positions ChangeForge against stable categories without live popularity claims.
 
 Optional project-level hook artifacts are also built for Codex and Claude Code.
 They are warning-only execution reminders, not skills and not a replacement for
@@ -113,6 +143,8 @@ python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
 python3 scripts/validate-skill-content-size.py
+python3 scripts/validate-examples.py
+python3 scripts/validate-productization-assets.py
 python3 scripts/audit-skill-content.py
 python3 scripts/eval-routing.py
 python3 scripts/eval-agent-behavior.py
@@ -134,6 +166,8 @@ python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
 python3 scripts/validate-runtime-reference-links.py
 python3 scripts/validate-installation.py
+python3 scripts/generate-professional-scorecard.py --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
+python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json
 ```
 
 `eval-skill-professionalism.py` writes both the main eval and key foundation coverage matrix;

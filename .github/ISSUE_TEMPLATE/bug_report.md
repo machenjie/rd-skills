@@ -7,6 +7,12 @@ labels: bug
 ## Summary
 
 
+## Scope
+
+- Affected area:
+- Profile: `recommended` / `full` / `dev` / not applicable
+- Runtime/install target: `codex` / `claude` / `copilot` / `openai-api` / not applicable
+
 ## Reproduction Steps
 
 1. 
@@ -33,6 +39,12 @@ labels: bug
 ```text
 
 ```
+
+## Evidence And Risk
+
+- Validation or doctor command run:
+- Expected risk if unresolved:
+- Workaround or rollback:
 
 ## Boundary Check
 

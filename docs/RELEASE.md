@@ -51,6 +51,8 @@ python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
 python3 scripts/validate-skill-content-size.py
+python3 scripts/validate-examples.py
+python3 scripts/validate-productization-assets.py
 python3 scripts/audit-skill-content.py
 python3 scripts/eval-routing.py
 python3 scripts/eval-agent-behavior.py
@@ -70,6 +72,10 @@ python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
 python3 scripts/validate-runtime-reference-links.py
 python3 scripts/validate-installation.py
+python3 scripts/generate-professional-scorecard.py --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
+python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json
+python3 scripts/export-marketplace-index.py --profile full --out /tmp/full-marketplace-index.json
+python3 scripts/export-marketplace-index.py --profile dev --out /tmp/dev-marketplace-index.json
 ```
 
 Run extended routing fixture comparison when updating or verifying captured
@@ -114,6 +120,7 @@ The Codex recommended user smoke must install 19 top-level skills. The Codex, Cl
 ## Release Checklist
 
 - Source structure matches the registry counts.
+- README, quickstart, examples, benchmark docs, scorecard docs, and marketplace docs pass productization validation.
 - Open-source publication status has been checked against [OPEN_SOURCE_READINESS.md](OPEN_SOURCE_READINESS.md) when publishing publicly.
 - License metadata, root `LICENSE`, contribution licensing, and security contact path are resolved before describing a release as open source.
 - Routing and code generation benchmark validators pass.
@@ -125,6 +132,9 @@ The Codex recommended user smoke must install 19 top-level skills. The Codex, Cl
 - Installer dry runs show 19 skills for recommended and 26 for full project installs.
 - Final smoke commands cover Codex user recommended install, Codex project full install, Codex project uninstall dry-run, Codex user/project doctor, Claude Code project full install/doctor/uninstall dry-run, GitHub Copilot project full install/doctor/uninstall dry-run, OpenAI API recommended zip dry-run, and installation artifact validation.
 - OpenAI API zips pass profile count and archive shape validation.
+- Professional scorecard is regenerated from current local evidence or explicitly marked as a sample snapshot.
+- Marketplace index exports pass smoke checks for `recommended`, `full`, and `dev`.
+- Showcase examples pass `python3 scripts/validate-examples.py`.
 - Cloud component routing for Redis/Kafka/K8s/Helm/Spark remains covered by routing evals.
 - Helm chart changes include lint/template/schema/rendered-manifest validation and secret values review.
 - Docs reflect any CLI, packaging, profile, or installer behavior changes.

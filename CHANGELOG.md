@@ -20,6 +20,8 @@ This project uses a simple release history format with an `Unreleased` section u
 - Added object-oriented structure thinking to `implementation-structure-design`, including object modeling, encapsulation, inheritance, composition, polymorphism, and object-versus-function decision gates.
 - Added usage documentation for building, installing, invoking, upgrading, uninstalling, and troubleshooting ChangeForge runtime skills.
 - Added open-source readiness documentation, contribution guidance, support policy, security policy, governance model, code of conduct, issue templates, pull request template, and CI validation workflow.
+- Added quickstart, benchmark, scorecard, comparison, marketplace index, report policy, and showcase example documentation for external productization.
+- Added `generate-professional-scorecard.py`, `export-marketplace-index.py`, example validation, and productization asset validation scripts with tests and CI smoke coverage.
 
 ### Changed
 
@@ -31,6 +33,7 @@ This project uses a simple release history format with an `Unreleased` section u
   ownership, responsibility, and boundary evidence.
 - Expanded `implementation-structure-design` completion and escalation rules so object contracts, inheritance relationships, class hierarchies, and polymorphic interfaces are reviewed as structural and architectural decisions when applicable.
 - Added project metadata links for homepage, documentation, issues, and source repository.
+- Clarified README positioning so ChangeForge is presented as a professional change engineering skill mesh rather than a prompt/rules collection.
 
 ### Pending Maintainer Decision
 

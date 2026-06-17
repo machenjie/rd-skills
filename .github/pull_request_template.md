@@ -7,6 +7,7 @@
 - Affected skills, capabilities, registries, docs, installers, scripts, or evals:
 - Runtime profiles affected: `recommended` / `full` / `dev` / none
 - Agent targets affected: `codex` / `claude` / `copilot` / `openai-api` / none
+- Non-goals:
 
 ## Validation
 
@@ -24,6 +25,8 @@ Required for skill-system changes:
 - [ ] `python3 scripts/validate-registry.py`
 - [ ] `python3 scripts/validate-skill-body-links.py`
 - [ ] `python3 scripts/validate-skill-content-size.py`
+- [ ] `python3 scripts/validate-examples.py`
+- [ ] `python3 scripts/validate-productization-assets.py`
 - [ ] `python3 scripts/eval-routing.py`
 - [ ] `python3 scripts/validate-stage-routing-architecture.py`
 - [ ] `python3 scripts/validate-hooks.py`
@@ -35,6 +38,16 @@ Required for skill-system changes:
 - [ ] `python3 scripts/build.py --profile dev`
 - [ ] `python3 scripts/validate-runtime-reference-links.py`
 - [ ] `python3 scripts/validate-installation.py`
+- [ ] `python3 scripts/generate-professional-scorecard.py --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json`
+- [ ] `python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json`
+
+## Evidence And Review
+
+- Read/inspection evidence:
+- TDD or validation evidence:
+- Independent review owner:
+- Repair/re-review result:
+- Residual risk:
 
 ## Boundary Check
 

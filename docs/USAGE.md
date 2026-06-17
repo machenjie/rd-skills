@@ -9,6 +9,8 @@ This guide explains how to use the `rd-skills` repository as the source for Chan
 
 Do not install `src/` directly. Runtime consumers use generated artifacts from `dist/` only.
 
+For the shortest build/install/doctor path, start with [QUICKSTART.md](QUICKSTART.md). This file remains the detailed operating guide and should be treated as the authority for installer options and workflow depth.
+
 ## Choose A Profile
 
 Use the smallest profile that fits the target runtime:

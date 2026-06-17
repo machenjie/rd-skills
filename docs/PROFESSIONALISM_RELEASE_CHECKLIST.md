@@ -21,6 +21,17 @@ coverage matrix reports for compatibility with release checklists that call it s
 
 Also run the repository validation/build suite listed in `AGENTS.md`.
 
+For productization releases, also run:
+
+```bash
+python3 scripts/validate-examples.py
+python3 scripts/validate-productization-assets.py
+python3 scripts/generate-professional-scorecard.py --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
+python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json
+python3 scripts/export-marketplace-index.py --profile full --out /tmp/full-marketplace-index.json
+python3 scripts/export-marketplace-index.py --profile dev --out /tmp/dev-marketplace-index.json
+```
+
 ## Blocking Conditions
 
 - `validate-professionalism-regression.py` fails in default mode.
@@ -117,4 +128,4 @@ warnings.
 - Do not add section-only fake professionalism.
 - Do not turn every warning-only eval into a hard gate.
 - Do not expand SKILL.md bodies to satisfy benchmarks.
-- Do not add marketplace, catalog, persona, slash command, badge, MCP, plugin-market, or UI packaging work.
+- Do not add marketplace, catalog, persona, slash command, badge, MCP, plugin-market, or UI packaging work that changes runtime packaging, duplicates registry truth, or creates a user-specific toolbox. A source-derived JSON discovery index is allowed only when generated from registries and validated.
