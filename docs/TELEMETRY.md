@@ -101,20 +101,32 @@ session, and writes a report plus a suggestions file. It never edits
 python3 scripts/review-agent-telemetry.py
 python3 scripts/review-agent-telemetry.py --repo-hash <repo_hash> --since 2026-06-01
 python3 scripts/review-agent-telemetry.py --format json --output-dir ./telemetry-out
+python3 scripts/review-agent-telemetry.py --recency-half-life-days 2
 ```
 
 Options: `--telemetry-root`, `--repo-hash`, `--since`, `--until`, `--output-dir`,
-`--format markdown|json|yaml`, and the optional CI guard
-`--fail-on-high-severity`. With no telemetry it prints `no samples found` and
-exits 0.
+`--format markdown|json|yaml`, `--recency-half-life-days`, and the optional CI
+guard `--fail-on-high-severity`. With no telemetry it prints `no samples found`
+and exits 0.
 
 It detects, among others: `missed_router`, `missed_implementation_structure`,
 `missed_reuse_evidence`, `missed_language_capability`,
 `missed_middleware_capability`, `missed_validation_evidence`,
-`missed_residual_risk`, `unverified_completion_claim`, `possible_over_routing`,
+`validation_command_without_outcome`, `missed_residual_risk`,
+`unverified_completion_claim`, `possible_over_routing`,
 `hook_false_positive_candidate`, and `hook_false_negative_candidate`. Every
-suggestion carries `id`, `type`, `severity`, `evidence`, `affected_session`,
-`suggested_action`, `promotion_target`, and `requires_human_review: true`.
+suggestion carries `id`, `type`, `severity`, `priority_score`, `recency_weight`,
+`recent_24h`, `evidence`, `affected_session`, `suggested_action`,
+`promotion_target`, and `requires_human_review: true`.
+
+The review summary separates `code_change_closures` from
+`engineering_surface_closures`. Risk surfaces that came only from read-only
+commands such as `sed`, `rg`, or `cat` are counted under
+`read_only_risk_surface_closures` and are not treated as code changes or missing
+router evidence. Risk surfaces from changed paths or mutating commands remain
+closure-relevant. Recency weighting uses the latest reviewed telemetry timestamp
+as the reference point and applies the configured half-life to produce
+`priority_score`, `weighted_issue_scores`, and `recent_24h_issue_counts`.
 
 ### Completion-Evidence Detection Family
 
@@ -144,9 +156,9 @@ auto-detects only what the recorded facts support and leaves the rest to pressur
 evals and human judgement.
 
 Review reports and doctor summaries surface `unverified_completion_claims`,
-`incomplete_required_references`, and `pressure_candidate_suggestions` directly
-in their summaries so these closure gaps are visible without digging through
-`issue_counts`.
+`validation_command_without_outcome`, `incomplete_required_references`, and
+`pressure_candidate_suggestions` directly in their summaries so these closure
+gaps are visible without digging through `issue_counts`.
 
 ## Step 2: Review Suggestions By Hand
 
@@ -241,6 +253,15 @@ The v1 telemetry schema is extended compatibly with action-aware hook facts:
   `implementation_preflight_seen` only means the manifest appeared;
   `implementation_preflight_complete` means the manifest satisfied the fields
   required for the observed edit.
+- Risk-surface state is split compatibly:
+  `risk_surfaces` remains the legacy field, while
+  `changed_path_risk_surfaces`, `command_risk_surfaces`, and
+  `closure_risk_surfaces` separate path matches, command matches, and
+  closure-relevant engineering risk. Read-only command matches are retained in
+  telemetry for review but excluded from closure risk.
+- `validation_command_detected` records that a validation-looking command was
+  observed; it is separate from `validation_evidence_detected`, which requires a
+  stop-closure outcome or artifact signal.
 
 These fields are facts about hook behavior, not content capture. Telemetry still
 records only path-like facts, compact signal names, command program names, gate

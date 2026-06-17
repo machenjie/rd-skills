@@ -515,17 +515,23 @@ def _structure_findings(paths: list[str], tool: str, added_paths: set[str]) -> l
         normalized = f"/{path.casefold()}"
         name = Path(path).name
         parts = {part.casefold() for part in Path(path).parts}
+        is_test_path = _is_test_or_fixture_path(path)
 
         reasons: list[str] = []
         if path in added_paths or tool == "write":
-            reasons.append("new file")
+            if not is_test_path:
+                reasons.append("new file")
         if name in DEPENDENCY_FILES:
             reasons.append("dependency or lockfile")
-        if any(hint in normalized for hint in STRUCTURE_PATH_HINTS):
+        if not is_test_path and any(hint in normalized for hint in STRUCTURE_PATH_HINTS):
             reasons.append("shared or structural path")
-        if (path in added_paths or tool == "write") and parts.intersection(STRUCTURAL_ROLE_HINTS):
+        if (
+            not is_test_path
+            and (path in added_paths or tool == "write")
+            and parts.intersection(STRUCTURAL_ROLE_HINTS)
+        ):
             reasons.append("new service/repository/adapter/client/helper/parser/mapper/validator")
-        if parts.intersection(PUBLIC_INTERFACE_HINTS):
+        if not is_test_path and parts.intersection(PUBLIC_INTERFACE_HINTS):
             reasons.append("public interface, SDK, client, or adapter surface")
 
         if reasons:
@@ -613,6 +619,8 @@ def _reuse_findings(paths: list[str], added_paths: set[str]) -> list[str]:
         path = normalize_path(raw)
         if not _is_code_file(path):
             continue
+        if _is_test_or_fixture_path(path) and not BUSINESS_TOKENS.intersection(_path_tokens(path)):
+            continue
         matched = sorted(REUSE_KEYWORDS.intersection(_path_tokens(path)))
         if matched:
             scope = "new file" if path in added_paths else "edited file"
@@ -691,28 +699,29 @@ def _structure_quality_findings(
         lines = added_by_file.get(path, [])
         if not lines:
             continue
+        is_test_path = _is_test_or_fixture_path(path)
         reasons: list[str] = []
         nonblank_count = sum(1 for line in lines if line.strip())
         if path in added_paths and nonblank_count > NEW_FILE_LINE_THRESHOLD:
             reasons.append(f"new file adds {nonblank_count} lines")
 
         function_count = sum(1 for line in lines if DEF_LINE_RE.search(line))
-        if function_count > ADDED_FUNCTION_THRESHOLD:
+        if not is_test_path and function_count > ADDED_FUNCTION_THRESHOLD:
             reasons.append(f"adds {function_count} functions")
 
         advanced_count = _advanced_structure_count(lines)
-        if advanced_count > ADDED_ADVANCED_STRUCTURE_THRESHOLD:
+        if not is_test_path and advanced_count > ADDED_ADVANCED_STRUCTURE_THRESHOLD:
             reasons.append(f"adds {advanced_count} class/interface/factory/strategy signals")
 
         signature_reasons = _signature_quality_reasons(lines)
         reasons.extend(signature_reasons)
 
         public_exports = sum(1 for line in lines if PUBLIC_EXPORT_RE.search(line))
-        if public_exports > PUBLIC_EXPORT_THRESHOLD:
+        if not is_test_path and public_exports > PUBLIC_EXPORT_THRESHOLD:
             reasons.append(f"adds {public_exports} public exports")
 
         branch_count = _branch_signal_count(lines)
-        if branch_count > BRANCH_SIGNAL_THRESHOLD:
+        if not is_test_path and branch_count > BRANCH_SIGNAL_THRESHOLD:
             reasons.append(f"adds {branch_count} branch/mode/fallback signals")
 
         if _shared_path_with_business_terms(path, lines):
@@ -727,7 +736,7 @@ def _structure_quality_findings(
             reasons.append("cleanup/deprecation/feature flag signal lacks owner or expiry")
 
         role_tokens = sorted({"manager", "processor", "helper", "util", "common", "shared"}.intersection(_path_tokens(path)))
-        if role_tokens:
+        if role_tokens and not is_test_path:
             reasons.append(f"filename uses broad role token ({', '.join(role_tokens)})")
 
         if reasons:
@@ -1015,6 +1024,17 @@ def _is_ignorable_file(name: str) -> bool:
 
 def _is_code_file(path: str) -> bool:
     return Path(path).suffix.casefold() in CODE_EXTENSIONS
+
+
+def _is_test_or_fixture_path(path: str) -> bool:
+    normalized = f"/{normalize_path(path).casefold()}"
+    name = Path(path).name.casefold()
+    tokens = _path_tokens(path)
+    return bool(
+        {"test", "tests", "fixture", "fixtures", "__tests__"}.intersection(tokens)
+        or "/__tests__/" in normalized
+        or name.endswith(("_test.go", ".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx"))
+    )
 
 
 def _suggested_skills(any_findings: bool) -> list[str]:

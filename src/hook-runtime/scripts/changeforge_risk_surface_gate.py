@@ -170,6 +170,21 @@ VALIDATION_MARKERS = (
     "run-codegen-benchmarks",
     "validate-installation",
 )
+READ_ONLY_COMMAND_PROGRAMS = {
+    "cat",
+    "find",
+    "grep",
+    "head",
+    "ls",
+    "nl",
+    "pwd",
+    "rg",
+    "sed",
+    "stat",
+    "tail",
+    "tree",
+    "wc",
+}
 
 
 def main() -> int:
@@ -192,20 +207,32 @@ def main() -> int:
         repo = repo_root(cwd_from_event(event))
         paths = extract_changed_paths(event)
         command = extract_bash_command(event)
-        findings = _risk_findings(paths, command)
+        path_findings = _risk_findings(paths, "")
+        command_findings = _risk_findings([], command)
+        findings = _merge_findings(path_findings + command_findings)
+        closure_command_findings = (
+            command_findings if _command_risk_is_closure_relevant(paths, command) else []
+        )
+        closure_findings = _merge_findings(path_findings + closure_command_findings)
+        path_surfaces = [str(finding["name"]) for finding in path_findings]
+        command_surfaces = [str(finding["name"]) for finding in command_findings]
+        closure_surfaces = [str(finding["name"]) for finding in closure_findings]
         debug_log(
             repo,
-            f"risk gate runtime={runtime} event={event_name(event)} tool={tool_name(event)} paths={paths} command={command!r} findings={findings}",
+            f"risk gate runtime={runtime} event={event_name(event)} tool={tool_name(event)} paths={paths} command={command!r} findings={findings} closure={closure_findings}",
         )
         state = merge_state(
             repo,
             runtime,
             changed_paths=paths,
-            risk_surfaces=[finding["name"] for finding in findings],
-            suggested_skills=_collect(findings, "skills"),
-            suggested_capabilities=_collect(findings, "capabilities"),
-            suggested_domain_extensions=_collect(findings, "domain_extensions"),
-            suggested_gates=_collect(findings, "gates"),
+            risk_surfaces=closure_surfaces,
+            changed_path_risk_surfaces=path_surfaces,
+            command_risk_surfaces=command_surfaces,
+            closure_risk_surfaces=closure_surfaces,
+            suggested_skills=_collect(closure_findings, "skills"),
+            suggested_capabilities=_collect(closure_findings, "capabilities"),
+            suggested_domain_extensions=_collect(closure_findings, "domain_extensions"),
+            suggested_gates=_collect(closure_findings, "gates"),
             validation_command_seen=_looks_like_validation(command),
         )
         write_telemetry_event(
@@ -221,12 +248,19 @@ def main() -> int:
             command_program=summarize_command_program(command),
             hook_findings={
                 "risk_surfaces": [str(finding["name"]) for finding in findings],
+                "changed_path_risk_surfaces": path_surfaces,
+                "command_risk_surfaces": command_surfaces,
+                "closure_risk_surfaces": closure_surfaces,
             },
             suggested_skills=_collect(findings, "skills"),
             suggested_capabilities=_collect(findings, "capabilities"),
             suggested_domain_extensions=_collect(findings, "domain_extensions"),
             suggested_gates=_collect(findings, "gates"),
             risk_surfaces=[str(finding["name"]) for finding in findings],
+            changed_path_risk_surfaces=path_surfaces,
+            command_risk_surfaces=command_surfaces,
+            closure_risk_surfaces=closure_surfaces,
+            validation_command_detected=_looks_like_validation(command),
             validation_evidence_detected=False,
         )
         if not findings or mode == "monitor":
@@ -234,7 +268,9 @@ def main() -> int:
         # First risk surface of the turn carries a route-preflight nudge so Codex,
         # which has no session-start hook, still gets an early routing reminder.
         # Subsequent risk warnings in the same turn omit it to avoid repetition.
-        preflight_needed = not bool(state.get("route_preflight_emitted"))
+        preflight_needed = bool(closure_findings) and not bool(
+            state.get("route_preflight_emitted")
+        )
         message = _warning_message(findings, include_route_preflight=preflight_needed)
         if preflight_needed:
             state["route_preflight_emitted"] = True
@@ -268,6 +304,31 @@ def _risk_findings(paths: list[str], command: str) -> list[dict[str, object]]:
         if matched:
             findings.append({**rule, "evidence": _unique(matched)})
     return findings
+
+
+def _merge_findings(findings: list[dict[str, object]]) -> list[dict[str, object]]:
+    merged: dict[str, dict[str, object]] = {}
+    for finding in findings:
+        name = str(finding.get("name", "")).strip()
+        if not name:
+            continue
+        target = merged.setdefault(name, {**finding, "evidence": []})
+        evidence = finding.get("evidence", [])
+        if isinstance(evidence, list):
+            target["evidence"] = _unique(
+                [str(item) for item in target.get("evidence", [])]
+                + [str(item) for item in evidence]
+            )
+    return list(merged.values())
+
+
+def _command_risk_is_closure_relevant(paths: list[str], command: str) -> bool:
+    if paths or not command:
+        return True
+    if _looks_like_validation(command):
+        return False
+    program = summarize_command_program(command).casefold()
+    return program not in READ_ONLY_COMMAND_PROGRAMS
 
 
 def _collect(findings: list[dict[str, object]], key: str) -> list[str]:

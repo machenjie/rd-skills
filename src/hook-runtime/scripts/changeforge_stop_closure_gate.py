@@ -343,8 +343,15 @@ def _main() -> int:
         suggested_gates=state.get("suggested_gates", []),
         suggested_domain_extensions=state.get("suggested_domain_extensions", []),
         risk_surfaces=state.get("risk_surfaces", []),
+        changed_path_risk_surfaces=state.get("changed_path_risk_surfaces", []),
+        command_risk_surfaces=state.get("command_risk_surfaces", []),
+        closure_risk_surfaces=state.get("closure_risk_surfaces", [])
+        or state.get("risk_surfaces", []),
         route_manifest_detected=signals["route_manifest"],
         required_references_detected=signals["references"],
+        validation_command_detected=bool(
+            state.get("validation_command_seen") or state.get("validation_seen")
+        ),
         validation_evidence_detected=signals["validation"],
         residual_risk_detected=signals["risk"],
         completion_language_detected=signals["completion_language"],
@@ -404,6 +411,7 @@ def _has_closure_surface(state: dict) -> bool:
     explicit_engineering_stage = stage in ENGINEERING_STAGES
     return bool(
         state.get("changed_paths")
+        or state.get("closure_risk_surfaces")
         or state.get("risk_surfaces")
         or state.get("structure_findings")
         or state.get("file_naming_findings")
@@ -480,6 +488,9 @@ def _stop_findings(state: dict) -> dict[str, list[str]]:
             "review_targets",
             "review_findings",
             "repair_findings",
+            "changed_path_risk_surfaces",
+            "command_risk_surfaces",
+            "closure_risk_surfaces",
             "professional_injections",
             "permission_decisions",
             "reference_loads",

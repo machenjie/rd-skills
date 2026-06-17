@@ -587,6 +587,25 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout, "")
 
+    def test_read_only_command_risk_surface_is_not_engineering_closure_surface(self) -> None:
+        event = {
+            "hook_event_name": "Stop",
+            "runtime": "claude",
+            "response": "Inspected schema telemetry. Residual risk: none. Next action: none.",
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(
+                cwd,
+                cache,
+                command_risk_surfaces=["data-api"],
+                closure_risk_surfaces=[],
+                risk_surfaces=[],
+            )
+            result = run_stop(event, cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
+
     def test_stop_review_no_change_profile_omits_edit_closure_groups(self) -> None:
         # Regression: review-only turns need findings/risk, not changed files or validation proof.
         event = {

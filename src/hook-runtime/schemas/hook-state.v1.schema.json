@@ -48,6 +48,18 @@
     "review_findings": { "$ref": "#/$defs/stringList" },
     "repair_findings": { "$ref": "#/$defs/stringList" },
     "risk_surfaces": { "$ref": "#/$defs/stringList" },
+    "changed_path_risk_surfaces": {
+      "description": "Risk surfaces matched from changed file paths only.",
+      "$ref": "#/$defs/stringList"
+    },
+    "command_risk_surfaces": {
+      "description": "Risk surfaces matched from a command string only. The full command is never stored.",
+      "$ref": "#/$defs/stringList"
+    },
+    "closure_risk_surfaces": {
+      "description": "Risk surfaces counted as closure-relevant engineering work. Read-only command matches are intentionally excluded.",
+      "$ref": "#/$defs/stringList"
+    },
     "professional_injections": { "$ref": "#/$defs/stringList" },
     "permission_decisions": { "$ref": "#/$defs/stringList" },
     "reference_loads": { "$ref": "#/$defs/stringList" },

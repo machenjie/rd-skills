@@ -33,8 +33,12 @@ def _record(**fields: object) -> str:
         "suggested_gates": [],
         "suggested_domain_extensions": [],
         "risk_surfaces": [],
+        "changed_path_risk_surfaces": [],
+        "command_risk_surfaces": [],
+        "closure_risk_surfaces": [],
         "route_manifest_detected": False,
         "required_references_detected": False,
+        "validation_command_detected": False,
         "validation_evidence_detected": False,
         "residual_risk_detected": False,
     }
@@ -246,6 +250,7 @@ class ReviewAgentTelemetryTests(unittest.TestCase):
             self.assertTrue(report)
             summary = json.loads(report[0].read_text(encoding="utf-8"))["summary"]
             self.assertEqual(summary["code_change_closures"], 2)
+            self.assertEqual(summary["engineering_surface_closures"], 2)
             self.assertEqual(summary["route_manifest_closures"], 1)
             self.assertEqual(summary["route_manifest_adoption"], 0.5)
 
@@ -334,6 +339,72 @@ class ReviewAgentTelemetryTests(unittest.TestCase):
             by_type = {s["type"]: s for s in data["suggestions"]}
             self.assertIn("missed_language_capability", by_type)
             self.assertFalse(by_type["missed_language_capability"]["cascading"])
+
+    def test_read_only_command_risk_surface_not_treated_as_code_change(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "telemetry"
+            repo_hash = "repohashaaaaaaaaaaaaaaaa"
+            self._seed(
+                root,
+                repo_hash,
+                [
+                    _record(
+                        hook_name="risk_surface_gate",
+                        tool_name="Bash",
+                        command_program="sed",
+                        risk_surfaces=["data-api"],
+                    ),
+                    _record(
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        risk_surfaces=["data-api"],
+                        route_manifest_detected=False,
+                    ),
+                ],
+            )
+            result = _run("--telemetry-root", str(root), "--format", "json")
+            self.assertEqual(result.returncode, 0)
+            report = list((root / repo_hash / "reports").glob("*-agent-telemetry-review.json"))
+            data = json.loads(report[0].read_text(encoding="utf-8"))
+            self.assertEqual(data["summary"]["code_change_closures"], 0)
+            self.assertEqual(data["summary"]["engineering_surface_closures"], 0)
+            self.assertEqual(data["summary"]["read_only_risk_surface_closures"], 1)
+            self.assertNotIn("missed_router", data["summary"]["issue_counts"])
+
+    def test_validation_command_without_outcome_is_distinct_from_no_command(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "telemetry"
+            repo_hash = "repohashaaaaaaaaaaaaaaaa"
+            self._seed(
+                root,
+                repo_hash,
+                [
+                    _record(
+                        changed_paths=["src/pricing.py"],
+                        hook_name="risk_surface_gate",
+                        validation_command_detected=True,
+                    ),
+                    _record(
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["src/pricing.py"],
+                        validation_evidence_detected=False,
+                    ),
+                ],
+            )
+            result = _run("--telemetry-root", str(root), "--format", "json")
+            self.assertEqual(result.returncode, 0)
+            report = list((root / repo_hash / "reports").glob("*-agent-telemetry-review.json"))
+            data = json.loads(report[0].read_text(encoding="utf-8"))
+            by_type = {s["type"]: s for s in data["suggestions"]}
+            self.assertIn("validation_command_without_outcome", by_type)
+            self.assertNotIn("missed_validation_evidence", by_type)
+            self.assertEqual(data["summary"]["validation_command_without_outcome"], 1)
+            self.assertIn("weighted_issue_scores", data["summary"])
+            self.assertGreater(
+                data["summary"]["weighted_issue_scores"]["validation_command_without_outcome"],
+                0,
+            )
 
 
 if __name__ == "__main__":

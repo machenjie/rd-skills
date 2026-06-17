@@ -35,6 +35,15 @@ def run_risk(event: dict, *, agent: str | None = None) -> subprocess.CompletedPr
         )
 
 
+def read_records(cache: Path) -> list[dict]:
+    records: list[dict] = []
+    for file_path in cache.glob("changeforge/telemetry/*/sessions/*.jsonl"):
+        for line in file_path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                records.append(json.loads(line))
+    return records
+
+
 class RiskSurfaceGateTests(unittest.TestCase):
     def test_auth_path_triggers_security_gate(self) -> None:
         event = {
@@ -153,6 +162,81 @@ class RiskSurfaceGateTests(unittest.TestCase):
         # one-time route-preflight nudge so the reminder is not repeated per edit.
         self.assertNotIn("Route preflight", second.stdout)
         self.assertIn("security", second.stdout)
+
+    def test_read_only_command_surface_does_not_pollute_closure_state(self) -> None:
+        event = {
+            "runtime": "codex",
+            "hookEventName": "PostToolUse",
+            "toolName": "Bash",
+            "toolInput": {
+                "command": "sed -n '1,80p' src/hook-runtime/schemas/hook-state.v1.schema.json"
+            },
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd = Path(cwd_s)
+            cache = Path(cache_s)
+            env = os.environ.copy()
+            env["XDG_CACHE_HOME"] = str(cache)
+            env.pop("CHANGEFORGE_HOOK_MODE", None)
+            env.pop("CHANGEFORGE_AGENT", None)
+            event["cwd"] = str(cwd)
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT_DIR / "changeforge_risk_surface_gate.py")],
+                input=json.dumps(event),
+                text=True,
+                capture_output=True,
+                cwd=str(cwd),
+                env=env,
+                check=False,
+            )
+            state_files = list(cache.glob("changeforge/hooks/*/current-turn.json"))
+            self.assertEqual(len(state_files), 1)
+            state = json.loads(state_files[0].read_text(encoding="utf-8"))
+            records = read_records(cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("data-api", result.stdout)
+        self.assertNotIn("Route preflight", result.stdout)
+        self.assertEqual(state["risk_surfaces"], [])
+        self.assertEqual(state["closure_risk_surfaces"], [])
+        self.assertEqual(state["command_risk_surfaces"], ["data-api"])
+        self.assertEqual(records[-1]["command_risk_surfaces"], ["data-api"])
+        self.assertEqual(records[-1]["closure_risk_surfaces"], [])
+
+    def test_validation_command_surface_does_not_pollute_closure_state(self) -> None:
+        event = {
+            "runtime": "codex",
+            "hookEventName": "PostToolUse",
+            "toolName": "Bash",
+            "toolInput": {"command": "python3 scripts/validate-schema.py"},
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd = Path(cwd_s)
+            cache = Path(cache_s)
+            env = os.environ.copy()
+            env["XDG_CACHE_HOME"] = str(cache)
+            env.pop("CHANGEFORGE_HOOK_MODE", None)
+            env.pop("CHANGEFORGE_AGENT", None)
+            event["cwd"] = str(cwd)
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT_DIR / "changeforge_risk_surface_gate.py")],
+                input=json.dumps(event),
+                text=True,
+                capture_output=True,
+                cwd=str(cwd),
+                env=env,
+                check=False,
+            )
+            state_files = list(cache.glob("changeforge/hooks/*/current-turn.json"))
+            self.assertEqual(len(state_files), 1)
+            state = json.loads(state_files[0].read_text(encoding="utf-8"))
+            records = read_records(cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("data-api", result.stdout)
+        self.assertNotIn("Route preflight", result.stdout)
+        self.assertEqual(state["closure_risk_surfaces"], [])
+        self.assertTrue(state["validation_command_seen"])
+        self.assertEqual(records[-1]["closure_risk_surfaces"], [])
+        self.assertTrue(records[-1]["validation_command_detected"])
 
 
 if __name__ == "__main__":

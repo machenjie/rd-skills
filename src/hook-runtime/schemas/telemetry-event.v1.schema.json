@@ -95,8 +95,24 @@
     "suggested_gates": { "$ref": "#/$defs/stringList" },
     "suggested_domain_extensions": { "$ref": "#/$defs/stringList" },
     "risk_surfaces": { "$ref": "#/$defs/stringList" },
+    "changed_path_risk_surfaces": {
+      "description": "Risk surfaces matched from changed file paths only.",
+      "$ref": "#/$defs/stringList"
+    },
+    "command_risk_surfaces": {
+      "description": "Risk surfaces matched from a command string only. The full command is never recorded.",
+      "$ref": "#/$defs/stringList"
+    },
+    "closure_risk_surfaces": {
+      "description": "Risk surfaces counted as closure-relevant engineering work. Read-only command matches are intentionally excluded.",
+      "$ref": "#/$defs/stringList"
+    },
     "route_manifest_detected": { "type": "boolean" },
     "required_references_detected": { "type": "boolean" },
+    "validation_command_detected": {
+      "type": "boolean",
+      "description": "Whether a validation-looking command was observed earlier in the turn. This is not validation evidence without an outcome in the stop closure."
+    },
     "validation_evidence_detected": { "type": "boolean" },
     "residual_risk_detected": { "type": "boolean" },
     "completion_language_detected": {

@@ -309,6 +309,17 @@ class PostEditStructureGateTests(unittest.TestCase):
         self.assertIn("shared/common/utils contains business vocabulary", result.stdout)
         self.assertIn("module-boundary-design", result.stdout)
 
+    def test_plain_test_helper_file_does_not_trigger_structure_gate(self) -> None:
+        body = (
+            "const makeLabelFixture = () => 'label';\n"
+            "const normalizeLabel = (value: string) => value.trim();"
+        )
+        result = run_structure(
+            apply_patch_event(add_file_patch("tests/helpers/string_helper.ts", body))
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("ChangeForge Structure Gate triggered", result.stdout)
+
     def test_cleanup_without_owner_or_expiry_triggers_refactoring_suggestion(self) -> None:
         patch = (
             "*** Begin Patch\n"
