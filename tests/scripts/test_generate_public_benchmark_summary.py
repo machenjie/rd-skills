@@ -38,8 +38,63 @@ class GeneratePublicBenchmarkSummaryTests(unittest.TestCase):
         statuses = {item["name"]: item["status"] for item in payload["items"]}
         self.assertEqual(statuses["Release readiness"], "unknown")
         self.assertEqual(statuses["Installation validation"], "not_collected")
-        self.assertEqual(statuses["Marketplace validation"], "not_collected")
+        self.assertEqual(statuses["Marketplace index validation"], "unknown")
         self.assertNotIn("pass", {statuses["Release readiness"], statuses["Installation validation"]})
+
+    def test_committed_summary_uses_stable_source_commit_label(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "[project]\nname = \"sample\"\nversion = \"0.1.0\"\n",
+                encoding="utf-8",
+            )
+            payload = module.generate_summary(root)
+
+        # Regression: committed snapshots must not go stale when HEAD changes after generation.
+        self.assertEqual(payload["repository"]["source_commit"], module.COMMITTED_SOURCE_COMMIT)
+
+    def test_release_artifact_can_supply_source_commit(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "[project]\nname = \"sample\"\nversion = \"0.1.0\"\n",
+                encoding="utf-8",
+            )
+            payload = module.generate_summary(root, source_commit="abc1234")
+
+        self.assertEqual(payload["repository"]["source_commit"], "abc1234")
+
+    def test_marketplace_status_comes_from_scorecard(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "[project]\nname = \"sample\"\nversion = \"0.1.0\"\n",
+                encoding="utf-8",
+            )
+            (root / "reports").mkdir()
+            (root / "reports" / "professional-scorecard.json").write_text(
+                "{\n"
+                "  \"dimensions\": [\n"
+                "    {\n"
+                "      \"name\": \"Marketplace index validation\",\n"
+                "      \"status\": \"pass\",\n"
+                "      \"detail\": \"all profiles validate\",\n"
+                "      \"verification_command\": \"python3 scripts/validate-marketplace-index.py --profile recommended\"\n"
+                "    }\n"
+                "  ]\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            payload = module.generate_summary(root)
+
+        # Regression: public summary and scorecard dashboard must report the same marketplace dimension.
+        marketplace = next(item for item in payload["items"] if item["name"] == "Marketplace index validation")
+        self.assertEqual(marketplace["status"], "pass")
+        self.assertEqual(marketplace["source"], "reports/professional-scorecard.json")
+        self.assertIn("all profiles validate", marketplace["detail"])
 
     def test_markdown_states_claim_boundary(self) -> None:
         module = _load_module()

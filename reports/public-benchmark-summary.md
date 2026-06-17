@@ -6,15 +6,15 @@ This generated summary reports local deterministic ChangeForge evidence. It does
 
 - Repository: `machenjie/rd-skills`
 - Version: `0.1.0`
-- Source commit: `26dc651`
+- Source commit: `provided by release artifact / CI metadata`
 
 ## Status Counts
 
-- `pass`: 7
+- `pass`: 8
 - `partial`: 2
 - `fail`: 0
 - `unknown`: 0
-- `not_collected`: 2
+- `not_collected`: 1
 
 ## Evidence
 
@@ -30,12 +30,11 @@ This generated summary reports local deterministic ChangeForge evidence. It does
 | Profile build: full | `pass` | dist/universal/skills/full/.changeforge-build-manifest.json | top_level=26, expected=26 | `python3 scripts/build.py --profile full` |
 | Profile build: dev | `pass` | dist/universal/skills/dev/.changeforge-build-manifest.json | top_level=143, expected=143 | `python3 scripts/build.py --profile dev` |
 | Installation validation | `not_collected` | scripts/validate-installation.py | validator does not emit a committed machine-readable report | `python3 scripts/validate-installation.py` |
-| Marketplace validation | `not_collected` | scripts/validate-marketplace-index.py | run per-profile validator; no committed result is inferred as pass | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` |
+| Marketplace index validation | `pass` | reports/professional-scorecard.json | recommended, full, and dev marketplace indexes validate | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` |
 
 ## Known Unknowns / Not Collected
 
 - Installation validation
-- Marketplace validation
 
 ## Refresh Commands
 

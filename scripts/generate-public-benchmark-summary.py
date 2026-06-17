@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 import tomllib
 from dataclasses import dataclass, asdict
@@ -18,6 +17,13 @@ from validation_utils import EXPECTED_PROFILE_TOP_LEVEL_COUNTS
 ROOT = Path(__file__).resolve().parents[1]
 PROFILES = ("recommended", "full", "dev")
 STATUS_ORDER = ("pass", "partial", "fail", "unknown", "not_collected")
+COMMITTED_SOURCE_COMMIT = "provided by release artifact / CI metadata"
+MARKETPLACE_DIMENSION = "Marketplace index validation"
+SCORECARD_REFRESH_COMMAND = (
+    "python3 scripts/generate-professional-scorecard.py "
+    "--out reports/professional-scorecard.md "
+    "--json-out reports/professional-scorecard.json"
+)
 REFRESH_COMMANDS = [
     "python3 scripts/eval-routing.py",
     "python3 scripts/eval-skill-professionalism.py",
@@ -64,20 +70,6 @@ def _project_version(root: Path) -> str:
         return "unknown"
     project = parsed.get("project", {})
     return str(project.get("version", "unknown")) if isinstance(project, dict) else "unknown"
-
-
-def _source_commit(root: Path) -> str:
-    try:
-        completed = subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            cwd=root,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except (OSError, subprocess.CalledProcessError):
-        return "unknown"
-    return completed.stdout.strip() or "unknown"
 
 
 def _status_from_summary(summary: dict[str, Any] | None, *, pass_key: str = "cases_checked") -> str:
@@ -198,7 +190,53 @@ def _profile_build_items(root: Path) -> list[EvidenceItem]:
     return items
 
 
-def _static_status_items() -> list[EvidenceItem]:
+def _scorecard_dimension_item(root: Path, dimension_name: str, public_name: str) -> EvidenceItem:
+    """Return one public evidence item from the generated professional scorecard."""
+    path = root / "reports" / "professional-scorecard.json"
+    scorecard = _read_json(path)
+    if not isinstance(scorecard, dict):
+        return EvidenceItem(
+            public_name,
+            "unknown",
+            "reports/professional-scorecard.json",
+            "scorecard report missing or invalid",
+            SCORECARD_REFRESH_COMMAND,
+        )
+
+    dimensions = scorecard.get("dimensions")
+    if not isinstance(dimensions, list):
+        return EvidenceItem(
+            public_name,
+            "unknown",
+            "reports/professional-scorecard.json",
+            "scorecard dimensions missing or invalid",
+            SCORECARD_REFRESH_COMMAND,
+        )
+
+    for dimension in dimensions:
+        if not isinstance(dimension, dict) or dimension.get("name") != dimension_name:
+            continue
+        status = str(dimension.get("status", "unknown"))
+        if status not in STATUS_ORDER:
+            status = "unknown"
+        return EvidenceItem(
+            public_name,
+            status,
+            "reports/professional-scorecard.json",
+            str(dimension.get("detail", "detail missing")),
+            str(dimension.get("verification_command", "")) or SCORECARD_REFRESH_COMMAND,
+        )
+
+    return EvidenceItem(
+        public_name,
+        "unknown",
+        "reports/professional-scorecard.json",
+        f"{dimension_name} dimension missing",
+        SCORECARD_REFRESH_COMMAND,
+    )
+
+
+def _additional_status_items(root: Path) -> list[EvidenceItem]:
     return [
         EvidenceItem(
             "Installation validation",
@@ -207,23 +245,17 @@ def _static_status_items() -> list[EvidenceItem]:
             "validator does not emit a committed machine-readable report",
             "python3 scripts/validate-installation.py",
         ),
-        EvidenceItem(
-            "Marketplace validation",
-            "not_collected",
-            "scripts/validate-marketplace-index.py",
-            "run per-profile validator; no committed result is inferred as pass",
-            "python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev",
-        ),
+        _scorecard_dimension_item(root, MARKETPLACE_DIMENSION, MARKETPLACE_DIMENSION),
     ]
 
 
-def generate_summary(root: Path) -> dict[str, Any]:
+def generate_summary(root: Path, *, source_commit: str = COMMITTED_SOURCE_COMMIT) -> dict[str, Any]:
     """Generate the public benchmark summary payload."""
     items = [
         *_release_readiness_items(root),
         *_direct_report_items(root),
         *_profile_build_items(root),
-        *_static_status_items(),
+        *_additional_status_items(root),
     ]
     status_counts = {status: 0 for status in STATUS_ORDER}
     for item in items:
@@ -239,7 +271,7 @@ def generate_summary(root: Path) -> dict[str, Any]:
         "repository": {
             "name": "machenjie/rd-skills",
             "version": _project_version(root),
-            "source_commit": _source_commit(root),
+            "source_commit": source_commit,
         },
         "status_counts": status_counts,
         "items": [asdict(item) for item in items],
@@ -307,10 +339,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", required=True)
     parser.add_argument("--json-out", required=True)
+    parser.add_argument(
+        "--source-commit",
+        default=COMMITTED_SOURCE_COMMIT,
+        help="Source commit metadata for release artifacts. Committed snapshots use a stable non-HEAD label.",
+    )
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
 
-    payload = generate_summary(ROOT)
+    payload = generate_summary(ROOT, source_commit=args.source_commit)
     json_text = json.dumps(payload, indent=2, sort_keys=True) + "\n"
     md_text = render_markdown(payload)
     out = Path(args.out)

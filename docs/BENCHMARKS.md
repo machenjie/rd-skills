@@ -36,6 +36,13 @@ Generate the public benchmark summary snapshot:
 python3 scripts/generate-public-benchmark-summary.py --out reports/public-benchmark-summary.md --json-out reports/public-benchmark-summary.json
 ```
 
+Committed public benchmark snapshots do not embed the current Git HEAD. Release
+artifacts or CI jobs that need exact provenance can provide it explicitly:
+
+```bash
+python3 scripts/generate-public-benchmark-summary.py --source-commit "$GITHUB_SHA" --out reports/public-benchmark-summary.md --json-out reports/public-benchmark-summary.json
+```
+
 The generator does not mark a validator as passed just because a command name exists. If a tool does not emit a machine-readable report, that status is reported as `not_collected` and the verification command is listed.
 
 ## Recommended Evidence Refresh
@@ -67,6 +74,22 @@ Longer comparisons such as `python3 scripts/eval-routing.py --candidate-output-d
 
 ## Report Policy
 
-`reports/` contains sample/generated report snapshots that document local evidence. Regenerate them before release decisions and include the generation command in handoff notes. Do not edit scorecard or public benchmark numbers by hand.
+`reports/` contains release snapshots that document local evidence. Regenerate them before release decisions and include the generation command in handoff notes. Do not edit scorecard or public benchmark numbers by hand.
+
+Ordinary CI freshness checks are limited to stable generated documentation whose inputs are refreshed during the productization smoke step:
+
+- `docs/SHOWCASE.md`
+- `docs/MARKETPLACE_CATALOG.md`
+
+Release snapshot artifacts are committed for reader context but are not guaranteed to be refreshed on every pull request:
+
+- `reports/public-benchmark-summary.md`
+- `reports/public-benchmark-summary.json`
+- `reports/professional-scorecard.md`
+- `reports/professional-scorecard.json`
+- `docs/SCORECARD_DASHBOARD.md`
+- the README scorecard summary block generated from `reports/professional-scorecard.json`
+
+When updating release snapshots, rebuild all three profiles, refresh the scorecard, render the dashboard and README block, then regenerate the public benchmark summary. The public benchmark summary reuses the scorecard marketplace dimension so those two artifacts do not disagree about marketplace validation status.
 
 See [SCORECARD.md](SCORECARD.md) and [SCORECARD_DASHBOARD.md](SCORECARD_DASHBOARD.md) for the reader-facing scorecard interpretation.

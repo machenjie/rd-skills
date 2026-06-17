@@ -14,6 +14,11 @@ Render the dashboard and generated README summary with:
 python3 scripts/render-scorecard-dashboard.py --scorecard reports/professional-scorecard.json --out docs/SCORECARD_DASHBOARD.md --readme README.md
 ```
 
+`reports/professional-scorecard.*`, `docs/SCORECARD_DASHBOARD.md`, and
+the README scorecard summary block are release snapshots. They should be
+regenerated together before release decisions, but ordinary CI does not treat
+them as per-PR freshness gates.
+
 CI smoke checks use the stricter profile-build mode after all profiles are built:
 
 ```bash

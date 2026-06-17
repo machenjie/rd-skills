@@ -15,4 +15,11 @@ Regenerate the public benchmark summary with:
 python3 scripts/generate-public-benchmark-summary.py --out reports/public-benchmark-summary.md --json-out reports/public-benchmark-summary.json
 ```
 
+Committed report snapshots use stable metadata and do not embed the current Git
+HEAD. Release artifact generation can attach provenance explicitly:
+
+```bash
+python3 scripts/generate-public-benchmark-summary.py --source-commit "$GITHUB_SHA" --out reports/public-benchmark-summary.md --json-out reports/public-benchmark-summary.json
+```
+
 Regenerate benchmark and release evidence before publication decisions. Do not edit generated metrics by hand. If a report is missing, downstream scorecards and public summaries must show `unknown` or `not_collected` rather than assuming success.

@@ -74,15 +74,14 @@
     },
     {
       "command": "python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev",
-      "detail": "run per-profile validator; no committed result is inferred as pass",
-      "name": "Marketplace validation",
-      "source": "scripts/validate-marketplace-index.py",
-      "status": "not_collected"
+      "detail": "recommended, full, and dev marketplace indexes validate",
+      "name": "Marketplace index validation",
+      "source": "reports/professional-scorecard.json",
+      "status": "pass"
     }
   ],
   "known_unknowns": [
-    "Installation validation",
-    "Marketplace validation"
+    "Installation validation"
   ],
   "refresh_commands": [
     "python3 scripts/eval-routing.py",
@@ -103,15 +102,15 @@
   ],
   "repository": {
     "name": "machenjie/rd-skills",
-    "source_commit": "26dc651",
+    "source_commit": "provided by release artifact / CI metadata",
     "version": "0.1.0"
   },
   "schema_version": 1,
   "status_counts": {
     "fail": 0,
-    "not_collected": 2,
+    "not_collected": 1,
     "partial": 2,
-    "pass": 7,
+    "pass": 8,
     "unknown": 0
   }
 }
