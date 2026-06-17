@@ -97,13 +97,15 @@ READ_INTENT_RE = re.compile(r"\b(read|grep|search|find|open|look at|inspect file
 READ_ZH_RE = re.compile(r"(阅读|查看|分析|理解|看看|检查代码)")
 EDIT_INTENT_RE = re.compile(r"\b(add|change|modify|update|implement|write|create)\b", re.I)
 EDIT_ZH_RE = re.compile(r"(修改|改动|实现|添加|新增|优化|调整|完善)")
-TEST_INTENT_RE = re.compile(r"\b(test|validate|verify|regression|coverage)\b", re.I)
+TEST_INTENT_RE = re.compile(r"\b(tests?|validate|verify|regression|coverage)\b", re.I)
 TEST_ZH_RE = re.compile(r"(测试|验证|跑一下|检查是否通过)")
 DEBUG_RE = re.compile(r"\b(debug|diagnose|root cause|reproduce|triage)\b", re.I)
 REFACTOR_RE = re.compile(r"\b(refactor|cleanup|split|merge|rename|move)\b", re.I)
 REFACTOR_ZH_RE = re.compile(r"(重构|拆分|合并|移动|重命名|抽取)")
 SKILL_AUTHORING_RE = re.compile(
-    r"\b(SKILL\.md|skill author|capability|registry|routing rule|hook runtime)\b",
+    r"\b(SKILL\.md|skill author(?:ing)?|foundation capability|capability reference|registry|routing rule|"
+    r"routing-rules\.ya?ml|stage-model\.ya?ml|hook runtime)\b"
+    r"|src/(?:professional-skills|foundation/capabilities|domain-extensions|registry|hook-runtime)/",
     re.I,
 )
 NO_INJECTION_STAGES = {"question", "unknown", "no_engineering_action", "compaction"}
@@ -246,12 +248,12 @@ def _stage_from_event(
         return "repair"
     if _read_intent(text):
         return "read"
+    if SKILL_AUTHORING_RE.search(combined):
+        return "skill_authoring"
     if _edit_intent(text):
         return "edit"
     if RELEASE_RE.search(combined):
         return "release"
-    if SKILL_AUTHORING_RE.search(combined):
-        return "skill_authoring"
     if hook == "userpromptsubmit":
         return "question"
     if hook in {"sessionstart", "userpromptexpansion"}:

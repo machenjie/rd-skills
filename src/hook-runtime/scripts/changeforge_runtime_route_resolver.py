@@ -144,6 +144,32 @@ RUNTIME_AUTHORING_PREFIXES = (
     SOURCE_ROOT_PREFIX + "registry/",
     SOURCE_ROOT_PREFIX + "hook-runtime/",
 )
+SKILL_AUTHORING_TEXT_PATTERNS = (
+    r"(?:^|[\s\"'`])src/(?:professional-skills|foundation/capabilities|domain-extensions|registry|hook-runtime)/",
+    r"(?:^|[\s\"'`])(?:[\w./-]+/)?SKILL\.md\b",
+    r"(?:^|[\s\"'`])routing-rules\.ya?ml\b",
+    r"(?:^|[\s\"'`])stage-model\.ya?ml\b",
+)
+DOCS_ONLY_TEXT_PATH_RE = re.compile(
+    r"(?:^|[\s\"'`])(?:docs|documentation)/[^\s\"'`]+"
+    r"\.(?:md|mdx|rst|adoc|txt)\b",
+    re.I,
+)
+CODE_TEXT_PATH_RE = re.compile(
+    r"(?:^|[\s\"'`])(?:src|app|lib|internal|pkg|cmd|deploy|db|migrations?|tests?)/"
+    r"[^\s\"'`]+\.(?:c|cc|cpp|cxx|h|hh|hpp|ipp|tpp|go|java|kt|kts|js|jsx|ts|tsx|mts|cts|py|rs|sh|bash|zsh|sql|ya?ml|json|toml)\b",
+    re.I,
+)
+SECURITY_RISK_PATTERNS = (
+    r"\bauth\b",
+    r"\bauthorization\b",
+    r"\bpermission\b",
+    r"\brbac\b",
+    r"\bsecret\b",
+    r"\btoken\b",
+    r"\bcredential\b",
+    r"\bprivate key\b",
+)
 
 DOMAIN_EXTENSION_BY_SURFACE = {
     "ai-rag-agent": "ai-product-extension",
@@ -505,15 +531,11 @@ def detect_product_surfaces(paths: list[str], command: str = "", text: str = "")
     evidence = _evidence(paths, command, text)
     surfaces: list[str] = []
 
-    if _has_path_prefix(paths, SKILL_AUTHORING_PREFIXES):
-        surfaces.append("skill-authoring")
-    if _has_path_prefix(paths, RUNTIME_AUTHORING_PREFIXES):
-        surfaces.append("skill-authoring")
-    if any(Path(path).name == "SKILL.md" for path in paths):
-        surfaces.append("skill-authoring")
+    if _is_skill_authoring_evidence(paths, evidence):
+        return ["skill-authoring"]
 
-    if _docs_only(paths) and not _matches_any(evidence, (r"\bapi\b", r"\bsecurity\b", r"\bmigration\b")):
-        surfaces.append("documentation-only")
+    if (_docs_only(paths) or _text_docs_only(evidence)) and not _matches_any(evidence, (r"\bapi\b", r"\bsecurity\b", r"\bmigration\b")):
+        return ["documentation-only"]
 
     if _matches_any(evidence, (r"\bcomponents?/", r"\bpages?/", r"\broutes?/", r"\bapp/", r"\breact\b", r"\bvue\b", r"\bsvelte\b")) or any(Path(path).suffix in {".tsx", ".jsx"} for path in paths):
         surfaces.append("frontend-product")
@@ -564,6 +586,9 @@ def detect_language_surfaces(paths: list[str], command: str = "", text: str = ""
         if any(Path(path).suffix.casefold() in extensions for path in paths):
             languages.append(language)
             continue
+        if _text_mentions_extension(evidence, extensions):
+            languages.append(language)
+            continue
         if any(pattern.search(evidence) for pattern in LANGUAGE_STRONG_PATTERNS[language]):
             languages.append(language)
     return _unique(languages)
@@ -585,11 +610,28 @@ def detect_domain_extensions(paths: list[str], command: str = "", text: str = ""
 def detect_risk_surfaces(paths: list[str], command: str = "", text: str = "") -> list[str]:
     evidence = _evidence(paths, command, text)
     risks: list[str] = []
-    if _matches_any(evidence, (r"\bauth\b", r"\bauthorization\b", r"\bpermission\b", r"\brbac\b", r"\bsecret\b", r"\btoken\b", r"\bcredential\b", r"\bprivate key\b")):
+    if _is_skill_authoring_evidence(paths, evidence):
+        # Skill bodies often discuss product contracts; do not treat that as a user API/data surface.
+        if _matches_any(evidence, SECURITY_RISK_PATTERNS):
+            risks.append("security")
+        return _unique(risks)
+    if _matches_any(evidence, SECURITY_RISK_PATTERNS):
         risks.append("security")
     if _matches_any(evidence, (r"\bmigration\b", r"\bschema\b", r"\bapi\b", r"\bdto\b", r"\bcontract\b", r"\bsql\b")):
         risks.append("data-api")
-    if _matches_any(evidence, (r"\bperformance\b", r"\breliability\b", r"\bproduction\b", r"\bconcurrency\b", r"\brace\b", r"\bdeadlock\b", r"\bobservability\b")):
+    if _matches_any(
+        evidence,
+        (
+            r"\bperformance\b",
+            r"\breliability\b",
+            r"\bin production\b(?!\s+code)",
+            r"\bproduction\s+(?:behavior|incident|outage|traffic|deployment|environment|risk|data|database|system|service)\b",
+            r"\bconcurrency\b",
+            r"\brace\b",
+            r"\bdeadlock\b",
+            r"\bobservability\b",
+        ),
+    ):
         risks.append("reliability")
     if _matches_any(evidence, (r"\brelease\b", r"\bdeploy\b", r"\bdeployment\b", r"\brollback\b", r"\bkubernetes\b", r"\bhelm\b", r"\bci\b", r"\bcd\b", r"发布", r"部署")):
         risks.append("delivery")
@@ -818,6 +860,8 @@ def _reviewer_skill(owner: str, current_stage: str, product_surfaces: list[str],
         return "change-forge-router"
     if owner == "delivery-release-gate":
         return "quality-test-gate"
+    if current_stage == "skill-authoring" and owner == "change-forge-router":
+        return "quality-test-gate"
     if owner == "change-forge-router":
         return "change-impact-analyzer"
     if current_stage == "release-delivery" and owner != "delivery-release-gate":
@@ -895,6 +939,8 @@ def _quality_gates(
         gates.append("security gate")
     if "reliability" in risk_surfaces or "reliability-observability-gate" in selected_skills:
         gates.append("reliability gate")
+    if "delivery" in risk_surfaces or "delivery-release-gate" in selected_skills:
+        gates.append("delivery gate")
     if "data-api" in risk_surfaces or _has_any(product_surfaces, ("api-contract", "data-model", "database-migration")):
         gates.append("API/data gate")
     if _has_any(product_surfaces, ("cache", "message-queue", "search-analytics")):
@@ -1030,6 +1076,8 @@ def _docs_only(paths: list[str]) -> bool:
     for path in paths:
         file_path = Path(path)
         lowered = path.casefold()
+        if _is_skill_authoring_path(path):
+            return False
         if lowered.startswith(("docs/", "documentation/")):
             continue
         if file_path.suffix.casefold() in doc_suffixes:
@@ -1038,6 +1086,34 @@ def _docs_only(paths: list[str]) -> bool:
             continue
         return False
     return True
+
+
+def _is_skill_authoring_evidence(paths: list[str], evidence: str) -> bool:
+    return any(_is_skill_authoring_path(path) for path in paths) or _matches_any(
+        evidence,
+        SKILL_AUTHORING_TEXT_PATTERNS,
+    )
+
+
+def _is_skill_authoring_path(path: str) -> bool:
+    lowered = path.replace("\\", "/").casefold()
+    return (
+        lowered.startswith(SKILL_AUTHORING_PREFIXES)
+        or lowered.startswith(RUNTIME_AUTHORING_PREFIXES)
+        or Path(lowered).name == "skill.md"
+        or Path(lowered).name in {"routing-rules.yaml", "routing-rules.yml", "stage-model.yaml", "stage-model.yml"}
+    )
+
+
+def _text_docs_only(evidence: str) -> bool:
+    return bool(DOCS_ONLY_TEXT_PATH_RE.search(evidence) and not CODE_TEXT_PATH_RE.search(evidence))
+
+
+def _text_mentions_extension(evidence: str, extensions: tuple[str, ...]) -> bool:
+    return any(
+        re.search(rf"(?:^|[\s\"'`])[\w./-]+{re.escape(extension)}\b", evidence, re.I)
+        for extension in extensions
+    )
 
 
 def _has_path_prefix(paths: Iterable[str], prefixes: tuple[str, ...]) -> bool:

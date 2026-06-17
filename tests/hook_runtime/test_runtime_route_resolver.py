@@ -139,6 +139,26 @@ class RuntimeRouteResolverTests(unittest.TestCase):
         self.assertIn("skill-authoring-expert", context["selected_capabilities"])
         self.assertNotIn("backend-change-builder", context["selected_skills"])
 
+    def test_prompt_only_skill_authoring_update_routes_skill_authoring(self) -> None:
+        event = {
+            "hook_event_name": "UserPromptSubmit",
+            "prompt": "Update src/registry/routing-rules.yaml and SKILL.md trigger",
+        }
+        classification = classify_event(event)
+        context = _context_for(event)
+        self.assertEqual(classification["stage"], "skill_authoring")
+        self.assertEqual(context["current_stage"], "skill-authoring")
+        self.assertEqual(context["product_surfaces"], ["skill-authoring"])
+        self.assertIn("skill-authoring-expert", context["selected_capabilities"])
+        self.assertIn("engineering-stage-professionalism", context["selected_capabilities"])
+        self.assertNotIn("implementation-structure-design", context["selected_capabilities"])
+
+    def test_skill_md_under_professional_skill_has_skill_authoring_primary_surface(self) -> None:
+        context = _context_for(_edit_event("src/professional-skills/change-forge-router/SKILL.md"))
+        self.assertEqual(context["current_stage"], "skill-authoring")
+        self.assertEqual(context["primary_product_surface"], "skill-authoring")
+        self.assertNotIn("documentation-only", context["product_surfaces"])
+
     def test_unknown_pure_question_has_no_injection(self) -> None:
         classification = classify_event({"hook_event_name": "UserPromptSubmit", "prompt": "what is this concept?"})
         self.assertFalse(classification["should_inject"])

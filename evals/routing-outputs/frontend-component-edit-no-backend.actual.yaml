@@ -24,8 +24,9 @@ actual:
     selected_skills: [frontend-change-builder, quality-test-gate]
     selected_capabilities: [implementation-structure-design, page-component-decomposition, typescript-professional-usage]
     selected_domain_extensions: []
-    skipped_capabilities:
-      - capability: backend-change-builder
+    skipped_capabilities: []
+    skipped_skills:
+      - skill: backend-change-builder
         reason: no backend path, service, controller, or server evidence
     context_budget_mode: single-stage
     context_budget_rationale: L2 TSX component edit needs frontend planning and TypeScript only
