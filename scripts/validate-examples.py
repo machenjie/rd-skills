@@ -77,6 +77,14 @@ def _expected_fixture_values(fixture: dict[str, object], key: str) -> list[str]:
     return [str(item) for item in value] if isinstance(value, list) else []
 
 
+def _forbidden_fixture_values(fixture: dict[str, object], key: str) -> list[str]:
+    forbidden = fixture.get("forbidden")
+    if not isinstance(forbidden, dict):
+        return []
+    value = forbidden.get(key)
+    return [str(item) for item in value] if isinstance(value, list) else []
+
+
 def _append_overlap_error(
     errors: list[str],
     scenario: Path,
@@ -88,6 +96,22 @@ def _append_overlap_error(
     if actual and expected and not (set(actual) & set(expected)):
         errors.append(
             f"{scenario.relative_to(root)}/expected-route.md has no {field} overlap with routing fixture"
+        )
+
+
+def _append_forbidden_overlap_error(
+    errors: list[str],
+    scenario: Path,
+    root: Path,
+    field: str,
+    actual: list[str],
+    forbidden: list[str],
+) -> None:
+    overlap = sorted(set(actual) & set(forbidden))
+    if overlap:
+        errors.append(
+            f"{scenario.relative_to(root)}/expected-route.md {field} "
+            f"conflicts with routing fixture forbidden: {', '.join(overlap)}"
         )
 
 
@@ -161,6 +185,30 @@ def validate_examples(root: Path) -> list[str]:
                 "required_quality_gates",
                 _list_value(payload, "required_quality_gates"),
                 _expected_fixture_values(fixture, "quality_gates"),
+            )
+            _append_forbidden_overlap_error(
+                errors,
+                scenario,
+                root,
+                "selected_skills",
+                _list_value(payload, "selected_skills"),
+                _forbidden_fixture_values(fixture, "skills"),
+            )
+            _append_forbidden_overlap_error(
+                errors,
+                scenario,
+                root,
+                "selected_capabilities",
+                _list_value(payload, "selected_capabilities"),
+                _forbidden_fixture_values(fixture, "capabilities"),
+            )
+            _append_forbidden_overlap_error(
+                errors,
+                scenario,
+                root,
+                "required_quality_gates",
+                _list_value(payload, "required_quality_gates"),
+                _forbidden_fixture_values(fixture, "quality_gates"),
             )
         for term in REQUIRED_EVIDENCE_TERMS:
             if term not in evidence:

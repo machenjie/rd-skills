@@ -6,19 +6,15 @@ selected_skills:
   - change-forge-router
   - quality-test-gate
   - security-privacy-gate
-  - delivery-release-gate
   - ai-code-review-refactor
 selected_capabilities:
   - package-dependency-management
   - regression-testing
-  - release-rollback
   - code-review
   - agent-execution-discipline
 required_quality_gates:
   - security gate
   - test gate
-  - delivery gate
-  - AI review gate
   - execution discipline gate
 review_owner: quality-test-gate
 ```

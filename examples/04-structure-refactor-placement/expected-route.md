@@ -6,7 +6,6 @@ selected_skills:
   - change-forge-router
   - architecture-impact-reviewer
   - backend-change-builder
-  - frontend-change-builder
   - quality-test-gate
   - ai-code-review-refactor
 selected_capabilities:

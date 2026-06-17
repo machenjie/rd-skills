@@ -116,6 +116,59 @@ class ValidateExamplesTests(unittest.TestCase):
             errors = module.validate_examples(root)
         self.assertTrue(any("has no selected_skills overlap" in error for error in errors))
 
+    def test_scenario_route_must_not_overlap_fixture_forbidden(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_minimal_registry(root)
+            scenario = _write_minimal_scenario(root, "01-sample", "fixture-case")
+            fixture = root / "evals" / "routing" / "fixture-case.yaml"
+            fixture.parent.mkdir(parents=True)
+            fixture.write_text(
+                "---\n"
+                "id: fixture-case\n"
+                "expected:\n"
+                "  skills:\n"
+                "    - backend-change-builder\n"
+                "  capabilities:\n"
+                "    - regression-testing\n"
+                "  quality_gates:\n"
+                "    - test gate\n"
+                "forbidden:\n"
+                "  skills:\n"
+                "    - frontend-change-builder\n"
+                "  capabilities:\n"
+                "    - release-rollback\n"
+                "  quality_gates:\n"
+                "    - delivery gate\n",
+                encoding="utf-8",
+            )
+            # Regression: routes can overlap fixture expected values and still
+            # be invalid when they select forbidden values.
+            (scenario / "expected-route.md").write_text(
+                "```yaml\n"
+                "scenario_id: fixture-case\n"
+                "selected_skills:\n"
+                "  - backend-change-builder\n"
+                "  - frontend-change-builder\n"
+                "selected_capabilities:\n"
+                "  - regression-testing\n"
+                "  - release-rollback\n"
+                "required_quality_gates:\n"
+                "  - test gate\n"
+                "  - delivery gate\n"
+                "```\n",
+                encoding="utf-8",
+            )
+            errors = module.validate_examples(root)
+        expected_conflicts = (
+            "selected_skills conflicts with routing fixture forbidden",
+            "selected_capabilities conflicts with routing fixture forbidden",
+            "required_quality_gates conflicts with routing fixture forbidden",
+        )
+        for expected in expected_conflicts:
+            self.assertTrue(any(expected in error for error in errors))
+
 
 def _write_minimal_registry(root: Path) -> None:
     (root / "src" / "registry").mkdir(parents=True)
@@ -136,13 +189,16 @@ def _write_minimal_registry(root: Path) -> None:
         "  - name: regression-testing\n"
         "    path: src/foundation/capabilities/regression-testing\n"
         "  - name: frontend-testing\n"
-        "    path: src/foundation/capabilities/frontend-testing\n",
+        "    path: src/foundation/capabilities/frontend-testing\n"
+        "  - name: release-rollback\n"
+        "    path: src/foundation/capabilities/release-rollback\n",
         encoding="utf-8",
     )
     (root / "src" / "registry" / "routing-rules.yaml").write_text(
         "quality_gates:\n"
         "  - test gate\n"
-        "  - implementation gate\n",
+        "  - implementation gate\n"
+        "  - delivery gate\n",
         encoding="utf-8",
     )
 
