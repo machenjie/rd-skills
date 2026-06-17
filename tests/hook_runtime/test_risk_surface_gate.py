@@ -245,11 +245,36 @@ class RiskSurfaceGateTests(unittest.TestCase):
             'bash -lc "rg data-api src"',
             'sh -c "sed -n 1,80p src/auth/session.py"',
             'zsh -c "git grep data-api"',
+            'bash -lc "rg data-api src || true"',
+            "rg data-api src || true",
+            "rg data-api src || :",
             "rg data-api src | head",
             "jq .schema config.json",
             "awk /schema/ README.md",
             "bat src/auth/session.py",
             "fd migration db",
+        ]
+        for command in commands:
+            with self.subTest(command=command):
+                event = {
+                    "runtime": "codex",
+                    "hookEventName": "PostToolUse",
+                    "toolName": "Bash",
+                    "toolInput": {"command": command},
+                }
+                result = run_risk(event)
+                self.assertEqual(result.returncode, 0)
+                self.assertEqual(result.stdout, "")
+
+    def test_read_only_git_commands_do_not_emit_warning(self) -> None:
+        commands = [
+            "git diff src/auth/session.py",
+            "git show HEAD:db/schema.sql",
+            "git status --short src/auth/session.py",
+            "git log -- db/migrations",
+            "git ls-files db/migrations",
+            "git rev-parse HEAD",
+            "git cat-file -p HEAD:db/schema.sql",
         ]
         for command in commands:
             with self.subTest(command=command):
@@ -269,6 +294,9 @@ class RiskSurfaceGateTests(unittest.TestCase):
             "kubectl apply -f deploy/kubernetes/rbac.yaml",
             "helm upgrade app ./deploy/helm -f deploy/helm/values.yaml",
             "go generate ./internal/auth",
+            "git checkout -- src/auth/session.py",
+            "git reset HEAD src/auth/session.py",
+            "git clean -fd db/migrations",
             'bash -lc "kubectl apply -f deploy/kubernetes/rbac.yaml"',
         ]
         for command in commands:

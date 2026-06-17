@@ -198,7 +198,34 @@ READ_ONLY_COMMAND_PROGRAMS = {
     "tree",
     "wc",
 }
-READ_ONLY_GIT_SUBCOMMANDS = {"grep"}
+READ_ONLY_GIT_SUBCOMMANDS = {
+    "branch",
+    "cat-file",
+    "diff",
+    "grep",
+    "log",
+    "ls-files",
+    "rev-parse",
+    "show",
+    "status",
+}
+NEUTRAL_STATUS_PROGRAMS = {"true", ":"}
+MUTATING_GIT_BRANCH_OPTIONS = {
+    "-c",
+    "-C",
+    "-d",
+    "-D",
+    "-m",
+    "-M",
+    "--copy",
+    "--delete",
+    "--edit-description",
+    "--move",
+    "--no-track",
+    "--set-upstream-to",
+    "--track",
+    "--unset-upstream",
+}
 SHELL_WRAPPER_PROGRAMS = {"bash", "sh", "zsh"}
 COMMAND_SEPARATORS = {"|", "|&", "&&", "||", ";"}
 WRITE_REDIRECT_TOKENS = {">", ">>", "1>", "1>>", "2>", "2>>", "&>", "&>>"}
@@ -358,7 +385,16 @@ def _command_is_read_only(command: str, *, depth: int = 0) -> bool:
     if inner_command is not None:
         return _command_is_read_only(inner_command, depth=depth + 1)
     segments = _command_segments(tokens)
-    return bool(segments) and all(_segment_is_read_only(segment) for segment in segments)
+    if not segments:
+        return False
+    for index, (separator, segment) in enumerate(segments):
+        if _segment_is_neutral_status(segment):
+            if separator == "||" and index == len(segments) - 1:
+                continue
+            return False
+        if not _segment_is_read_only(segment):
+            return False
+    return True
 
 
 def _command_tokens(command: str) -> list[str]:
@@ -388,19 +424,26 @@ def _shell_wrapper_inner_command(tokens: list[str]) -> str | None:
     return None
 
 
-def _command_segments(tokens: list[str]) -> list[list[str]]:
-    segments: list[list[str]] = []
+def _command_segments(tokens: list[str]) -> list[tuple[str | None, list[str]]]:
+    segments: list[tuple[str | None, list[str]]] = []
     current: list[str] = []
+    current_separator: str | None = None
     for token in tokens:
         if token in COMMAND_SEPARATORS:
             if current:
-                segments.append(current)
+                segments.append((current_separator, current))
                 current = []
+            current_separator = token
             continue
         current.append(token)
     if current:
-        segments.append(current)
+        segments.append((current_separator, current))
     return segments
+
+
+def _segment_is_neutral_status(tokens: list[str]) -> bool:
+    program, _ = _program_token(tokens)
+    return program in NEUTRAL_STATUS_PROGRAMS
 
 
 def _segment_is_read_only(tokens: list[str]) -> bool:
@@ -408,7 +451,7 @@ def _segment_is_read_only(tokens: list[str]) -> bool:
     if not program:
         return False
     if program == "git":
-        return _git_subcommand(tokens[index + 1 :]) in READ_ONLY_GIT_SUBCOMMANDS
+        return _git_command_is_read_only(tokens[index + 1 :])
     if program == "find" and any(token in FIND_MUTATING_TOKENS for token in tokens[index + 1 :]):
         return False
     return program in READ_ONLY_COMMAND_PROGRAMS
@@ -422,7 +465,28 @@ def _program_token(tokens: list[str]) -> tuple[str, int]:
     return "", -1
 
 
+def _git_command_is_read_only(tokens: list[str]) -> bool:
+    subcommand, args = _git_subcommand_and_args(tokens)
+    if subcommand not in READ_ONLY_GIT_SUBCOMMANDS:
+        return False
+    if subcommand == "branch":
+        return _git_branch_is_read_only(args)
+    return True
+
+
+def _git_branch_is_read_only(args: list[str]) -> bool:
+    if not args:
+        return True
+    if any(arg in MUTATING_GIT_BRANCH_OPTIONS for arg in args):
+        return False
+    return all(arg.startswith("-") for arg in args)
+
+
 def _git_subcommand(tokens: list[str]) -> str:
+    return _git_subcommand_and_args(tokens)[0]
+
+
+def _git_subcommand_and_args(tokens: list[str]) -> tuple[str, list[str]]:
     index = 0
     while index < len(tokens):
         token = tokens[index]
@@ -432,8 +496,8 @@ def _git_subcommand(tokens: list[str]) -> str:
         if token.startswith("-"):
             index += 1
             continue
-        return token.casefold()
-    return ""
+        return token.casefold(), tokens[index + 1 :]
+    return "", []
 
 
 def _collect(findings: list[dict[str, object]], key: str) -> list[str]:
