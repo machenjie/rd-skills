@@ -84,7 +84,7 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
         self.assertIn("ChangeForge Professional Skill Injection", result.stdout)
         self.assertEqual(state["turn_stage"], "code-review")
         self.assertEqual(state["active_skill_context"]["action_stage"], "review")
-        self.assertEqual(state["owner_skill"], "ai-code-review-refactor")
+        self.assertEqual(state["owner_skill"], "security-privacy-gate")
         self.assertNotIn("auth token handling", json.dumps(state))
         self.assertIn("security_or_permission", state["prompt_signals"])
 

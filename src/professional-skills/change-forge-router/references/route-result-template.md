@@ -139,10 +139,14 @@ Each task:
 ## 12. Stage Professionalism
 - Current engineering stage:
 - Next engineering stage:
-- Product surface:
-- Language surface:
+- Primary product surface:
+- Product surfaces:
+- Primary language surface:
+- Language surfaces:
 - Stage-specific capabilities:
 - Capabilities explicitly skipped:
+- Skills explicitly skipped:
+- Routes explicitly skipped:
 - Skip rationale:
 - Context budget decision:
 - Required evidence:

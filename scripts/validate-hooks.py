@@ -1011,6 +1011,7 @@ def _validate_runtime_route_resolver(errors: list[str]) -> None:
     try:
         from changeforge_action_classifier import classify_event
         from changeforge_runtime_route_resolver import (
+            CAPABILITY_IDS,
             LANGUAGE_FILE_EXTENSIONS,
             build_active_skill_context,
         )
@@ -1072,6 +1073,124 @@ def _validate_runtime_route_resolver(errors: list[str]) -> None:
         errors.append("runtime resolver: no-surface edit must fall back to change-forge-router")
     if "backend-change-builder" in no_surface_context.get("selected_skills", []):
         errors.append("runtime resolver: no-surface edit must not select backend-change-builder")
+
+    docs_context = build_active_skill_context(
+        runtime="codex",
+        stage="edit",
+        surfaces=["documentation-only"],
+        event_name="UserPromptSubmit",
+        classification={
+            "stage": "edit",
+            "product_surfaces": ["documentation-only"],
+            "language_surfaces": [],
+            "risk_surfaces": ["documentation"],
+        },
+    )
+    if docs_context.get("owner_skill") != "change-documentation-gate":
+        errors.append("runtime resolver: docs-only edit must route to change-documentation-gate")
+    if "quality-test-gate" in docs_context.get("selected_skills", []):
+        errors.append("runtime resolver: docs-only edit must not select quality-test-gate")
+    if "test gate" in docs_context.get("required_quality_gates", []):
+        errors.append("runtime resolver: docs-only edit must not require test gate")
+
+    read_context = build_active_skill_context(
+        runtime="codex",
+        stage="read",
+        surfaces=[],
+        event_name="PostToolUse",
+        classification={
+            "stage": "read",
+            "product_surfaces": [],
+            "language_surfaces": [],
+            "risk_surfaces": [],
+        },
+    )
+    if "quality-test-gate" in read_context.get("selected_skills", []):
+        errors.append("runtime resolver: read-only route must not select quality-test-gate")
+    if "test gate" in read_context.get("required_quality_gates", []):
+        errors.append("runtime resolver: read-only route must not require test gate")
+
+    coding_state = {
+        "read_evidence_seen": True,
+        "implementation_preflight_required": True,
+        "implementation_preflight_complete": True,
+        "implementation_preflights": ["paths=src/services/order_service.py; fields=test_plan,risk"],
+        "pre_edit_missing_test_plan": False,
+        "validation_command_seen": False,
+        "validation_seen": False,
+    }
+    coding_context = build_active_skill_context(
+        runtime="codex",
+        stage="edit",
+        surfaces=["backend-product"],
+        event_name="PreToolUse",
+        state=coding_state,
+        classification={
+            "stage": "edit",
+            "product_surfaces": ["backend-product"],
+            "language_surfaces": ["python"],
+            "risk_surfaces": [],
+        },
+    )
+    if coding_context.get("current_stage") != "coding":
+        errors.append("runtime resolver: edit with completed preflight test plan must enter coding")
+
+    multi_surface_context = build_active_skill_context(
+        runtime="codex",
+        stage="edit",
+        surfaces=["backend-product", "api-contract"],
+        event_name="PreToolUse",
+        state=coding_state,
+        classification={
+            "stage": "edit",
+            "product_surfaces": ["backend-product", "api-contract"],
+            "language_surfaces": ["python"],
+            "risk_surfaces": ["data-api"],
+        },
+    )
+    if multi_surface_context.get("product_surfaces") != ["backend-product", "api-contract"]:
+        errors.append("runtime resolver: multi-surface route must preserve all product surfaces")
+    if multi_surface_context.get("primary_product_surface") != "backend-product":
+        errors.append("runtime resolver: multi-surface route must record primary product surface")
+    if "api-contract-design" not in multi_surface_context.get("selected_capabilities", []):
+        errors.append("runtime resolver: secondary product surface capability must be selected")
+    if multi_surface_context.get("product_surface") != multi_surface_context.get("primary_product_surface"):
+        errors.append("runtime resolver: legacy product_surface must match primary_product_surface")
+
+    registered_capabilities = set(CAPABILITY_IDS)
+    illegal_skipped = []
+    for context in (frontend_context, docs_context, read_context, multi_surface_context):
+        for entry in context.get("skipped_capabilities", []):
+            if not isinstance(entry, dict):
+                illegal_skipped.append(str(entry))
+                continue
+            capability = entry.get("capability")
+            if capability not in registered_capabilities:
+                illegal_skipped.append(str(capability))
+    if illegal_skipped:
+        errors.append(
+            "runtime resolver: skipped_capabilities must contain only registered "
+            f"foundation capabilities, found {illegal_skipped}"
+        )
+
+    web3_sdk_context = build_active_skill_context(
+        runtime="codex",
+        stage="edit",
+        surfaces=["web3", "sdk-library"],
+        event_name="PreToolUse",
+        state=coding_state,
+        classification={
+            "stage": "edit",
+            "product_surfaces": ["web3", "sdk-library"],
+            "language_surfaces": ["typescript"],
+            "risk_surfaces": ["security"],
+            "domain_extensions": ["web3-product-extension"],
+        },
+    )
+    if web3_sdk_context.get("owner_skill") != "data-api-contract-changer":
+        errors.append("runtime resolver: Web3 SDK coding owner must come from product surface")
+    if "web3-product-extension" not in web3_sdk_context.get("selected_domain_extensions", []):
+        errors.append("runtime resolver: Web3 SDK route must preserve web3 domain extension")
 
 
 def _timeouts(value: Any, context: str = "hooks") -> list[tuple[int, str]]:

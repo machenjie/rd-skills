@@ -8,6 +8,7 @@ reference bodies, network resources, prompts from state, or project source.
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from typing import Any, Iterable
@@ -19,6 +20,7 @@ ROUTER_SELF_REFERENCES = (
     "references/capability-index.md",
     "references/domain-extension-index.md",
 )
+RUNTIME_ROUTE_INDEX_NAME = "changeforge_runtime_route_index.json"
 
 CODE_FILE_EXTENSIONS = frozenset(
     {
@@ -109,27 +111,27 @@ LANGUAGE_STRONG_PATTERNS = {
 }
 
 PRODUCT_SURFACE_ORDER = (
-    "skill-authoring",
-    "documentation-only",
-    "kubernetes-helm",
-    "ci-cd",
-    "infrastructure-deployment",
     "frontend-product",
+    "backend-product",
     "api-contract",
-    "database-migration",
     "data-model",
+    "database-migration",
     "cache",
     "message-queue",
     "search-analytics",
-    "webhook",
     "external-integration",
+    "webhook",
+    "infrastructure-deployment",
+    "kubernetes-helm",
+    "ci-cd",
     "ai-rag-agent",
     "web3",
     "payment-trading",
     "low-level-systems",
     "sdk-library",
     "cli-daemon",
-    "backend-product",
+    "documentation-only",
+    "skill-authoring",
 )
 
 SOURCE_ROOT_PREFIX = "src/"
@@ -199,91 +201,187 @@ SURFACE_CAPABILITIES = {
     ),
     "backend-product": (
         "service-business-logic",
+        "authentication-authorization",
+        "idempotency-retry-design",
         "logging-error-handling",
     ),
     "api-contract": (
         "api-contract-design",
         "dto-schema-design",
+        "error-code-design",
         "version-compatibility",
     ),
     "data-model": (
         "data-model-design",
         "relational-database",
+        "indexing-query-optimization",
     ),
     "database-migration": (
         "data-migration-design",
         "transaction-consistency",
+        "release-rollback",
     ),
-    "cache": ("cache-design",),
+    "cache": ("cache-design", "concurrency-control"),
     "message-queue": ("message-queue-design", "idempotency-retry-design"),
-    "search-analytics": ("search-analytics-design",),
+    "search-analytics": ("search-analytics-design", "indexing-query-optimization"),
     "external-integration": (
         "degradation-circuit-breaking",
         "idempotency-retry-design",
     ),
     "webhook": ("authentication-security", "idempotency-retry-design"),
-    "infrastructure-deployment": ("containerization", "ci-cd", "release-rollback"),
-    "kubernetes-helm": ("kubernetes-gateway", "ci-cd"),
+    "infrastructure-deployment": ("containerization", "release-rollback", "ci-cd"),
+    "kubernetes-helm": ("kubernetes-gateway", "ci-cd", "secret-configuration-security"),
     "ci-cd": ("ci-cd", "package-dependency-management"),
-    "ai-rag-agent": ("threat-modeling", "test-strategy"),
+    "ai-rag-agent": ("threat-modeling", "observability", "test-strategy"),
     "web3": ("authentication-security", "threat-modeling"),
     "payment-trading": ("idempotency-retry-design", "transaction-consistency"),
-    "low-level-systems": ("language-performance-safety", "concurrency-control"),
-    "sdk-library": ("sdk-library-contract-design", "version-compatibility"),
+    "low-level-systems": ("concurrency-control", "language-performance-safety"),
+    "sdk-library": ("sdk-library-contract-design", "version-compatibility", "package-dependency-management"),
     "cli-daemon": ("cli-daemon-interface-design", "logging-error-handling"),
     "documentation-only": ("documentation-generation",),
-    "skill-authoring": ("skill-authoring-expert",),
+    "skill-authoring": ("skill-authoring-expert", "engineering-stage-professionalism"),
 }
 
 STAGE_CAPABILITIES = {
-    "requirement-intake": ("requirement-clarification",),
-    "architecture-design": ("module-boundary-design",),
-    "implementation-planning": ("implementation-structure-design",),
-    "coding": ("language-idiom-enforcement", "input-validation"),
-    "debugging-diagnosis": ("failure-diagnosis",),
-    "bug-fix": ("regression-testing", "code-review", "agent-execution-discipline"),
-    "code-review": ("code-review",),
-    "refactoring": ("refactoring", "code-review", "regression-testing"),
-    "testing": ("test-strategy", "language-testing-strategy"),
-    "release-delivery": ("ci-cd", "release-rollback"),
-    "documentation-handoff": ("documentation-generation",),
-    "skill-authoring": ("skill-authoring-expert",),
+    "requirement-intake": (
+        "requirement-clarification",
+        "requirement-structuring",
+        "non-goal-boundary-definition",
+        "acceptance-standard-definition",
+        "scenario-decomposition",
+    ),
+    "architecture-design": (
+        "architecture-style-selection",
+        "module-boundary-design",
+        "layered-architecture-design",
+        "architecture-tradeoff-analysis",
+        "extensibility-design",
+        "solution-optimality-evaluation",
+    ),
+    "implementation-planning": (
+        "implementation-structure-design",
+        "module-boundary-design",
+        "code-clarity-maintainability",
+        "language-idiom-enforcement",
+    ),
+    "coding": ("language-idiom-enforcement", "input-validation", "logging-error-handling"),
+    "debugging-diagnosis": ("failure-diagnosis", "agent-execution-discipline", "observability"),
+    "bug-fix": ("agent-execution-discipline", "regression-testing", "code-review"),
+    "code-review": (
+        "code-review",
+        "implementation-structure-design",
+        "code-clarity-maintainability",
+        "language-idiom-enforcement",
+    ),
+    "refactoring": (
+        "refactoring",
+        "implementation-structure-design",
+        "code-clarity-maintainability",
+        "code-review",
+        "regression-testing",
+    ),
+    "testing": ("test-strategy", "language-testing-strategy", "test-data-management"),
+    "release-delivery": (
+        "ci-cd",
+        "release-rollback",
+        "containerization",
+        "kubernetes-gateway",
+        "observability",
+        "backup-recovery",
+    ),
+    "documentation-handoff": ("documentation-generation", "agent-execution-discipline"),
+    "skill-authoring": (
+        "skill-authoring-expert",
+        "documentation-generation",
+        "agent-execution-discipline",
+    ),
 }
 
 CAPABILITY_IDS = {
     "requirement-clarification": "01",
+    "requirement-structuring": "02",
+    "user-role-identification": "03",
+    "scenario-decomposition": "04",
+    "acceptance-standard-definition": "05",
+    "non-goal-boundary-definition": "06",
+    "information-architecture": "07",
+    "user-flow-modeling": "08",
+    "prototype-description": "09",
+    "interaction-state-modeling": "10",
+    "design-system-rules": "11",
+    "domain-object-identification": "12",
+    "business-rule-extraction": "13",
+    "state-machine-modeling": "14",
+    "use-case-modeling": "15",
+    "permission-boundary-modeling": "16",
+    "domain-event-modeling": "17",
+    "architecture-style-selection": "18",
     "module-boundary-design": "19",
+    "layered-architecture-design": "20",
+    "microservice-splitting": "21",
+    "event-driven-architecture": "22",
+    "architecture-tradeoff-analysis": "23",
+    "extensibility-design": "24",
+    "data-model-design": "25",
+    "api-contract-design": "26",
+    "dto-schema-design": "27",
+    "error-code-design": "28",
+    "version-compatibility": "29",
+    "data-migration-design": "30",
     "page-component-decomposition": "31",
+    "routing-navigation-design": "32",
     "state-management-design": "33",
     "form-validation-design": "34",
     "frontend-api-integration": "35",
+    "frontend-testing": "36",
+    "controller-api-implementation": "37",
     "service-business-logic": "38",
+    "domain-logic-implementation": "39",
+    "repository-persistence": "40",
     "authentication-authorization": "41",
     "idempotency-retry-design": "42",
+    "async-job-design": "43",
     "logging-error-handling": "44",
     "relational-database": "45",
+    "nosql-database": "46",
+    "indexing-query-optimization": "47",
     "transaction-consistency": "48",
     "cache-design": "49",
     "message-queue-design": "50",
     "search-analytics-design": "51",
     "threat-modeling": "52",
     "input-validation": "53",
+    "web-security": "54",
     "authentication-security": "55",
     "secret-configuration-security": "56",
+    "dependency-vulnerability-scanning": "57",
     "test-strategy": "58",
     "unit-testing": "59",
+    "integration-testing": "60",
+    "contract-testing": "61",
+    "e2e-testing": "62",
+    "test-data-management": "63",
     "regression-testing": "64",
+    "performance-budgeting": "65",
+    "profiling": "66",
     "concurrency-control": "67",
     "degradation-circuit-breaking": "68",
     "observability": "69",
+    "backup-recovery": "70",
+    "project-initialization": "71",
     "containerization": "72",
     "ci-cd": "73",
     "kubernetes-gateway": "74",
     "release-rollback": "75",
+    "context-packaging": "76",
+    "task-dag-decomposition": "77",
     "code-review": "78",
     "refactoring": "79",
     "documentation-generation": "80",
     "failure-diagnosis": "81",
+    "solution-optimality-evaluation": "82",
+    "technology-stack-selection": "83",
+    "language-runtime-selection": "84",
     "language-idiom-enforcement": "85",
     "language-testing-strategy": "86",
     "language-performance-safety": "87",
@@ -298,17 +396,107 @@ CAPABILITY_IDS = {
     "sql-professional-usage": "96",
     "sdk-library-contract-design": "97",
     "cli-daemon-interface-design": "98",
+    "file-storage-processing": "99",
     "i18n-timezone-money-safety": "100",
     "implementation-structure-design": "101",
     "agent-execution-discipline": "102",
     "skill-authoring-expert": "103",
     "engineering-stage-professionalism": "104",
-    "data-model-design": "25",
-    "api-contract-design": "26",
-    "dto-schema-design": "27",
-    "version-compatibility": "29",
-    "data-migration-design": "30",
+    "code-clarity-maintainability": "105",
+    "design-pattern-selection": "106",
+    "testability-seam-design": "107",
+    "dependency-wiring-lifecycle": "108",
+    "algorithm-data-structure-selection": "109",
+    "failure-contract-design": "110",
+    "configuration-runtime-policy": "111",
+    "model-boundary-mapping": "112",
+    "data-side-effect-flow-tracing": "113",
+    "architecture-enforcement-tooling": "114",
+    "consumer-impact-analysis": "115",
+    "cleanup-deletion-governance": "116",
+    "minimal-correct-implementation": "117",
 }
+
+
+def _load_runtime_route_index() -> dict[str, Any]:
+    index_path = Path(__file__).with_name(RUNTIME_ROUTE_INDEX_NAME)
+    if not index_path.is_file():
+        return {}
+    try:
+        data = json.loads(index_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    if not isinstance(data, dict) or data.get("kind") != "changeforge.runtime_route_index":
+        return {}
+    return data
+
+
+def _tuple_mapping(value: object, fallback: dict[str, tuple[str, ...]]) -> dict[str, tuple[str, ...]]:
+    if not isinstance(value, dict):
+        return fallback
+    mapped: dict[str, tuple[str, ...]] = {}
+    for key, items in value.items():
+        if not isinstance(key, str) or not isinstance(items, list):
+            return fallback
+        if not all(isinstance(item, str) and item.strip() for item in items):
+            return fallback
+        mapped[key] = tuple(item.strip() for item in items)
+    return mapped
+
+
+def _string_mapping(value: object, fallback: dict[str, str]) -> dict[str, str]:
+    if not isinstance(value, dict):
+        return fallback
+    mapped: dict[str, str] = {}
+    for key, item in value.items():
+        if not isinstance(key, str) or not isinstance(item, str) or not item.strip():
+            return fallback
+        mapped[key] = item.strip()
+    return mapped
+
+
+def _string_tuple(value: object, fallback: tuple[str, ...]) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        return fallback
+    if not all(isinstance(item, str) and item.strip() for item in value):
+        return fallback
+    return tuple(item.strip() for item in value)
+
+
+def _apply_runtime_route_index() -> None:
+    index = _load_runtime_route_index()
+    if not index:
+        return
+    global LANGUAGE_FILE_EXTENSIONS
+    global LANGUAGE_CAPABILITIES
+    global PRODUCT_SURFACE_ORDER
+    global DOMAIN_EXTENSION_BY_SURFACE
+    global ALL_DOMAIN_EXTENSIONS
+    global PRODUCT_OWNER
+    global DOMAIN_OWNER
+    global SURFACE_CAPABILITIES
+    global STAGE_CAPABILITIES
+    global CAPABILITY_IDS
+
+    LANGUAGE_FILE_EXTENSIONS = _tuple_mapping(
+        index.get("language_file_extensions"),
+        LANGUAGE_FILE_EXTENSIONS,
+    )
+    LANGUAGE_CAPABILITIES = _string_mapping(index.get("language_capabilities"), LANGUAGE_CAPABILITIES)
+    PRODUCT_SURFACE_ORDER = _string_tuple(index.get("product_surface_order"), PRODUCT_SURFACE_ORDER)
+    DOMAIN_EXTENSION_BY_SURFACE = _string_mapping(
+        index.get("domain_extension_by_surface"),
+        DOMAIN_EXTENSION_BY_SURFACE,
+    )
+    ALL_DOMAIN_EXTENSIONS = _string_tuple(index.get("all_domain_extensions"), ALL_DOMAIN_EXTENSIONS)
+    PRODUCT_OWNER = _string_mapping(index.get("product_owner"), PRODUCT_OWNER)
+    DOMAIN_OWNER = _string_mapping(index.get("domain_owner"), DOMAIN_OWNER)
+    SURFACE_CAPABILITIES = _tuple_mapping(index.get("surface_capabilities"), SURFACE_CAPABILITIES)
+    STAGE_CAPABILITIES = _tuple_mapping(index.get("stage_capabilities"), STAGE_CAPABILITIES)
+    CAPABILITY_IDS = _string_mapping(index.get("capability_ids"), CAPABILITY_IDS)
+
+
+_apply_runtime_route_index()
 
 NO_INJECTION_STAGES = {"question", "unknown", "no_engineering_action", "compaction"}
 
@@ -450,6 +638,8 @@ def build_active_skill_context(
     quality_gates = _quality_gates(current_stage, product_surfaces, risk_surfaces, selected_skills)
     references = _required_references(capabilities)
     skipped_capabilities = _skipped_capabilities(capabilities, action_stage, current_stage)
+    skipped_skills = _skipped_skills(selected_skills, product_surfaces, current_stage)
+    skipped_routes = _skipped_routes(action_stage, current_stage)
     skipped_domain_extensions = _skipped_domain_extensions(domain_extensions)
     primary_surface = product_surfaces[0] if product_surfaces else "none"
     primary_language = language_surfaces[0] if language_surfaces else "none"
@@ -461,6 +651,8 @@ def build_active_skill_context(
         "action_stage": action_stage,
         "product_surfaces": product_surfaces,
         "language_surfaces": language_surfaces,
+        "product_surface": primary_surface,
+        "language_surface": primary_language,
         "risk_surfaces": risk_surfaces,
         "selected_skills": selected_skills,
         "selected_capabilities": capabilities,
@@ -468,6 +660,8 @@ def build_active_skill_context(
         "required_quality_gates": quality_gates,
         "required_references": references,
         "skipped_capabilities": skipped_capabilities,
+        "skipped_skills": skipped_skills,
+        "skipped_routes": skipped_routes,
         "skipped_domain_extensions": skipped_domain_extensions,
         "owner_skill": owner,
         "reviewer_skill": reviewer,
@@ -512,6 +706,24 @@ def context_lines(context: dict[str, Any]) -> list[str]:
         ]
         if rendered:
             lines.append(f"- skipped_capabilities: {'; '.join(rendered)}")
+    skipped_skills = context.get("skipped_skills", [])
+    if isinstance(skipped_skills, list) and skipped_skills:
+        rendered = [
+            f"{item.get('skill')}: {item.get('reason')}"
+            for item in skipped_skills[:4]
+            if isinstance(item, dict)
+        ]
+        if rendered:
+            lines.append(f"- skipped_skills: {'; '.join(rendered)}")
+    skipped_routes = context.get("skipped_routes", [])
+    if isinstance(skipped_routes, list) and skipped_routes:
+        rendered = [
+            f"{item.get('route')}: {item.get('reason')}"
+            for item in skipped_routes[:4]
+            if isinstance(item, dict)
+        ]
+        if rendered:
+            lines.append(f"- skipped_routes: {'; '.join(rendered)}")
     return lines
 
 
@@ -539,11 +751,8 @@ def _canonical_stage(action_stage: str, product_surfaces: list[str], state: dict
     if action_stage == "edit":
         ready_for_code = bool(
             state.get("read_evidence_seen")
-            and (
-                state.get("implementation_preflight_complete")
-                or not state.get("implementation_preflight_required")
-            )
-            and (state.get("validation_command_seen") or state.get("validation_seen"))
+            and state.get("implementation_preflight_complete")
+            and _test_plan_declared(state)
         )
         return "coding" if ready_for_code else "implementation-planning"
     if action_stage == "subagent":
@@ -564,22 +773,37 @@ def _owner_skill(
         return "task-dag-planner"
     if current_stage == "requirement-intake" and action_stage == "read":
         return "change-impact-analyzer"
+    if current_stage == "release-delivery":
+        return "delivery-release-gate"
     if current_stage == "testing":
         return "quality-test-gate"
     if current_stage == "code-review":
+        domain_owner = _domain_owner(domain_extensions)
+        if domain_owner in {"security-privacy-gate", "reliability-observability-gate"}:
+            return domain_owner
+        if "security" in risk_surfaces:
+            return "security-privacy-gate"
+        if "reliability" in risk_surfaces:
+            return "reliability-observability-gate"
         return "ai-code-review-refactor"
     if current_stage == "debugging-diagnosis":
         return "quality-test-gate"
     if current_stage == "refactoring":
         return "ai-code-review-refactor"
-    if domain_extensions:
-        return DOMAIN_OWNER.get(domain_extensions[0], "quality-test-gate")
+    if current_stage == "documentation-handoff":
+        return "change-documentation-gate"
+    if current_stage in {"implementation-planning", "coding", "bug-fix"}:
+        for surface in product_surfaces:
+            owner = PRODUCT_OWNER.get(surface)
+            if owner:
+                return owner
+        if "security" in risk_surfaces:
+            return "security-privacy-gate"
+    domain_owner = _domain_owner(domain_extensions)
+    if domain_owner:
+        return domain_owner
     if "security" in risk_surfaces:
         return "security-privacy-gate"
-    for surface in product_surfaces:
-        owner = PRODUCT_OWNER.get(surface)
-        if owner:
-            return owner
     return "change-forge-router"
 
 
@@ -589,15 +813,19 @@ def _reviewer_skill(owner: str, current_stage: str, product_surfaces: list[str],
     if owner == "security-privacy-gate":
         return "quality-test-gate"
     if owner == "change-documentation-gate":
-        return "quality-test-gate"
+        return "change-forge-router"
+    if owner == "change-impact-analyzer":
+        return "change-forge-router"
     if owner == "delivery-release-gate":
         return "quality-test-gate"
     if owner == "change-forge-router":
-        return "quality-test-gate"
+        return "change-impact-analyzer"
     if current_stage == "release-delivery" and owner != "delivery-release-gate":
         return "delivery-release-gate"
     if "security" in risk_surfaces and owner != "security-privacy-gate":
         return "security-privacy-gate"
+    if current_stage in {"implementation-planning", "coding", "bug-fix", "refactoring"}:
+        return "ai-code-review-refactor"
     return "quality-test-gate"
 
 
@@ -643,7 +871,7 @@ def _selected_capabilities(
         capabilities.append("agent-execution-discipline")
     if domain_extensions and "low-level-systems-extension" in domain_extensions:
         capabilities.append("language-performance-safety")
-    return _unique(capabilities)[:14]
+    return _unique(capabilities)
 
 
 def _quality_gates(
@@ -693,19 +921,60 @@ def _skipped_capabilities(capabilities: list[str], action_stage: str, current_st
     for capability, reason in (
         ("implementation-structure-design", "not a structure-changing action in the current canonical stage"),
         ("release-rollback", "not a release-delivery or migration rollout action"),
-        ("backend-change-builder", "not selected because no backend product surface was detected"),
-        ("frontend-change-builder", "not selected because no frontend product surface was detected"),
     ):
         if capability not in selected:
             skipped.append({"capability": capability, "reason": reason})
-    if action_stage in {"read", "test", "review"} and "implementation-structure-design" in selected:
+    return skipped
+
+
+def _skipped_skills(
+    selected_skills: list[str],
+    product_surfaces: list[str],
+    current_stage: str,
+) -> list[dict[str, str]]:
+    selected = set(selected_skills)
+    skipped: list[dict[str, str]] = []
+    if "backend-change-builder" not in selected and "backend-product" not in product_surfaces:
         skipped.append(
             {
-                "capability": "product-coding-owner",
-                "reason": "current action is not an implementation owner stage",
+                "skill": "backend-change-builder",
+                "reason": "no backend product surface was detected",
+            }
+        )
+    if "frontend-change-builder" not in selected and "frontend-product" not in product_surfaces:
+        skipped.append(
+            {
+                "skill": "frontend-change-builder",
+                "reason": "no frontend product surface was detected",
+            }
+        )
+    if (
+        "delivery-release-gate" not in selected
+        and current_stage != "release-delivery"
+        and not _has_any(product_surfaces, ("kubernetes-helm", "ci-cd", "infrastructure-deployment"))
+    ):
+        skipped.append(
+            {
+                "skill": "delivery-release-gate",
+                "reason": "not a release-delivery or deployment surface",
             }
         )
     return skipped
+
+
+def _skipped_routes(action_stage: str, current_stage: str) -> list[dict[str, str]]:
+    if action_stage in {"read", "test", "review"} or current_stage not in {
+        "implementation-planning",
+        "coding",
+        "bug-fix",
+    }:
+        return [
+            {
+                "route": "product-coding-owner",
+                "reason": "current action is not an implementation owner stage",
+            }
+        ]
+    return []
 
 
 def _skipped_domain_extensions(selected: list[str]) -> list[dict[str, str]]:
@@ -728,6 +997,29 @@ def _route_reason(
         f"resolved from action evidence to canonical stage {current_stage}, "
         f"surface={primary_surface}, language={primary_language}{domain}"
     )
+
+
+def _domain_owner(domain_extensions: list[str]) -> str:
+    for extension in domain_extensions:
+        owner = DOMAIN_OWNER.get(extension)
+        if owner:
+            return owner
+    return ""
+
+
+def _test_plan_declared(state: dict[str, Any]) -> bool:
+    if state.get("pre_edit_missing_test_plan") is False:
+        return True
+    if state.get("tdd_signal") or state.get("test_plan_declared"):
+        return True
+    summaries = state.get("implementation_preflights")
+    if isinstance(summaries, list):
+        return any(
+            isinstance(summary, str)
+            and re.search(r"\b(test_plan|tdd|validation_commands?)\b", summary, re.I)
+            for summary in summaries
+        )
+    return False
 
 
 def _docs_only(paths: list[str]) -> bool:

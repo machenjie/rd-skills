@@ -73,7 +73,12 @@ actual:
     current_stage: bug-fix
     next_stage: testing
     product_surface: backend-product
+    primary_product_surface: backend-product
+    product_surfaces:
+      - backend-product
     language_surface: none
+    primary_language_surface: none
+    language_surfaces: []
     selected_skills:
       - backend-change-builder
       - security-privacy-gate
@@ -101,6 +106,10 @@ actual:
     skipped_capabilities:
       - capability: release-rollback
         reason: no release sequencing required for this route
+    skipped_skills:
+      - skill: frontend-change-builder
+        reason: no frontend product surface was detected
+    skipped_routes: []
     handoff_target: testing
 """
 
@@ -173,7 +182,12 @@ class EvalRoutingCandidateTests(unittest.TestCase):
             "    current_stage: bug-fix\n"
             "    next_stage: testing\n"
             "    product_surface: backend-product\n"
+            "    primary_product_surface: backend-product\n"
+            "    product_surfaces:\n"
+            "      - backend-product\n"
             "    language_surface: none\n"
+            "    primary_language_surface: none\n"
+            "    language_surfaces: []\n"
             "    selected_skills:\n"
             "      - backend-change-builder\n"
             "      - security-privacy-gate\n"
@@ -201,6 +215,10 @@ class EvalRoutingCandidateTests(unittest.TestCase):
             "    skipped_capabilities:\n"
             "      - capability: release-rollback\n"
             "        reason: no release sequencing required for this route\n"
+            "    skipped_skills:\n"
+            "      - skill: frontend-change-builder\n"
+            "        reason: no frontend product surface was detected\n"
+            "    skipped_routes: []\n"
             "    handoff_target: testing\n",
             "",
         )
@@ -285,6 +303,59 @@ class EvalRoutingCandidateTests(unittest.TestCase):
         result = _run_candidate(candidate)
         self.assertEqual(result.returncode, 1)
         self.assertIn("unselected language capability", result.stderr)
+
+    def test_skipped_capability_must_be_registered_capability(self) -> None:
+        candidate = VALID_BACKEND_AUTH_IDOR.replace(
+            "      - capability: release-rollback\n"
+            "        reason: no release sequencing required for this route\n",
+            "      - capability: backend-change-builder\n"
+            "        reason: no backend surface was detected\n",
+        )
+        result = _run_candidate(candidate)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(
+            "skipped_capabilities contains unknown capability ['backend-change-builder']",
+            result.stderr,
+        )
+
+    def test_stage_route_allows_capability_from_secondary_surface(self) -> None:
+        candidate = (
+            VALID_BACKEND_AUTH_IDOR.replace(
+                "    - change-documentation-gate\n  capabilities:\n",
+                "    - change-documentation-gate\n"
+                "    - data-api-contract-changer\n"
+                "  capabilities:\n",
+            )
+            .replace(
+                "    - logging-error-handling\n  domain_extensions: []\n",
+                "    - logging-error-handling\n"
+                "    - api-contract-design\n"
+                "  domain_extensions: []\n",
+            )
+            .replace(
+                "    - references/capabilities/44-logging-error-handling.md\n",
+                "    - references/capabilities/44-logging-error-handling.md\n"
+                "    - references/capabilities/26-api-contract-design.md\n",
+            )
+            .replace(
+                "    product_surfaces:\n      - backend-product\n",
+                "    product_surfaces:\n      - backend-product\n      - api-contract\n",
+            )
+            .replace(
+                "      - quality-test-gate\n    selected_capabilities:\n",
+                "      - quality-test-gate\n"
+                "      - data-api-contract-changer\n"
+                "    selected_capabilities:\n",
+            )
+            .replace(
+                "      - logging-error-handling\n      - regression-testing\n",
+                "      - logging-error-handling\n"
+                "      - api-contract-design\n"
+                "      - regression-testing\n",
+            )
+        )
+        result = _run_candidate(candidate)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_extra_actual_domain_extension_fails(self) -> None:
         candidate = VALID_BACKEND_AUTH_IDOR.replace(

@@ -13,7 +13,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from changeforge_action_classifier import classify_event  # noqa: E402
 from changeforge_common import load_state, merge_state, reset_state_for_new_prompt  # noqa: E402
-from changeforge_runtime_route_resolver import build_active_skill_context  # noqa: E402
+from changeforge_runtime_route_resolver import CAPABILITY_IDS, build_active_skill_context  # noqa: E402
 
 
 def _context_for(event: dict, state: dict | None = None) -> dict:
@@ -68,6 +68,8 @@ class RuntimeRouteResolverTests(unittest.TestCase):
         self.assertIn("documentation-only", context["product_surfaces"])
         self.assertNotIn("implementation-structure-design", context["selected_capabilities"])
         self.assertNotIn("backend-change-builder", context["selected_skills"])
+        self.assertNotIn("quality-test-gate", context["selected_skills"])
+        self.assertNotIn("test gate", context["required_quality_gates"])
 
     def test_chart_values_route_delivery_not_backend(self) -> None:
         context = _context_for(_edit_event("deploy/chart/values.yaml", "helm Chart.yaml rollout"))
@@ -104,6 +106,25 @@ class RuntimeRouteResolverTests(unittest.TestCase):
         self.assertIn("web3-product-extension", context["selected_domain_extensions"])
         self.assertNotIn("payment-trading-extension", context["selected_domain_extensions"])
 
+    def test_web3_sdk_coding_uses_product_owner_not_domain_gate(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["web3", "sdk-library"],
+            event_name="PreToolUse",
+            state=_coding_ready_state(),
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["web3", "sdk-library"],
+                "language_surfaces": ["typescript"],
+                "risk_surfaces": ["security"],
+                "domain_extensions": ["web3-product-extension"],
+            },
+        )
+        self.assertEqual(context["current_stage"], "coding")
+        self.assertEqual(context["owner_skill"], "data-api-contract-changer")
+        self.assertIn("web3-product-extension", context["selected_domain_extensions"])
+
     def test_payment_ledger_selects_payment_not_web3(self) -> None:
         context = _context_for(
             {"hook_event_name": "UserPromptSubmit", "prompt": "Fix payment ledger settlement reconciliation"}
@@ -122,6 +143,60 @@ class RuntimeRouteResolverTests(unittest.TestCase):
         classification = classify_event({"hook_event_name": "UserPromptSubmit", "prompt": "what is this concept?"})
         self.assertFalse(classification["should_inject"])
         self.assertEqual(classification["product_surfaces"], [])
+
+    def test_completed_preflight_test_plan_enters_coding_without_validation_run(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state=_coding_ready_state(),
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+            },
+        )
+        self.assertEqual(context["current_stage"], "coding")
+        self.assertFalse(_coding_ready_state()["validation_command_seen"])
+
+    def test_multi_surface_route_preserves_secondary_surface_capabilities(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product", "api-contract"],
+            event_name="PreToolUse",
+            state=_coding_ready_state(),
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product", "api-contract"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": ["data-api"],
+            },
+        )
+        self.assertEqual(context["product_surfaces"], ["backend-product", "api-contract"])
+        self.assertEqual(context["product_surface"], "backend-product")
+        self.assertEqual(context["primary_product_surface"], "backend-product")
+        self.assertIn("api-contract-design", context["selected_capabilities"])
+
+    def test_skipped_capabilities_are_only_foundation_capabilities(self) -> None:
+        context = _context_for(_edit_event("src/components/ProfileCard.tsx"))
+        skipped = [
+            item["capability"]
+            for item in context["skipped_capabilities"]
+            if isinstance(item, dict) and "capability" in item
+        ]
+        self.assertTrue(set(skipped).issubset(set(CAPABILITY_IDS)))
+        self.assertNotIn("backend-change-builder", skipped)
+        self.assertNotIn("frontend-change-builder", skipped)
+        self.assertNotIn("product-coding-owner", skipped)
+        skipped_skills = [
+            item["skill"]
+            for item in context["skipped_skills"]
+            if isinstance(item, dict) and "skill" in item
+        ]
+        self.assertIn("backend-change-builder", skipped_skills)
 
     def test_user_prompt_submit_resets_state_unless_follow_up(self) -> None:
         old_cache = os.environ.get("XDG_CACHE_HOME")
@@ -156,6 +231,18 @@ class RuntimeRouteResolverTests(unittest.TestCase):
             os.environ.pop("XDG_CACHE_HOME", None)
         else:
             os.environ["XDG_CACHE_HOME"] = old_cache
+
+
+def _coding_ready_state() -> dict[str, object]:
+    return {
+        "read_evidence_seen": True,
+        "implementation_preflight_required": True,
+        "implementation_preflight_complete": True,
+        "implementation_preflights": ["paths=src/services/order_service.py; fields=test_plan,risk"],
+        "pre_edit_missing_test_plan": False,
+        "validation_command_seen": False,
+        "validation_seen": False,
+    }
 
 
 if __name__ == "__main__":

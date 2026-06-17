@@ -464,6 +464,30 @@ def hooks_supported(agent: str, scope: str) -> bool:
     return agent in HOOK_AGENTS and scope in HOOK_SCOPES
 
 
+def _default_hook_support_files(agent: str) -> tuple[str, ...]:
+    if agent == "copilot":
+        return (*COMMON_HOOK_SUPPORT_FILES, *COPILOT_HOOK_SUPPORT_FILES)
+    return COMMON_HOOK_SUPPORT_FILES
+
+
+def _hook_support_files_from_manifest(manifest_source: Path, agent: str) -> tuple[str, ...]:
+    if not manifest_source.is_file():
+        return _default_hook_support_files(agent)
+    try:
+        manifest = json.loads(manifest_source.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return _default_hook_support_files(agent)
+    support_files = manifest.get("support_files") if isinstance(manifest, dict) else None
+    if not isinstance(support_files, list):
+        return _default_hook_support_files(agent)
+    files: list[str] = []
+    for item in support_files:
+        if not isinstance(item, str) or not item.strip():
+            return _default_hook_support_files(agent)
+        files.append(item.strip())
+    return tuple(dict.fromkeys(files))
+
+
 def plan_hook_install(agent: str, scope: str, target: Path | None) -> HookPlan:
     """Compute a merge-safe hook install plan without writing anything.
 
@@ -496,6 +520,7 @@ def plan_hook_install(agent: str, scope: str, target: Path | None) -> HookPlan:
 
     scripts_subdir = HOOK_SCRIPTS_SUBDIR[agent]
     aux_subdir = HOOK_AUX_SUBDIR[agent]
+    manifest_source = source_root / aux_subdir / HOOK_MANIFEST_NAME
     for script_name in HOOK_SCRIPT_NAMES:
         source_script = source_root / scripts_subdir / script_name
         if not source_script.is_file():
@@ -504,9 +529,7 @@ def plan_hook_install(agent: str, scope: str, target: Path | None) -> HookPlan:
         action = "overwrite" if destination.exists() else "create"
         plan.script_actions.append((source_script, destination, action))
 
-    support_files = list(COMMON_HOOK_SUPPORT_FILES)
-    if agent == "copilot":
-        support_files.extend(COPILOT_HOOK_SUPPORT_FILES)
+    support_files = _hook_support_files_from_manifest(manifest_source, agent)
     for file_name in support_files:
         source_file = source_root / scripts_subdir / file_name
         if not source_file.is_file():
@@ -515,7 +538,6 @@ def plan_hook_install(agent: str, scope: str, target: Path | None) -> HookPlan:
         action = "overwrite" if destination.exists() else "create"
         plan.support_actions.append((source_file, destination, action))
 
-    manifest_source = source_root / aux_subdir / HOOK_MANIFEST_NAME
     manifest_target = target_root / aux_subdir / HOOK_MANIFEST_NAME
     plan.manifest_action = (
         manifest_source,

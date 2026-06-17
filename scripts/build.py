@@ -62,6 +62,7 @@ COPILOT_HOOK_SUPPORT_FILES = (
     "changeforge_copilot_skill_summary.md",
     "changeforge_copilot_professional_contract.md",
 )
+RUNTIME_ROUTE_INDEX_NAME = "changeforge_runtime_route_index.json"
 UNIVERSAL_BOOTSTRAP_ROOT = DIST_DIR / "universal" / "bootstrap"
 
 
@@ -128,6 +129,7 @@ def build_profile(profile: str) -> dict[str, int]:
     )
     capabilities = _load_capabilities(registries["capabilities"])
     routing_rules = registries["routing_rules"]
+    stage_model = _load_stage_model_registry()
 
     top_level_items = _top_level_items(profile, professional_skills, capabilities, domain_extensions)
     compiled_capability_names = _build_all_runtime_roots(
@@ -138,7 +140,7 @@ def build_profile(profile: str) -> dict[str, int]:
         domain_extensions,
         routing_rules,
     )
-    _build_hook_runtime()
+    _build_hook_runtime(professional_skills, capabilities, domain_extensions, stage_model)
     _cleanup_legacy_openai_zips(OPENAI_ZIP_DIR)
     zip_count = _package_openai_zips(
         UNIVERSAL_SKILLS_ROOT / profile,
@@ -180,6 +182,18 @@ def _load_registries() -> dict[str, list[dict[str, Any]]]:
         registries[logical_name] = normalized
 
     return registries
+
+
+def _load_stage_model_registry() -> dict[str, Any]:
+    path = REGISTRY_DIR / "stage-model.yaml"
+    if not path.is_file():
+        raise BuildError(f"missing registry file: {path.relative_to(ROOT)}")
+    data = load_yaml_file(path)
+    if not isinstance(data, dict):
+        raise BuildError(f"{path.relative_to(ROOT)} must be a mapping")
+    if data.get("kind") != "changeforge.stage_model":
+        raise BuildError(f"{path.relative_to(ROOT)} kind must be changeforge.stage_model")
+    return data
 
 
 def _load_runtime_items(
@@ -401,7 +415,12 @@ def _copy_skill_tree(source: Path, destination: Path) -> None:
     shutil.copytree(source, destination, ignore=ignore)
 
 
-def _build_hook_runtime() -> None:
+def _build_hook_runtime(
+    professional_skills: list[RuntimeItem],
+    capabilities: list[Capability],
+    domain_extensions: list[RuntimeItem],
+    stage_model: dict[str, Any],
+) -> None:
     if not HOOK_RUNTIME_ROOT.is_dir():
         raise BuildError(f"missing hook runtime source: {HOOK_RUNTIME_ROOT.relative_to(ROOT)}")
     if not BOOTSTRAP_TEMPLATE.is_file():
@@ -410,21 +429,27 @@ def _build_hook_runtime() -> None:
         raise BuildError(
             f"missing professional bootstrap template: {PROFESSIONAL_BOOTSTRAP_TEMPLATE.relative_to(ROOT)}"
         )
-    _build_codex_hook_runtime()
-    _build_codex_user_hook_runtime()
-    _build_claude_hook_runtime()
-    _build_claude_user_hook_runtime()
-    _build_copilot_hook_runtime("project")
-    _build_copilot_hook_runtime("user")
+    _build_codex_hook_runtime(professional_skills, capabilities, domain_extensions, stage_model)
+    _build_codex_user_hook_runtime(professional_skills, capabilities, domain_extensions, stage_model)
+    _build_claude_hook_runtime(professional_skills, capabilities, domain_extensions, stage_model)
+    _build_claude_user_hook_runtime(professional_skills, capabilities, domain_extensions, stage_model)
+    _build_copilot_hook_runtime("project", professional_skills, capabilities, domain_extensions, stage_model)
+    _build_copilot_hook_runtime("user", professional_skills, capabilities, domain_extensions, stage_model)
     _build_universal_bootstrap()
 
 
-def _build_codex_hook_runtime() -> None:
+def _build_codex_hook_runtime(
+    professional_skills: list[RuntimeItem],
+    capabilities: list[Capability],
+    domain_extensions: list[RuntimeItem],
+    stage_model: dict[str, Any],
+) -> None:
     target = HOOK_OUTPUT_ROOTS[("codex", "project")]
     hooks_dir = target / "hooks"
     _reset_dir(hooks_dir)
     _copy_hook_scripts(hooks_dir)
     _copy_hook_support_files(hooks_dir, COMMON_HOOK_SUPPORT_FILES)
+    _write_runtime_route_index(hooks_dir, professional_skills, capabilities, domain_extensions, stage_model)
     shutil.copy2(
         HOOK_RUNTIME_ROOT / "templates" / "codex" / "hooks.json",
         target / "hooks.json",
@@ -438,12 +463,18 @@ def _build_codex_hook_runtime() -> None:
     )
 
 
-def _build_codex_user_hook_runtime() -> None:
+def _build_codex_user_hook_runtime(
+    professional_skills: list[RuntimeItem],
+    capabilities: list[Capability],
+    domain_extensions: list[RuntimeItem],
+    stage_model: dict[str, Any],
+) -> None:
     target = HOOK_OUTPUT_ROOTS[("codex", "user")]
     hooks_dir = target / "hooks"
     _reset_dir(hooks_dir)
     _copy_hook_scripts(hooks_dir)
     _copy_hook_support_files(hooks_dir, COMMON_HOOK_SUPPORT_FILES)
+    _write_runtime_route_index(hooks_dir, professional_skills, capabilities, domain_extensions, stage_model)
     shutil.copy2(
         HOOK_RUNTIME_ROOT / "templates" / "codex-user" / "hooks.json",
         target / "hooks.json",
@@ -457,12 +488,18 @@ def _build_codex_user_hook_runtime() -> None:
     )
 
 
-def _build_claude_hook_runtime() -> None:
+def _build_claude_hook_runtime(
+    professional_skills: list[RuntimeItem],
+    capabilities: list[Capability],
+    domain_extensions: list[RuntimeItem],
+    stage_model: dict[str, Any],
+) -> None:
     target = HOOK_OUTPUT_ROOTS[("claude", "project")]
     hooks_dir = target / "hooks"
     _reset_dir(hooks_dir)
     _copy_hook_scripts(hooks_dir)
     _copy_hook_support_files(hooks_dir, COMMON_HOOK_SUPPORT_FILES)
+    _write_runtime_route_index(hooks_dir, professional_skills, capabilities, domain_extensions, stage_model)
     shutil.copy2(
         HOOK_RUNTIME_ROOT
         / "templates"
@@ -479,12 +516,18 @@ def _build_claude_hook_runtime() -> None:
     )
 
 
-def _build_claude_user_hook_runtime() -> None:
+def _build_claude_user_hook_runtime(
+    professional_skills: list[RuntimeItem],
+    capabilities: list[Capability],
+    domain_extensions: list[RuntimeItem],
+    stage_model: dict[str, Any],
+) -> None:
     target = HOOK_OUTPUT_ROOTS[("claude", "user")]
     hooks_dir = target / "hooks"
     _reset_dir(hooks_dir)
     _copy_hook_scripts(hooks_dir)
     _copy_hook_support_files(hooks_dir, COMMON_HOOK_SUPPORT_FILES)
+    _write_runtime_route_index(hooks_dir, professional_skills, capabilities, domain_extensions, stage_model)
     shutil.copy2(
         HOOK_RUNTIME_ROOT
         / "templates"
@@ -501,7 +544,13 @@ def _build_claude_user_hook_runtime() -> None:
     )
 
 
-def _build_copilot_hook_runtime(scope: str) -> None:
+def _build_copilot_hook_runtime(
+    scope: str,
+    professional_skills: list[RuntimeItem],
+    capabilities: list[Capability],
+    domain_extensions: list[RuntimeItem],
+    stage_model: dict[str, Any],
+) -> None:
     # VS Code Copilot loads every *.json in the hook folder, so the managed hook
     # config lives at <hooks>/changeforge-hooks.json while the scripts, manifest,
     # and bootstrap fragment live in a <hooks>/changeforge/ subfolder VS Code does
@@ -514,6 +563,7 @@ def _build_copilot_hook_runtime(scope: str) -> None:
     scripts_dir.mkdir(parents=True, exist_ok=True)
     _copy_hook_scripts(scripts_dir)
     _copy_hook_support_files(scripts_dir, (*COMMON_HOOK_SUPPORT_FILES, *COPILOT_HOOK_SUPPORT_FILES))
+    _write_runtime_route_index(scripts_dir, professional_skills, capabilities, domain_extensions, stage_model)
     template_dir = "copilot" if scope == "project" else "copilot-user"
     shutil.copy2(
         HOOK_RUNTIME_ROOT / "templates" / template_dir / "changeforge-hooks.json",
@@ -564,6 +614,115 @@ def _copy_hook_support_files(target: Path, support_files: tuple[str, ...]) -> No
         shutil.copy2(source, target / file_name)
 
 
+def _write_runtime_route_index(
+    target: Path,
+    professional_skills: list[RuntimeItem],
+    capabilities: list[Capability],
+    domain_extensions: list[RuntimeItem],
+    stage_model: dict[str, Any],
+) -> None:
+    target.mkdir(parents=True, exist_ok=True)
+    index = _runtime_route_index(
+        professional_skills,
+        capabilities,
+        domain_extensions,
+        stage_model,
+    )
+    (target / RUNTIME_ROUTE_INDEX_NAME).write_text(
+        json.dumps(index, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _runtime_route_index(
+    professional_skills: list[RuntimeItem],
+    capabilities: list[Capability],
+    domain_extensions: list[RuntimeItem],
+    stage_model: dict[str, Any],
+) -> dict[str, Any]:
+    skill_names = {item.name for item in professional_skills}
+    extension_names = {item.name for item in domain_extensions}
+    product_owner: dict[str, str] = {}
+    domain_extension_by_surface: dict[str, str] = {}
+    surface_capabilities: dict[str, list[str]] = {}
+    product_surface_order: list[str] = []
+    for entry in stage_model.get("product_surfaces", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        surface = entry.get("surface")
+        if not isinstance(surface, str) or not surface.strip():
+            continue
+        surface_name = surface.strip()
+        product_surface_order.append(surface_name)
+        required_skill = entry.get("required_skill")
+        if isinstance(required_skill, str):
+            if required_skill in skill_names:
+                product_owner[surface_name] = required_skill
+            elif required_skill in extension_names:
+                domain_extension_by_surface[surface_name] = required_skill
+        surface_capabilities[surface_name] = _string_items(
+            entry.get("default_capabilities")
+        )
+
+    language_file_extensions: dict[str, list[str]] = {}
+    language_capabilities: dict[str, str] = {}
+    for entry in stage_model.get("language_surfaces", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        language = entry.get("language")
+        if not isinstance(language, str) or not language.strip():
+            continue
+        language_name = language.strip()
+        language_file_extensions[language_name] = _string_items(
+            entry.get("file_extensions")
+        )
+        capability = entry.get("capability")
+        if isinstance(capability, str) and capability.strip():
+            language_capabilities[language_name] = capability.strip()
+
+    stage_capabilities: dict[str, list[str]] = {}
+    stage_conditional_capabilities: dict[str, list[str]] = {}
+    for entry in stage_model.get("stages", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        stage = entry.get("name")
+        if not isinstance(stage, str) or not stage.strip():
+            continue
+        stage_name = stage.strip()
+        stage_capabilities[stage_name] = _string_items(entry.get("default_capabilities"))
+        stage_conditional_capabilities[stage_name] = _string_items(
+            entry.get("conditional_capabilities")
+        )
+
+    return {
+        "kind": "changeforge.runtime_route_index",
+        "schema_version": 1,
+        "source_registries": [
+            "stage-model",
+            "capabilities",
+            "domain-extensions",
+        ],
+        "product_surface_order": product_surface_order,
+        "language_file_extensions": language_file_extensions,
+        "language_capabilities": language_capabilities,
+        "product_owner": product_owner,
+        "domain_extension_by_surface": domain_extension_by_surface,
+        "all_domain_extensions": [item.name for item in domain_extensions],
+        "surface_capabilities": surface_capabilities,
+        "stage_capabilities": stage_capabilities,
+        "stage_conditional_capabilities": stage_conditional_capabilities,
+        "capability_ids": {
+            capability.name: capability.capability_id for capability in capabilities
+        },
+    }
+
+
+def _string_items(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item.strip() for item in value if isinstance(item, str) and item.strip()]
+
+
 def _write_hook_manifest(
     target: Path,
     agent: str,
@@ -603,7 +762,7 @@ def _write_hook_manifest(
         "scope": scope,
         "source_version": _source_version(),
         "hooks": hooks,
-        "support_files": list(support_files),
+        "support_files": list(dict.fromkeys((*support_files, RUNTIME_ROUTE_INDEX_NAME))),
         "bootstrap_fragment": BOOTSTRAP_FRAGMENT_NAME,
         "session_bootstrap_hook": True,
     }

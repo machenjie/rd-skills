@@ -32,6 +32,7 @@ import importlib.util
 import re
 from pathlib import Path
 from types import ModuleType
+from typing import Any
 
 from validation_utils import (
     EXPECTED_DOMAIN_EXTENSION_COUNT,
@@ -206,6 +207,229 @@ def _stage_entries(stage_model: dict[str, object]) -> dict[str, dict[str, object
         if isinstance(name, str) and name.strip():
             stages[name.strip()] = entry
     return stages
+
+
+def _product_surface_entries(stage_model: dict[str, object]) -> dict[str, dict[str, object]]:
+    surfaces: dict[str, dict[str, object]] = {}
+    for entry in stage_model.get("product_surfaces", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        surface = entry.get("surface")
+        if isinstance(surface, str) and surface.strip():
+            surfaces[surface.strip()] = entry
+    return surfaces
+
+
+def _language_surface_entries(stage_model: dict[str, object]) -> dict[str, dict[str, object]]:
+    languages: dict[str, dict[str, object]] = {}
+    for entry in stage_model.get("language_surfaces", []) or []:
+        if not isinstance(entry, dict):
+            continue
+        language = entry.get("language")
+        if isinstance(language, str) and language.strip():
+            languages[language.strip()] = entry
+    return languages
+
+
+def _capability_id_mapping(errors: list[str]) -> dict[str, str]:
+    try:
+        data = load_yaml_file(CAPABILITIES_REGISTRY)
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+        return {}
+    mapping: dict[str, str] = {}
+    for entry in registry_items(data, "capabilities", CAPABILITIES_REGISTRY, []):
+        if not isinstance(entry, dict):
+            continue
+        name = entry.get("name")
+        capability_id = entry.get("id")
+        if isinstance(name, str) and isinstance(capability_id, str):
+            mapping[name.strip()] = capability_id.strip()
+    return mapping
+
+
+def _tuple_dict(value: object) -> dict[str, tuple[str, ...]] | None:
+    if not isinstance(value, dict):
+        return None
+    mapped: dict[str, tuple[str, ...]] = {}
+    for key, items in value.items():
+        if not isinstance(key, str):
+            return None
+        if not isinstance(items, (list, tuple)):
+            return None
+        values: list[str] = []
+        for item in items:
+            if not isinstance(item, str):
+                return None
+            values.append(item.strip())
+        mapped[key.strip()] = tuple(values)
+    return mapped
+
+
+def _string_dict(value: object) -> dict[str, str] | None:
+    if not isinstance(value, dict):
+        return None
+    mapped: dict[str, str] = {}
+    for key, item in value.items():
+        if not isinstance(key, str) or not isinstance(item, str):
+            return None
+        mapped[key.strip()] = item.strip()
+    return mapped
+
+
+def _check_runtime_resolver_registry_consistency(
+    stage_model: dict[str, object],
+    resolver: ModuleType,
+    skill_names: set[str],
+    extension_names: set[str],
+    errors: list[str],
+) -> None:
+    rel = relpath(ROOT, RUNTIME_ROUTE_RESOLVER)
+    stages = _stage_entries(stage_model)
+    surfaces = _product_surface_entries(stage_model)
+    languages = _language_surface_entries(stage_model)
+    capability_ids = _capability_id_mapping(errors)
+
+    expected_product_order = tuple(surfaces)
+    resolver_product_order = tuple(getattr(resolver, "PRODUCT_SURFACE_ORDER", ()))
+    if resolver_product_order != expected_product_order:
+        errors.append(
+            f"{rel}: PRODUCT_SURFACE_ORDER must match stage-model product_surfaces "
+            f"{list(expected_product_order)}, found {list(resolver_product_order)}"
+        )
+
+    expected_language_extensions = {
+        language: tuple(_string_list(entry.get("file_extensions")))
+        for language, entry in languages.items()
+    }
+    resolver_language_extensions = _tuple_dict(
+        getattr(resolver, "LANGUAGE_FILE_EXTENSIONS", None)
+    )
+    if resolver_language_extensions is None:
+        errors.append(f"{rel}: LANGUAGE_FILE_EXTENSIONS must be a mapping")
+    elif resolver_language_extensions != expected_language_extensions:
+        errors.append(
+            f"{rel}: LANGUAGE_FILE_EXTENSIONS must match stage-model language surfaces"
+        )
+
+    expected_language_capabilities = {
+        language: capability
+        for language, entry in languages.items()
+        if isinstance((capability := entry.get("capability")), str)
+    }
+    resolver_language_capabilities = _string_dict(
+        getattr(resolver, "LANGUAGE_CAPABILITIES", None)
+    )
+    if resolver_language_capabilities is None:
+        errors.append(f"{rel}: LANGUAGE_CAPABILITIES must be a mapping")
+    elif resolver_language_capabilities != expected_language_capabilities:
+        errors.append(
+            f"{rel}: LANGUAGE_CAPABILITIES must match stage-model language capabilities"
+        )
+
+    expected_product_owner: dict[str, str] = {}
+    expected_domain_surface: dict[str, str] = {}
+    expected_surface_capabilities: dict[str, tuple[str, ...]] = {}
+    for surface, entry in surfaces.items():
+        required_skill = entry.get("required_skill")
+        if isinstance(required_skill, str):
+            if required_skill in skill_names:
+                expected_product_owner[surface] = required_skill
+            elif required_skill in extension_names:
+                expected_domain_surface[surface] = required_skill
+        expected_surface_capabilities[surface] = tuple(
+            _string_list(entry.get("default_capabilities"))
+        )
+
+    resolver_product_owner = _string_dict(getattr(resolver, "PRODUCT_OWNER", None))
+    if resolver_product_owner is None:
+        errors.append(f"{rel}: PRODUCT_OWNER must be a mapping")
+    elif resolver_product_owner != expected_product_owner:
+        errors.append(
+            f"{rel}: PRODUCT_OWNER must match product surface required_skill entries "
+            "that reference professional skills"
+        )
+
+    resolver_domain_surface = _string_dict(
+        getattr(resolver, "DOMAIN_EXTENSION_BY_SURFACE", None)
+    )
+    if resolver_domain_surface is None:
+        errors.append(f"{rel}: DOMAIN_EXTENSION_BY_SURFACE must be a mapping")
+    elif resolver_domain_surface != expected_domain_surface:
+        errors.append(
+            f"{rel}: DOMAIN_EXTENSION_BY_SURFACE must match product surface "
+            "required_skill entries that reference domain extensions"
+        )
+
+    resolver_surface_capabilities = _tuple_dict(
+        getattr(resolver, "SURFACE_CAPABILITIES", None)
+    )
+    if resolver_surface_capabilities is None:
+        errors.append(f"{rel}: SURFACE_CAPABILITIES must be a mapping")
+    elif resolver_surface_capabilities != expected_surface_capabilities:
+        errors.append(
+            f"{rel}: SURFACE_CAPABILITIES must match stage-model product surface "
+            "default_capabilities"
+        )
+
+    expected_stage_capabilities = {
+        stage: tuple(_string_list(entry.get("default_capabilities")))
+        for stage, entry in stages.items()
+    }
+    resolver_stage_capabilities = _tuple_dict(
+        getattr(resolver, "STAGE_CAPABILITIES", None)
+    )
+    if resolver_stage_capabilities is None:
+        errors.append(f"{rel}: STAGE_CAPABILITIES must be a mapping")
+    elif resolver_stage_capabilities != expected_stage_capabilities:
+        errors.append(
+            f"{rel}: STAGE_CAPABILITIES must match stage-model stage "
+            "default_capabilities"
+        )
+
+    resolver_capability_ids = _string_dict(getattr(resolver, "CAPABILITY_IDS", None))
+    if resolver_capability_ids is None:
+        errors.append(f"{rel}: CAPABILITY_IDS must be a mapping")
+    elif resolver_capability_ids != capability_ids:
+        errors.append(f"{rel}: CAPABILITY_IDS must match capabilities.yaml")
+
+    all_extensions = tuple(
+        entry.get("name")
+        for entry in load_yaml_file(DOMAIN_EXTENSIONS_REGISTRY).get("domain_extensions", [])
+        if isinstance(entry, dict) and isinstance(entry.get("name"), str)
+    )
+    resolver_all_extensions = tuple(getattr(resolver, "ALL_DOMAIN_EXTENSIONS", ()))
+    if resolver_all_extensions != all_extensions:
+        errors.append(
+            f"{rel}: ALL_DOMAIN_EXTENSIONS must match domain-extensions.yaml order"
+        )
+
+    resolver_domain_owner = _string_dict(getattr(resolver, "DOMAIN_OWNER", None))
+    if resolver_domain_owner is None:
+        errors.append(f"{rel}: DOMAIN_OWNER must be a mapping")
+    else:
+        unknown_owner_keys = sorted(set(resolver_domain_owner) - extension_names)
+        missing_owner_keys = sorted(extension_names - set(resolver_domain_owner))
+        unknown_owner_values = sorted(set(resolver_domain_owner.values()) - skill_names)
+        if unknown_owner_keys or missing_owner_keys or unknown_owner_values:
+            errors.append(
+                f"{rel}: DOMAIN_OWNER must cover registered domain extensions and "
+                "point to registered professional skills "
+                f"(unknown keys={unknown_owner_keys}, missing keys={missing_owner_keys}, "
+                f"unknown values={unknown_owner_values})"
+            )
+
+    conditional_capabilities = {
+        capability
+        for entry in stages.values()
+        for capability in _string_list(entry.get("conditional_capabilities"))
+    }
+    missing_conditional_ids = sorted(conditional_capabilities - set(capability_ids))
+    if missing_conditional_ids:
+        errors.append(
+            f"{rel}: stage-model conditional_capabilities missing from CAPABILITY_IDS "
+            f"{missing_conditional_ids}"
+        )
 
 
 def _load_stage_model(errors: list[str]) -> dict[str, object] | None:
@@ -438,6 +662,13 @@ def _check_stage_model_registry(stage_model: dict[str, object], errors: list[str
 
     resolver = _load_runtime_resolver(errors)
     if resolver is not None:
+        _check_runtime_resolver_registry_consistency(
+            stage_model,
+            resolver,
+            skill_names,
+            extension_names,
+            errors,
+        )
         resolver_surfaces = tuple(getattr(resolver, "PRODUCT_SURFACE_ORDER", ()))
         missing_surfaces = sorted(seen_surfaces - set(resolver_surfaces))
         if missing_surfaces:

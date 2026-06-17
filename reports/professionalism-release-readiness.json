@@ -33,7 +33,7 @@
       "evidence_source": "reports/professional-routing-coverage.json",
       "item": "routing coverage",
       "notes": "needs_manual_review=0",
-      "status": "fail"
+      "status": "pass"
     },
     {
       "blocking": true,
@@ -72,7 +72,7 @@
     "split_candidates": 0
   },
   "default_regression_status": "pass",
-  "generated_at": "2026-06-17T00:47:12.442305+00:00",
+  "generated_at": "2026-06-17T01:44:32.874922+00:00",
   "key_foundation_capability_coverage_summary": {
     "count": 40,
     "statuses": {

@@ -74,6 +74,7 @@ COPILOT_HOOK_SUPPORT_FILES = (
     "changeforge_copilot_skill_summary.md",
     "changeforge_copilot_professional_contract.md",
 )
+RUNTIME_ROUTE_INDEX_NAME = "changeforge_runtime_route_index.json"
 REQUIRED_HOOK_DIST_FILES = (
     "codex/project/.codex/hooks.json",
     "codex/project/.codex/.changeforge-hook-manifest.json",
@@ -451,7 +452,7 @@ def _validate_hook_manifest(path: Path, *, agent: str, scope: str, errors: list[
             f"{relpath(ROOT, path)}: bootstrap_fragment must be {BOOTSTRAP_FRAGMENT_NAME}"
         )
     support_files = data.get("support_files")
-    expected_support_files = set(COMMON_HOOK_SUPPORT_FILES)
+    expected_support_files = set((*COMMON_HOOK_SUPPORT_FILES, RUNTIME_ROUTE_INDEX_NAME))
     if agent == "copilot":
         expected_support_files.update(COPILOT_HOOK_SUPPORT_FILES)
     if (

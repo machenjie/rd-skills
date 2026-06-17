@@ -119,7 +119,7 @@ Suggested-action distribution:
 | `domain-impact-modeler` | 202 | 3297 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-intake-compiler` | 200 | 3300 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `ai-code-review-refactor` | 350 | 5516 | 100 | 73 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `change-forge-router` | 315 | 6051 | 100 | 81 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `change-forge-router` | 315 | 6070 | 100 | 81 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `quality-test-gate` | 302 | 5378 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `reliability-observability-gate` | 272 | 4810 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `backend-change-builder` | 267 | 4739 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
@@ -313,17 +313,17 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | Files | Excerpt |
 | --- | --- |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 18 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 18 | do not load every reference by default. treat references as targeted support selected by t |
+| 18 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 9 | these triggers are hidden-risk escalators, not ordinary checklist items. |
-| 8 | **accepted exceptions** with owner / scope / expiration |
 | 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
+| 8 | **accepted exceptions** with owner / scope / expiration |
 | 7 | **residual risk**: untested runtime behavior, owner, and next gate. |
 | 7 | **block/pass decision** with required conditions for approval. |
 

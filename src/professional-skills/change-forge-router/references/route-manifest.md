@@ -122,25 +122,37 @@ Manifest rules:
 For non-trivial engineering tasks, also emit one fenced YAML block named
 `changeforge_stage_route`. It is the machine-readable projection of the `## Stage
 Professionalism` section and of the `engineering-stage-professionalism` Stage Professional
-Launch Plan. It records the current and next engineering stage, the product and language
-surface, the capabilities launched this stage, the heavy capabilities explicitly skipped with
-a reason, the context budget, required evidence, required gates, and the next-stage handoff.
-It does not replace the human-readable routing result and does not authorize any tool to
-mutate skills.
+Launch Plan. It records the current and next engineering stage, the primary and complete
+product/language surfaces, the capabilities launched this stage, the heavy capabilities
+explicitly skipped with a reason, skipped skills/routes with separate rationale, the context
+budget, required evidence, required gates, and the next-stage handoff. It does not replace the
+human-readable routing result and does not authorize any tool to mutate skills.
 
 ```yaml
 changeforge_stage_route:
   schema_version: 1
   current_stage: <requirement-intake|architecture-design|implementation-planning|coding|debugging-diagnosis|bug-fix|code-review|refactoring|testing|release-delivery|documentation-handoff|skill-authoring>
   next_stage: <next engineering stage or closed>
-  product_surface: <product surface, or none>
-  language_surface: <language, or none>
+  product_surface: <primary product surface, or none; legacy compatibility field>
+  primary_product_surface: <primary product surface, or none>
+  product_surfaces:
+    - <all selected product surfaces, or empty when none>
+  language_surface: <primary language surface, or none; legacy compatibility field>
+  primary_language_surface: <primary language surface, or none>
+  language_surfaces:
+    - <all selected language surfaces, or empty when none>
   selected_skills: []
   selected_capabilities: []
   selected_domain_extensions: []
   skipped_capabilities:
     - capability: <heavy capability not launched this stage>
       reason: <why it is skipped this stage>
+  skipped_skills:
+    - skill: <professional skill not selected>
+      reason: <why it is not selected>
+  skipped_routes:
+    - route: <non-skill route concept not selected>
+      reason: <why it is not selected>
   context_budget_mode: <minimal|single-stage|staged-plan>
   context_budget_rationale: <why this budget fits the change level>
   required_evidence: []
@@ -152,6 +164,8 @@ Stage manifest rules:
 
 - Emit `changeforge_stage_route` only for non-trivial engineering tasks; omit it for a single trivial edit whose stage is obvious.
 - `current_stage` must be one engineering stage; a cross-stage task is split and re-emitted per stage rather than collapsed into one plan.
-- Every entry in `skipped_capabilities` must carry a `reason`; a heavy capability is either launched this stage or skipped with a reason, never dropped silently.
+- `product_surface` and `language_surface` are compatibility fields and must match `primary_product_surface` and `primary_language_surface`. Capability allowance and multi-surface validation use `product_surfaces` and `language_surfaces`.
+- `skipped_capabilities` may contain only foundation capability names that exist in `capabilities.yaml`; do not put professional skills or pseudo route concepts in this list.
+- Every entry in `skipped_capabilities`, `skipped_skills`, and `skipped_routes` must carry a `reason`; a heavy capability, skill, or route is either launched this stage or skipped with a reason, never dropped silently.
 - `context_budget_mode` is `minimal` for L1, `single-stage` for L2, and `staged-plan` for L3 and higher.
 - The stage manifest is consistent with `changeforge_route`; it sequences professional launch within the same route, it does not define a second route.

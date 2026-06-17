@@ -1178,6 +1178,26 @@ def _stage_skipped_without_reason(manifest: dict[str, Any]) -> list[str]:
     return missing
 
 
+def _stage_skipped_unknown_capabilities(
+    manifest: dict[str, Any],
+    capabilities: set[str],
+) -> list[str]:
+    entries = manifest.get("skipped_capabilities")
+    if not isinstance(entries, list):
+        return []
+    unknown: list[str] = []
+    for entry in entries:
+        capability = ""
+        if isinstance(entry, dict):
+            capability = str(entry.get("capability", "")).strip()
+        elif isinstance(entry, str):
+            raw = entry.strip()
+            capability = raw.partition("=>")[0].strip() if "=>" in raw else raw
+        if capability and capability not in capabilities:
+            unknown.append(capability)
+    return unknown
+
+
 def _reference_paths(references: set[tuple[str, str]]) -> set[str]:
     return {reference for _skill, reference in references}
 
@@ -1385,6 +1405,16 @@ def _stage_manifest_required_schema_errors(rel: str, manifest: dict[str, Any]) -
         "required_evidence",
         "required_quality_gates",
     )
+    optional_string_fields = (
+        "primary_product_surface",
+        "primary_language_surface",
+    )
+    optional_list_fields = (
+        "product_surfaces",
+        "language_surfaces",
+        "skipped_skills",
+        "skipped_routes",
+    )
     if manifest.get("schema_version") != 1:
         errors.append(f"{rel}: changeforge_stage_route.schema_version must be 1")
     for field in required_string_fields:
@@ -1393,6 +1423,14 @@ def _stage_manifest_required_schema_errors(rel: str, manifest: dict[str, Any]) -
             errors.append(f"{rel}: changeforge_stage_route.{field} is required")
     for field in required_list_fields:
         if not isinstance(manifest.get(field), list):
+            errors.append(f"{rel}: changeforge_stage_route.{field} must be a list")
+    for field in optional_string_fields:
+        value = manifest.get(field)
+        if value is not None and not isinstance(value, str):
+            errors.append(f"{rel}: changeforge_stage_route.{field} must be a string")
+    for field in optional_list_fields:
+        value = manifest.get(field)
+        if value is not None and not isinstance(value, list):
             errors.append(f"{rel}: changeforge_stage_route.{field} must be a list")
     return errors
 
@@ -1413,8 +1451,8 @@ def _required_phrase_missing(required: Iterable[str], actual: Iterable[str]) -> 
 
 def _stage_allowed_capabilities(
     current_stage: str,
-    product_surface: str,
-    language_surface: str,
+    product_surfaces: Iterable[str],
+    language_surfaces: Iterable[str],
     expected: dict[str, Any],
     stage_model: dict[str, Any],
     risk_rules: dict[str, RiskRule],
@@ -1428,15 +1466,17 @@ def _stage_allowed_capabilities(
     allowed.update(_string_tuple(stage_entry.get("default_capabilities")))
     allowed.update(_string_tuple(stage_entry.get("conditional_capabilities")))
 
-    surface_entry = surfaces.get(product_surface)
-    if surface_entry is not None:
-        allowed.update(_string_tuple(surface_entry.get("default_capabilities")))
+    for product_surface in product_surfaces:
+        surface_entry = surfaces.get(product_surface)
+        if surface_entry is not None:
+            allowed.update(_string_tuple(surface_entry.get("default_capabilities")))
 
-    language_entry = languages.get(language_surface)
-    if language_entry is not None:
-        capability = language_entry.get("capability")
-        if isinstance(capability, str) and capability.strip():
-            allowed.add(capability.strip())
+    for language_surface in language_surfaces:
+        language_entry = languages.get(language_surface)
+        if language_entry is not None:
+            capability = language_entry.get("capability")
+            if isinstance(capability, str) and capability.strip():
+                allowed.add(capability.strip())
 
     for trigger in _as_string_list(expected.get("risk_triggers")) or []:
         rule = risk_rules.get(trigger.casefold(), {})
@@ -1456,6 +1496,20 @@ def _language_capability_by_surface(stage_model: dict[str, Any]) -> dict[str, st
 def _expected_surface_values(expected: dict[str, Any], field: str) -> set[str]:
     values = _as_expected_surface_list(expected.get(field))
     return set(values or [])
+
+
+def _manifest_surface_list(
+    manifest: dict[str, Any],
+    field: str,
+    fallback: str,
+) -> list[str] | None:
+    value = manifest.get(field)
+    if value is None:
+        return [fallback] if fallback else []
+    values = _manifest_string_list(manifest, field)
+    if values is None:
+        return None
+    return list(dict.fromkeys(values))
 
 
 def _enforce_actual_language_domain_exclusion(
@@ -1506,6 +1560,7 @@ def _enforce_actual_stage_route(  # noqa: C901 - manifest schema is intentionall
     output_data: dict[str, Any],
     actual: dict[str, Any],
     actual_sets: dict[str, list[str]],
+    capabilities: set[str],
     allowed_stages: set[str],
     allowed_gates: set[str],
     stage_model: dict[str, Any],
@@ -1564,52 +1619,123 @@ def _enforce_actual_stage_route(  # noqa: C901 - manifest schema is intentionall
     product_surface = manifest.get("product_surface")
     if isinstance(product_surface, str) and product_surface.strip():
         product_surface = product_surface.strip()
-        if product_surface != "none" and product_surface not in surfaces:
-            errors.append(
-                f"{rel}: changeforge_stage_route.product_surface must be one of "
-                f"{sorted(surfaces)} or 'none', found {product_surface!r}"
-            )
-        surface_entry = surfaces.get(product_surface)
-        if surface_entry is not None:
-            required_skill = surface_entry.get("required_skill")
-            selected_owners = set(actual_sets["skills"]) | set(actual_sets["domain_extensions"])
-            if isinstance(required_skill, str) and required_skill not in selected_owners:
-                errors.append(
-                    f"{rel}: product_surface {product_surface!r} requires selected "
-                    f"skill or extension {required_skill!r}"
-                )
     else:
         product_surface = ""
-    expected_product_surfaces = _expected_surface_values(expected, "expected_product_surface")
-    if expected_product_surfaces and product_surface not in expected_product_surfaces:
+    primary_product_surface = manifest.get("primary_product_surface")
+    if isinstance(primary_product_surface, str) and primary_product_surface.strip():
+        primary_product_surface = primary_product_surface.strip()
+    else:
+        primary_product_surface = product_surface
+    product_surfaces = _manifest_surface_list(
+        manifest,
+        "product_surfaces",
+        product_surface,
+    )
+    if product_surfaces is None:
+        errors.append(f"{rel}: changeforge_stage_route.product_surfaces must be a list")
+        product_surfaces = []
+    if product_surface and primary_product_surface != product_surface:
         errors.append(
-            f"{rel}: changeforge_stage_route.product_surface must be one of "
-            f"{sorted(expected_product_surfaces)}, found {product_surface!r}"
+            f"{rel}: changeforge_stage_route.product_surface must match "
+            "primary_product_surface for compatibility"
+        )
+    if (
+        primary_product_surface
+        and primary_product_surface != "none"
+        and primary_product_surface not in product_surfaces
+    ):
+        errors.append(
+            f"{rel}: changeforge_stage_route.primary_product_surface must be present "
+            "in product_surfaces"
+        )
+    if not product_surfaces and product_surface:
+        product_surfaces = [product_surface]
+    selected_owners = set(actual_sets["skills"]) | set(actual_sets["domain_extensions"])
+    for surface in product_surfaces:
+        if surface == "none":
+            continue
+        if surface not in surfaces:
+            errors.append(
+                f"{rel}: changeforge_stage_route.product_surfaces must contain only "
+                f"{sorted(surfaces)} or 'none', found {surface!r}"
+            )
+        surface_entry = surfaces.get(surface)
+        required_skill = surface_entry.get("required_skill") if surface_entry else None
+        if isinstance(required_skill, str) and required_skill not in selected_owners:
+            errors.append(
+                f"{rel}: product_surface {surface!r} requires selected "
+                f"skill or extension {required_skill!r}"
+            )
+    expected_product_surfaces = _expected_surface_values(expected, "expected_product_surface")
+    actual_product_surface_values = set(product_surfaces)
+    actual_product_surface_values.update(
+        surface for surface in (product_surface, primary_product_surface) if surface
+    )
+    if expected_product_surfaces and not actual_product_surface_values & expected_product_surfaces:
+        errors.append(
+            f"{rel}: changeforge_stage_route.product_surfaces must include one of "
+            f"{sorted(expected_product_surfaces)}, found {sorted(actual_product_surface_values)}"
         )
 
     language_surface = manifest.get("language_surface")
     if isinstance(language_surface, str) and language_surface.strip():
         language_surface = language_surface.strip()
-        if language_surface != "none" and language_surface not in languages:
+    else:
+        language_surface = ""
+    primary_language_surface = manifest.get("primary_language_surface")
+    if isinstance(primary_language_surface, str) and primary_language_surface.strip():
+        primary_language_surface = primary_language_surface.strip()
+    else:
+        primary_language_surface = language_surface
+    language_surfaces = _manifest_surface_list(
+        manifest,
+        "language_surfaces",
+        language_surface,
+    )
+    if language_surfaces is None:
+        errors.append(f"{rel}: changeforge_stage_route.language_surfaces must be a list")
+        language_surfaces = []
+    if language_surface and primary_language_surface != language_surface:
+        errors.append(
+            f"{rel}: changeforge_stage_route.language_surface must match "
+            "primary_language_surface for compatibility"
+        )
+    if (
+        primary_language_surface
+        and primary_language_surface != "none"
+        and primary_language_surface not in language_surfaces
+    ):
+        errors.append(
+            f"{rel}: changeforge_stage_route.primary_language_surface must be present "
+            "in language_surfaces"
+        )
+    if not language_surfaces and language_surface:
+        language_surfaces = [language_surface]
+    for language in language_surfaces:
+        if language == "none":
+            continue
+        if language not in languages:
             errors.append(
-                f"{rel}: changeforge_stage_route.language_surface must be one of "
-                f"{sorted(languages)} or 'none', found {language_surface!r}"
+                f"{rel}: changeforge_stage_route.language_surfaces must contain only "
+                f"{sorted(languages)} or 'none', found {language!r}"
             )
-        language_entry = languages.get(language_surface)
+        language_entry = languages.get(language)
         if language_entry is not None:
             language_stages = set(_string_tuple(language_entry.get("stages")))
             if current_stage and current_stage not in language_stages:
                 errors.append(
-                    f"{rel}: language_surface {language_surface!r} is not valid for "
+                    f"{rel}: language_surface {language!r} is not valid for "
                     f"stage {current_stage!r}"
                 )
-    else:
-        language_surface = ""
     expected_language_surfaces = _expected_surface_values(expected, "expected_language_surface")
-    if expected_language_surfaces and language_surface not in expected_language_surfaces:
+    actual_language_surface_values = set(language_surfaces)
+    actual_language_surface_values.update(
+        surface for surface in (language_surface, primary_language_surface) if surface
+    )
+    if expected_language_surfaces and not actual_language_surface_values & expected_language_surfaces:
         errors.append(
-            f"{rel}: changeforge_stage_route.language_surface must be one of "
-            f"{sorted(expected_language_surfaces)}, found {language_surface!r}"
+            f"{rel}: changeforge_stage_route.language_surfaces must include one of "
+            f"{sorted(expected_language_surfaces)}, found {sorted(actual_language_surface_values)}"
         )
 
     actual_budget = manifest.get("context_budget_mode")
@@ -1669,8 +1795,8 @@ def _enforce_actual_stage_route(  # noqa: C901 - manifest schema is intentionall
             )
         allowed_capabilities = _stage_allowed_capabilities(
             current_stage,
-            product_surface,
-            language_surface,
+            product_surfaces,
+            language_surfaces,
             expected,
             stage_model,
             risk_rules,
@@ -1759,6 +1885,12 @@ def _enforce_actual_stage_route(  # noqa: C901 - manifest schema is intentionall
         errors.append(
             f"{rel}: changeforge_stage_route.skipped_capabilities missing reason for "
             f"{skipped_missing_reason}"
+        )
+    skipped_unknown = _stage_skipped_unknown_capabilities(manifest, capabilities)
+    if skipped_unknown:
+        errors.append(
+            f"{rel}: changeforge_stage_route.skipped_capabilities contains unknown "
+            f"capability {skipped_unknown}"
         )
 
     handoff = manifest.get("handoff_target")
@@ -1922,6 +2054,7 @@ def _compare_candidate_output(  # noqa: C901 - schema comparison is branchy.
         output_data,
         actual,
         actual_sets,
+        capabilities,
         allowed_stages,
         allowed_gates,
         stage_model,

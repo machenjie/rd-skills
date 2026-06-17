@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -36,6 +37,9 @@ def _configure_module(module, root: Path) -> None:
     module.SKILLS_REGISTRY = registry / "skills.yaml"
     module.CAPABILITIES_REGISTRY = registry / "capabilities.yaml"
     module.DOMAIN_EXTENSIONS_REGISTRY = registry / "domain-extensions.yaml"
+    module.RUNTIME_ROUTE_RESOLVER = (
+        root / "src" / "hook-runtime" / "scripts" / "changeforge_runtime_route_resolver.py"
+    )
 
 
 def _write_base_registries(root: Path, routing_rules: str) -> None:
@@ -53,7 +57,9 @@ skills:
         """
 capabilities:
   - name: implementation-structure-design
+    id: "101"
   - name: agent-execution-discipline
+    id: "102"
 """,
     )
     _write_registry(
@@ -146,6 +152,105 @@ quality_gates:
         self.assertIn("unknown capability 'missing-capability'", joined)
         self.assertIn("unknown domain extension 'missing-extension'", joined)
         self.assertIn("unknown quality gate 'missing gate'", joined)
+
+
+class RuntimeResolverRegistryConsistencyTests(unittest.TestCase):
+    def test_runtime_resolver_registry_projection_passes_when_exact(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp_s:
+            tmp = Path(tmp_s)
+            _configure_module(module, tmp)
+            _write_base_registries(
+                tmp,
+                """
+risk_escalation_triggers: []
+risk_trigger_rules: []
+quality_gates: []
+""",
+            )
+            errors: list[str] = []
+            module._check_runtime_resolver_registry_consistency(
+                _minimal_stage_model(),
+                _minimal_resolver(),
+                {"backend-change-builder", "security-privacy-gate"},
+                {"ai-product-extension"},
+                errors,
+            )
+        self.assertEqual(errors, [])
+
+    def test_runtime_resolver_registry_projection_rejects_capability_id_drift(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp_s:
+            tmp = Path(tmp_s)
+            _configure_module(module, tmp)
+            _write_base_registries(
+                tmp,
+                """
+risk_escalation_triggers: []
+risk_trigger_rules: []
+quality_gates: []
+""",
+            )
+            resolver = _minimal_resolver()
+            resolver.CAPABILITY_IDS = {
+                "implementation-structure-design": "999",
+                "agent-execution-discipline": "102",
+            }
+            errors: list[str] = []
+            module._check_runtime_resolver_registry_consistency(
+                _minimal_stage_model(),
+                resolver,
+                {"backend-change-builder", "security-privacy-gate"},
+                {"ai-product-extension"},
+                errors,
+            )
+        self.assertTrue(any("CAPABILITY_IDS must match" in error for error in errors), errors)
+
+
+def _minimal_stage_model() -> dict[str, object]:
+    return {
+        "stages": [
+            {
+                "name": "coding",
+                "default_capabilities": ["implementation-structure-design"],
+                "conditional_capabilities": ["agent-execution-discipline"],
+            }
+        ],
+        "product_surfaces": [
+            {
+                "surface": "backend-product",
+                "required_skill": "backend-change-builder",
+                "default_capabilities": ["implementation-structure-design"],
+            }
+        ],
+        "language_surfaces": [
+            {
+                "language": "python",
+                "capability": "agent-execution-discipline",
+                "file_extensions": [".py"],
+            }
+        ],
+    }
+
+
+def _minimal_resolver() -> SimpleNamespace:
+    return SimpleNamespace(
+        PRODUCT_SURFACE_ORDER=("backend-product",),
+        LANGUAGE_FILE_EXTENSIONS={"python": (".py",)},
+        LANGUAGE_CAPABILITIES={"python": "agent-execution-discipline"},
+        PRODUCT_OWNER={"backend-product": "backend-change-builder"},
+        DOMAIN_EXTENSION_BY_SURFACE={},
+        SURFACE_CAPABILITIES={
+            "backend-product": ("implementation-structure-design",),
+        },
+        STAGE_CAPABILITIES={"coding": ("implementation-structure-design",)},
+        CAPABILITY_IDS={
+            "implementation-structure-design": "101",
+            "agent-execution-discipline": "102",
+        },
+        ALL_DOMAIN_EXTENSIONS=("ai-product-extension",),
+        DOMAIN_OWNER={"ai-product-extension": "security-privacy-gate"},
+    )
 
 
 if __name__ == "__main__":
