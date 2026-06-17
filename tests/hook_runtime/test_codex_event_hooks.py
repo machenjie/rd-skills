@@ -122,6 +122,26 @@ class PreToolRiskPreviewTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertIn("data-api", payload["hookSpecificOutput"]["additionalContext"])
 
+    def test_read_only_bash_command_is_silent(self) -> None:
+        event = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Bash",
+            "tool_input": {"command": 'bash -lc "rg data-api src | head"'},
+        }
+        result = _run(self.SCRIPT, event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "")
+
+    def test_validation_command_is_silent(self) -> None:
+        event = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Bash",
+            "tool_input": {"command": "python3 scripts/eval-skill-professionalism.py"},
+        }
+        result = _run(self.SCRIPT, event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "")
+
     def test_off_mode_is_silent(self) -> None:
         event = {
             "hook_event_name": "PreToolUse",

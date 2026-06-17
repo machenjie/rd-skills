@@ -38,14 +38,20 @@ DEFAULT_RECENCY_HALF_LIFE_DAYS = 2.0
 RECENT_WINDOW = timedelta(hours=24)
 SEVERITY_PRIORITY_WEIGHT = {"high": 3.0, "medium": 2.0, "low": 1.0}
 READ_ONLY_COMMAND_PROGRAMS = {
+    "awk",
+    "bat",
     "cat",
+    "fd",
     "find",
     "grep",
     "head",
+    "jq",
+    "less",
     "ls",
     "nl",
     "pwd",
     "rg",
+    "ripgrep",
     "sed",
     "stat",
     "tail",
@@ -205,6 +211,8 @@ class SessionSummary:
         if self.changed_path_risk_surfaces:
             return set(self.changed_path_risk_surfaces)
         if self.risk_surface_split_seen:
+            if self.changed_paths or self.structural_findings or self._legacy_mutating_command_seen:
+                return set(self.risk_surfaces)
             return set()
         if self.changed_paths or self.structural_findings or self._legacy_mutating_command_seen:
             return set(self.risk_surfaces)
@@ -712,7 +720,7 @@ def _detect_missed_residual_risk(session: SessionSummary) -> Suggestion | None:
         return _suggestion(
             "missed_residual_risk",
             "medium",
-            "stop closure without a residual-risk statement after a code change",
+            "stop closure without a residual-risk statement after an engineering surface",
             session,
             "State residual risk and unverified items in the final handoff.",
             "evals/agent-behavior/samples",
@@ -721,7 +729,7 @@ def _detect_missed_residual_risk(session: SessionSummary) -> Suggestion | None:
 
 
 def _detect_unverified_completion_claim(session: SessionSummary) -> Suggestion | None:
-    """Completion language at stop with a code change but no validation evidence.
+    """Completion language at stop with an engineering surface but no validation evidence.
 
     This is the fact-detectable member of the completion-evidence family
     (see COMPLETION_EVIDENCE_DETECTION_TYPES). The presence-only completion

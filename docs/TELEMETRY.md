@@ -140,7 +140,7 @@ treated as negative validation evidence. The stop gate records a presence-only
 absence of validation evidence. The completion-evidence family is:
 
 - `unverified_completion_claim` — fact-detected: the stop closure used completion
-  language after a code change but recorded no validation evidence. Routed to
+  language after an engineering surface but recorded no validation evidence. Routed to
   `agent-execution-discipline` and `quality-test-gate`.
 - `success_language_without_evidence`, `partial_validation_overclaimed`,
   `stale_validation_reused`, and
@@ -258,7 +258,7 @@ The v1 telemetry schema is extended compatibly with action-aware hook facts:
   `changed_path_risk_surfaces`, `command_risk_surfaces`, and
   `closure_risk_surfaces` separate path matches, command matches, and
   closure-relevant engineering risk. Read-only command matches are retained in
-  telemetry for review but excluded from closure risk.
+  telemetry for review but excluded from closure risk and runtime route warnings.
 - `validation_command_detected` records that a validation-looking command was
   observed; it is separate from `validation_evidence_detected`, which requires a
   stop-closure outcome or artifact signal.

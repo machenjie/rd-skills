@@ -34,7 +34,13 @@ from changeforge_common import (
     repo_root,
     tool_name,
 )
-from changeforge_risk_surface_gate import WATCHED_TOOLS, _collect, _risk_findings
+from changeforge_risk_surface_gate import (
+    WATCHED_TOOLS,
+    _collect,
+    _command_risk_is_closure_relevant,
+    _merge_findings,
+    _risk_findings,
+)
 
 
 def main() -> int:
@@ -57,7 +63,12 @@ def main() -> int:
         repo = repo_root(cwd_from_event(event))
         paths = extract_changed_paths(event)
         command = extract_bash_command(event)
-        findings = _risk_findings(paths, command)
+        path_findings = _risk_findings(paths, "")
+        command_findings = _risk_findings([], command)
+        closure_command_findings = (
+            command_findings if _command_risk_is_closure_relevant(paths, command) else []
+        )
+        findings = _merge_findings(path_findings + closure_command_findings)
         debug_log(
             repo,
             f"pre-tool risk preview runtime={runtime} tool={tool_name(event)} findings={findings}",

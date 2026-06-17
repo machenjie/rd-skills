@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import shlex
+
 from changeforge_common import (
     compact_name,
     cwd_from_event,
@@ -167,24 +169,40 @@ VALIDATION_MARKERS = (
     "validate_",
     "scripts/validate",
     "eval-routing",
+    "eval-skill-professionalism",
+    "eval-professional-benchmarks",
+    "eval-agent-behavior",
+    "eval-professional-agent-samples",
+    "eval-pressure-behavior",
     "run-codegen-benchmarks",
     "validate-installation",
 )
 READ_ONLY_COMMAND_PROGRAMS = {
+    "awk",
+    "bat",
     "cat",
+    "fd",
     "find",
     "grep",
     "head",
+    "jq",
+    "less",
     "ls",
     "nl",
     "pwd",
     "rg",
+    "ripgrep",
     "sed",
     "stat",
     "tail",
     "tree",
     "wc",
 }
+READ_ONLY_GIT_SUBCOMMANDS = {"grep"}
+SHELL_WRAPPER_PROGRAMS = {"bash", "sh", "zsh"}
+COMMAND_SEPARATORS = {"|", "|&", "&&", "||", ";"}
+WRITE_REDIRECT_TOKENS = {">", ">>", "1>", "1>>", "2>", "2>>", "&>", "&>>"}
+FIND_MUTATING_TOKENS = {"-delete", "-exec", "-execdir"}
 
 
 def main() -> int:
@@ -247,23 +265,23 @@ def main() -> int:
             changed_paths=paths,
             command_program=summarize_command_program(command),
             hook_findings={
-                "risk_surfaces": [str(finding["name"]) for finding in findings],
+                "risk_surfaces": closure_surfaces,
                 "changed_path_risk_surfaces": path_surfaces,
                 "command_risk_surfaces": command_surfaces,
                 "closure_risk_surfaces": closure_surfaces,
             },
-            suggested_skills=_collect(findings, "skills"),
-            suggested_capabilities=_collect(findings, "capabilities"),
-            suggested_domain_extensions=_collect(findings, "domain_extensions"),
-            suggested_gates=_collect(findings, "gates"),
-            risk_surfaces=[str(finding["name"]) for finding in findings],
+            suggested_skills=_collect(closure_findings, "skills"),
+            suggested_capabilities=_collect(closure_findings, "capabilities"),
+            suggested_domain_extensions=_collect(closure_findings, "domain_extensions"),
+            suggested_gates=_collect(closure_findings, "gates"),
+            risk_surfaces=closure_surfaces,
             changed_path_risk_surfaces=path_surfaces,
             command_risk_surfaces=command_surfaces,
             closure_risk_surfaces=closure_surfaces,
             validation_command_detected=_looks_like_validation(command),
             validation_evidence_detected=False,
         )
-        if not findings or mode == "monitor":
+        if not closure_findings or mode == "monitor":
             return 0
         # First risk surface of the turn carries a route-preflight nudge so Codex,
         # which has no session-start hook, still gets an early routing reminder.
@@ -271,7 +289,7 @@ def main() -> int:
         preflight_needed = bool(closure_findings) and not bool(
             state.get("route_preflight_emitted")
         )
-        message = _warning_message(findings, include_route_preflight=preflight_needed)
+        message = _warning_message(closure_findings, include_route_preflight=preflight_needed)
         if preflight_needed:
             state["route_preflight_emitted"] = True
             save_state(repo, state)
@@ -327,8 +345,95 @@ def _command_risk_is_closure_relevant(paths: list[str], command: str) -> bool:
         return True
     if _looks_like_validation(command):
         return False
-    program = summarize_command_program(command).casefold()
-    return program not in READ_ONLY_COMMAND_PROGRAMS
+    return not _command_is_read_only(command)
+
+
+def _command_is_read_only(command: str, *, depth: int = 0) -> bool:
+    if depth > 3:
+        return False
+    tokens = _command_tokens(command)
+    if not tokens or _has_write_redirection(tokens):
+        return False
+    inner_command = _shell_wrapper_inner_command(tokens)
+    if inner_command is not None:
+        return _command_is_read_only(inner_command, depth=depth + 1)
+    segments = _command_segments(tokens)
+    return bool(segments) and all(_segment_is_read_only(segment) for segment in segments)
+
+
+def _command_tokens(command: str) -> list[str]:
+    try:
+        return shlex.split(command, posix=True)
+    except ValueError:
+        return command.strip().split()
+
+
+def _has_write_redirection(tokens: list[str]) -> bool:
+    return any(
+        token in WRITE_REDIRECT_TOKENS
+        or token.startswith((">", ">>", "1>", "1>>", "2>", "2>>", "&>", "&>>"))
+        for token in tokens
+    )
+
+
+def _shell_wrapper_inner_command(tokens: list[str]) -> str | None:
+    program, index = _program_token(tokens)
+    if program not in SHELL_WRAPPER_PROGRAMS:
+        return None
+    for offset, token in enumerate(tokens[index + 1 :], start=index + 1):
+        if token == "-c" and offset + 1 < len(tokens):
+            return tokens[offset + 1]
+        if token.startswith("-") and "c" in token[1:] and offset + 1 < len(tokens):
+            return tokens[offset + 1]
+    return None
+
+
+def _command_segments(tokens: list[str]) -> list[list[str]]:
+    segments: list[list[str]] = []
+    current: list[str] = []
+    for token in tokens:
+        if token in COMMAND_SEPARATORS:
+            if current:
+                segments.append(current)
+                current = []
+            continue
+        current.append(token)
+    if current:
+        segments.append(current)
+    return segments
+
+
+def _segment_is_read_only(tokens: list[str]) -> bool:
+    program, index = _program_token(tokens)
+    if not program:
+        return False
+    if program == "git":
+        return _git_subcommand(tokens[index + 1 :]) in READ_ONLY_GIT_SUBCOMMANDS
+    if program == "find" and any(token in FIND_MUTATING_TOKENS for token in tokens[index + 1 :]):
+        return False
+    return program in READ_ONLY_COMMAND_PROGRAMS
+
+
+def _program_token(tokens: list[str]) -> tuple[str, int]:
+    for index, token in enumerate(tokens):
+        if "=" in token and token.split("=", 1)[0].isidentifier():
+            continue
+        return token.casefold(), index
+    return "", -1
+
+
+def _git_subcommand(tokens: list[str]) -> str:
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        if token == "-C" and index + 1 < len(tokens):
+            index += 2
+            continue
+        if token.startswith("-"):
+            index += 1
+            continue
+        return token.casefold()
+    return ""
 
 
 def _collect(findings: list[dict[str, object]], key: str) -> list[str]:

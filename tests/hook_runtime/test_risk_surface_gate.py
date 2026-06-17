@@ -194,11 +194,13 @@ class RiskSurfaceGateTests(unittest.TestCase):
             state = json.loads(state_files[0].read_text(encoding="utf-8"))
             records = read_records(cache)
         self.assertEqual(result.returncode, 0)
-        self.assertIn("data-api", result.stdout)
+        self.assertEqual(result.stdout, "")
         self.assertNotIn("Route preflight", result.stdout)
         self.assertEqual(state["risk_surfaces"], [])
         self.assertEqual(state["closure_risk_surfaces"], [])
         self.assertEqual(state["command_risk_surfaces"], ["data-api"])
+        self.assertEqual(records[-1]["risk_surfaces"], [])
+        self.assertEqual(records[-1]["suggested_skills"], [])
         self.assertEqual(records[-1]["command_risk_surfaces"], ["data-api"])
         self.assertEqual(records[-1]["closure_risk_surfaces"], [])
 
@@ -231,12 +233,56 @@ class RiskSurfaceGateTests(unittest.TestCase):
             state = json.loads(state_files[0].read_text(encoding="utf-8"))
             records = read_records(cache)
         self.assertEqual(result.returncode, 0)
-        self.assertIn("data-api", result.stdout)
+        self.assertEqual(result.stdout, "")
         self.assertNotIn("Route preflight", result.stdout)
         self.assertEqual(state["closure_risk_surfaces"], [])
         self.assertTrue(state["validation_command_seen"])
         self.assertEqual(records[-1]["closure_risk_surfaces"], [])
         self.assertTrue(records[-1]["validation_command_detected"])
+
+    def test_read_only_wrappers_and_pipelines_do_not_emit_warning(self) -> None:
+        commands = [
+            'bash -lc "rg data-api src"',
+            'sh -c "sed -n 1,80p src/auth/session.py"',
+            'zsh -c "git grep data-api"',
+            "rg data-api src | head",
+            "jq .schema config.json",
+            "awk /schema/ README.md",
+            "bat src/auth/session.py",
+            "fd migration db",
+        ]
+        for command in commands:
+            with self.subTest(command=command):
+                event = {
+                    "runtime": "codex",
+                    "hookEventName": "PostToolUse",
+                    "toolName": "Bash",
+                    "toolInput": {"command": command},
+                }
+                result = run_risk(event)
+                self.assertEqual(result.returncode, 0)
+                self.assertEqual(result.stdout, "")
+
+    def test_mutating_commands_remain_closure_relevant(self) -> None:
+        commands = [
+            "python scripts/migrate_schema.py",
+            "kubectl apply -f deploy/kubernetes/rbac.yaml",
+            "helm upgrade app ./deploy/helm -f deploy/helm/values.yaml",
+            "go generate ./internal/auth",
+            'bash -lc "kubectl apply -f deploy/kubernetes/rbac.yaml"',
+        ]
+        for command in commands:
+            with self.subTest(command=command):
+                event = {
+                    "runtime": "codex",
+                    "hookEventName": "PostToolUse",
+                    "toolName": "Bash",
+                    "toolInput": {"command": command},
+                }
+                result = run_risk(event)
+                self.assertEqual(result.returncode, 0)
+                self.assertIn("ChangeForge Risk Surface Gate triggered", result.stdout)
+                self.assertIn("Route preflight", result.stdout)
 
 
 if __name__ == "__main__":

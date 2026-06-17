@@ -65,6 +65,11 @@ class ReviewAgentTelemetryTests(unittest.TestCase):
         sessions.mkdir(parents=True, exist_ok=True)
         (sessions / "2026-06-05.jsonl").write_text("\n".join(rows) + "\n", encoding="utf-8")
 
+    def _json_report(self, root: Path, repo_hash: str) -> dict:
+        report = list((root / repo_hash / "reports").glob("*-agent-telemetry-review.json"))
+        self.assertTrue(report)
+        return json.loads(report[0].read_text(encoding="utf-8"))
+
     def test_no_samples_found_returns_zero(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             result = _run("--telemetry-root", str(Path(tmp) / "telemetry"))
@@ -158,7 +163,7 @@ class ReviewAgentTelemetryTests(unittest.TestCase):
             self.assertNotIn('"type": "missed_router"', text)
 
     def test_detects_unverified_completion_claim(self) -> None:
-        # Completion language at stop with a code change but no validation
+        # Completion language at stop with an engineering surface but no validation
         # evidence must surface unverified_completion_claim.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "telemetry"
@@ -371,6 +376,35 @@ class ReviewAgentTelemetryTests(unittest.TestCase):
             self.assertEqual(data["summary"]["read_only_risk_surface_closures"], 1)
             self.assertNotIn("missed_router", data["summary"]["issue_counts"])
 
+    def test_legacy_jq_command_risk_surface_not_treated_as_code_change(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "telemetry"
+            repo_hash = "repohashaaaaaaaaaaaaaaaa"
+            self._seed(
+                root,
+                repo_hash,
+                [
+                    _record(
+                        hook_name="risk_surface_gate",
+                        tool_name="Bash",
+                        command_program="jq",
+                        risk_surfaces=["data-api"],
+                    ),
+                    _record(
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        risk_surfaces=["data-api"],
+                        route_manifest_detected=False,
+                    ),
+                ],
+            )
+            result = _run("--telemetry-root", str(root), "--format", "json")
+            self.assertEqual(result.returncode, 0)
+            data = self._json_report(root, repo_hash)
+            self.assertEqual(data["summary"]["engineering_surface_closures"], 0)
+            self.assertEqual(data["summary"]["read_only_risk_surface_closures"], 1)
+            self.assertNotIn("missed_router", data["summary"]["issue_counts"])
+
     def test_validation_command_without_outcome_is_distinct_from_no_command(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "telemetry"
@@ -404,6 +438,193 @@ class ReviewAgentTelemetryTests(unittest.TestCase):
             self.assertGreater(
                 data["summary"]["weighted_issue_scores"]["validation_command_without_outcome"],
                 0,
+            )
+
+    def test_mixed_legacy_and_split_telemetry_keeps_legacy_closure_risk(self) -> None:
+        # A legacy mutating command risk must survive a later split-format
+        # read-only command record in the same review window.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "telemetry"
+            repo_hash = "repohashaaaaaaaaaaaaaaaa"
+            self._seed(
+                root,
+                repo_hash,
+                [
+                    _record(
+                        hook_name="risk_surface_gate",
+                        tool_name="Bash",
+                        command_program="python",
+                        risk_surfaces=["cache"],
+                    ),
+                    _record(
+                        hook_name="risk_surface_gate",
+                        tool_name="Bash",
+                        command_program="sed",
+                        command_risk_surfaces=["data-api"],
+                        closure_risk_surfaces=[],
+                    ),
+                    _record(
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        route_manifest_detected=False,
+                    ),
+                ],
+            )
+            result = _run("--telemetry-root", str(root), "--format", "json")
+            self.assertEqual(result.returncode, 0)
+            data = self._json_report(root, repo_hash)
+            self.assertEqual(data["summary"]["engineering_surface_closures"], 1)
+            self.assertEqual(data["summary"]["risk_surface_closures"], 1)
+            self.assertIn("missed_router", data["summary"]["issue_counts"])
+            self.assertEqual(data["summary"]["read_only_risk_surface_closures"], 0)
+
+    def test_recency_default_half_life_weights_two_day_old_issue_at_half(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "telemetry"
+            repo_hash = "repohashaaaaaaaaaaaaaaaa"
+            self._seed(
+                root,
+                repo_hash,
+                [
+                    _record(
+                        session_id="old",
+                        timestamp_utc="2026-06-03T10:00:00+00:00",
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["README"],
+                    ),
+                    _record(
+                        session_id="new",
+                        timestamp_utc="2026-06-05T10:00:00+00:00",
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["README"],
+                    ),
+                ],
+            )
+            result = _run("--telemetry-root", str(root), "--format", "json")
+            self.assertEqual(result.returncode, 0)
+            data = self._json_report(root, repo_hash)
+            routers = {
+                suggestion["affected_session"]: suggestion
+                for suggestion in data["suggestions"]
+                if suggestion["type"] == "missed_router"
+            }
+            self.assertEqual(routers["old"]["recency_weight"], 0.5)
+            self.assertEqual(routers["old"]["priority_score"], 1.5)
+            self.assertEqual(routers["new"]["recency_weight"], 1.0)
+            self.assertEqual(routers["new"]["priority_score"], 3.0)
+            self.assertEqual(data["summary"]["weighted_issue_scores"]["missed_router"], 4.5)
+
+    def test_recency_half_life_zero_disables_decay(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "telemetry"
+            repo_hash = "repohashaaaaaaaaaaaaaaaa"
+            self._seed(
+                root,
+                repo_hash,
+                [
+                    _record(
+                        session_id="old",
+                        timestamp_utc="2026-06-01T10:00:00+00:00",
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["README"],
+                    ),
+                    _record(
+                        session_id="new",
+                        timestamp_utc="2026-06-05T10:00:00+00:00",
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["README"],
+                    ),
+                ],
+            )
+            result = _run(
+                "--telemetry-root",
+                str(root),
+                "--format",
+                "json",
+                "--recency-half-life-days",
+                "0",
+            )
+            self.assertEqual(result.returncode, 0)
+            data = self._json_report(root, repo_hash)
+            routers = [
+                suggestion
+                for suggestion in data["suggestions"]
+                if suggestion["type"] == "missed_router"
+            ]
+            self.assertEqual([suggestion["recency_weight"] for suggestion in routers], [1.0, 1.0])
+            self.assertEqual(data["summary"]["weighted_issue_scores"]["missed_router"], 6.0)
+
+    def test_recent_24h_boundary_is_inclusive(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "telemetry"
+            repo_hash = "repohashaaaaaaaaaaaaaaaa"
+            self._seed(
+                root,
+                repo_hash,
+                [
+                    _record(
+                        session_id="just_old",
+                        timestamp_utc="2026-06-04T09:59:59+00:00",
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["README"],
+                    ),
+                    _record(
+                        session_id="boundary",
+                        timestamp_utc="2026-06-04T10:00:00+00:00",
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["README"],
+                    ),
+                    _record(
+                        session_id="latest",
+                        timestamp_utc="2026-06-05T10:00:00+00:00",
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["README"],
+                    ),
+                ],
+            )
+            result = _run("--telemetry-root", str(root), "--format", "json")
+            self.assertEqual(result.returncode, 0)
+            data = self._json_report(root, repo_hash)
+            routers = {
+                suggestion["affected_session"]: suggestion
+                for suggestion in data["suggestions"]
+                if suggestion["type"] == "missed_router"
+            }
+            self.assertFalse(routers["just_old"]["recent_24h"])
+            self.assertTrue(routers["boundary"]["recent_24h"])
+            self.assertTrue(routers["latest"]["recent_24h"])
+            self.assertEqual(data["summary"]["recent_24h_issue_counts"]["missed_router"], 2)
+
+    def test_recency_weighted_markdown_order_is_stable_for_equal_scores(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "telemetry"
+            repo_hash = "repohashaaaaaaaaaaaaaaaa"
+            self._seed(
+                root,
+                repo_hash,
+                [
+                    _record(
+                        hook_name="stop_closure_gate",
+                        event_name="Stop",
+                        changed_paths=["README"],
+                    ),
+                ],
+            )
+            result = _run("--telemetry-root", str(root))
+            self.assertEqual(result.returncode, 0)
+            report = list((root / repo_hash / "reports").glob("*-agent-telemetry-review.md"))
+            self.assertTrue(report)
+            text = report[0].read_text(encoding="utf-8")
+            self.assertLess(
+                text.index("- missed_router: priority 3"),
+                text.index("- missed_validation_evidence: priority 3"),
             )
 
 

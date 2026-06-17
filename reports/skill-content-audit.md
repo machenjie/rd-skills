@@ -313,17 +313,17 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | Files | Excerpt |
 | --- | --- |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 18 | do not load every reference by default. treat references as targeted support selected by t |
 | 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 18 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
-| 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 18 | do not load every reference by default. treat references as targeted support selected by t |
+| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
+| 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 9 | these triggers are hidden-risk escalators, not ordinary checklist items. |
-| 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
 | 8 | **accepted exceptions** with owner / scope / expiration |
+| 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
 | 7 | **residual risk**: untested runtime behavior, owner, and next gate. |
 | 7 | **block/pass decision** with required conditions for approval. |
 
