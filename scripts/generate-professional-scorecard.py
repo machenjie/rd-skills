@@ -247,14 +247,14 @@ def _summary_status(name: str, value: dict[str, Any]) -> str:
         statuses = value.get("statuses", {})
         if statuses.get("fail") or statuses.get("missing"):
             return "fail"
-        if statuses.get("needs-review"):
+        if statuses.get("needs-review") or statuses.get("partial") or statuses.get("sample-grade"):
             return "partial"
         return "pass" if value.get("count") else "unknown"
     if name == "Professional skill coverage":
         statuses = value.get("statuses", {})
         if statuses.get("fail") or statuses.get("missing"):
             return "fail"
-        if statuses.get("needs-review"):
+        if statuses.get("needs-review") or statuses.get("partial") or statuses.get("sample-grade"):
             return "partial"
         return "pass" if value.get("count") == EXPECTED_PROFESSIONAL_SKILL_COUNT else "partial"
     return "partial"

@@ -4,8 +4,8 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 
 ## Status Summary
 
-- `pass`: 10
-- `partial`: 2
+- `pass`: 9
+- `partial`: 3
 - `fail`: 0
 - `unknown`: 0
 - `not_collected`: 2
@@ -38,6 +38,7 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 
 ### Medium
 
+- `partial` Professional skill coverage: Repair weak professional skill sections without keyword stuffing.
 - `partial` Foundation capability coverage: Improve selected capability evidence contracts and references.
 - `partial` Open-source readiness: Owner must select an OSI license, update package metadata, confirm contribution licensing, and configure private vulnerability reporting before open-source publication.
 

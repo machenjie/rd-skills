@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 import tempfile
 import unittest
@@ -95,6 +96,71 @@ class GeneratePublicBenchmarkSummaryTests(unittest.TestCase):
         self.assertEqual(marketplace["status"], "pass")
         self.assertEqual(marketplace["source"], "reports/professional-scorecard.json")
         self.assertIn("all profiles validate", marketplace["detail"])
+
+    def test_cli_scorecard_argument_controls_scorecard_source(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repo"
+            root.mkdir()
+            out = root / "summary.md"
+            json_out = root / "summary.json"
+            external_scorecard = Path(tmp) / "professional-scorecard.json"
+            (root / "pyproject.toml").write_text(
+                "[project]\nname = \"sample\"\nversion = \"0.1.0\"\n",
+                encoding="utf-8",
+            )
+            (root / "reports").mkdir()
+            (root / "reports" / "professional-scorecard.json").write_text(
+                "{\n"
+                "  \"dimensions\": [\n"
+                "    {\n"
+                "      \"name\": \"Marketplace index validation\",\n"
+                "      \"status\": \"pass\",\n"
+                "      \"detail\": \"committed snapshot\",\n"
+                "      \"verification_command\": \"python3 scripts/validate-marketplace-index.py --profile recommended\"\n"
+                "    }\n"
+                "  ]\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            external_scorecard.write_text(
+                "{\n"
+                "  \"dimensions\": [\n"
+                "    {\n"
+                "      \"name\": \"Marketplace index validation\",\n"
+                "      \"status\": \"fail\",\n"
+                "      \"detail\": \"current CI scorecard\",\n"
+                "      \"verification_command\": \"python3 scripts/validate-marketplace-index.py --profile dev\"\n"
+                "    }\n"
+                "  ]\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            old_root = module.ROOT
+            module.ROOT = root
+            try:
+                self.assertEqual(
+                    module.main(
+                        [
+                            "--scorecard",
+                            str(external_scorecard),
+                            "--out",
+                            str(out),
+                            "--json-out",
+                            str(json_out),
+                        ]
+                    ),
+                    0,
+                )
+            finally:
+                module.ROOT = old_root
+
+            # Regression: CI must be able to base public benchmark output on the freshly generated scorecard.
+            payload = json.loads(json_out.read_text(encoding="utf-8"))
+            marketplace = next(item for item in payload["items"] if item["name"] == "Marketplace index validation")
+            self.assertEqual(marketplace["status"], "fail")
+            self.assertEqual(marketplace["source"], str(external_scorecard))
+            self.assertIn("current CI scorecard", marketplace["detail"])
 
     def test_markdown_states_claim_boundary(self) -> None:
         module = _load_module()

@@ -81,7 +81,7 @@ python3 scripts/validate-marketplace-index.py --profile dev
 python3 scripts/validate-open-source-readiness.py
 python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
 python3 scripts/render-scorecard-dashboard.py --scorecard /tmp/professional-scorecard.json --out /tmp/scorecard-dashboard.md
-python3 scripts/generate-public-benchmark-summary.py --out /tmp/public-benchmark-summary.md --json-out /tmp/public-benchmark-summary.json
+python3 scripts/generate-public-benchmark-summary.py --scorecard /tmp/professional-scorecard.json --out /tmp/public-benchmark-summary.md --json-out /tmp/public-benchmark-summary.json
 python3 scripts/generate-examples-showcase.py --check --out docs/SHOWCASE.md
 python3 scripts/generate-marketplace-catalog.py --profile recommended --check --out docs/MARKETPLACE_CATALOG.md
 ```

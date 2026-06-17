@@ -77,6 +77,32 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
         )
         self.assertEqual(status, "partial")
 
+    def test_foundation_sample_grade_is_partial(self) -> None:
+        module = _load_module()
+        # Regression: public benchmark and scorecard must agree that sample-grade is partial evidence.
+        status = module._summary_status(
+            "Foundation capability coverage",
+            {"count": 40, "statuses": {"acceptable": 39, "sample-grade": 1}},
+        )
+        self.assertEqual(status, "partial")
+
+    def test_professional_sample_grade_is_partial(self) -> None:
+        module = _load_module()
+        # Regression: public benchmark and scorecard must agree that sample-grade is partial evidence.
+        status = module._summary_status(
+            "Professional skill coverage",
+            {"count": 19, "statuses": {"sample-grade": 19}},
+        )
+        self.assertEqual(status, "partial")
+
+    def test_professional_explicit_partial_status_is_partial(self) -> None:
+        module = _load_module()
+        status = module._summary_status(
+            "Professional skill coverage",
+            {"count": 19, "statuses": {"partial": 1, "acceptable": 18}},
+        )
+        self.assertEqual(status, "partial")
+
     def test_cli_writes_markdown_and_json(self) -> None:
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:

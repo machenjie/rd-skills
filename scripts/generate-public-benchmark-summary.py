@@ -60,6 +60,18 @@ def _read_json(path: Path) -> Any | None:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _scorecard_path_and_source(root: Path, scorecard_path: Path | None) -> tuple[Path, str]:
+    """Return the scorecard path to read and the source label to render."""
+    path = scorecard_path or Path("reports") / "professional-scorecard.json"
+    if not path.is_absolute():
+        path = root / path
+    try:
+        source = path.relative_to(root).as_posix()
+    except ValueError:
+        source = str(path)
+    return path, source
+
+
 def _project_version(root: Path) -> str:
     path = root / "pyproject.toml"
     if not path.exists():
@@ -190,15 +202,20 @@ def _profile_build_items(root: Path) -> list[EvidenceItem]:
     return items
 
 
-def _scorecard_dimension_item(root: Path, dimension_name: str, public_name: str) -> EvidenceItem:
+def _scorecard_dimension_item(
+    root: Path,
+    dimension_name: str,
+    public_name: str,
+    scorecard_path: Path | None = None,
+) -> EvidenceItem:
     """Return one public evidence item from the generated professional scorecard."""
-    path = root / "reports" / "professional-scorecard.json"
+    path, source = _scorecard_path_and_source(root, scorecard_path)
     scorecard = _read_json(path)
     if not isinstance(scorecard, dict):
         return EvidenceItem(
             public_name,
             "unknown",
-            "reports/professional-scorecard.json",
+            source,
             "scorecard report missing or invalid",
             SCORECARD_REFRESH_COMMAND,
         )
@@ -208,7 +225,7 @@ def _scorecard_dimension_item(root: Path, dimension_name: str, public_name: str)
         return EvidenceItem(
             public_name,
             "unknown",
-            "reports/professional-scorecard.json",
+            source,
             "scorecard dimensions missing or invalid",
             SCORECARD_REFRESH_COMMAND,
         )
@@ -222,7 +239,7 @@ def _scorecard_dimension_item(root: Path, dimension_name: str, public_name: str)
         return EvidenceItem(
             public_name,
             status,
-            "reports/professional-scorecard.json",
+            source,
             str(dimension.get("detail", "detail missing")),
             str(dimension.get("verification_command", "")) or SCORECARD_REFRESH_COMMAND,
         )
@@ -230,13 +247,13 @@ def _scorecard_dimension_item(root: Path, dimension_name: str, public_name: str)
     return EvidenceItem(
         public_name,
         "unknown",
-        "reports/professional-scorecard.json",
+        source,
         f"{dimension_name} dimension missing",
         SCORECARD_REFRESH_COMMAND,
     )
 
 
-def _additional_status_items(root: Path) -> list[EvidenceItem]:
+def _additional_status_items(root: Path, scorecard_path: Path | None = None) -> list[EvidenceItem]:
     return [
         EvidenceItem(
             "Installation validation",
@@ -245,17 +262,22 @@ def _additional_status_items(root: Path) -> list[EvidenceItem]:
             "validator does not emit a committed machine-readable report",
             "python3 scripts/validate-installation.py",
         ),
-        _scorecard_dimension_item(root, MARKETPLACE_DIMENSION, MARKETPLACE_DIMENSION),
+        _scorecard_dimension_item(root, MARKETPLACE_DIMENSION, MARKETPLACE_DIMENSION, scorecard_path),
     ]
 
 
-def generate_summary(root: Path, *, source_commit: str = COMMITTED_SOURCE_COMMIT) -> dict[str, Any]:
+def generate_summary(
+    root: Path,
+    *,
+    source_commit: str = COMMITTED_SOURCE_COMMIT,
+    scorecard_path: Path | None = None,
+) -> dict[str, Any]:
     """Generate the public benchmark summary payload."""
     items = [
         *_release_readiness_items(root),
         *_direct_report_items(root),
         *_profile_build_items(root),
-        *_additional_status_items(root),
+        *_additional_status_items(root, scorecard_path),
     ]
     status_counts = {status: 0 for status in STATUS_ORDER}
     for item in items:
@@ -344,10 +366,15 @@ def main(argv: list[str] | None = None) -> int:
         default=COMMITTED_SOURCE_COMMIT,
         help="Source commit metadata for release artifacts. Committed snapshots use a stable non-HEAD label.",
     )
+    parser.add_argument(
+        "--scorecard",
+        help="Professional scorecard JSON used for scorecard-derived dimensions. Defaults to reports/professional-scorecard.json.",
+    )
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
 
-    payload = generate_summary(ROOT, source_commit=args.source_commit)
+    scorecard_path = Path(args.scorecard) if args.scorecard else None
+    payload = generate_summary(ROOT, source_commit=args.source_commit, scorecard_path=scorecard_path)
     json_text = json.dumps(payload, indent=2, sort_keys=True) + "\n"
     md_text = render_markdown(payload)
     out = Path(args.out)
