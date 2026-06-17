@@ -51,6 +51,7 @@ HOOK_SCRIPT_FILENAMES = (
     "changeforge_hook_policy.py",
     "changeforge_state_reducer.py",
     "changeforge_action_classifier.py",
+    "changeforge_runtime_route_resolver.py",
     "changeforge_skill_index.py",
     "changeforge_session_bootstrap.py",
     "changeforge_user_prompt_route_reminder.py",

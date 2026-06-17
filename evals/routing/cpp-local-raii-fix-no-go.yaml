@@ -1,0 +1,25 @@
+---
+id: cpp-local-raii-fix-no-go
+description: C++ RAII bug fix must select C++ and low-level systems, not Go or other language capabilities.
+prompt: |
+  Fix src/native/socket_pool.cpp and include/socket_pool.hpp so file descriptors
+  are closed through RAII and sanitizer regression coverage catches leaks.
+expected:
+  complexity: L2
+  risk_level: high
+  expected_stage: bug-fix
+  expected_context_budget_mode: single-stage
+  expected_product_surface: low-level-systems
+  expected_language_surface: cpp
+  risk_triggers: []
+  skills: [reliability-observability-gate, quality-test-gate]
+  capabilities: [regression-testing, code-review, language-performance-safety, cpp-professional-usage]
+  domain_extensions: [low-level-systems-extension]
+  quality_gates: [implementation gate, reliability gate, test gate]
+forbidden:
+  skills: [backend-change-builder, frontend-change-builder]
+  capabilities: [go-professional-usage, python-professional-usage, typescript-professional-usage]
+  domain_extensions: [web3-product-extension, payment-trading-extension, ai-product-extension]
+  quality_gates: [delivery gate]
+notes: |
+  Native file extensions and RAII evidence select low-level C++ only.

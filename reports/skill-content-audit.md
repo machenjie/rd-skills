@@ -42,8 +42,8 @@ Suggested-action distribution:
 | `backend-change-builder` | professional-skill | 267 | 69 | body 267 lines exceeds review threshold 250 |
 | `security-privacy-gate` | professional-skill | 259 | 69 | body 259 lines exceeds review threshold 250 |
 | `delivery-release-gate` | professional-skill | 257 | 69 | body 257 lines exceeds review threshold 250 |
-| `change-forge-router` | professional-skill | 311 | 71 | body 311 lines exceeds review threshold 250 |
 | `ai-code-review-refactor` | professional-skill | 350 | 73 | body 350 lines exceeds review threshold 250 |
+| `change-forge-router` | professional-skill | 315 | 81 | body 315 lines exceeds review threshold 250 |
 | `implementation-structure-design` | foundation-capability | 244 | 82 | section 'Critical Details' is 83 lines (> 80) — reference candidate |
 | `task-dag-planner` | professional-skill | 237 | 82 | - |
 
@@ -86,7 +86,7 @@ Suggested-action distribution:
 | `domain-event-modeling` | foundation-capability | 208 | 26 | Industry Benchmarks (86) |
 | `form-validation-design` | foundation-capability | 203 | 26 | Industry Benchmarks (86) |
 | `ai-code-review-refactor` | professional-skill | 350 | 18 | - |
-| `change-forge-router` | professional-skill | 311 | 18 | - |
+| `change-forge-router` | professional-skill | 315 | 18 | - |
 | `quality-test-gate` | professional-skill | 302 | 18 | - |
 | `reliability-observability-gate` | professional-skill | 272 | 18 | - |
 | `backend-change-builder` | professional-skill | 267 | 18 | - |
@@ -119,7 +119,7 @@ Suggested-action distribution:
 | `domain-impact-modeler` | 202 | 3297 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-intake-compiler` | 200 | 3300 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `ai-code-review-refactor` | 350 | 5516 | 100 | 73 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `change-forge-router` | 311 | 5871 | 100 | 71 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `change-forge-router` | 315 | 6051 | 100 | 81 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `quality-test-gate` | 302 | 5378 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `reliability-observability-gate` | 272 | 4810 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `backend-change-builder` | 267 | 4739 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
@@ -136,7 +136,7 @@ Suggested-action distribution:
 - **`change-forge-router`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/change-forge-router/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 311 lines exceeds review threshold 250
+  - Finding: body 315 lines exceeds review threshold 250
 - **`quality-test-gate`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/quality-test-gate/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
@@ -312,18 +312,18 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 
 | Files | Excerpt |
 | --- | --- |
-| 19 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
-| 19 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 19 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 19 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 19 | do not load every reference by default. treat references as targeted support selected by t |
-| 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
+| 18 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
+| 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
+| 18 | do not load every reference by default. treat references as targeted support selected by t |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
+| 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 9 | these triggers are hidden-risk escalators, not ordinary checklist items. |
-| 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
 | 8 | **accepted exceptions** with owner / scope / expiration |
+| 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
 | 7 | **residual risk**: untested runtime behavior, owner, and next gate. |
 | 7 | **block/pass decision** with required conditions for approval. |
 

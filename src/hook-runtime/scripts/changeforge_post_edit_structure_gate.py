@@ -33,6 +33,7 @@ from changeforge_common import (
     tool_name,
     write_telemetry_event,
 )
+from changeforge_runtime_route_resolver import CODE_FILE_EXTENSIONS
 
 
 # Compacted (lowercase, alphanumeric-only) edit tool names across runtimes:
@@ -225,32 +226,7 @@ DEF_LINE_RE = re.compile(
     r"\b(def|func|function|fn)\s+\w+\s*\(|\b(public|private|protected)\b[^;{]*\w+\s*\("
 )
 
-CODE_EXTENSIONS = {
-    ".go",
-    ".ts",
-    ".tsx",
-    ".js",
-    ".jsx",
-    ".mts",
-    ".cts",
-    ".py",
-    ".java",
-    ".kt",
-    ".kts",
-    ".cpp",
-    ".cc",
-    ".cxx",
-    ".hpp",
-    ".hh",
-    ".h",
-    ".rs",
-    ".c",
-    ".cs",
-    ".rb",
-    ".php",
-    ".scala",
-    ".swift",
-}
+CODE_EXTENSIONS = CODE_FILE_EXTENSIONS
 IGNORABLE_SUFFIXES = {
     ".pyc",
     ".pyo",

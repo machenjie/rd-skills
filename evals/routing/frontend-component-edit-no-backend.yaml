@@ -1,0 +1,24 @@
+---
+id: frontend-component-edit-no-backend
+description: Frontend TSX component edit must not load backend or delivery skills.
+prompt: |
+  Update src/components/ProfileCard.tsx to fix the disabled save button state.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  expected_product_surface: frontend-product
+  expected_language_surface: typescript
+  risk_triggers: []
+  skills: [frontend-change-builder, quality-test-gate]
+  capabilities: [implementation-structure-design, page-component-decomposition, typescript-professional-usage]
+  domain_extensions: []
+  quality_gates: [implementation gate, test gate]
+forbidden:
+  skills: [backend-change-builder, data-api-contract-changer, delivery-release-gate, security-privacy-gate]
+  capabilities: [release-rollback, data-migration-design]
+  domain_extensions: [web3-product-extension, payment-trading-extension, ai-product-extension]
+  quality_gates: [security gate, delivery gate, API/data gate]
+notes: |
+  TSX path evidence selects frontend and TypeScript only.

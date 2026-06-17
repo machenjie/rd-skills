@@ -604,7 +604,7 @@ original reminder gates.
 
 | Lifecycle area | Scripts | Purpose |
 | --- | --- | --- |
-| Action classification | `changeforge_action_classifier.py`, `changeforge_skill_index.py` | Classify stage and select owner/reviewer skill context. |
+| Action classification | `changeforge_action_classifier.py`, `changeforge_runtime_route_resolver.py`, `changeforge_skill_index.py` | Classify action, resolve canonical stage/surfaces, and select minimum owner/reviewer skill context without static backend defaults. |
 | Runtime output | `changeforge_runtime_adapters.py` | Keep Codex/Claude hook-specific context, Copilot top-level context, and generic text output separate. |
 | Professional context | `changeforge_professional_injector.py` | Emit compact active skill context for engineering stages only and record selected gates/references without marking a route manifest present. |
 | Read/review evidence | `changeforge_read_context_gate.py`, `changeforge_review_gate.py` | Preserve read/search, MCP/GitHub/Fetch/PR diff evidence, and separate review intent from artifact evidence. |

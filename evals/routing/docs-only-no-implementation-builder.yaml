@@ -1,0 +1,24 @@
+---
+id: docs-only-no-implementation-builder
+description: Docs-only handoff must not select product implementation builders.
+prompt: |
+  Update docs/runbooks/cache-warmup.md to describe the manual validation steps.
+expected:
+  complexity: L2
+  risk_level: low
+  expected_stage: documentation-handoff
+  expected_context_budget_mode: single-stage
+  expected_product_surface: documentation-only
+  expected_language_surface: none
+  risk_triggers: []
+  skills: [change-documentation-gate]
+  capabilities: [documentation-generation]
+  domain_extensions: []
+  quality_gates: [documentation gate]
+forbidden:
+  skills: [backend-change-builder, frontend-change-builder, data-api-contract-changer]
+  capabilities: [implementation-structure-design, go-professional-usage, typescript-professional-usage, python-professional-usage]
+  domain_extensions: [ai-product-extension, web3-product-extension, payment-trading-extension]
+  quality_gates: [implementation gate, security gate, delivery gate]
+notes: |
+  Markdown docs-only path selects documentation and no language runtime.

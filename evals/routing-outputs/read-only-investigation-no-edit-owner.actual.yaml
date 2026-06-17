@@ -1,0 +1,32 @@
+---
+case_id: read-only-investigation-no-edit-owner
+actual:
+  complexity: L2
+  risk_level: low
+  skills: [change-impact-analyzer, change-intake-compiler]
+  capabilities: [requirement-clarification]
+  domain_extensions: []
+  quality_gates: [requirement gate]
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/01-requirement-clarification.md
+  stage_route_manifest:
+    schema_version: 1
+    current_stage: requirement-intake
+    next_stage: implementation-planning
+    product_surface: none
+    language_surface: none
+    selected_skills: [change-impact-analyzer, change-intake-compiler]
+    selected_capabilities: [requirement-clarification]
+    selected_domain_extensions: []
+    skipped_capabilities:
+      - capability: implementation-structure-design
+        reason: user explicitly requested read-only investigation
+    context_budget_mode: single-stage
+    context_budget_rationale: L2 read-only investigation stays in intake/impact context
+    required_evidence: [clarified scope, explicit non-goals, testable acceptance signal, clarification status before action]
+    required_quality_gates: [requirement gate]
+    handoff_target: implementation-planning

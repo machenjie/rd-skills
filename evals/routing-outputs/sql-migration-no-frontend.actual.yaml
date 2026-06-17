@@ -1,0 +1,38 @@
+---
+case_id: sql-migration-no-frontend
+actual:
+  complexity: L2
+  risk_level: high
+  skills: [data-api-contract-changer, data-middleware-change-builder, delivery-release-gate, quality-test-gate]
+  capabilities: [data-migration-design, transaction-consistency, version-compatibility, release-rollback, test-strategy, language-testing-strategy, sql-professional-usage]
+  domain_extensions: []
+  quality_gates: [API/data gate, delivery gate, test gate]
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/30-data-migration-design.md
+    - references/capabilities/48-transaction-consistency.md
+    - references/capabilities/29-version-compatibility.md
+    - references/capabilities/75-release-rollback.md
+    - references/capabilities/58-test-strategy.md
+    - references/capabilities/86-language-testing-strategy.md
+    - references/capabilities/96-sql-professional-usage.md
+  stage_route_manifest:
+    schema_version: 1
+    current_stage: testing
+    next_stage: code-review
+    product_surface: database-migration
+    language_surface: sql
+    selected_skills: [data-api-contract-changer, data-middleware-change-builder, delivery-release-gate, quality-test-gate]
+    selected_capabilities: [data-migration-design, transaction-consistency, release-rollback, test-strategy, language-testing-strategy, sql-professional-usage]
+    selected_domain_extensions: []
+    skipped_capabilities:
+      - capability: typescript-professional-usage
+        reason: migration file is SQL and no frontend path is affected
+    context_budget_mode: single-stage
+    context_budget_rationale: L2 SQL migration validation selects data/API and SQL testing only
+    required_evidence: [risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected]
+    required_quality_gates: [API/data gate, delivery gate, test gate]
+    handoff_target: code-review

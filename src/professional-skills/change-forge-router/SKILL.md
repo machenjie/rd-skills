@@ -240,12 +240,16 @@ Route by evidence in the request:
 - **Confusing hidden-risk triggers with checklists** inflates routes without improving professional evidence.
 
 ## Reference Loading Policy
-Do not load every reference by default. Treat references as targeted support selected by the router and the task risk.
+Do not load every reference by default. Treat references as targeted support selected by the router and the task risk. `required_references` is an allow-list, not a convenience list.
 
-- L1 changes: do not read references unless the task touches security, data, auth, external integration, performance, release, or irreversible behavior.
-- L2 changes: read `references/capabilities/index.md` and only capability files explicitly selected by `change-forge-router`.
-- L3 changes: read all selected capability references and `references/checklist.md` when present.
-- L4/L5 changes: read all selected capability references, `references/checklist.md` when present, and domain extension references when selected.
+- L1 changes: read only router self-use references needed to classify the route plus selected capability references. Do not read unrelated professional skill, domain extension, language, or checklist references.
+- L2 changes: read the selected owner and reviewer skill bodies, `references/capabilities/index.md` when needed to locate compiled capability files, the necessary mode reference for the current route, and only capability files explicitly selected by `change-forge-router`.
+- L3 changes: read all selected capability references and the relevant impact/API/security/test/release checklist sections when those surfaces are selected; list adjacent skipped references with a reason.
+- L4/L5 changes: read the full relevant selected path, including selected owner/reviewer skill references, selected capability references, selected domain extension references, and `references/checklist.md` when present. Still do not read unrelated language or domain references.
+- Runtime profile boundary: `recommended` loads selected professional skills with compiled selected capability references; `full` may additionally load selected domain extensions; `dev` may inspect source registries and generated references for authoring validation, but only for selected route surfaces.
+- `required_references` must contain only router self-use references, selected capability references, selected owner/reviewer mode references, selected domain extension references, and selected checklist references required by the route.
+- `skipped_references` or the skipped rationale must explain why nearby capabilities, language references, domain extensions, professional skills, and quality gates were not loaded.
+- Final handoff must restate selected references, skipped references or skipped rationale, validation evidence, residual risk, and any reference loading limit that remains.
 - Selected capability reference path format: `references/capabilities/<capability-id>-<capability-name>.md`.
 
 ## Output Contract

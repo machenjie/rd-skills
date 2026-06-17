@@ -122,9 +122,11 @@ The hook runtime now adds an action-aware layer around the original reminders:
   `compaction`, or `unknown`) and detects compact source/reason/matcher names.
   Pure questions, explanations, translations, and no-action lifecycle events do
   not receive professional injection and do not create Stop closure surface.
-- `changeforge_skill_index.py` maps that stage and surface set to an owner
-  professional skill, a separate reviewer skill, selected capability names,
-  reference paths, and quality gates.
+- `changeforge_runtime_route_resolver.py` maps the action, canonical stage,
+  product surfaces, language surfaces, risk surfaces, and domain extensions to
+  the minimum owner/reviewer skill set, selected capabilities, reference paths,
+  skipped rationale, and quality gates. `changeforge_skill_index.py` remains a
+  compatibility wrapper and does not contain static edit/repair owner routing.
 - `changeforge_runtime_adapters.py` isolates output protocol differences across
   Codex, Claude, Copilot, and generic text runtimes.
 - `changeforge_professional_injector.py`, read/review/permission/compaction,

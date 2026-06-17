@@ -15,6 +15,7 @@ from changeforge_common import (
     merge_state,
     read_event,
     repo_root,
+    reset_state_for_new_prompt,
     session_id_from_event,
     write_telemetry_event,
 )
@@ -38,6 +39,7 @@ def main() -> int:
         return 0
     hook_event = event_name(event) or "PostToolUse"
     repo = repo_root(cwd_from_event(event))
+    reset_state_for_new_prompt(repo, runtime, event)
     state = load_state(repo)
     classification = classify_event(event)
     if not classification.get("should_inject", True):
@@ -48,6 +50,7 @@ def main() -> int:
         surfaces=classification["surfaces"],
         event_name=hook_event,
         state=state,
+        classification=classification,
     )
     contract_text = _contract_text(runtime)
     message = "\n".join(context_lines(context))
@@ -59,11 +62,13 @@ def main() -> int:
         runtime,
         professional_injections=[f"{hook_event}:{context['stage']}"],
         prompt_signals=classification.get("prompt_signals", []),
-        suggested_skills=[context["owner_skill"], context["reviewer_skill"]],
+        suggested_skills=context.get("selected_skills", []),
         suggested_capabilities=context.get("selected_capabilities", []),
+        suggested_domain_extensions=context.get("selected_domain_extensions", []),
         suggested_gates=context.get("required_quality_gates", []),
         reference_loads=context.get("required_references", []),
-        turn_stage=context["stage"],
+        risk_surfaces=context.get("risk_surfaces", []),
+        turn_stage=context["current_stage"],
         active_skill_context=context,
         owner_skill=context["owner_skill"],
         reviewer_skill=context["reviewer_skill"],
@@ -78,11 +83,12 @@ def main() -> int:
         session_id=session_id_from_event(event),
         cwd=cwd_from_event(event),
         tool_name=classification.get("tool", ""),
-        risk_surfaces=classification.get("surfaces", []),
-        suggested_skills=[context["owner_skill"], context["reviewer_skill"]],
+        risk_surfaces=context.get("risk_surfaces", []),
+        suggested_skills=context.get("selected_skills", []),
         suggested_capabilities=context.get("selected_capabilities", []),
         suggested_gates=context.get("required_quality_gates", []),
-        turn_stage=context["stage"],
+        suggested_domain_extensions=context.get("selected_domain_extensions", []),
+        turn_stage=context["current_stage"],
         owner_skill=context["owner_skill"],
         reviewer_skill=context["reviewer_skill"],
         professional_contract_seen=bool(contract_text),

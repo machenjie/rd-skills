@@ -1,0 +1,35 @@
+---
+case_id: go-channel-fix-no-cpp
+actual:
+  complexity: L2
+  risk_level: medium
+  skills: [backend-change-builder, quality-test-gate]
+  capabilities: [implementation-structure-design, regression-testing, code-review, go-professional-usage]
+  domain_extensions: []
+  quality_gates: [implementation gate, test gate]
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/101-implementation-structure-design.md
+    - references/capabilities/64-regression-testing.md
+    - references/capabilities/78-code-review.md
+    - references/capabilities/89-go-professional-usage.md
+  stage_route_manifest:
+    schema_version: 1
+    current_stage: bug-fix
+    next_stage: testing
+    product_surface: backend-product
+    language_surface: go
+    selected_skills: [backend-change-builder, quality-test-gate]
+    selected_capabilities: [regression-testing, code-review, go-professional-usage]
+    selected_domain_extensions: []
+    skipped_capabilities:
+      - capability: cpp-professional-usage
+        reason: no C/C++ extension or native binding signal
+    context_budget_mode: single-stage
+    context_budget_rationale: L2 Go worker fix needs backend owner and Go capability only
+    required_evidence: [minimal diff, deleted or rejected complexity when selected, same-pattern scan record, regression test, blast-radius note]
+    required_quality_gates: [implementation gate, test gate]
+    handoff_target: testing

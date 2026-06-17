@@ -476,35 +476,43 @@ product_surfaces:
 language_surfaces:
   - language: go
     capability: go-professional-usage
-    stages: [coding, bug-fix, code-review, refactoring, testing]
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.go]
     signals: [go, golang, goroutine, context, channel]
   - language: java-jvm
     capability: java-jvm-professional-usage
-    stages: [coding, bug-fix, code-review, refactoring, testing]
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.java, .kt, .kts]
     signals: [java, jvm, spring, executor, thread]
   - language: typescript
     capability: typescript-professional-usage
-    stages: [coding, bug-fix, code-review, refactoring, testing]
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.ts, .tsx, .js, .jsx, .mts, .cts]
     signals: [typescript, ts, node, react, promise]
   - language: python
     capability: python-professional-usage
-    stages: [coding, bug-fix, code-review, refactoring, testing]
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.py]
     signals: [python, py, asyncio, pytest, type hints]
   - language: rust
     capability: rust-professional-usage
-    stages: [coding, bug-fix, code-review, refactoring, testing]
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.rs]
     signals: [rust, borrow, lifetime, unsafe, cargo]
   - language: cpp
     capability: cpp-professional-usage
-    stages: [coding, bug-fix, code-review, refactoring, testing]
-    signals: [c++, cpp, c, raii, abi]
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.c, .cc, .cpp, .cxx, .h, .hh, .hpp, .ipp, .tpp]
+    signals: [c++, cpp, C ABI, native C, native C++, raii, abi, ffi, sanitizer]
   - language: shell
     capability: shell-cli-professional-usage
-    stages: [coding, bug-fix, code-review, refactoring, testing]
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.sh, .bash, .zsh]
     signals: [shell, bash, sh, zsh, cli]
   - language: sql
     capability: sql-professional-usage
-    stages: [coding, bug-fix, code-review, refactoring, testing]
+    stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
+    file_extensions: [.sql]
     signals: [sql, query, index, transaction, migration]
 
 stage_transitions:

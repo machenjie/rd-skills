@@ -1,0 +1,32 @@
+---
+case_id: docs-only-no-implementation-builder
+actual:
+  complexity: L2
+  risk_level: low
+  skills: [change-documentation-gate]
+  capabilities: [documentation-generation]
+  domain_extensions: []
+  quality_gates: [documentation gate]
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/80-documentation-generation.md
+  stage_route_manifest:
+    schema_version: 1
+    current_stage: documentation-handoff
+    next_stage: closed
+    product_surface: documentation-only
+    language_surface: none
+    selected_skills: [change-documentation-gate]
+    selected_capabilities: [documentation-generation]
+    selected_domain_extensions: []
+    skipped_capabilities:
+      - capability: implementation-structure-design
+        reason: documentation-only change has no code placement decision
+    context_budget_mode: single-stage
+    context_budget_rationale: L2 docs-only handoff loads documentation reference only
+    required_evidence: [validated boundary, residual risk, updated docs list, handoff target]
+    required_quality_gates: [documentation gate]
+    handoff_target: closed

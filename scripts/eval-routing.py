@@ -363,6 +363,14 @@ def _as_string_list(value: Any) -> list[str] | None:
     return out
 
 
+def _as_expected_surface_list(value: Any) -> list[str] | None:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value.strip()] if value.strip() else None
+    return _as_string_list(value)
+
+
 def _validate_case(  # noqa: C901 - branchy validator by design
     path: Path,
     data: Any,
@@ -448,6 +456,39 @@ def _validate_case(  # noqa: C901 - branchy validator by design
             errors.append(
                 f"{rel}: expected.expected_stage must be one of "
                 f"{sorted(allowed_stages)}, found '{expected_stage.strip()}'"
+            )
+
+    stage_model = _load_stage_model()
+    allowed_product_surfaces = set(_stage_model_surfaces(stage_model)) | {"none"}
+    expected_product_surfaces = _as_expected_surface_list(
+        expected.get("expected_product_surface")
+    )
+    if expected_product_surfaces is None:
+        errors.append(
+            f"{rel}: expected.expected_product_surface must be a string or list of strings"
+        )
+        expected_product_surfaces = []
+    for surface in expected_product_surfaces:
+        if surface not in allowed_product_surfaces:
+            errors.append(
+                f"{rel}: expected.expected_product_surface must be one of "
+                f"{sorted(allowed_product_surfaces)}, found '{surface}'"
+            )
+
+    allowed_language_surfaces = set(_stage_model_languages(stage_model)) | {"none"}
+    expected_language_surfaces = _as_expected_surface_list(
+        expected.get("expected_language_surface")
+    )
+    if expected_language_surfaces is None:
+        errors.append(
+            f"{rel}: expected.expected_language_surface must be a string or list of strings"
+        )
+        expected_language_surfaces = []
+    for language in expected_language_surfaces:
+        if language not in allowed_language_surfaces:
+            errors.append(
+                f"{rel}: expected.expected_language_surface must be one of "
+                f"{sorted(allowed_language_surfaces)}, found '{language}'"
             )
 
     expected_budget = expected.get("expected_context_budget_mode")
@@ -1403,6 +1444,62 @@ def _stage_allowed_capabilities(
     return allowed
 
 
+def _language_capability_by_surface(stage_model: dict[str, Any]) -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    for language, entry in _stage_model_languages(stage_model).items():
+        capability = entry.get("capability")
+        if isinstance(capability, str) and capability.strip():
+            mapping[language] = capability.strip()
+    return mapping
+
+
+def _expected_surface_values(expected: dict[str, Any], field: str) -> set[str]:
+    values = _as_expected_surface_list(expected.get(field))
+    return set(values or [])
+
+
+def _enforce_actual_language_domain_exclusion(
+    rel: str,
+    expected: dict[str, Any],
+    actual_sets: dict[str, list[str]],
+    stage_model: dict[str, Any],
+    errors: list[str],
+) -> None:
+    language_capabilities = set(_language_capability_by_surface(stage_model).values())
+    actual_language_capabilities = set(actual_sets["capabilities"]) & language_capabilities
+    expected_language_surfaces = _expected_surface_values(expected, "expected_language_surface")
+    capability_by_language = _language_capability_by_surface(stage_model)
+    if expected_language_surfaces:
+        allowed_language_capabilities = {
+            capability_by_language[language]
+            for language in expected_language_surfaces
+            if language in capability_by_language
+        }
+    else:
+        allowed_language_capabilities = (
+            set(_as_string_list(expected.get("capabilities")) or [])
+            & language_capabilities
+        )
+    extra_language_capabilities = sorted(
+        actual_language_capabilities - allowed_language_capabilities
+    )
+    if extra_language_capabilities:
+        errors.append(
+            f"{rel}: actual.capabilities contains unselected language capability "
+            f"{extra_language_capabilities}"
+        )
+
+    expected_extensions = set(_as_string_list(expected.get("domain_extensions")) or [])
+    if expected.get("allow_additional_domain_extensions") is True:
+        return
+    extra_extensions = sorted(set(actual_sets["domain_extensions"]) - expected_extensions)
+    if extra_extensions:
+        errors.append(
+            f"{rel}: actual.domain_extensions contains unselected domain extension "
+            f"{extra_extensions}"
+        )
+
+
 def _enforce_actual_stage_route(  # noqa: C901 - manifest schema is intentionally explicit.
     rel: str,
     expected: dict[str, Any],
@@ -1483,6 +1580,12 @@ def _enforce_actual_stage_route(  # noqa: C901 - manifest schema is intentionall
                 )
     else:
         product_surface = ""
+    expected_product_surfaces = _expected_surface_values(expected, "expected_product_surface")
+    if expected_product_surfaces and product_surface not in expected_product_surfaces:
+        errors.append(
+            f"{rel}: changeforge_stage_route.product_surface must be one of "
+            f"{sorted(expected_product_surfaces)}, found {product_surface!r}"
+        )
 
     language_surface = manifest.get("language_surface")
     if isinstance(language_surface, str) and language_surface.strip():
@@ -1502,6 +1605,12 @@ def _enforce_actual_stage_route(  # noqa: C901 - manifest schema is intentionall
                 )
     else:
         language_surface = ""
+    expected_language_surfaces = _expected_surface_values(expected, "expected_language_surface")
+    if expected_language_surfaces and language_surface not in expected_language_surfaces:
+        errors.append(
+            f"{rel}: changeforge_stage_route.language_surface must be one of "
+            f"{sorted(expected_language_surfaces)}, found {language_surface!r}"
+        )
 
     actual_budget = manifest.get("context_budget_mode")
     expected_budget = _expected_context_budget_mode(expected)
@@ -1800,6 +1909,13 @@ def _compare_candidate_output(  # noqa: C901 - schema comparison is branchy.
         risk_rules,
     )
     _enforce_l4_l5_actual_gate_coverage(rel, expected, actual_sets, errors)
+    _enforce_actual_language_domain_exclusion(
+        rel,
+        expected,
+        actual_sets,
+        stage_model,
+        errors,
+    )
     _enforce_actual_stage_route(
         rel,
         expected,

@@ -152,14 +152,14 @@ concerns. The full per-stage checklist lives in the language capability body, no
 
 | Language | Capability | Launch stages | Main professional concerns |
 | --- | --- | --- | --- |
-| Go | `go-professional-usage` | coding, bug-fix, code-review, refactoring, testing | context propagation, goroutine lifecycle, error wrapping, small interfaces, package boundaries, table-driven tests, race detector |
-| Java/JVM | `java-jvm-professional-usage` | coding, bug-fix, code-review, refactoring, testing | null safety, immutability, exception model, thread/executor lifecycle, equals/hashCode, JVM memory, dependency hygiene |
-| TypeScript | `typescript-professional-usage` | coding, bug-fix, code-review, refactoring, testing | strict types, `unknown` over `any`, runtime validation, async error handling, state modeling, bundle impact |
-| Python | `python-professional-usage` | coding, bug-fix, code-review, refactoring, testing | type hints, runtime validation, packaging, async/sync boundary, context managers, mutable defaults |
-| Rust | `rust-professional-usage` | coding, bug-fix, code-review, refactoring, testing | ownership/borrowing, error model, `unsafe` boundary, trait design, async runtime, lifetime correctness |
-| C/C++ | `cpp-professional-usage` | coding, bug-fix, code-review, refactoring, testing | memory ownership, RAII, UB, bounds, concurrency, ABI, resource cleanup |
-| Shell | `shell-cli-professional-usage` | coding, bug-fix, code-review, refactoring, testing | quoting, `set -euo pipefail`, injection, portability, exit codes, idempotency |
-| SQL | `sql-professional-usage` | coding, bug-fix, code-review, refactoring, testing | parameterization, index usage, transaction isolation, migration safety, set-based logic |
+| Go | `go-professional-usage` | implementation-planning, coding, bug-fix, code-review, refactoring, testing | context propagation, goroutine lifecycle, error wrapping, small interfaces, package boundaries, table-driven tests, race detector |
+| Java/JVM | `java-jvm-professional-usage` | implementation-planning, coding, bug-fix, code-review, refactoring, testing | null safety, immutability, exception model, thread/executor lifecycle, equals/hashCode, JVM memory, dependency hygiene |
+| TypeScript | `typescript-professional-usage` | implementation-planning, coding, bug-fix, code-review, refactoring, testing | strict types, `unknown` over `any`, runtime validation, async error handling, state modeling, bundle impact |
+| Python | `python-professional-usage` | implementation-planning, coding, bug-fix, code-review, refactoring, testing | type hints, runtime validation, packaging, async/sync boundary, context managers, mutable defaults |
+| Rust | `rust-professional-usage` | implementation-planning, coding, bug-fix, code-review, refactoring, testing | ownership/borrowing, error model, `unsafe` boundary, trait design, async runtime, lifetime correctness |
+| C/C++ | `cpp-professional-usage` | implementation-planning, coding, bug-fix, code-review, refactoring, testing | memory ownership, RAII, UB, bounds, concurrency, ABI, resource cleanup |
+| Shell | `shell-cli-professional-usage` | implementation-planning, coding, bug-fix, code-review, refactoring, testing | quoting, `set -euo pipefail`, injection, portability, exit codes, idempotency |
+| SQL | `sql-professional-usage` | implementation-planning, coding, bug-fix, code-review, refactoring, testing | parameterization, index usage, transaction isolation, migration safety, set-based logic |
 
 ## 4. Launch Discipline
 

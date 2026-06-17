@@ -1,8 +1,8 @@
 # Professional Routing Coverage
 
-- Generated: 2026-06-16T13:20:11.284058+00:00
+- Generated: 2026-06-17T00:47:14.551001+00:00
 - Status: pass
-- Routing cases checked: 106
+- Routing cases checked: 118
 - Benchmark cases checked: 30
 - Hidden risks checked: 91
 - Strongly covered: 87
@@ -61,7 +61,7 @@
 | `evals/professional-benchmarks/language/go-goroutine-without-cancel-or-error-propagation` | covered | Go goroutine without cancel or error propagation | go-backend-goroutine-leak-bugfix |
 | `evals/professional-benchmarks/language/go-goroutine-without-cancel-or-error-propagation` | covered | goroutine leak from missing cancellation | go-backend-goroutine-leak-bugfix |
 | `evals/professional-benchmarks/language/go-goroutine-without-cancel-or-error-propagation` | covered | error propagation lost in goroutine | go-backend-goroutine-leak-bugfix |
-| `evals/professional-benchmarks/language/idiom-mismatch-copied-from-other-language` | covered | idiom mismatch copied from other language | implementation-naming-taxonomy |
+| `evals/professional-benchmarks/language/idiom-mismatch-copied-from-other-language` | covered | idiom mismatch copied from other language | cpp-local-raii-fix-no-go, implementation-naming-taxonomy |
 | `evals/professional-benchmarks/language/idiom-mismatch-copied-from-other-language` | covered | invented abstraction ignores repository convention | implementation-naming-taxonomy |
 | `evals/professional-benchmarks/language/idiom-mismatch-copied-from-other-language` | covered | framework-incorrect naming or file layout | implementation-naming-taxonomy |
 | `evals/professional-benchmarks/language/java-executor-without-shutdown-or-bounds` | covered | Java executor without shutdown or bounds | java-executor-lifecycle-hidden-risk |

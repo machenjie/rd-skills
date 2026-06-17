@@ -1,0 +1,34 @@
+---
+case_id: frontend-component-edit-no-backend
+actual:
+  complexity: L2
+  risk_level: medium
+  skills: [frontend-change-builder, quality-test-gate]
+  capabilities: [implementation-structure-design, page-component-decomposition, typescript-professional-usage]
+  domain_extensions: []
+  quality_gates: [implementation gate, test gate]
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/101-implementation-structure-design.md
+    - references/capabilities/31-page-component-decomposition.md
+    - references/capabilities/91-typescript-professional-usage.md
+  stage_route_manifest:
+    schema_version: 1
+    current_stage: implementation-planning
+    next_stage: coding
+    product_surface: frontend-product
+    language_surface: typescript
+    selected_skills: [frontend-change-builder, quality-test-gate]
+    selected_capabilities: [implementation-structure-design, page-component-decomposition, typescript-professional-usage]
+    selected_domain_extensions: []
+    skipped_capabilities:
+      - capability: backend-change-builder
+        reason: no backend path, service, controller, or server evidence
+    context_budget_mode: single-stage
+    context_budget_rationale: L2 TSX component edit needs frontend planning and TypeScript only
+    required_evidence: [target boundaries inspected before plan, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal]
+    required_quality_gates: [implementation gate, test gate]
+    handoff_target: coding

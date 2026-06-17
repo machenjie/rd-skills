@@ -82,7 +82,8 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0)
         self.assertIn("ChangeForge Professional Skill Injection", result.stdout)
-        self.assertEqual(state["turn_stage"], "review")
+        self.assertEqual(state["turn_stage"], "code-review")
+        self.assertEqual(state["active_skill_context"]["action_stage"], "review")
         self.assertEqual(state["owner_skill"], "ai-code-review-refactor")
         self.assertNotIn("auth token handling", json.dumps(state))
         self.assertIn("security_or_permission", state["prompt_signals"])
@@ -134,7 +135,8 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0)
         self.assertIn("ChangeForge Professional Skill Injection", result.stdout)
-        self.assertEqual(state["turn_stage"], "review")
+        self.assertEqual(state["turn_stage"], "code-review")
+        self.assertEqual(state["active_skill_context"]["action_stage"], "review")
         self.assertIn("review_intent", state["prompt_signals"])
 
     def test_user_prompt_repair_followup_chinese_detected(self) -> None:
@@ -152,7 +154,8 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0)
         self.assertIn("ChangeForge Professional Skill Injection", result.stdout)
-        self.assertEqual(state["turn_stage"], "repair")
+        self.assertEqual(state["turn_stage"], "debugging-diagnosis")
+        self.assertEqual(state["active_skill_context"]["action_stage"], "repair")
         self.assertIn("repair_followup", state["prompt_signals"])
 
     def test_professional_injector_does_not_set_stage_route_present(self) -> None:

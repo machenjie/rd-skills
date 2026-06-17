@@ -33,7 +33,7 @@
       "evidence_source": "reports/professional-routing-coverage.json",
       "item": "routing coverage",
       "notes": "needs_manual_review=0",
-      "status": "pass"
+      "status": "fail"
     },
     {
       "blocking": true,
@@ -72,7 +72,7 @@
     "split_candidates": 0
   },
   "default_regression_status": "pass",
-  "generated_at": "2026-06-16T13:20:10.243137+00:00",
+  "generated_at": "2026-06-17T00:47:12.442305+00:00",
   "key_foundation_capability_coverage_summary": {
     "count": 40,
     "statuses": {
@@ -317,7 +317,7 @@
     "python3 scripts/eval-professional-agent-samples.py --promoted-only --strict"
   ],
   "routing_coverage_summary": {
-    "cases_checked": 106,
+    "cases_checked": 118,
     "cases_without_forbidden": 0,
     "hidden_risks_checked": 91,
     "hidden_risks_needing_manual_review": 0,

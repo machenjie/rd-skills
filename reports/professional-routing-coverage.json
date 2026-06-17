@@ -720,10 +720,12 @@
       "matched_by_expected_route_only": [],
       "needs_manual_review": false,
       "routing_cases": [
+        "cpp-local-raii-fix-no-go",
         "implementation-naming-taxonomy"
       ],
       "routing_not_required_reason": "",
       "strong_matches": [
+        "cpp-local-raii-fix-no-go",
         "implementation-naming-taxonomy"
       ],
       "weak_matches": []
@@ -1512,7 +1514,7 @@
   ],
   "expected_route_only_supplemental": 7,
   "findings": [],
-  "generated_at": "2026-06-16T13:20:11.284058+00:00",
+  "generated_at": "2026-06-17T00:47:14.551001+00:00",
   "hidden_risks_checked": 91,
   "hidden_risks_covered": 87,
   "hidden_risks_matched_by_expected_route_only": 7,
@@ -1524,7 +1526,7 @@
   "l1_anti_over_routing_count": 9,
   "matched_by_expected_route_only": 7,
   "needs_manual_review": 0,
-  "routing_cases_checked": 106,
+  "routing_cases_checked": 118,
   "status": "pass",
   "strong_matches": 87,
   "weak_matches": 6

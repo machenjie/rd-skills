@@ -1,0 +1,24 @@
+---
+id: skill-authoring-no-product-coding
+description: Skill registry authoring must not select product coding builders.
+prompt: |
+  Update src/registry/routing-rules.yaml and a SKILL.md trigger for route precision.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: skill-authoring
+  expected_context_budget_mode: single-stage
+  expected_product_surface: skill-authoring
+  expected_language_surface: none
+  risk_triggers: []
+  skills: [change-forge-router, quality-test-gate]
+  capabilities: [skill-authoring-expert, engineering-stage-professionalism]
+  domain_extensions: []
+  quality_gates: [documentation gate, test gate]
+forbidden:
+  skills: [backend-change-builder, frontend-change-builder, data-api-contract-changer]
+  capabilities: [go-professional-usage, cpp-professional-usage, implementation-structure-design]
+  domain_extensions: [ai-product-extension, web3-product-extension, payment-trading-extension]
+  quality_gates: [implementation gate, delivery gate]
+notes: |
+  Registry and SKILL.md authoring belongs to the router authoring path.

@@ -1,0 +1,33 @@
+---
+case_id: skill-authoring-no-product-coding
+actual:
+  complexity: L2
+  risk_level: medium
+  skills: [change-forge-router, quality-test-gate]
+  capabilities: [skill-authoring-expert, engineering-stage-professionalism]
+  domain_extensions: []
+  quality_gates: [documentation gate, test gate]
+  required_references:
+    - references/routing-rules.md
+    - references/skill-registry.md
+    - references/capability-index.md
+    - references/domain-extension-index.md
+    - references/capabilities/103-skill-authoring-expert.md
+    - references/capabilities/104-engineering-stage-professionalism.md
+  stage_route_manifest:
+    schema_version: 1
+    current_stage: skill-authoring
+    next_stage: documentation-handoff
+    product_surface: skill-authoring
+    language_surface: none
+    selected_skills: [change-forge-router, quality-test-gate]
+    selected_capabilities: [skill-authoring-expert, engineering-stage-professionalism]
+    selected_domain_extensions: []
+    skipped_capabilities:
+      - capability: implementation-structure-design
+        reason: registry authoring does not change target product code structure
+    context_budget_mode: single-stage
+    context_budget_rationale: L2 skill authoring route selects router authoring and validation only
+    required_evidence: [boundary, trigger precision, output contract, registry/routing/validation impact, minimal scope diff, deleted or rejected complexity, shortcut ceiling and upgrade trigger when shortcuts remain]
+    required_quality_gates: [documentation gate, test gate]
+    handoff_target: documentation-handoff

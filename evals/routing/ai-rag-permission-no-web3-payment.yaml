@@ -1,0 +1,24 @@
+---
+id: ai-rag-permission-no-web3-payment
+description: RAG tenant permission fix must select AI and security, not Web3 or payment.
+prompt: |
+  Fix RAG retrieval so tenant permissions are enforced before context reaches the prompt.
+expected:
+  complexity: L3
+  risk_level: critical
+  expected_stage: bug-fix
+  expected_context_budget_mode: staged-plan
+  expected_product_surface: ai-rag-agent
+  expected_language_surface: none
+  risk_triggers: [RAG, AI prompt, object-level permission]
+  skills: [security-privacy-gate, quality-test-gate]
+  capabilities: [threat-modeling, permission-boundary-modeling, test-strategy]
+  domain_extensions: [ai-product-extension]
+  quality_gates: [implementation gate, security gate, test gate]
+forbidden:
+  skills: [delivery-release-gate]
+  capabilities: [authentication-security, release-rollback]
+  domain_extensions: [web3-product-extension, payment-trading-extension]
+  quality_gates: [delivery gate]
+notes: |
+  RAG and permission signals select AI/security only.

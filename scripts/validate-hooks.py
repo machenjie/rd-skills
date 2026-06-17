@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from validation_utils import fail_many, relpath
+from validation_utils import fail_many, load_yaml_file, relpath
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -117,6 +117,7 @@ REQUIRED_HOOK_SCRIPTS = (
     "changeforge_hook_policy.py",
     "changeforge_state_reducer.py",
     "changeforge_action_classifier.py",
+    "changeforge_runtime_route_resolver.py",
     "changeforge_skill_index.py",
     "changeforge_session_bootstrap.py",
     "changeforge_user_prompt_route_reminder.py",
@@ -203,6 +204,7 @@ def main() -> int:
     if isinstance(copilot_user, dict):
         _validate_copilot_template(copilot_user, COPILOT_USER_TEMPLATE, errors=errors)
     _validate_hook_behavior(errors)
+    _validate_runtime_route_resolver(errors)
 
     if errors:
         return fail_many("validate-hooks", errors)
@@ -816,17 +818,17 @@ def _validate_hook_behavior(errors: list[str]) -> None:
     deployment_review = classify_event(
         {"hook_event_name": "UserPromptSubmit", "prompt": "review deployment change"}
     )
-    if deployment_review.get("stage") != "review" or "delivery" not in deployment_review.get("surfaces", []):
-        errors.append("classifier: review deployment change must be review stage with delivery surface")
+    if deployment_review.get("stage") != "review" or "infrastructure-deployment" not in deployment_review.get("surfaces", []):
+        errors.append("classifier: review deployment change must be review stage with infrastructure-deployment surface")
 
     chinese_release_review = classify_event(
         {"hook_event_name": "UserPromptSubmit", "prompt": "审查发布流程"}
     )
     if (
         chinese_release_review.get("stage") != "review"
-        or "delivery" not in chinese_release_review.get("surfaces", [])
+        or "infrastructure-deployment" not in chinese_release_review.get("surfaces", [])
     ):
-        errors.append("classifier: Chinese release review must be review stage with delivery surface")
+        errors.append("classifier: Chinese release review must be review stage with infrastructure-deployment surface")
 
     for prompt, expected_stage in (
         ("阅读这个文件", "read"),
@@ -940,6 +942,136 @@ def _validate_hook_behavior(errors: list[str]) -> None:
             errors.append(f"telemetry writer must include {field}")
     if '"pre_edit_structure_gate"' not in telemetry_schema:
         errors.append("telemetry schema must include pre_edit_structure_gate hook name")
+
+
+def _validate_runtime_route_resolver(errors: list[str]) -> None:
+    resolver_path = HOOK_SCRIPTS_DIR / "changeforge_runtime_route_resolver.py"
+    skill_index_path = HOOK_SCRIPTS_DIR / "changeforge_skill_index.py"
+    injector_path = HOOK_SCRIPTS_DIR / "changeforge_professional_injector.py"
+    classifier_path = HOOK_SCRIPTS_DIR / "changeforge_action_classifier.py"
+    pre_edit_path = HOOK_SCRIPTS_DIR / "changeforge_pre_edit_structure_gate.py"
+    post_edit_path = HOOK_SCRIPTS_DIR / "changeforge_post_edit_structure_gate.py"
+    common_path = HOOK_SCRIPTS_DIR / "changeforge_common.py"
+    if not resolver_path.is_file():
+        errors.append("missing runtime route resolver")
+        return
+
+    resolver_text = resolver_path.read_text(encoding="utf-8")
+    skill_index_text = skill_index_path.read_text(encoding="utf-8") if skill_index_path.is_file() else ""
+    injector_text = injector_path.read_text(encoding="utf-8") if injector_path.is_file() else ""
+    classifier_text = classifier_path.read_text(encoding="utf-8") if classifier_path.is_file() else ""
+    common_text = common_path.read_text(encoding="utf-8") if common_path.is_file() else ""
+
+    if "SKILL_INDEX" in skill_index_text:
+        errors.append("changeforge_skill_index.py: must not keep a static SKILL_INDEX")
+    for forbidden in (
+        '"edit": ("backend-change-builder"',
+        "'edit': ('backend-change-builder'",
+        '"repair": ("backend-change-builder"',
+        "'repair': ('backend-change-builder'",
+    ):
+        if forbidden in skill_index_text:
+            errors.append("changeforge_skill_index.py: edit/repair must not default to backend-change-builder")
+    if "changeforge_runtime_route_resolver" not in skill_index_text:
+        errors.append("changeforge_skill_index.py: must delegate to runtime route resolver")
+    if "classification=classification" not in injector_text:
+        errors.append("changeforge_professional_injector.py: must pass classification to resolver")
+    if "reset_state_for_new_prompt" not in injector_text:
+        errors.append("changeforge_professional_injector.py: must reset per-turn state on UserPromptSubmit")
+    if "suggested_skills=context.get(\"selected_skills\"" not in injector_text:
+        errors.append("changeforge_professional_injector.py: must persist resolver-selected skills")
+    if "detect_product_surfaces" not in classifier_text or "detect_language_surfaces" not in classifier_text:
+        errors.append("changeforge_action_classifier.py: must use runtime resolver surface detectors")
+    if "def reset_state_for_new_prompt" not in common_text or "FOLLOW_UP_PROMPT_RE" not in common_text:
+        errors.append("changeforge_common.py: must support prompt-turn state isolation")
+    for stage in (
+        "requirement-intake",
+        "architecture-design",
+        "implementation-planning",
+        "coding",
+        "debugging-diagnosis",
+        "bug-fix",
+        "code-review",
+        "refactoring",
+        "testing",
+        "release-delivery",
+        "documentation-handoff",
+        "skill-authoring",
+    ):
+        if stage not in resolver_text:
+            errors.append(f"changeforge_runtime_route_resolver.py: missing canonical stage {stage}")
+    for token in ("requests.", "httpx.", "urllib.", "socket.", "subprocess.", "write_text(", "write_bytes(", "git commit", "git push"):
+        if token in resolver_text:
+            errors.append(f"changeforge_runtime_route_resolver.py: forbidden runtime operation token {token!r}")
+    for path in (pre_edit_path, post_edit_path):
+        if path.is_file() and "CODE_FILE_EXTENSIONS" not in path.read_text(encoding="utf-8"):
+            errors.append(f"{path.name}: must use shared CODE_FILE_EXTENSIONS")
+
+    sys.path.insert(0, str(HOOK_SCRIPTS_DIR))
+    try:
+        from changeforge_action_classifier import classify_event
+        from changeforge_runtime_route_resolver import (
+            LANGUAGE_FILE_EXTENSIONS,
+            build_active_skill_context,
+        )
+    except Exception as exc:
+        errors.append(f"runtime resolver import failed: {exc}")
+        return
+    finally:
+        try:
+            sys.path.remove(str(HOOK_SCRIPTS_DIR))
+        except ValueError:
+            pass
+
+    try:
+        stage_model = load_yaml_file(ROOT / "src" / "registry" / "stage-model.yaml")
+    except Exception as exc:
+        errors.append(f"stage model load failed for hook validation: {exc}")
+        stage_model = {}
+    if isinstance(stage_model, dict):
+        for entry in stage_model.get("language_surfaces", []) or []:
+            if not isinstance(entry, dict):
+                continue
+            language = entry.get("language")
+            extensions = tuple(entry.get("file_extensions") or ())
+            if isinstance(language, str) and tuple(LANGUAGE_FILE_EXTENSIONS.get(language, ())) != extensions:
+                errors.append(
+                    f"runtime resolver: language extensions for {language} do not match stage model"
+                )
+
+    frontend = classify_event(
+        {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "apply_patch",
+            "tool_input": {"patch": "*** Begin Patch\n*** Update File: src/components/UserCard.tsx\n*** End Patch\n"},
+        }
+    )
+    frontend_context = build_active_skill_context(
+        runtime="codex",
+        stage=frontend["stage"],
+        surfaces=frontend["surfaces"],
+        event_name="PreToolUse",
+        classification=frontend,
+    )
+    if frontend_context.get("owner_skill") != "frontend-change-builder":
+        errors.append("runtime resolver: .tsx edit must route to frontend-change-builder")
+    if "backend-change-builder" in frontend_context.get("selected_skills", []):
+        errors.append("runtime resolver: frontend edit must not select backend-change-builder")
+
+    unknown = classify_event({"hook_event_name": "UserPromptSubmit", "prompt": "what is this?"})
+    if unknown.get("should_inject"):
+        errors.append("runtime resolver: pure question must not inject")
+    no_surface_context = build_active_skill_context(
+        runtime="codex",
+        stage="edit",
+        surfaces=[],
+        event_name="UserPromptSubmit",
+        classification={"stage": "edit", "product_surfaces": [], "language_surfaces": []},
+    )
+    if no_surface_context.get("owner_skill") != "change-forge-router":
+        errors.append("runtime resolver: no-surface edit must fall back to change-forge-router")
+    if "backend-change-builder" in no_surface_context.get("selected_skills", []):
+        errors.append("runtime resolver: no-surface edit must not select backend-change-builder")
 
 
 def _timeouts(value: Any, context: str = "hooks") -> list[tuple[int, str]]:

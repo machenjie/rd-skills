@@ -165,17 +165,34 @@ ENGINEERING_STAGES = {
     "hook_runtime",
     "permission",
     "subagent",
+    "requirement-intake",
+    "architecture-design",
+    "implementation-planning",
+    "coding",
+    "debugging-diagnosis",
+    "bug-fix",
+    "code-review",
+    "release-delivery",
+    "documentation-handoff",
+    "skill-authoring",
 }
 STAGE_REQUIRED_STATE = {
     "plan": ("active_skill_context",),
     "edit": ("changed_paths",),
+    "implementation-planning": ("active_skill_context",),
+    "coding": ("changed_paths",),
     "refactor": ("changed_paths",),
+    "refactoring": ("changed_paths",),
     "skill_authoring": ("changed_paths",),
+    "skill-authoring": ("changed_paths",),
     "hook_runtime": ("changed_paths",),
     "repair": ("review_evidence_seen", "review_findings"),
+    "bug-fix": ("review_evidence_seen", "review_findings"),
     "test": ("validation_command_seen",),
+    "testing": ("validation_command_seen",),
     "permission": ("permission_gate_seen", "permission_decisions"),
     "release": ("risk_surfaces", "suggested_gates"),
+    "release-delivery": ("risk_surfaces", "suggested_gates"),
     "subagent": ("subagent_contracts",),
     "compaction": ("compaction_snapshots",),
 }
@@ -233,14 +250,24 @@ READ_REVIEW_RISK_KEYWORDS = CLOSURE_KEYWORDS["risk"] + [
 STAGE_HANDOFF_KEYWORDS = {
     "plan": ["plan", "scope", "validation", "risk", "计划", "范围"],
     "edit": ["changed", "validation", "risk", "修改", "验证", "风险"],
+    "implementation-planning": ["plan", "scope", "validation", "risk", "计划", "范围"],
+    "coding": ["changed", "validation", "risk", "修改", "验证", "风险"],
     "review": ["finding", "severity", "no issues", "review", "risk"],
+    "code-review": ["finding", "severity", "no issues", "review", "risk"],
     "repair": ["fixed", "repaired", "re-review", "validated", "residual"],
+    "debugging-diagnosis": ["cause", "diagnosis", "reproduction", "validated", "risk"],
+    "bug-fix": ["fixed", "repaired", "re-review", "validated", "residual"],
     "refactor": ["refactor", "behavior", "validation", "risk", "重构"],
+    "refactoring": ["refactor", "behavior", "validation", "risk", "重构"],
     "skill_authoring": ["skill", "capability", "registry", "validation", "技能"],
+    "skill-authoring": ["skill", "capability", "registry", "validation", "技能"],
     "hook_runtime": ["hook", "runtime", "validation", "risk", "钩子"],
     "test": ["command", "exit", "passed", "failed", "not run", "validation"],
+    "testing": ["command", "exit", "passed", "failed", "not run", "validation"],
     "permission": ["permission", "security", "approval", "rollback", "risk"],
     "release": ["rollback", "deploy", "release", "validation", "risk"],
+    "release-delivery": ["rollback", "deploy", "release", "validation", "risk"],
+    "documentation-handoff": ["documentation", "docs", "handoff", "validation", "risk"],
     "subagent": ["subagent", "owner", "reviewer", "handoff"],
     "compaction": ["compaction", "context", "resume", "stage"],
 }
@@ -406,7 +433,7 @@ def _closure_profile(state: dict) -> str:
     stage = str(state.get("turn_stage") or "").strip()
     if stage in {"question", "unknown", "no_engineering_action"}:
         return "silent"
-    if stage in {"read", "review"} and not state.get("changed_paths"):
+    if stage in {"read", "review", "requirement-intake", "code-review"} and not state.get("changed_paths"):
         return "read_review"
     return "engineering"
 
@@ -807,9 +834,9 @@ def _stage_missing_groups(text: str, state: dict) -> list[str]:
     if stage in NO_CLOSURE_STAGES:
         return []
     lowered = text.casefold()
-    if stage == "read":
+    if stage in {"read", "requirement-intake"}:
         return _read_stage_missing_groups(lowered, state)
-    if stage == "review":
+    if stage in {"review", "code-review"}:
         return _review_stage_missing_groups(lowered, state)
     missing: list[str] = []
     for state_key in STAGE_REQUIRED_STATE.get(stage, ()):

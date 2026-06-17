@@ -1,0 +1,24 @@
+---
+id: redis-cache-no-kafka-bigdata
+description: Redis cache change must not select Kafka or big-data routing.
+prompt: |
+  Add Redis TTL and invalidation for product detail cache keys in production.
+expected:
+  complexity: L2
+  risk_level: high
+  expected_stage: implementation-planning
+  expected_context_budget_mode: single-stage
+  expected_product_surface: cache
+  expected_language_surface: none
+  risk_triggers: []
+  skills: [data-middleware-change-builder, reliability-observability-gate, quality-test-gate]
+  capabilities: [implementation-structure-design, cache-design, concurrency-control]
+  domain_extensions: []
+  quality_gates: [implementation gate, reliability gate, test gate]
+forbidden:
+  skills: [frontend-change-builder, delivery-release-gate]
+  capabilities: [message-queue-design, kubernetes-gateway]
+  domain_extensions: [bigdata-product-extension, web3-product-extension]
+  quality_gates: [delivery gate]
+notes: |
+  Redis cache evidence selects cache-design only, not Kafka or warehouse routing.

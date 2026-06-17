@@ -16,6 +16,12 @@ from changeforge_common import (
     summarize_command_program,
     tool_name,
 )
+from changeforge_runtime_route_resolver import (
+    detect_domain_extensions,
+    detect_language_surfaces,
+    detect_product_surfaces,
+    detect_risk_surfaces,
+)
 
 
 READ_TOOLS = {
@@ -100,12 +106,6 @@ SKILL_AUTHORING_RE = re.compile(
     r"\b(SKILL\.md|skill author|capability|registry|routing rule|hook runtime)\b",
     re.I,
 )
-SCHEMA_RE = re.compile(r"\b(schema|dto|api|contract|openapi|graphql|proto|migration)\b", re.I)
-SECURITY_RE = re.compile(r"\b(auth|permission|secret|token|password|credential|security)\b", re.I)
-DELIVERY_SURFACE_RE = re.compile(
-    r"\b(kubectl|helm|terraform|release|deploy|deployment|rollback|install|build|package)\b|发布|部署",
-    re.I,
-)
 NO_INJECTION_STAGES = {"question", "unknown", "no_engineering_action", "compaction"}
 
 
@@ -122,6 +122,10 @@ def classify_event(event: dict) -> dict[str, Any]:
         return {
             "stage": stage,
             "surfaces": [],
+            "product_surfaces": [],
+            "language_surfaces": [],
+            "risk_surfaces": [],
+            "domain_extensions": [],
             "prompt_signals": _prompt_signals(text),
             "paths": paths,
             "tool": tool,
@@ -129,16 +133,17 @@ def classify_event(event: dict) -> dict[str, Any]:
             "should_inject": False,
         }
     surfaces = _surfaces(paths, command, text)
+    language_surfaces = detect_language_surfaces(paths, command, text)
+    risk_surfaces = detect_risk_surfaces(paths, command, text)
+    domain_extensions = detect_domain_extensions(paths, command, text)
     prompt_signals = _prompt_signals(text)
-    if stage == "read" and "context_read" not in surfaces:
-        surfaces.append("context_read")
-    if stage == "review" and "review" not in surfaces:
-        surfaces.append("review")
-    if stage == "test" and "test" not in surfaces:
-        surfaces.append("test")
     return {
         "stage": stage,
         "surfaces": surfaces,
+        "product_surfaces": surfaces,
+        "language_surfaces": language_surfaces,
+        "risk_surfaces": risk_surfaces,
+        "domain_extensions": domain_extensions,
         "prompt_signals": prompt_signals,
         "paths": paths,
         "tool": tool,
@@ -255,28 +260,7 @@ def _stage_from_event(
 
 
 def _surfaces(paths: list[str], command: str, text: str) -> list[str]:
-    values: list[str] = []
-    joined = "\n".join(paths) + "\n" + command + "\n" + text
-    for path in paths:
-        if path.startswith("src/hook-runtime/"):
-            values.append("hook_runtime")
-        if path.startswith("src/professional-skills/"):
-            values.append("skill_authoring")
-        if path.startswith("src/foundation/capabilities/"):
-            values.append("capability_authoring")
-        if path.startswith("scripts/") or path.startswith("installers/"):
-            values.append("build_install_validation")
-        if path.startswith("docs/") or path in {"AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md"}:
-            values.append("documentation")
-    if SCHEMA_RE.search(joined):
-        values.append("data_api_contract")
-    if SECURITY_RE.search(joined):
-        values.append("security")
-    if SKILL_AUTHORING_RE.search(joined):
-        values.append("skill_authoring")
-    if DELIVERY_SURFACE_RE.search(joined):
-        values.append("delivery")
-    return _unique(values) or ["general_engineering"]
+    return detect_product_surfaces(paths, command, text)
 
 
 def _prompt_signals(text: str) -> list[str]:
@@ -285,11 +269,14 @@ def _prompt_signals(text: str) -> list[str]:
     signals: list[str] = []
     for name, pattern in (
         ("release_intent", RELEASE_RE),
-        ("schema_or_api", SCHEMA_RE),
-        ("security_or_permission", SECURITY_RE),
     ):
         if pattern.search(text):
             signals.append(name)
+    risk_surfaces = detect_risk_surfaces([], "", text)
+    if "data-api" in risk_surfaces:
+        signals.append("schema_or_api")
+    if "security" in risk_surfaces:
+        signals.append("security_or_permission")
     if _review_intent(text):
         signals.append("review_intent")
     if _repair_intent(text):

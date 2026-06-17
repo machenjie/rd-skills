@@ -260,6 +260,41 @@ class EvalRoutingCandidateTests(unittest.TestCase):
             errors,
         )
 
+    def test_unknown_expected_language_surface_fails(self) -> None:
+        case_data = _minimal_l2_case()
+        expected = case_data["expected"]
+        assert isinstance(expected, dict)
+        expected["expected_stage"] = "implementation-planning"
+        expected["expected_context_budget_mode"] = "single-stage"
+        expected["expected_language_surface"] = "not-a-language"
+        errors = _validate_case_data(case_data)
+        self.assertTrue(
+            any("expected.expected_language_surface must be one of" in error for error in errors),
+            errors,
+        )
+
+    def test_extra_actual_language_capability_fails(self) -> None:
+        candidate = VALID_BACKEND_AUTH_IDOR.replace(
+            "    - logging-error-handling\n",
+            "    - logging-error-handling\n    - cpp-professional-usage\n",
+        ).replace(
+            "    - references/capabilities/44-logging-error-handling.md\n",
+            "    - references/capabilities/44-logging-error-handling.md\n"
+            "    - references/capabilities/94-cpp-professional-usage.md\n",
+        )
+        result = _run_candidate(candidate)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("unselected language capability", result.stderr)
+
+    def test_extra_actual_domain_extension_fails(self) -> None:
+        candidate = VALID_BACKEND_AUTH_IDOR.replace(
+            "  domain_extensions: []\n",
+            "  domain_extensions:\n    - web3-product-extension\n",
+        )
+        result = _run_candidate(candidate)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("unselected domain extension", result.stderr)
+
     def test_stage_route_skip_reason_allows_missing_expected_stage(self) -> None:
         case_data = _minimal_l2_case()
         expected = case_data["expected"]

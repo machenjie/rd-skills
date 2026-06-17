@@ -28,8 +28,10 @@ is present and wired:
 
 from __future__ import annotations
 
+import importlib.util
 import re
 from pathlib import Path
+from types import ModuleType
 
 from validation_utils import (
     EXPECTED_DOMAIN_EXTENSION_COUNT,
@@ -58,6 +60,9 @@ ROUTING_RULES_REGISTRY = REGISTRY_DIR / "routing-rules.yaml"
 SKILLS_REGISTRY = REGISTRY_DIR / "skills.yaml"
 DOMAIN_EXTENSIONS_REGISTRY = REGISTRY_DIR / "domain-extensions.yaml"
 STAGE_MODEL_REGISTRY = REGISTRY_DIR / "stage-model.yaml"
+RUNTIME_ROUTE_RESOLVER = (
+    ROOT / "src" / "hook-runtime" / "scripts" / "changeforge_runtime_route_resolver.py"
+)
 ROUTER_SKILL = PROFESSIONAL_SKILLS_DIR / "change-forge-router" / "SKILL.md"
 ROUTER_RESULT_TEMPLATE = (
     PROFESSIONAL_SKILLS_DIR
@@ -237,6 +242,22 @@ def _load_quality_gates(errors: list[str]) -> set[str]:
     }
 
 
+def _load_runtime_resolver(errors: list[str]) -> ModuleType | None:
+    if not RUNTIME_ROUTE_RESOLVER.is_file():
+        errors.append(f"missing runtime route resolver: {relpath(ROOT, RUNTIME_ROUTE_RESOLVER)}")
+        return None
+    spec = importlib.util.spec_from_file_location(
+        "changeforge_runtime_route_resolver_validation",
+        RUNTIME_ROUTE_RESOLVER,
+    )
+    if spec is None or spec.loader is None:
+        errors.append(f"{relpath(ROOT, RUNTIME_ROUTE_RESOLVER)}: cannot load module spec")
+        return None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def _check_stage_model_registry(stage_model: dict[str, object], errors: list[str]) -> None:
     rel = relpath(ROOT, STAGE_MODEL_REGISTRY)
     capability_names = _registry_names(
@@ -324,10 +345,10 @@ def _check_stage_model_registry(stage_model: dict[str, object], errors: list[str
             )
 
     surfaces = stage_model.get("product_surfaces")
+    seen_surfaces: set[str] = set()
     if not isinstance(surfaces, list) or not surfaces:
         errors.append(f"{rel}: product_surfaces must be a non-empty list")
     else:
-        seen_surfaces: set[str] = set()
         for entry in surfaces:
             if not isinstance(entry, dict):
                 errors.append(f"{rel}: product_surfaces entries must be mappings")
@@ -355,6 +376,8 @@ def _check_stage_model_registry(stage_model: dict[str, object], errors: list[str
                 errors.append(f"{rel}: product surface '{surface}' needs signals")
 
     languages = stage_model.get("language_surfaces")
+    seen_extensions: dict[str, str] = {}
+    language_extensions: dict[str, tuple[str, ...]] = {}
     if not isinstance(languages, list) or not languages:
         errors.append(f"{rel}: language_surfaces must be a non-empty list")
     else:
@@ -384,6 +407,63 @@ def _check_stage_model_registry(stage_model: dict[str, object], errors: list[str
                     )
             if not _string_list(entry.get("signals")):
                 errors.append(f"{rel}: language surface '{language}' needs signals")
+            for signal in _string_list(entry.get("signals")):
+                if len(signal.strip()) == 1:
+                    errors.append(
+                        f"{rel}: language surface '{language}' has weak one-character "
+                        f"signal '{signal}'"
+                    )
+            extensions = _string_list(entry.get("file_extensions"))
+            if not extensions:
+                errors.append(
+                    f"{rel}: language surface '{language}' needs file_extensions"
+                )
+            normalized_extensions: list[str] = []
+            for extension in extensions:
+                if not extension.startswith(".") or extension.strip() != extension:
+                    errors.append(
+                        f"{rel}: language surface '{language}' invalid file extension "
+                        f"'{extension}'"
+                    )
+                existing = seen_extensions.get(extension)
+                if existing and existing != language:
+                    errors.append(
+                        f"{rel}: file extension '{extension}' is assigned to both "
+                        f"'{existing}' and '{language}'"
+                    )
+                seen_extensions[extension] = language
+                normalized_extensions.append(extension)
+            if isinstance(language, str) and language.strip():
+                language_extensions[language.strip()] = tuple(normalized_extensions)
+
+    resolver = _load_runtime_resolver(errors)
+    if resolver is not None:
+        resolver_surfaces = tuple(getattr(resolver, "PRODUCT_SURFACE_ORDER", ()))
+        missing_surfaces = sorted(seen_surfaces - set(resolver_surfaces))
+        if missing_surfaces:
+            errors.append(
+                f"{rel}: runtime resolver does not cover product surface(s): "
+                f"{', '.join(missing_surfaces)}"
+            )
+        resolver_language_extensions = getattr(resolver, "LANGUAGE_FILE_EXTENSIONS", {})
+        if not isinstance(resolver_language_extensions, dict):
+            errors.append(
+                f"{relpath(ROOT, RUNTIME_ROUTE_RESOLVER)}: LANGUAGE_FILE_EXTENSIONS must be a mapping"
+            )
+        else:
+            missing_languages = sorted(set(language_extensions) - set(resolver_language_extensions))
+            if missing_languages:
+                errors.append(
+                    f"{rel}: runtime resolver does not cover language surface(s): "
+                    f"{', '.join(missing_languages)}"
+                )
+            for language, extensions in language_extensions.items():
+                resolver_extensions = tuple(resolver_language_extensions.get(language, ()))
+                if resolver_extensions != extensions:
+                    errors.append(
+                        f"{rel}: runtime resolver extensions for '{language}' must match "
+                        f"stage model {list(extensions)}, found {list(resolver_extensions)}"
+                    )
 
     resolution = stage_model.get("stage_resolution")
     if not isinstance(resolution, dict):
@@ -422,6 +502,15 @@ def _check_stage_model_registry(stage_model: dict[str, object], errors: list[str
 def _markdown_section(markdown: str, heading: str) -> str:
     pattern = re.compile(
         rf"^### {re.escape(heading)}\s*$([\s\S]*?)(?=^### |\Z)",
+        re.MULTILINE,
+    )
+    match = pattern.search(markdown)
+    return match.group(1) if match else ""
+
+
+def _markdown_h2_section(markdown: str, heading: str) -> str:
+    pattern = re.compile(
+        rf"^## {re.escape(heading)}\s*$([\s\S]*?)(?=^## |\Z)",
         re.MULTILINE,
     )
     match = pattern.search(markdown)
@@ -615,6 +704,32 @@ def _check_router_stage_contract(errors: list[str]) -> None:
         errors.append(
             f"{relpath(ROOT, ROUTER_SKILL)}: router does not reference '{STAGE_CAPABILITY}'"
         )
+    policy = _markdown_h2_section(body, "Reference Loading Policy")
+    policy_folded = policy.casefold()
+    if len(policy.strip()) < 500:
+        errors.append(
+            f"{relpath(ROOT, ROUTER_SKILL)}: Reference Loading Policy must be complete, not empty"
+        )
+    for keyword in (
+        "l1",
+        "l2",
+        "l3",
+        "l4",
+        "l5",
+        "recommended",
+        "full",
+        "dev",
+        "selected",
+        "skipped",
+        "references",
+        "required_references",
+        "skipped_references",
+    ):
+        if keyword not in policy_folded:
+            errors.append(
+                f"{relpath(ROOT, ROUTER_SKILL)}: Reference Loading Policy missing "
+                f"keyword '{keyword}'"
+            )
 
 
 def _check_routing_rules(errors: list[str]) -> None:

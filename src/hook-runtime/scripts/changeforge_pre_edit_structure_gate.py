@@ -27,6 +27,7 @@ from changeforge_common import (
 )
 from changeforge_hook_policy import gate_mode, run_gate_with_policy, should_block, should_emit_context
 from changeforge_runtime_adapters import adapter_for
+from changeforge_runtime_route_resolver import CODE_FILE_EXTENSIONS
 
 
 EDIT_TOOLS = {"applypatch", "apply_patch", "edit", "write", "multiedit"}
@@ -49,25 +50,7 @@ HELPER_PATH_TOKENS = {
     "managers",
 }
 OBJECT_BOUNDARY_TOKENS = {"service", "repository", "repo", "adapter", "client", "manager"}
-CODE_EXTENSIONS = {
-    ".c",
-    ".cc",
-    ".cpp",
-    ".cs",
-    ".go",
-    ".java",
-    ".js",
-    ".jsx",
-    ".kt",
-    ".php",
-    ".py",
-    ".rb",
-    ".rs",
-    ".scala",
-    ".swift",
-    ".ts",
-    ".tsx",
-}
+CODE_EXTENSIONS = CODE_FILE_EXTENSIONS
 EDIT_CONTENT_KEYS = {"content", "new_string", "replacement", "text", "file_content"}
 MAX_TRANSCRIPT_BYTES = 1_000_000
 CLASS_OR_OBJECT_PATCH_RE = re.compile(

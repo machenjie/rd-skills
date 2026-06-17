@@ -136,6 +136,11 @@ EXCLUDED_PATH_KEYS = {
 PATCH_FILE_RE = re.compile(r"^\*\*\* (?:Add|Update|Delete) File:\s+(.+?)\s*$")
 DIFF_GIT_RE = re.compile(r"^diff --git a/(.+?) b/(.+?)\s*$")
 DIFF_FILE_RE = re.compile(r"^(?:\+\+\+|---)\s+(?:a/|b/)?(.+?)\s*$")
+FOLLOW_UP_PROMPT_RE = re.compile(
+    r"\b(continue|follow up|re-review|latest fix|same pr|latest commit)\b"
+    r"|继续|上面|上述|最新提交|修复已经提交|再审查",
+    re.IGNORECASE,
+)
 
 
 def read_event() -> dict:
@@ -670,6 +675,20 @@ def clear_state(repo: Path, runtime: str) -> None:
     state = _empty_state()
     state["runtime"] = runtime
     save_state(repo, state)
+
+
+def reset_state_for_new_prompt(repo: Path, runtime: str, event: dict) -> bool:
+    """Clear per-turn state for a new prompt unless it is an explicit follow-up.
+
+    The raw prompt is inspected only in memory for continuation cues and is not
+    written to state, telemetry, or debug logs.
+    """
+    if not is_user_prompt_submit(event):
+        return False
+    if _is_follow_up_prompt(event):
+        return False
+    clear_state(repo, runtime)
+    return True
 
 
 def compact_name(value: str) -> str:
@@ -1317,6 +1336,14 @@ def _empty_state() -> dict:
         "turn_id": "",
         "updated_at": "",
     }
+
+
+def _is_follow_up_prompt(event: dict) -> bool:
+    for key in ("prompt", "message", "userPrompt", "user_prompt"):
+        value = event.get(key)
+        if isinstance(value, str) and FOLLOW_UP_PROMPT_RE.search(value[:1000]):
+            return True
+    return False
 
 
 def _extract_paths_from_patch_text(text: str) -> list[str]:

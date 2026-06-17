@@ -89,6 +89,17 @@
         "permission",
         "subagent",
         "compaction",
+        "requirement-intake",
+        "architecture-design",
+        "implementation-planning",
+        "coding",
+        "debugging-diagnosis",
+        "bug-fix",
+        "code-review",
+        "refactoring",
+        "release-delivery",
+        "documentation-handoff",
+        "skill-authoring",
         "unknown",
         "no_engineering_action"
       ]

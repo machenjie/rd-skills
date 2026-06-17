@@ -1,0 +1,24 @@
+---
+id: read-only-investigation-no-edit-owner
+description: Read-only investigation should stay at intake/impact and avoid edit owners.
+prompt: |
+  Read the payment module and explain where invoice status is calculated. Do not edit files.
+expected:
+  complexity: L2
+  risk_level: low
+  expected_stage: requirement-intake
+  expected_context_budget_mode: single-stage
+  expected_product_surface: none
+  expected_language_surface: none
+  risk_triggers: []
+  skills: [change-impact-analyzer, change-intake-compiler]
+  capabilities: [requirement-clarification]
+  domain_extensions: []
+  quality_gates: [requirement gate]
+forbidden:
+  skills: [backend-change-builder, frontend-change-builder, delivery-release-gate]
+  capabilities: [implementation-structure-design, release-rollback, typescript-professional-usage]
+  domain_extensions: [payment-trading-extension, web3-product-extension]
+  quality_gates: [implementation gate, delivery gate]
+notes: |
+  Payment word is investigation context only; no mutation or financial workflow change is requested.

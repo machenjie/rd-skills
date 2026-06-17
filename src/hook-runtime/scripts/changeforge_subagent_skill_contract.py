@@ -35,15 +35,20 @@ def main() -> int:
         stage="subagent",
         surfaces=classification["surfaces"],
         event_name=event_name(event) or "SubagentStart",
+        classification=classification,
     )
     repo = repo_root(cwd_from_event(event))
     merge_state(
         repo,
         runtime,
         subagent_contracts=[f"{context['owner_skill']}->{context['reviewer_skill']}"],
-        suggested_skills=[context["owner_skill"], context["reviewer_skill"]],
+        suggested_skills=context.get("selected_skills", []),
         suggested_capabilities=context.get("selected_capabilities", []),
-        turn_stage="subagent",
+        suggested_domain_extensions=context.get("selected_domain_extensions", []),
+        suggested_gates=context.get("required_quality_gates", []),
+        reference_loads=context.get("required_references", []),
+        risk_surfaces=context.get("risk_surfaces", []),
+        turn_stage=context["current_stage"],
         active_skill_context=context,
         owner_skill=context["owner_skill"],
         reviewer_skill=context["reviewer_skill"],
@@ -56,7 +61,12 @@ def main() -> int:
         mode=mode,
         session_id=session_id_from_event(event),
         cwd=cwd_from_event(event),
-        turn_stage="subagent",
+        suggested_skills=context.get("selected_skills", []),
+        suggested_capabilities=context.get("selected_capabilities", []),
+        suggested_gates=context.get("required_quality_gates", []),
+        suggested_domain_extensions=context.get("selected_domain_extensions", []),
+        risk_surfaces=context.get("risk_surfaces", []),
+        turn_stage=context["current_stage"],
         owner_skill=context["owner_skill"],
         reviewer_skill=context["reviewer_skill"],
     )
@@ -67,4 +77,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

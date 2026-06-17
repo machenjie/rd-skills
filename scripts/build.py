@@ -584,6 +584,7 @@ def _write_hook_manifest(
         "changeforge_professional_injector",
         "changeforge_runtime_adapters",
         "changeforge_action_classifier",
+        "changeforge_runtime_route_resolver",
         "changeforge_skill_index",
         "changeforge_read_context_gate",
         "changeforge_review_gate",

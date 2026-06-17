@@ -1,0 +1,24 @@
+---
+id: sql-migration-no-frontend
+description: SQL migration validation must select data/API and SQL, not frontend.
+prompt: |
+  Add tests for db/migrations/202606_add_invoice_status.sql rollback compatibility.
+expected:
+  complexity: L2
+  risk_level: high
+  expected_stage: testing
+  expected_context_budget_mode: single-stage
+  expected_product_surface: database-migration
+  expected_language_surface: sql
+  risk_triggers: []
+  skills: [data-api-contract-changer, data-middleware-change-builder, delivery-release-gate, quality-test-gate]
+  capabilities: [data-migration-design, transaction-consistency, version-compatibility, release-rollback, test-strategy, language-testing-strategy, sql-professional-usage]
+  domain_extensions: []
+  quality_gates: [API/data gate, delivery gate, test gate]
+forbidden:
+  skills: [frontend-change-builder]
+  capabilities: [typescript-professional-usage, cpp-professional-usage]
+  domain_extensions: [web3-product-extension, ai-product-extension]
+  quality_gates: [security gate]
+notes: |
+  SQL migration path selects migration/rollback compatibility and SQL only.
