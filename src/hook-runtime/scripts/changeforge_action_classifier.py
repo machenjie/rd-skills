@@ -103,8 +103,9 @@ DEBUG_RE = re.compile(r"\b(debug|diagnose|root cause|reproduce|triage)\b", re.I)
 REFACTOR_RE = re.compile(r"\b(refactor|cleanup|split|merge|rename|move)\b", re.I)
 REFACTOR_ZH_RE = re.compile(r"(重构|拆分|合并|移动|重命名|抽取)")
 SKILL_AUTHORING_RE = re.compile(
-    r"\b(SKILL\.md|skill author(?:ing)?|foundation capability|capability reference|registry|routing rule|"
-    r"routing-rules\.ya?ml|stage-model\.ya?ml|hook runtime)\b"
+    r"\b(SKILL\.md|skill author(?:ing)?|foundation capability|capability reference|routing rule|"
+    r"ChangeForge registry|skill registry|capability registry|routing-rules\.ya?ml|"
+    r"stage-model\.ya?ml|hook runtime)\b"
     r"|src/(?:professional-skills|foundation/capabilities|domain-extensions|registry|hook-runtime)/",
     re.I,
 )

@@ -22,7 +22,8 @@ DIST_COPILOT_HOOK_SUPPORT = (
     / "changeforge"
     / "changeforge_copilot_skill_summary.md"
 )
-EXPECTED_HOOK_SCRIPT_COUNT = 21
+EXPECTED_HOOK_SCRIPT_COUNT = 22
+RUNTIME_ROUTE_RESOLVER_NAME = "changeforge_runtime_route_resolver.py"
 RUNTIME_ROUTE_INDEX_NAME = "changeforge_runtime_route_index.json"
 EXPECTED_COMMON_SUPPORT_FILES = [
     "changeforge_professional_contract.md",
@@ -70,6 +71,18 @@ def _run_install(project: Path, *extra: str) -> subprocess.CompletedProcess[str]
     )
 
 
+def _assert_action_classifier_smoke(test_case: unittest.TestCase, scripts_dir: Path) -> None:
+    result = subprocess.run(
+        [sys.executable, str(scripts_dir / "changeforge_action_classifier.py")],
+        text=True,
+        capture_output=True,
+        cwd=str(scripts_dir.parent),
+        env=os.environ.copy(),
+        check=False,
+    )
+    test_case.assertEqual(result.returncode, 0, result.stderr)
+
+
 class InstallHooksTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -105,6 +118,7 @@ class InstallHooksTests(unittest.TestCase):
             self.assertTrue(
                 (codex_dir / "hooks" / "changeforge_pre_tool_risk_preview.py").is_file()
             )
+            self.assertTrue((codex_dir / "hooks" / RUNTIME_ROUTE_RESOLVER_NAME).is_file())
             self.assertTrue(
                 (codex_dir / "hooks" / "changeforge_subagent_stop_reminder.py").is_file()
             )
@@ -113,6 +127,7 @@ class InstallHooksTests(unittest.TestCase):
             self.assertTrue((codex_dir / "hooks" / RUNTIME_ROUTE_INDEX_NAME).is_file())
             self.assertTrue(manifest.is_file())
             self.assertTrue(hooks_json.is_file())
+            _assert_action_classifier_smoke(self, codex_dir / "hooks")
 
     def test_merge_preserves_existing_user_hook(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -170,6 +185,7 @@ class InstallHooksTests(unittest.TestCase):
             codex_dir = Path(home) / ".codex"
             scripts = sorted((codex_dir / "hooks").glob("changeforge_*.py"))
             self.assertEqual(len(scripts), EXPECTED_HOOK_SCRIPT_COUNT)
+            self.assertTrue((codex_dir / "hooks" / RUNTIME_ROUTE_RESOLVER_NAME).is_file())
             self.assertTrue((codex_dir / "hooks.json").is_file())
             manifest = json.loads(
                 (codex_dir / ".changeforge-hook-manifest.json").read_text(encoding="utf-8")
@@ -224,6 +240,7 @@ class InstallCopilotHooksTests(unittest.TestCase):
             self.assertTrue(config.is_file())
             scripts = sorted(scripts_dir.glob("changeforge_*.py"))
             self.assertEqual(len(scripts), EXPECTED_HOOK_SCRIPT_COUNT)
+            self.assertTrue((scripts_dir / RUNTIME_ROUTE_RESOLVER_NAME).is_file())
             self.assertTrue((scripts_dir / "changeforge_professional_contract.md").is_file())
             self.assertTrue((scripts_dir / RUNTIME_ROUTE_INDEX_NAME).is_file())
             self.assertTrue((scripts_dir / "changeforge_copilot_skill_summary.md").is_file())
@@ -304,6 +321,9 @@ class InstallCopilotHooksTests(unittest.TestCase):
             self.assertTrue((hooks_dir / "changeforge-hooks.json").is_file())
             scripts = sorted((hooks_dir / "changeforge").glob("changeforge_*.py"))
             self.assertEqual(len(scripts), EXPECTED_HOOK_SCRIPT_COUNT)
+            self.assertTrue(
+                (hooks_dir / "changeforge" / RUNTIME_ROUTE_RESOLVER_NAME).is_file()
+            )
             self.assertTrue(
                 (hooks_dir / "changeforge" / "changeforge_professional_contract.md").is_file()
             )

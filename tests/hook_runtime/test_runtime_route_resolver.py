@@ -153,6 +153,22 @@ class RuntimeRouteResolverTests(unittest.TestCase):
         self.assertIn("engineering-stage-professionalism", context["selected_capabilities"])
         self.assertNotIn("implementation-structure-design", context["selected_capabilities"])
 
+    def test_bare_business_registry_prompt_does_not_route_skill_authoring(self) -> None:
+        prompts = (
+            ("Update service registry behavior", "edit"),
+            ("Modify package registry cache", "edit"),
+            ("Fix user registry table", "repair"),
+        )
+        for prompt, expected_stage in prompts:
+            with self.subTest(prompt=prompt):
+                event = {"hook_event_name": "UserPromptSubmit", "prompt": prompt}
+                classification = classify_event(event)
+                context = _context_for(event)
+                self.assertEqual(classification["stage"], expected_stage)
+                self.assertNotIn("skill-authoring", context["product_surfaces"])
+                self.assertNotEqual(context["current_stage"], "skill-authoring")
+                self.assertNotIn("skill-authoring-expert", context["selected_capabilities"])
+
     def test_skill_md_under_professional_skill_has_skill_authoring_primary_surface(self) -> None:
         context = _context_for(_edit_event("src/professional-skills/change-forge-router/SKILL.md"))
         self.assertEqual(context["current_stage"], "skill-authoring")
