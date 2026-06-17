@@ -29,6 +29,19 @@ SHORT_CIRCUIT_PATTERNS = (
     re.compile(r"直接改代码"),
 )
 ROUTE_BLOCK_RE = re.compile(r"```yaml\n(.*?)\n```", re.DOTALL)
+SUPPLEMENTAL_ROUTE_KEYS = {
+    "selected_skills": "skills",
+    "selected_capabilities": "capabilities",
+    "required_quality_gates": "quality_gates",
+}
+SUPPLEMENTAL_REASON_FORBIDDEN = (
+    "convenience",
+    "marketing",
+    "fluff",
+    "showcase",
+    "demo",
+    "nice to have",
+)
 
 
 def _known_names(root: Path) -> tuple[set[str], set[str]]:
@@ -66,6 +79,14 @@ def _route_payload(route_text: str, path: Path) -> dict[str, object]:
 
 def _list_value(payload: dict[str, object], key: str) -> list[str]:
     value = payload.get(key)
+    return [str(item) for item in value] if isinstance(value, list) else []
+
+
+def _supplemental_value(payload: dict[str, object], key: str) -> list[str]:
+    items = payload.get("supplemental_route_items")
+    if not isinstance(items, dict):
+        return []
+    value = items.get(key)
     return [str(item) for item in value] if isinstance(value, list) else []
 
 
@@ -112,6 +133,74 @@ def _append_forbidden_overlap_error(
         errors.append(
             f"{scenario.relative_to(root)}/expected-route.md {field} "
             f"conflicts with routing fixture forbidden: {', '.join(overlap)}"
+        )
+
+
+def _append_subset_error(
+    errors: list[str],
+    scenario: Path,
+    root: Path,
+    field: str,
+    actual: list[str],
+    expected: list[str],
+    supplemental: list[str],
+) -> None:
+    allowed = set(expected) | set(supplemental)
+    extras = sorted(set(actual) - allowed)
+    if extras:
+        errors.append(
+            f"{scenario.relative_to(root)}/expected-route.md {field} exceeds routing fixture expected values"
+            f" without supplemental rationale: {', '.join(extras)}"
+        )
+
+
+def _append_supplemental_errors(
+    errors: list[str],
+    scenario: Path,
+    root: Path,
+    payload: dict[str, object],
+    fixture: dict[str, object],
+    known_skills: set[str],
+    known_capabilities: set[str],
+    known_quality_gates: set[str],
+) -> None:
+    supplemental = payload.get("supplemental_route_items")
+    if supplemental is None:
+        return
+    if not isinstance(supplemental, dict):
+        errors.append(f"{scenario.relative_to(root)}/expected-route.md supplemental_route_items must be a mapping")
+        return
+
+    reason = str(payload.get("supplemental_reason", "")).strip()
+    if not reason:
+        errors.append(f"{scenario.relative_to(root)}/expected-route.md supplemental_reason must be non-empty")
+    lowered_reason = reason.lower()
+    for forbidden in SUPPLEMENTAL_REASON_FORBIDDEN:
+        if forbidden in lowered_reason:
+            errors.append(
+                f"{scenario.relative_to(root)}/expected-route.md supplemental_reason looks like convenience or marketing: {forbidden}"
+            )
+
+    known_by_key = {
+        "skills": known_skills,
+        "capabilities": known_capabilities,
+        "quality_gates": known_quality_gates,
+    }
+    for supplemental_key, fixture_key in SUPPLEMENTAL_ROUTE_KEYS.items():
+        values = _supplemental_value(payload, supplemental_key)
+        known = known_by_key[fixture_key]
+        for value in values:
+            if value not in known:
+                errors.append(
+                    f"{scenario.relative_to(root)}/expected-route.md supplemental {fixture_key[:-1]} is unknown: {value}"
+                )
+        _append_forbidden_overlap_error(
+            errors,
+            scenario,
+            root,
+            supplemental_key,
+            values,
+            _forbidden_fixture_values(fixture, fixture_key),
         )
 
 
@@ -162,6 +251,16 @@ def validate_examples(root: Path) -> list[str]:
             errors.append(f"{scenario.relative_to(root)}/expected-route.md has no routing eval fixture: {scenario_id}")
         else:
             fixture = routing_fixtures[scenario_id]
+            _append_supplemental_errors(
+                errors,
+                scenario,
+                root,
+                payload,
+                fixture,
+                known_skills,
+                known_capabilities,
+                known_quality_gates,
+            )
             _append_overlap_error(
                 errors,
                 scenario,
@@ -209,6 +308,33 @@ def validate_examples(root: Path) -> list[str]:
                 "required_quality_gates",
                 _list_value(payload, "required_quality_gates"),
                 _forbidden_fixture_values(fixture, "quality_gates"),
+            )
+            _append_subset_error(
+                errors,
+                scenario,
+                root,
+                "selected_skills",
+                _list_value(payload, "selected_skills"),
+                _expected_fixture_values(fixture, "skills"),
+                _supplemental_value(payload, "selected_skills"),
+            )
+            _append_subset_error(
+                errors,
+                scenario,
+                root,
+                "selected_capabilities",
+                _list_value(payload, "selected_capabilities"),
+                _expected_fixture_values(fixture, "capabilities"),
+                _supplemental_value(payload, "selected_capabilities"),
+            )
+            _append_subset_error(
+                errors,
+                scenario,
+                root,
+                "required_quality_gates",
+                _list_value(payload, "required_quality_gates"),
+                _expected_fixture_values(fixture, "quality_gates"),
+                _supplemental_value(payload, "required_quality_gates"),
             )
         for term in REQUIRED_EVIDENCE_TERMS:
             if term not in evidence:

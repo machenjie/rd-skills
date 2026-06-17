@@ -3,25 +3,28 @@
 ```yaml
 scenario_id: backend-auth-idor
 selected_skills:
-  - change-forge-router
   - change-intake-compiler
+  - change-impact-analyzer
   - backend-change-builder
-  - data-api-contract-changer
   - security-privacy-gate
   - quality-test-gate
+  - change-documentation-gate
 selected_capabilities:
+  - implementation-structure-design
   - permission-boundary-modeling
-  - api-contract-design
-  - version-compatibility
+  - authentication-authorization
+  - web-security
+  - input-validation
   - regression-testing
-  - agent-execution-discipline
+  - logging-error-handling
 required_quality_gates:
   - requirement gate
-  - API/data gate
+  - impact gate
+  - implementation gate
   - security gate
   - test gate
-  - execution discipline gate
+  - documentation gate
 review_owner: quality-test-gate
 ```
 
-The backend owner handles validation, authorization, transaction, and error model decisions. The data/API owner checks response compatibility. The security gate owns object-level authorization and denied-path behavior.
+The backend owner handles validation, authorization, transaction, and error model decisions. The security gate owns object-level authorization and denied-path behavior. Documentation review keeps the endpoint behavior and error contract visible to consumers.

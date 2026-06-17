@@ -38,6 +38,10 @@ python3 scripts/validate-marketplace-index.py --profile recommended
 python3 scripts/validate-marketplace-index.py --profile full
 python3 scripts/validate-marketplace-index.py --profile dev
 python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
+python3 scripts/render-scorecard-dashboard.py --scorecard /tmp/professional-scorecard.json --out /tmp/scorecard-dashboard.md
+python3 scripts/generate-public-benchmark-summary.py --out /tmp/public-benchmark-summary.md --json-out /tmp/public-benchmark-summary.json
+python3 scripts/generate-examples-showcase.py --check --out docs/SHOWCASE.md
+python3 scripts/generate-marketplace-catalog.py --profile recommended --check --out docs/MARKETPLACE_CATALOG.md
 ```
 
 ## Blocking Conditions
@@ -136,4 +140,4 @@ warnings.
 - Do not add section-only fake professionalism.
 - Do not turn every warning-only eval into a hard gate.
 - Do not expand SKILL.md bodies to satisfy benchmarks.
-- Do not add marketplace, catalog, persona, slash command, badge, MCP, plugin-market, or UI packaging work that changes runtime packaging, duplicates registry truth, or creates a user-specific toolbox. A source-derived JSON discovery index is allowed only when generated from registries and validated.
+- Do not add marketplace publishing, persona, slash command, badge, MCP, plugin-market, or UI packaging work that changes runtime packaging, duplicates registry truth, or creates a user-specific toolbox. A source-derived JSON discovery index and source-derived human catalog are allowed only when generated from registries/frontmatter and validated.

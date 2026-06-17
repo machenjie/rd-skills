@@ -18,19 +18,26 @@ General agent rules can remind an agent to be careful. ChangeForge turns that re
 - It is evidence-oriented: validation, eval, benchmark, example, and scorecard assets make the system auditable.
 - It keeps hooks in their lane: optional hooks are advisory guardrails, not a replacement for `change-forge-router`.
 
-## 3-Step Quickstart
+## One-Command Quickstart
 
 ```bash
-python3 scripts/build.py --profile recommended
-python3 installers/install.py --agent codex --scope user --profile recommended
-python3 installers/doctor.py --agent codex --scope user --profile recommended
+python3 scripts/quickstart.py --agent codex --scope user
 ```
 
-Use `recommended` for global installs, `full` for project installs that should expose domain extensions, and `dev` only for ChangeForge authoring/debugging. See [docs/QUICKSTART.md](docs/QUICKSTART.md) for Codex, Claude Code, GitHub Copilot, OpenAI API, and first-prompt examples.
+This builds the `recommended` profile, installs the built Codex user skills from
+`dist/`, runs doctor, and prints a first prompt to try. For local dry-run review:
+
+```bash
+python3 scripts/quickstart.py --agent codex --scope user --dry-run
+```
+
+Use `recommended` for global installs, `full` for project installs that should expose domain extensions, and `dev` only when explicitly authoring/debugging ChangeForge. See [docs/QUICKSTART.md](docs/QUICKSTART.md) for Codex, Claude Code, GitHub Copilot, OpenAI API, and first-prompt examples.
 
 ## Usage
 
 For day-to-day use, build a runtime profile, install the generated skills into the target agent runtime, then ask the agent to use the relevant ChangeForge skill for the change you are making.
+
+Manual/debug path:
 
 ```bash
 python3 scripts/build.py --profile full
@@ -59,10 +66,29 @@ See [docs/USAGE.md](docs/USAGE.md) for the full usage guide, including profile s
 ## Professional Evidence
 
 - [docs/BENCHMARKS.md](docs/BENCHMARKS.md): explains routing, professionalism, hook, profile, install, and codegen benchmark evidence.
+- [reports/public-benchmark-summary.md](reports/public-benchmark-summary.md): generated public benchmark summary with known unknowns.
 - [docs/SCORECARD.md](docs/SCORECARD.md): documents conservative scorecard dimensions and status rules.
+- [docs/SCORECARD_DASHBOARD.md](docs/SCORECARD_DASHBOARD.md): generated human-readable scorecard dashboard.
 - [docs/MARKETPLACE.md](docs/MARKETPLACE.md): describes the source-derived discovery index for skills, capabilities, and domain extensions.
+- [docs/MARKETPLACE_CATALOG.md](docs/MARKETPLACE_CATALOG.md): generated local marketplace catalog for browsing skills, capabilities, gates, triggers, and profile exposure.
 - [examples/README.md](examples/README.md): provides copyable engineering scenarios with expected routes and evidence.
+- [docs/SHOWCASE.md](docs/SHOWCASE.md): scenario showcase comparing ordinary agent behavior against ChangeForge-routed behavior without requiring a demo repository.
 - [docs/COMPARISON.md](docs/COMPARISON.md): positions ChangeForge against stable categories without live popularity claims.
+
+## Current Evidence
+
+These signals are generated or validator-backed local evidence, not external popularity, adoption, or marketplace-availability claims.
+
+<!-- changeforge-scorecard-summary:start -->
+| Evidence | Status | Source |
+| --- | --- | --- |
+| Profile build reproducibility | `pass` | [docs/SCORECARD_DASHBOARD.md](docs/SCORECARD_DASHBOARD.md) |
+| Example coverage | `pass` | [scripts/validate-examples.py](scripts/validate-examples.py) |
+| Marketplace index validation | `pass` | [scripts/validate-marketplace-index.py](scripts/validate-marketplace-index.py) |
+| Open-source readiness | `partial` | [docs/OPEN_SOURCE_READINESS.md](docs/OPEN_SOURCE_READINESS.md) |
+<!-- changeforge-scorecard-summary:end -->
+
+Stable profile counts are `recommended=19`, `full=26`, and `dev=143`. Local install starts with `python3 scripts/quickstart.py --agent codex --scope user`; official Codex/Claude marketplace publishing is intentionally not implemented.
 
 Optional project-level hook artifacts are also built for Codex and Claude Code.
 They are warning-only execution reminders, not skills and not a replacement for

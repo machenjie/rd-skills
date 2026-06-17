@@ -26,6 +26,36 @@ It is not a prompt dump. The system combines:
 
 ## Three Steps
 
+For the shortest Codex user install, run one command:
+
+```bash
+python3 scripts/quickstart.py --agent codex --scope user
+```
+
+Dry-run the same path without writing:
+
+```bash
+python3 scripts/quickstart.py --agent codex --scope user --dry-run
+```
+
+Project installs default to the `full` profile and require `--target`:
+
+```bash
+python3 scripts/quickstart.py --agent claude --scope project --target /path/to/project
+python3 scripts/quickstart.py --agent copilot --scope project --target /path/to/project
+```
+
+OpenAI API zip output:
+
+```bash
+python3 scripts/quickstart.py --agent openai-api
+```
+
+`scripts/quickstart.py` orchestrates the existing build, installer, and doctor
+commands. It does not implement official marketplace installation.
+
+## Manual Path
+
 1. Build the profile:
 
 ```bash
@@ -52,33 +82,25 @@ Restart or reload the target runtime after installation if it was already open.
 Codex user install:
 
 ```bash
-python3 scripts/build.py --profile recommended
-python3 installers/install.py --agent codex --scope user --profile recommended
-python3 installers/doctor.py --agent codex --scope user --profile recommended
+python3 scripts/quickstart.py --agent codex --scope user
 ```
 
 Claude Code project install:
 
 ```bash
-python3 scripts/build.py --profile full
-python3 installers/install.py --agent claude --scope project --target /path/to/project --profile full
-python3 installers/doctor.py --agent claude --scope project --target /path/to/project --profile full
+python3 scripts/quickstart.py --agent claude --scope project --target /path/to/project
 ```
 
 GitHub Copilot project install:
 
 ```bash
-python3 scripts/build.py --profile full
-python3 installers/install.py --agent copilot --scope project --target /path/to/project --profile full
-python3 installers/doctor.py --agent copilot --scope project --target /path/to/project --profile full
+python3 scripts/quickstart.py --agent copilot --scope project --target /path/to/project
 ```
 
 OpenAI API zip bundles:
 
 ```bash
-python3 scripts/build.py --profile recommended
-python3 scripts/package.py --profile recommended
-python3 installers/install.py --agent openai-api --profile recommended --dry-run
+python3 scripts/quickstart.py --agent openai-api
 ```
 
 ## First Prompts

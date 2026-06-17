@@ -3,17 +3,14 @@
 ```yaml
 scenario_id: completion-evidence-unverified-fix
 selected_skills:
-  - change-forge-router
+  - backend-change-builder
   - quality-test-gate
-  - security-privacy-gate
-  - ai-code-review-refactor
 selected_capabilities:
-  - package-dependency-management
+  - implementation-structure-design
   - regression-testing
-  - code-review
   - agent-execution-discipline
 required_quality_gates:
-  - security gate
+  - implementation gate
   - test gate
   - execution discipline gate
 review_owner: quality-test-gate

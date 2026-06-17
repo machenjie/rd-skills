@@ -1,0 +1,117 @@
+{
+  "claim_boundary": "Local deterministic evidence only; not external popularity, adoption, marketplace availability, or market claim evidence.",
+  "generated_by": "scripts/generate-public-benchmark-summary.py",
+  "items": [
+    {
+      "command": "python3 scripts/validate-professional-routing-coverage.py",
+      "detail": "{\"cases_checked\": 118, \"cases_without_forbidden\": 0, \"hidden_risks_checked\": 91, \"hidden_risks_needing_manual_review\": 0, \"hidden_risks_strongly_covered\": 87, \"l1_anti_over_routing_count\": 9}",
+      "name": "Routing coverage",
+      "source": "reports/professionalism-release-readiness.json",
+      "status": "pass"
+    },
+    {
+      "command": "python3 scripts/eval-skill-professionalism.py",
+      "detail": "{\"count\": 19, \"statuses\": {\"sample-grade\": 19}}",
+      "name": "Professional skill coverage",
+      "source": "reports/professionalism-release-readiness.json",
+      "status": "partial"
+    },
+    {
+      "command": "python3 scripts/eval-skill-professionalism.py --coverage-matrix",
+      "detail": "{\"count\": 40, \"statuses\": {\"acceptable\": 29, \"needs-review\": 10, \"sample-grade\": 1}}",
+      "name": "Foundation capability coverage",
+      "source": "reports/professionalism-release-readiness.json",
+      "status": "partial"
+    },
+    {
+      "command": "python3 scripts/validate-professionalism-regression.py --strict",
+      "detail": "strict_regression_status=pass",
+      "name": "Strict regression",
+      "source": "reports/professionalism-release-readiness.json",
+      "status": "pass"
+    },
+    {
+      "command": "python3 scripts/eval-skill-professionalism.py",
+      "detail": "average_score=41.45",
+      "name": "Skill professionalism report",
+      "source": "reports/skill-professionalism-eval.json",
+      "status": "pass"
+    },
+    {
+      "command": "python3 scripts/eval-skill-professionalism.py --coverage-matrix",
+      "detail": "rows=59",
+      "name": "Professional coverage matrix",
+      "source": "reports/professional-coverage-matrix.json",
+      "status": "pass"
+    },
+    {
+      "command": "python3 scripts/build.py --profile recommended",
+      "detail": "top_level=19, expected=19",
+      "name": "Profile build: recommended",
+      "source": "dist/universal/skills/recommended/.changeforge-build-manifest.json",
+      "status": "pass"
+    },
+    {
+      "command": "python3 scripts/build.py --profile full",
+      "detail": "top_level=26, expected=26",
+      "name": "Profile build: full",
+      "source": "dist/universal/skills/full/.changeforge-build-manifest.json",
+      "status": "pass"
+    },
+    {
+      "command": "python3 scripts/build.py --profile dev",
+      "detail": "top_level=143, expected=143",
+      "name": "Profile build: dev",
+      "source": "dist/universal/skills/dev/.changeforge-build-manifest.json",
+      "status": "pass"
+    },
+    {
+      "command": "python3 scripts/validate-installation.py",
+      "detail": "validator does not emit a committed machine-readable report",
+      "name": "Installation validation",
+      "source": "scripts/validate-installation.py",
+      "status": "not_collected"
+    },
+    {
+      "command": "python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev",
+      "detail": "run per-profile validator; no committed result is inferred as pass",
+      "name": "Marketplace validation",
+      "source": "scripts/validate-marketplace-index.py",
+      "status": "not_collected"
+    }
+  ],
+  "known_unknowns": [
+    "Installation validation",
+    "Marketplace validation"
+  ],
+  "refresh_commands": [
+    "python3 scripts/eval-routing.py",
+    "python3 scripts/eval-skill-professionalism.py",
+    "python3 scripts/eval-skill-professionalism.py --coverage-matrix",
+    "python3 scripts/eval-professional-benchmarks.py",
+    "python3 scripts/validate-professionalism-regression.py --strict",
+    "python3 scripts/validate-professional-routing-coverage.py",
+    "python3 scripts/build.py --profile recommended",
+    "python3 scripts/build.py --profile full",
+    "python3 scripts/build.py --profile dev",
+    "python3 scripts/validate-runtime-reference-links.py",
+    "python3 scripts/validate-installation.py",
+    "python3 scripts/validate-marketplace-index.py --profile recommended",
+    "python3 scripts/validate-marketplace-index.py --profile full",
+    "python3 scripts/validate-marketplace-index.py --profile dev",
+    "python3 scripts/generate-public-benchmark-summary.py --out reports/public-benchmark-summary.md --json-out reports/public-benchmark-summary.json"
+  ],
+  "repository": {
+    "name": "machenjie/rd-skills",
+    "source_commit": "26dc651",
+    "version": "0.1.0"
+  },
+  "schema_version": 1,
+  "status_counts": {
+    "fail": 0,
+    "not_collected": 2,
+    "partial": 2,
+    "pass": 7,
+    "unknown": 0
+  }
+}

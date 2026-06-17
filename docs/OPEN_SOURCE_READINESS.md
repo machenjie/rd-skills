@@ -1,6 +1,6 @@
 # Open Source Readiness
 
-This audit tracks the repository work needed to meet common open-source project expectations. The repository is structurally close to open-source-ready after the governance, CI, quickstart, scorecard, examples, and discovery-index additions, but it is not publishable as an open-source project until maintainers choose and declare an OSI-approved license.
+This audit tracks the repository work needed to meet common open-source project expectations. The repository is structurally close to open-source-ready after the governance, CI, quickstart, scorecard, examples, and discovery-index additions, but it is not publishable as an open-source project until maintainers complete the owner license, contribution licensing, and security-contact decisions.
 
 ## Current Status
 
@@ -21,16 +21,19 @@ This audit tracks the repository work needed to meet common open-source project 
 | CI | Ready | `.github/workflows/ci.yml` runs core validation, profile builds for `recommended`, `full`, and `dev`, runtime reference validation, installation validation, marketplace export/validation, strict profile-build scorecard smoke, and unit tests. Heavy evals and benchmark comparisons remain release gates. |
 | Package metadata | Partial | `pyproject.toml` has project URLs, keywords, and classifiers. License metadata remains proprietary pending owner decision. |
 | License | Blocked | No open-source license file exists. Maintainers must choose the license. |
+| Owner release config | Partial | [../config/open-source-release.yaml](../config/open-source-release.yaml) records that owner decisions are not complete. |
 
 ## Required Before Public Open-Source Release
 
 1. Choose an OSI-approved license, such as MIT, Apache-2.0, BSD-3-Clause, MPL-2.0, GPL-3.0-only, or AGPL-3.0-only.
 2. Add the matching root `LICENSE` file.
 3. Update `pyproject.toml` from proprietary license metadata to the selected license metadata.
-4. Confirm contribution licensing in [CONTRIBUTING.md](../CONTRIBUTING.md).
-5. Enable GitHub private vulnerability reporting or publish a private security contact path in [SECURITY.md](../SECURITY.md).
-6. Confirm whether generated `dist/` artifacts should remain ignored or be attached only to releases.
-7. Run the full validation suite and confirm CI passes on a pull request.
+4. Update [LICENSE_DECISION.md](LICENSE_DECISION.md) notes if the owner decision requires project-specific context.
+5. Update [../config/open-source-release.yaml](../config/open-source-release.yaml) with the selected license and confirmed owner decisions.
+6. Confirm contribution licensing in [CONTRIBUTING.md](../CONTRIBUTING.md).
+7. Enable GitHub private vulnerability reporting or publish a private security contact path in [SECURITY.md](../SECURITY.md).
+8. Confirm whether generated `dist/` artifacts should remain ignored or be attached only to releases.
+9. Run the full validation suite and confirm CI passes on a pull request.
 
 ## Owner Decision Required
 
@@ -40,8 +43,19 @@ The maintainer has not supplied a selected OSI license for this change. Until th
 - Do not change `pyproject.toml` from proprietary license metadata.
 - Do not describe the repository as open-source-ready.
 - Treat outside contribution acceptance as blocked or maintainer-reviewed under the existing proprietary metadata.
+- Keep `config/open-source-release.yaml:selected_license` set to `null`.
 
 Security contact also requires an owner-controlled private path. [SECURITY.md](../SECURITY.md) describes GitHub private vulnerability reporting when enabled, but the maintainer must either enable that feature or provide a private security contact channel before public release.
+
+Mechanical status is checked with:
+
+```bash
+python3 scripts/validate-open-source-readiness.py
+```
+
+Use `--require-pass` only when intentionally verifying that all owner
+publication decisions are complete. The default repository state is expected to
+be `partial`, not `pass`.
 
 ## Recommended Repository Standards
 
@@ -91,6 +105,7 @@ python3 scripts/validate-installation.py
 python3 scripts/validate-marketplace-index.py --profile recommended
 python3 scripts/validate-marketplace-index.py --profile full
 python3 scripts/validate-marketplace-index.py --profile dev
+python3 scripts/validate-open-source-readiness.py
 python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
 python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json
 ```

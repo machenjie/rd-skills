@@ -1,6 +1,8 @@
 # Marketplace Index
 
-The marketplace index is a machine-readable discovery export. It is not a new runtime package format, not a duplicated registry, and not a user-specific toolbox.
+The marketplace index is a machine-readable discovery export. The marketplace catalog is a generated human-readable discovery view over the same source data. These are local discovery assets only: official Codex and Claude marketplace publishing is intentionally not implemented.
+
+The index and catalog are not a new runtime package format, not a duplicated registry, not an official marketplace listing, and not a user-specific toolbox. Do not use these files to claim Codex/Claude marketplace availability.
 
 ## Asset Types
 
@@ -31,6 +33,22 @@ python3 scripts/validate-marketplace-index.py --profile recommended
 python3 scripts/validate-marketplace-index.py --profile full
 python3 scripts/validate-marketplace-index.py --profile dev
 ```
+
+## Catalog
+
+Generate the combined human-readable catalog:
+
+```bash
+python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md
+```
+
+Validate the committed catalog snapshot:
+
+```bash
+python3 scripts/generate-marketplace-catalog.py --profile recommended --check --out docs/MARKETPLACE_CATALOG.md
+```
+
+`docs/MARKETPLACE_CATALOG.md` is generated from the same exporter-backed source as the machine index. Do not hand-author a separate catalog.
 
 ## Fields
 

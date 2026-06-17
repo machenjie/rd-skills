@@ -9,3 +9,5 @@ Each example includes:
 - `expected-evidence.md`: code to inspect before planning, TDD or validation evidence, independent review, residual risk, and handoff shape.
 
 Use them to compare a normal "just implement it" response against a ChangeForge-routed response with clarification, code inspection, TDD signal, review, repair/re-review, and evidence handoff.
+
+Scenario showcase: compare ordinary agent behavior against ChangeForge-routed behavior without requiring a demo repository in [docs/SHOWCASE.md](../docs/SHOWCASE.md).

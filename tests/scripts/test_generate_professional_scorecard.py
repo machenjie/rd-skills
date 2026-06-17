@@ -13,6 +13,26 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "generate-professional-scorecard.py"
 
 
+def _write_release_config(
+    root: Path,
+    *,
+    selected_license: str | None = None,
+    contribution: bool = False,
+    security: bool = False,
+) -> None:
+    (root / "config").mkdir(parents=True, exist_ok=True)
+    license_value = "null" if selected_license is None else selected_license
+    (root / "config" / "open-source-release.yaml").write_text(
+        "schema_version: 1\n"
+        "kind: changeforge.open_source_release\n"
+        f"selected_license: {license_value}\n"
+        f"contribution_licensing_confirmed: {str(contribution).lower()}\n"
+        f"security_contact_confirmed: {str(security).lower()}\n"
+        "dist_release_policy: release-artifact-only\n",
+        encoding="utf-8",
+    )
+
+
 def _load_module():
     scripts_dir = str(ROOT / "scripts")
     if scripts_dir not in sys.path:
@@ -111,10 +131,21 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
         self.assertEqual(example_dimension.status, "fail")
         self.assertIn("examples/01 broken", example_dimension.detail)
 
+    def test_marketplace_index_status_uses_profile_validator(self) -> None:
+        module = _load_module()
+        module._load_validate_marketplace_index = lambda: SimpleNamespace(
+            validate_profile=lambda root, profile: ["runtime path missing"] if profile == "dev" else []
+        )
+        status, detail = module.marketplace_index_status(ROOT)
+        self.assertEqual(status, "fail")
+        self.assertIn("dev", detail)
+        self.assertIn("runtime path missing", detail)
+
     def test_open_source_readiness_no_license_is_partial(self) -> None:
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            _write_release_config(root)
             (root / "pyproject.toml").write_text('license = { text = "Proprietary" }\n', encoding="utf-8")
             status, detail = module.open_source_readiness_status(root)
         self.assertEqual(status, "partial")
@@ -124,6 +155,7 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            _write_release_config(root)
             (root / "LICENSE").write_text("MIT\n", encoding="utf-8")
             (root / "pyproject.toml").write_text('license = { text = "Proprietary" }\n', encoding="utf-8")
             status, detail = module.open_source_readiness_status(root)
@@ -134,6 +166,7 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            _write_release_config(root)
             (root / "LICENSE").write_text("MIT\n", encoding="utf-8")
             (root / "pyproject.toml").write_text('license = { text = "MIT" }\n', encoding="utf-8")
             (root / "CONTRIBUTING.md").write_text(
@@ -152,6 +185,7 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
+            _write_release_config(root, selected_license="MIT", contribution=True, security=True)
             (root / "LICENSE").write_text("MIT\n", encoding="utf-8")
             (root / "pyproject.toml").write_text('license = { text = "MIT" }\n', encoding="utf-8")
             (root / "CONTRIBUTING.md").write_text(

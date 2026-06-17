@@ -169,6 +169,86 @@ class ValidateExamplesTests(unittest.TestCase):
         for expected in expected_conflicts:
             self.assertTrue(any(expected in error for error in errors))
 
+    def test_scenario_route_must_be_subset_of_fixture_expected_values(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_minimal_registry(root)
+            scenario = _write_minimal_scenario(root, "01-sample", "fixture-case")
+            _write_backend_fixture(root)
+            (scenario / "expected-route.md").write_text(
+                "```yaml\n"
+                "scenario_id: fixture-case\n"
+                "selected_skills:\n"
+                "  - backend-change-builder\n"
+                "  - frontend-change-builder\n"
+                "selected_capabilities:\n"
+                "  - regression-testing\n"
+                "required_quality_gates:\n"
+                "  - test gate\n"
+                "```\n",
+                encoding="utf-8",
+            )
+            errors = module.validate_examples(root)
+        self.assertTrue(any("selected_skills exceeds routing fixture expected values" in error for error in errors))
+
+    def test_supplemental_route_items_allow_justified_fixture_extras(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_minimal_registry(root)
+            scenario = _write_minimal_scenario(root, "01-sample", "fixture-case")
+            _write_backend_fixture(root)
+            (scenario / "expected-route.md").write_text(
+                "```yaml\n"
+                "scenario_id: fixture-case\n"
+                "selected_skills:\n"
+                "  - backend-change-builder\n"
+                "  - frontend-change-builder\n"
+                "selected_capabilities:\n"
+                "  - regression-testing\n"
+                "required_quality_gates:\n"
+                "  - test gate\n"
+                "supplemental_route_items:\n"
+                "  selected_skills:\n"
+                "    - frontend-change-builder\n"
+                "supplemental_reason: |\n"
+                "  The prompt explicitly crosses a backend behavior change and an existing UI state owner.\n"
+                "```\n",
+                encoding="utf-8",
+            )
+            errors = module.validate_examples(root)
+        self.assertFalse(any("exceeds routing fixture expected values" in error for error in errors))
+        self.assertFalse(any("supplemental" in error for error in errors))
+
+    def test_supplemental_route_items_require_known_items_and_reason(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_minimal_registry(root)
+            scenario = _write_minimal_scenario(root, "01-sample", "fixture-case")
+            _write_backend_fixture(root)
+            (scenario / "expected-route.md").write_text(
+                "```yaml\n"
+                "scenario_id: fixture-case\n"
+                "selected_skills:\n"
+                "  - backend-change-builder\n"
+                "selected_capabilities:\n"
+                "  - regression-testing\n"
+                "required_quality_gates:\n"
+                "  - test gate\n"
+                "supplemental_route_items:\n"
+                "  selected_skills:\n"
+                "    - invented-skill\n"
+                "  required_quality_gates:\n"
+                "    - delivery gate\n"
+                "```\n",
+                encoding="utf-8",
+            )
+            errors = module.validate_examples(root)
+        self.assertTrue(any("supplemental_reason must be non-empty" in error for error in errors))
+        self.assertTrue(any("supplemental skill is unknown" in error for error in errors))
+
 
 def _write_minimal_registry(root: Path) -> None:
     (root / "src" / "registry").mkdir(parents=True)
@@ -226,6 +306,23 @@ def _write_minimal_scenario(root: Path, name: str, scenario_id: str) -> Path:
         encoding="utf-8",
     )
     return scenario
+
+
+def _write_backend_fixture(root: Path) -> None:
+    fixture = root / "evals" / "routing" / "fixture-case.yaml"
+    fixture.parent.mkdir(parents=True)
+    fixture.write_text(
+        "---\n"
+        "id: fixture-case\n"
+        "expected:\n"
+        "  skills:\n"
+        "    - backend-change-builder\n"
+        "  capabilities:\n"
+        "    - regression-testing\n"
+        "  quality_gates:\n"
+        "    - test gate\n",
+        encoding="utf-8",
+    )
 
 
 if __name__ == "__main__":

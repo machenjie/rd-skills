@@ -78,7 +78,12 @@ python3 scripts/export-marketplace-index.py --profile dev --out /tmp/dev-marketp
 python3 scripts/validate-marketplace-index.py --profile recommended
 python3 scripts/validate-marketplace-index.py --profile full
 python3 scripts/validate-marketplace-index.py --profile dev
+python3 scripts/validate-open-source-readiness.py
 python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
+python3 scripts/render-scorecard-dashboard.py --scorecard /tmp/professional-scorecard.json --out /tmp/scorecard-dashboard.md
+python3 scripts/generate-public-benchmark-summary.py --out /tmp/public-benchmark-summary.md --json-out /tmp/public-benchmark-summary.json
+python3 scripts/generate-examples-showcase.py --check --out docs/SHOWCASE.md
+python3 scripts/generate-marketplace-catalog.py --profile recommended --check --out docs/MARKETPLACE_CATALOG.md
 ```
 
 Run extended routing fixture comparison when updating or verifying captured
@@ -91,6 +96,10 @@ python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs
 Run installer dry runs for supported targets:
 
 ```bash
+python3 scripts/quickstart.py --agent codex --scope user --dry-run
+python3 scripts/quickstart.py --agent claude --scope project --target /tmp/changeforge-quickstart-claude --dry-run
+python3 scripts/quickstart.py --agent copilot --scope project --target /tmp/changeforge-quickstart-copilot --dry-run
+python3 scripts/quickstart.py --agent openai-api --dry-run
 python3 installers/install.py --agent codex --scope user --profile recommended --dry-run
 python3 installers/install.py --agent codex --scope project --target /tmp/changeforge-codex-full --profile full --dry-run
 python3 installers/install.py --agent claude --scope user --profile recommended --dry-run
@@ -98,6 +107,16 @@ python3 installers/install.py --agent claude --scope project --target /tmp/chang
 python3 installers/install.py --agent copilot --scope user --profile recommended --dry-run
 python3 installers/install.py --agent copilot --scope project --target /tmp/changeforge-copilot-full --profile full --dry-run
 python3 installers/install.py --agent openai-api --profile recommended --dry-run
+```
+
+Regenerate committed public evidence snapshots before a publication decision:
+
+```bash
+python3 scripts/generate-professional-scorecard.py --out reports/professional-scorecard.md --json-out reports/professional-scorecard.json
+python3 scripts/render-scorecard-dashboard.py --scorecard reports/professional-scorecard.json --out docs/SCORECARD_DASHBOARD.md --readme README.md
+python3 scripts/generate-public-benchmark-summary.py --out reports/public-benchmark-summary.md --json-out reports/public-benchmark-summary.json
+python3 scripts/generate-examples-showcase.py --out docs/SHOWCASE.md
+python3 scripts/generate-marketplace-catalog.py --profile recommended --out docs/MARKETPLACE_CATALOG.md
 ```
 
 Run final smoke checks against disposable targets:
@@ -124,8 +143,9 @@ The Codex recommended user smoke must install 19 top-level skills. The Codex, Cl
 
 - Source structure matches the registry counts.
 - README, quickstart, examples, benchmark docs, scorecard docs, and marketplace docs pass productization validation.
-- Open-source publication status has been checked against [OPEN_SOURCE_READINESS.md](OPEN_SOURCE_READINESS.md) when publishing publicly.
+- Open-source publication status has been checked with `python3 scripts/validate-open-source-readiness.py` and against [OPEN_SOURCE_READINESS.md](OPEN_SOURCE_READINESS.md) when publishing publicly.
 - License metadata, root `LICENSE`, contribution licensing, and security contact path are resolved before describing a release as open source.
+- If no owner license is selected, `config/open-source-release.yaml:selected_license` remains `null`, no root `LICENSE` is added, and the release handoff says owner decision is still required.
 - Routing and code generation benchmark validators pass.
 - No banned `src/toolbox` or `registry/toolbox.yaml` path exists.
 - No personal asset mapping, raw `src/`, or raw registry content is installed.
@@ -136,7 +156,9 @@ The Codex recommended user smoke must install 19 top-level skills. The Codex, Cl
 - Final smoke commands cover Codex user recommended install, Codex project full install, Codex project uninstall dry-run, Codex user/project doctor, Claude Code project full install/doctor/uninstall dry-run, GitHub Copilot project full install/doctor/uninstall dry-run, OpenAI API recommended zip dry-run, and installation artifact validation.
 - OpenAI API zips pass profile count and archive shape validation.
 - Professional scorecard is regenerated from current local evidence or explicitly marked as a sample snapshot.
+- Scorecard dashboard, README scorecard summary block, public benchmark summary, scenario showcase, and marketplace catalog are regenerated or validated fresh.
 - Marketplace index exports pass smoke checks for `recommended`, `full`, and `dev`.
+- Marketplace catalog means local/generated discovery catalog only; official marketplace publishing is intentionally not implemented.
 - Showcase examples pass `python3 scripts/validate-examples.py`.
 - Cloud component routing for Redis/Kafka/K8s/Helm/Spark remains covered by routing evals.
 - Helm chart changes include lint/template/schema/rendered-manifest validation and secret values review.

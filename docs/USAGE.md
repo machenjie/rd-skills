@@ -1,6 +1,12 @@
 # Usage
 
-This guide explains how to use the `rd-skills` repository as the source for ChangeForge runtime skills. The normal flow is:
+This guide explains how to use the `rd-skills` repository as the source for ChangeForge runtime skills. The shortest local flow is:
+
+```bash
+python3 scripts/quickstart.py --agent codex --scope user
+```
+
+The detailed manual flow is:
 
 1. Build a runtime profile into `dist/`.
 2. Install the built output into an agent runtime.
@@ -9,7 +15,7 @@ This guide explains how to use the `rd-skills` repository as the source for Chan
 
 Do not install `src/` directly. Runtime consumers use generated artifacts from `dist/` only.
 
-For the shortest build/install/doctor path, start with [QUICKSTART.md](QUICKSTART.md). This file remains the detailed operating guide and should be treated as the authority for installer options and workflow depth.
+For the one-command build/install/doctor path, start with [QUICKSTART.md](QUICKSTART.md). This file remains the detailed operating guide and should be treated as the authority for installer options and workflow depth.
 
 ## Choose A Profile
 
@@ -24,6 +30,10 @@ Use the smallest profile that fits the target runtime:
 In `recommended` and `full`, foundation capabilities are compiled into professional skill `references/` and loaded selectively by the selected skill route. They are not installed as top-level global skills.
 
 ## Build Runtime Artifacts
+
+`scripts/quickstart.py` runs the build, installer, and doctor commands for the
+common local path. Use the manual commands below when debugging a specific step
+or when you need a custom installer option.
 
 Build the profile before installing it:
 

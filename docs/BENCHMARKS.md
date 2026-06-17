@@ -24,6 +24,18 @@ Generate a public scorecard from the local evidence already present in `reports/
 python3 scripts/generate-professional-scorecard.py --out reports/professional-scorecard.md --json-out reports/professional-scorecard.json
 ```
 
+Render the reader-facing dashboard from the scorecard JSON:
+
+```bash
+python3 scripts/render-scorecard-dashboard.py --scorecard reports/professional-scorecard.json --out docs/SCORECARD_DASHBOARD.md --readme README.md
+```
+
+Generate the public benchmark summary snapshot:
+
+```bash
+python3 scripts/generate-public-benchmark-summary.py --out reports/public-benchmark-summary.md --json-out reports/public-benchmark-summary.json
+```
+
 The generator does not mark a validator as passed just because a command name exists. If a tool does not emit a machine-readable report, that status is reported as `not_collected` and the verification command is listed.
 
 ## Recommended Evidence Refresh
@@ -47,12 +59,14 @@ python3 scripts/validate-marketplace-index.py --profile recommended
 python3 scripts/validate-marketplace-index.py --profile full
 python3 scripts/validate-marketplace-index.py --profile dev
 python3 scripts/generate-professional-scorecard.py --out reports/professional-scorecard.md --json-out reports/professional-scorecard.json
+python3 scripts/render-scorecard-dashboard.py --scorecard reports/professional-scorecard.json --out docs/SCORECARD_DASHBOARD.md --readme README.md
+python3 scripts/generate-public-benchmark-summary.py --out reports/public-benchmark-summary.md --json-out reports/public-benchmark-summary.json
 ```
 
 Longer comparisons such as `python3 scripts/eval-routing.py --candidate-output-dir evals/routing-outputs` should be run when maintaining captured router outputs, not as a default PR blocker.
 
 ## Report Policy
 
-`reports/` contains sample/generated report snapshots that document local evidence. Regenerate them before release decisions and include the generation command in handoff notes. Do not edit scorecard numbers by hand.
+`reports/` contains sample/generated report snapshots that document local evidence. Regenerate them before release decisions and include the generation command in handoff notes. Do not edit scorecard or public benchmark numbers by hand.
 
-See [SCORECARD.md](SCORECARD.md) for the reader-facing scorecard interpretation.
+See [SCORECARD.md](SCORECARD.md) and [SCORECARD_DASHBOARD.md](SCORECARD_DASHBOARD.md) for the reader-facing scorecard interpretation.

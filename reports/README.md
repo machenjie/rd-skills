@@ -6,6 +6,13 @@ Regenerate professional scorecards with:
 
 ```bash
 python3 scripts/generate-professional-scorecard.py --out reports/professional-scorecard.md --json-out reports/professional-scorecard.json
+python3 scripts/render-scorecard-dashboard.py --scorecard reports/professional-scorecard.json --out docs/SCORECARD_DASHBOARD.md --readme README.md
 ```
 
-Regenerate benchmark and release evidence before publication decisions. Do not edit generated metrics by hand. If a report is missing, downstream scorecards must show `unknown` or `not_collected` rather than assuming success.
+Regenerate the public benchmark summary with:
+
+```bash
+python3 scripts/generate-public-benchmark-summary.py --out reports/public-benchmark-summary.md --json-out reports/public-benchmark-summary.json
+```
+
+Regenerate benchmark and release evidence before publication decisions. Do not edit generated metrics by hand. If a report is missing, downstream scorecards and public summaries must show `unknown` or `not_collected` rather than assuming success.

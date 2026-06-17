@@ -7,7 +7,6 @@ import argparse
 import importlib.util
 import json
 import sys
-import tomllib
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any
@@ -34,12 +33,27 @@ PRODUCTIZATION_ASSETS = (
     "docs/QUICKSTART.md",
     "docs/BENCHMARKS.md",
     "docs/SCORECARD.md",
+    "docs/SCORECARD_DASHBOARD.md",
     "docs/MARKETPLACE.md",
+    "docs/MARKETPLACE_CATALOG.md",
+    "docs/SHOWCASE.md",
     "docs/COMPARISON.md",
     "docs/OPEN_SOURCE_READINESS.md",
+    "docs/LICENSE_DECISION.md",
     "reports/README.md",
+    "reports/professional-scorecard.md",
+    "reports/professional-scorecard.json",
+    "reports/public-benchmark-summary.md",
+    "reports/public-benchmark-summary.json",
+    "config/open-source-release.yaml",
     "schemas/marketplace-index.schema.json",
     "scripts/generate-professional-scorecard.py",
+    "scripts/generate-public-benchmark-summary.py",
+    "scripts/generate-examples-showcase.py",
+    "scripts/generate-marketplace-catalog.py",
+    "scripts/render-scorecard-dashboard.py",
+    "scripts/quickstart.py",
+    "scripts/validate-open-source-readiness.py",
     "scripts/export-marketplace-index.py",
     "scripts/validate-marketplace-index.py",
     "scripts/validate-examples.py",
@@ -78,6 +92,11 @@ VALIDATION_COMMANDS = [
     "python3 scripts/validate-marketplace-index.py --profile dev",
     "python3 scripts/validate-examples.py",
     "python3 scripts/validate-productization-assets.py",
+    "python3 scripts/validate-open-source-readiness.py",
+    "python3 scripts/generate-public-benchmark-summary.py --check --out reports/public-benchmark-summary.md --json-out reports/public-benchmark-summary.json",
+    "python3 scripts/generate-examples-showcase.py --check --out docs/SHOWCASE.md",
+    "python3 scripts/generate-marketplace-catalog.py --profile recommended --check --out docs/MARKETPLACE_CATALOG.md",
+    "python3 scripts/render-scorecard-dashboard.py --scorecard reports/professional-scorecard.json --out docs/SCORECARD_DASHBOARD.md --readme README.md --check",
 ]
 
 
@@ -137,69 +156,23 @@ def _build_manifest(root: Path, profile: str) -> dict[str, Any] | None:
     return _read_json(root / "dist" / "universal" / "skills" / profile / ".changeforge-build-manifest.json")
 
 
-def _pyproject_license_text(root: Path) -> str:
-    path = root / "pyproject.toml"
-    if not path.exists():
-        return ""
-    try:
-        parsed = tomllib.loads(path.read_text(encoding="utf-8"))
-    except tomllib.TOMLDecodeError:
-        return ""
-    project = parsed.get("project", parsed)
-    license_value = project.get("license") if isinstance(project, dict) else None
-    if isinstance(license_value, dict):
-        return str(license_value.get("text") or license_value.get("file") or "").strip()
-    if isinstance(license_value, str):
-        return license_value.strip()
-    return ""
-
-
-def _contribution_licensing_confirmed(root: Path) -> bool:
-    path = root / "CONTRIBUTING.md"
-    if not path.exists():
-        return False
-    text = path.read_text(encoding="utf-8").casefold()
-    unresolved_markers = (
-        "proprietary license metadata",
-        "maintainers must choose",
-        "before accepting external contributions",
-        "pending owner decision",
+def _load_open_source_validator():
+    spec = importlib.util.spec_from_file_location(
+        "validate_open_source_readiness",
+        ROOT / "scripts" / "validate-open-source-readiness.py",
     )
-    return "contribution licensing" in text and "repository license" in text and not any(
-        marker in text for marker in unresolved_markers
-    )
-
-
-def _security_contact_confirmed(root: Path) -> bool:
-    path = root / "SECURITY.md"
-    if not path.exists():
-        return False
-    text = path.read_text(encoding="utf-8").casefold()
-    return (
-        "private vulnerability reporting is enabled" in text
-        or "mailto:" in text
-        or "security@" in text
-    )
+    if spec is None or spec.loader is None:
+        raise RuntimeError("unable to load validate-open-source-readiness.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 def open_source_readiness_status(root: Path) -> tuple[str, str]:
     """Return conservative open-source readiness status and check details."""
-    license_text = _pyproject_license_text(root)
-    checks = {
-        "license_file": (root / "LICENSE").exists(),
-        "pyproject_license_not_proprietary": bool(license_text)
-        and "proprietary" not in license_text.casefold(),
-        "contribution_licensing_confirmed": _contribution_licensing_confirmed(root),
-        "security_contact_confirmed": _security_contact_confirmed(root),
-    }
-    detail = ", ".join(f"{name}={passed}" for name, passed in checks.items())
-    if not checks["license_file"]:
-        return "partial", detail
-    if not checks["pyproject_license_not_proprietary"]:
-        return "fail", detail
-    if all(checks.values()):
-        return "pass", detail
-    return "partial", detail
+    result = _load_open_source_validator().evaluate_open_source_readiness(root)
+    return result.status, result.detail
 
 
 def productization_assets_status(root: Path) -> tuple[str, str]:
@@ -223,12 +196,42 @@ def _load_validate_examples():
     return module
 
 
+def _load_validate_marketplace_index():
+    spec = importlib.util.spec_from_file_location(
+        "validate_marketplace_index",
+        ROOT / "scripts" / "validate-marketplace-index.py",
+    )
+    if spec is None or spec.loader is None:
+        raise RuntimeError("unable to load validate-marketplace-index.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 def examples_status(root: Path) -> tuple[str, str]:
     """Return status/detail from the same validator used by CI."""
     errors = _load_validate_examples().validate_examples(root)
     if errors:
         return "fail", "; ".join(errors[:5])
     return "pass", "showcase examples validate"
+
+
+def marketplace_index_status(root: Path) -> tuple[str, str]:
+    """Return status/detail from the marketplace index validator for all profiles."""
+    validator = _load_validate_marketplace_index()
+    errors_by_profile: dict[str, list[str]] = {}
+    for profile in PROFILES:
+        errors = validator.validate_profile(root, profile)
+        if errors:
+            errors_by_profile[profile] = errors
+    if errors_by_profile:
+        detail = {
+            profile: errors[:3]
+            for profile, errors in errors_by_profile.items()
+        }
+        return "fail", json.dumps(detail, sort_keys=True)
+    return "pass", "recommended, full, and dev marketplace indexes validate"
 
 
 def _summary_status(name: str, value: dict[str, Any]) -> str:
@@ -307,7 +310,13 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
         profile_details[profile] = {
             "status": status,
             "detail": detail,
-            "manifest": str(root / "dist" / "universal" / "skills" / profile / ".changeforge-build-manifest.json"),
+            "manifest": str(
+                Path("dist")
+                / "universal"
+                / "skills"
+                / profile
+                / ".changeforge-build-manifest.json"
+            ),
         }
 
     if any(status == "fail" for status in profile_statuses):
@@ -398,13 +407,25 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
         )
     )
 
+    marketplace_status, marketplace_detail = marketplace_index_status(root)
+    dimensions.append(
+        Dimension(
+            "Marketplace index validation",
+            marketplace_status,
+            "scripts/validate-marketplace-index.py",
+            "python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev",
+            "Rebuild all profiles and repair marketplace index schema, visibility, or runtime path mismatches.",
+            marketplace_detail,
+        )
+    )
+
     open_source_status, open_source_detail = open_source_readiness_status(root)
     dimensions.append(
         Dimension(
             "Open-source readiness",
             open_source_status,
-            "docs/OPEN_SOURCE_READINESS.md, pyproject.toml, CONTRIBUTING.md, SECURITY.md, LICENSE",
-            "python3 scripts/validate-productization-assets.py",
+            "config/open-source-release.yaml, docs/LICENSE_DECISION.md, docs/OPEN_SOURCE_READINESS.md, pyproject.toml, CONTRIBUTING.md, SECURITY.md, LICENSE",
+            "python3 scripts/validate-open-source-readiness.py",
             "Owner must select an OSI license, update package metadata, confirm contribution licensing, and configure private vulnerability reporting before open-source publication.",
             open_source_detail,
         )
