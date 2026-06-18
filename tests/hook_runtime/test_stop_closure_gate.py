@@ -374,11 +374,12 @@ class StopClosureGateTests(unittest.TestCase):
             "stop_hook_active": False,
             "last_assistant_message": (
                 "I used the ChangeForge skill path. Changed files are listed. "
-                "Validation: ran pytest -q, 12 passed, exit 0. Residual risk is none. "
+                "Validation: ran python3 scripts/validate-hooks.py, passed, exit 0. Residual risk is none. "
                 "Repository context: owning surface and caller/callee flow inspected. "
                 "Workflow state: current stage testing, allowed transition handoff, owner/reviewer split recorded. "
                 "Plan-execution consistency: accepted plan vs actual changed files and validation commands reconciled. "
-                "Validation freshness: latest edit covered by the pytest run. Next steps: deploy.\n\n"
+                "Skill efficacy benchmark: hook runtime behavior only; existing hook validator covers the changed closure behavior. "
+                "Validation freshness: latest edit covered by the hook validator. Next steps: deploy.\n\n"
                 f"{PREFLIGHT_MANIFEST}\n"
                 "```yaml\n"
                 "changeforge_route:\n"
@@ -395,7 +396,12 @@ class StopClosureGateTests(unittest.TestCase):
         }
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
             cwd, cache = Path(cwd_s), Path(cache_s)
-            seed_state(cwd, cache, runtime="codex", changed_paths=["a.go"])
+            seed_state(
+                cwd,
+                cache,
+                runtime="codex",
+                changed_paths=["src/hook-runtime/scripts/changeforge_common.py"],
+            )
             result = run_stop(event, cwd, cache, mode="block", agent="codex")
         self.assertEqual(result.returncode, 0)
         payload = json.loads(result.stdout)
@@ -409,11 +415,12 @@ class StopClosureGateTests(unittest.TestCase):
             "stop_hook_active": False,
             "last_assistant_message": (
                 "I used the ChangeForge skill path. Changed files are listed. "
-                "Validation: ran go test ./..., exit 0. Residual risk is none. "
+                "Validation: ran python3 scripts/validate-hooks.py, exit 0. Residual risk is none. "
                 "Repository context: owning surface and caller/callee flow inspected. "
                 "Workflow state: current stage testing, allowed transition review, owner/reviewer split recorded. "
                 "Plan-execution consistency: accepted plan vs actual changed files and validation commands reconciled. "
-                "Validation freshness: latest edit covered by go test. Next steps: review.\n\n"
+                "Skill efficacy benchmark: hook runtime behavior only; existing hook validator covers the changed closure behavior. "
+                "Validation freshness: latest edit covered by the hook validator. Next steps: review.\n\n"
                 f"{PREFLIGHT_MANIFEST}\n"
                 "```yaml\n"
                 "changeforge_route:\n"
@@ -434,7 +441,7 @@ class StopClosureGateTests(unittest.TestCase):
                 cwd,
                 cache,
                 runtime="codex",
-                changed_paths=["a.go"],
+                changed_paths=["src/hook-runtime/scripts/changeforge_common.py"],
                 implementation_preflight_required=True,
                 implementation_preflight_seen=True,
                 implementation_preflight_complete=True,
@@ -731,7 +738,7 @@ class StopClosureGateTests(unittest.TestCase):
 
     def test_completion_language_with_validation_is_not_flagged(self) -> None:
         text = (
-            "Done. Ran pytest -q, 12 passed, exit 0.\n\n"
+            "Done. Ran python3 scripts/validate-hooks.py, passed, exit 0.\n\n"
             "```yaml\n"
             "changeforge_route:\n"
             "  selected_skills:\n"
@@ -741,7 +748,7 @@ class StopClosureGateTests(unittest.TestCase):
         event = {"hook_event_name": "Stop", "runtime": "claude", "response": text}
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
             cwd, cache = Path(cwd_s), Path(cache_s)
-            seed_state(cwd, cache, changed_paths=["a.py"])
+            seed_state(cwd, cache, changed_paths=["src/hook-runtime/scripts/changeforge_common.py"])
             result = run_stop(event, cwd, cache)
         self.assertEqual(result.returncode, 0)
         self.assertNotIn("completion language but shows no validation", result.stdout)

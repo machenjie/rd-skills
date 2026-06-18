@@ -35,6 +35,7 @@ Owns testing strategy; also shapes acceptance in requirement-intake. Per-stage f
 - **Negative, permission, rollback, migration, and failure paths must be tested when those paths are exercised by the change.** A test strategy that has only happy-path cases for a payment flow is incomplete — it does not prove that a payment failure is handled, that an unauthorized user is rejected, that a partial migration can be rolled back, or that a third-party timeout is recovered. If these paths are NOT tested, that must be an explicit documented decision with residual risk and compensating evidence, not an oversight.
 - **Omitted test levels require explicit justification: technical reason, residual risk, and compensating evidence.** "We don't have time" is not a technical reason. Acceptable technical reasons: "the test level is covered by a separate gate (security-privacy-gate performs a dedicated auth matrix review)"; "the behavior is stateless and entirely covered by unit tests with 100% branch coverage"; "the external dependency has an SLA test in the provider's own suite (contract test by provider)." Residual risk must be rated. Compensating evidence must be named.
 - **Test evidence must trace to acceptance standards and changed behavior.** Each test must answer: "which acceptance criterion does this prove?" and "which changed behavior does this exercise?" A test that cannot be traced to an acceptance criterion or a changed code path is a test that proves nothing about correctness — it is coverage theater.
+- **Validation Broker command choice must be explained when available.** Use the broker plan to choose narrow/module/full commands for changed paths and risk surfaces, and state why a narrower command is sufficient or why the full command was deferred. Unknown coverage is residual risk, not a pass.
 
 # Industry Benchmarks
 
@@ -132,6 +133,7 @@ Return a test strategy with:
 - `test_data_requirements` (fixtures, factories, isolation mechanism — delegate to `test-data-management`)
 - `release_blocking_criteria` (which test results must be green before release is approved)
 - `evidence_artifacts` (test report locations, coverage reports, contract verification results)
+- `validation_broker_plan` (changed paths/risk surfaces, selected command level, skipped full validators and rationale, freshness expectation)
 
 # Evidence Contract
 

@@ -114,6 +114,33 @@
       "description": "Whether a validation-looking command was observed earlier in the turn. This is not validation evidence without an outcome in the stop closure."
     },
     "validation_evidence_detected": { "type": "boolean" },
+    "validation_result_outcome": {
+      "type": "string",
+      "enum": ["", "pass", "fail", "unknown", "not_run"],
+      "description": "Broker-parsed outcome from bounded closure evidence."
+    },
+    "validation_result_evidence_strength": {
+      "type": "string",
+      "enum": ["", "strong", "weak", "negative"]
+    },
+    "validation_result_negative_reason": {
+      "type": "string",
+      "enum": ["", "not_run", "unable_to_run", "stale", "failed", "no_outcome"]
+    },
+    "validation_result_command_kind": {
+      "type": "string",
+      "enum": ["", "narrow", "module", "full", "unknown"]
+    },
+    "validation_result_fresh_after_last_edit": {
+      "type": "string",
+      "enum": ["", "true", "false", "unknown"]
+    },
+    "validation_result_coverage_aligned": {
+      "type": "string",
+      "enum": ["", "true", "false", "unknown"]
+    },
+    "validation_result_covered_paths": { "$ref": "#/$defs/stringList" },
+    "validation_result_covered_risk_surfaces": { "$ref": "#/$defs/stringList" },
     "residual_risk_detected": { "type": "boolean" },
     "completion_language_detected": {
       "type": "boolean",

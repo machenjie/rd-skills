@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from pathlib import Path
 
 from changeforge_common import (
@@ -26,6 +27,19 @@ from changeforge_common import (
 from changeforge_adapter_capabilities import adapter_capabilities_for
 from changeforge_closure_contract import ClosureContract
 from changeforge_hook_policy import gate_mode, run_gate_with_policy
+
+try:
+    from validation_broker import assess_validation_closure
+except ModuleNotFoundError:  # Source tree layout: hook scripts live under src/hook-runtime.
+    _src_root = Path(__file__).resolve().parents[2]
+    if str(_src_root) not in sys.path:
+        sys.path.insert(0, str(_src_root))
+    try:
+        from validation_broker import assess_validation_closure
+    except Exception:  # pragma: no cover - hook runtime must fail open.
+        assess_validation_closure = None
+except Exception:  # pragma: no cover - hook runtime must fail open.
+    assess_validation_closure = None
 
 
 MAX_TRANSCRIPT_BYTES = 1_000_000
@@ -375,7 +389,9 @@ def _main() -> int:
         return 0
     final_text = _final_text(event)
     manifest = extract_manifest_fields(final_text)
-    signals = _closure_signals(final_text, state, manifest)
+    validation_assessment = _validation_broker_assessment(final_text, state, mode)
+    validation_result = _validation_result(validation_assessment)
+    signals = _closure_signals(final_text, state, manifest, validation_assessment)
     contract = _closure_contract(final_text, state, manifest, runtime, mode, signals)
     write_telemetry_event(
         repo,
@@ -402,6 +418,24 @@ def _main() -> int:
             state.get("validation_command_seen") or state.get("validation_seen")
         ),
         validation_evidence_detected=signals["validation"],
+        validation_result_outcome=str(validation_result.get("outcome", "")),
+        validation_result_evidence_strength=str(
+            validation_result.get("evidence_strength", "")
+        ),
+        validation_result_negative_reason=str(
+            validation_result.get("negative_evidence_reason", "")
+        ),
+        validation_result_command_kind=str(validation_result.get("command_kind", "")),
+        validation_result_fresh_after_last_edit=_telemetry_truth(
+            validation_result.get("fresh_after_last_edit")
+        ),
+        validation_result_coverage_aligned=_telemetry_truth(
+            validation_result.get("coverage_aligned")
+        ),
+        validation_result_covered_paths=validation_result.get("covered_paths", []),
+        validation_result_covered_risk_surfaces=validation_result.get(
+            "covered_risk_surfaces", []
+        ),
         residual_risk_detected=signals["risk"],
         completion_language_detected=signals["completion_language"],
         stage_manifest_detected=bool(manifest.get("stage_present")),
@@ -501,7 +535,12 @@ def _closure_profile(state: dict) -> str:
     return "engineering"
 
 
-def _closure_signals(final_text: str, state: dict, manifest: dict) -> dict[str, bool]:
+def _closure_signals(
+    final_text: str,
+    state: dict,
+    manifest: dict,
+    validation_assessment: dict | None = None,
+) -> dict[str, bool]:
     """Completeness flags for telemetry. This is presence detection only.
 
     The Stop gate does not judge semantic correctness; it records whether the
@@ -517,7 +556,7 @@ def _closure_signals(final_text: str, state: dict, manifest: dict) -> dict[str, 
 
     return {
         "route_manifest": bool(manifest.get("route_present")),
-        "validation": _has_validation_evidence(final_text, state),
+        "validation": _has_validation_evidence(final_text, state, validation_assessment),
         "risk": has("risk"),
         "references": bool(manifest.get("required_references")) or "reference" in lowered,
         "skills": has("skills"),
@@ -633,6 +672,12 @@ def _closure_message(
         details.append(f"- changed paths: {', '.join(state['changed_paths'])}")
     if state.get("validation_command_seen") or state.get("validation_seen"):
         details.append("- validation command was observed")
+    broker_assessment = _validation_broker_assessment(final_text, state, "warn")
+    broker_issues = broker_assessment.get("issues", []) if broker_assessment else []
+    if isinstance(broker_issues, list) and broker_issues:
+        details.append(
+            f"- validation broker issues: {', '.join(str(issue) for issue in broker_issues[:6])}"
+        )
     if state.get("suggested_domain_extensions"):
         details.append(
             f"- suggested domain extensions: {', '.join(state['suggested_domain_extensions'])}"
@@ -1127,6 +1172,36 @@ def _has_implementation_preflight_evidence(text: str, state: dict) -> bool:
     return True
 
 
+def _validation_broker_assessment(final_text: str, state: dict, mode: str) -> dict:
+    if assess_validation_closure is None:
+        return {}
+    try:
+        return assess_validation_closure(
+            final_text,
+            state,
+            block_mode=mode == "block",
+        )
+    except Exception:
+        return {}
+
+
+def _validation_result(assessment: dict | None) -> dict:
+    if not isinstance(assessment, dict):
+        return {}
+    result = assessment.get("validation_result")
+    return result if isinstance(result, dict) else {}
+
+
+def _telemetry_truth(value: object) -> str:
+    if value is True:
+        return "true"
+    if value is False:
+        return "false"
+    if value == "unknown":
+        return "unknown"
+    return ""
+
+
 def _unverified_completion(text: str, state: dict) -> bool:
     """Presence check: completion language with no validation evidence.
 
@@ -1144,7 +1219,11 @@ def _unverified_completion(text: str, state: dict) -> bool:
     return not _has_validation_evidence(text, state)
 
 
-def _has_validation_evidence(text: str, state: dict) -> bool:
+def _has_validation_evidence(
+    text: str,
+    state: dict,
+    validation_assessment: dict | None = None,
+) -> bool:
     """Return true only for strong validation evidence in the closure text.
 
     A command-like string in hook state means a validation command was observed,
@@ -1154,6 +1233,17 @@ def _has_validation_evidence(text: str, state: dict) -> bool:
     """
     if not text:
         return False
+    if validation_assessment is None and assess_validation_closure is not None:
+        validation_assessment = _validation_broker_assessment(text, state, "warn")
+    result = _validation_result(validation_assessment)
+    if result:
+        if result.get("fresh_after_last_edit") is False:
+            return False
+        if result.get("outcome") != "pass":
+            return False
+        if result.get("coverage_aligned") is False:
+            return False
+        return result.get("evidence_strength") == "strong"
     lowered = text.casefold()
     if _has_negative_validation_phrase(lowered):
         return False

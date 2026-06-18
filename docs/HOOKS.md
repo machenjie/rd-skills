@@ -248,6 +248,10 @@ planner. It tells the agent *when* to route, not *how* to route:
   validation keyword is not evidence by itself; the closure needs the command
   plus an outcome, exit code, output, or artifact, and negative phrases such as
   `not verified` or `没有运行` stay non-evidence.
+- Validation evidence is evaluated by the Validation Broker when available:
+  changed paths and risk surfaces resolve to narrow/full command candidates,
+  command summaries are parsed into bounded result facts, and Stop closure checks
+  whether the command finished after the latest material edit.
 - An explicit, in-scope user skill path is respected without re-routing.
 - Pure question, explanation, or translation needs no routing.
 
@@ -264,6 +268,30 @@ Bootstrap boundaries:
   explicit in-scope instruction.
 - The bootstrap reads no references, calls no LLM, makes no network call, and
   writes no project source.
+
+## Validation Broker
+
+The Validation Broker is a deterministic support package used by scripts and the
+Stop Closure Gate. It does not execute tests by itself. It recommends validation
+commands from changed paths, risk surfaces, stage, and optional context-pack
+validation candidates, then evaluates bounded result facts:
+
+- known rd-skills paths map to narrow commands and full fallback commands;
+- unknown paths return a conservative recommendation instead of passing;
+- command text without an outcome is weak evidence;
+- `not run`, `unable to run`, `未验证`, `无法运行`, and equivalent disclosures are
+  negative evidence;
+- a validation command observed before the latest material edit is stale and
+  cannot prove the final patch;
+- coverage that does not align with changed paths or risk surfaces is surfaced
+  as a broker issue.
+
+Stop closure remains warning/fail-open by default. In block mode, the gate may
+block high-confidence validation failures such as stale validation, failed
+validation, or command-without-outcome. Broker telemetry records only bounded
+fields such as outcome, freshness, command kind, and covered path/risk patterns;
+it never records raw stdout, prompts, secrets, environment variables, or full
+command output.
 
 Runtime support:
 

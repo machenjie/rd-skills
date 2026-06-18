@@ -62,6 +62,7 @@ COPILOT_HOOK_SUPPORT_FILES = (
     "changeforge_copilot_skill_summary.md",
     "changeforge_copilot_professional_contract.md",
 )
+HOOK_SUPPORT_PACKAGES = (SRC_DIR / "validation_broker",)
 RUNTIME_ROUTE_INDEX_NAME = "changeforge_runtime_route_index.json"
 UNIVERSAL_BOOTSTRAP_ROOT = DIST_DIR / "universal" / "bootstrap"
 
@@ -448,6 +449,7 @@ def _build_codex_hook_runtime(
     hooks_dir = target / "hooks"
     _reset_dir(hooks_dir)
     _copy_hook_scripts(hooks_dir)
+    _copy_hook_support_packages(hooks_dir)
     _copy_hook_support_files(hooks_dir, COMMON_HOOK_SUPPORT_FILES)
     _write_runtime_route_index(hooks_dir, professional_skills, capabilities, domain_extensions, stage_model)
     shutil.copy2(
@@ -473,6 +475,7 @@ def _build_codex_user_hook_runtime(
     hooks_dir = target / "hooks"
     _reset_dir(hooks_dir)
     _copy_hook_scripts(hooks_dir)
+    _copy_hook_support_packages(hooks_dir)
     _copy_hook_support_files(hooks_dir, COMMON_HOOK_SUPPORT_FILES)
     _write_runtime_route_index(hooks_dir, professional_skills, capabilities, domain_extensions, stage_model)
     shutil.copy2(
@@ -498,6 +501,7 @@ def _build_claude_hook_runtime(
     hooks_dir = target / "hooks"
     _reset_dir(hooks_dir)
     _copy_hook_scripts(hooks_dir)
+    _copy_hook_support_packages(hooks_dir)
     _copy_hook_support_files(hooks_dir, COMMON_HOOK_SUPPORT_FILES)
     _write_runtime_route_index(hooks_dir, professional_skills, capabilities, domain_extensions, stage_model)
     shutil.copy2(
@@ -526,6 +530,7 @@ def _build_claude_user_hook_runtime(
     hooks_dir = target / "hooks"
     _reset_dir(hooks_dir)
     _copy_hook_scripts(hooks_dir)
+    _copy_hook_support_packages(hooks_dir)
     _copy_hook_support_files(hooks_dir, COMMON_HOOK_SUPPORT_FILES)
     _write_runtime_route_index(hooks_dir, professional_skills, capabilities, domain_extensions, stage_model)
     shutil.copy2(
@@ -562,6 +567,7 @@ def _build_copilot_hook_runtime(
     scripts_dir = hooks_root / "changeforge"
     scripts_dir.mkdir(parents=True, exist_ok=True)
     _copy_hook_scripts(scripts_dir)
+    _copy_hook_support_packages(scripts_dir)
     _copy_hook_support_files(scripts_dir, (*COMMON_HOOK_SUPPORT_FILES, *COPILOT_HOOK_SUPPORT_FILES))
     _write_runtime_route_index(scripts_dir, professional_skills, capabilities, domain_extensions, stage_model)
     template_dir = "copilot" if scope == "project" else "copilot-user"
@@ -603,6 +609,20 @@ def _copy_hook_scripts(target: Path) -> None:
         destination = target / path.name
         shutil.copy2(path, destination)
         destination.chmod(0o755)
+
+
+def _copy_hook_support_packages(target: Path) -> None:
+    for source in HOOK_SUPPORT_PACKAGES:
+        if not source.is_dir():
+            raise BuildError(f"missing hook support package: {source.relative_to(ROOT)}")
+        destination = target / source.name
+        if destination.exists():
+            shutil.rmtree(destination)
+        shutil.copytree(
+            source,
+            destination,
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+        )
 
 
 def _copy_hook_support_files(target: Path, support_files: tuple[str, ...]) -> None:

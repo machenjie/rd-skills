@@ -30,6 +30,7 @@ Keep agent-assisted engineering work in a coherent state machine from clarificat
 - Do not move from review to closure when findings remain unrepaired or unre-reviewed.
 - The action owner and independent reviewer must be different skills or capabilities.
 - Validation evidence must be fresh after the final material edit; stale validation must be disclosed as not verified.
+- When Validation Broker output is available, use its event-order freshness and coverage result as closure evidence; stale, failed, not-run, no-outcome, or coverage-mismatch results route back to testing or failure diagnosis.
 - Repair requires a targeted re-review of the repaired area, not a broad completion claim.
 - Stop conditions must prevent a third same-path retry after two failures without new evidence and route repair.
 
@@ -76,6 +77,7 @@ Return a `workflow_state_summary` with:
 - **Owner and reviewer**: action owner skill/capability and different review skill/capability.
 - **Transition history**: prior stage, current stage, next stage, and reason.
 - **Validation freshness**: command, outcome, timestamp or turn relation, and whether edits happened after it.
+- **Validation broker result**: selected command level, coverage alignment, event-order freshness, and next route when validation failed.
 - **Review and repair ledger**: findings, repair owner, re-review result, and unresolved findings.
 - **Stop condition**: failure count, route repair trigger, or blocked owner question.
 - **Closure package status**: route manifest, stage manifest, repository context, plan consistency, validation, residual risk, and next action.

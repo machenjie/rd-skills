@@ -83,6 +83,11 @@ was seen. It does not record the assistant message or raw manifest body. The
 Stop Closure Gate records completeness facts only: whether a complete parseable
 `changeforge_route` manifest, changed files, validation evidence, residual risk,
 required references, and implementation preflight evidence were present.
+When Validation Broker is available, Stop telemetry also records bounded result
+facts: validation outcome, evidence strength, negative reason, command kind,
+freshness after the last material edit, coverage alignment, and covered path/risk
+patterns. It does not record raw stdout, prompts, secrets, environment
+variables, or full command output.
 
 Hooks still cannot replace `change-forge-router`. They never call a model, never
 reach the network, never modify project source, and never load every compiled
@@ -135,21 +140,22 @@ command observed earlier in the turn is recorded only as command presence; the
 stop closure still needs a strong evidence signal such as the command plus an
 outcome, exit code, output, or artifact. Text that says validation was not run
 (`not verified`, `not run`, `unable to run`, `未验证`, `没有运行`, `无法运行`) is
-treated as negative validation evidence. The stop gate records a presence-only
-`completion_language_detected` fact, and the review tool pairs it with the
-absence of validation evidence. The completion-evidence family is:
+treated as negative validation evidence. The Validation Broker adds a bounded
+freshness check using hook event order when available: validation must finish
+after the latest material edit, or the broker records stale negative evidence.
+The stop gate records a presence-only `completion_language_detected` fact, and
+the review tool pairs it with the absence of validation evidence. The
+completion-evidence family is:
 
 - `unverified_completion_claim` — fact-detected: the stop closure used completion
   language after an engineering surface but recorded no validation evidence. Routed to
   `agent-execution-discipline` and `quality-test-gate`.
 - `success_language_without_evidence`, `partial_validation_overclaimed`,
-  `stale_validation_reused`, and
-  `delegated_agent_report_trusted_without_independent_check` — recognized
-  categories that fact-only telemetry cannot reliably detect (it does not capture
-  claim wording, per-command granularity, run timestamps versus edits, or
-  delegation chains). These are surfaced through the completion-evidence pressure
-  evals (`evals/pressure/completion-evidence/`) and human review, not through
-  automatic telemetry detectors.
+  and `delegated_agent_report_trusted_without_independent_check` — recognized
+  categories that fact-only telemetry cannot reliably detect because it does not
+  capture raw claim wording or delegation chains. `stale_validation_reused` is
+  now detected when hook event order proves validation finished before the latest
+  material edit; older sessions without order facts remain human-review cases.
 
 Fact telemetry never records prompts or output, so the family deliberately
 auto-detects only what the recorded facts support and leaves the rest to pressure

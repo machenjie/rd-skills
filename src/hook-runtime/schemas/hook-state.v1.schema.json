@@ -19,6 +19,9 @@
     "reviewer_skill",
     "validation_command_seen",
     "validation_seen",
+    "event_index",
+    "last_material_edit_index",
+    "last_validation_command_index",
     "updated_at"
   ],
   "$defs": {
@@ -176,6 +179,21 @@
     "route_preflight_emitted": {
       "description": "Whether the route-preflight reminder was already emitted this turn.",
       "type": "boolean"
+    },
+    "event_index": {
+      "description": "Cache-only monotonic event counter for this turn. It stores order, not prompts or output.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "last_material_edit_index": {
+      "description": "Latest event index that changed source, tests, docs, config, registry, schemas, templates, build, or install behavior.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "last_validation_command_index": {
+      "description": "Latest event index where a validation-looking command was observed. Outcome is still required in Stop closure.",
+      "type": "integer",
+      "minimum": 0
     },
     "turn_id": { "type": "string" },
     "updated_at": { "type": "string" }

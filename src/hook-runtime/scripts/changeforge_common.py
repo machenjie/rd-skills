@@ -67,6 +67,11 @@ STATE_SCALAR_STRING_FIELDS = (
     "owner_skill",
     "reviewer_skill",
 )
+STATE_SCALAR_INT_FIELDS = (
+    "event_index",
+    "last_material_edit_index",
+    "last_validation_command_index",
+)
 STATE_BOOL_FIELDS = (
     "stage_route_present",
     "read_intent_seen",
@@ -349,6 +354,11 @@ def load_state(repo: Path) -> dict:
     for key in STATE_SCALAR_STRING_FIELDS:
         if not isinstance(state.get(key), str):
             state[key] = ""
+    for key in STATE_SCALAR_INT_FIELDS:
+        try:
+            state[key] = int(state.get(key) or 0)
+        except (TypeError, ValueError):
+            state[key] = 0
     for key in STATE_BOOL_FIELDS:
         if not isinstance(state.get(key), bool):
             state[key] = bool(state.get(key))
@@ -377,6 +387,11 @@ def save_state(repo: Path, state: dict) -> None:
         )
     for key in STATE_SCALAR_STRING_FIELDS:
         next_state[key] = str(next_state.get(key, "")).strip()[:MAX_STATE_VALUE_LEN]
+    for key in STATE_SCALAR_INT_FIELDS:
+        try:
+            next_state[key] = max(0, int(next_state.get(key) or 0))
+        except (TypeError, ValueError):
+            next_state[key] = 0
     for key in STATE_BOOL_FIELDS:
         next_state[key] = bool(next_state.get(key))
     if "validation_command_seen" not in next_state:
@@ -643,8 +658,11 @@ def merge_state(
     state["runtime"] = runtime
     if not state.get("turn_id"):
         state["turn_id"] = _new_turn_id()
+    next_event_index = int(state.get("event_index") or 0) + 1
+    state["event_index"] = next_event_index
+    changed_path_values = list(changed_paths or ())
     update = {
-        "changed_paths": changed_paths,
+        "changed_paths": changed_path_values,
         "read_paths": read_paths,
         "read_tools": read_tools,
         "searched_patterns": searched_patterns,
@@ -712,6 +730,10 @@ def merge_state(
     if command_seen is not None:
         state = reduce_state_update(state, {"validation_command_seen": bool(command_seen)})
         state["validation_seen"] = state["validation_command_seen"]
+        if command_seen:
+            state["last_validation_command_index"] = next_event_index
+    if changed_path_values:
+        state["last_material_edit_index"] = next_event_index
     save_state(repo, state)
     return state
 
@@ -845,6 +867,14 @@ def write_telemetry_event(
     skill_efficacy_benchmark_seen: bool = False,
     plan_execution_consistency_seen: bool = False,
     validation_freshness_seen: bool = False,
+    validation_result_outcome: str = "",
+    validation_result_evidence_strength: str = "",
+    validation_result_negative_reason: str = "",
+    validation_result_command_kind: str = "",
+    validation_result_fresh_after_last_edit: str = "",
+    validation_result_coverage_aligned: str = "",
+    validation_result_covered_paths: Iterable[str] = (),
+    validation_result_covered_risk_surfaces: Iterable[str] = (),
     implementation_preflight_required: bool = False,
     implementation_preflight_seen: bool = False,
     implementation_preflight_complete: bool = False,
@@ -918,6 +948,34 @@ def write_telemetry_event(
             "skill_efficacy_benchmark_seen": bool(skill_efficacy_benchmark_seen),
             "plan_execution_consistency_seen": bool(plan_execution_consistency_seen),
             "validation_freshness_seen": bool(validation_freshness_seen),
+            "validation_result_outcome": _telemetry_enum(
+                validation_result_outcome,
+                {"", "pass", "fail", "unknown", "not_run"},
+            ),
+            "validation_result_evidence_strength": _telemetry_enum(
+                validation_result_evidence_strength,
+                {"", "strong", "weak", "negative"},
+            ),
+            "validation_result_negative_reason": _telemetry_enum(
+                validation_result_negative_reason,
+                {"", "not_run", "unable_to_run", "stale", "failed", "no_outcome"},
+            ),
+            "validation_result_command_kind": _telemetry_enum(
+                validation_result_command_kind,
+                {"", "narrow", "module", "full", "unknown"},
+            ),
+            "validation_result_fresh_after_last_edit": _telemetry_enum(
+                validation_result_fresh_after_last_edit,
+                {"", "true", "false", "unknown"},
+            ),
+            "validation_result_coverage_aligned": _telemetry_enum(
+                validation_result_coverage_aligned,
+                {"", "true", "false", "unknown"},
+            ),
+            "validation_result_covered_paths": _capped_items(validation_result_covered_paths),
+            "validation_result_covered_risk_surfaces": _capped_items(
+                validation_result_covered_risk_surfaces
+            ),
             "implementation_preflight_required": bool(implementation_preflight_required),
             "implementation_preflight_seen": bool(implementation_preflight_seen),
             "implementation_preflight_complete": bool(implementation_preflight_complete),
@@ -1371,6 +1429,11 @@ def _capped_items(values: Iterable[str]) -> list[str]:
     return _unique(out)
 
 
+def _telemetry_enum(value: object, allowed: set[str]) -> str:
+    text = str(value or "").strip()
+    return text if text in allowed else ""
+
+
 def _sanitize_memory_event(repo: Path, event: dict[str, Any]) -> dict[str, Any]:
     source = event if isinstance(event, dict) else {}
     paths = _memory_clean_paths(repo, source.get("paths", []))
@@ -1426,6 +1489,12 @@ def _memory_event_from_telemetry_record(repo: Path, record: dict[str, Any]) -> d
         evidence_refs.append("route_manifest_detected")
     if record.get("validation_evidence_detected"):
         evidence_refs.append("validation_evidence_detected")
+    if record.get("validation_result_outcome"):
+        evidence_refs.append(f"validation_result:{record.get('validation_result_outcome')}")
+    if record.get("validation_result_fresh_after_last_edit"):
+        evidence_refs.append(f"fresh_after_last_edit:{record.get('validation_result_fresh_after_last_edit')}")
+    if record.get("validation_result_negative_reason"):
+        evidence_refs.append(f"negative_reason:{record.get('validation_result_negative_reason')}")
     if record.get("implementation_preflight_blocked"):
         evidence_refs.append("implementation_preflight_blocked")
     return {
@@ -1462,6 +1531,12 @@ def _memory_type_from_telemetry(record: dict[str, Any]) -> str:
 def _memory_outcome_from_telemetry(record: dict[str, Any]) -> str:
     if record.get("implementation_preflight_blocked"):
         return "blocked"
+    if record.get("validation_result_negative_reason") in {"stale", "failed"}:
+        return "failed"
+    if record.get("validation_result_outcome") == "fail":
+        return "failed"
+    if record.get("validation_result_outcome") == "not_run":
+        return "partial"
     if record.get("validation_evidence_detected") and record.get("residual_risk_detected"):
         return "success"
     if record.get("completion_language_detected") and not record.get("validation_evidence_detected"):
@@ -1719,6 +1794,9 @@ def _empty_state() -> dict:
         "validation_command_seen": False,
         "validation_seen": False,
         "route_preflight_emitted": False,
+        "event_index": 0,
+        "last_material_edit_index": 0,
+        "last_validation_command_index": 0,
         "turn_id": "",
         "updated_at": "",
     }

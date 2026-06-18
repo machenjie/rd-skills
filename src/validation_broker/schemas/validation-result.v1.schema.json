@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/validation-result.v1.schema.json",
+  "title": "ChangeForge Validation Result",
+  "description": "Bounded validation result fact. It records command identity, outcome, freshness, and coverage only; it must not contain raw stdout, prompts, secrets, or full command output.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "command",
+    "command_kind",
+    "outcome",
+    "covered_paths",
+    "covered_risk_surfaces",
+    "fresh_after_last_edit",
+    "evidence_strength",
+    "negative_evidence_reason"
+  ],
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "type": "string", "maxLength": 300 }
+    }
+  },
+  "properties": {
+    "schema_version": { "const": 1 },
+    "command": { "type": "string", "maxLength": 500 },
+    "command_kind": { "type": "string", "enum": ["narrow", "module", "full", "unknown"] },
+    "validation_looking": { "type": "boolean" },
+    "started_at": { "type": "string", "maxLength": 100 },
+    "finished_at": { "type": "string", "maxLength": 100 },
+    "finished_index": { "type": ["integer", "null"] },
+    "outcome": { "type": "string", "enum": ["pass", "fail", "unknown", "not_run"] },
+    "exit_code": { "type": ["integer", "null"] },
+    "covered_paths": { "$ref": "#/$defs/stringList" },
+    "covered_risk_surfaces": { "$ref": "#/$defs/stringList" },
+    "material_edit_cutoff": {
+      "oneOf": [
+        { "type": "string", "maxLength": 100 },
+        { "type": "integer" }
+      ]
+    },
+    "fresh_after_last_edit": {
+      "oneOf": [
+        { "type": "boolean" },
+        { "type": "string", "const": "unknown" }
+      ]
+    },
+    "coverage_aligned": {
+      "oneOf": [
+        { "type": "boolean" },
+        { "type": "string", "const": "unknown" }
+      ]
+    },
+    "evidence_strength": { "type": "string", "enum": ["strong", "weak", "negative"] },
+    "negative_evidence_reason": {
+      "type": "string",
+      "enum": ["", "not_run", "unable_to_run", "stale", "failed", "no_outcome"]
+    }
+  }
+}
