@@ -20,6 +20,7 @@ STATUS_ORDER = ("pass", "partial", "fail", "unknown", "not_collected")
 COMMITTED_SOURCE_COMMIT = "provided by release artifact / CI metadata"
 MARKETPLACE_DIMENSION = "Marketplace index validation"
 SKILL_EFFICACY_DIMENSION = "Skill efficacy structural fixtures"
+RUNTIME_GOVERNANCE_DIMENSION = "Runtime governance structural fixtures"
 SCORECARD_REFRESH_COMMAND = (
     "python3 scripts/generate-professional-scorecard.py "
     "--out reports/professional-scorecard.md "
@@ -265,6 +266,7 @@ def _additional_status_items(root: Path, scorecard_path: Path | None = None) -> 
             "python3 scripts/validate-installation.py",
         ),
         _scorecard_dimension_item(root, SKILL_EFFICACY_DIMENSION, SKILL_EFFICACY_DIMENSION, scorecard_path),
+        _scorecard_dimension_item(root, RUNTIME_GOVERNANCE_DIMENSION, RUNTIME_GOVERNANCE_DIMENSION, scorecard_path),
         _scorecard_dimension_item(root, MARKETPLACE_DIMENSION, MARKETPLACE_DIMENSION, scorecard_path),
     ]
 

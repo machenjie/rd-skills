@@ -776,10 +776,15 @@ def _zero_scores() -> dict[str, float]:
 
 
 def _render(report_format: str, aggregate: dict[str, float], results: list[SampleResult]) -> str:
+    status_counts = {
+        "ok": sum(1 for result in results if result.ok),
+        "findings": sum(1 for result in results if not result.ok),
+    }
     payload = {
         "schema_version": "1",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "samples": len(results),
+        "status_counts": status_counts,
         "aggregate": {key: round(aggregate[key], 4) for key in SCORE_KEYS},
         "results": [
             {
@@ -806,6 +811,8 @@ def _render_markdown(payload: dict[str, Any]) -> str:
         "# ChangeForge Agent Behavior Eval",
         "",
         f"- samples: {payload['samples']}",
+        f"- ok: {payload['status_counts']['ok']}",
+        f"- findings: {payload['status_counts']['findings']}",
         "",
         "## Aggregate Scores",
         "",

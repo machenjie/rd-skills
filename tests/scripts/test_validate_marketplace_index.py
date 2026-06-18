@@ -121,9 +121,9 @@ class ValidateMarketplaceIndexTests(unittest.TestCase):
         module = _load_module()
         errors = module._item_count_errors([_item()])
         joined = "\n".join(errors)
-        self.assertIn("148 total", joined)
+        self.assertIn("153 total", joined)
         self.assertIn("19 professional_skill", joined)
-        self.assertIn("122 foundation_capability", joined)
+        self.assertIn("127 foundation_capability", joined)
         self.assertIn("7 domain_extension", joined)
 
 

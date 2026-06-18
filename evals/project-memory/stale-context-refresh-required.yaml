@@ -1,0 +1,14 @@
+---
+id: stale-context-refresh-required
+scenario: Stale memory or context pack must refresh before planning.
+expected_capabilities:
+  - project-memory-governance
+  - context-packaging
+expected_evidence:
+  - Stale context gate compares memory projection time to source changes.
+  - Context package labels memory as experience input.
+  - Refresh requirement blocks source-fact reuse.
+forbidden_claims:
+  - Old memory summary is used as current repository truth.
+  - Context package omits freshness markers.
+privacy_boundary: Memory event ids and freshness metadata only.

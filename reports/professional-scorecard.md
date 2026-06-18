@@ -4,7 +4,7 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 
 ## Summary
 
-- `pass`: 10
+- `pass`: 11
 - `partial`: 3
 - `fail`: 0
 - `unknown`: 0
@@ -23,6 +23,7 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 | Professionalism regression | `pass` | reports/professionalism-release-readiness.json | `python3 scripts/validate-professionalism-regression.py --strict` |
 | Promoted agent samples | `pass` | reports/professionalism-release-readiness.json | `python3 scripts/eval-professional-agent-samples.py --promoted-only --strict` |
 | Skill efficacy structural fixtures | `pass` | evals/skill-efficacy and scripts/validate-skill-efficacy-benchmarks.py | `python3 scripts/validate-skill-efficacy-benchmarks.py` |
+| Runtime governance structural fixtures | `pass` | evals/executor-adapters, evals/repository-intelligence, evals/project-memory, evals/validation-broker, evals/trajectory | `python3 scripts/validate-professional-routing-coverage.py` |
 | Example coverage | `pass` | examples/ and scripts/validate-examples.py | `python3 scripts/validate-examples.py` |
 | Productization assets | `pass` | docs/productization assets, schemas, and scripts | `python3 scripts/validate-productization-assets.py` |
 | Marketplace index validation | `pass` | scripts/validate-marketplace-index.py | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` |
@@ -34,7 +35,7 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 
 - `recommended`: `pass` - recommended top-level count is 19
 - `full`: `pass` - full top-level count is 26
-- `dev`: `pass` - dev top-level count is 148
+- `dev`: `pass` - dev top-level count is 153
 
 ## Repair Hints
 

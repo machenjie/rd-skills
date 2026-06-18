@@ -23,6 +23,7 @@ Do not use this capability to dump an entire repository or codebase into context
 
 - **Source-grounded, not paraphrased.** Every factual claim in the context package must cite a specific file path, line range, ADR number, specification section, or test name. "The service uses JWT" is only acceptable if followed by `(src/auth/middleware.ts:12–28)`. Uncited claims are inferences, not facts; mark them as such.
 - **Prefer generated repository intelligence when available.** Start from a fresh RepositoryGraph and TaskContextPack when the repository provides them, then inspect the selected files directly. A stale graph, missing changed path, mismatched commit, or changed repo hash invalidates the package until re-indexed.
+- **Treat project memory as experience, not source.** Memory summaries may flag repeated failures, fragile files, or stale context, but every source fact must still come from current repository evidence, generated repository intelligence, or explicit user-provided material.
 - **Minimum sufficient size.** Include only what the agent *must know* to act correctly on this task. Irrelevant context is not neutral — it competes with relevant context and degrades output quality. Omitting irrelevant information is as important as including relevant information.
 - **Explicit non-goals and do-not-touch zones.** Every context package declares what the agent must NOT change, even if it appears related. Missing non-goals → scope creep → unintended side effects.
 - **Freshness dates and drift triggers.** Each major context element is dated: "Schema as of commit `abc1234` (2026-05-10)" or "ADR-012 supersedes ADR-007 as of 2026-03-01." Context becomes unsafe when the sources it references change; list the specific events that invalidate it.
@@ -47,6 +48,8 @@ Select this capability when **task context transfer to an AI coding agent** is p
 - Prefer `documentation-generation` when producing durable operator or user-facing documentation.
 - Prefer `scenario-decomposition` when the context still needs to be broken into executable scenarios.
 - Use **with** `acceptance-standard-definition` so completion criteria are acceptance-criteria-grade, not informal.
+- Use **with** `repository-graph-analysis` when the package should be generated from a graph/context pack rather than a hand-built file list.
+- Use **with** `project-memory-governance` when memory-derived repeat-failure, fragile-file, or stale-context signals influence risk, while keeping them out of source-fact sections.
 
 # Risk Escalation Rules
 
@@ -102,6 +105,7 @@ Return a context package with:
 - `affected_tests` (per test: file/test name, what it proves, must-not-regress flag)
 - `quality_gates` (per gate: objective check, pass criterion, verification method)
 - `freshness_markers` (per major element: commit SHA, date, source snapshot)
+- `memory_experience_inputs` (optional repeat-failure, fragile-file, or stale-context signals, clearly labeled as non-source facts)
 - `drift_triggers` (specific events that invalidate this package)
 - `excluded_context` (what was deliberately omitted + reason)
 - `owner` (task owner; contract owners; boundary owners)
@@ -124,6 +128,7 @@ The context package passes only when:
 11. "Excluded context" section explains what was deliberately omitted.
 12. Generated graph/context-pack facts are separated from agent inferences, assumptions, and open questions.
 13. RepositoryGraph content is pruned by task relevance and graph distance; it is never copied as an all-files dump.
+14. Memory summaries are labeled as experience inputs and never used as source facts without current-source confirmation.
 
 # Used By
 

@@ -1,0 +1,14 @@
+---
+id: edit-before-read
+scenario: Editing before repository read evidence creates an illegal transition finding.
+expected_capabilities:
+  - execution-trajectory-analysis
+  - repository-context-map
+expected_evidence:
+  - Trajectory analyzer detects edit before read.
+  - Closure advice routes back to repository context inspection.
+  - Residual risk names the skipped stage.
+forbidden_claims:
+  - Final diff approval ignores missing read evidence.
+  - Edit-before-read is treated as harmless when source ownership is unknown.
+privacy_boundary: Stage order and bounded path facts only.

@@ -136,7 +136,7 @@ def render_catalog(payload: dict[str, Any]) -> str:
         "| --- | ---: | --- |",
         f"| `recommended` | {EXPECTED_PROFILE_TOP_LEVEL_COUNTS['recommended']} | 19 professional skills top-level; foundation capabilities compiled into references; domain extensions indexed for routing. |",
         f"| `full` | {EXPECTED_PROFILE_TOP_LEVEL_COUNTS['full']} | 19 professional skills plus 7 domain extensions top-level; foundation capabilities compiled into references. |",
-        f"| `dev` | {EXPECTED_PROFILE_TOP_LEVEL_COUNTS['dev']} | 19 professional skills plus 122 foundation capabilities plus 7 domain extensions top-level. |",
+        f"| `dev` | {EXPECTED_PROFILE_TOP_LEVEL_COUNTS['dev']} | 19 professional skills plus 127 foundation capabilities plus 7 domain extensions top-level. |",
         "",
         "## Professional Skills",
         "",

@@ -13,7 +13,7 @@ changeforge_version: 0.1.0
 Create a small, evidence-backed map of the repository area affected by a proposed change before planning or editing. The map identifies ownership, local conventions, callers and callees, tests, configuration, documentation, generated artifacts, and unknowns so the implementation plan is based on inspected project context rather than prompt-only assumptions.
 
 ## Repository Intelligence Tooling
-When repository-intelligence tooling is available, prefer a freshly generated RepositoryGraph and TaskContextPack as the first evidence layer for this capability. The generated graph supplies deterministic file roles, Python symbol/import edges, Markdown/SKILL heading and reference edges, YAML/JSON registry references, skill-capability-registry relationships, hook-template/build-output relationships, test links, and freshness metadata.
+When repository-intelligence tooling is available, prefer a freshly generated RepositoryGraph and TaskContextPack as the first evidence layer for this capability. The generated graph supplies deterministic file roles, Python symbol/import edges, Markdown/SKILL heading and reference edges, YAML/JSON registry references, skill-capability-registry relationships, hook-template/build-output relationships, test links, and freshness metadata. Use `repository-graph-analysis` for graph slicing, source-of-truth decisions, affected-test candidates, generated artifact edges, and anti context-bloat limits.
 
 The generated graph does not replace professional judgment. Agents must still inspect the selected source files, confirm source-of-truth ownership, and label anything the graph cannot prove as `INFERENCE`, `ASSUMPTION`, or `OPEN QUESTION`. If the graph is stale, missing a changed path, or built from a different commit/hash than the current working tree, re-index before using it as evidence.
 
@@ -49,6 +49,7 @@ The generated graph does not replace professional judgment. Agents must still in
 - Select this capability for L2 or higher engineering work when the affected repository area is not already mapped in the current turn.
 - Select it when a plan names files to edit but does not list files inspected.
 - Select it when a skill, capability, registry, stage model, hook runtime, generated dist output, benchmark, or validator is touched.
+- Select `repository-graph-analysis` with this capability when repo graph, context pack, import/reference/test graph, source-of-truth, generated artifact, or graph freshness signals are present.
 - Select it with `implementation-structure-design` when file placement or reuse is part of the decision.
 - Select it with `change-impact-analyzer` when caller, consumer, or generated artifact impact is uncertain.
 
@@ -64,7 +65,8 @@ The generated graph does not replace professional judgment. Agents must still in
 - The same directory and parent-module convention are evidence for naming and placement decisions.
 - Generated outputs are impact surfaces but not necessarily source-of-truth locations.
 - Tests and docs are part of the map because stale evidence and stale reader guidance cause false completion.
-- Repository context must be refreshed after meaningful edits if the plan, tests, or validation depend on changed files.
+- Repository context must be refreshed after meaningful edits if the plan, tests, graph edges, context pack, or validation depend on changed files.
+- A stale graph, missing graph edge for a changed path, or graph/source mismatch requires graph refresh or explicit fallback to direct source inspection before planning.
 
 ## Failure Modes
 - **Prompt-only plan**: The agent plans a new file without reading sibling files and duplicates an existing capability.
@@ -78,6 +80,7 @@ The generated graph does not replace professional judgment. Agents must still in
 Return a `repository_context_map` with:
 - **Change basis**: request, intended behavior, non-goals, and risk level.
 - **Generated evidence**: repository graph path/hash, context-pack path/hash when available, indexed commit or fallback mtime, and whether the graph was refreshed for the current task.
+- **Graph slice**: selected symbol, import, reference, test, ownership, and generated-artifact edges from `repository-graph-analysis`, plus omitted high-volume areas.
 - **Source of truth**: files or registries that own the behavior, plus generated or installed artifacts explicitly excluded from source edits.
 - **Files inspected**: exact paths read before planning, including sibling files, parent module files, tests, docs, configs, validators, and build scripts.
 - **Searches run**: patterns searched, paths or globs searched, and what was found or not found.
@@ -99,6 +102,7 @@ Return a `repository_context_map` with:
 7. Unknowns and skipped surfaces include rationale and next owner.
 8. Generated repository graph/context-pack evidence is bounded to task-relevant files and is not used as a full-repository dump.
 9. Stale or mismatched graph freshness markers trigger re-indexing before implementation planning.
+10. Context packs include only task-relevant graph slices and do not become whole-repository dumps.
 
 ## Used By
 - `change-forge-router`

@@ -1,7 +1,7 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-18T09:04:28.594544+00:00
-- Skills/capabilities checked: 141
+- Generated: 2026-06-18T11:59:41.818693+00:00
+- Skills/capabilities checked: 146
 - Warning count: 2
 - Average score: 41.64/60
 
@@ -75,24 +75,29 @@
 | `src/foundation/capabilities/model-boundary-mapping/SKILL.md` | foundation-capability | 37/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/profiling/SKILL.md` | foundation-capability | 38/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/project-initialization/SKILL.md` | foundation-capability | 38/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/project-memory-governance/SKILL.md` | foundation-capability | 38/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/architecture-tradeoff-analysis/SKILL.md` | foundation-capability | 39/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/controller-api-implementation/SKILL.md` | foundation-capability | 39/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/failure-contract-design/SKILL.md` | foundation-capability | 39/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/package-dependency-management/SKILL.md` | foundation-capability | 39/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/consumer-impact-analysis/SKILL.md` | foundation-capability | 40/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/dependency-wiring-lifecycle/SKILL.md` | foundation-capability | 40/60 | needs-review | 0 | 0 |
+| `src/foundation/capabilities/executor-adapter-protocol/SKILL.md` | foundation-capability | 40/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/technology-stack-selection/SKILL.md` | foundation-capability | 40/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/web-security/SKILL.md` | foundation-capability | 40/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/configuration-runtime-policy/SKILL.md` | foundation-capability | 41/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/module-boundary-design/SKILL.md` | foundation-capability | 41/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/repository-graph-analysis/SKILL.md` | foundation-capability | 41/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cleanup-deletion-governance/SKILL.md` | foundation-capability | 42/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/design-pattern-selection/SKILL.md` | foundation-capability | 42/60 | acceptable | 0 | 1 |
 | `src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md` | foundation-capability | 42/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/execution-trajectory-analysis/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/message-queue-design/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/observability/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/relational-database/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/release-rollback/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/solution-optimality-evaluation/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/validation-broker/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/async-job-design/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/context-packaging/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/contract-testing/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
@@ -101,7 +106,6 @@
 | `src/foundation/capabilities/testability-seam-design/SKILL.md` | foundation-capability | 44/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/transaction-consistency/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/unit-testing/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/agent-workflow-state-machine/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cache-design/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/ci-cd/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/idempotency-retry-design/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
@@ -110,9 +114,10 @@
 | `src/foundation/capabilities/plan-execution-consistency/SKILL.md` | foundation-capability | 46/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/repository-context-map/SKILL.md` | foundation-capability | 46/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/agent-execution-discipline/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/agent-workflow-state-machine/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/language-performance-safety/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/skill-authoring-expert/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/test-strategy/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/test-strategy/SKILL.md` | foundation-capability | 48/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cpp-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/go-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/implementation-structure-design/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |

@@ -73,6 +73,34 @@ The manifest does not replace the human-readable explanation and does not
 authorize any tool to mutate skill rules. It exists so closure completeness can
 be checked mechanically.
 
+## Runtime Governance Facts
+
+Executor adapters expose a runtime protocol surface: adapter capabilities,
+normalized event facts, lifecycle state, gate results, evidence-ledger entries,
+and closure-contract support. The adapter core is not an LLM and not the router.
+When a runtime cannot emit or consume an event, telemetry records the bounded
+capability limitation so closure can degrade explicitly instead of pretending the
+gate was observed.
+
+Repository graph evidence may feed context packs and validation candidates, but
+it is a source-evidence helper only. It should name bounded symbols, imports,
+references, tests, owners, and generated artifacts relevant to the task; it must
+not become a full-repository dump or a substitute for direct source inspection.
+Freshness markers decide whether the graph can be treated as current.
+
+Project memory facts are append-only and human-governed. Memory can report repeat
+failure, fragile-file, and stale-context signals, but it never modifies skills,
+routes, capabilities, or registry data without a human promotion flow.
+
+Validation Broker facts classify validation command selection and freshness. A
+command without outcome, a failed command, a negative validation disclosure, or a
+command that finished before the last material edit remains non-closure evidence.
+
+Trajectory facts are review-only. The trajectory inspector reconstructs stage
+order and evidence freshness from bounded telemetry and memory fields, and it
+does not record prompts, secrets, environment variables, raw command output, or
+full command arguments.
+
 ## Hooks Record, They Do Not Route
 
 The Pre-Edit Implementation Structure Gate, Post-Edit Structure Gate, Risk

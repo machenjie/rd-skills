@@ -44,6 +44,7 @@ Define the minimum evidence needed to prove a change works correctly, does not r
 - **Changed code maps to tests**: every material changed branch, public contract, migration, fixture, generated artifact, or integration seam must map to a specific test, validation command, or explicitly accepted residual risk.
 - **Validation freshness is mandatory**: if source, fixtures, configs, generated inputs, lockfiles, migrations, or test data change after a validation run, the affected validation is stale and must be re-run or reported as not verified.
 - **Validation Broker results are closure inputs**: when a broker plan or result is available, use it to map changed paths and risk surfaces to narrow/module/full commands, inspect outcome and freshness, and treat stale, failed, not-run, no-outcome, or coverage-mismatch results as incomplete validation. Broker recommendations do not execute commands automatically and do not replace professional judgment.
+- **Broker owns freshness classification**: use `validation-broker` as the source for changed-path-to-validation mapping, validator depth, parsed outcomes, freshness, negative validation evidence, and stop-closure validation status.
 - **Flaky tests need classification**: a flaky, retried, quarantined, or skipped test must be classified by signature, owner, affected risk, quarantine/remediation path, and why its missing signal does or does not block the change.
 - **Minimal validation is risk-bound**: L1 low-risk changes may use the smallest meaningful runnable check, but a smoke check is not evidence for money, security, auth, data migration, retry/idempotency, or production reliability correctness. Do not delete a meaningful smoke or self-check as bloat.
 - **Test structure follows module structure**: test files, fixtures, factories, mocks, and golden data must have an owning module or contract boundary; shared test helpers must not become business-fixture dumping grounds.
@@ -231,6 +232,7 @@ Return a test strategy with:
 - **Professional judgment**: test depth decision, risk accepted or ruled out, and why cheaper or heavier evidence is insufficient or unnecessary.
 - **Risk-to-test mapping**: Each identified risk paired with its required test type, depth, and pass criteria.
 - **Changed-code-to-test map**: every material changed path, branch, public contract, fixture, generated input, and integration seam paired with covering tests/validators or residual risk.
+- **Changed-path validation map**: narrow/module/full validator selection, unvalidated changed paths, stale commands, and stop-closure consequence from `validation-broker`.
 - **Proof statement**: for every proposed or executed test, what this test proves and what it does not prove.
 - **Test level breakdown**: Unit / integration / contract / E2E / migration count and rationale.
 - **Fixture strategy**: Data setup, isolation approach, and test data generation method.
@@ -290,6 +292,7 @@ Close a test strategy only when all five canonical answers are concrete (answer 
 21. Tests do not rely on private helper access when public behavior can prove the outcome.
 22. Module splits include corresponding test and fixture ownership review.
 23. Test pass claims map to the actual command and suite that ran; a lint or type-check pass is never reported as a test pass, and a single passing test is never reported as full-suite or full-coverage success.
+24. Negative validation evidence from the broker is preserved and not hidden behind later unrelated passes.
 24. Minimal checks are accepted only for risk levels where they actually prove the selected behavior; high-risk gates keep their required unit, integration, contract, security, reliability, migration, or rollback evidence.
 25. Reused test results are fresh: if code or inputs changed after a run, the suite is re-run before the pass is claimed.
 26. Test acceptance maps to the acceptance criteria and non-goals (spec compliance) before test-quality sign-off; a clean test suite does not substitute for a missing required behavior.

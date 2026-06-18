@@ -1514,7 +1514,7 @@
   ],
   "expected_route_only_supplemental": 7,
   "findings": [],
-  "generated_at": "2026-06-18T09:04:41.979798+00:00",
+  "generated_at": "2026-06-18T11:59:44.117469+00:00",
   "hidden_risks_checked": 91,
   "hidden_risks_covered": 87,
   "hidden_risks_matched_by_expected_route_only": 7,
@@ -1527,6 +1527,50 @@
   "matched_by_expected_route_only": 7,
   "needs_manual_review": 0,
   "routing_cases_checked": 118,
+  "runtime_fixture_cases_checked": 15,
+  "runtime_fixture_coverage": [
+    {
+      "errors": [],
+      "fixtures": 3,
+      "required_capability": "executor-adapter-protocol",
+      "status": "pass",
+      "suite": "executor-adapters",
+      "valid_cases": 3
+    },
+    {
+      "errors": [],
+      "fixtures": 3,
+      "required_capability": "repository-graph-analysis",
+      "status": "pass",
+      "suite": "repository-intelligence",
+      "valid_cases": 3
+    },
+    {
+      "errors": [],
+      "fixtures": 3,
+      "required_capability": "project-memory-governance",
+      "status": "pass",
+      "suite": "project-memory",
+      "valid_cases": 3
+    },
+    {
+      "errors": [],
+      "fixtures": 3,
+      "required_capability": "validation-broker",
+      "status": "pass",
+      "suite": "validation-broker",
+      "valid_cases": 3
+    },
+    {
+      "errors": [],
+      "fixtures": 3,
+      "required_capability": "execution-trajectory-analysis",
+      "status": "pass",
+      "suite": "trajectory",
+      "valid_cases": 3
+    }
+  ],
+  "runtime_fixture_dirs_checked": 5,
   "status": "pass",
   "strong_matches": 87,
   "weak_matches": 6

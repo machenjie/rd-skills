@@ -132,6 +132,11 @@ PRODUCT_SURFACE_ORDER = (
     "cli-daemon",
     "documentation-only",
     "skill-authoring",
+    "agent-runtime-governance",
+    "repository-intelligence",
+    "project-memory",
+    "validation-broker",
+    "execution-trajectory",
 )
 
 SOURCE_ROOT_PREFIX = "src/"
@@ -204,6 +209,11 @@ PRODUCT_OWNER = {
     "ci-cd": "delivery-release-gate",
     "documentation-only": "change-documentation-gate",
     "skill-authoring": "change-forge-router",
+    "agent-runtime-governance": "change-forge-router",
+    "repository-intelligence": "change-impact-analyzer",
+    "project-memory": "change-forge-router",
+    "validation-broker": "quality-test-gate",
+    "execution-trajectory": "ai-code-review-refactor",
     "sdk-library": "data-api-contract-changer",
     "cli-daemon": "backend-change-builder",
 }
@@ -271,6 +281,31 @@ SURFACE_CAPABILITIES = {
         "engineering-stage-professionalism",
         "skill-efficacy-benchmark",
         "plan-execution-consistency",
+    ),
+    "agent-runtime-governance": (
+        "executor-adapter-protocol",
+        "agent-tool-permission-sandbox",
+        "agent-workflow-state-machine",
+    ),
+    "repository-intelligence": (
+        "repository-graph-analysis",
+        "repository-context-map",
+        "context-packaging",
+    ),
+    "project-memory": (
+        "project-memory-governance",
+        "agent-execution-discipline",
+        "plan-execution-consistency",
+    ),
+    "validation-broker": (
+        "validation-broker",
+        "repository-graph-analysis",
+        "plan-execution-consistency",
+    ),
+    "execution-trajectory": (
+        "execution-trajectory-analysis",
+        "agent-workflow-state-machine",
+        "validation-broker",
     ),
 }
 
@@ -467,6 +502,11 @@ CAPABILITY_IDS = {
     "agent-tool-permission-sandbox": "120",
     "skill-efficacy-benchmark": "121",
     "plan-execution-consistency": "122",
+    "executor-adapter-protocol": "123",
+    "repository-graph-analysis": "124",
+    "project-memory-governance": "125",
+    "validation-broker": "126",
+    "execution-trajectory-analysis": "127",
 }
 
 

@@ -1,7 +1,7 @@
 {
   "average_score": 41.64,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-18T09:04:28.594544+00:00",
+  "generated_at": "2026-06-18T11:59:41.818693+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -29,7 +29,7 @@
       "warnings": []
     },
     {
-      "body_lines": 360,
+      "body_lines": 363,
       "dimensions": {
         "anti_bloat_control": 4,
         "boundary_clarity": 5,
@@ -129,7 +129,7 @@
       "warnings": []
     },
     {
-      "body_lines": 331,
+      "body_lines": 340,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -379,7 +379,7 @@
       "warnings": []
     },
     {
-      "body_lines": 318,
+      "body_lines": 323,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -504,7 +504,7 @@
       "warnings": []
     },
     {
-      "body_lines": 259,
+      "body_lines": 266,
       "dimensions": {
         "anti_bloat_control": 4,
         "boundary_clarity": 5,
@@ -554,20 +554,20 @@
       "warnings": []
     },
     {
-      "body_lines": 100,
+      "body_lines": 109,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 4,
         "failure_mode_coverage": 3,
         "mode_coverage": 4,
-        "output_actionability": 4,
+        "output_actionability": 5,
         "proactive_trigger_quality": 1,
         "professional_depth": 4,
         "reference_precision": 4,
         "stage_fit": 5,
         "trigger_accuracy": 4,
-        "validation_obligation": 2
+        "validation_obligation": 3
       },
       "kind": "foundation-capability",
       "likely_missing_sections": [],
@@ -575,7 +575,7 @@
       "path": "src/foundation/capabilities/agent-workflow-state-machine/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 45,
+      "total": 47,
       "warnings": []
     },
     {
@@ -1093,7 +1093,7 @@
       "warnings": []
     },
     {
-      "body_lines": 131,
+      "body_lines": 136,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1627,6 +1627,56 @@
       "recommended_fixes": [],
       "status": "acceptable",
       "total": 33,
+      "warnings": []
+    },
+    {
+      "body_lines": 91,
+      "dimensions": {
+        "anti_bloat_control": 5,
+        "boundary_clarity": 3,
+        "evidence_contract_strength": 3,
+        "failure_mode_coverage": 3,
+        "mode_coverage": 4,
+        "output_actionability": 3,
+        "proactive_trigger_quality": 1,
+        "professional_depth": 4,
+        "reference_precision": 4,
+        "stage_fit": 5,
+        "trigger_accuracy": 5,
+        "validation_obligation": 3
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "execution-trajectory-analysis",
+      "path": "src/foundation/capabilities/execution-trajectory-analysis/SKILL.md",
+      "recommended_fixes": [],
+      "status": "acceptable",
+      "total": 43,
+      "warnings": []
+    },
+    {
+      "body_lines": 92,
+      "dimensions": {
+        "anti_bloat_control": 5,
+        "boundary_clarity": 4,
+        "evidence_contract_strength": 2,
+        "failure_mode_coverage": 3,
+        "mode_coverage": 4,
+        "output_actionability": 3,
+        "proactive_trigger_quality": 1,
+        "professional_depth": 4,
+        "reference_precision": 4,
+        "stage_fit": 4,
+        "trigger_accuracy": 4,
+        "validation_obligation": 2
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "executor-adapter-protocol",
+      "path": "src/foundation/capabilities/executor-adapter-protocol/SKILL.md",
+      "recommended_fixes": [],
+      "status": "acceptable",
+      "total": 40,
       "warnings": []
     },
     {
@@ -2605,6 +2655,31 @@
       "warnings": []
     },
     {
+      "body_lines": 90,
+      "dimensions": {
+        "anti_bloat_control": 5,
+        "boundary_clarity": 3,
+        "evidence_contract_strength": 2,
+        "failure_mode_coverage": 3,
+        "mode_coverage": 4,
+        "output_actionability": 3,
+        "proactive_trigger_quality": 1,
+        "professional_depth": 4,
+        "reference_precision": 4,
+        "stage_fit": 2,
+        "trigger_accuracy": 3,
+        "validation_obligation": 4
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "project-memory-governance",
+      "path": "src/foundation/capabilities/project-memory-governance/SKILL.md",
+      "recommended_fixes": [],
+      "status": "acceptable",
+      "total": 38,
+      "warnings": []
+    },
+    {
       "body_lines": 158,
       "dimensions": {
         "anti_bloat_control": 4,
@@ -2755,7 +2830,7 @@
       "warnings": []
     },
     {
-      "body_lines": 116,
+      "body_lines": 120,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -2777,6 +2852,31 @@
       "recommended_fixes": [],
       "status": "acceptable",
       "total": 46,
+      "warnings": []
+    },
+    {
+      "body_lines": 93,
+      "dimensions": {
+        "anti_bloat_control": 5,
+        "boundary_clarity": 5,
+        "evidence_contract_strength": 3,
+        "failure_mode_coverage": 3,
+        "mode_coverage": 4,
+        "output_actionability": 3,
+        "proactive_trigger_quality": 1,
+        "professional_depth": 4,
+        "reference_precision": 4,
+        "stage_fit": 3,
+        "trigger_accuracy": 3,
+        "validation_obligation": 3
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "repository-graph-analysis",
+      "path": "src/foundation/capabilities/repository-graph-analysis/SKILL.md",
+      "recommended_fixes": [],
+      "status": "acceptable",
+      "total": 41,
       "warnings": []
     },
     {
@@ -3280,14 +3380,14 @@
       "warnings": []
     },
     {
-      "body_lines": 158,
+      "body_lines": 160,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 3,
         "failure_mode_coverage": 3,
         "mode_coverage": 4,
-        "output_actionability": 4,
+        "output_actionability": 5,
         "proactive_trigger_quality": 1,
         "professional_depth": 5,
         "reference_precision": 3,
@@ -3301,7 +3401,7 @@
       "path": "src/foundation/capabilities/test-strategy/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 47,
+      "total": 48,
       "warnings": []
     },
     {
@@ -3505,6 +3605,31 @@
       "warnings": []
     },
     {
+      "body_lines": 90,
+      "dimensions": {
+        "anti_bloat_control": 5,
+        "boundary_clarity": 3,
+        "evidence_contract_strength": 3,
+        "failure_mode_coverage": 3,
+        "mode_coverage": 4,
+        "output_actionability": 3,
+        "proactive_trigger_quality": 1,
+        "professional_depth": 4,
+        "reference_precision": 4,
+        "stage_fit": 4,
+        "trigger_accuracy": 4,
+        "validation_obligation": 5
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "validation-broker",
+      "path": "src/foundation/capabilities/validation-broker/SKILL.md",
+      "recommended_fixes": [],
+      "status": "acceptable",
+      "total": 43,
+      "warnings": []
+    },
+    {
       "body_lines": 107,
       "dimensions": {
         "anti_bloat_control": 5,
@@ -3555,6 +3680,6 @@
       "warnings": []
     }
   ],
-  "skills_checked": 141,
+  "skills_checked": 146,
   "warning_count": 2
 }

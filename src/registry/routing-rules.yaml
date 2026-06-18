@@ -33,14 +33,14 @@ supported_change_types:
 runtime_profiles:
   - name: recommended
     top_level: 19 professional skills
-    foundation_mode: 122 foundation capabilities compiled into professional references
+    foundation_mode: 127 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 19 professional skills and 7 domain extensions
-    foundation_mode: 122 foundation capabilities compiled into professional references
+    foundation_mode: 127 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 19 professional skills, 122 foundation capabilities, and 7 domain extensions
+    top_level: 19 professional skills, 127 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -253,6 +253,34 @@ risk_escalation_triggers:
   - review scope does not cover final diff
   - skill efficacy claim without baseline
   - skill benchmark overhead unknown
+  - executor adapter
+  - runtime adapter
+  - adapter capabilities
+  - normalized event
+  - closure contract
+  - unsupported runtime event
+  - repo graph
+  - symbol graph
+  - import graph
+  - call graph
+  - test graph
+  - context pack
+  - source of truth unknown
+  - project memory
+  - repeat failure
+  - fragile file
+  - stale context
+  - previous fix failed
+  - latest commit review follow-up
+  - validation command selection
+  - stale validation
+  - validation without outcome
+  - affected tests
+  - changed path validation
+  - trajectory
+  - edit before read
+  - stop without residual risk
+  - skipped engineering stage
 quality_gates:
   - requirement gate
   - impact gate
@@ -455,6 +483,106 @@ risk_trigger_rules:
     required_skills: [quality-test-gate]
     required_capabilities: [skill-efficacy-benchmark]
     required_quality_gates: [test gate]
+  - trigger: executor adapter
+    required_skills: [security-privacy-gate]
+    required_capabilities: [executor-adapter-protocol, agent-tool-permission-sandbox]
+    required_quality_gates: [security gate, execution discipline gate]
+  - trigger: runtime adapter
+    required_skills: [security-privacy-gate]
+    required_capabilities: [executor-adapter-protocol, agent-tool-permission-sandbox]
+    required_quality_gates: [security gate, execution discipline gate]
+  - trigger: adapter capabilities
+    required_capabilities: [executor-adapter-protocol]
+    required_quality_gates: [execution discipline gate]
+  - trigger: normalized event
+    required_capabilities: [executor-adapter-protocol, agent-workflow-state-machine]
+    required_quality_gates: [execution discipline gate]
+  - trigger: closure contract
+    required_capabilities: [executor-adapter-protocol, agent-execution-discipline, plan-execution-consistency]
+    required_quality_gates: [execution discipline gate]
+  - trigger: unsupported runtime event
+    required_skills: [quality-test-gate]
+    required_capabilities: [executor-adapter-protocol, validation-broker]
+    required_quality_gates: [test gate, execution discipline gate]
+  - trigger: repo graph
+    required_skills: [change-impact-analyzer]
+    required_capabilities: [repository-graph-analysis, repository-context-map]
+    required_quality_gates: [impact gate]
+  - trigger: symbol graph
+    required_skills: [architecture-impact-reviewer]
+    required_capabilities: [repository-graph-analysis, repository-context-map]
+    required_quality_gates: [architecture gate]
+  - trigger: import graph
+    required_skills: [architecture-impact-reviewer]
+    required_capabilities: [repository-graph-analysis, module-boundary-design]
+    required_quality_gates: [architecture gate]
+  - trigger: call graph
+    required_skills: [change-impact-analyzer]
+    required_capabilities: [repository-graph-analysis, repository-context-map]
+    required_quality_gates: [impact gate]
+  - trigger: test graph
+    required_skills: [quality-test-gate]
+    required_capabilities: [repository-graph-analysis, validation-broker]
+    required_quality_gates: [test gate]
+  - trigger: context pack
+    required_capabilities: [repository-graph-analysis, context-packaging]
+    required_quality_gates: [impact gate]
+  - trigger: source of truth unknown
+    required_skills: [change-impact-analyzer]
+    required_capabilities: [repository-graph-analysis, repository-context-map]
+    required_quality_gates: [impact gate]
+  - trigger: project memory
+    required_capabilities: [project-memory-governance, agent-execution-discipline]
+    required_quality_gates: [execution discipline gate]
+  - trigger: repeat failure
+    required_capabilities: [project-memory-governance, agent-execution-discipline, failure-diagnosis]
+    required_quality_gates: [execution discipline gate]
+  - trigger: fragile file
+    required_capabilities: [project-memory-governance, repository-context-map, plan-execution-consistency]
+    required_quality_gates: [execution discipline gate]
+  - trigger: stale context
+    required_capabilities: [project-memory-governance, repository-graph-analysis, context-packaging]
+    required_quality_gates: [execution discipline gate]
+  - trigger: previous fix failed
+    required_skills: [quality-test-gate]
+    required_capabilities: [project-memory-governance, failure-diagnosis, regression-testing]
+    required_quality_gates: [test gate, execution discipline gate]
+  - trigger: latest commit review follow-up
+    required_skills: [ai-code-review-refactor]
+    required_capabilities: [project-memory-governance, execution-trajectory-analysis, code-review]
+    required_quality_gates: [AI review gate]
+  - trigger: validation command selection
+    required_skills: [quality-test-gate]
+    required_capabilities: [validation-broker, plan-execution-consistency]
+    required_quality_gates: [test gate]
+  - trigger: stale validation
+    required_skills: [quality-test-gate]
+    required_capabilities: [validation-broker, plan-execution-consistency]
+    required_quality_gates: [test gate, execution discipline gate]
+  - trigger: validation without outcome
+    required_skills: [quality-test-gate]
+    required_capabilities: [validation-broker, agent-execution-discipline]
+    required_quality_gates: [test gate, execution discipline gate]
+  - trigger: affected tests
+    required_skills: [quality-test-gate]
+    required_capabilities: [validation-broker, repository-graph-analysis]
+    required_quality_gates: [test gate]
+  - trigger: changed path validation
+    required_skills: [quality-test-gate]
+    required_capabilities: [validation-broker, repository-graph-analysis]
+    required_quality_gates: [test gate]
+  - trigger: trajectory
+    required_capabilities: [execution-trajectory-analysis, agent-workflow-state-machine]
+    required_quality_gates: [execution discipline gate]
+  - trigger: edit before read
+    required_capabilities: [execution-trajectory-analysis, repository-context-map, agent-execution-discipline]
+    required_quality_gates: [execution discipline gate]
+  - trigger: stop without residual risk
+    required_capabilities: [execution-trajectory-analysis, agent-execution-discipline, plan-execution-consistency]
+    required_quality_gates: [execution discipline gate]
+  - trigger: skipped engineering stage
+    required_capabilities: [execution-trajectory-analysis, agent-workflow-state-machine, engineering-stage-professionalism]
+    required_quality_gates: [execution discipline gate]
   - trigger: environment-blame without inspection
     required_capabilities: [agent-execution-discipline, failure-diagnosis]
   - trigger: route repair required
@@ -864,6 +992,12 @@ failure_routing:
     route_to: repository-context-map
   - condition: local convention scan missing
     route_to: repository-context-map
+  - condition: repo graph stale
+    route_to: repository-graph-analysis
+  - condition: source of truth unknown
+    route_to: repository-graph-analysis
+  - condition: context pack missing or bloated
+    route_to: repository-graph-analysis
   - condition: untestable done state
     route_to: acceptance-criteria-builder
   - condition: task too large
@@ -1032,6 +1166,22 @@ failure_routing:
     route_to: skill-efficacy-benchmark
   - condition: skill benchmark overhead unknown
     route_to: skill-efficacy-benchmark
+  - condition: executor adapter unsupported event
+    route_to: executor-adapter-protocol
+  - condition: closure contract unsupported by adapter
+    route_to: executor-adapter-protocol
+  - condition: project memory repeat failure gate
+    route_to: project-memory-governance
+  - condition: fragile file preflight missing
+    route_to: project-memory-governance
+  - condition: validation command selection unclear
+    route_to: validation-broker
+  - condition: stale validation rejected
+    route_to: validation-broker
+  - condition: execution trajectory has illegal transition
+    route_to: execution-trajectory-analysis
+  - condition: edit before read or repair without re-review
+    route_to: execution-trajectory-analysis
   - condition: contract or schema mismatch
     route_to: data-api-contract-changer
   - condition: frontend issue
@@ -1075,7 +1225,7 @@ engineering_stage_signals:
   - stage: architecture-design
     signals: design architecture module boundary dependency direction data ownership service boundary extensibility reversibility
   - stage: implementation-planning
-    signals: code placement reuse decision object function class file directory design naming public private internal boundary repository context map caller callee local convention scan plan before repository context
+    signals: code placement reuse decision object function class file directory design naming public private internal boundary repository context map repo graph context pack caller callee local convention scan plan before repository context source of truth unknown
   - stage: coding
     signals: coding implementation language idiom error handling resource cleanup input validation concurrency minimal implementation
   - stage: debugging-diagnosis
@@ -1087,13 +1237,13 @@ engineering_stage_signals:
   - stage: refactoring
     signals: refactoring behavior preserving extraction movement inline merge split dependency direction rollback clarity
   - stage: testing
-    signals: testing unit integration contract e2e regression fixture mock concurrency language specific test validation freshness changed-code-to-test mapping stale validation
+    signals: testing unit integration contract e2e regression fixture mock concurrency language specific test validation freshness changed-code-to-test mapping validation broker affected tests stale validation validation without outcome changed path validation
   - stage: release-delivery
     signals: release rollout rollback migration config feature flag canary blue green observability
   - stage: documentation-handoff
-    signals: documentation handoff change boundary validation evidence residual risk runbook changelog next action workflow state plan execution consistency route manifest repository context
+    signals: documentation handoff change boundary validation evidence residual risk runbook changelog next action workflow state lifecycle state trajectory closure contract validation broker plan execution consistency route manifest repository context
   - stage: skill-authoring
-    signals: SKILL.md capability reference registry routing rule skill authoring repository context map skill efficacy benchmark plan execution consistency
+    signals: SKILL.md capability reference registry routing rule stage model skill authoring repository context map repo graph context pack executor adapter project memory validation broker trajectory skill efficacy benchmark plan execution consistency
 routing_rules:
   - route_to: change-forge-router
     triggers:
@@ -1709,6 +1859,7 @@ routing_rules:
     triggers:
       - package AI coding context relevant requirements architecture contracts files constraints tests quality gates
       - prevent context drift stale summaries secret exposure irrelevant context and unverified generated claims
+      - package repository intelligence context pack without treating memory summary as source fact
     priority: 60
   - route_to: task-dag-decomposition
     triggers:
@@ -1759,11 +1910,12 @@ routing_rules:
     triggers:
       - repository context map read before plan files inspected ownership caller callee tests configs docs local conventions source of truth generated artifact
       - repository map missing before plan caller callee graph unclear local convention scan missing source dist boundary wrong placement risk
+      - use repo graph context pack when fresh and refresh graph when stale
     priority: 60
   - route_to: agent-workflow-state-machine
     triggers:
       - agent workflow state machine current stage next stage legal transition owner reviewer repair re-review validation freshness closure evidence
-      - workflow state missing illegal workflow transition repair without re-review self approval stale validation stage manifest stop condition
+      - workflow state missing illegal workflow transition repair without re-review self approval stale validation stage manifest lifecycle state trajectory stop condition
     priority: 60
   - route_to: agent-tool-permission-sandbox
     triggers:
@@ -1779,6 +1931,31 @@ routing_rules:
     triggers:
       - plan execution consistency planned files actual changed files extra file stale validation unplanned behavior review scope final diff
       - plan execution drift actual files differ from plan validation before final edit partial validation reported as full repair without re-review
+    priority: 60
+  - route_to: executor-adapter-protocol
+    triggers:
+      - executor adapter runtime adapter adapter capabilities AdapterCapabilities NormalizedEvent LifecycleState EvidenceLedger GateResult ClosureContract
+      - unsupported runtime event runtime capability degradation fail-open fail-closed closure contract unsupported event handling
+    priority: 60
+  - route_to: repository-graph-analysis
+    triggers:
+      - repo graph symbol graph import graph call graph reference graph test graph ownership graph generated artifact graph
+      - context pack source of truth unknown freshness drift anti context bloat generated dist do not edit repository intelligence
+    priority: 60
+  - route_to: project-memory-governance
+    triggers:
+      - project memory append-only memory event memory projection deterministic retrieval repeat failure fragile file stale context
+      - previous fix failed latest commit review follow-up human promotion only privacy boundary
+    priority: 60
+  - route_to: validation-broker
+    triggers:
+      - validation broker validation command selection changed path validation affected tests stale validation validation without outcome
+      - changed-path-to-validation mapping narrow module full validator selection validation result parsing negative validation evidence stop closure integration
+    priority: 60
+  - route_to: execution-trajectory-analysis
+    triggers:
+      - execution trajectory trajectory builder trajectory analyzer illegal transition edit before read repair without re-review
+      - validation freshness timeline stop without residual risk skipped engineering stage pressure behavior candidate generation
     priority: 60
   - route_to: skill-authoring-expert
     triggers:

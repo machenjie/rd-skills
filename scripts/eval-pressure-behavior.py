@@ -427,6 +427,9 @@ def _render(fmt: str, aggregate: dict[str, float], results: list[CaseResult]) ->
     ]
     for key in SCORE_KEYS:
         lines.append(f"- {key}: {aggregate[key]:.2f}")
+    lines.extend(["", "## Pressure Types", ""])
+    for pressure_type, count in _pressure_type_counts(results).items():
+        lines.append(f"- {pressure_type}: {count}")
     lines.extend(["", "## Scenarios", ""])
     for result in results:
         state = "scored" if result.scored else "spec-only"
@@ -442,6 +445,7 @@ def _render(fmt: str, aggregate: dict[str, float], results: list[CaseResult]) ->
 def _report_payload(aggregate: dict[str, float], results: list[CaseResult]) -> dict[str, Any]:
     return {
         "aggregate": {key: round(aggregate[key], 4) for key in SCORE_KEYS},
+        "pressure_type_counts": _pressure_type_counts(results),
         "scenarios": [
             {
                 "id": result.case_id,
@@ -454,6 +458,14 @@ def _report_payload(aggregate: dict[str, float], results: list[CaseResult]) -> d
             for result in results
         ],
     }
+
+
+def _pressure_type_counts(results: list[CaseResult]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for result in results:
+        key = result.pressure_type or "unspecified"
+        counts[key] = counts.get(key, 0) + 1
+    return dict(sorted(counts.items()))
 
 
 def _write_output(output_dir: Path | None, fmt: str, text: str) -> Path | None:

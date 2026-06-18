@@ -1,0 +1,14 @@
+---
+id: complete-healthy-trajectory
+scenario: Healthy trajectory shows read, plan, edit, validate, review, and handoff in order.
+expected_capabilities:
+  - execution-trajectory-analysis
+  - agent-workflow-state-machine
+expected_evidence:
+  - Trajectory builder orders lifecycle events.
+  - Trajectory analyzer finds no illegal transition.
+  - Validation freshness timeline covers final material edits.
+forbidden_claims:
+  - Closure omits residual risk status.
+  - Trajectory includes raw prompts or full command output.
+privacy_boundary: Ordered lifecycle facts only.

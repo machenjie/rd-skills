@@ -85,6 +85,7 @@ stages:
       - cleanup-deletion-governance
       - minimal-correct-implementation
       - agent-workflow-state-machine
+      - repository-graph-analysis
       - plan-execution-consistency
     skip_by_default:
       - full architecture review
@@ -181,6 +182,8 @@ stages:
       - code-review
     conditional_capabilities:
       - minimal-correct-implementation
+      - execution-trajectory-analysis
+      - project-memory-governance
       - plan-execution-consistency
       - agent-workflow-state-machine
     skip_by_default:
@@ -296,6 +299,8 @@ stages:
       - data-side-effect-flow-tracing
       - minimal-correct-implementation
       - agent-workflow-state-machine
+      - validation-broker
+      - repository-graph-analysis
     skip_by_default:
       - architecture redesign
       - coding of new features
@@ -360,6 +365,11 @@ stages:
       - plan-execution-consistency
       - documentation-generation
       - agent-execution-discipline
+    conditional_capabilities:
+      - executor-adapter-protocol
+      - validation-broker
+      - execution-trajectory-analysis
+      - project-memory-governance
     skip_by_default:
       - coding capabilities
     required_evidence:
@@ -390,6 +400,11 @@ stages:
     conditional_capabilities:
       - minimal-correct-implementation
       - agent-workflow-state-machine
+      - executor-adapter-protocol
+      - repository-graph-analysis
+      - project-memory-governance
+      - validation-broker
+      - execution-trajectory-analysis
     skip_by_default:
       - product coding
       - language runtime
@@ -496,10 +511,30 @@ product_surfaces:
     required_skill: change-documentation-gate
     default_capabilities: [documentation-generation]
   - surface: skill-authoring
-    signals: [skill, capability, registry, routing rule, stage model]
+    signals: [skill, capability, registry, routing rule, stage model, executor adapter, repo graph, project memory, validation broker, trajectory]
     required_skill: change-forge-router
     default_capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency]
     conditional_capabilities: [minimal-correct-implementation]
+  - surface: agent-runtime-governance
+    signals: [executor adapter, runtime adapter, adapter capabilities, normalized event, closure contract, unsupported runtime event]
+    required_skill: change-forge-router
+    default_capabilities: [executor-adapter-protocol, agent-tool-permission-sandbox, agent-workflow-state-machine]
+  - surface: repository-intelligence
+    signals: [repo graph, symbol graph, import graph, call graph, reference graph, test graph, context pack, source of truth unknown]
+    required_skill: change-impact-analyzer
+    default_capabilities: [repository-graph-analysis, repository-context-map, context-packaging]
+  - surface: project-memory
+    signals: [project memory, repeat failure, fragile file, stale context, previous fix failed, latest commit review follow-up]
+    required_skill: change-forge-router
+    default_capabilities: [project-memory-governance, agent-execution-discipline, plan-execution-consistency]
+  - surface: validation-broker
+    signals: [validation broker, validation command selection, stale validation, validation without outcome, affected tests, changed path validation]
+    required_skill: quality-test-gate
+    default_capabilities: [validation-broker, repository-graph-analysis, plan-execution-consistency]
+  - surface: execution-trajectory
+    signals: [trajectory, edit before read, repair without re-review, stop without residual risk, skipped engineering stage]
+    required_skill: ai-code-review-refactor
+    default_capabilities: [execution-trajectory-analysis, agent-workflow-state-machine, validation-broker]
 
 language_surfaces:
   - language: go

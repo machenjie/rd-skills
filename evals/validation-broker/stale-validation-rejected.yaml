@@ -1,0 +1,14 @@
+---
+id: stale-validation-rejected
+scenario: A passing validation run before final material edits is rejected as stale.
+expected_capabilities:
+  - validation-broker
+  - plan-execution-consistency
+expected_evidence:
+  - Validation freshness timeline shows edits after the command.
+  - Broker status is stale or not-verified, not passed.
+  - Next validator command is named.
+forbidden_claims:
+  - Earlier pass is reported as final verification.
+  - Partial validation is generalized to full pass.
+privacy_boundary: Command, outcome, and edit-order facts only.

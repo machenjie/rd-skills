@@ -23,6 +23,21 @@ DEFAULT_REPORTS_DIR = ROOT / "reports"
 DEFAULT_BASELINE = ROOT / "config" / "professionalism-baseline.yaml"
 JSON_REPORT = "professional-routing-coverage.json"
 MARKDOWN_REPORT = "professional-routing-coverage.md"
+RUNTIME_FIXTURE_SUITES = {
+    "executor-adapters": "executor-adapter-protocol",
+    "repository-intelligence": "repository-graph-analysis",
+    "project-memory": "project-memory-governance",
+    "validation-broker": "validation-broker",
+    "trajectory": "execution-trajectory-analysis",
+}
+RUNTIME_FIXTURE_REQUIRED_FIELDS = (
+    "id",
+    "scenario",
+    "expected_capabilities",
+    "expected_evidence",
+    "forbidden_claims",
+    "privacy_boundary",
+)
 
 EXPECTED_FIELDS = ("skills", "capabilities", "domain_extensions", "quality_gates")
 MIN_L1_ANTI_OVER_ROUTING_CASES = 8
@@ -167,8 +182,11 @@ class CoverageReport:
     hidden_risks_matched_by_expected_route_only: int
     hidden_risks_needing_manual_review: int
     l1_anti_over_routing_count: int
+    runtime_fixture_dirs_checked: int
+    runtime_fixture_cases_checked: int
     findings: list[Finding]
     benchmark_risk_coverage: list[dict[str, Any]]
+    runtime_fixture_coverage: list[dict[str, Any]]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -201,8 +219,11 @@ def main(argv: list[str] | None = None) -> int:
             hidden_risks_matched_by_expected_route_only=0,
             hidden_risks_needing_manual_review=0,
             l1_anti_over_routing_count=0,
+            runtime_fixture_dirs_checked=0,
+            runtime_fixture_cases_checked=0,
             findings=[finding],
             benchmark_risk_coverage=[],
+            runtime_fixture_coverage=[],
         )
         _write_reports(report, args.reports_dir)
         print(f"validate-professional-routing-coverage: ERROR: {exc}", file=sys.stderr)
@@ -212,6 +233,7 @@ def main(argv: list[str] | None = None) -> int:
         "validate-professional-routing-coverage: "
         f"status={report.status}; routing_cases={report.routing_cases_checked}; "
         f"benchmark_hidden_risks_strong={report.hidden_risks_covered}/{report.hidden_risks_checked}; "
+        f"runtime_fixtures={report.runtime_fixture_cases_checked}; "
         f"not_required={report.hidden_risks_not_required}; "
         f"findings={len(report.findings)}"
     )
@@ -242,6 +264,7 @@ def validate(*, routing_dir: Path, benchmarks_dir: Path, baseline_path: Path) ->
     findings: list[Finding] = []
 
     _check_routing_cases(routing_cases, skills, capabilities, domain_extensions, capability_used_by, findings)
+    runtime_rows, runtime_dirs, runtime_cases = _check_runtime_fixture_coverage(capabilities, findings)
     l1_count = sum(1 for case in routing_cases if _is_l1_anti_over_routing_case(case))
     baseline_l1 = _baseline_l1_count(baseline_path)
     if baseline_l1 is not None and l1_count < baseline_l1:
@@ -281,9 +304,94 @@ def validate(*, routing_dir: Path, benchmarks_dir: Path, baseline_path: Path) ->
         hidden_risks_matched_by_expected_route_only=route_only_count,
         hidden_risks_needing_manual_review=manual_review_count,
         l1_anti_over_routing_count=l1_count,
+        runtime_fixture_dirs_checked=runtime_dirs,
+        runtime_fixture_cases_checked=runtime_cases,
         findings=findings,
         benchmark_risk_coverage=coverage_rows,
+        runtime_fixture_coverage=runtime_rows,
     )
+
+
+def _check_runtime_fixture_coverage(
+    capabilities: set[str],
+    findings: list[Finding],
+) -> tuple[list[dict[str, Any]], int, int]:
+    rows: list[dict[str, Any]] = []
+    total_cases = 0
+    for suite, required_capability in RUNTIME_FIXTURE_SUITES.items():
+        suite_dir = ROOT / "evals" / suite
+        paths = sorted(suite_dir.glob("*.yaml")) if suite_dir.is_dir() else []
+        suite_errors: list[str] = []
+        if not suite_dir.is_dir():
+            suite_errors.append("directory missing")
+        if len(paths) < 3:
+            suite_errors.append(f"fixtures={len(paths)}, expected_at_least=3")
+        required_hits = 0
+        valid_cases = 0
+        for path in paths:
+            total_cases += 1
+            case_errors = _runtime_fixture_case_errors(path, required_capability, capabilities)
+            if case_errors:
+                suite_errors.extend(f"{path.name}: {error}" for error in case_errors)
+            else:
+                valid_cases += 1
+                required_hits += 1
+        if required_hits < min(3, len(paths)) or required_hits < 3:
+            suite_errors.append(
+                f"required_capability_hits={required_hits}, expected_at_least=3 for {required_capability}"
+            )
+        status = "pass" if not suite_errors else "fail"
+        rows.append(
+            {
+                "suite": suite,
+                "required_capability": required_capability,
+                "fixtures": len(paths),
+                "valid_cases": valid_cases,
+                "status": status,
+                "errors": suite_errors,
+            }
+        )
+        for error in suite_errors:
+            findings.append(
+                Finding(
+                    "runtime-fixture-coverage",
+                    f"evals/{suite}",
+                    error,
+                )
+            )
+    return rows, len(RUNTIME_FIXTURE_SUITES), total_cases
+
+
+def _runtime_fixture_case_errors(
+    path: Path,
+    required_capability: str,
+    capabilities: set[str],
+) -> list[str]:
+    errors: list[str] = []
+    try:
+        data = load_yaml_file(path)
+    except ValidationProblem as exc:
+        return [str(exc)]
+    if not isinstance(data, dict):
+        return ["fixture must be a mapping"]
+    for field_name in RUNTIME_FIXTURE_REQUIRED_FIELDS:
+        if field_name not in data:
+            errors.append(f"missing field '{field_name}'")
+    for field_name in ("id", "scenario", "privacy_boundary"):
+        value = data.get(field_name)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"field '{field_name}' must be a non-empty string")
+    for field_name in ("expected_capabilities", "expected_evidence", "forbidden_claims"):
+        values = _string_list(data.get(field_name))
+        if not values:
+            errors.append(f"field '{field_name}' must be a non-empty list of strings")
+    expected_capabilities = _string_list(data.get("expected_capabilities"))
+    for capability in expected_capabilities:
+        if capability not in capabilities:
+            errors.append(f"unknown capability '{capability}'")
+    if required_capability not in expected_capabilities:
+        errors.append(f"expected_capabilities must include '{required_capability}'")
+    return errors
 
 
 def _load_registry() -> tuple[set[str], set[str], set[str], dict[str, set[str]]]:
@@ -778,6 +886,8 @@ def _render_markdown(report: CoverageReport) -> str:
         f"- Uncovered: {report.hidden_risks_uncovered}",
         f"- Manual review: {report.needs_manual_review}",
         f"- L1 anti-over-routing cases: {report.l1_anti_over_routing_count}",
+        f"- Runtime fixture suites checked: {report.runtime_fixture_dirs_checked}",
+        f"- Runtime fixture cases checked: {report.runtime_fixture_cases_checked}",
         f"- Findings: {len(report.findings)}",
         "",
         "## Benchmark Hidden Risk Coverage",
@@ -812,6 +922,20 @@ def _render_markdown(report: CoverageReport) -> str:
     else:
         lines.append("- None")
     lines.extend(["", "</details>"])
+    lines.extend(
+        [
+            "",
+            "## Runtime Governance Fixture Coverage",
+            "",
+            "| Suite | Status | Fixtures | Required Capability |",
+            "| --- | --- | --- | --- |",
+        ]
+    )
+    for row in report.runtime_fixture_coverage:
+        lines.append(
+            f"| `evals/{row['suite']}` | {row['status']} | "
+            f"{row['fixtures']} | `{row['required_capability']}` |"
+        )
     lines.extend(["", "## Findings", ""])
     if report.findings:
         for finding in report.findings:

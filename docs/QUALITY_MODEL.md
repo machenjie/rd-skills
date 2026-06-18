@@ -92,6 +92,21 @@ Required evidence:
 - Installer or packaging dry-run output when behavior changed.
 - Profile count summary.
 
+Runtime-governance evidence must stay bounded:
+
+- executor adapter evidence names supported capabilities, degraded capabilities,
+  normalized event type, lifecycle state, gate result, and closure-contract
+  limits;
+- repository graph evidence names only task-relevant graph slices and freshness
+  markers, not a whole-repository dump;
+- project memory evidence is experience input only and requires human promotion
+  before becoming authored skill, registry, or fixture content;
+- validation evidence is fresh only when the Validation Broker can tie the
+  command outcome to the latest material edit and changed-path/risk coverage;
+- trajectory evidence is a review view over bounded facts and must not include
+  prompts, secrets, environment variables, raw command output, or full command
+  arguments.
+
 ## L4 Product-Grade High-Risk Change
 
 Scope: changes that alter public contracts, installation behavior, packaging semantics, runtime profile behavior, routing decisions, cross-agent compatibility, or release procedure.

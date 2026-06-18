@@ -23,6 +23,13 @@ from validation_utils import (
 ROOT = Path(__file__).resolve().parents[1]
 PROFILES = ("recommended", "full", "dev")
 STATUSES = ("pass", "partial", "fail", "unknown", "not_collected")
+RUNTIME_GOVERNANCE_FIXTURE_SUITES = {
+    "executor-adapters": "executor-adapter-protocol",
+    "repository-intelligence": "repository-graph-analysis",
+    "project-memory": "project-memory-governance",
+    "validation-broker": "validation-broker",
+    "trajectory": "execution-trajectory-analysis",
+}
 STRICT_PROFILE_BUILD_DIMENSIONS = (
     "Registry source counts",
     "Profile build reproducibility",
@@ -286,6 +293,37 @@ def skill_efficacy_status(root: Path) -> tuple[str, str]:
     return "pass", json.dumps(detail, sort_keys=True)
 
 
+def runtime_governance_fixture_status(root: Path) -> tuple[str, str]:
+    """Return structural fixture coverage for runtime-governance capability suites."""
+    rows: dict[str, dict[str, Any]] = {}
+    invalid: list[str] = []
+    for suite, required_capability in RUNTIME_GOVERNANCE_FIXTURE_SUITES.items():
+        suite_dir = root / "evals" / suite
+        paths = sorted(suite_dir.glob("*.yaml")) if suite_dir.is_dir() else []
+        hit_count = 0
+        for path in paths:
+            data = load_yaml_file(path)
+            expected = data.get("expected_capabilities") if isinstance(data, dict) else None
+            if isinstance(expected, list) and required_capability in {str(item).strip() for item in expected}:
+                hit_count += 1
+        if len(paths) < 3 or hit_count < 3:
+            invalid.append(suite)
+        rows[suite] = {
+            "fixtures": len(paths),
+            "required_capability": required_capability,
+            "required_capability_hits": hit_count,
+        }
+    detail = {
+        "suites": rows,
+        "total_fixtures": sum(row["fixtures"] for row in rows.values()),
+        "evidence_boundary": "structural/local fixtures only; no live empirical pass-rate or runtime overhead evidence",
+    }
+    if invalid:
+        detail["invalid"] = invalid
+        return "fail", json.dumps(detail, sort_keys=True)
+    return "pass", json.dumps(detail, sort_keys=True)
+
+
 def _summary_status(name: str, value: dict[str, Any]) -> str:
     if name == "Routing coverage":
         if value.get("hidden_risks_needing_manual_review", 0) or value.get("cases_without_forbidden", 0):
@@ -444,6 +482,18 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
             "python3 scripts/validate-skill-efficacy-benchmarks.py",
             "Repair skill-efficacy fixture structure; do not claim live pass-rate evidence without measured runs.",
             skill_efficacy_detail,
+        )
+    )
+
+    runtime_fixture_status, runtime_fixture_detail = runtime_governance_fixture_status(root)
+    dimensions.append(
+        Dimension(
+            "Runtime governance structural fixtures",
+            runtime_fixture_status,
+            "evals/executor-adapters, evals/repository-intelligence, evals/project-memory, evals/validation-broker, evals/trajectory",
+            "python3 scripts/validate-professional-routing-coverage.py",
+            "Repair runtime-governance fixture structure; do not treat structural fixtures as live runtime pass-rate evidence.",
+            runtime_fixture_detail,
         )
     )
 

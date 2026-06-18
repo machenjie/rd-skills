@@ -1,0 +1,14 @@
+---
+id: repair-without-rereview
+scenario: Repair after review requires a re-review ledger before closure.
+expected_capabilities:
+  - execution-trajectory-analysis
+  - agent-workflow-state-machine
+expected_evidence:
+  - Repair/re-review ledger names finding, repair, and missing re-review.
+  - Validation freshness timeline distinguishes repair validation from review approval.
+  - Closure advice is needs re-review or blocked with residual risk.
+forbidden_claims:
+  - Repair is declared approved without targeted re-review.
+  - Review approval scope silently expands to post-review edits.
+privacy_boundary: Finding id, bounded paths, and review status only.

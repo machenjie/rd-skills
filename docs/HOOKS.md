@@ -6,6 +6,36 @@ skill references. Its job is to notice signals at session start, after tools
 run, or before an agent stops, then remind the agent to run a route preflight or
 close the matching ChangeForge gate.
 
+## Runtime Protocol Boundaries
+
+The hook runtime and adapter core provide an execution protocol, not an LLM, a
+router, or a source of skill rules. Runtime adapters normalize supported agent
+events into bounded facts, report adapter capabilities, and degrade explicitly
+when an event or advisory output path is unsupported. Unsupported events follow
+adapter policy: fail open for advisory reminders, fail closed only for
+configured high-confidence closure gates, and record the limitation as residual
+risk when it affects handoff evidence.
+
+Repository graph and context-pack support are source-evidence helpers. They may
+summarize symbol, import, reference, test, ownership, and generated-artifact
+relationships, but they are not whole-repository dumps and do not replace direct
+file inspection. Stale graph or context-pack evidence must be refreshed or
+labeled as an assumption.
+
+Project memory is human-governed operational memory. It can warn about repeated
+failures, fragile files, and stale context, but it never auto-learns into skills,
+registry rules, or capabilities. Memory summaries are experience evidence, not
+source facts.
+
+The Validation Broker owns validation freshness classification for closure
+checks. It maps changed paths to candidate commands, parses bounded outcomes,
+and rejects stale, failed, command-only, or negative validation evidence.
+
+Trajectory inspection is an offline review view built from bounded telemetry,
+memory, and validation facts. It checks stage order, repair/re-review,
+validation freshness, and residual-risk closure without recording prompts,
+secrets, environment variables, raw command output, or full command arguments.
+
 ## What ChangeForge Hook Runtime Does
 
 The first-stage runtime provides these reminder gates:

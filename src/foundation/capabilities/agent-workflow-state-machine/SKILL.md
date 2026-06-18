@@ -31,6 +31,8 @@ Keep agent-assisted engineering work in a coherent state machine from clarificat
 - The action owner and independent reviewer must be different skills or capabilities.
 - Validation evidence must be fresh after the final material edit; stale validation must be disclosed as not verified.
 - When Validation Broker output is available, use its event-order freshness and coverage result as closure evidence; stale, failed, not-run, no-outcome, or coverage-mismatch results route back to testing or failure diagnosis.
+- When executor adapter output is available, lifecycle state transitions must respect `AdapterCapabilities`; unsupported runtime events create degraded workflow evidence rather than full closure.
+- When trajectory output is available, use `execution-trajectory-analysis` as the bounded review view for lifecycle transitions, repair/re-review, and validation freshness timeline.
 - Repair requires a targeted re-review of the repaired area, not a broad completion claim.
 - Stop conditions must prevent a third same-path retry after two failures without new evidence and route repair.
 
@@ -47,6 +49,8 @@ Keep agent-assisted engineering work in a coherent state machine from clarificat
 - Select it when stage routing, active skill context, owner/reviewer, or next handoff is ambiguous.
 - Select it with `agent-execution-discipline` when evidence, retry, repair, or closure risk exists.
 - Select it with `change-forge-router` for routed changes that need a `changeforge_stage_route` manifest.
+- Select `executor-adapter-protocol` when lifecycle state is derived from runtime adapter events.
+- Select `execution-trajectory-analysis` when event order, edit-before-read, skipped stage, or repair/re-review integrity needs inspection.
 
 ## Risk Escalation Rules
 - Escalate to `failure-diagnosis` after two same-path failures without verified cause.
@@ -76,6 +80,7 @@ Return a `workflow_state_summary` with:
 - **Exit criteria**: evidence required before moving to the next stage.
 - **Owner and reviewer**: action owner skill/capability and different review skill/capability.
 - **Transition history**: prior stage, current stage, next stage, and reason.
+- **Lifecycle state source**: manual route evidence, adapter lifecycle state, trajectory view, or unavailable source with degradation note.
 - **Validation freshness**: command, outcome, timestamp or turn relation, and whether edits happened after it.
 - **Validation broker result**: selected command level, coverage alignment, event-order freshness, and next route when validation failed.
 - **Review and repair ledger**: findings, repair owner, re-review result, and unresolved findings.
@@ -91,7 +96,8 @@ Return a `workflow_state_summary` with:
 5. Repair has targeted re-review before closure.
 6. Validation evidence is fresh or explicitly disclosed as stale/not run.
 7. The stop condition prevents repeated same-path retries.
-8. Final handoff contains route, stage, validation, residual risk, and next action evidence when engineering work occurred.
+8. Adapter capability limits and trajectory findings are reconciled before closure when they are available.
+9. Final handoff contains route, stage, validation, residual risk, and next action evidence when engineering work occurred.
 
 ## Used By
 - `change-forge-router`

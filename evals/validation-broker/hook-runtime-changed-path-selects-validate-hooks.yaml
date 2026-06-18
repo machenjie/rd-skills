@@ -1,0 +1,13 @@
+---
+id: hook-runtime-changed-path-selects-validate-hooks
+scenario: Hook runtime source changes require validate-hooks and related profile validation.
+expected_capabilities:
+  - validation-broker
+expected_evidence:
+  - Changed-path-to-validation mapping selects scripts/validate-hooks.py.
+  - Validator depth records narrow hook validation and downstream profile risk.
+  - Stop closure input names fresh or not-run outcome.
+forbidden_claims:
+  - Hook runtime edit is verified by docs-only validation.
+  - Command selection is omitted from handoff.
+privacy_boundary: Changed paths, command names, and outcomes only.

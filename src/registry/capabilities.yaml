@@ -1174,3 +1174,62 @@ capabilities:
       - plan drift actual diff differs validation before final edit partial validation reported as full extra generated file missing planned file
     risk_notes: [Agent handoffs can hide scope drift stale validation extra files unreviewed repairs and claims that no longer match the final patch]
     expected_outputs: [Plan Execution Consistency Report with plan summary actual diff variance table behavior mapping validation freshness review scope docs registry consistency residual risk and closure decision]
+  - id: "123"
+    name: executor-adapter-protocol
+    group: agent-runtime-governance
+    path: src/foundation/capabilities/executor-adapter-protocol
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, security-privacy-gate, delivery-release-gate, quality-test-gate, ai-code-review-refactor, change-documentation-gate, agent-execution-discipline]
+    triggers:
+      - executor adapter runtime adapter adapter capabilities AdapterCapabilities NormalizedEvent LifecycleState EvidenceLedger GateResult ClosureContract unsupported runtime event runtime capability degradation
+      - normalized event closure contract fail open fail closed unsupported event handling adapter capability missing stop closure unsupported
+    risk_notes: [Executor adapters can silently overclaim closure when unsupported events degraded runtime capability or fail-open policy is not represented]
+    expected_outputs: [Executor Adapter Protocol Record with AdapterCapabilities NormalizedEvent LifecycleState EvidenceLedger GateResult ClosureContract degradation fail-open fail-closed unsupported event handling and residual risk]
+  - id: "124"
+    name: repository-graph-analysis
+    group: repository-intelligence
+    path: src/foundation/capabilities/repository-graph-analysis
+    status: implemented
+    used_by: [change-forge-router, change-impact-analyzer, architecture-impact-reviewer, task-dag-planner, quality-test-gate, ai-code-review-refactor, change-documentation-gate, agent-execution-discipline]
+    triggers:
+      - repo graph symbol graph import graph call graph reference graph test graph ownership graph generated artifact graph context pack source of truth unknown freshness drift
+      - repository intelligence graph stale context pack anti context bloat generated dist do not edit affected tests owner graph
+    risk_notes: [Repository graph output can become stale or bloated and generated artifacts can be edited instead of their source of truth]
+    expected_outputs: [Repository Graph Analysis with graph sources freshness selected nodes context pack anti-bloat decision validation candidates generated artifact source-of-truth and residual drift risk]
+  - id: "125"
+    name: project-memory-governance
+    group: project-memory
+    path: src/foundation/capabilities/project-memory-governance
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, quality-test-gate, ai-code-review-refactor, change-documentation-gate, agent-execution-discipline, skill-authoring-expert]
+    triggers:
+      - project memory append-only memory event memory projection deterministic retrieval repeat failure fragile file stale context previous fix failed latest commit review follow-up
+      - repeat failure third attempt fragile file without preflight stale context refresh required human promotion only privacy boundary
+    risk_notes: [Project memory can become unsafe source substitution or automatic learning unless it remains append-only bounded deterministic private and human-governed]
+    expected_outputs: [Project Memory Governance Record with append-only event memory projection deterministic retrieval repeat failure gate fragile file gate stale context gate privacy boundary promotion decision and residual risk]
+  - id: "126"
+    name: validation-broker
+    group: quality-testing
+    path: src/foundation/capabilities/validation-broker
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, quality-test-gate, delivery-release-gate, ai-code-review-refactor, change-documentation-gate, agent-execution-discipline]
+    triggers:
+      - validation broker validation command selection stale validation validation without outcome affected tests changed path validation changed-path-to-validation mapping validator selection
+      - narrow module full validator selection validation result parsing validation freshness negative validation evidence stop closure integration
+    risk_notes: [Validation can be stale partial unparsed or mismatched to changed paths while handoff still claims full verification]
+    expected_outputs: [Validation Broker Result with changed-path mapping validator selection command ledger parsed outcomes freshness negative evidence stop closure input residual risk and next validator]
+  - id: "127"
+    name: execution-trajectory-analysis
+    group: engineering-workflow
+    path: src/foundation/capabilities/execution-trajectory-analysis
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, quality-test-gate, ai-code-review-refactor, change-documentation-gate, agent-execution-discipline, skill-authoring-expert]
+    triggers:
+      - execution trajectory trajectory builder trajectory analyzer illegal transition edit before read repair without re-review stop without residual risk skipped engineering stage
+      - repair re-review ledger validation freshness timeline pressure behavior candidate generation lifecycle trajectory review
+    risk_notes: [Final diff review can miss illegal stage transitions stale validation edit-before-read behavior and repair without re-review]
+    expected_outputs: [Execution Trajectory Analysis with ordered lifecycle events illegal transition findings repair re-review ledger validation freshness timeline pressure behavior candidates closure advice and residual risk]

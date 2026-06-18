@@ -25,9 +25,15 @@ Use the smallest profile that fits the target runtime:
 | --- | --- | --- |
 | `recommended` | Default for global/user installs. | 19 professional skills |
 | `full` | Project installs where domain extensions should be visible as top-level skills. | 19 professional skills plus 7 domain extensions |
-| `dev` | ChangeForge authoring, validation, or debugging only. | 19 professional skills plus 122 foundation capabilities plus 7 domain extensions |
+| `dev` | ChangeForge authoring, validation, or debugging only. | 19 professional skills plus 127 foundation capabilities plus 7 domain extensions |
 
 In `recommended` and `full`, foundation capabilities are compiled into professional skill `references/` and loaded selectively by the selected skill route. They are not installed as top-level global skills.
+
+Runtime-governance capabilities such as executor adapter protocol, repository
+graph analysis, project memory governance, validation broker, and execution
+trajectory analysis follow the same profile rule. They are selected by route or
+stage signal and compiled into professional references for `recommended` and
+`full`; only `dev` exposes them as top-level authoring/debugging skills.
 
 ## Build Runtime Artifacts
 
@@ -121,6 +127,12 @@ python3 installers/doctor.py --agent claude --scope user --profile recommended
 ## Use The Skills In An Agent
 
 After installation, the target agent runtime discovers the installed skill folders. If the runtime was already open and does not immediately see new skills, reload or restart that runtime.
+
+Optional hook/runtime support can provide adapter events, repository graph
+context packs, project memory warnings, validation freshness facts, and
+trajectory review evidence. These signals support routing and closure, but they
+do not replace `change-forge-router`, do not auto-learn into skills, and do not
+turn repository intelligence into a whole-repository context dump.
 
 Use `change-forge-router` when the requested work needs classification, routing, or risk sizing:
 

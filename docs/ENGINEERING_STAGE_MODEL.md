@@ -36,6 +36,7 @@ quality gates, and the allowed handoff target stage.
 ### implementation-planning
 - Purpose: code placement, reuse decision, object/function/class/file/directory design, naming, readable main flow, public/private/internal boundaries.
 - Launch: `repository-context-map`, `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` (naming only); add `minimal-correct-implementation` when new structure, dependency, file, class, config, or abstraction is proposed.
+- Conditional launch: `repository-graph-analysis` when repo graph, context pack, generated artifact graph, affected-test graph, or source-of-truth uncertainty is part of the plan.
 - Do not launch by default: full architecture review, release gate, deep performance profiling.
 - Required evidence: target boundaries inspected before plan, repository context map with owning surface and caller/callee evidence, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal.
 - Required quality gates: implementation gate.
@@ -69,7 +70,7 @@ quality gates, and the allowed handoff target stage.
 ### code-review
 - Purpose: correctness, structure, naming, reuse, readability, security, reliability, test evidence, hallucinated-API check.
 - Launch: `code-review`, `plan-execution-consistency`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `ai-code-review-refactor` for generated code as a professional skill.
-- Conditional launch: `minimal-correct-implementation` when minimal fix, delete/shrink, dependency, abstraction, wrapper-only delegation, shortcut, or overengineering review signal exists.
+- Conditional launch: `minimal-correct-implementation` when minimal fix, delete/shrink, dependency, abstraction, wrapper-only delegation, shortcut, or overengineering review signal exists; add `execution-trajectory-analysis` or `project-memory-governance` when review must account for trajectory, repeated failure, fragile-file, or stale-context evidence.
 - Do not launch by default: release gate, deployment, infrastructure capabilities.
 - Required evidence: findings with severity, complexity-only delete/shrink findings when selected, evidence, impacted file, required fix, validation required, independent reviewer, repair and re-review result, final diff covered by review scope.
 - Required quality gates: implementation gate.
@@ -86,6 +87,7 @@ quality gates, and the allowed handoff target stage.
 ### testing
 - Purpose: unit, integration, contract, e2e, regression, fixtures, mocks, concurrency, language-specific tests.
 - Launch: `test-strategy`, `plan-execution-consistency`, `language-testing-strategy`, the matching test capability (`unit-testing`, `integration-testing`, `contract-testing`, `e2e-testing`, `regression-testing`), `test-data-management`; add `minimal-correct-implementation` when lower-depth validation is proposed.
+- Conditional launch: `validation-broker` and `repository-graph-analysis` when changed-path mapping, affected-test selection, stale validation, or generated artifact validation is in scope.
 - Do not launch by default: architecture redesign, coding of new features.
 - Required evidence: risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected, validation freshness after final material edits.
 - Required quality gates: test gate.
@@ -103,6 +105,7 @@ quality gates, and the allowed handoff target stage.
 ### documentation-handoff
 - Purpose: change boundary, validation evidence, residual risk, runbook, API docs, changelog, next actions.
 - Launch: `agent-workflow-state-machine`, `plan-execution-consistency`, `documentation-generation`, `agent-execution-discipline`; pair with `change-documentation-gate` as the professional owner.
+- Conditional launch: `executor-adapter-protocol`, `validation-broker`, `execution-trajectory-analysis`, or `project-memory-governance` when closure depends on adapter support, validation freshness, trajectory review, or governed memory.
 - Do not launch by default: coding capabilities unless docs contain API or code examples.
 - Required evidence: validated boundary, validation freshness and plan-execution consistency, residual risk, updated docs list, handoff target.
 - Required quality gates: documentation gate.
@@ -111,6 +114,7 @@ quality gates, and the allowed handoff target stage.
 ### skill-authoring
 - Purpose: author, review, slim, split, or maintain ChangeForge skills, capabilities, references, registry, or routing rules.
 - Launch: `repository-context-map`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `documentation-generation`, `agent-execution-discipline`, `plan-execution-consistency`; add `minimal-correct-implementation` when skill source adds routing surface, references, benchmarks, shortcuts, or generated-review complexity; pair with `change-documentation-gate`, `ai-code-review-refactor`, or `quality-test-gate` when those professional owners are selected by risk.
+- Conditional launch: `executor-adapter-protocol`, `repository-graph-analysis`, `project-memory-governance`, `validation-broker`, and `execution-trajectory-analysis` when authoring or evaluating those runtime-governance surfaces.
 - Do not launch by default: product coding, language runtime, release capabilities.
 - Required evidence: boundary, trigger precision, output contract, registry/routing/validation impact, skill-efficacy benchmark impact when behavior claims change, minimal scope diff, deleted or rejected complexity, shortcut ceiling and upgrade trigger when shortcuts remain.
 - Required quality gates: documentation gate, test gate.
@@ -144,6 +148,11 @@ common risks, and gates likely needed. Launch only the matching set for the surf
 | cli-daemon | `backend-change-builder` | `cli-daemon-interface-design`, `logging-error-handling` | exit-code/IO contract | test |
 | documentation-only | `change-documentation-gate` | `documentation-generation` | stale or wrong docs | documentation |
 | skill-authoring | `change-forge-router` | `repository-context-map`, `skill-authoring-expert`, `engineering-stage-professionalism`, `skill-efficacy-benchmark`, `plan-execution-consistency`, `minimal-correct-implementation` | over/under routing, context bloat | documentation, test |
+| agent-runtime-governance | `change-forge-router` | `executor-adapter-protocol`, `agent-tool-permission-sandbox`, `agent-workflow-state-machine` | unsupported runtime event, overclaimed closure | security, execution discipline |
+| repository-intelligence | `change-impact-analyzer` | `repository-graph-analysis`, `repository-context-map`, `context-packaging` | stale graph, source-of-truth drift | impact, test |
+| project-memory | `change-forge-router` | `project-memory-governance`, `agent-execution-discipline`, `plan-execution-consistency` | unsafe auto-learning, stale context | execution discipline |
+| validation-broker | `quality-test-gate` | `validation-broker`, `repository-graph-analysis`, `plan-execution-consistency` | stale validation, wrong validator depth | test |
+| execution-trajectory | `ai-code-review-refactor` | `execution-trajectory-analysis`, `agent-workflow-state-machine`, `validation-broker` | edit-before-read, repair without re-review | AI review, test |
 
 ## 3. Language Surface Selector
 

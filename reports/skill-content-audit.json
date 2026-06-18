@@ -272,7 +272,7 @@
     {
       "anti_example_section_length": 14,
       "benchmark_section_length": 22,
-      "bullet_count": 206,
+      "bullet_count": 209,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 58,
@@ -280,18 +280,18 @@
       "description_findings": [],
       "description_length": 240,
       "findings": [
-        "body 360 lines exceeds heavy threshold 350"
+        "body 363 lines exceeds heavy threshold 350"
       ],
       "has_shared_optimality": false,
       "heading_count": 23,
       "kind": "professional-skill",
-      "largest_section_lines": 74,
+      "largest_section_lines": 75,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 10,
-      "line_count": 360,
+      "line_count": 363,
       "name": "ai-code-review-refactor",
       "optimality_section_length": 5,
-      "output_contract_length": 74,
+      "output_contract_length": 75,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/ai-code-review-refactor/SKILL.md",
@@ -305,7 +305,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 5826
+      "word_count": 5950
     },
     {
       "anti_example_section_length": 10,
@@ -422,30 +422,30 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 3,
-      "bullet_count": 206,
+      "bullet_count": 215,
       "classification": "MOVE_SECTIONS_TO_REFERENCES",
       "code_block_count": 0,
       "context_efficiency_score": 73,
-      "critical_details_length": 83,
+      "critical_details_length": 88,
       "description_findings": [],
       "description_length": 308,
       "findings": [
-        "body 331 lines exceeds review threshold 250",
-        "section 'Critical Details' is 83 lines (> 80) \u2014 reference candidate"
+        "body 340 lines exceeds review threshold 250",
+        "section 'Critical Details' is 88 lines (> 80) \u2014 reference candidate"
       ],
       "has_shared_optimality": false,
       "heading_count": 21,
       "kind": "professional-skill",
-      "largest_section_lines": 83,
+      "largest_section_lines": 88,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 14,
-      "line_count": 331,
+      "line_count": 340,
       "name": "change-forge-router",
       "optimality_section_length": 0,
       "output_contract_length": 40,
       "oversized_sections": [
         {
-          "lines": 83,
+          "lines": 88,
           "title": "Critical Details"
         }
       ],
@@ -461,7 +461,7 @@
       "suggested_action": "Move oversized sections/tables into references/*.md; keep a concise body summary.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 6554
+      "word_count": 6714
     },
     {
       "anti_example_section_length": 10,
@@ -792,7 +792,7 @@
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 22,
-      "bullet_count": 204,
+      "bullet_count": 209,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 69,
@@ -800,7 +800,7 @@
       "description_findings": [],
       "description_length": 202,
       "findings": [
-        "body 318 lines exceeds review threshold 250"
+        "body 323 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 23,
@@ -808,10 +808,10 @@
       "largest_section_lines": 44,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 318,
+      "line_count": 323,
       "name": "quality-test-gate",
       "optimality_section_length": 0,
-      "output_contract_length": 32,
+      "output_contract_length": 34,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/quality-test-gate/SKILL.md",
@@ -825,7 +825,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 5870
+      "word_count": 6011
     },
     {
       "anti_example_section_length": 10,
@@ -978,7 +978,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 9,
-      "bullet_count": 139,
+      "bullet_count": 146,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 0,
       "context_efficiency_score": 75,
@@ -989,7 +989,7 @@
       "description_length": 365,
       "findings": [
         "description: long (365 chars); keep it to trigger conditions, not a body summary",
-        "body 259 lines exceeds heavy threshold 250"
+        "body 266 lines exceeds heavy threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 27,
@@ -997,10 +997,10 @@
       "largest_section_lines": 60,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 0,
-      "line_count": 259,
+      "line_count": 266,
       "name": "agent-execution-discipline",
       "optimality_section_length": 0,
-      "output_contract_length": 22,
+      "output_contract_length": 25,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/agent-execution-discipline/SKILL.md",
@@ -1014,7 +1014,7 @@
       "suggested_action": "Trim the heaviest section to decision-critical lines; this capability is already a selectively-loaded reference, so brevity directly reduces compiled-reference weight.",
       "table_count": 0,
       "used_by_count": 19,
-      "word_count": 3655
+      "word_count": 3863
     },
     {
       "anti_example_section_length": 0,
@@ -1062,7 +1062,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 7,
-      "bullet_count": 66,
+      "bullet_count": 75,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 92,
@@ -1070,21 +1070,21 @@
       "description_findings": [],
       "description_length": 176,
       "findings": [
-        "section 'Agent Workflow State Machine' is 99 lines (> 80) \u2014 reference candidate"
+        "section 'Agent Workflow State Machine' is 108 lines (> 80) \u2014 reference candidate"
       ],
       "has_shared_optimality": false,
       "heading_count": 15,
       "kind": "foundation-capability",
-      "largest_section_lines": 99,
+      "largest_section_lines": 108,
       "largest_section_title": "Agent Workflow State Machine",
       "largest_table_rows": 0,
-      "line_count": 100,
+      "line_count": 109,
       "name": "agent-workflow-state-machine",
       "optimality_section_length": 0,
-      "output_contract_length": 12,
+      "output_contract_length": 15,
       "oversized_sections": [
         {
-          "lines": 99,
+          "lines": 108,
           "title": "Agent Workflow State Machine"
         }
       ],
@@ -1100,7 +1100,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 9,
-      "word_count": 955
+      "word_count": 1162
     },
     {
       "anti_example_section_length": 0,
@@ -1860,7 +1860,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 74,
+      "bullet_count": 79,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 100,
@@ -1871,13 +1871,13 @@
       "has_shared_optimality": false,
       "heading_count": 14,
       "kind": "foundation-capability",
-      "largest_section_lines": 22,
+      "largest_section_lines": 23,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 0,
-      "line_count": 131,
+      "line_count": 136,
       "name": "context-packaging",
       "optimality_section_length": 0,
-      "output_contract_length": 22,
+      "output_contract_length": 23,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/context-packaging/SKILL.md",
@@ -1891,7 +1891,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 2,
-      "word_count": 2045
+      "word_count": 2152
     },
     {
       "anti_example_section_length": 14,
@@ -2655,6 +2655,92 @@
       "table_count": 4,
       "used_by_count": 3,
       "word_count": 2631
+    },
+    {
+      "anti_example_section_length": 0,
+      "benchmark_section_length": 7,
+      "bullet_count": 57,
+      "classification": "KEEP_AS_IS",
+      "code_block_count": 0,
+      "context_efficiency_score": 92,
+      "critical_details_length": 8,
+      "description_findings": [],
+      "description_length": 176,
+      "findings": [
+        "section 'Execution Trajectory Analysis' is 90 lines (> 80) \u2014 reference candidate"
+      ],
+      "has_shared_optimality": false,
+      "heading_count": 15,
+      "kind": "foundation-capability",
+      "largest_section_lines": 90,
+      "largest_section_title": "Execution Trajectory Analysis",
+      "largest_table_rows": 0,
+      "line_count": 91,
+      "name": "execution-trajectory-analysis",
+      "optimality_section_length": 0,
+      "output_contract_length": 9,
+      "oversized_sections": [
+        {
+          "lines": 90,
+          "title": "Execution Trajectory Analysis"
+        }
+      ],
+      "oversized_tables": [],
+      "path": "src/foundation/capabilities/execution-trajectory-analysis/SKILL.md",
+      "professionalism_score": 100,
+      "recommended_phase": "-",
+      "reference_link_count": 0,
+      "repeated_phrase_count": 0,
+      "risk_of_change": "low",
+      "routing_clarity_score": 100,
+      "split_candidate_score": 14,
+      "suggested_action": "Compact decision aid within budget; no action required.",
+      "table_count": 0,
+      "used_by_count": 6,
+      "word_count": 821
+    },
+    {
+      "anti_example_section_length": 0,
+      "benchmark_section_length": 7,
+      "bullet_count": 58,
+      "classification": "KEEP_AS_IS",
+      "code_block_count": 0,
+      "context_efficiency_score": 92,
+      "critical_details_length": 8,
+      "description_findings": [],
+      "description_length": 174,
+      "findings": [
+        "section 'Executor Adapter Protocol' is 91 lines (> 80) \u2014 reference candidate"
+      ],
+      "has_shared_optimality": false,
+      "heading_count": 15,
+      "kind": "foundation-capability",
+      "largest_section_lines": 91,
+      "largest_section_title": "Executor Adapter Protocol",
+      "largest_table_rows": 0,
+      "line_count": 92,
+      "name": "executor-adapter-protocol",
+      "optimality_section_length": 0,
+      "output_contract_length": 9,
+      "oversized_sections": [
+        {
+          "lines": 91,
+          "title": "Executor Adapter Protocol"
+        }
+      ],
+      "oversized_tables": [],
+      "path": "src/foundation/capabilities/executor-adapter-protocol/SKILL.md",
+      "professionalism_score": 100,
+      "recommended_phase": "-",
+      "reference_link_count": 0,
+      "repeated_phrase_count": 0,
+      "risk_of_change": "low",
+      "routing_clarity_score": 100,
+      "split_candidate_score": 14,
+      "suggested_action": "Compact decision aid within budget; no action required.",
+      "table_count": 0,
+      "used_by_count": 7,
+      "word_count": 878
     },
     {
       "anti_example_section_length": 13,
@@ -4148,6 +4234,52 @@
       "word_count": 2565
     },
     {
+      "anti_example_section_length": 0,
+      "benchmark_section_length": 7,
+      "bullet_count": 56,
+      "classification": "KEEP_AS_IS",
+      "code_block_count": 0,
+      "context_efficiency_score": 92,
+      "critical_details_length": 7,
+      "description_findings": [
+        "description: states no trigger condition or scope (when/for/use, or a scope noun)"
+      ],
+      "description_length": 173,
+      "findings": [
+        "description: states no trigger condition or scope (when/for/use, or a scope noun)",
+        "section 'Project Memory Governance' is 89 lines (> 80) \u2014 reference candidate"
+      ],
+      "has_shared_optimality": false,
+      "heading_count": 15,
+      "kind": "foundation-capability",
+      "largest_section_lines": 89,
+      "largest_section_title": "Project Memory Governance",
+      "largest_table_rows": 0,
+      "line_count": 90,
+      "name": "project-memory-governance",
+      "optimality_section_length": 0,
+      "output_contract_length": 9,
+      "oversized_sections": [
+        {
+          "lines": 89,
+          "title": "Project Memory Governance"
+        }
+      ],
+      "oversized_tables": [],
+      "path": "src/foundation/capabilities/project-memory-governance/SKILL.md",
+      "professionalism_score": 100,
+      "recommended_phase": "-",
+      "reference_link_count": 0,
+      "repeated_phrase_count": 0,
+      "risk_of_change": "low",
+      "routing_clarity_score": 100,
+      "split_candidate_score": 14,
+      "suggested_action": "Compact decision aid within budget; no action required.",
+      "table_count": 0,
+      "used_by_count": 6,
+      "word_count": 858
+    },
+    {
       "anti_example_section_length": 11,
       "benchmark_section_length": 61,
       "bullet_count": 36,
@@ -4376,29 +4508,29 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 7,
-      "bullet_count": 77,
+      "bullet_count": 81,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 92,
-      "critical_details_length": 7,
+      "critical_details_length": 8,
       "description_findings": [],
       "description_length": 184,
       "findings": [
-        "section 'Repository Context Map' is 115 lines (> 80) \u2014 reference candidate"
+        "section 'Repository Context Map' is 119 lines (> 80) \u2014 reference candidate"
       ],
       "has_shared_optimality": false,
       "heading_count": 16,
       "kind": "foundation-capability",
-      "largest_section_lines": 115,
+      "largest_section_lines": 119,
       "largest_section_title": "Repository Context Map",
       "largest_table_rows": 0,
-      "line_count": 116,
+      "line_count": 120,
       "name": "repository-context-map",
       "optimality_section_length": 0,
-      "output_contract_length": 15,
+      "output_contract_length": 16,
       "oversized_sections": [
         {
-          "lines": 115,
+          "lines": 119,
           "title": "Repository Context Map"
         }
       ],
@@ -4414,7 +4546,50 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 15,
-      "word_count": 1328
+      "word_count": 1428
+    },
+    {
+      "anti_example_section_length": 0,
+      "benchmark_section_length": 7,
+      "bullet_count": 59,
+      "classification": "KEEP_AS_IS",
+      "code_block_count": 0,
+      "context_efficiency_score": 92,
+      "critical_details_length": 9,
+      "description_findings": [],
+      "description_length": 153,
+      "findings": [
+        "section 'Repository Graph Analysis' is 92 lines (> 80) \u2014 reference candidate"
+      ],
+      "has_shared_optimality": false,
+      "heading_count": 15,
+      "kind": "foundation-capability",
+      "largest_section_lines": 92,
+      "largest_section_title": "Repository Graph Analysis",
+      "largest_table_rows": 0,
+      "line_count": 93,
+      "name": "repository-graph-analysis",
+      "optimality_section_length": 0,
+      "output_contract_length": 9,
+      "oversized_sections": [
+        {
+          "lines": 92,
+          "title": "Repository Graph Analysis"
+        }
+      ],
+      "oversized_tables": [],
+      "path": "src/foundation/capabilities/repository-graph-analysis/SKILL.md",
+      "professionalism_score": 100,
+      "recommended_phase": "-",
+      "reference_link_count": 0,
+      "repeated_phrase_count": 0,
+      "risk_of_change": "low",
+      "routing_clarity_score": 100,
+      "split_candidate_score": 14,
+      "suggested_action": "Compact decision aid within budget; no action required.",
+      "table_count": 0,
+      "used_by_count": 8,
+      "word_count": 840
     },
     {
       "anti_example_section_length": 11,
@@ -5176,7 +5351,7 @@
     {
       "anti_example_section_length": 11,
       "benchmark_section_length": 44,
-      "bullet_count": 40,
+      "bullet_count": 42,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 100,
@@ -5192,10 +5367,10 @@
       "largest_section_lines": 44,
       "largest_section_title": "Industry Benchmarks",
       "largest_table_rows": 10,
-      "line_count": 158,
+      "line_count": 160,
       "name": "test-strategy",
       "optimality_section_length": 0,
-      "output_contract_length": 14,
+      "output_contract_length": 15,
       "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/foundation/capabilities/test-strategy/SKILL.md",
@@ -5209,7 +5384,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 3,
       "used_by_count": 2,
-      "word_count": 2612
+      "word_count": 2674
     },
     {
       "anti_example_section_length": 0,
@@ -5514,6 +5689,49 @@
       "table_count": 2,
       "used_by_count": 3,
       "word_count": 2404
+    },
+    {
+      "anti_example_section_length": 0,
+      "benchmark_section_length": 7,
+      "bullet_count": 56,
+      "classification": "KEEP_AS_IS",
+      "code_block_count": 0,
+      "context_efficiency_score": 92,
+      "critical_details_length": 7,
+      "description_findings": [],
+      "description_length": 149,
+      "findings": [
+        "section 'Validation Broker' is 89 lines (> 80) \u2014 reference candidate"
+      ],
+      "has_shared_optimality": false,
+      "heading_count": 15,
+      "kind": "foundation-capability",
+      "largest_section_lines": 89,
+      "largest_section_title": "Validation Broker",
+      "largest_table_rows": 0,
+      "line_count": 90,
+      "name": "validation-broker",
+      "optimality_section_length": 0,
+      "output_contract_length": 9,
+      "oversized_sections": [
+        {
+          "lines": 89,
+          "title": "Validation Broker"
+        }
+      ],
+      "oversized_tables": [],
+      "path": "src/foundation/capabilities/validation-broker/SKILL.md",
+      "professionalism_score": 100,
+      "recommended_phase": "-",
+      "reference_link_count": 0,
+      "repeated_phrase_count": 0,
+      "risk_of_change": "low",
+      "routing_clarity_score": 100,
+      "split_candidate_score": 14,
+      "suggested_action": "Compact decision aid within budget; no action required.",
+      "table_count": 0,
+      "used_by_count": 6,
+      "word_count": 809
     },
     {
       "anti_example_section_length": 11,
@@ -5844,12 +6062,12 @@
   ],
   "summary": {
     "classifications": {
-      "KEEP_AS_IS": 139,
+      "KEEP_AS_IS": 144,
       "MOVE_SECTIONS_TO_REFERENCES": 1,
       "TIGHTEN_BODY": 8
     },
     "domain_extensions": 7,
-    "foundation_capabilities": 122,
+    "foundation_capabilities": 127,
     "heavy_domain": 0,
     "heavy_foundation": 1,
     "heavy_professional": 1,

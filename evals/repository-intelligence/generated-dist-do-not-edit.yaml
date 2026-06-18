@@ -1,0 +1,13 @@
+---
+id: generated-dist-do-not-edit
+scenario: Detect generated dist as do-not-edit and route to the source registry or build script.
+expected_capabilities:
+  - repository-graph-analysis
+expected_evidence:
+  - Generated artifact graph names source file and generated output.
+  - Anti context-bloat record explains omitted generated files.
+  - Source-of-truth decision rejects direct dist edits.
+forbidden_claims:
+  - Generated output is changed without source update.
+  - Dist artifact freshness is ignored.
+privacy_boundary: Generated/source path facts only; no packaged artifact body dump.

@@ -129,6 +129,7 @@ Select the AI review/refactor mode before approving or changing generated code. 
 - **Signal:** AI expands scope from local fix to broad refactor, new abstraction, dependency, or architecture change without boundary statement. **Hidden risk:** unbounded scope means review cannot prove behavior preservation. **Required professional action:** split the change or document scope, unchanged boundaries, and evidence. **Route to:** `agent-execution-discipline`, `change-impact-analyzer`. **Evidence required:** boundary statement, changed/unchanged file list, validation command output, and residual risk owner.
 - **Signal:** completion claim lacks command output or uses stale validation from before generated changes. **Hidden risk:** unverified AI code. **Required professional action:** block approval until fresh evidence or not-verified disclosure. **Route to:** `agent-execution-discipline`. **Evidence required:** command, exit code, outcome, residual risk.
 - **Signal:** review approves AI code without the requirement, accepted plan, final diff, test evidence, or validation freshness. **Hidden risk:** clean-looking code can miss the requested behavior or approve stale proof. **Required professional action:** run spec-compliance review first, then code-quality review with approval scope. **Route to:** `plan-execution-consistency`, `quality-test-gate`. **Evidence required:** requirement/plan match, final diff covered, changed-code-to-test map, validation freshness, and explicit approval limits.
+- **Signal:** review inspects only the final diff while runtime trajectory, project memory, or repository context pack shows edit-before-read, repeated failure, fragile file, stale context, or skipped validation. **Hidden risk:** the final diff can look clean while process evidence shows unreviewed repair or stale assumptions. **Required professional action:** read the trajectory, memory projection, and context pack as review inputs, then verify current source evidence. **Route to:** `execution-trajectory-analysis`, `project-memory-governance`, `repository-graph-analysis`. **Evidence required:** trajectory findings, memory limits, context-pack freshness, final diff scope, and current-source confirmation.
 - **Signal:** an implementer claims their own generated patch is reviewed or a repair closes without re-review. **Hidden risk:** review findings are silently bypassed. **Required professional action:** require independent review or targeted re-review after repair. **Route to:** `code-review`, `agent-workflow-state-machine`. **Evidence required:** reviewer skill/capability, finding ID, repair diff, validation, and re-review result.
 
 ### Decision Tree: Accept or Return for Remediation
@@ -255,6 +256,7 @@ Return a structured review with:
 - **Approval Scope**: what the approval covers and what it explicitly does not.
 - **Approval status**: Approved with evidence / Returned for remediation with numbered action items.
 - **Independent review record**: requirement, accepted plan, final diff, test/validation evidence, reviewer skill/capability, implementer separation, and repair/re-review result.
+- **Process evidence review**: trajectory view, memory projection limits, context-pack freshness, and whether any edit-before-read, repeat-failure, fragile-file, or stale-validation signal changes approval scope.
 - **Plan-execution consistency**: accepted plan compared to actual changed files, validation commands, skipped work, stale evidence, unplanned behavior changes, and residual risk before approval.
 - **Local naming evidence**:
   same-directory file names inspected;
@@ -342,8 +344,9 @@ Close an AI-code review or refactor only when all five canonical answers are con
 31. Reject completion claims that use success-implying language ("done", "fixed", "should pass", "works") without a fresh command output, validator result, or artifact from the current change.
 32. Reject partial verification reported as full: a lint-only or single-test pass presented as "all tests pass" or "build is green" is returned for honest scoping with the gap named.
 33. Reject approvals that do not explicitly cover requirement compliance, accepted plan match, final diff scope, changed-code-to-test mapping, validation freshness, and approval limits.
-34. Reject implementer self-approval as independent review.
-35. Reject repaired findings that have not been re-reviewed at the stage where the finding was raised.
+34. Reject final-diff-only approval when trajectory, memory, or context-pack evidence indicates unreviewed repair, stale context, or unsupported closure.
+35. Reject implementer self-approval as independent review.
+36. Reject repaired findings that have not been re-reviewed at the stage where the finding was raised.
 
 ## Handoff
 - **security-privacy-gate** — for auth, permission, payment, or sensitive data code that requires adversarial review.

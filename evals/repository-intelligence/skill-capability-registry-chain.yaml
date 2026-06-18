@@ -1,0 +1,14 @@
+---
+id: skill-capability-registry-chain
+scenario: Trace a skill capability registry dependent chain before changing ChangeForge routing.
+expected_capabilities:
+  - repository-graph-analysis
+  - context-packaging
+expected_evidence:
+  - Symbol or reference graph includes SKILL.md, capabilities.yaml, routing-rules.yaml, and stage-model.yaml.
+  - Context pack selects only affected skill, capability, registry, and validator files.
+  - Freshness compares graph evidence to the current working tree.
+forbidden_claims:
+  - Registry update is planned without dependent skill or validator context.
+  - Graph is used as semantic proof without source inspection.
+privacy_boundary: Source file path and registry edge facts only.

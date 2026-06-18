@@ -1,6 +1,6 @@
 # Professional Routing Coverage
 
-- Generated: 2026-06-18T09:04:41.979798+00:00
+- Generated: 2026-06-18T11:59:44.117469+00:00
 - Status: pass
 - Routing cases checked: 118
 - Benchmark cases checked: 30
@@ -12,6 +12,8 @@
 - Uncovered: 0
 - Manual review: 0
 - L1 anti-over-routing cases: 9
+- Runtime fixture suites checked: 5
+- Runtime fixture cases checked: 15
 - Findings: 0
 
 ## Benchmark Hidden Risk Coverage
@@ -126,6 +128,16 @@
 | `evals/professional-benchmarks/release/migration-without-rollback` | rollback fails because schema moved forward | - | api-breaking-field-rename, bigdata-schema-evolution, helm-chart-secret-values, mobile-offline-sync-conflict |
 
 </details>
+
+## Runtime Governance Fixture Coverage
+
+| Suite | Status | Fixtures | Required Capability |
+| --- | --- | --- | --- |
+| `evals/executor-adapters` | pass | 3 | `executor-adapter-protocol` |
+| `evals/repository-intelligence` | pass | 3 | `repository-graph-analysis` |
+| `evals/project-memory` | pass | 3 | `project-memory-governance` |
+| `evals/validation-broker` | pass | 3 | `validation-broker` |
+| `evals/trajectory` | pass | 3 | `execution-trajectory-analysis` |
 
 ## Findings
 

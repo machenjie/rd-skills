@@ -8,7 +8,7 @@
 | Metric | Value |
 | --- | --- |
 | Total professional skills | 19 |
-| Total foundation capabilities | 122 |
+| Total foundation capabilities | 127 |
 | Total domain extensions | 7 |
 | Heavy professional skills (> 350 lines) | 1 |
 | Heavy foundation capabilities (> 250 lines) | 1 |
@@ -22,7 +22,7 @@ Suggested-action distribution:
 
 | Classification | Count |
 | --- | --- |
-| KEEP_AS_IS | 139 |
+| KEEP_AS_IS | 144 |
 | TIGHTEN_BODY | 8 |
 | MOVE_SECTIONS_TO_REFERENCES | 1 |
 | MERGE_DUPLICATE_CONTENT | 0 |
@@ -36,15 +36,15 @@ Suggested-action distribution:
 
 | Skill | Kind | Lines | Efficiency | Top finding |
 | --- | --- | --- | --- | --- |
-| `ai-code-review-refactor` | professional-skill | 360 | 58 | body 360 lines exceeds heavy threshold 350 |
+| `ai-code-review-refactor` | professional-skill | 363 | 58 | body 363 lines exceeds heavy threshold 350 |
 | `backend-change-builder` | professional-skill | 268 | 67 | body 268 lines exceeds review threshold 250 |
 | `delivery-release-gate` | professional-skill | 262 | 67 | body 262 lines exceeds review threshold 250 |
 | `architecture-impact-reviewer` | professional-skill | 254 | 67 | body 254 lines exceeds review threshold 250 |
-| `quality-test-gate` | professional-skill | 318 | 69 | body 318 lines exceeds review threshold 250 |
+| `quality-test-gate` | professional-skill | 323 | 69 | body 323 lines exceeds review threshold 250 |
 | `reliability-observability-gate` | professional-skill | 276 | 69 | body 276 lines exceeds review threshold 250 |
 | `security-privacy-gate` | professional-skill | 263 | 69 | body 263 lines exceeds review threshold 250 |
-| `change-forge-router` | professional-skill | 331 | 73 | body 331 lines exceeds review threshold 250 |
-| `agent-execution-discipline` | foundation-capability | 259 | 75 | description: long (365 chars); keep it to trigger conditions, not a body summary |
+| `change-forge-router` | professional-skill | 340 | 73 | body 340 lines exceeds review threshold 250 |
+| `agent-execution-discipline` | foundation-capability | 266 | 75 | description: long (365 chars); keep it to trigger conditions, not a body summary |
 | `frontend-change-builder` | professional-skill | 244 | 82 | - |
 
 ### 2.2 Lowest Professionalism
@@ -54,13 +54,13 @@ Suggested-action distribution:
 | `documentation-generation` | foundation-capability | 100 | - |
 | `domain-logic-implementation` | foundation-capability | 100 | - |
 | `domain-object-identification` | foundation-capability | 100 | - |
+| `project-memory-governance` | foundation-capability | 100 | description: states no trigger condition or scope (when/for/use, or a scope noun) |
+| `validation-broker` | foundation-capability | 100 | section 'Validation Broker' is 89 lines (> 80) — reference candidate |
+| `execution-trajectory-analysis` | foundation-capability | 100 | section 'Execution Trajectory Analysis' is 90 lines (> 80) — reference candidate |
+| `executor-adapter-protocol` | foundation-capability | 100 | section 'Executor Adapter Protocol' is 91 lines (> 80) — reference candidate |
+| `repository-graph-analysis` | foundation-capability | 100 | section 'Repository Graph Analysis' is 92 lines (> 80) — reference candidate |
 | `skill-efficacy-benchmark` | foundation-capability | 100 | section 'Skill Efficacy Benchmark' is 94 lines (> 80) — reference candidate |
 | `agent-tool-permission-sandbox` | foundation-capability | 100 | section 'Agent Tool Permission Sandbox' is 96 lines (> 80) — reference candidate |
-| `plan-execution-consistency` | foundation-capability | 100 | section 'Plan Execution Consistency' is 98 lines (> 80) — reference candidate |
-| `agent-workflow-state-machine` | foundation-capability | 100 | section 'Agent Workflow State Machine' is 99 lines (> 80) — reference candidate |
-| `version-compatibility` | foundation-capability | 100 | - |
-| `architecture-enforcement-tooling` | foundation-capability | 100 | - |
-| `consumer-impact-analysis` | foundation-capability | 100 | - |
 
 ### 2.3 Weakest Routing Boundaries
 
@@ -69,26 +69,26 @@ Suggested-action distribution:
 | `documentation-generation` | foundation-capability | 100 | - |
 | `domain-logic-implementation` | foundation-capability | 100 | - |
 | `domain-object-identification` | foundation-capability | 100 | - |
+| `project-memory-governance` | foundation-capability | 100 | - |
+| `validation-broker` | foundation-capability | 100 | - |
+| `execution-trajectory-analysis` | foundation-capability | 100 | - |
+| `executor-adapter-protocol` | foundation-capability | 100 | - |
+| `repository-graph-analysis` | foundation-capability | 100 | - |
 | `skill-efficacy-benchmark` | foundation-capability | 100 | - |
 | `agent-tool-permission-sandbox` | foundation-capability | 100 | - |
-| `plan-execution-consistency` | foundation-capability | 100 | - |
-| `agent-workflow-state-machine` | foundation-capability | 100 | - |
-| `version-compatibility` | foundation-capability | 100 | - |
-| `architecture-enforcement-tooling` | foundation-capability | 100 | - |
-| `consumer-impact-analysis` | foundation-capability | 100 | - |
 
 ### 2.4 Strongest Split Candidates
 
 | Skill | Kind | Lines | Split score | Oversized sections |
 | --- | --- | --- | --- | --- |
-| `ai-code-review-refactor` | professional-skill | 360 | 35 | - |
-| `agent-execution-discipline` | foundation-capability | 259 | 35 | - |
-| `change-forge-router` | professional-skill | 331 | 32 | Critical Details (83) |
+| `ai-code-review-refactor` | professional-skill | 363 | 35 | - |
+| `agent-execution-discipline` | foundation-capability | 266 | 35 | - |
+| `change-forge-router` | professional-skill | 340 | 32 | Critical Details (88) |
 | `concurrency-control` | foundation-capability | 210 | 26 | Industry Benchmarks (81) |
 | `degradation-circuit-breaking` | foundation-capability | 210 | 26 | Industry Benchmarks (101) |
 | `domain-event-modeling` | foundation-capability | 208 | 26 | Industry Benchmarks (86) |
 | `form-validation-design` | foundation-capability | 203 | 26 | Industry Benchmarks (86) |
-| `quality-test-gate` | professional-skill | 318 | 18 | - |
+| `quality-test-gate` | professional-skill | 323 | 18 | - |
 | `reliability-observability-gate` | professional-skill | 276 | 18 | - |
 | `backend-change-builder` | professional-skill | 268 | 18 | - |
 
@@ -100,6 +100,7 @@ Suggested-action distribution:
 | `agent-execution-discipline` | foundation-capability | 365 | long (365 chars); keep it to trigger conditions, not a body summary |
 | `data-side-effect-flow-tracing` | foundation-capability | 201 | states no trigger condition or scope (when/for/use, or a scope noun) |
 | `configuration-runtime-policy` | foundation-capability | 177 | states no trigger condition or scope (when/for/use, or a scope noun) |
+| `project-memory-governance` | foundation-capability | 173 | states no trigger condition or scope (when/for/use, or a scope noun) |
 
 ## 3. Per Skill Findings
 
@@ -118,9 +119,9 @@ Suggested-action distribution:
 | `change-impact-analyzer` | 215 | 3386 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `domain-impact-modeler` | 202 | 3297 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-intake-compiler` | 200 | 3300 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `ai-code-review-refactor` | 360 | 5826 | 100 | 58 | 100 | 35 | TIGHTEN_BODY | P2 | low |
-| `change-forge-router` | 331 | 6554 | 100 | 73 | 100 | 32 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
-| `quality-test-gate` | 318 | 5870 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `ai-code-review-refactor` | 363 | 5950 | 100 | 58 | 100 | 35 | TIGHTEN_BODY | P2 | low |
+| `change-forge-router` | 340 | 6714 | 100 | 73 | 100 | 32 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
+| `quality-test-gate` | 323 | 6011 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `reliability-observability-gate` | 276 | 4949 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `backend-change-builder` | 268 | 4761 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `security-privacy-gate` | 263 | 4449 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
@@ -132,16 +133,16 @@ Suggested-action distribution:
 - **`ai-code-review-refactor`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/ai-code-review-refactor/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 360 lines exceeds heavy threshold 350
+  - Finding: body 363 lines exceeds heavy threshold 350
 - **`change-forge-router`** (MOVE_SECTIONS_TO_REFERENCES, P2, risk: low)
   - Path: `src/professional-skills/change-forge-router/SKILL.md`
   - Suggested action: Move oversized sections/tables into references/*.md; keep a concise body summary.
-  - Finding: body 331 lines exceeds review threshold 250
-  - Finding: section 'Critical Details' is 83 lines (> 80) — reference candidate
+  - Finding: body 340 lines exceeds review threshold 250
+  - Finding: section 'Critical Details' is 88 lines (> 80) — reference candidate
 - **`quality-test-gate`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/quality-test-gate/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 318 lines exceeds review threshold 250
+  - Finding: body 323 lines exceeds review threshold 250
 - **`reliability-observability-gate`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/reliability-observability-gate/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
@@ -163,7 +164,7 @@ Suggested-action distribution:
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
   - Finding: body 254 lines exceeds review threshold 250
 
-### 3.2 Foundation Capabilities (122)
+### 3.2 Foundation Capabilities (127)
 
 | Skill | Lines | Words | Prof | Ctx | Route | Split | Classification | Phase | Risk |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -240,10 +241,10 @@ Suggested-action distribution:
 | `microservice-splitting` | 162 | 2426 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `information-architecture` | 161 | 2352 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
 | `profiling` | 160 | 2710 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `test-strategy` | 160 | 2674 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `project-initialization` | 159 | 2565 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `python-professional-usage` | 159 | 1949 | 100 | 92 | 100 | 0 | KEEP_AS_IS | - | low |
 | `prototype-description` | 158 | 2596 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `test-strategy` | 158 | 2612 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `state-machine-modeling` | 156 | 2289 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `file-storage-processing` | 155 | 1865 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `threat-modeling` | 154 | 2471 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -263,32 +264,37 @@ Suggested-action distribution:
 | `search-analytics-design` | 140 | 2277 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `architecture-tradeoff-analysis` | 138 | 1627 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `acceptance-standard-definition` | 137 | 1599 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `context-packaging` | 136 | 2152 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `routing-navigation-design` | 136 | 2080 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `state-management-design` | 134 | 2356 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `test-data-management` | 134 | 2359 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `failure-contract-design` | 132 | 1041 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `scenario-decomposition` | 132 | 2205 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `context-packaging` | 131 | 2045 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `error-code-design` | 128 | 1991 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `cleanup-deletion-governance` | 124 | 937 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `testability-seam-design` | 124 | 1183 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `algorithm-data-structure-selection` | 122 | 912 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `configuration-runtime-policy` | 120 | 828 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `dependency-wiring-lifecycle` | 120 | 932 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `repository-context-map` | 120 | 1428 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `data-side-effect-flow-tracing` | 119 | 850 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `model-boundary-mapping` | 117 | 814 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `repository-context-map` | 116 | 1328 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `consumer-impact-analysis` | 115 | 743 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `architecture-enforcement-tooling` | 113 | 771 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `agent-workflow-state-machine` | 109 | 1162 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `version-compatibility` | 107 | 1866 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `agent-workflow-state-machine` | 100 | 955 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `plan-execution-consistency` | 99 | 924 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `agent-tool-permission-sandbox` | 97 | 1076 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `skill-efficacy-benchmark` | 95 | 894 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
+| `repository-graph-analysis` | 93 | 840 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
+| `executor-adapter-protocol` | 92 | 878 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
+| `execution-trajectory-analysis` | 91 | 821 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
+| `project-memory-governance` | 90 | 858 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
+| `validation-broker` | 90 | 809 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `domain-logic-implementation` | 73 | 578 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `domain-object-identification` | 73 | 540 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `documentation-generation` | 72 | 573 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `agent-execution-discipline` | 259 | 3655 | 100 | 75 | 100 | 35 | TIGHTEN_BODY | P2 | low |
+| `agent-execution-discipline` | 266 | 3863 | 100 | 75 | 100 | 35 | TIGHTEN_BODY | P2 | low |
 
 #### Detailed findings — Foundation Capabilities
 
@@ -296,7 +302,7 @@ Suggested-action distribution:
   - Path: `src/foundation/capabilities/agent-execution-discipline/SKILL.md`
   - Suggested action: Trim the heaviest section to decision-critical lines; this capability is already a selectively-loaded reference, so brevity directly reduces compiled-reference weight.
   - Finding: description: long (365 chars); keep it to trigger conditions, not a body summary
-  - Finding: body 259 lines exceeds heavy threshold 250
+  - Finding: body 266 lines exceeds heavy threshold 250
 
 ### 3.3 Domain Extensions (7)
 
@@ -312,7 +318,7 @@ Suggested-action distribution:
 
 ## 4. Classification Index
 
-- **KEEP_AS_IS** (139): `acceptance-criteria-builder`, `acceptance-standard-definition`, `agent-tool-permission-sandbox`, `agent-workflow-state-machine`, `ai-product-extension`, `algorithm-data-structure-selection`, `api-contract-design`, `architecture-enforcement-tooling`, `architecture-style-selection`, `architecture-tradeoff-analysis`, `async-job-design`, `authentication-authorization`, `authentication-security`, `backup-recovery`, `bigdata-product-extension`, `business-rule-extraction`, `cache-design`, `change-documentation-gate`, `change-impact-analyzer`, `change-intake-compiler`, `ci-cd`, `cleanup-deletion-governance`, `cli-daemon-interface-design`, `code-clarity-maintainability`, `code-review`, `concurrency-control`, `configuration-runtime-policy`, `consumer-impact-analysis`, `containerization`, `context-packaging`, `contract-testing`, `controller-api-implementation`, `cpp-professional-usage`, `data-api-contract-changer`, `data-middleware-change-builder`, `data-migration-design`, `data-model-design`, `data-side-effect-flow-tracing`, `degradation-circuit-breaking`, `dependency-vulnerability-scanning`, `dependency-wiring-lifecycle`, `design-pattern-selection`, `design-system-rules`, `documentation-generation`, `domain-event-modeling`, `domain-impact-modeler`, `domain-logic-implementation`, `domain-object-identification`, `dto-schema-design`, `e2e-testing`, `engineering-stage-professionalism`, `error-code-design`, `event-driven-architecture`, `experience-impact-modeler`, `extensibility-design`, `failure-contract-design`, `failure-diagnosis`, `file-storage-processing`, `form-validation-design`, `frontend-api-integration`, `frontend-change-builder`, `frontend-testing`, `go-professional-usage`, `i18n-timezone-money-safety`, `idempotency-retry-design`, `implementation-structure-design`, `indexing-query-optimization`, `information-architecture`, `input-validation`, `integration-change-builder`, `integration-testing`, `interaction-state-modeling`, `iot-embedded-extension`, `java-jvm-professional-usage`, `kubernetes-gateway`, `language-idiom-enforcement`, `language-performance-safety`, `language-runtime-selection`, `language-testing-strategy`, `layered-architecture-design`, `logging-error-handling`, `low-level-systems-extension`, `message-queue-design`, `microservice-splitting`, `minimal-correct-implementation`, `mobile-product-extension`, `model-boundary-mapping`, `module-boundary-design`, `non-goal-boundary-definition`, `nosql-database`, `observability`, `package-dependency-management`, `page-component-decomposition`, `payment-trading-extension`, `performance-budgeting`, `permission-boundary-modeling`, `plan-execution-consistency`, `profiling`, `project-initialization`, `prototype-description`, `python-professional-usage`, `refactoring`, `regression-testing`, `relational-database`, `release-rollback`, `repository-context-map`, `repository-persistence`, `requirement-clarification`, `requirement-structuring`, `routing-navigation-design`, `rust-professional-usage`, `scenario-decomposition`, `sdk-library-contract-design`, `search-analytics-design`, `secret-configuration-security`, `service-business-logic`, `shell-cli-professional-usage`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `solution-optimality-evaluation`, `sql-professional-usage`, `state-machine-modeling`, `state-management-design`, `task-dag-decomposition`, `task-dag-planner`, `technology-stack-selection`, `test-data-management`, `test-strategy`, `testability-seam-design`, `threat-modeling`, `transaction-consistency`, `typescript-professional-usage`, `unit-testing`, `use-case-modeling`, `user-flow-modeling`, `user-role-identification`, `version-compatibility`, `web-security`, `web3-product-extension`
+- **KEEP_AS_IS** (144): `acceptance-criteria-builder`, `acceptance-standard-definition`, `agent-tool-permission-sandbox`, `agent-workflow-state-machine`, `ai-product-extension`, `algorithm-data-structure-selection`, `api-contract-design`, `architecture-enforcement-tooling`, `architecture-style-selection`, `architecture-tradeoff-analysis`, `async-job-design`, `authentication-authorization`, `authentication-security`, `backup-recovery`, `bigdata-product-extension`, `business-rule-extraction`, `cache-design`, `change-documentation-gate`, `change-impact-analyzer`, `change-intake-compiler`, `ci-cd`, `cleanup-deletion-governance`, `cli-daemon-interface-design`, `code-clarity-maintainability`, `code-review`, `concurrency-control`, `configuration-runtime-policy`, `consumer-impact-analysis`, `containerization`, `context-packaging`, `contract-testing`, `controller-api-implementation`, `cpp-professional-usage`, `data-api-contract-changer`, `data-middleware-change-builder`, `data-migration-design`, `data-model-design`, `data-side-effect-flow-tracing`, `degradation-circuit-breaking`, `dependency-vulnerability-scanning`, `dependency-wiring-lifecycle`, `design-pattern-selection`, `design-system-rules`, `documentation-generation`, `domain-event-modeling`, `domain-impact-modeler`, `domain-logic-implementation`, `domain-object-identification`, `dto-schema-design`, `e2e-testing`, `engineering-stage-professionalism`, `error-code-design`, `event-driven-architecture`, `execution-trajectory-analysis`, `executor-adapter-protocol`, `experience-impact-modeler`, `extensibility-design`, `failure-contract-design`, `failure-diagnosis`, `file-storage-processing`, `form-validation-design`, `frontend-api-integration`, `frontend-change-builder`, `frontend-testing`, `go-professional-usage`, `i18n-timezone-money-safety`, `idempotency-retry-design`, `implementation-structure-design`, `indexing-query-optimization`, `information-architecture`, `input-validation`, `integration-change-builder`, `integration-testing`, `interaction-state-modeling`, `iot-embedded-extension`, `java-jvm-professional-usage`, `kubernetes-gateway`, `language-idiom-enforcement`, `language-performance-safety`, `language-runtime-selection`, `language-testing-strategy`, `layered-architecture-design`, `logging-error-handling`, `low-level-systems-extension`, `message-queue-design`, `microservice-splitting`, `minimal-correct-implementation`, `mobile-product-extension`, `model-boundary-mapping`, `module-boundary-design`, `non-goal-boundary-definition`, `nosql-database`, `observability`, `package-dependency-management`, `page-component-decomposition`, `payment-trading-extension`, `performance-budgeting`, `permission-boundary-modeling`, `plan-execution-consistency`, `profiling`, `project-initialization`, `project-memory-governance`, `prototype-description`, `python-professional-usage`, `refactoring`, `regression-testing`, `relational-database`, `release-rollback`, `repository-context-map`, `repository-graph-analysis`, `repository-persistence`, `requirement-clarification`, `requirement-structuring`, `routing-navigation-design`, `rust-professional-usage`, `scenario-decomposition`, `sdk-library-contract-design`, `search-analytics-design`, `secret-configuration-security`, `service-business-logic`, `shell-cli-professional-usage`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `solution-optimality-evaluation`, `sql-professional-usage`, `state-machine-modeling`, `state-management-design`, `task-dag-decomposition`, `task-dag-planner`, `technology-stack-selection`, `test-data-management`, `test-strategy`, `testability-seam-design`, `threat-modeling`, `transaction-consistency`, `typescript-professional-usage`, `unit-testing`, `use-case-modeling`, `user-flow-modeling`, `user-role-identification`, `validation-broker`, `version-compatibility`, `web-security`, `web3-product-extension`
 - **TIGHTEN_BODY** (8): `agent-execution-discipline`, `ai-code-review-refactor`, `architecture-impact-reviewer`, `backend-change-builder`, `delivery-release-gate`, `quality-test-gate`, `reliability-observability-gate`, `security-privacy-gate`
 - **MOVE_SECTIONS_TO_REFERENCES** (1): `change-forge-router`
 - **SPLIT_CAPABILITY** (0): _none_
@@ -327,17 +333,17 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | Files | Excerpt |
 | --- | --- |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 18 | do not load every reference by default. treat references as targeted support selected by t |
-| 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
 | 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 18 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
+| 18 | do not load every reference by default. treat references as targeted support selected by t |
 | 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
+| 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 9 | these triggers are hidden-risk escalators, not ordinary checklist items. |
-| 8 | **accepted exceptions** with owner / scope / expiration |
 | 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
+| 8 | **accepted exceptions** with owner / scope / expiration |
 | 7 | **residual risk**: untested runtime behavior, owner, and next gate. |
 | 7 | **block/pass decision** with required conditions for approval. |
 | 6 | non-trivial direct use still requires `repository-context-map` before planning when affect |
