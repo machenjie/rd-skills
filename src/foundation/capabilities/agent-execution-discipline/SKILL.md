@@ -196,6 +196,7 @@ Return an Execution Discipline Report alongside any non-trivial agent-assisted c
 - **Proactive closure package**: boundary, validation results, residual risk, handoff target.
 - **Plan-execution consistency record**: accepted plan, actual changed files, validation commands, skipped work, stale evidence, unplanned behavior changes, and residual-risk reconciliation.
 - **Professional evidence contract answer set**: basis; files and boundaries inspected; reuse/placement rationale; behavior preservation when applicable; validation commands; residual risk; next gate.
+- **Trajectory inspection record**: optional offline evidence view built from telemetry, memory facts, and validation signals. It may support review of skipped stages, stale validation, missing residual risk, or repair without re-review, but it never auto-mutates skills, routing rules, capabilities, or project content.
 - **Discipline violations**: any rule violation that was accepted with justification, or "none".
 - **Local convention scan record**: same file, same directory, parent module, sibling module, tests, selected convention.
 - **Reuse ladder record**: direct reuse, extension reuse, composition, adapter/wrapper, extraction, new code decision.
@@ -232,6 +233,7 @@ Return an Execution Discipline Report alongside any non-trivial agent-assisted c
 26. Workflow state is explicit before phase transitions and at handoff.
 27. Risky shell, connector/MCP, destructive, deploy, migration, network-write, secret-bearing, or untrusted-output actions carry tool permission/sandbox evidence.
 28. Final review and handoff include plan-execution consistency and disclose stale validation or unplanned changes.
+29. When a trajectory report is cited as evidence, its validation freshness, review integrity, and issue list are reconciled with the final handoff rather than treated as automatic approval.
 
 # Used By
 

@@ -133,6 +133,35 @@ closure-relevant. Recency weighting uses the latest reviewed telemetry timestamp
 as the reference point and applies the configured half-life to produce
 `priority_score`, `weighted_issue_scores`, and `recent_24h_issue_counts`.
 
+## Trajectory Inspector
+
+`scripts/inspect-trajectory.py` builds an ordered route/read/plan/edit/test/
+review/repair/stop trajectory from bounded telemetry facts, optional memory
+events, and validation-evidence signals. It is a runtime-evidence review view,
+not an automatic learning system and not a source of skill-rule mutation.
+
+```bash
+python3 scripts/inspect-trajectory.py --telemetry-root <path> --memory-root <path> --repo-hash <repo_hash> --session <session-id>
+python3 scripts/inspect-trajectory.py --repo-hash <repo_hash> --format markdown
+python3 scripts/inspect-trajectory.py --repo-hash <repo_hash> --format json
+python3 scripts/inspect-trajectory.py --repo-hash <repo_hash> --generate-candidates
+```
+
+With no matching telemetry, it prints `no samples found` and exits 0. Markdown
+reports include the stage timeline, changed/read path summary, validation
+freshness, review/repair status, issues, and suggested next gates. JSON reports
+emit both `trajectory` and `trajectory_report` objects.
+
+The analyzer checks deterministic execution-quality gaps: edit before read,
+plan before repository context, missing implementation preflight, missing or
+stale validation, validation command without outcome, implementer self-review,
+repair without re-review, stop without residual risk, incomplete route manifest,
+repeat failure without route repair, and fragile-file changes without memory,
+preflight, read, and test evidence. If a high-severity issue appears, candidate
+skeletons may be generated for pressure scenarios, agent-behavior samples, and
+hook fixtures. Skeletons are marked `requires_human_review: true` and must be
+completed and reviewed by a maintainer before promotion.
+
 ### Completion-Evidence Detection Family
 
 A completion claim must rest on fresh validation evidence. A validation-looking
@@ -224,6 +253,8 @@ calls a model and prints `no samples found` (exit 0) when empty.
 | `eval-agent-behavior.py` | Does a captured agent output satisfy its expected route manifest? |
 | `eval-pressure-behavior.py` | Does a captured agent result hold up under a declared pressure scenario? |
 | `review-agent-telemetry.py` | What did real agent runs miss? (advisory only) |
+| `inspect-trajectory.py` | Did a session follow a coherent, evidence-backed execution trajectory? |
+| `validate-trajectory.py` | Are trajectory schemas, analyzer rules, renderers, and promotion skeletons valid? |
 | `validate-hooks.py` | Are hook scripts safe, offline, and protocol-correct? |
 | `validate-installation.py` | Are built `dist/` outputs and hook artifacts correct? |
 

@@ -334,6 +334,10 @@ Telemetry never edits skill rules; promotion is always a human decision.
 # Review real agent behavior and write a report plus suggestions:
 python3 scripts/review-agent-telemetry.py
 
+# Inspect one execution trajectory as markdown or JSON:
+python3 scripts/inspect-trajectory.py --repo-hash <repo_hash> --session <session-id>
+python3 scripts/inspect-trajectory.py --repo-hash <repo_hash> --format json
+
 # Turn one reviewed suggestion into a candidate (dry run, then write):
 python3 scripts/promote-telemetry-suggestion.py --id <suggestion-id> --suggestions <path>
 python3 scripts/promote-telemetry-suggestion.py --id <suggestion-id> --suggestions <path> --write
@@ -345,8 +349,8 @@ python3 scripts/eval-agent-behavior.py
 python3 installers/doctor.py --telemetry-root ~/.cache/changeforge/telemetry
 ```
 
-See [TELEMETRY.md](TELEMETRY.md) for the full data flow, privacy guarantees, and
-the route manifest contract.
+See [TELEMETRY.md](TELEMETRY.md) for the full data flow, trajectory inspector,
+privacy guarantees, and the route manifest contract.
 
 ## Troubleshooting
 

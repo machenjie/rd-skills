@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.local/schemas/trajectory.v1.schema.json",
+  "title": "ChangeForge Trajectory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "session_id",
+    "repo_hash",
+    "task_fingerprint",
+    "started_at",
+    "ended_at",
+    "steps",
+    "issues"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "session_id": { "type": "string", "maxLength": 160 },
+    "repo_hash": { "type": "string", "maxLength": 160 },
+    "task_fingerprint": { "type": "string", "maxLength": 160 },
+    "started_at": { "type": "string", "maxLength": 80 },
+    "ended_at": { "type": "string", "maxLength": 80 },
+    "steps": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "index",
+          "stage",
+          "event_type",
+          "runtime",
+          "tool_name",
+          "command_program",
+          "paths",
+          "facts",
+          "evidence",
+          "risk_surfaces",
+          "outcome"
+        ],
+        "properties": {
+          "index": { "type": "integer", "minimum": 1 },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "user_prompt",
+              "route",
+              "read",
+              "plan",
+              "edit",
+              "test",
+              "review",
+              "repair",
+              "re_review",
+              "stop"
+            ]
+          },
+          "event_type": { "type": "string", "maxLength": 120 },
+          "runtime": {
+            "type": "string",
+            "enum": ["codex", "claude", "copilot", "generic"]
+          },
+          "tool_name": { "type": "string", "maxLength": 120 },
+          "command_program": { "type": "string", "maxLength": 120 },
+          "paths": {
+            "type": "array",
+            "maxItems": 80,
+            "items": { "type": "string", "maxLength": 240 }
+          },
+          "facts": {
+            "type": "object",
+            "additionalProperties": true,
+            "maxProperties": 80
+          },
+          "evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "route_manifest_seen",
+              "read_evidence_seen",
+              "repository_context_seen",
+              "implementation_preflight_seen",
+              "validation_seen",
+              "validation_command_seen",
+              "validation_outcome_seen",
+              "review_seen",
+              "repair_seen",
+              "residual_risk_seen",
+              "memory_summary_seen",
+              "nearby_test_seen"
+            ],
+            "properties": {
+              "route_manifest_seen": { "type": "boolean" },
+              "read_evidence_seen": { "type": "boolean" },
+              "repository_context_seen": { "type": "boolean" },
+              "implementation_preflight_seen": { "type": "boolean" },
+              "validation_seen": { "type": "boolean" },
+              "validation_command_seen": { "type": "boolean" },
+              "validation_outcome_seen": { "type": "boolean" },
+              "review_seen": { "type": "boolean" },
+              "repair_seen": { "type": "boolean" },
+              "residual_risk_seen": { "type": "boolean" },
+              "memory_summary_seen": { "type": "boolean" },
+              "nearby_test_seen": { "type": "boolean" }
+            }
+          },
+          "risk_surfaces": {
+            "type": "array",
+            "maxItems": 80,
+            "items": { "type": "string", "maxLength": 120 }
+          },
+          "outcome": {
+            "type": "string",
+            "enum": ["pass", "fail", "unknown", "not_applicable"]
+          }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "maxItems": 200,
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "severity", "step_index", "message", "recommended_gate"],
+      "properties": {
+        "type": { "type": "string", "maxLength": 120 },
+        "severity": { "type": "string", "enum": ["low", "medium", "high"] },
+        "step_index": { "type": "integer", "minimum": 0 },
+        "message": { "type": "string", "maxLength": 500 },
+        "recommended_gate": { "type": "string", "maxLength": 160 }
+      }
+    }
+  }
+}

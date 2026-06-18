@@ -293,6 +293,13 @@ fields such as outcome, freshness, command kind, and covered path/risk patterns;
 it never records raw stdout, prompts, secrets, environment variables, or full
 command output.
 
+Trajectory inspection consumes these bounded broker fields alongside hook
+telemetry and optional memory facts. It reconstructs an ordered evidence view
+for offline review, including whether validation ran after the final material
+edit, whether repair was followed by re-review, and whether final handoff named
+residual risk. It does not execute validation commands, alter hook state,
+promote candidates, or edit skills.
+
 Runtime support:
 
 - Codex, Claude, and Copilot project hooks all wire the bootstrap as a

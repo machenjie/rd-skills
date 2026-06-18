@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.local/schemas/trajectory-report.v1.schema.json",
+  "title": "ChangeForge Trajectory Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "session_id",
+    "closure_status",
+    "issue_counts",
+    "highest_severity",
+    "skipped_stages",
+    "validation_freshness",
+    "review_integrity",
+    "recommended_promotions",
+    "issues"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "session_id": { "type": "string", "maxLength": 160 },
+    "closure_status": { "type": "string", "enum": ["pass", "warn", "fail"] },
+    "issue_counts": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 0 },
+      "maxProperties": 40
+    },
+    "highest_severity": { "type": "string", "enum": ["none", "low", "medium", "high"] },
+    "skipped_stages": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "type": "string", "maxLength": 80 }
+    },
+    "validation_freshness": {
+      "type": "string",
+      "enum": ["fresh", "stale", "unknown", "not_run"]
+    },
+    "review_integrity": { "type": "string", "enum": ["pass", "warn", "fail"] },
+    "recommended_promotions": {
+      "type": "array",
+      "maxItems": 40,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "issue_type", "requires_human_review", "reason"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["pressure_scenario", "agent_behavior_sample", "hook_fixture"]
+          },
+          "issue_type": { "type": "string", "maxLength": 120 },
+          "requires_human_review": { "const": true },
+          "reason": { "type": "string", "maxLength": 300 }
+        }
+      }
+    },
+    "promotion_skeletons": {
+      "type": "array",
+      "maxItems": 40,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "target", "requires_human_review", "written"],
+        "properties": {
+          "path": { "type": "string", "maxLength": 240 },
+          "target": { "type": "string", "maxLength": 120 },
+          "requires_human_review": { "const": true },
+          "written": { "type": "boolean" }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "severity", "step_index", "message", "recommended_gate"],
+        "properties": {
+          "type": { "type": "string", "maxLength": 120 },
+          "severity": { "type": "string", "enum": ["low", "medium", "high"] },
+          "step_index": { "type": "integer", "minimum": 0 },
+          "message": { "type": "string", "maxLength": 500 },
+          "recommended_gate": { "type": "string", "maxLength": 160 }
+        }
+      }
+    }
+  }
+}

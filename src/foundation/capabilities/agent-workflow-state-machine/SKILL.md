@@ -81,6 +81,7 @@ Return a `workflow_state_summary` with:
 - **Review and repair ledger**: findings, repair owner, re-review result, and unresolved findings.
 - **Stop condition**: failure count, route repair trigger, or blocked owner question.
 - **Closure package status**: route manifest, stage manifest, repository context, plan consistency, validation, residual risk, and next action.
+- **Trajectory evidence view**: when telemetry is available, offline trajectory inspection may summarize route/read/plan/edit/test/review/repair/stop evidence, illegal transitions, validation freshness, and repair/re-review status. It is review evidence only, not automatic skill learning.
 
 ## Quality Gate
 1. Exactly one current stage is named.
@@ -107,4 +108,4 @@ Return a `workflow_state_summary` with:
 Hand off the current state summary with every implementation, review, repair, test, release, or documentation transition. If the next stage is blocked, hand off only to the skill or owner that can remove the block.
 
 ## Completion Criteria
-The capability is complete when the work has a coherent current stage, legal next transition, owner/reviewer split, fresh validation status, repair/re-review ledger, and closure evidence that matches the actual state of the repository.
+The capability is complete when the work has a coherent current stage, legal next transition, owner/reviewer split, fresh validation status, repair/re-review ledger, and closure evidence that matches the actual state of the repository. When a trajectory report is used, it supports this closure check as bounded runtime evidence and does not replace human review or explicit validation.
