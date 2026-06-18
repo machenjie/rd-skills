@@ -35,6 +35,12 @@ class ValidationResultParserTests(unittest.TestCase):
         )
         self.assertEqual(result["outcome"], "pass")
 
+    def test_zero_tests_failed_is_pass_not_fail(self) -> None:
+        result = parse_validation_result(
+            "Ran python3 scripts/validate-hooks.py: 0 tests failed."
+        )
+        self.assertEqual(result["outcome"], "pass")
+
     def test_mixed_zero_errors_and_nonzero_failure_is_fail(self) -> None:
         result = parse_validation_result(
             "Ran python3 scripts/validate-hooks.py: 0 errors, 1 failure."

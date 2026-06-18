@@ -35,7 +35,7 @@ PASS_RE = re.compile(
 )
 PASS_NEUTRAL_RE = re.compile(
     r"\b("
-    r"0\s+(?:errors?|failures?|failed|issues?)|"
+    r"0\s+(?:errors?|issues?|(?:tests?\s+)?(?:failures?|failed))|"
     r"no\s+(?:errors?|failures?|failed|issues?)|"
     r"without\s+errors?"
     r")\b",
@@ -50,7 +50,10 @@ NONZERO_FAIL_RE = re.compile(
     r")\b",
     re.IGNORECASE,
 )
-BARE_FAILED_RE = re.compile(r"(?<!0\s)\bfailed\b(?!\s*[:=]\s*0\b)", re.IGNORECASE)
+BARE_FAILED_RE = re.compile(
+    r"(?<!0\s)(?<!0\stest\s)(?<!0\stests\s)\bfailed\b(?!\s*[:=]\s*0\b)",
+    re.IGNORECASE,
+)
 GENERIC_FAIL_RE = re.compile(
     r"\b("
     r"fail(?:ing|ures?)?|error(?:s)?|red|失败|错误"
