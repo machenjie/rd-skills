@@ -53,6 +53,22 @@ python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out
 
 Do not replace `unknown` or `not_collected` with `pass` by hand. Run the verification command and update the scorecard generator only when the underlying tool emits reliable machine-readable evidence.
 
+## Evidence Levels
+
+| Evidence | Meaning |
+| --- | --- |
+| structural fixture | Local deterministic structure sample passed; this is not live task success evidence. |
+| runtime telemetry sample | Actual runtime fact sample; it may still require human review before promotion. |
+| promoted golden case | Human-reviewed case admitted to regression coverage. |
+| live pass-rate | Measured real-task success rate. |
+| token overhead | Measured additional token cost. |
+| turn overhead | Measured additional turn cost. |
+
+Generated telemetry candidates with `generated_from_telemetry: true` and
+`requires_human_review: true` are candidate evidence only. They must not count as
+measured evidence, promoted golden cases, live pass-rate, token overhead, or turn
+overhead until a maintainer reviews and promotes them.
+
 Open-source readiness is conservative: a root `LICENSE` alone is not enough. Proprietary `pyproject.toml` license metadata fails the dimension once a license file exists. `config/open-source-release.yaml:selected_license` must be non-null, contribution licensing must be owner-confirmed, and GitHub private vulnerability reporting or a private security contact must be owner-confirmed before the dimension can be `pass`.
 
 ## README Summary

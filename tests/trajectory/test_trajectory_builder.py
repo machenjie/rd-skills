@@ -31,8 +31,14 @@ class TrajectoryBuilderTests(unittest.TestCase):
         self.assertIsNotNone(trajectory)
         assert trajectory is not None
         self.assertEqual([step["stage"] for step in trajectory["steps"]], ["route", "read", "plan", "edit", "test", "review", "stop"])
+        self.assertEqual(trajectory["changed_paths"], ["src/app.py"])
+        self.assertEqual(trajectory["read_paths"], ["src/app.py"])
+        self.assertEqual(trajectory["ordered_events"][3]["action_type"], "apply_patch")
+        self.assertEqual(trajectory["validation_timeline"][0]["validation_outcome"], "passed")
+        self.assertEqual(trajectory["review_repair_timeline"][0]["reviewer_skill"], "ai-code-review-refactor")
         report = analyze_trajectory(trajectory)
         self.assertEqual(report["closure_status"], "pass")
+        self.assertEqual(report["verdict"], "ready")
         self.assertEqual(report["validation_freshness"], "fresh")
 
     def test_no_samples_found_exits_zero(self) -> None:

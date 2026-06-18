@@ -35,6 +35,7 @@ REGISTRY: dict[str, dict[str, object]] = {
         "path_patterns": (
             "src/hook-runtime/**",
             "tests/hook_runtime/**",
+            "scripts/validate-hooks.py",
         ),
         "risk_surfaces": (
             "hook-runtime",
@@ -159,6 +160,29 @@ REGISTRY: dict[str, dict[str, object]] = {
             ("python3 scripts/validate-hooks.py", "hook runtime consumes project memory records"),
         ),
     },
+    "telemetry": {
+        "path_patterns": (
+            "scripts/review-agent-telemetry.py",
+            "scripts/telemetry_utils.py",
+            "scripts/promote-telemetry-suggestion.py",
+            "tests/telemetry/**",
+            "docs/TELEMETRY.md",
+        ),
+        "risk_surfaces": ("telemetry", "agent-execution-discipline", "privacy"),
+        "narrow": (
+            ("python3 -m unittest discover -s tests/telemetry", "telemetry review or tests changed"),
+        ),
+        "module": (
+            ("python3 scripts/eval-agent-behavior.py", "telemetry semantics inform agent behavior review"),
+        ),
+        "full": (
+            (
+                "python3 -m unittest discover -s tests",
+                "telemetry changes can affect runtime governance and trajectory tests",
+            ),
+            ("python3 scripts/validate-hooks.py", "hook runtime emits telemetry records"),
+        ),
+    },
     "trajectory": {
         "path_patterns": (
             "src/trajectory/**",
@@ -170,6 +194,9 @@ REGISTRY: dict[str, dict[str, object]] = {
         "narrow": (
             ("python3 scripts/validate-trajectory.py", "trajectory schemas and analyzer rules changed"),
             ("python3 -m unittest discover -s tests/trajectory", "trajectory tests changed"),
+        ),
+        "module": (
+            ("python3 scripts/inspect-trajectory.py --help", "trajectory CLI must remain loadable"),
         ),
         "full": (
             (
@@ -191,6 +218,10 @@ REGISTRY: dict[str, dict[str, object]] = {
             ("python3 scripts/validate-validation-broker.py", "validation broker registry, schemas, and parser changed"),
             ("python3 -m unittest discover -s tests/validation_broker", "validation broker tests changed"),
         ),
+        "module": (
+            ("python3 -m unittest discover -s tests/telemetry", "stop closure and telemetry consume broker facts"),
+            ("python3 -m unittest discover -s tests/trajectory", "trajectory consumes broker freshness facts"),
+        ),
         "full": (
             (
                 "python3 -m unittest discover -s tests",
@@ -208,11 +239,103 @@ REGISTRY: dict[str, dict[str, object]] = {
         "narrow": (
             ("python3 scripts/validate-productization-assets.py", "documentation or productization asset changed"),
         ),
+        "module": (
+            ("python3 scripts/validate-skill-body-links.py", "documentation links and runtime references may change"),
+        ),
         "full": (
             (
                 "python3 scripts/render-scorecard-dashboard.py --scorecard reports/professional-scorecard.json --out docs/SCORECARD_DASHBOARD.md --readme README.md --check",
                 "documentation dashboard output should remain reproducible",
             ),
+        ),
+    },
+    "evals": {
+        "path_patterns": (
+            "evals/**",
+            "scripts/eval-*.py",
+            "tests/evals/**",
+        ),
+        "risk_surfaces": ("evals", "skill-efficacy-benchmark", "professionalism-regression"),
+        "narrow": (
+            ("python3 scripts/eval-routing.py", "routing eval fixtures or runner changed"),
+            ("python3 scripts/eval-skill-professionalism.py", "skill professionalism eval behavior may change"),
+        ),
+        "module": (
+            ("python3 scripts/eval-agent-behavior.py", "agent behavior evals should stay compatible"),
+            ("python3 scripts/eval-pressure-behavior.py", "pressure behavior evals should stay compatible"),
+        ),
+        "full": (
+            ("python3 scripts/eval-professional-benchmarks.py", "professional benchmark behavior may change"),
+            (
+                "python3 scripts/validate-professionalism-regression.py --strict",
+                "eval changes can affect strict professionalism regression",
+            ),
+        ),
+    },
+    "generated_artifacts": {
+        "path_patterns": (
+            "dist/**",
+            "reports/**",
+            "docs/SCORECARD_DASHBOARD.md",
+        ),
+        "risk_surfaces": ("generated-artifacts", "build", "installation"),
+        "narrow": (
+            ("python3 scripts/build.py --profile recommended", "generated artifacts must be reproducible from source"),
+            ("python3 scripts/validate-runtime-reference-links.py", "runtime artifact references must resolve"),
+        ),
+        "module": (),
+        "full": (
+            ("python3 scripts/validate-installation.py", "generated artifacts must remain installable"),
+            ("python3 scripts/build.py --profile full", "full profile artifacts should remain reproducible"),
+        ),
+    },
+    "installer_build_profile": {
+        "path_patterns": (
+            "installers/**",
+            "profiles/**",
+            "scripts/build.py",
+            "scripts/validate-installation.py",
+            "scripts/validate-runtime-reference-links.py",
+        ),
+        "risk_surfaces": ("installer", "build", "profile", "release"),
+        "narrow": (
+            ("python3 scripts/build.py --profile recommended", "build or profile logic changed"),
+            ("python3 scripts/validate-installation.py", "installer behavior must remain valid"),
+        ),
+        "module": (
+            ("python3 scripts/build.py --profile dev", "development profile build should remain valid"),
+        ),
+        "full": (
+            ("python3 scripts/build.py --profile full", "full profile build should remain valid"),
+            ("python3 scripts/validate-runtime-reference-links.py", "installed runtime references must remain valid"),
+        ),
+    },
+    "tests": {
+        "path_patterns": ("tests/**",),
+        "risk_surfaces": ("tests", "regression", "quality-gate"),
+        "fallback_only": True,
+        "narrow": (
+            ("python3 -m unittest discover -s tests", "test-only change without narrower registry owner"),
+        ),
+        "module": (
+            ("python3 scripts/validate-validation-broker.py", "test changes may affect broker validation metadata"),
+        ),
+        "full": (
+            ("python3 scripts/build.py --profile recommended", "test changes should not mask build regressions"),
+        ),
+    },
+    "source": {
+        "path_patterns": ("src/**",),
+        "risk_surfaces": ("source", "python", "regression"),
+        "fallback_only": True,
+        "narrow": (
+            ("python3 -m unittest discover -s tests", "source change without narrower registry owner"),
+        ),
+        "module": (
+            ("python3 scripts/validate-hooks.py", "source changes may affect runtime support artifacts"),
+        ),
+        "full": (
+            ("python3 scripts/build.py --profile recommended", "source changes should build into runtime artifacts"),
         ),
     },
 }
@@ -258,8 +381,8 @@ def registry_commands() -> list[ValidationCommand]:
     for category, entry in REGISTRY.items():
         patterns = tuple(str(item) for item in entry["path_patterns"])
         surfaces = tuple(str(item) for item in entry["risk_surfaces"])
-        for level in ("narrow", "full"):
-            for command, reason in entry[level]:  # type: ignore[index]
+        for level in ("narrow", "module", "full"):
+            for command, reason in entry.get(level, ()):  # type: ignore[union-attr]
                 commands.append(
                     ValidationCommand(
                         command=str(command),
@@ -277,12 +400,21 @@ def matching_categories(changed_paths: Iterable[str]) -> list[str]:
     """Return registry categories matched by repository-relative paths."""
     categories: list[str] = []
     for path in _clean_paths(changed_paths):
+        fallback_matches: list[str] = []
+        path_matched = False
         for category, entry in REGISTRY.items():
             if category in categories:
                 continue
             patterns = tuple(str(item) for item in entry["path_patterns"])
-            if any(fnmatch(path, pattern) for pattern in patterns):
-                categories.append(category)
+            if not any(fnmatch(path, pattern) for pattern in patterns):
+                continue
+            if bool(entry.get("fallback_only")):
+                fallback_matches.append(category)
+                continue
+            categories.append(category)
+            path_matched = True
+        if not path_matched:
+            categories.extend(category for category in fallback_matches if category not in categories)
     return categories
 
 

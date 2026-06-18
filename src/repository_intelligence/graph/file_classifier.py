@@ -17,9 +17,18 @@ EXCLUDED_DIRS = {
 INDEXED_SUFFIXES = {
     ".py",
     ".md",
+    ".sh",
+    ".js",
+    ".jsx",
+    ".ts",
+    ".tsx",
+    ".go",
+    ".rs",
+    ".java",
     ".yaml",
     ".yml",
     ".json",
+    ".toml",
 }
 
 
@@ -63,6 +72,18 @@ def classify_kind(path: str | Path) -> str:
         return "yaml"
     if suffix == ".json":
         return "json"
+    if suffix == ".sh":
+        return "shell"
+    if suffix in {".js", ".jsx", ".ts", ".tsx"}:
+        return "javascript"
+    if suffix == ".go":
+        return "go"
+    if suffix == ".rs":
+        return "rust"
+    if suffix == ".java":
+        return "java"
+    if suffix == ".toml":
+        return "toml"
     return "unknown"
 
 
@@ -97,4 +118,3 @@ def classify_role(path: str | Path) -> str:
     if rel.startswith("reports/"):
         return "generated_artifact"
     return "unknown"
-

@@ -11,6 +11,13 @@
     "task_fingerprint",
     "started_at",
     "ended_at",
+    "ordered_events",
+    "changed_paths",
+    "read_paths",
+    "validation_timeline",
+    "review_repair_timeline",
+    "memory_hits",
+    "adapter_degradations",
     "steps",
     "issues"
   ],
@@ -21,6 +28,70 @@
     "task_fingerprint": { "type": "string", "maxLength": 160 },
     "started_at": { "type": "string", "maxLength": 80 },
     "ended_at": { "type": "string", "maxLength": 80 },
+    "ordered_events": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event_id",
+          "order",
+          "stage",
+          "action_type",
+          "bounded_paths",
+          "owner_skill",
+          "reviewer_skill",
+          "command_kind",
+          "validation_outcome"
+        ],
+        "properties": {
+          "event_id": { "type": "string", "maxLength": 200 },
+          "order": { "type": "integer", "minimum": 1 },
+          "stage": { "type": "string", "maxLength": 80 },
+          "action_type": { "type": "string", "maxLength": 120 },
+          "bounded_paths": {
+            "type": "array",
+            "maxItems": 80,
+            "items": { "type": "string", "maxLength": 240 }
+          },
+          "owner_skill": { "type": "string", "maxLength": 120 },
+          "reviewer_skill": { "type": "string", "maxLength": 120 },
+          "command_kind": { "type": "string", "maxLength": 120 },
+          "validation_outcome": { "type": "string", "maxLength": 80 }
+        }
+      }
+    },
+    "changed_paths": {
+      "type": "array",
+      "maxItems": 200,
+      "items": { "type": "string", "maxLength": 240 }
+    },
+    "read_paths": {
+      "type": "array",
+      "maxItems": 200,
+      "items": { "type": "string", "maxLength": 240 }
+    },
+    "validation_timeline": {
+      "type": "array",
+      "maxItems": 200,
+      "items": { "$ref": "#/$defs/timeline_event" }
+    },
+    "review_repair_timeline": {
+      "type": "array",
+      "maxItems": 200,
+      "items": { "$ref": "#/$defs/timeline_event" }
+    },
+    "memory_hits": {
+      "type": "array",
+      "maxItems": 200,
+      "items": { "$ref": "#/$defs/timeline_event" }
+    },
+    "adapter_degradations": {
+      "type": "array",
+      "maxItems": 200,
+      "items": { "$ref": "#/$defs/timeline_event" }
+    },
     "steps": {
       "type": "array",
       "maxItems": 1000,
@@ -125,6 +196,14 @@
     }
   },
   "$defs": {
+    "timeline_event": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["order"],
+      "properties": {
+        "order": { "type": "integer", "minimum": 1 }
+      }
+    },
     "issue": {
       "type": "object",
       "additionalProperties": false,

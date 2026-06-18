@@ -10,6 +10,12 @@ from changeforge_adapter_capabilities import AdapterCapabilities, adapter_capabi
 
 @dataclass(frozen=True)
 class ClosureContract:
+    adapter: str = "generic"
+    supported_checks: list[str] = field(default_factory=list)
+    unsupported_checks: list[str] = field(default_factory=list)
+    degraded_capabilities: list[str] = field(default_factory=list)
+    verdict: str = "needs_validation"
+    residual_risk: list[str] = field(default_factory=list)
     requires_route_manifest: bool = True
     requires_stage_route: bool = False
     requires_repository_context: bool = False
@@ -36,12 +42,27 @@ class ClosureContract:
         capabilities: AdapterCapabilities | None = None,
         runtime: str = "generic",
         block_mode: bool = False,
+        validation_broker_outcome: str = "",
+        validation_broker_residual_risk: list[str] | None = None,
     ) -> "ClosureContract":
         state = state if isinstance(state, dict) else {}
         capabilities = capabilities or adapter_capabilities_for(runtime)
+        supported_checks = _list(getattr(capabilities, "supported_checks", ()))
+        unsupported_checks = _list(getattr(capabilities, "unsupported_checks", ()))
+        degraded_capabilities = [
+            f"{capabilities.runtime}_{_check_token(check)}_unsupported"
+            for check in unsupported_checks
+        ]
+        residual = _list(validation_broker_residual_risk or [])
         profile = _profile(state)
         if profile == "silent":
             return cls(
+                adapter=capabilities.runtime,
+                supported_checks=supported_checks,
+                unsupported_checks=unsupported_checks,
+                degraded_capabilities=degraded_capabilities,
+                verdict="ready" if not unsupported_checks else "degraded_ready",
+                residual_risk=residual,
                 requires_route_manifest=False,
                 requires_validation_evidence=False,
                 requires_residual_risk=False,
@@ -77,7 +98,21 @@ class ClosureContract:
         status = "pass"
         if missing:
             status = "block" if block_mode and capabilities.supports_blocking else "warn"
+        verdict = _verdict(
+            missing,
+            unsupported_checks,
+            status,
+            validation_broker_outcome,
+        )
+        if unsupported_checks:
+            residual.append("unsupported runtime checks remain")
         return cls(
+            adapter=capabilities.runtime,
+            supported_checks=supported_checks,
+            unsupported_checks=unsupported_checks,
+            degraded_capabilities=degraded_capabilities,
+            verdict=verdict,
+            residual_risk=_unique(residual),
             requires_route_manifest=requires_route,
             requires_stage_route=engineering and bool(state.get("stage_route_present")),
             requires_repository_context=requires_repo,
@@ -99,6 +134,12 @@ class ClosureContract:
             "requires_validation_evidence": self.requires_validation_evidence,
             "requires_review_evidence": self.requires_review_evidence,
             "requires_residual_risk": self.requires_residual_risk,
+            "adapter": self.adapter,
+            "supported_checks": list(self.supported_checks),
+            "unsupported_checks": list(self.unsupported_checks),
+            "degraded_capabilities": list(self.degraded_capabilities),
+            "verdict": self.verdict,
+            "residual_risk": list(self.residual_risk),
             "adapter_supports_blocking": self.adapter_supports_blocking,
             "closure_status": self.closure_status,
             "missing_items": list(self.missing_items),
@@ -112,6 +153,38 @@ def _profile(state: dict) -> str:
     if stage in {"read", "review", "requirement-intake", "code-review"} and not state.get("changed_paths"):
         return "read_review"
     return "engineering"
+
+
+def _verdict(
+    missing: list[str],
+    unsupported_checks: list[str],
+    closure_status: str,
+    validation_broker_outcome: str,
+) -> str:
+    broker = str(validation_broker_outcome or "").strip()
+    if broker in {"blocked", "needs_validation"}:
+        return broker
+    if broker == "degraded_ready":
+        return "degraded_ready"
+    if closure_status == "block":
+        return "blocked"
+    if missing:
+        return "needs_validation"
+    if unsupported_checks:
+        return "degraded_ready"
+    if broker == "ready":
+        return "ready"
+    return "ready"
+
+
+def _check_token(value: str) -> str:
+    return str(value).strip().replace("-", "_").replace(" ", "_")
+
+
+def _list(values: object) -> list[str]:
+    if not isinstance(values, (list, tuple, set)):
+        return []
+    return _unique([str(item) for item in values])
 
 
 def _unique(values: list[str]) -> list[str]:

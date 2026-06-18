@@ -40,8 +40,9 @@ def validate_repository_graph(document: dict[str, Any]) -> list[str]:
     except ValueError as exc:
         return [str(exc)]
 
-    if graph.get("schema_version") != 1:
-        errors.append("repository_graph.schema_version must be 1")
+    schema_version = graph.get("schema_version")
+    if schema_version not in {1, 2}:
+        errors.append("repository_graph.schema_version must be 1 or 2")
     repo_hash = graph.get("repo_hash")
     if not isinstance(repo_hash, str) or not repo_hash:
         errors.append("repository_graph.repo_hash must be present")
@@ -49,6 +50,11 @@ def validate_repository_graph(document: dict[str, Any]) -> list[str]:
         errors.append("repository_graph.repo_hash must not contain an absolute path")
     if not graph.get("indexed_at"):
         errors.append("repository_graph.indexed_at must be present")
+    if schema_version == 2:
+        if not graph.get("created_at"):
+            errors.append("repository_graph.created_at must be present for schema_version=2")
+        if "commit_sha" not in graph:
+            errors.append("repository_graph.commit_sha must be present for schema_version=2")
 
     files = graph.get("files")
     if not isinstance(files, list):
@@ -85,6 +91,36 @@ def validate_repository_graph(document: dict[str, Any]) -> list[str]:
             value = edge.get(field)
             if isinstance(value, str) and _is_user_absolute_path(value):
                 errors.append(f"edges[{index}].{field} must be repository-relative")
+
+    if schema_version == 2:
+        for field in (
+            "symbols",
+            "module_boundaries",
+            "ownership",
+            "generated_artifacts",
+            "validation_candidates",
+        ):
+            if not isinstance(graph.get(field), list):
+                errors.append(f"repository_graph.{field} must be a list for schema_version=2")
+        freshness = graph.get("freshness")
+        if not isinstance(freshness, dict) or not freshness.get("repo_hash") or not freshness.get("created_at"):
+            errors.append("repository_graph.freshness must include repo_hash and created_at for schema_version=2")
+        for index, symbol in enumerate(graph.get("symbols", []) if isinstance(graph.get("symbols"), list) else []):
+            if not isinstance(symbol, dict):
+                errors.append(f"symbols[{index}] must be an object")
+                continue
+            for field in ("name", "kind", "path", "line", "visibility", "language", "confidence"):
+                if field not in symbol:
+                    errors.append(f"symbols[{index}].{field} is required")
+            if isinstance(symbol.get("path"), str) and _is_user_absolute_path(symbol["path"]):
+                errors.append(f"symbols[{index}].path must be repository-relative")
+        candidates = graph.get("validation_candidates", [])
+        for index, candidate in enumerate(candidates if isinstance(candidates, list) else []):
+            if not isinstance(candidate, dict):
+                errors.append(f"validation_candidates[{index}] must be an object")
+                continue
+            if not candidate.get("command") or not candidate.get("scope"):
+                errors.append(f"validation_candidates[{index}] must include command and scope")
 
     if _has_secret_like(document):
         errors.append("repository graph contains secret-like content")

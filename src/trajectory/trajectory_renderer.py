@@ -24,10 +24,12 @@ def render_markdown(trajectory: dict[str, Any], report: dict[str, Any]) -> str:
     lines: list[str] = [
         f"# Trajectory Inspection: {trajectory.get('session_id', '') or 'unknown-session'}",
         "",
+        f"- Verdict: {report.get('verdict', report.get('closure_status', 'unknown'))}",
         f"- Closure status: {report.get('closure_status', 'unknown')}",
         f"- Highest severity: {report.get('highest_severity', 'none')}",
         f"- Validation freshness: {report.get('validation_freshness', 'unknown')}",
         f"- Review integrity: {report.get('review_integrity', 'unknown')}",
+        f"- Residual risk: {report.get('residual_risk_status', 'unknown')}",
         "",
         "## Stage Timeline",
     ]
@@ -88,6 +90,15 @@ def render_markdown(trajectory: dict[str, Any], report: dict[str, Any]) -> str:
             lines.append(
                 f"- {skeleton.get('target')}: `{skeleton.get('path')}` "
                 f"human_review={skeleton.get('requires_human_review')}"
+            )
+    fixtures = report.get("candidate_fixtures", []) if isinstance(report.get("candidate_fixtures"), list) else []
+    if fixtures:
+        lines.extend(["", "## Candidate Fixtures"])
+        for fixture in fixtures:
+            lines.append(
+                f"- {fixture.get('type')}: issue={fixture.get('issue_type')} "
+                f"source={fixture.get('source_suggestion_id')} "
+                f"human_review={fixture.get('requires_human_review')}"
             )
     return "\n".join(lines) + "\n"
 

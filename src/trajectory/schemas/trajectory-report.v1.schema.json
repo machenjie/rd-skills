@@ -7,18 +7,34 @@
   "required": [
     "schema_version",
     "session_id",
+    "verdict",
     "closure_status",
     "issue_counts",
     "highest_severity",
     "skipped_stages",
     "validation_freshness",
     "review_integrity",
+    "repair_rereview_status",
+    "residual_risk_status",
+    "findings",
     "recommended_promotions",
+    "candidate_fixtures",
     "issues"
   ],
   "properties": {
     "schema_version": { "const": 1 },
     "session_id": { "type": "string", "maxLength": 160 },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "ready",
+        "needs_validation",
+        "needs_review",
+        "needs_repair",
+        "blocked",
+        "degraded_ready"
+      ]
+    },
     "closure_status": { "type": "string", "enum": ["pass", "warn", "fail"] },
     "issue_counts": {
       "type": "object",
@@ -36,6 +52,19 @@
       "enum": ["fresh", "stale", "unknown", "not_run", "not_applicable"]
     },
     "review_integrity": { "type": "string", "enum": ["pass", "warn", "fail"] },
+    "repair_rereview_status": {
+      "type": "string",
+      "enum": ["passed", "needs_review", "needs_independent_review", "not_applicable"]
+    },
+    "residual_risk_status": {
+      "type": "string",
+      "enum": ["present", "missing", "not_applicable"]
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 200,
+      "items": { "$ref": "#/$defs/finding" }
+    },
     "recommended_promotions": {
       "type": "array",
       "maxItems": 40,
@@ -46,13 +75,25 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["pressure_scenario", "agent_behavior_sample", "hook_fixture"]
+            "enum": [
+              "pressure_scenario",
+              "agent_behavior_sample",
+              "hook_fixture",
+              "validation_broker_fixture",
+              "trajectory_fixture"
+            ]
           },
           "issue_type": { "type": "string", "maxLength": 120 },
+          "generated_from_telemetry": { "const": true },
           "requires_human_review": { "const": true },
           "reason": { "type": "string", "maxLength": 300 }
         }
       }
+    },
+    "candidate_fixtures": {
+      "type": "array",
+      "maxItems": 40,
+      "items": { "$ref": "#/$defs/candidate_fixture" }
     },
     "promotion_skeletons": {
       "type": "array",
@@ -64,6 +105,8 @@
         "properties": {
           "path": { "type": "string", "maxLength": 240 },
           "target": { "type": "string", "maxLength": 120 },
+          "generated_from_telemetry": { "const": true },
+          "source_suggestion_id": { "type": "string", "maxLength": 240 },
           "requires_human_review": { "const": true },
           "written": { "type": "boolean" }
         }
@@ -83,6 +126,51 @@
           "message": { "type": "string", "maxLength": 500 },
           "recommended_gate": { "type": "string", "maxLength": 160 }
         }
+      }
+    }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "severity", "evidence", "required_next_gate", "affected_paths"],
+      "properties": {
+        "type": { "type": "string", "maxLength": 120 },
+        "severity": { "type": "string", "enum": ["low", "medium", "high"] },
+        "evidence": { "type": "string", "maxLength": 500 },
+        "required_next_gate": { "type": "string", "maxLength": 160 },
+        "affected_paths": {
+          "type": "array",
+          "maxItems": 80,
+          "items": { "type": "string", "maxLength": 240 }
+        }
+      }
+    },
+    "candidate_fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "issue_type",
+        "generated_from_telemetry",
+        "requires_human_review",
+        "source_suggestion_id"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "pressure_scenario",
+            "agent_behavior_sample",
+            "hook_fixture",
+            "validation_broker_fixture",
+            "trajectory_fixture"
+          ]
+        },
+        "issue_type": { "type": "string", "maxLength": 120 },
+        "generated_from_telemetry": { "const": true },
+        "requires_human_review": { "const": true },
+        "source_suggestion_id": { "type": "string", "maxLength": 240 }
       }
     }
   }

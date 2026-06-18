@@ -36,9 +36,24 @@ class TrajectoryPromotionTests(unittest.TestCase):
         assert trajectory is not None
         report = analyze_trajectory(trajectory)
         skeletons = promotion_skeletons(trajectory, report)
-        self.assertEqual(len(skeletons), 3)
+        self.assertEqual(len(skeletons), 5)
         self.assertTrue(all(skeleton["requires_human_review"] for skeleton in skeletons))
-        self.assertTrue(all(str(skeleton["path"]).startswith(("evals/pressure", "evals/agent-behavior", "tests/fixtures/hooks")) for skeleton in skeletons))
+        self.assertTrue(all("generated_from_telemetry" in str(skeleton["content"]) for skeleton in skeletons))
+        self.assertTrue(all("source_suggestion_id" in str(skeleton["content"]) for skeleton in skeletons))
+        self.assertTrue(
+            all(
+                str(skeleton["path"]).startswith(
+                    (
+                        "evals/pressure",
+                        "evals/agent-behavior",
+                        "tests/fixtures/hooks",
+                        "tests/fixtures/validation_broker",
+                        "tests/fixtures/trajectory",
+                    )
+                )
+                for skeleton in skeletons
+            )
+        )
 
     def test_write_skeletons_is_explicit_and_bounded(self) -> None:
         trajectory = build_trajectory(complete_records(), repo_hash="repo", session_id="sess")

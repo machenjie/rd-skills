@@ -134,7 +134,7 @@ COPILOT_HOOK_SUPPORT_FILES = (
     "changeforge_copilot_skill_summary.md",
     "changeforge_copilot_professional_contract.md",
 )
-COMMON_HOOK_SUPPORT_PACKAGES = ("validation_broker",)
+COMMON_HOOK_SUPPORT_PACKAGES = ("validation_broker", "runtime_governance")
 HOOK_SUPPORT_PACKAGE_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 # Advisory route-preflight bootstrap. The fragment is plain guidance text, not an

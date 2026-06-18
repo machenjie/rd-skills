@@ -9,6 +9,14 @@
     "schema_version",
     "event_id",
     "repo_hash",
+    "commit_sha",
+    "timestamp",
+    "kind",
+    "bounded_paths",
+    "summary",
+    "privacy_class",
+    "retention_policy",
+    "source",
     "task_fingerprint",
     "type",
     "paths",
@@ -40,8 +48,35 @@
   },
   "properties": {
     "schema_version": { "const": 1 },
-    "event_id": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "event_id": { "type": "string", "minLength": 1, "maxLength": 300, "pattern": "^mem_" },
     "repo_hash": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "commit_sha": { "type": "string", "maxLength": 300 },
+    "timestamp": { "type": "string", "maxLength": 80 },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "fragile_file",
+        "repeat_failure",
+        "validation_pattern",
+        "review_finding_pattern",
+        "module_convention",
+        "generated_source_mapping",
+        "route_correction",
+        "false_positive_hook",
+        "false_negative_hook"
+      ]
+    },
+    "bounded_paths": { "$ref": "#/$defs/boundedPathList" },
+    "summary": { "type": "string", "maxLength": 240 },
+    "privacy_class": {
+      "type": "string",
+      "enum": ["safe_bounded", "redacted", "rejected_sensitive"]
+    },
+    "retention_policy": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "source": {
+      "type": "string",
+      "enum": ["telemetry", "trajectory", "human", "validator"]
+    },
     "task_fingerprint": { "type": "string", "minLength": 1, "maxLength": 300 },
     "type": {
       "type": "string",
@@ -79,4 +114,3 @@
     "created_at": { "type": "string", "maxLength": 80 }
   }
 }
-

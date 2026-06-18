@@ -7,7 +7,11 @@ expected_capabilities:
 expected_evidence:
   - Symbol or reference graph includes SKILL.md, capabilities.yaml, routing-rules.yaml, and stage-model.yaml.
   - Context pack selects only affected skill, capability, registry, and validator files.
+  - Context pack emits reuse_candidates before suggesting a parallel registry or helper structure.
+  - Context pack emits affected_tests or related_tests for registry/capability changes when graph edges identify them.
+  - Context pack emits validation_candidates from the validation broker for the affected registry/capability paths.
   - Freshness compares graph evidence to the current working tree.
+expected_outcome: Bounded context pack supports reuse review, affected-test review, and validator selection without treating graph facts as semantic proof.
 forbidden_claims:
   - Registry update is planned without dependent skill or validator context.
   - Graph is used as semantic proof without source inspection.

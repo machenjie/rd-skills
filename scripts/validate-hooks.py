@@ -215,6 +215,9 @@ def main() -> int:
 
     if errors:
         return fail_many("validate-hooks", errors)
+    capabilities = _load_adapter_capabilities(errors)
+    if capabilities is not None:
+        print(capabilities.format_coverage_matrix())
     print("validate-hooks: validated hook runtime scripts and templates.")
     return 0
 
@@ -266,7 +269,7 @@ def _validate_adapter_capabilities(errors: list[str]) -> None:
     capabilities = _load_adapter_capabilities(errors)
     if capabilities is None:
         return
-    for runtime in ("codex", "claude", "copilot", "generic"):
+    for runtime in ("codex", "claude", "copilot", "generic", "cline", "openhands", "gemini-cli", "goose"):
         adapter = capabilities.adapter_capabilities_for(runtime)
         if adapter.runtime != runtime:
             errors.append(f"adapter capabilities: {runtime} returned {adapter.runtime}")
@@ -290,12 +293,33 @@ def _validate_adapter_capabilities(errors: list[str]) -> None:
             errors.append(f"adapter capabilities: {runtime} must default to fail_open")
         if not isinstance(data.get("unsupported_events"), list):
             errors.append(f"adapter capabilities: {runtime}.unsupported_events must be a list")
+        for field in (
+            "supported_events",
+            "observable_payload_fields",
+            "advisory_context_events",
+            "supported_checks",
+            "unsupported_checks",
+        ):
+            if not isinstance(data.get(field), list):
+                errors.append(f"adapter capabilities: {runtime}.{field} must be a list")
+        if not isinstance(data.get("default_gate_modes"), dict):
+            errors.append(f"adapter capabilities: {runtime}.default_gate_modes must be a dict")
+        if not data.get("degradation_policy"):
+            errors.append(f"adapter capabilities: {runtime}.degradation_policy is required")
+        if runtime in {"cline", "openhands", "gemini-cli", "goose"}:
+            if not data.get("placeholder"):
+                errors.append(f"adapter capabilities: {runtime} must be a placeholder")
+            if data.get("supported_events"):
+                errors.append(f"adapter capabilities: {runtime} must not claim supported events")
     copilot = capabilities.adapter_capabilities_for("copilot")
     for event in ("UserPromptSubmit", "PreToolUse", "SubagentStop"):
         if event not in copilot.unsupported_events:
             errors.append(f"adapter capabilities: Copilot must mark {event} unsupported")
         if copilot.supports_event(event):
             errors.append(f"adapter capabilities: Copilot must not support {event}")
+    for check in ("pre_tool_advisory_context", "user_prompt_advisory_context", "subagent_stop_context"):
+        if check not in copilot.unsupported_checks:
+            errors.append(f"adapter capabilities: Copilot must mark {check} unsupported")
 
 
 def _copilot_unsupported_advisory_events(errors: list[str]) -> tuple[str, ...]:

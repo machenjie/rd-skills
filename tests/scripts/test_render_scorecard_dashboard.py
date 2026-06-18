@@ -32,6 +32,24 @@ def _payload() -> dict[str, object]:
         "profile_counts": {
             "recommended": {"status": "pass", "detail": "recommended top-level count is 19"},
         },
+        "evidence_levels": {
+            "structural fixture": {
+                "status": "pass",
+                "meaning": "Local deterministic structure sample passed.",
+            },
+            "live pass-rate": {
+                "status": "not_collected",
+                "meaning": "Measured real-task success rate.",
+            },
+            "token overhead": {
+                "status": "not_collected",
+                "meaning": "Measured additional token cost.",
+            },
+            "turn overhead": {
+                "status": "not_collected",
+                "meaning": "Measured additional turn cost.",
+            },
+        },
         "dimensions": [
             {
                 "name": "Profile build reproducibility",
@@ -86,6 +104,15 @@ class RenderScorecardDashboardTests(unittest.TestCase):
         self.assertIn("| Marketplace index validation | `unknown` |", rendered)
         self.assertIn("- Installation validation: scripts/validate-installation.py", rendered)
         self.assertNotIn("| Marketplace index validation | `pass` |", rendered)
+
+    def test_evidence_levels_render_not_collected_live_metrics(self) -> None:
+        module = _load_module()
+        rendered = module.render_dashboard(_payload())
+        self.assertIn("## Evidence Levels", rendered)
+        self.assertIn("| live pass-rate | `not_collected` |", rendered)
+        self.assertIn("| token overhead | `not_collected` |", rendered)
+        self.assertIn("| turn overhead | `not_collected` |", rendered)
+        self.assertNotIn("| live pass-rate | `pass` |", rendered)
 
     def test_open_source_partial_is_visible(self) -> None:
         module = _load_module()

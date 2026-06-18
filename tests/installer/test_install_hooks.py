@@ -38,7 +38,7 @@ EXPECTED_COPILOT_SUPPORT_FILES = sorted(
         "changeforge_copilot_skill_summary.md",
     ]
 )
-EXPECTED_SUPPORT_PACKAGES = ["validation_broker"]
+EXPECTED_SUPPORT_PACKAGES = ["validation_broker", "runtime_governance"]
 
 
 def _build_recommended() -> None:
@@ -208,6 +208,7 @@ class InstallHooksTests(unittest.TestCase):
             self.assertEqual(manifest["support_files"], EXPECTED_COMMON_SUPPORT_FILES)
             self.assertEqual(manifest["support_packages"], EXPECTED_SUPPORT_PACKAGES)
             self.assertTrue((codex_dir / "hooks" / "validation_broker" / "__init__.py").is_file())
+            self.assertTrue((codex_dir / "hooks" / "runtime_governance" / "__init__.py").is_file())
 
     def test_hook_support_package_manifest_rejects_path_like_names(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -279,6 +280,7 @@ class InstallCopilotHooksTests(unittest.TestCase):
             self.assertEqual(sorted(manifest["support_files"]), EXPECTED_COPILOT_SUPPORT_FILES)
             self.assertEqual(manifest["support_packages"], EXPECTED_SUPPORT_PACKAGES)
             self.assertTrue((scripts_dir / "validation_broker" / "__init__.py").is_file())
+            self.assertTrue((scripts_dir / "runtime_governance" / "__init__.py").is_file())
             # The manifest is nested so VS Code does not parse it as a hook config.
             self.assertFalse((hooks_dir / ".changeforge-hook-manifest.json").exists())
             payload = json.loads(config.read_text(encoding="utf-8"))
@@ -376,6 +378,9 @@ class InstallCopilotHooksTests(unittest.TestCase):
             self.assertEqual(manifest["support_packages"], EXPECTED_SUPPORT_PACKAGES)
             self.assertTrue(
                 (hooks_dir / "changeforge" / "validation_broker" / "__init__.py").is_file()
+            )
+            self.assertTrue(
+                (hooks_dir / "changeforge" / "runtime_governance" / "__init__.py").is_file()
             )
 
 

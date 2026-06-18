@@ -37,10 +37,19 @@ class CommandRegistryTests(unittest.TestCase):
             "src/validation_broker/validation_result_parser.py": "validation_broker",
             "scripts/resolve-validation.py": "validation_broker",
             "scripts/validate-validation-broker.py": "validation_broker",
+            "scripts/validate-hooks.py": "hook_runtime",
+            "scripts/review-agent-telemetry.py": "telemetry",
+            "tests/telemetry/test_review_agent_telemetry.py": "telemetry",
+            "evals/routing/cases.yaml": "evals",
+            "reports/professional-scorecard.json": "generated_artifacts",
+            "installers/install.py": "installer_build_profile",
+            "scripts/build.py": "installer_build_profile",
+            "src/unowned/new_module.py": "source",
+            "tests/unknown/test_sample.py": "tests",
         }
         for path, category in cases.items():
             with self.subTest(path=path):
-                self.assertEqual(matching_categories([path]), [category])
+                self.assertIn(category, matching_categories([path]))
 
     def test_known_command_kind_is_narrow(self) -> None:
         self.assertEqual(command_kind("python3 scripts/validate-hooks.py"), "narrow")

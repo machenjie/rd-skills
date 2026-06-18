@@ -39,7 +39,8 @@ async def fetch():
     def test_reports_parse_error_without_executing_code(self) -> None:
         extracted = extract_python_source("def broken(:\n")
         self.assertEqual(extracted["symbols"], [])
-        self.assertEqual(extracted["references"][0]["kind"], "parse_error")
+        self.assertEqual(extracted["references"][0]["kind"], "index_error")
+        self.assertEqual(extracted["references"][0]["error_kind"], "parse_error")
 
 
 if __name__ == "__main__":

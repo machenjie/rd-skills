@@ -17,6 +17,11 @@ def evaluate_stale_context_gate(
     """Detect context packs that are too old to be treated as facts."""
     markers = context_pack.get("freshness_markers") if isinstance(context_pack, dict) else {}
     indexed_at = parse_iso_datetime(markers.get("indexed_at") if isinstance(markers, dict) else None)
+    projection_status = ""
+    if isinstance(context_pack, dict):
+        projection = context_pack.get("project_memory_projection")
+        if isinstance(projection, dict):
+            projection_status = str(projection.get("stale_context_gate") or "").strip()
     stale_paths: list[str] = []
     for item in changed_files:
         if not isinstance(item, dict):
@@ -27,9 +32,13 @@ def evaluate_stale_context_gate(
             if path:
                 stale_paths.append(path)
     triggers = [str(trigger).strip() for trigger in drift_triggers if str(trigger).strip()]
+    if projection_status in {"warn", "block"}:
+        triggers.append(f"project_memory_projection:{projection_status}")
     stale = bool(stale_paths or triggers)
+    status = "block" if projection_status == "block" else "warn" if stale else "pass"
     return {
         "stale_context_gate": {
+            "status": status,
             "stale": stale,
             "stale_paths": stale_paths[:50],
             "drift_triggers": triggers[:50],
@@ -42,4 +51,3 @@ def evaluate_stale_context_gate(
             ),
         }
     }
-

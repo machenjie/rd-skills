@@ -48,14 +48,17 @@ def validate_context_pack(document: dict[str, Any]) -> list[str]:
     except ValueError as exc:
         return [str(exc)]
 
-    if pack.get("schema_version") != 1:
-        errors.append("task_context_pack.schema_version must be 1")
-    if not pack.get("task_goal"):
-        errors.append("task_context_pack.task_goal must be present")
+    schema_version = pack.get("schema_version")
+    if schema_version not in {1, 2}:
+        errors.append("task_context_pack.schema_version must be 1 or 2")
+    if not pack.get("task_goal") and not pack.get("task"):
+        errors.append("task_context_pack.task_goal or task must be present")
 
-    freshness = pack.get("freshness_markers")
+    freshness = pack.get("freshness") if schema_version == 2 else pack.get("freshness_markers")
     if not isinstance(freshness, dict):
-        errors.append("task_context_pack.freshness_markers must be present")
+        freshness = pack.get("freshness_markers")
+    if not isinstance(freshness, dict):
+        errors.append("task_context_pack.freshness or freshness_markers must be present")
         freshness = {}
     if not freshness.get("repo_hash"):
         errors.append("freshness_markers.repo_hash must be present")
@@ -85,8 +88,20 @@ def validate_context_pack(document: dict[str, Any]) -> list[str]:
         for index, item in enumerate(validations):
             if not isinstance(item, dict) or not item.get("command") or not item.get("proves"):
                 errors.append(f"validation_candidates[{index}] must include command and proves")
+            if schema_version == 2 and isinstance(item, dict) and not item.get("scope"):
+                errors.append(f"validation_candidates[{index}] must include scope for schema_version=2")
 
-    for collection_name in ("source_of_truth", "relevant_files", "affected_tests", "excluded_context"):
+    for collection_name in (
+        "source_of_truth",
+        "relevant_files",
+        "selected_files",
+        "affected_tests",
+        "related_tests",
+        "excluded_context",
+        "reuse_candidates",
+        "rejected_locations",
+        "omitted_nodes",
+    ):
         collection = pack.get(collection_name, [])
         if not isinstance(collection, list):
             errors.append(f"{collection_name} must be a list")
@@ -100,6 +115,34 @@ def validate_context_pack(document: dict[str, Any]) -> list[str]:
         for item in pack.get("source_of_truth", [])
     ):
         errors.append("dist must not appear as source_of_truth")
+    if schema_version == 2:
+        for field in (
+            "graph_source",
+            "selected_files",
+            "selected_symbols",
+            "caller_callee_edges",
+            "imports",
+            "references",
+            "related_tests",
+            "generated_artifacts",
+            "ownership",
+            "reuse_candidates",
+            "rejected_locations",
+            "anti_bloat_decision",
+            "omitted_nodes",
+            "residual_risk",
+        ):
+            if field not in pack:
+                errors.append(f"task_context_pack.{field} is required for schema_version=2")
+        if not isinstance(pack.get("anti_bloat_decision"), dict):
+            errors.append("anti_bloat_decision must be an object for schema_version=2")
+        for index, item in enumerate(pack.get("ownership", []) if isinstance(pack.get("ownership"), list) else []):
+            if not isinstance(item, dict):
+                errors.append(f"ownership[{index}] must be an object")
+                continue
+            for field in ("path", "owner_surface", "owner_module", "public_private_boundary"):
+                if not item.get(field):
+                    errors.append(f"ownership[{index}].{field} is required")
     if _has_secret_like(document):
         errors.append("context pack contains secret-like content")
     return errors

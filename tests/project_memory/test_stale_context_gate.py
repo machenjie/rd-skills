@@ -21,10 +21,19 @@ class StaleContextGateTests(unittest.TestCase):
             drift_triggers=["route-manifest-changed"],
         )["stale_context_gate"]
         self.assertTrue(decision["stale"])
+        self.assertEqual(decision["status"], "warn")
         self.assertFalse(decision["allowed_as_fact"])
         self.assertEqual(decision["required_action"], "refresh_repository_graph_or_mark_stale_assumption")
+
+    def test_memory_projection_warns_as_stale_context(self) -> None:
+        decision = evaluate_stale_context_gate(
+            {"project_memory_projection": {"stale_context_gate": "warn"}},
+            changed_files=[],
+        )["stale_context_gate"]
+        self.assertTrue(decision["stale"])
+        self.assertEqual(decision["status"], "warn")
+        self.assertIn("project_memory_projection:warn", decision["drift_triggers"])
 
 
 if __name__ == "__main__":
     unittest.main()
-

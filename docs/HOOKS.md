@@ -16,6 +16,22 @@ adapter policy: fail open for advisory reminders, fail closed only for
 configured high-confidence closure gates, and record the limitation as residual
 risk when it affects handoff evidence.
 
+The adapter capability matrix is the single downstream source for runtime
+differences. `scripts/validate-hooks.py` and `installers/doctor.py` print it as
+part of hook validation.
+
+| Runtime | Supported events | Unsupported events | Advisory context | Stop block | Command outcome |
+| --- | --- | --- | --- | --- | --- |
+| Codex | `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `Stop`, `SubagentStart`, `SubagentStop`, `Compact` | none declared | yes | yes, only when configured | partial |
+| Claude | `SessionStart`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolBatch`, `Stop`, `SubagentStart`, `SubagentStop`, `Compact` | none declared | yes | yes, only when configured | partial |
+| Copilot | `SessionStart`, `PostToolUse`, `Stop`, `SubagentStart` | `UserPromptSubmit`, `PreToolUse`, `SubagentStop` | only supported events | yes for Stop closure | partial |
+| Generic fallback | `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop` | none declared | limited text fallback | no | none |
+| Future placeholders (`Cline`, `OpenHands`, `Gemini CLI`, `Goose`) | none | canonical lifecycle events | no | no | none |
+
+Unsupported checks in the closure contract stay unsupported. A runtime that
+cannot observe a lifecycle event or inject advisory context records a degraded
+capability and residual risk; it is never treated as a full pass.
+
 Repository graph and context-pack support are source-evidence helpers. They may
 summarize symbol, import, reference, test, ownership, and generated-artifact
 relationships, but they are not whole-repository dumps and do not replace direct
@@ -226,6 +242,10 @@ residual risk, and required references were present. A prose mention of
 `changeforge_route`, or a YAML block missing `selected_skills`,
 `selected_capabilities`, `required_references`, or `required_quality_gates`, is
 not counted as route-manifest evidence.
+The Stop closure contract also records `adapter`, `supported_checks`,
+`unsupported_checks`, `degraded_capabilities`, `verdict`, and residual-risk
+labels so unsupported runtime paths degrade explicitly instead of being counted
+as observed checks.
 
 Telemetry is enabled by default and can be disabled with `CHANGEFORGE_TELEMETRY=off`.
 See [TELEMETRY.md](TELEMETRY.md) for the data model, the offline review tool, and
@@ -329,6 +349,24 @@ for offline review, including whether validation ran after the final material
 edit, whether repair was followed by re-review, and whether final handoff named
 residual risk. It does not execute validation commands, alter hook state,
 promote candidates, or edit skills.
+
+Repository-intelligence preflight facts should be passed in bounded form when
+available:
+
+```yaml
+repository_context:
+  context_pack: "/tmp/changeforge-context-pack.json"
+  source_of_truth: []
+  reuse_candidates: []
+  test_candidates: []
+  rejected_locations: []
+  graph_freshness: current
+```
+
+These fields are context selectors, not completion evidence. A stale graph,
+unknown source-of-truth, rejected location, or missing validator remains residual
+risk until the source files are inspected and the Validation Broker has fresh
+outcomes for the final material diff.
 
 Runtime support:
 

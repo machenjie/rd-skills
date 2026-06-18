@@ -262,6 +262,12 @@ class EvidenceLedger:
         self.implementation_preflight.merge(entry)
 
     def _record_validation(self, fact: Mapping[str, Any], ref: str, timestamp: str | None) -> None:
+        broker_entry = _validation_entry_from_broker_fact(fact, ref, timestamp)
+        if broker_entry is not None:
+            self.validation.merge(broker_entry)
+            if _broker_has_validation_blocker(fact):
+                return
+
         outcome = str(fact.get("validation_result_outcome") or "").strip().lower()
         strength = str(fact.get("validation_result_evidence_strength") or "").strip().lower()
         negative_reason = str(fact.get("validation_result_negative_reason") or "").strip()
@@ -334,6 +340,90 @@ class EvidenceLedger:
 
 def _list_field(fact: Mapping[str, Any], key: str) -> list[str]:
     return cap_list(fact.get(key) or [])
+
+
+def _validation_entry_from_broker_fact(
+    fact: Mapping[str, Any],
+    ref: str,
+    timestamp: str | None,
+) -> EvidenceEntry | None:
+    broker_outcome = str(fact.get("validation_broker_closure_outcome") or "").strip().lower()
+    broker_negative = _list_field(fact, "validation_broker_negative_evidence")
+    ledger = fact.get("validation_broker_command_ledger")
+    ledger_items = ledger if isinstance(ledger, list) else []
+    if not broker_outcome and not broker_negative and not ledger_items:
+        return None
+
+    ledger_outcomes = {
+        str(item.get("outcome") or "").strip().lower()
+        for item in ledger_items
+        if isinstance(item, Mapping)
+    }
+    freshness = Freshness.UNKNOWN.value
+    if "stale" in ledger_outcomes or "stale_validation" in broker_negative:
+        freshness = Freshness.STALE.value
+    elif "passed" in ledger_outcomes or broker_outcome in {"ready", "degraded_ready"}:
+        freshness = Freshness.CURRENT.value
+
+    validation_blockers = {
+        "missing_validation",
+        "validation_command_without_outcome",
+        "validation_not_run",
+        "validation_failed",
+        "stale_validation",
+        "coverage_mismatch",
+        "targeted_check_reported_as_full",
+        "changed_path_without_validator",
+    }
+    negative_blockers = validation_blockers & set(broker_negative)
+    if {"failed", "stale"} & ledger_outcomes or {"validation_failed", "stale_validation"} & set(
+        broker_negative
+    ):
+        strength = EvidenceStrength.NEGATIVE.value
+    elif negative_blockers:
+        strength = EvidenceStrength.WEAK.value
+    elif "passed" in ledger_outcomes and broker_outcome in {"ready", "degraded_ready"}:
+        strength = EvidenceStrength.STRONG.value
+    elif ledger_items or broker_outcome == "needs_validation":
+        strength = EvidenceStrength.WEAK.value
+    else:
+        strength = EvidenceStrength.PARTIAL.value
+
+    outcome = None
+    if "failed" in ledger_outcomes:
+        outcome = "failed"
+    elif "stale" in ledger_outcomes:
+        outcome = "stale"
+    elif "not_verified" in ledger_outcomes or "unknown" in ledger_outcomes:
+        outcome = "no_outcome"
+    elif "not_run" in ledger_outcomes:
+        outcome = "not_run"
+    elif "passed" in ledger_outcomes:
+        outcome = "pass"
+
+    return EvidenceEntry(
+        "validation",
+        strength,
+        freshness,
+        [ref],
+        summary=",".join(broker_negative[:5]),
+        outcome=outcome,
+        timestamp=timestamp,
+    )
+
+
+def _broker_has_validation_blocker(fact: Mapping[str, Any]) -> bool:
+    blockers = {
+        "missing_validation",
+        "validation_command_without_outcome",
+        "validation_not_run",
+        "validation_failed",
+        "stale_validation",
+        "coverage_mismatch",
+        "targeted_check_reported_as_full",
+        "changed_path_without_validator",
+    }
+    return bool(blockers & set(_list_field(fact, "validation_broker_negative_evidence")))
 
 
 def _strength(value: object) -> str:

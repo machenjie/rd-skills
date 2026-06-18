@@ -1,10 +1,37 @@
 {
   "claim_boundary": "Local deterministic evidence only; skill efficacy fixtures are structural/local evidence, not live pass-rate, empirical before/after performance, external popularity, adoption, marketplace availability, or market claim evidence.",
+  "evidence_levels": {
+    "live pass-rate": {
+      "meaning": "Measured real-task success rate.",
+      "status": "not_collected"
+    },
+    "promoted golden case": {
+      "meaning": "Human-reviewed case admitted to regression coverage.",
+      "status": "pass"
+    },
+    "runtime telemetry sample": {
+      "meaning": "Actual runtime fact sample; may still require human review.",
+      "status": "not_collected"
+    },
+    "structural fixture": {
+      "meaning": "Local deterministic structure sample passed; not evidence of live task success.",
+      "status": "pass"
+    },
+    "token overhead": {
+      "meaning": "Measured additional token cost.",
+      "status": "not_collected"
+    },
+    "turn overhead": {
+      "meaning": "Measured additional turn cost.",
+      "status": "not_collected"
+    }
+  },
   "generated_by": "scripts/generate-public-benchmark-summary.py",
   "items": [
     {
       "command": "python3 scripts/validate-professional-routing-coverage.py",
       "detail": "{\"cases_checked\": 118, \"cases_without_forbidden\": 0, \"hidden_risks_checked\": 91, \"hidden_risks_needing_manual_review\": 0, \"hidden_risks_strongly_covered\": 87, \"l1_anti_over_routing_count\": 9}",
+      "evidence_level": "structural fixture",
       "name": "Routing coverage",
       "source": "reports/professionalism-release-readiness.json",
       "status": "pass"
@@ -12,6 +39,7 @@
     {
       "command": "python3 scripts/eval-skill-professionalism.py",
       "detail": "{\"count\": 19, \"statuses\": {\"sample-grade\": 19}}",
+      "evidence_level": "structural fixture",
       "name": "Professional skill coverage",
       "source": "reports/professionalism-release-readiness.json",
       "status": "partial"
@@ -19,6 +47,7 @@
     {
       "command": "python3 scripts/eval-skill-professionalism.py --coverage-matrix",
       "detail": "{\"count\": 40, \"statuses\": {\"acceptable\": 29, \"needs-review\": 10, \"sample-grade\": 1}}",
+      "evidence_level": "structural fixture",
       "name": "Foundation capability coverage",
       "source": "reports/professionalism-release-readiness.json",
       "status": "partial"
@@ -26,6 +55,7 @@
     {
       "command": "python3 scripts/validate-professionalism-regression.py --strict",
       "detail": "strict_regression_status=pass",
+      "evidence_level": "promoted golden case",
       "name": "Strict regression",
       "source": "reports/professionalism-release-readiness.json",
       "status": "pass"
@@ -33,6 +63,7 @@
     {
       "command": "python3 scripts/eval-skill-professionalism.py",
       "detail": "average_score=41.64",
+      "evidence_level": "structural fixture",
       "name": "Skill professionalism report",
       "source": "reports/skill-professionalism-eval.json",
       "status": "pass"
@@ -40,6 +71,7 @@
     {
       "command": "python3 scripts/eval-skill-professionalism.py --coverage-matrix",
       "detail": "rows=59",
+      "evidence_level": "structural fixture",
       "name": "Professional coverage matrix",
       "source": "reports/professional-coverage-matrix.json",
       "status": "pass"
@@ -47,6 +79,7 @@
     {
       "command": "python3 scripts/build.py --profile recommended",
       "detail": "top_level=19, expected=19",
+      "evidence_level": "structural fixture",
       "name": "Profile build: recommended",
       "source": "dist/universal/skills/recommended/.changeforge-build-manifest.json",
       "status": "pass"
@@ -54,6 +87,7 @@
     {
       "command": "python3 scripts/build.py --profile full",
       "detail": "top_level=26, expected=26",
+      "evidence_level": "structural fixture",
       "name": "Profile build: full",
       "source": "dist/universal/skills/full/.changeforge-build-manifest.json",
       "status": "pass"
@@ -61,6 +95,7 @@
     {
       "command": "python3 scripts/build.py --profile dev",
       "detail": "top_level=153, expected=153",
+      "evidence_level": "structural fixture",
       "name": "Profile build: dev",
       "source": "dist/universal/skills/dev/.changeforge-build-manifest.json",
       "status": "pass"
@@ -68,20 +103,23 @@
     {
       "command": "python3 scripts/validate-installation.py",
       "detail": "validator does not emit a committed machine-readable report",
+      "evidence_level": "runtime telemetry sample",
       "name": "Installation validation",
       "source": "scripts/validate-installation.py",
       "status": "not_collected"
     },
     {
       "command": "python3 scripts/validate-skill-efficacy-benchmarks.py",
-      "detail": "{\"evidence_boundary\": \"structural/local fixtures only; no empirical before/after agent performance\", \"fixtures\": 3, \"live_pass_rate\": \"not_collected\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\", \"verdicts\": {\"structural_pass\": 3}}",
+      "detail": "{\"candidate_fixtures_ignored\": 0, \"evidence_boundary\": \"structural/local fixtures only; no empirical before/after agent performance\", \"evidence_levels\": {\"live pass-rate\": \"not_collected\", \"promoted golden case\": \"not_collected\", \"runtime telemetry sample\": \"not_collected\", \"structural fixture\": 3, \"token overhead\": \"not_collected\", \"turn overhead\": \"not_collected\"}, \"fixtures\": 3, \"live_pass_rate\": \"not_collected\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\", \"verdicts\": {\"structural_pass\": 3}}",
+      "evidence_level": "structural fixture",
       "name": "Skill efficacy structural fixtures",
       "source": "reports/professional-scorecard.json",
       "status": "pass"
     },
     {
       "command": "python3 scripts/validate-professional-routing-coverage.py",
-      "detail": "{\"evidence_boundary\": \"structural/local fixtures only; no live empirical pass-rate or runtime overhead evidence\", \"suites\": {\"executor-adapters\": {\"fixtures\": 3, \"required_capability\": \"executor-adapter-protocol\", \"required_capability_hits\": 3}, \"project-memory\": {\"fixtures\": 3, \"required_capability\": \"project-memory-governance\", \"required_capability_hits\": 3}, \"repository-intelligence\": {\"fixtures\": 3, \"required_capability\": \"repository-graph-analysis\", \"required_capability_hits\": 3}, \"trajectory\": {\"fixtures\": 3, \"required_capability\": \"execution-trajectory-analysis\", \"required_capability_hits\": 3}, \"validation-broker\": {\"fixtures\": 3, \"required_capability\": \"validation-broker\", \"required_capability_hits\": 3}}, \"total_fixtures\": 15}",
+      "detail": "{\"candidate_fixtures_ignored\": 0, \"evidence_boundary\": \"structural/local fixtures only; no live empirical pass-rate or runtime overhead evidence\", \"evidence_levels\": {\"live pass-rate\": \"not_collected\", \"promoted golden case\": \"not_collected\", \"runtime telemetry sample\": \"not_collected\", \"structural fixture\": 15, \"token overhead\": \"not_collected\", \"turn overhead\": \"not_collected\"}, \"suites\": {\"executor-adapters\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"executor-adapter-protocol\", \"required_capability_hits\": 3}, \"project-memory\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"project-memory-governance\", \"required_capability_hits\": 3}, \"repository-intelligence\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"repository-graph-analysis\", \"required_capability_hits\": 3}, \"trajectory\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"execution-trajectory-analysis\", \"required_capability_hits\": 3}, \"validation-broker\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"validation-broker\", \"required_capability_hits\": 3}}, \"total_fixtures\": 15}",
+      "evidence_level": "structural fixture",
       "name": "Runtime governance structural fixtures",
       "source": "reports/professional-scorecard.json",
       "status": "pass"
@@ -89,6 +127,7 @@
     {
       "command": "python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev",
       "detail": "recommended, full, and dev marketplace indexes validate",
+      "evidence_level": "structural fixture",
       "name": "Marketplace index validation",
       "source": "reports/professional-scorecard.json",
       "status": "pass"

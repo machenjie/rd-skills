@@ -10,6 +10,17 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 - `unknown`: 0
 - `not_collected`: 2
 
+## Evidence Levels
+
+| Evidence | Status | Meaning |
+| --- | --- | --- |
+| live pass-rate | `not_collected` | Measured real-task success rate. |
+| promoted golden case | `pass` | Human-reviewed case admitted to regression coverage. |
+| runtime telemetry sample | `not_collected` | Actual runtime fact sample; may still require human review. |
+| structural fixture | `pass` | Local deterministic structure sample passed; not evidence of live task success. |
+| token overhead | `not_collected` | Measured additional token cost. |
+| turn overhead | `not_collected` | Measured additional turn cost. |
+
 ## Key Statuses
 
 | Evidence | Status | Detail |

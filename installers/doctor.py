@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,16 @@ from changeforge_install import (
     source_version,
     skill_metadata,
 )
+
+ROOT = Path(__file__).resolve().parents[1]
+for _support_path in (ROOT / "src" / "hook-runtime" / "scripts", ROOT / "src"):
+    if str(_support_path) not in sys.path:
+        sys.path.insert(0, str(_support_path))
+
+try:
+    from changeforge_adapter_capabilities import format_coverage_matrix
+except Exception:  # pragma: no cover - source-tree path fallback for direct runs.
+    format_coverage_matrix = None
 
 
 COMMON_HOOK_SUPPORT_FILES = ("changeforge_professional_contract.md",)
@@ -86,6 +97,7 @@ def main() -> int:
         _inspect_skill_dirs(label, path, duplicate_index, issues)
 
     _inspect_duplicates(duplicate_index, issues)
+    _print_runtime_coverage_matrix()
 
     if args.telemetry_report is not None or args.telemetry_root is not None:
         _report_telemetry(args.telemetry_report, args.telemetry_root, args.repo_hash)
@@ -432,6 +444,14 @@ def _print_remediation(issues: list[str]) -> None:
         if message not in printed:
             print(f"- {message}")
             printed.add(message)
+
+
+def _print_runtime_coverage_matrix() -> None:
+    print("doctor: runtime coverage matrix")
+    if format_coverage_matrix is None:
+        print("- unavailable: adapter capability module could not be loaded")
+        return
+    print(format_coverage_matrix())
 
 
 if __name__ == "__main__":

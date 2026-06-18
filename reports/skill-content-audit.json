@@ -4516,21 +4516,21 @@
       "description_findings": [],
       "description_length": 184,
       "findings": [
-        "section 'Repository Context Map' is 119 lines (> 80) \u2014 reference candidate"
+        "section 'Repository Context Map' is 126 lines (> 80) \u2014 reference candidate"
       ],
       "has_shared_optimality": false,
       "heading_count": 16,
       "kind": "foundation-capability",
-      "largest_section_lines": 119,
+      "largest_section_lines": 126,
       "largest_section_title": "Repository Context Map",
       "largest_table_rows": 0,
-      "line_count": 120,
+      "line_count": 127,
       "name": "repository-context-map",
       "optimality_section_length": 0,
       "output_contract_length": 16,
       "oversized_sections": [
         {
-          "lines": 119,
+          "lines": 126,
           "title": "Repository Context Map"
         }
       ],
@@ -4546,34 +4546,34 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 15,
-      "word_count": 1428
+      "word_count": 1476
     },
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 7,
-      "bullet_count": 59,
+      "bullet_count": 60,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 92,
-      "critical_details_length": 9,
+      "critical_details_length": 12,
       "description_findings": [],
       "description_length": 153,
       "findings": [
-        "section 'Repository Graph Analysis' is 92 lines (> 80) \u2014 reference candidate"
+        "section 'Repository Graph Analysis' is 95 lines (> 80) \u2014 reference candidate"
       ],
       "has_shared_optimality": false,
       "heading_count": 15,
       "kind": "foundation-capability",
-      "largest_section_lines": 92,
+      "largest_section_lines": 95,
       "largest_section_title": "Repository Graph Analysis",
       "largest_table_rows": 0,
-      "line_count": 93,
+      "line_count": 96,
       "name": "repository-graph-analysis",
       "optimality_section_length": 0,
       "output_contract_length": 9,
       "oversized_sections": [
         {
-          "lines": 92,
+          "lines": 95,
           "title": "Repository Graph Analysis"
         }
       ],
@@ -4589,7 +4589,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 8,
-      "word_count": 840
+      "word_count": 864
     },
     {
       "anti_example_section_length": 11,

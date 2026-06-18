@@ -30,6 +30,45 @@
       "type": "array",
       "maxItems": 50,
       "items": { "type": "string", "maxLength": 300 }
+    },
+    "validationBrokerCommandLedger": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "command_kind": {
+            "type": "string",
+            "enum": ["", "narrow", "module", "full", "unknown"]
+          },
+          "command_display_safe": { "type": "string", "maxLength": 300 },
+          "scope": {
+            "type": "string",
+            "enum": ["", "narrow", "module", "full", "none", "unknown"]
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "",
+              "passed",
+              "failed",
+              "not_run",
+              "not_verified",
+              "stale",
+              "partial",
+              "unknown"
+            ]
+          },
+          "finished_at_or_order": { "type": "string", "maxLength": 300 },
+          "covered_paths": { "$ref": "#/$defs/stringList" },
+          "covered_risk_surfaces": { "$ref": "#/$defs/stringList" },
+          "evidence_strength": {
+            "type": "string",
+            "enum": ["", "none", "weak", "partial", "strong", "negative"]
+          }
+        }
+      }
     }
   },
   "properties": {
@@ -141,6 +180,58 @@
     },
     "validation_result_covered_paths": { "$ref": "#/$defs/stringList" },
     "validation_result_covered_risk_surfaces": { "$ref": "#/$defs/stringList" },
+    "validation_broker_closure_outcome": {
+      "type": "string",
+      "enum": ["", "ready", "needs_validation", "degraded_ready", "blocked"]
+    },
+    "validation_broker_selected_scope": {
+      "type": "string",
+      "enum": ["", "narrow", "module", "full", "none"]
+    },
+    "validation_broker_negative_evidence": { "$ref": "#/$defs/stringList" },
+    "validation_broker_residual_risk": { "$ref": "#/$defs/stringList" },
+    "validation_broker_command_ledger": {
+      "$ref": "#/$defs/validationBrokerCommandLedger"
+    },
+    "adapter_name": {
+      "type": "string",
+      "enum": [
+        "",
+        "codex",
+        "claude",
+        "copilot",
+        "generic",
+        "unknown",
+        "cline",
+        "openhands",
+        "gemini-cli",
+        "goose"
+      ]
+    },
+    "adapter_supported_checks": { "$ref": "#/$defs/stringList" },
+    "adapter_unsupported_checks": { "$ref": "#/$defs/stringList" },
+    "adapter_degraded_capabilities": { "$ref": "#/$defs/stringList" },
+    "closure_contract_verdict": {
+      "type": "string",
+      "enum": ["", "ready", "needs_validation", "degraded_ready", "blocked"]
+    },
+    "closure_contract_residual_risk": { "$ref": "#/$defs/stringList" },
+    "project_memory_available": {
+      "description": "Whether the cache-side project memory advisory store was readable for this Stop evaluation.",
+      "type": "boolean"
+    },
+    "project_memory_projection_key": {
+      "description": "Deterministic key for the bounded memory facts considered at Stop.",
+      "type": "string",
+      "maxLength": 300
+    },
+    "project_memory_included_events": { "$ref": "#/$defs/stringList" },
+    "project_memory_excluded_events": { "$ref": "#/$defs/stringList" },
+    "project_memory_stale_context_gate": {
+      "type": "string",
+      "enum": ["", "pass", "warn", "block"]
+    },
+    "project_memory_residual_risk": { "$ref": "#/$defs/stringList" },
     "residual_risk_detected": { "type": "boolean" },
     "completion_language_detected": {
       "type": "boolean",

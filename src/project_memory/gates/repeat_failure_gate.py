@@ -38,13 +38,13 @@ def evaluate_repeat_failure_gate(
         path=path,
         owner_skill=owner_skill,
     )
-    matched.sort(key=lambda event: str(event.get("created_at", "")), reverse=True)
+    matched.sort(key=_timestamp, reverse=True)
     failure_count = 0
     matched_paths: list[str] = []
     for event in matched:
         if event.get("outcome") in FAILURE_OUTCOMES:
             failure_count += 1
-            for item in event.get("paths") or []:
+            for item in _paths(event):
                 if item not in matched_paths:
                     matched_paths.append(item)
             continue
@@ -82,15 +82,36 @@ def _matching_events(
             continue
         if event.get("owner_skill") != owner_skill:
             continue
-        if path not in (event.get("paths") or []):
+        if path not in _paths(event):
             continue
         matched.append(event)
     return matched
 
 
 def _required_next_gate(events: list[dict[str, Any]]) -> str:
-    if any(event.get("type") == "validation_result" for event in events):
+    if any(_type(event) == "validation_result" or _kind(event) == "validation_pattern" for event in events):
         return "quality-test-gate"
     if any("architecture" in str(event.get("owner_skill", "")) for event in events):
         return "architecture-impact-reviewer"
     return "failure-diagnosis"
+
+
+def _paths(event: dict[str, Any]) -> list[str]:
+    values = event.get("bounded_paths")
+    if not isinstance(values, list):
+        values = event.get("paths")
+    if not isinstance(values, list):
+        return []
+    return [str(path) for path in values if str(path).strip()][:50]
+
+
+def _timestamp(event: dict[str, Any]) -> str:
+    return str(event.get("timestamp") or event.get("created_at") or "").strip()
+
+
+def _type(event: dict[str, Any]) -> str:
+    return str(event.get("type") or "").strip()
+
+
+def _kind(event: dict[str, Any]) -> str:
+    return str(event.get("kind") or "").strip()

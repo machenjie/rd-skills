@@ -71,6 +71,8 @@ def _validate_policy(errors: list[str]) -> None:
     report = analyze_trajectory(trajectory)
     if report["closure_status"] != "pass":
         errors.append(f"complete sample should pass, got {report['closure_status']} with {report['issues']}")
+    if report.get("verdict") != "ready":
+        errors.append(f"complete sample should be ready, got {report.get('verdict')}")
     if "Stage Timeline" not in render_markdown(trajectory, report):
         errors.append("markdown renderer omitted stage timeline")
     payload = json.loads(render_json(trajectory, report))
@@ -86,8 +88,46 @@ def _validate_policy(errors: list[str]) -> None:
     stale_report = analyze_trajectory(stale)
     if "stale_validation" not in stale_report["issue_counts"]:
         errors.append("stale validation sample was not detected")
+    if stale_report.get("verdict") != "needs_validation":
+        errors.append(f"stale validation should need validation, got {stale_report.get('verdict')}")
     if not promotion_skeletons(stale, stale_report):
         errors.append("high severity issue should generate promotion skeletons")
+    for skeleton in promotion_skeletons(stale, stale_report):
+        content = str(skeleton.get("content") or "")
+        if "generated_from_telemetry" not in content or "requires_human_review" not in content:
+            errors.append("promotion skeleton missing human-review-only candidate headers")
+
+    route_gap = build_trajectory(_route_gap_records(), repo_hash="repo", session_id="sess-route-gap")
+    if route_gap is None:
+        errors.append("route-gap sample did not build a trajectory")
+    else:
+        route_gap_report = analyze_trajectory(route_gap)
+        if route_gap_report.get("verdict") == "ready":
+            errors.append("incomplete route manifest must not be ready")
+
+    repair = build_trajectory(_repair_without_rereview_records(), repo_hash="repo", session_id="sess-repair")
+    if repair is None:
+        errors.append("repair sample did not build a trajectory")
+    else:
+        repair_report = analyze_trajectory(repair)
+        if repair_report.get("verdict") != "needs_repair":
+            errors.append(f"repair without re-review should need repair, got {repair_report.get('verdict')}")
+
+    residual = build_trajectory(_missing_residual_risk_records(), repo_hash="repo", session_id="sess-risk")
+    if residual is None:
+        errors.append("missing residual risk sample did not build a trajectory")
+    else:
+        residual_report = analyze_trajectory(residual)
+        if residual_report.get("verdict") == "ready":
+            errors.append("stop without residual risk must not be ready")
+
+    adapter = build_trajectory(_unsupported_adapter_records(), repo_hash="repo", session_id="sess-adapter")
+    if adapter is None:
+        errors.append("unsupported adapter sample did not build a trajectory")
+    else:
+        adapter_report = analyze_trajectory(adapter)
+        if adapter_report.get("verdict") != "degraded_ready":
+            errors.append(f"unsupported adapter should be degraded_ready, got {adapter_report.get('verdict')}")
 
 
 def _complete_records() -> list[dict[str, object]]:
@@ -179,6 +219,78 @@ def _stale_records() -> list[dict[str, object]]:
     )
     for record in records:
         record["session_id"] = "sess-stale"
+    return records
+
+
+def _route_gap_records() -> list[dict[str, object]]:
+    records = _complete_records()
+    records[0] = dict(records[0])
+    records[0]["manifest_selected_capabilities"] = []
+    for record in records:
+        record["session_id"] = "sess-route-gap"
+    return records
+
+
+def _repair_without_rereview_records() -> list[dict[str, object]]:
+    records = _complete_records()
+    records.insert(
+        -1,
+        {
+            "timestamp_utc": "2026-06-01T00:05:30Z",
+            "session_id": "sess-repair",
+            "event_name": "PostToolUse",
+            "runtime": "codex",
+            "turn_stage": "repair",
+            "tool_name": "apply_patch",
+            "changed_paths": ["src/app.py"],
+            "repair_evidence_seen": True,
+            "validation_command_detected": True,
+            "validation_evidence_detected": True,
+            "validation_result_outcome": "pass",
+        },
+    )
+    records.insert(
+        -1,
+        {
+            "timestamp_utc": "2026-06-01T00:05:40Z",
+            "session_id": "sess-repair",
+            "event_name": "PostToolUse",
+            "runtime": "codex",
+            "turn_stage": "test",
+            "command_program": "python3",
+            "validation_command_detected": True,
+            "validation_evidence_detected": True,
+            "validation_result_outcome": "pass",
+        },
+    )
+    for record in records:
+        record["session_id"] = "sess-repair"
+    return records
+
+
+def _missing_residual_risk_records() -> list[dict[str, object]]:
+    records = _complete_records()
+    records[-1] = dict(records[-1])
+    records[-1]["residual_risk_detected"] = False
+    for record in records:
+        record["session_id"] = "sess-risk"
+    return records
+
+
+def _unsupported_adapter_records() -> list[dict[str, object]]:
+    records = _complete_records()
+    records[-1] = dict(records[-1])
+    records[-1].update(
+        {
+            "adapter_name": "copilot",
+            "adapter_unsupported_checks": ["pre_tool_advisory_context"],
+            "adapter_degraded_capabilities": ["copilot_pre_tool_advisory_unsupported"],
+            "closure_contract_verdict": "degraded_ready",
+            "closure_contract_residual_risk": ["unsupported adapter check"],
+        }
+    )
+    for record in records:
+        record["session_id"] = "sess-adapter"
     return records
 
 

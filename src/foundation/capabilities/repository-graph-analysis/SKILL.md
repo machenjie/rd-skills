@@ -53,6 +53,9 @@ Use repository graphs to identify the relevant source-of-truth, dependencies, te
 
 ## Critical Details
 - Symbol graph names functions, classes, types, exports, and public entry points.
+- RepositoryGraph v2 records normalized symbols with `name`, `kind`, `path`,
+  `line`, `visibility`, `owner_object`, `parent_symbol`, `language`, and
+  `confidence`; low-confidence language nodes remain selectors, not proof.
 - Import graph names module dependency direction, cycles, and boundary violations.
 - Reference graph names callers, consumers, config references, docs references, and registry references.
 - Test graph names direct, indirect, and missing validation targets.

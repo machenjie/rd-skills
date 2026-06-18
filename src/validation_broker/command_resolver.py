@@ -48,7 +48,7 @@ def resolve_validation_plan(
 def _context_validation_candidates(repo_context: dict | None) -> list[ValidationCommand]:
     if not isinstance(repo_context, dict):
         return []
-    pack = repo_context.get("task_context_pack")
+    pack = _context_pack_payload(repo_context)
     if not isinstance(pack, dict):
         return []
     result: list[ValidationCommand] = []
@@ -59,17 +59,41 @@ def _context_validation_candidates(repo_context: dict | None) -> list[Validation
         proves = str(item.get("proves", "")).strip()
         if not command or not proves:
             continue
+        level = str(item.get("scope") or item.get("level") or "module").strip()
+        if level not in {"narrow", "module", "full"}:
+            level = "module"
         result.append(
             ValidationCommand(
                 command=command,
-                level="module",
+                level=level,
                 reason=f"context pack candidate: {proves}",
-                category="context_pack",
-                covered_path_patterns=tuple(_clean_list(pack.get("changed_paths", []))) or ("**",),
-                covered_risk_surfaces=("context-pack",),
+                category=str(item.get("category") or "context_pack"),
+                covered_path_patterns=tuple(
+                    _clean_list(item.get("covered_paths", []))
+                    or _clean_list(item.get("covered_path_patterns", []))
+                    or _clean_list(pack.get("changed_paths", []))
+                )
+                or ("**",),
+                covered_risk_surfaces=tuple(_clean_list(item.get("covered_risk_surfaces", []))) or ("context-pack",),
             )
         )
     return result
+
+
+def _context_pack_payload(repo_context: dict) -> dict | None:
+    pack = repo_context.get("task_context_pack")
+    if isinstance(pack, dict):
+        return pack
+    repository_context = repo_context.get("repository_context")
+    if isinstance(repository_context, dict):
+        nested = repository_context.get("task_context_pack")
+        if isinstance(nested, dict):
+            return nested
+        if isinstance(repository_context.get("validation_candidates"), list):
+            return repository_context
+    if isinstance(repo_context.get("validation_candidates"), list):
+        return repo_context
+    return None
 
 
 def _merge_commands(
@@ -92,9 +116,13 @@ def _dedupe(commands: Iterable[ValidationCommand]) -> list[ValidationCommand]:
 
 
 def _unknown_paths(paths: list[str], categories: list[str]) -> list[str]:
-    if categories:
-        return []
-    return paths[:]
+    unknown: list[str] = []
+    for path in paths:
+        if not matching_categories([path]):
+            unknown.append(path)
+    if unknown:
+        return unknown
+    return [] if categories else paths[:]
 
 
 def _plan_notes(
@@ -118,6 +146,8 @@ def _plan_notes(
 def _clean_list(values: Iterable[str]) -> list[str]:
     result: list[str] = []
     seen: set[str] = set()
+    if isinstance(values, str):
+        values = (values,)
     for value in values or ():
         text = str(value).replace("\\", "/").strip().lstrip("./")
         if not text or text in seen:

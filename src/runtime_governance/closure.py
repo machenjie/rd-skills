@@ -22,8 +22,10 @@ class ClosureVerdict(str, Enum):
 
 @dataclass
 class ClosureContract:
+    adapter: str = ""
     supported_checks: list[str] = field(default_factory=list)
     unsupported_checks: list[str] = field(default_factory=list)
+    degraded_capabilities: list[str] = field(default_factory=list)
     required_evidence: list[str] = field(default_factory=list)
     present_evidence: list[str] = field(default_factory=list)
     missing_evidence: list[str] = field(default_factory=list)
@@ -40,14 +42,18 @@ class ClosureContract:
         *,
         supported_checks: Iterable[object] = (),
         unsupported_checks: Iterable[object] = (),
+        degraded_capabilities: Iterable[object] = (),
+        adapter: str = "",
         required_evidence: Iterable[object] = ("route_manifest", "validation", "residual_risk"),
         next_owner: str = "agent",
     ) -> "ClosureContract":
         required = cap_list(required_evidence)
         supported = cap_list(supported_checks)
         unsupported = cap_list(unsupported_checks)
+        degraded = cap_list(degraded_capabilities)
         if ledger.adapter_degradation.strength != EvidenceStrength.NONE.value:
             unsupported = cap_list([*unsupported, "runtime_adapter_degradation"])
+            degraded = cap_list([*degraded, *ledger.adapter_degradation.refs])
 
         present: list[str] = []
         missing: list[str] = []
@@ -96,8 +102,10 @@ class ClosureContract:
             residual.append("unsupported runtime checks remain")
         verdict = _verdict(required, missing, negative, unsupported)
         return cls(
+            adapter=redact_sensitive_value(adapter),
             supported_checks=supported,
             unsupported_checks=unsupported,
+            degraded_capabilities=degraded,
             required_evidence=required,
             present_evidence=cap_list(present),
             missing_evidence=cap_list(missing),
@@ -118,8 +126,10 @@ class ClosureContract:
     def from_json_dict(cls, data: Mapping[str, Any]) -> "ClosureContract":
         freshness = data.get("freshness")
         return cls(
+            adapter=redact_sensitive_value(data.get("adapter")),
             supported_checks=cap_list(data.get("supported_checks") or []),
             unsupported_checks=cap_list(data.get("unsupported_checks") or []),
+            degraded_capabilities=cap_list(data.get("degraded_capabilities") or []),
             required_evidence=cap_list(data.get("required_evidence") or []),
             present_evidence=cap_list(data.get("present_evidence") or []),
             missing_evidence=cap_list(data.get("missing_evidence") or []),

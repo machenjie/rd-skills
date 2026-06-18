@@ -31,6 +31,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--changed-path", action="append", default=[], help="Changed or target path. Repeatable.")
     parser.add_argument("--target", default=".", help="Repository root. Defaults to cwd.")
     parser.add_argument("--graph", help="Optional prebuilt RepositoryGraph JSON path.")
+    parser.add_argument("--max-files", type=int, default=36, help="Maximum selected files in the context pack.")
+    parser.add_argument("--max-symbols", type=int, default=80, help="Maximum selected symbols in the context pack.")
+    parser.add_argument(
+        "--context-budget-tokens",
+        type=int,
+        default=1200,
+        help="Rough token budget for selected file rows.",
+    )
     parser.add_argument("--out", help="Output context-pack JSON path. Writes JSON to stdout when omitted.")
     parser.add_argument("--markdown-out", help="Optional Markdown output path. Defaults to JSON sibling .md when --out is used.")
     args = parser.parse_args(argv)
@@ -42,6 +50,9 @@ def main(argv: list[str] | None = None) -> int:
         args.task,
         args.changed_path,
         target,
+        max_files=args.max_files,
+        max_symbols=args.max_symbols,
+        context_budget_tokens=args.context_budget_tokens,
         graph_path=args.graph,
         context_pack_path=args.out,
     )

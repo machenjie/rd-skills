@@ -67,6 +67,32 @@ class EvidenceLedgerTests(unittest.TestCase):
         self.assertEqual(ledger.validation.strength, EvidenceStrength.NEGATIVE.value)
         self.assertEqual(ledger.validation.freshness, Freshness.STALE.value)
 
+    def test_broker_coverage_blocker_overrides_flat_pass(self) -> None:
+        ledger = EvidenceLedger.from_telemetry_facts(
+            [
+                {
+                    "event_name": "Stop",
+                    "validation_command_detected": True,
+                    "validation_evidence_detected": True,
+                    "validation_result_outcome": "pass",
+                    "validation_result_evidence_strength": "strong",
+                    "validation_result_fresh_after_last_edit": "true",
+                    "validation_broker_closure_outcome": "needs_validation",
+                    "validation_broker_negative_evidence": [
+                        "targeted_check_reported_as_full"
+                    ],
+                    "validation_broker_command_ledger": [
+                        {
+                            "outcome": "partial",
+                            "evidence_strength": "partial",
+                        }
+                    ],
+                }
+            ]
+        )
+        self.assertEqual(ledger.validation.strength, EvidenceStrength.WEAK.value)
+        self.assertFalse(ledger.validation.is_closure_evidence)
+
     def test_prose_mention_is_not_strong_evidence(self) -> None:
         ledger = EvidenceLedger.from_telemetry_facts(
             [{"event_name": "Stop", "message": "validation passed in prose"}]

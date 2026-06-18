@@ -76,6 +76,24 @@ def _escape(text: str) -> str:
     return text.replace("|", "\\|").replace("\n", " ")
 
 
+def _evidence_levels(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    value = payload.get("evidence_levels")
+    if not isinstance(value, dict):
+        return {}
+    levels: dict[str, dict[str, Any]] = {}
+    for name, detail in value.items():
+        if not isinstance(detail, dict):
+            continue
+        status = str(detail.get("status", "unknown"))
+        if status not in STATUSES:
+            status = "unknown"
+        levels[str(name)] = {
+            "status": status,
+            "meaning": str(detail.get("meaning", "")),
+        }
+    return levels
+
+
 def render_dashboard(payload: dict[str, Any]) -> str:
     """Render the scorecard dashboard as Markdown."""
     counts = _status_counts(payload)
@@ -89,6 +107,16 @@ def render_dashboard(payload: dict[str, Any]) -> str:
     ]
     for status in STATUSES:
         lines.append(f"- `{status}`: {counts[status]}")
+
+    levels = _evidence_levels(payload)
+    lines.extend(["", "## Evidence Levels", "", "| Evidence | Status | Meaning |", "| --- | --- | --- |"])
+    if levels:
+        for level, detail in levels.items():
+            lines.append(
+                f"| {level} | `{detail['status']}` | {_escape(str(detail.get('meaning', '')))} |"
+            )
+    else:
+        lines.append("| unknown | `unknown` | evidence level metadata not present in scorecard |")
 
     lines.extend(["", "## Key Statuses", "", "| Evidence | Status | Detail |", "| --- | --- | --- |"])
     for name in (

@@ -72,6 +72,28 @@ class CommandResolverTests(unittest.TestCase):
         self.assertIn("python3 -m unittest discover -s tests", commands(plan))
         self.assertIn("unknown", plan["matched_categories"])
 
+    def test_new_rd_skills_surfaces_select_validators(self) -> None:
+        cases = {
+            "scripts/review-agent-telemetry.py": "python3 -m unittest discover -s tests/telemetry",
+            "evals/routing/cases.yaml": "python3 scripts/eval-routing.py",
+            "reports/professional-scorecard.json": "python3 scripts/build.py --profile recommended",
+            "installers/install.py": "python3 scripts/validate-installation.py",
+            "scripts/build.py": "python3 scripts/validate-installation.py",
+            "src/unowned/new_module.py": "python3 -m unittest discover -s tests",
+            "tests/unknown/test_sample.py": "python3 -m unittest discover -s tests",
+        }
+        for path, expected in cases.items():
+            with self.subTest(path=path):
+                plan = resolve_validation_plan([path])
+                self.assertIn(expected, commands(plan))
+
+    def test_mixed_known_and_unknown_paths_keep_unknown_residual(self) -> None:
+        plan = resolve_validation_plan(
+            ["src/validation_broker/validation_policy.py", "unknown/file.bin"]
+        )
+        self.assertIn("validation_broker", plan["matched_categories"])
+        self.assertIn("unknown/file.bin", plan["unknown_paths"])
+
 
 if __name__ == "__main__":
     unittest.main()

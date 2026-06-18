@@ -47,10 +47,11 @@ Telemetry deliberately omits sensitive content:
 - no full prompts;
 - no environment variables;
 - no secrets;
-- no full command output (stdout);
+- no full command output (stdout or stderr);
 - only the leading program name of an observed command (for example `kubectl`),
   truncated, never full arguments;
 - repository and working-directory identifiers are hashed, not absolute paths;
+- no user absolute paths;
 - changed paths are recorded as relative paths and capped in number and length.
 
 Telemetry writing always fails open: any error is logged to the hook debug log
@@ -81,6 +82,12 @@ and closure-contract support. The adapter core is not an LLM and not the router.
 When a runtime cannot emit or consume an event, telemetry records the bounded
 capability limitation so closure can degrade explicitly instead of pretending the
 gate was observed.
+Stop telemetry records adapter/closure-contract facts as bounded strings:
+`adapter_name`, `adapter_supported_checks`, `adapter_unsupported_checks`,
+`adapter_degraded_capabilities`, `closure_contract_verdict`, and
+`closure_contract_residual_risk`. These fields let review and trajectory tools
+distinguish `ready` from `degraded_ready` when a runtime could not observe a
+check such as Copilot `PreToolUse` advisory context.
 
 Repository graph evidence may feed context packs and validation candidates, but
 it is a source-evidence helper only. It should name bounded symbols, imports,
@@ -95,6 +102,9 @@ routes, capabilities, or registry data without a human promotion flow.
 Validation Broker facts classify validation command selection and freshness. A
 command without outcome, a failed command, a negative validation disclosure, or a
 command that finished before the last material edit remains non-closure evidence.
+The broker closure outcome is one of `ready`, `needs_validation`,
+`degraded_ready`, or `blocked`; degraded adapter coverage is reported as residual
+risk instead of a pass.
 
 Trajectory facts are review-only. The trajectory inspector reconstructs stage
 order and evidence freshness from bounded telemetry and memory fields, and it
@@ -114,8 +124,15 @@ required references, and implementation preflight evidence were present.
 When Validation Broker is available, Stop telemetry also records bounded result
 facts: validation outcome, evidence strength, negative reason, command kind,
 freshness after the last material edit, coverage alignment, and covered path/risk
-patterns. It does not record raw stdout, prompts, secrets, environment
-variables, or full command output.
+patterns. It also records optional bounded broker facts:
+`validation_broker_closure_outcome`, `validation_broker_selected_scope`,
+`validation_broker_negative_evidence`, `validation_broker_residual_risk`, and a
+sanitized `validation_broker_command_ledger` whose command display is normalized
+or registry-derived. It does not record raw stdout, prompts, secrets,
+environment variables, full command output, or dangerous full command arguments.
+Stop telemetry also records adapter closure-contract facts. Unsupported adapter
+checks are residual-risk evidence and do not satisfy a full validation or
+closure pass.
 
 Hooks still cannot replace `change-forge-router`. They never call a model, never
 reach the network, never modify project source, and never load every compiled
@@ -146,7 +163,8 @@ It detects, among others: `missed_router`, `missed_implementation_structure`,
 `missed_reuse_evidence`, `missed_language_capability`,
 `missed_middleware_capability`, `missed_validation_evidence`,
 `validation_command_without_outcome`, `missed_residual_risk`,
-`unverified_completion_claim`, `possible_over_routing`,
+`degraded_runtime_adapter_closure`, `unverified_completion_claim`,
+`possible_over_routing`,
 `hook_false_positive_candidate`, and `hook_false_negative_candidate`. Every
 suggestion carries `id`, `type`, `severity`, `priority_score`, `recency_weight`,
 `recent_24h`, `evidence`, `affected_session`, `suggested_action`,
@@ -178,17 +196,44 @@ python3 scripts/inspect-trajectory.py --repo-hash <repo_hash> --generate-candida
 With no matching telemetry, it prints `no samples found` and exits 0. Markdown
 reports include the stage timeline, changed/read path summary, validation
 freshness, review/repair status, issues, and suggested next gates. JSON reports
-emit both `trajectory` and `trajectory_report` objects.
+emit both `trajectory` and `trajectory_report` objects. The trajectory object
+includes derived `ordered_events`, `changed_paths`, `read_paths`,
+`validation_timeline`, `review_repair_timeline`, `memory_hits`, and
+`adapter_degradations` summaries. The report includes a closure `verdict`,
+normalized `findings`, validation freshness, repair/re-review status, residual
+risk status, and human-review-only candidate fixture metadata.
 
 The analyzer checks deterministic execution-quality gaps: edit before read,
 plan before repository context, missing implementation preflight, missing or
 stale validation, validation command without outcome, implementer self-review,
 repair without re-review, stop without residual risk, incomplete route manifest,
 repeat failure without route repair, and fragile-file changes without memory,
-preflight, read, and test evidence. If a high-severity issue appears, candidate
-skeletons may be generated for pressure scenarios, agent-behavior samples, and
-hook fixtures. Skeletons are marked `requires_human_review: true` and must be
-completed and reviewed by a maintainer before promotion.
+preflight, read, and test evidence. Unsupported adapter closure overclaims are
+reported as degraded evidence, not as pass. If a high-severity issue appears,
+candidate skeletons may be generated for pressure scenarios, agent-behavior
+samples, hook fixtures, validation broker fixtures, and trajectory fixtures.
+Skeletons are marked `generated_from_telemetry: true` and
+`requires_human_review: true` and must be completed and reviewed by a maintainer
+before promotion.
+
+## Evidence Levels
+
+Telemetry and trajectory reports can feed scorecards, but they do not all carry
+the same proof strength. Reports must keep these levels distinct:
+
+| Evidence | Meaning |
+| --- | --- |
+| `structural fixture` | Local deterministic fixture or schema sample passed. This proves shape and policy wiring only. |
+| `runtime telemetry sample` | Actual runtime fact sample was observed. It may still require human review. |
+| `promoted golden case` | A human-reviewed case was admitted to regression coverage. |
+| `live pass-rate` | Measured real-task success rate. If not collected, render `not_collected`. |
+| `token overhead` | Measured additional token cost. If not collected, render `not_collected`. |
+| `turn overhead` | Measured additional turn cost. If not collected, render `not_collected`. |
+
+Generated candidates are never measured evidence until a maintainer reviews and
+promotes them. Missing live pass-rate, token overhead, or turn overhead data must
+remain `not_collected`; it must not be inferred from structural fixtures,
+runtime telemetry, or local validator success.
 
 ### Completion-Evidence Detection Family
 
@@ -347,10 +392,32 @@ ${XDG_CACHE_HOME:-~/.cache}/changeforge/memory/<repo_hash>/
 
 Memory events use
 [`memory-event.v1.schema.json`](../src/project_memory/schemas/memory-event.v1.schema.json).
+Memory projections use
+[`memory-projection.v1.schema.json`](../src/project_memory/schemas/memory-projection.v1.schema.json).
 Memory summaries use
 [`memory-summary.v1.schema.json`](../src/project_memory/schemas/memory-summary.v1.schema.json).
 The first implementation uses deterministic retrieval only; no vector database
 or embedding index is introduced.
+
+`MemoryEvent` v1 keeps legacy `type`, `paths`, and `created_at` for old readers
+and adds canonical governed fields:
+
+- `commit_sha`
+- `timestamp`
+- `kind`
+- `bounded_paths`
+- `summary`
+- `privacy_class`
+- `retention_policy`
+- `source`
+
+Allowed `kind` values are `fragile_file`, `repeat_failure`,
+`validation_pattern`, `review_finding_pattern`, `module_convention`,
+`generated_source_mapping`, `route_correction`, `false_positive_hook`, and
+`false_negative_hook`. The projection records included and excluded event ids,
+the retrieval key, stale-context status, residual risk, and
+`source_check_required: true`. Memory is never source truth; agents must still
+read current repository files before acting.
 
 ### Memory Review And Promotion
 
@@ -389,7 +456,8 @@ warning-first and fail-open.
   continue only with new evidence or a repair route manifest.
 - Fragile File Gate: a file with repeated `review_finding`,
   failed/blocked `validation_result`, `repair_attempt`, or `fragile_file`
-  events requires read-file evidence, nearby-test evidence, memory summary
+  events requires read-file evidence, owner/source-of-truth check,
+  same-pattern scan, validator mapping, nearby-test evidence, memory summary
   evidence, and an implementation preflight before edit.
 - Stale Context Gate: a context pack whose freshness marker predates changed
   files or a drift trigger cannot be treated as fact. The agent must refresh the
@@ -426,8 +494,25 @@ The v1 telemetry schema is extended compatibly with action-aware hook facts:
 - `validation_command_detected` records that a validation-looking command was
   observed; it is separate from `validation_evidence_detected`, which requires a
   stop-closure outcome or artifact signal.
+- Stop closure can record project-memory facts without blocking by default:
+  `project_memory_available`, `project_memory_projection_key`,
+  `project_memory_included_events`, `project_memory_excluded_events`,
+  `project_memory_stale_context_gate`, and `project_memory_residual_risk`.
+  Unavailable or degraded memory becomes residual risk; it does not become a
+  pass condition.
+
+### Telemetry Memory Candidates
+
+`scripts/review-agent-telemetry.py` emits a `memory_candidates` section in the
+report and suggestions file. These candidates are human-review-only and may
+point to `memory`, `hook_fixture`, `eval`, `docs`, or `none` as a promotion
+target. They are derived from bounded facts such as stale validation, repeated
+same-path failures, repair without re-review, fragile-file signals, and hook
+false-positive/false-negative candidates. The reviewer does not auto-promote or
+edit skills, routing, registries, or capabilities.
 
 These fields are facts about hook behavior, not content capture. Telemetry still
 records only path-like facts, compact signal names, command program names, gate
 names, and booleans. It must not record prompt text, environment variables,
-secrets, full command arguments, command output, or user-specific archives.
+secrets, full command arguments, command output, absolute paths, or
+user-specific archives.

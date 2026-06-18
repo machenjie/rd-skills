@@ -12,6 +12,11 @@ ALLOWED_TARGETS = {
     "tests/fixtures/hooks",
     "tests/project_memory/fixtures",
 }
+PROMOTION_TARGET_ALIASES = {
+    "memory": "tests/project_memory/fixtures",
+    "hook_fixture": "tests/fixtures/hooks",
+    "eval": "evals/agent-behavior/samples",
+}
 FORBIDDEN_TARGET_TOKENS = (
     "SKILL.md",
     "src/registry",
@@ -26,7 +31,7 @@ FORBIDDEN_TARGET_TOKENS = (
 
 def supported_target(target: str) -> bool:
     """Return True only for human-review candidate skeleton targets."""
-    normalized = target.strip().replace("\\", "/").strip("/")
+    normalized = _canonical_target(target)
     if any(token.casefold() in normalized.casefold() for token in FORBIDDEN_TARGET_TOKENS):
         return False
     return normalized in ALLOWED_TARGETS
@@ -34,7 +39,7 @@ def supported_target(target: str) -> bool:
 
 def candidate_output_path(repo_root: Path, suggestion: dict[str, Any], target: str | None = None) -> Path:
     """Return the deterministic candidate path for a selected suggestion."""
-    selected_target = (target or str(suggestion.get("promotion_target", ""))).strip().replace("\\", "/")
+    selected_target = _canonical_target(target or str(suggestion.get("promotion_target", "")))
     if not supported_target(selected_target):
         raise ValueError(f"unsupported promotion_target: {selected_target}")
     suggestion_id = str(suggestion.get("id", "")).strip()
@@ -70,9 +75,14 @@ def write_candidate(
     output = candidate_output_path(repo_root, suggestion, target)
     if write:
         output.parent.mkdir(parents=True, exist_ok=True)
-        selected_target = str(target or suggestion.get("promotion_target", "")).strip().replace("\\", "/")
+        selected_target = _canonical_target(target or str(suggestion.get("promotion_target", "")))
         output.write_text(render_candidate(suggestion, selected_target), encoding="utf-8")
     return output
+
+
+def _canonical_target(target: str) -> str:
+    normalized = str(target or "").strip().replace("\\", "/").strip("/")
+    return PROMOTION_TARGET_ALIASES.get(normalized, normalized)
 
 
 def _pressure_candidate(suggestion_id: str, suggestion_type: str) -> str:
@@ -157,4 +167,3 @@ def _memory_gate_fixture_candidate(suggestion_id: str, suggestion_type: str) -> 
 
 def _safe_id(value: str) -> str:
     return "".join(char if char.isalnum() or char in {"-", "_"} else "-" for char in value)[:120]
-

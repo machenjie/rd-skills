@@ -43,6 +43,49 @@ class StopClosureIntegrationTests(unittest.TestCase):
             "stale",
         )
 
+    def test_repair_after_review_without_rereview_blocks_closure(self) -> None:
+        gate = load_stop_gate()
+        state = {
+            "changed_paths": ["src/hook-runtime/scripts/changeforge_common.py"],
+            "risk_surfaces": ["hook-runtime"],
+            "review_evidence_seen": True,
+            "repair_evidence_seen": True,
+        }
+        text = (
+            "Ran python3 scripts/validate-hooks.py, passed, exit 0. "
+            "Residual risk: repair has not been re-reviewed."
+        )
+        assessment = gate._validation_broker_assessment(text, state, "warn")
+        result = assessment["validation_broker_result"]
+
+        self.assertIn("repair_without_rereview", result["negative_evidence"])
+        self.assertEqual(result["closure_outcome"], "blocked")
+        self.assertIn(
+            "validation_broker_blocked",
+            gate._missing_keyword_groups(text, state, {}, None, assessment),
+        )
+
+    def test_unsupported_adapter_is_degraded_not_ready(self) -> None:
+        gate = load_stop_gate()
+        state = {
+            "changed_paths": ["src/hook-runtime/scripts/changeforge_common.py"],
+            "risk_surfaces": ["hook-runtime"],
+            "unsupported_adapter_events": ["PreToolUse"],
+        }
+        text = (
+            "Ran python3 scripts/validate-hooks.py, passed, exit 0. "
+            "Residual risk: adapter does not support PreToolUse."
+        )
+        assessment = gate._validation_broker_assessment(text, state, "warn")
+        result = assessment["validation_broker_result"]
+
+        self.assertTrue(gate._has_validation_evidence(text, state, assessment))
+        self.assertEqual(result["closure_outcome"], "degraded_ready")
+        self.assertNotIn(
+            "validation_broker_degraded_ready",
+            gate._missing_keyword_groups(text, state, {}, None, assessment),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

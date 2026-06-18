@@ -133,11 +133,64 @@ MEMORY_TYPES = {
     "hook_false_negative",
     "repeat_failure",
 }
+MEMORY_KINDS = {
+    "fragile_file",
+    "repeat_failure",
+    "validation_pattern",
+    "review_finding_pattern",
+    "module_convention",
+    "generated_source_mapping",
+    "route_correction",
+    "false_positive_hook",
+    "false_negative_hook",
+}
+MEMORY_KIND_BY_TYPE = {
+    "route_decision": "route_correction",
+    "context_pack": "generated_source_mapping",
+    "implementation_attempt": "module_convention",
+    "validation_result": "validation_pattern",
+    "validated_command": "validation_pattern",
+    "review_finding": "review_finding_pattern",
+    "repair_attempt": "review_finding_pattern",
+    "accepted_decision": "module_convention",
+    "rejected_decision": "module_convention",
+    "fragile_file": "fragile_file",
+    "hook_false_positive": "false_positive_hook",
+    "hook_false_negative": "false_negative_hook",
+    "repeat_failure": "repeat_failure",
+}
+MEMORY_TYPE_BY_KIND = {
+    "fragile_file": "fragile_file",
+    "repeat_failure": "repeat_failure",
+    "validation_pattern": "validation_result",
+    "review_finding_pattern": "review_finding",
+    "module_convention": "implementation_attempt",
+    "generated_source_mapping": "context_pack",
+    "route_correction": "route_decision",
+    "false_positive_hook": "hook_false_positive",
+    "false_negative_hook": "hook_false_negative",
+}
+MEMORY_PRIVACY_CLASSES = {"safe_bounded", "redacted", "rejected_sensitive"}
+MEMORY_SOURCES = {"telemetry", "trajectory", "human", "validator"}
+MEMORY_FORBIDDEN_KEY_TOKENS = (
+    "prompt",
+    "raw_prompt",
+    "stdout",
+    "stderr",
+    "environment",
+    "env",
+    "secret",
+    "password",
+    "api_key",
+    "apikey",
+    "token_value",
+)
 MEMORY_SECRET_VALUE_RE = re.compile(
     r"(secret|password|api[_-]?key|bearer\s+[a-z0-9._-]{12,}|token=)",
     re.IGNORECASE,
 )
 MEMORY_OUTCOMES = {"success", "failed", "partial", "blocked", "unknown"}
+MAX_MEMORY_SUMMARY_LEN = 240
 MAX_TELEMETRY_ITEMS = 50
 MAX_TELEMETRY_VALUE_LEN = 300
 MAX_STATE_ITEMS = 50
@@ -879,6 +932,23 @@ def write_telemetry_event(
     validation_result_coverage_aligned: str = "",
     validation_result_covered_paths: Iterable[str] = (),
     validation_result_covered_risk_surfaces: Iterable[str] = (),
+    validation_broker_closure_outcome: str = "",
+    validation_broker_selected_scope: str = "",
+    validation_broker_negative_evidence: Iterable[str] = (),
+    validation_broker_residual_risk: Iterable[str] = (),
+    validation_broker_command_ledger: Iterable[dict[str, Any]] = (),
+    adapter_name: str = "",
+    adapter_supported_checks: Iterable[str] = (),
+    adapter_unsupported_checks: Iterable[str] = (),
+    adapter_degraded_capabilities: Iterable[str] = (),
+    closure_contract_verdict: str = "",
+    closure_contract_residual_risk: Iterable[str] = (),
+    project_memory_available: bool = True,
+    project_memory_projection_key: str = "",
+    project_memory_included_events: Iterable[str] = (),
+    project_memory_excluded_events: Iterable[str] = (),
+    project_memory_stale_context_gate: str = "",
+    project_memory_residual_risk: Iterable[str] = (),
     implementation_preflight_required: bool = False,
     implementation_preflight_seen: bool = False,
     implementation_preflight_complete: bool = False,
@@ -980,6 +1050,41 @@ def write_telemetry_event(
             "validation_result_covered_risk_surfaces": _capped_items(
                 validation_result_covered_risk_surfaces
             ),
+            "validation_broker_closure_outcome": _telemetry_enum(
+                validation_broker_closure_outcome,
+                {"", "ready", "needs_validation", "degraded_ready", "blocked"},
+            ),
+            "validation_broker_selected_scope": _telemetry_enum(
+                validation_broker_selected_scope,
+                {"", "narrow", "module", "full", "none"},
+            ),
+            "validation_broker_negative_evidence": _capped_items(
+                validation_broker_negative_evidence
+            ),
+            "validation_broker_residual_risk": _capped_items(validation_broker_residual_risk),
+            "validation_broker_command_ledger": _clean_validation_broker_command_ledger(
+                validation_broker_command_ledger
+            ),
+            "adapter_name": _telemetry_runtime(adapter_name),
+            "adapter_supported_checks": _capped_items(adapter_supported_checks),
+            "adapter_unsupported_checks": _capped_items(adapter_unsupported_checks),
+            "adapter_degraded_capabilities": _capped_items(adapter_degraded_capabilities),
+            "closure_contract_verdict": _telemetry_enum(
+                closure_contract_verdict,
+                {"", "ready", "needs_validation", "degraded_ready", "blocked"},
+            ),
+            "closure_contract_residual_risk": _capped_items(closure_contract_residual_risk),
+            "project_memory_available": bool(project_memory_available),
+            "project_memory_projection_key": _memory_clean_scalar(
+                project_memory_projection_key
+            ),
+            "project_memory_included_events": _capped_items(project_memory_included_events),
+            "project_memory_excluded_events": _capped_items(project_memory_excluded_events),
+            "project_memory_stale_context_gate": _telemetry_enum(
+                project_memory_stale_context_gate,
+                {"", "pass", "warn", "block"},
+            ),
+            "project_memory_residual_risk": _capped_items(project_memory_residual_risk),
             "implementation_preflight_required": bool(implementation_preflight_required),
             "implementation_preflight_seen": bool(implementation_preflight_seen),
             "implementation_preflight_complete": bool(implementation_preflight_complete),
@@ -1033,6 +1138,12 @@ def memory_pre_edit_advice(
         if fragile_paths:
             if not evidence["read_file_evidence"]:
                 missing.append("read_file_evidence")
+            if not evidence["owner_source_of_truth_check"]:
+                missing.append("owner_source_of_truth_check")
+            if not evidence["same_pattern_scan"]:
+                missing.append("same_pattern_scan")
+            if not evidence["validator_mapping"]:
+                missing.append("validator_mapping")
             if not evidence["nearby_test_evidence"]:
                 missing.append("nearby_test_evidence")
             if not evidence["memory_summary_evidence"]:
@@ -1047,6 +1158,63 @@ def memory_pre_edit_advice(
     except Exception as exc:
         debug_log(repo, f"memory pre-edit advice failed open: {exc}")
         return {"fragile_paths": [], "repeat_failure": {}, "missing": []}
+
+
+def memory_closure_advice(repo: Path, state: dict | None = None) -> dict[str, Any]:
+    """Return fail-open project-memory closure facts for Stop telemetry."""
+    changed_paths = _capped_items((state or {}).get("changed_paths", []))
+    if not memory_enabled():
+        return {
+            "available": False,
+            "projection_key": "",
+            "included_events": [],
+            "excluded_events": [],
+            "stale_context_gate": "warn" if changed_paths else "pass",
+            "residual_risk": ["project_memory_unavailable"] if changed_paths else [],
+        }
+    try:
+        events = _read_memory_events(repo)
+        included: list[dict[str, Any]] = []
+        excluded: list[str] = []
+        residual: list[str] = []
+        for event in events:
+            event_id = _memory_event_id(event)
+            if event.get("privacy_class") == "rejected_sensitive":
+                excluded.append(f"{event_id}:rejected_sensitive")
+                residual.append("sensitive_memory_event_excluded")
+                continue
+            event_paths = _memory_event_paths(event)
+            if changed_paths and not _memory_paths_overlap(set(changed_paths), set(event_paths)):
+                excluded.append(f"{event_id}:not_relevant_to_changed_paths")
+                continue
+            included.append(event)
+            kind = _memory_event_kind(event)
+            if kind == "fragile_file":
+                residual.append("project_memory_fragile_file")
+            if kind == "repeat_failure":
+                residual.append("project_memory_repeat_failure")
+            if len(included) >= MAX_TELEMETRY_ITEMS:
+                residual.append("project_memory_projection_truncated")
+                break
+        stale_context_gate = "warn" if residual else "pass"
+        return {
+            "available": True,
+            "projection_key": _memory_projection_key(changed_paths, included, excluded),
+            "included_events": [_memory_event_id(event) for event in included[:MAX_TELEMETRY_ITEMS]],
+            "excluded_events": excluded[:MAX_TELEMETRY_ITEMS],
+            "stale_context_gate": stale_context_gate,
+            "residual_risk": _unique(residual)[:MAX_TELEMETRY_ITEMS],
+        }
+    except Exception as exc:
+        debug_log(repo, f"memory closure advice failed open: {exc}")
+        return {
+            "available": False,
+            "projection_key": "",
+            "included_events": [],
+            "excluded_events": [],
+            "stale_context_gate": "warn" if changed_paths else "pass",
+            "residual_risk": ["project_memory_unavailable"] if changed_paths else [],
+        }
 
 
 def _utc_date() -> str:
@@ -1435,6 +1603,57 @@ def _capped_items(values: Iterable[str]) -> list[str]:
     return _unique(out)
 
 
+def _clean_validation_broker_command_ledger(values: Iterable[dict[str, Any]]) -> list[dict[str, object]]:
+    out: list[dict[str, object]] = []
+    if isinstance(values, (str, bytes)):
+        return out
+    for raw in values or ():
+        if not isinstance(raw, dict):
+            continue
+        out.append(
+            {
+                "command_kind": _telemetry_enum(
+                    raw.get("command_kind"),
+                    {"", "narrow", "module", "full", "unknown"},
+                ),
+                "command_display_safe": str(raw.get("command_display_safe") or "").strip()[
+                    :MAX_TELEMETRY_VALUE_LEN
+                ],
+                "scope": _telemetry_enum(
+                    raw.get("scope"),
+                    {"", "narrow", "module", "full", "none", "unknown"},
+                ),
+                "outcome": _telemetry_enum(
+                    raw.get("outcome"),
+                    {
+                        "",
+                        "passed",
+                        "failed",
+                        "not_run",
+                        "not_verified",
+                        "stale",
+                        "partial",
+                        "unknown",
+                    },
+                ),
+                "finished_at_or_order": str(raw.get("finished_at_or_order") or "").strip()[
+                    :MAX_TELEMETRY_VALUE_LEN
+                ],
+                "covered_paths": _capped_items(raw.get("covered_paths", []) or []),
+                "covered_risk_surfaces": _capped_items(
+                    raw.get("covered_risk_surfaces", []) or []
+                ),
+                "evidence_strength": _telemetry_enum(
+                    raw.get("evidence_strength"),
+                    {"", "none", "weak", "partial", "strong", "negative"},
+                ),
+            }
+        )
+        if len(out) >= 10:
+            break
+    return out
+
+
 def _memory_capped_items(values: Iterable[str]) -> list[str]:
     out: list[str] = []
     for raw in values:
@@ -1454,28 +1673,87 @@ def _memory_clean_scalar(value: object) -> str:
     return text[:MAX_TELEMETRY_VALUE_LEN]
 
 
+def _memory_clean_summary(value: object, *, default: str = "") -> str:
+    text = _memory_clean_scalar(value) or default
+    return text[:MAX_MEMORY_SUMMARY_LEN]
+
+
+def _memory_enum(value: object, allowed: set[str], default: str) -> str:
+    text = _memory_clean_scalar(value)
+    return text if text in allowed else default
+
+
 def _telemetry_enum(value: object, allowed: set[str]) -> str:
     text = str(value or "").strip()
     return text if text in allowed else ""
 
 
+def _telemetry_runtime(value: object) -> str:
+    text = str(value or "").strip().casefold().replace("_", "-")
+    allowed = {
+        "",
+        "codex",
+        "claude",
+        "copilot",
+        "generic",
+        "unknown",
+        "cline",
+        "openhands",
+        "gemini-cli",
+        "goose",
+    }
+    return text if text in allowed else "unknown"
+
+
 def _sanitize_memory_event(repo: Path, event: dict[str, Any]) -> dict[str, Any]:
     source = event if isinstance(event, dict) else {}
-    paths = _memory_clean_paths(repo, source.get("paths", []))
+    raw_kind = _memory_enum(source.get("kind"), MEMORY_KINDS, "")
+    event_type = _memory_enum(
+        source.get("type"),
+        MEMORY_TYPES,
+        MEMORY_TYPE_BY_KIND.get(raw_kind, "implementation_attempt"),
+    )
+    kind = raw_kind or MEMORY_KIND_BY_TYPE.get(event_type, "module_convention")
+    paths = _memory_clean_paths(repo, source.get("bounded_paths") or source.get("paths", []))
     owner = _memory_clean_scalar(source.get("owner_skill", ""))
-    event_type = str(source.get("type", "implementation_attempt")).strip()
-    if event_type not in MEMORY_TYPES:
-        event_type = "implementation_attempt"
-    outcome = str(source.get("outcome", "unknown")).strip()
-    if outcome not in MEMORY_OUTCOMES:
-        outcome = "unknown"
+    outcome = _memory_enum(source.get("outcome"), MEMORY_OUTCOMES, "unknown")
+    timestamp = _memory_clean_scalar(
+        source.get("timestamp") or source.get("created_at")
+    ) or datetime.now(timezone.utc).isoformat()
+    repo_hash = _memory_clean_scalar(source.get("repo_hash") or _repo_hash(repo))
+    summary = _memory_clean_summary(
+        source.get("summary"),
+        default=_memory_summary_from_event(kind, paths, outcome),
+    )
+    sensitive_input = _memory_contains_forbidden_key(source) or _memory_contains_sensitive_value(source)
+    privacy_default = "redacted" if sensitive_input else "safe_bounded"
+    event_id = _memory_clean_scalar(source.get("event_id"))
+    if not event_id:
+        event_id = _memory_deterministic_event_id(repo_hash, timestamp, kind, paths, summary, source)
+    elif not event_id.startswith("mem_"):
+        event_id = "mem_" + _hash_text(event_id)
+    task_fingerprint = _memory_clean_scalar(source.get("task_fingerprint"))
+    if not task_fingerprint:
+        task_fingerprint = _memory_task_fingerprint(paths, owner, source.get("kind") or source.get("type"))
     return {
         "schema_version": MEMORY_SCHEMA_VERSION,
-        "event_id": _memory_clean_scalar(source.get("event_id") or f"mem-{uuid.uuid4().hex[:24]}"),
-        "repo_hash": _memory_clean_scalar(source.get("repo_hash") or _repo_hash(repo)),
-        "task_fingerprint": str(
-            source.get("task_fingerprint") or _memory_task_fingerprint(paths, owner, "")
-        )[:MAX_TELEMETRY_VALUE_LEN],
+        "event_id": event_id,
+        "repo_hash": repo_hash,
+        "commit_sha": _memory_clean_scalar(source.get("commit_sha")),
+        "timestamp": timestamp[:80],
+        "kind": kind,
+        "bounded_paths": paths,
+        "summary": summary,
+        "privacy_class": _memory_enum(
+            source.get("privacy_class"),
+            MEMORY_PRIVACY_CLASSES,
+            privacy_default,
+        ),
+        "retention_policy": _memory_clean_scalar(
+            source.get("retention_policy")
+        ) or _memory_default_retention_policy(kind),
+        "source": _memory_enum(source.get("source"), MEMORY_SOURCES, "telemetry"),
+        "task_fingerprint": task_fingerprint[:MAX_TELEMETRY_VALUE_LEN],
         "type": event_type,
         "paths": paths,
         "symbols": _memory_capped_items(source.get("symbols", [])),
@@ -1486,7 +1764,7 @@ def _sanitize_memory_event(repo: Path, event: dict[str, Any]) -> dict[str, Any]:
         "evidence_refs": _memory_capped_items(source.get("evidence_refs", [])),
         "confidence": _memory_confidence(source.get("confidence")),
         "promotion_status": _memory_promotion_status(source.get("promotion_status")),
-        "created_at": str(source.get("created_at") or datetime.now(timezone.utc).isoformat())[:80],
+        "created_at": timestamp[:80],
     }
 
 
@@ -1505,6 +1783,7 @@ def _memory_event_from_telemetry_record(repo: Path, record: dict[str, Any]) -> d
         return None
     owner = str(record.get("owner_skill") or "").strip()
     event_type = _memory_type_from_telemetry(record)
+    kind = _memory_kind_from_telemetry(record, event_type)
     outcome = _memory_outcome_from_telemetry(record)
     evidence_refs = [
         f"hook:{record.get('hook_name', '')}",
@@ -1520,10 +1799,21 @@ def _memory_event_from_telemetry_record(repo: Path, record: dict[str, Any]) -> d
         evidence_refs.append(f"fresh_after_last_edit:{record.get('validation_result_fresh_after_last_edit')}")
     if record.get("validation_result_negative_reason"):
         evidence_refs.append(f"negative_reason:{record.get('validation_result_negative_reason')}")
+    if record.get("validation_broker_closure_outcome"):
+        evidence_refs.append(f"validation_broker:{record.get('validation_broker_closure_outcome')}")
+    for item in _memory_capped_items(record.get("validation_broker_negative_evidence", []) or [])[:5]:
+        evidence_refs.append(f"validation_negative:{item}")
     if record.get("implementation_preflight_blocked"):
         evidence_refs.append("implementation_preflight_blocked")
     return {
         "repo_hash": record.get("repo_hash") or _repo_hash(repo),
+        "timestamp": record.get("timestamp_utc") or datetime.now(timezone.utc).isoformat(),
+        "kind": kind,
+        "bounded_paths": paths,
+        "summary": _memory_summary_from_event(kind, paths, outcome),
+        "privacy_class": "safe_bounded",
+        "retention_policy": _memory_default_retention_policy(kind),
+        "source": "telemetry",
         "task_fingerprint": _memory_task_fingerprint(paths, owner, ""),
         "type": event_type,
         "paths": paths,
@@ -1553,9 +1843,32 @@ def _memory_type_from_telemetry(record: dict[str, Any]) -> str:
     return "implementation_attempt"
 
 
+def _memory_kind_from_telemetry(record: dict[str, Any], event_type: str) -> str:
+    findings = record.get("hook_findings")
+    if isinstance(findings, dict):
+        if findings.get("review_findings") or findings.get("repair_findings"):
+            return "review_finding_pattern"
+        if findings.get("structure_findings"):
+            return "module_convention"
+    if record.get("validation_command_detected") or event_type in {"validation_result", "validated_command"}:
+        return "validation_pattern"
+    if event_type == "hook_false_positive":
+        return "false_positive_hook"
+    if event_type == "hook_false_negative":
+        return "false_negative_hook"
+    return MEMORY_KIND_BY_TYPE.get(event_type, "module_convention")
+
+
 def _memory_outcome_from_telemetry(record: dict[str, Any]) -> str:
     if record.get("implementation_preflight_blocked"):
         return "blocked"
+    broker_outcome = record.get("validation_broker_closure_outcome")
+    if broker_outcome == "blocked":
+        return "blocked"
+    if broker_outcome in {"needs_validation", "degraded_ready"}:
+        return "partial"
+    if broker_outcome == "ready" and record.get("validation_evidence_detected"):
+        return "success"
     if record.get("validation_result_negative_reason") in {"stale", "failed"}:
         return "failed"
     if record.get("validation_result_outcome") == "fail":
@@ -1615,16 +1928,20 @@ def _memory_fragile_paths(events: list[dict[str, Any]], paths: list[str]) -> lis
     for event in events:
         if not _memory_fragile_signal(event):
             continue
-        for path in event.get("paths", []) or []:
+        for path in _memory_event_paths(event):
             item = str(path)
             counts[item] = counts.get(item, 0) + 1
     return [path for path in paths if counts.get(path, 0) >= 2][:MAX_TELEMETRY_ITEMS]
 
 
 def _memory_fragile_signal(event: dict[str, Any]) -> bool:
-    if event.get("type") in {"review_finding", "repair_attempt", "fragile_file"}:
+    kind = _memory_event_kind(event)
+    event_type = str(event.get("type") or "")
+    if kind in {"fragile_file", "review_finding_pattern"}:
         return True
-    return event.get("type") == "validation_result" and event.get("outcome") in {"failed", "blocked"}
+    if event_type in {"review_finding", "repair_attempt", "fragile_file"}:
+        return True
+    return event_type == "validation_result" and event.get("outcome") in {"failed", "blocked"}
 
 
 def _memory_repeat_failure(
@@ -1656,9 +1973,7 @@ def _memory_repeat_failure(
     return {
         "repeated": repeated,
         "failure_count": min(len(failures), 2),
-        "matched_paths": _unique(
-            path for event in failures[:2] for path in event.get("paths", []) or []
-        ),
+        "matched_paths": _unique(path for event in failures[:2] for path in _memory_event_paths(event)),
         "required_next_gate": "failure-diagnosis",
         "allowed_to_continue": not repeated,
     }
@@ -1682,12 +1997,56 @@ def _memory_matching_failures(
             continue
         if owner and event.get("owner_skill") != owner:
             continue
-        if not (path_set & set(event.get("paths", []) or [])):
+        if not _memory_paths_overlap(path_set, set(_memory_event_paths(event))):
             continue
         if event.get("outcome") not in {"failed", "blocked"}:
             continue
         failures.append(event)
     return failures
+
+
+def _memory_event_id(event: dict[str, Any]) -> str:
+    return _memory_clean_scalar(event.get("event_id")) or "unknown"
+
+
+def _memory_event_paths(event: dict[str, Any]) -> list[str]:
+    values = event.get("bounded_paths")
+    if not isinstance(values, list):
+        values = event.get("paths")
+    if not isinstance(values, list):
+        return []
+    return _memory_capped_items(values)
+
+
+def _memory_event_kind(event: dict[str, Any]) -> str:
+    kind = str(event.get("kind") or "").strip()
+    if kind:
+        return kind
+    return MEMORY_KIND_BY_TYPE.get(str(event.get("type") or "").strip(), "module_convention")
+
+
+def _memory_paths_overlap(left_paths: set[str], right_paths: set[str]) -> bool:
+    if left_paths & right_paths:
+        return True
+    for left in left_paths:
+        for right in right_paths:
+            if left.startswith(f"{right}/") or right.startswith(f"{left}/"):
+                return True
+    return False
+
+
+def _memory_projection_key(
+    changed_paths: list[str],
+    included: list[dict[str, Any]],
+    excluded: list[str],
+) -> str:
+    payload = {
+        "changed_paths": sorted(changed_paths),
+        "included": sorted(_memory_event_id(event) for event in included),
+        "excluded": sorted(excluded),
+        "determinism_version": 1,
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()[:24]
 
 
 def _memory_pre_edit_evidence(state: dict, assistant_text: str) -> dict[str, bool]:
@@ -1697,6 +2056,21 @@ def _memory_pre_edit_evidence(state: dict, assistant_text: str) -> dict[str, boo
             state.get("read_evidence_seen")
             or state.get("read_paths")
             or "read_evidence" in lowered
+        ),
+        "owner_source_of_truth_check": bool(
+            "source of truth" in lowered
+            or "owner source" in lowered
+            or state.get("repository_context_seen")
+        ),
+        "same_pattern_scan": bool(
+            state.get("searched_patterns")
+            or "same-pattern" in lowered
+            or "same pattern" in lowered
+        ),
+        "validator_mapping": bool(
+            state.get("validation_command_seen")
+            or "validator mapping" in lowered
+            or "validation broker" in lowered
         ),
         "nearby_test_evidence": bool(
             state.get("validation_command_seen")
@@ -1760,6 +2134,62 @@ def _memory_confidence(value: object) -> str:
 def _memory_promotion_status(value: object) -> str:
     text = str(value or "").strip()
     return text if text in {"raw", "candidate", "approved", "rejected"} else "raw"
+
+
+def _memory_summary_from_event(kind: str, paths: list[str], outcome: str) -> str:
+    path_text = ", ".join(paths[:3]) if paths else "no bounded path"
+    return f"{kind} memory signal for {path_text}; outcome={outcome}"
+
+
+def _memory_default_retention_policy(kind: str) -> str:
+    if kind in {"false_positive_hook", "false_negative_hook"}:
+        return "retain_until_human_review"
+    if kind in {"fragile_file", "repeat_failure"}:
+        return "retain_90_days_or_until_superseded"
+    return "retain_30_days_or_until_superseded"
+
+
+def _memory_contains_forbidden_key(data: Any) -> bool:
+    if isinstance(data, dict):
+        for key, value in data.items():
+            key_text = str(key).casefold()
+            if any(token in key_text for token in MEMORY_FORBIDDEN_KEY_TOKENS):
+                return True
+            if _memory_contains_forbidden_key(value):
+                return True
+    elif isinstance(data, list):
+        return any(_memory_contains_forbidden_key(item) for item in data)
+    return False
+
+
+def _memory_contains_sensitive_value(data: Any) -> bool:
+    if isinstance(data, dict):
+        return any(_memory_contains_sensitive_value(value) for value in data.values())
+    if isinstance(data, list):
+        return any(_memory_contains_sensitive_value(item) for item in data)
+    if isinstance(data, str):
+        return bool(MEMORY_SECRET_VALUE_RE.search(data))
+    return False
+
+
+def _memory_deterministic_event_id(
+    repo_hash: str,
+    timestamp: str,
+    kind: str,
+    paths: list[str],
+    summary: str,
+    source: dict[str, Any],
+) -> str:
+    payload = {
+        "repo_hash": repo_hash,
+        "timestamp": timestamp,
+        "kind": kind,
+        "paths": sorted(paths),
+        "summary": summary,
+        "source": _memory_clean_scalar(source.get("source")),
+        "evidence_refs": _memory_capped_items(source.get("evidence_refs", [])),
+    }
+    return "mem_" + hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()[:24]
 
 
 def _clean_findings(findings: dict[str, Iterable[str]] | None) -> dict[str, list[str]]:

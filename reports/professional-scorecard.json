@@ -65,7 +65,7 @@
       "verification_command": "python3 scripts/eval-professional-agent-samples.py --promoted-only --strict"
     },
     {
-      "detail": "{\"evidence_boundary\": \"structural/local fixtures only; no empirical before/after agent performance\", \"fixtures\": 3, \"live_pass_rate\": \"not_collected\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\", \"verdicts\": {\"structural_pass\": 3}}",
+      "detail": "{\"candidate_fixtures_ignored\": 0, \"evidence_boundary\": \"structural/local fixtures only; no empirical before/after agent performance\", \"evidence_levels\": {\"live pass-rate\": \"not_collected\", \"promoted golden case\": \"not_collected\", \"runtime telemetry sample\": \"not_collected\", \"structural fixture\": 3, \"token overhead\": \"not_collected\", \"turn overhead\": \"not_collected\"}, \"fixtures\": 3, \"live_pass_rate\": \"not_collected\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\", \"verdicts\": {\"structural_pass\": 3}}",
       "fix_hint": "Repair skill-efficacy fixture structure; do not claim live pass-rate evidence without measured runs.",
       "name": "Skill efficacy structural fixtures",
       "source": "evals/skill-efficacy and scripts/validate-skill-efficacy-benchmarks.py",
@@ -73,7 +73,7 @@
       "verification_command": "python3 scripts/validate-skill-efficacy-benchmarks.py"
     },
     {
-      "detail": "{\"evidence_boundary\": \"structural/local fixtures only; no live empirical pass-rate or runtime overhead evidence\", \"suites\": {\"executor-adapters\": {\"fixtures\": 3, \"required_capability\": \"executor-adapter-protocol\", \"required_capability_hits\": 3}, \"project-memory\": {\"fixtures\": 3, \"required_capability\": \"project-memory-governance\", \"required_capability_hits\": 3}, \"repository-intelligence\": {\"fixtures\": 3, \"required_capability\": \"repository-graph-analysis\", \"required_capability_hits\": 3}, \"trajectory\": {\"fixtures\": 3, \"required_capability\": \"execution-trajectory-analysis\", \"required_capability_hits\": 3}, \"validation-broker\": {\"fixtures\": 3, \"required_capability\": \"validation-broker\", \"required_capability_hits\": 3}}, \"total_fixtures\": 15}",
+      "detail": "{\"candidate_fixtures_ignored\": 0, \"evidence_boundary\": \"structural/local fixtures only; no live empirical pass-rate or runtime overhead evidence\", \"evidence_levels\": {\"live pass-rate\": \"not_collected\", \"promoted golden case\": \"not_collected\", \"runtime telemetry sample\": \"not_collected\", \"structural fixture\": 15, \"token overhead\": \"not_collected\", \"turn overhead\": \"not_collected\"}, \"suites\": {\"executor-adapters\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"executor-adapter-protocol\", \"required_capability_hits\": 3}, \"project-memory\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"project-memory-governance\", \"required_capability_hits\": 3}, \"repository-intelligence\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"repository-graph-analysis\", \"required_capability_hits\": 3}, \"trajectory\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"execution-trajectory-analysis\", \"required_capability_hits\": 3}, \"validation-broker\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"validation-broker\", \"required_capability_hits\": 3}}, \"total_fixtures\": 15}",
       "fix_hint": "Repair runtime-governance fixture structure; do not treat structural fixtures as live runtime pass-rate evidence.",
       "name": "Runtime governance structural fixtures",
       "source": "evals/executor-adapters, evals/repository-intelligence, evals/project-memory, evals/validation-broker, evals/trajectory",
@@ -129,6 +129,32 @@
       "verification_command": "python3 scripts/validate-installation.py"
     }
   ],
+  "evidence_levels": {
+    "live pass-rate": {
+      "meaning": "Measured real-task success rate.",
+      "status": "not_collected"
+    },
+    "promoted golden case": {
+      "meaning": "Human-reviewed case admitted to regression coverage.",
+      "status": "pass"
+    },
+    "runtime telemetry sample": {
+      "meaning": "Actual runtime fact sample; may still require human review.",
+      "status": "not_collected"
+    },
+    "structural fixture": {
+      "meaning": "Local deterministic structure sample passed; not evidence of live task success.",
+      "status": "pass"
+    },
+    "token overhead": {
+      "meaning": "Measured additional token cost.",
+      "status": "not_collected"
+    },
+    "turn overhead": {
+      "meaning": "Measured additional turn cost.",
+      "status": "not_collected"
+    }
+  },
   "generated_by": "scripts/generate-professional-scorecard.py",
   "profile_counts": {
     "dev": {

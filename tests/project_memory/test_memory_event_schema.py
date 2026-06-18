@@ -17,6 +17,7 @@ class MemoryEventSchemaTests(unittest.TestCase):
         schema_dir = ROOT / "src" / "project_memory" / "schemas"
         for name in (
             "memory-event.v1.schema.json",
+            "memory-projection.v1.schema.json",
             "memory-summary.v1.schema.json",
             "memory-query.v1.schema.json",
             "memory-decision.v1.schema.json",
@@ -33,12 +34,29 @@ class MemoryEventSchemaTests(unittest.TestCase):
             )
         )
         required = set(data["required"])
+        self.assertIn("kind", required)
+        self.assertIn("bounded_paths", required)
+        self.assertIn("timestamp", required)
+        self.assertIn("privacy_class", required)
         self.assertIn("task_fingerprint", required)
         self.assertIn("promotion_status", required)
         self.assertIn("route_decision", data["properties"]["type"]["enum"])
         self.assertIn("repeat_failure", data["properties"]["type"]["enum"])
+        self.assertIn("validation_pattern", data["properties"]["kind"]["enum"])
+
+    def test_memory_projection_schema_documents_source_check_contract(self) -> None:
+        data = json.loads(
+            (ROOT / "src" / "project_memory" / "schemas" / "memory-projection.v1.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        body = data["properties"]["project_memory_projection"]
+        self.assertIn("source_check_required", body["required"])
+        self.assertEqual(
+            body["properties"]["source_check_required"],
+            {"type": "boolean", "const": True},
+        )
 
 
 if __name__ == "__main__":
     unittest.main()
-

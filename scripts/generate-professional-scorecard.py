@@ -23,6 +23,14 @@ from validation_utils import (
 ROOT = Path(__file__).resolve().parents[1]
 PROFILES = ("recommended", "full", "dev")
 STATUSES = ("pass", "partial", "fail", "unknown", "not_collected")
+EVIDENCE_LEVELS = {
+    "structural fixture": "Local deterministic structure sample passed; not evidence of live task success.",
+    "runtime telemetry sample": "Actual runtime fact sample; may still require human review.",
+    "promoted golden case": "Human-reviewed case admitted to regression coverage.",
+    "live pass-rate": "Measured real-task success rate.",
+    "token overhead": "Measured additional token cost.",
+    "turn overhead": "Measured additional turn cost.",
+}
 RUNTIME_GOVERNANCE_FIXTURE_SUITES = {
     "executor-adapters": "executor-adapter-protocol",
     "repository-intelligence": "repository-graph-analysis",
@@ -254,6 +262,8 @@ def skill_efficacy_status(root: Path) -> tuple[str, str]:
 
     valid_verdicts = {"structural_pass", "measured_pass", "inconclusive", "blocked"}
     verdicts: dict[str, int] = {}
+    reviewed_count = 0
+    candidate_ignored = 0
     token_not_collected = 0
     turn_not_collected = 0
     invalid: list[str] = []
@@ -262,6 +272,10 @@ def skill_efficacy_status(root: Path) -> tuple[str, str]:
         if not isinstance(data, dict):
             invalid.append(path.name)
             continue
+        if _human_review_candidate(data):
+            candidate_ignored += 1
+            continue
+        reviewed_count += 1
         verdict = data.get("verdict")
         status = verdict.get("status") if isinstance(verdict, dict) else None
         if not isinstance(status, str) or status not in valid_verdicts:
@@ -276,17 +290,29 @@ def skill_efficacy_status(root: Path) -> tuple[str, str]:
                 turn_not_collected += 1
 
     detail = {
-        "fixtures": len(paths),
+        "fixtures": reviewed_count,
+        "candidate_fixtures_ignored": candidate_ignored,
         "verdicts": verdicts,
         "live_pass_rate": "not_collected",
         "token_overhead": "not_collected"
-        if token_not_collected == len(paths)
+        if token_not_collected == reviewed_count
         else "partially_collected",
         "turn_overhead": "not_collected"
-        if turn_not_collected == len(paths)
+        if turn_not_collected == reviewed_count
         else "partially_collected",
         "evidence_boundary": "structural/local fixtures only; no empirical before/after agent performance",
+        "evidence_levels": {
+            "structural fixture": reviewed_count,
+            "runtime telemetry sample": "not_collected",
+            "promoted golden case": "not_collected",
+            "live pass-rate": "not_collected",
+            "token overhead": "not_collected",
+            "turn overhead": "not_collected",
+        },
     }
+    if reviewed_count < 3:
+        detail["invalid"] = invalid + ["reviewed_fixture_count_below_3"]
+        return "fail", json.dumps(detail, sort_keys=True)
     if invalid:
         detail["invalid"] = invalid
         return "fail", json.dumps(detail, sort_keys=True)
@@ -297,26 +323,46 @@ def runtime_governance_fixture_status(root: Path) -> tuple[str, str]:
     """Return structural fixture coverage for runtime-governance capability suites."""
     rows: dict[str, dict[str, Any]] = {}
     invalid: list[str] = []
+    candidate_ignored_total = 0
     for suite, required_capability in RUNTIME_GOVERNANCE_FIXTURE_SUITES.items():
         suite_dir = root / "evals" / suite
         paths = sorted(suite_dir.glob("*.yaml")) if suite_dir.is_dir() else []
-        hit_count = 0
+        reviewed_paths = []
+        candidate_ignored = 0
         for path in paths:
+            data = load_yaml_file(path)
+            if isinstance(data, dict) and _human_review_candidate(data):
+                candidate_ignored += 1
+                continue
+            reviewed_paths.append(path)
+        candidate_ignored_total += candidate_ignored
+        hit_count = 0
+        for path in reviewed_paths:
             data = load_yaml_file(path)
             expected = data.get("expected_capabilities") if isinstance(data, dict) else None
             if isinstance(expected, list) and required_capability in {str(item).strip() for item in expected}:
                 hit_count += 1
-        if len(paths) < 3 or hit_count < 3:
+        if len(reviewed_paths) < 3 or hit_count < 3:
             invalid.append(suite)
         rows[suite] = {
-            "fixtures": len(paths),
+            "fixtures": len(reviewed_paths),
+            "candidate_fixtures_ignored": candidate_ignored,
             "required_capability": required_capability,
             "required_capability_hits": hit_count,
         }
     detail = {
         "suites": rows,
         "total_fixtures": sum(row["fixtures"] for row in rows.values()),
+        "candidate_fixtures_ignored": candidate_ignored_total,
         "evidence_boundary": "structural/local fixtures only; no live empirical pass-rate or runtime overhead evidence",
+        "evidence_levels": {
+            "structural fixture": sum(row["fixtures"] for row in rows.values()),
+            "runtime telemetry sample": "not_collected",
+            "promoted golden case": "not_collected",
+            "live pass-rate": "not_collected",
+            "token overhead": "not_collected",
+            "turn overhead": "not_collected",
+        },
     }
     if invalid:
         detail["invalid"] = invalid
@@ -348,6 +394,10 @@ def _summary_status(name: str, value: dict[str, Any]) -> str:
             return "partial"
         return "pass" if value.get("count") == EXPECTED_PROFESSIONAL_SKILL_COUNT else "partial"
     return "partial"
+
+
+def _human_review_candidate(data: dict[str, Any]) -> bool:
+    return data.get("generated_from_telemetry") is True and data.get("requires_human_review") is True
 
 
 def _release_readiness_dimension(reports_dir: Path, key: str, *, name: str, command: str, fix_hint: str) -> Dimension:
@@ -600,6 +650,9 @@ def render_markdown(payload: dict[str, Any]) -> str:
     ]
     for status, count in payload["status_summary"].items():
         lines.append(f"- `{status}`: {count}")
+    lines.extend(["", "## Evidence Levels", "", "| Evidence | Status | Meaning |", "| --- | --- | --- |"])
+    for level, detail in payload["evidence_levels"].items():
+        lines.append(f"| {level} | `{detail['status']}` | {detail['meaning']} |")
     lines.extend(["", "## Dimensions", "", "| Dimension | Status | Source | Verification |", "| --- | --- | --- | --- |"])
     for dimension in payload["dimensions"]:
         lines.append(
@@ -624,9 +677,36 @@ def generate_scorecard(root: Path, reports_dir: Path) -> dict[str, Any]:
         "schema_version": 1,
         "generated_by": "scripts/generate-professional-scorecard.py",
         "status_summary": _summary(dimensions),
+        "evidence_levels": _evidence_levels(dimensions),
         "dimensions": dimension_payload,
         **metadata,
     }
+
+
+def _evidence_levels(dimensions: list[Dimension]) -> dict[str, dict[str, str]]:
+    promoted_status = _status_for_dimension(dimensions, "Promoted agent samples")
+    return {
+        level: {
+            "status": _evidence_level_status(level, promoted_status),
+            "meaning": meaning,
+        }
+        for level, meaning in EVIDENCE_LEVELS.items()
+    }
+
+
+def _status_for_dimension(dimensions: list[Dimension], name: str) -> str:
+    for dimension in dimensions:
+        if dimension.name == name:
+            return dimension.status
+    return "unknown"
+
+
+def _evidence_level_status(level: str, promoted_status: str) -> str:
+    if level == "structural fixture":
+        return "pass"
+    if level == "promoted golden case":
+        return promoted_status if promoted_status in STATUSES else "unknown"
+    return "not_collected"
 
 
 def strict_profile_build_errors(payload: dict[str, Any]) -> list[str]:

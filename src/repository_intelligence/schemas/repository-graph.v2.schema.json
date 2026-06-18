@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "changeforge.repository-graph.v2",
+  "title": "ChangeForge RepositoryGraph v2",
+  "type": "object",
+  "required": ["repository_graph"],
+  "properties": {
+    "repository_graph": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "repo_hash",
+        "commit_sha",
+        "created_at",
+        "files",
+        "symbols",
+        "edges",
+        "module_boundaries",
+        "ownership",
+        "generated_artifacts",
+        "validation_candidates",
+        "freshness"
+      ],
+      "properties": {
+        "schema_version": {"const": 2},
+        "repo_hash": {"type": "string"},
+        "artifact_hash": {"type": "string"},
+        "commit_sha": {"type": ["string", "null"]},
+        "created_at": {"type": "string"},
+        "indexed_at": {"type": "string"},
+        "indexed_commit": {"type": ["string", "null"]},
+        "files": {"type": "array"},
+        "symbols": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "kind", "path", "line", "visibility", "language", "confidence"],
+            "properties": {
+              "name": {"type": "string"},
+              "kind": {
+                "enum": ["function", "class", "method", "constant", "heading", "config_key", "unknown"]
+              },
+              "path": {"type": "string"},
+              "line": {"type": ["integer", "number", "string"]},
+              "visibility": {"type": "string"},
+              "owner_object": {},
+              "parent_symbol": {},
+              "language": {"type": "string"},
+              "confidence": {"type": "string"}
+            }
+          }
+        },
+        "edges": {"type": "array"},
+        "module_boundaries": {"type": "array"},
+        "ownership": {"type": "array"},
+        "generated_artifacts": {"type": "array"},
+        "validation_candidates": {"type": "array"},
+        "freshness": {"type": "object"}
+      }
+    }
+  }
+}

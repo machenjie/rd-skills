@@ -10,6 +10,17 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 - `unknown`: 0
 - `not_collected`: 2
 
+## Evidence Levels
+
+| Evidence | Status | Meaning |
+| --- | --- | --- |
+| structural fixture | `pass` | Local deterministic structure sample passed; not evidence of live task success. |
+| runtime telemetry sample | `not_collected` | Actual runtime fact sample; may still require human review. |
+| promoted golden case | `pass` | Human-reviewed case admitted to regression coverage. |
+| live pass-rate | `not_collected` | Measured real-task success rate. |
+| token overhead | `not_collected` | Measured additional token cost. |
+| turn overhead | `not_collected` | Measured additional turn cost. |
+
 ## Dimensions
 
 | Dimension | Status | Source | Verification |

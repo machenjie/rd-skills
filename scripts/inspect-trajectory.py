@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -70,6 +71,8 @@ def main() -> int:
                     "path": skeleton["path"],
                     "target": skeleton["target"],
                     "requires_human_review": skeleton["requires_human_review"],
+                    "generated_from_telemetry": True,
+                    "source_suggestion_id": _source_suggestion_id_from_content(str(skeleton.get("content") or "")),
                     "written": bool(args.write_candidates),
                 }
                 for skeleton in skeletons
@@ -82,6 +85,18 @@ def main() -> int:
     else:
         print(rendered, end="")
     return 0
+
+
+def _source_suggestion_id_from_content(content: str) -> str:
+    for line in content.splitlines():
+        if line.startswith("source_suggestion_id:"):
+            return line.split(":", 1)[1].strip()
+    try:
+        parsed = json.loads(content)
+    except json.JSONDecodeError:
+        return ""
+    value = parsed.get("source_suggestion_id") if isinstance(parsed, dict) else ""
+    return str(value or "")
 
 
 if __name__ == "__main__":

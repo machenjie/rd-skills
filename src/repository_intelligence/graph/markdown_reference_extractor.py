@@ -71,20 +71,34 @@ def extract_markdown_source(source: str, source_path: str = "") -> dict[str, Any
     headings: list[dict[str, object]] = []
     references: list[dict[str, object]] = []
     body_start_line = source[: len(source) - len(body)].count("\n")
+    heading_stack: list[dict[str, object]] = []
 
     for offset, line in enumerate(body.splitlines(), start=1):
         line_number = body_start_line + offset
         heading_match = HEADING_RE.match(line)
         if heading_match:
+            level = len(heading_match.group(1))
+            while heading_stack and int(heading_stack[-1]["level"]) >= level:
+                heading_stack.pop()
+            parent = str(heading_stack[-1]["name"]) if heading_stack else None
+            heading = {
+                "name": heading_match.group(2).strip(),
+                "kind": "heading",
+                "path": source_path,
+                "line": line_number,
+                "level": level,
+                "line_start": line_number,
+                "line_end": line_number,
+                "visibility": "public",
+                "owner_object": frontmatter.get("name"),
+                "parent_symbol": parent,
+                "language": "markdown",
+                "confidence": "high",
+            }
             headings.append(
-                {
-                    "name": heading_match.group(2).strip(),
-                    "kind": "heading",
-                    "level": len(heading_match.group(1)),
-                    "line_start": line_number,
-                    "line_end": line_number,
-                }
+                heading
             )
+            heading_stack.append(heading)
 
         for match in LINK_RE.finditer(line):
             raw_target = match.group(2).strip()

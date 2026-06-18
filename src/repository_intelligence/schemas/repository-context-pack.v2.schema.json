@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "changeforge.repository-context-pack.v2",
+  "title": "ChangeForge TaskContextPack v2",
+  "type": "object",
+  "required": ["task_context_pack"],
+  "properties": {
+    "task_context_pack": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "task",
+        "graph_source",
+        "freshness",
+        "selected_files",
+        "selected_symbols",
+        "caller_callee_edges",
+        "imports",
+        "references",
+        "related_tests",
+        "validation_candidates",
+        "source_of_truth",
+        "generated_artifacts",
+        "ownership",
+        "reuse_candidates",
+        "rejected_locations",
+        "anti_bloat_decision",
+        "omitted_nodes",
+        "residual_risk"
+      ],
+      "properties": {
+        "schema_version": {"const": 2},
+        "task": {"type": "string"},
+        "task_goal": {"type": "string"},
+        "graph_source": {"type": "object"},
+        "freshness": {"type": "object"},
+        "changed_paths": {"type": "array", "items": {"type": "string"}},
+        "selected_files": {"type": "array"},
+        "selected_symbols": {"type": "array"},
+        "caller_callee_edges": {"type": "array"},
+        "imports": {"type": "array"},
+        "references": {"type": "array"},
+        "related_tests": {"type": "array"},
+        "validation_candidates": {"type": "array"},
+        "source_of_truth": {"type": "array"},
+        "generated_artifacts": {"type": "array"},
+        "ownership": {"type": "array"},
+        "reuse_candidates": {"type": "array"},
+        "rejected_locations": {"type": "array"},
+        "anti_bloat_decision": {"type": "object"},
+        "omitted_nodes": {"type": "array"},
+        "residual_risk": {"type": "array"}
+      }
+    }
+  }
+}

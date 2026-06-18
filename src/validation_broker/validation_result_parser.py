@@ -152,10 +152,10 @@ def _outcome(
 ) -> str:
     if negative_reason:
         return "not_run"
-    if exit_code is not None:
-        return "pass" if exit_code == 0 else "fail"
     if NONZERO_FAIL_RE.search(text) or BARE_FAILED_RE.search(text):
         return "fail"
+    if exit_code is not None:
+        return "pass" if exit_code == 0 else "fail"
     if PASS_NEUTRAL_RE.search(text):
         return "pass" if validation_looking else "unknown"
     if GENERIC_FAIL_RE.search(text):

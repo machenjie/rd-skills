@@ -23,25 +23,35 @@ def analyze_trajectory(trajectory: dict[str, Any]) -> dict[str, Any]:
     issues.extend(_validation_issues(steps))
     issues.extend(_review_issues(steps))
     issues.extend(_stop_issues(steps))
+    issues.extend(_adapter_degradation_issues(steps))
     issues.extend(_repeat_failure_issues(steps))
     issues.extend(_fragile_file_issues(steps))
+    issues.extend(_stale_context_issues(steps))
 
     counts = dict(Counter(str(issue.get("type")) for issue in issues))
     highest = highest_severity(issues)
     validation_freshness = _validation_freshness(steps)
     review_integrity = _review_integrity(steps, issues)
+    residual_risk_status = _residual_risk_status(steps)
+    repair_rereview_status = _repair_rereview_status(steps, issues)
     closure_status = _closure_status(highest, validation_freshness)
+    verdict = _verdict(issues, validation_freshness, residual_risk_status)
 
     return {
         "schema_version": 1,
         "session_id": str(trajectory.get("session_id") or ""),
+        "verdict": verdict,
         "closure_status": closure_status,
         "issue_counts": counts,
         "highest_severity": highest,
         "skipped_stages": _skipped_stages(steps),
         "validation_freshness": validation_freshness,
         "review_integrity": review_integrity,
+        "repair_rereview_status": repair_rereview_status,
+        "residual_risk_status": residual_risk_status,
+        "findings": _findings(issues, steps),
         "recommended_promotions": _recommended_promotions(issues),
+        "candidate_fixtures": _candidate_fixtures(trajectory, issues),
         "issues": issues,
     }
 
@@ -179,6 +189,14 @@ def _validation_issues(steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     "Validation command was observed without a pass/fail outcome.",
                 )
             )
+        if _step_validation_stale(step):
+            issues.append(
+                classify_issue(
+                    "stale_validation",
+                    int(step.get("index") or 0),
+                    "Validation broker marked the command outcome as stale.",
+                )
+            )
 
     latest_evidence_index = max((int(step.get("index") or 0) for step in evidence_steps), default=0)
     if latest_evidence_index == 0:
@@ -216,12 +234,12 @@ def _review_issues(steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
             )
             break
 
-    repair_indexes = [int(step.get("index") or 0) for step in steps if step.get("stage") == "repair" or _evidence(step).get("repair_seen")]
+    repair_indexes = [int(step.get("index") or 0) for step in steps if step.get("stage") == "repair"]
     if repair_indexes:
         latest_repair = max(repair_indexes)
         rereview_seen = any(
             int(step.get("index") or 0) > latest_repair
-            and (step.get("stage") in {"review", "re_review"} or _evidence(step).get("review_seen"))
+            and step.get("stage") in {"review", "re_review"}
             for step in steps
         )
         if not rereview_seen:
@@ -253,6 +271,35 @@ def _stop_issues(steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return []
 
 
+def _adapter_degradation_issues(steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    for step in steps:
+        facts = _facts(step)
+        unsupported = [str(item) for item in facts.get("adapter_unsupported_checks", []) or [] if str(item)]
+        degraded = [str(item) for item in facts.get("adapter_degraded_capabilities", []) or [] if str(item)]
+        contract_verdict = str(facts.get("closure_contract_verdict") or "").strip()
+        if not unsupported and not degraded and contract_verdict != "degraded_ready":
+            continue
+        parts = []
+        if unsupported:
+            parts.append("unsupported checks: " + ", ".join(unsupported[:6]))
+        if degraded:
+            parts.append("degraded capabilities: " + ", ".join(degraded[:6]))
+        if contract_verdict:
+            parts.append(f"closure contract verdict: {contract_verdict}")
+        issues.append(
+            classify_issue(
+                "unsupported_adapter_overclaim",
+                int(step.get("index") or 0),
+                "Adapter closure has degraded or unsupported capability evidence; it must not be treated as a full pass. "
+                + "; ".join(parts)
+                + ".",
+            )
+        )
+        break
+    return issues
+
+
 def _repeat_failure_issues(steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
     failures_by_key: dict[tuple[str, str], list[int]] = {}
@@ -281,7 +328,11 @@ def _fragile_file_issues(steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for step in steps:
         risk = {str(item) for item in step.get("risk_surfaces", []) or []}
         facts = _facts(step)
-        if "fragile-file" not in risk and facts.get("memory_event_type") != "fragile_file":
+        if (
+            "fragile-file" not in risk
+            and facts.get("memory_event_type") != "fragile_file"
+            and facts.get("memory_event_kind") != "fragile_file"
+        ):
             continue
         evidence = _evidence(step)
         missing = []
@@ -305,6 +356,23 @@ def _fragile_file_issues(steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return issues
 
 
+def _stale_context_issues(steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    for step in steps:
+        facts = _facts(step)
+        status = str(facts.get("project_memory_stale_context_gate") or "").strip()
+        residual = {str(item) for item in facts.get("project_memory_residual_risk", []) or []}
+        if status not in {"warn", "block"} and not any("stale" in item for item in residual):
+            continue
+        return [
+            classify_issue(
+                "stale_context_memory",
+                int(step.get("index") or 0),
+                "Project memory context was stale or degraded and must not be treated as source truth.",
+            )
+        ]
+    return []
+
+
 def _validation_freshness(steps: list[dict[str, Any]]) -> str:
     material_edit_indexes = [int(step.get("index") or 0) for step in steps if _material_edit(step)]
     if not material_edit_indexes:
@@ -312,6 +380,8 @@ def _validation_freshness(steps: list[dict[str, Any]]) -> str:
     validation_steps = [step for step in steps if _step_validation_seen(step)]
     if not validation_steps:
         return "not_run"
+    if any(_step_validation_stale(step) for step in validation_steps):
+        return "stale"
     if max(int(step.get("index") or 0) for step in validation_steps) > max(material_edit_indexes):
         return "fresh"
     return "stale"
@@ -328,12 +398,101 @@ def _review_integrity(steps: list[dict[str, Any]], issues: list[dict[str, Any]])
     return "warn" if any(_material_edit(step) for step in steps) else "pass"
 
 
+def _repair_rereview_status(steps: list[dict[str, Any]], issues: list[dict[str, Any]]) -> str:
+    issue_types = {str(issue.get("type")) for issue in issues}
+    if "repair_without_rereview" in issue_types:
+        return "needs_review"
+    if "self_review" in issue_types:
+        return "needs_independent_review"
+    if not any(step.get("stage") == "repair" for step in steps):
+        return "not_applicable"
+    return "passed"
+
+
+def _residual_risk_status(steps: list[dict[str, Any]]) -> str:
+    if not any(_material_edit(step) for step in steps):
+        return "not_applicable"
+    stop_steps = [step for step in steps if step.get("stage") == "stop"]
+    if not stop_steps:
+        return "missing"
+    latest_stop = stop_steps[-1]
+    return "present" if _evidence(latest_stop).get("residual_risk_seen") else "missing"
+
+
 def _closure_status(highest: str, validation_freshness: str) -> str:
     if highest == "high":
         return "fail"
     if highest in {"medium", "low"} or validation_freshness in {"stale", "not_run"}:
         return "warn"
     return "pass"
+
+
+def _verdict(issues: list[dict[str, Any]], validation_freshness: str, residual_risk_status: str) -> str:
+    issue_types = {str(issue.get("type")) for issue in issues}
+    if issue_types & {
+        "route_manifest_incomplete",
+        "edit_before_read",
+        "repeat_failure_without_route_repair",
+        "fragile_file_without_preflight",
+    }:
+        return "blocked"
+    if issue_types & {"missing_validation", "stale_validation", "validation_without_outcome"}:
+        return "needs_validation"
+    if "repair_without_rereview" in issue_types:
+        return "needs_repair"
+    if "self_review" in issue_types:
+        return "needs_review"
+    if residual_risk_status == "missing" or "stop_without_residual_risk" in issue_types:
+        return "needs_review"
+    if "unsupported_adapter_overclaim" in issue_types or "stale_context_memory" in issue_types:
+        return "degraded_ready"
+    if issues:
+        return "degraded_ready"
+    if validation_freshness in {"stale", "not_run"}:
+        return "needs_validation"
+    return "ready"
+
+
+def _findings(issues: list[dict[str, Any]], steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    step_by_index = {int(step.get("index") or 0): step for step in steps}
+    for issue in issues:
+        step_index = int(issue.get("step_index") or 0)
+        step = step_by_index.get(step_index, {})
+        findings.append(
+            {
+                "type": str(issue.get("type") or ""),
+                "severity": str(issue.get("severity") or "medium"),
+                "evidence": str(issue.get("message") or ""),
+                "required_next_gate": str(issue.get("recommended_gate") or ""),
+                "affected_paths": _affected_paths(step),
+            }
+        )
+    return findings
+
+
+def _candidate_fixtures(trajectory: dict[str, Any], issues: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    high_issue = next((issue for issue in issues if issue.get("severity") == "high"), None)
+    if not high_issue:
+        return []
+    source_suggestion_id = _source_suggestion_id(trajectory, high_issue)
+    issue_type = str(high_issue.get("type") or "trajectory_issue")
+    return [
+        {
+            "type": target,
+            "issue_type": issue_type,
+            "generated_from_telemetry": True,
+            "requires_human_review": True,
+            "source_suggestion_id": source_suggestion_id,
+        }
+        for target in (
+            "pressure_scenario",
+            "agent_behavior_sample",
+            "hook_fixture",
+            "validation_broker_fixture",
+            "trajectory_fixture",
+        )
+    ]
 
 
 def _recommended_promotions(issues: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -346,6 +505,7 @@ def _recommended_promotions(issues: list[dict[str, Any]]) -> list[dict[str, Any]
             {
                 "type": "pressure_scenario",
                 "issue_type": issue_type,
+                "generated_from_telemetry": True,
                 "requires_human_review": True,
                 "reason": "High severity trajectory issue should be considered for pressure behavior coverage.",
             }
@@ -354,6 +514,7 @@ def _recommended_promotions(issues: list[dict[str, Any]]) -> list[dict[str, Any]
             {
                 "type": "agent_behavior_sample",
                 "issue_type": issue_type,
+                "generated_from_telemetry": True,
                 "requires_human_review": True,
                 "reason": "High severity trajectory issue may need a promoted behavior eval sample.",
             }
@@ -362,6 +523,7 @@ def _recommended_promotions(issues: list[dict[str, Any]]) -> list[dict[str, Any]
             {
                 "type": "hook_fixture",
                 "issue_type": issue_type,
+                "generated_from_telemetry": True,
                 "requires_human_review": True,
                 "reason": "High severity trajectory issue may need a bounded hook fixture.",
             }
@@ -386,13 +548,45 @@ def _step_validation_seen(step: dict[str, Any]) -> bool:
     facts = _facts(step)
     if facts.get("validation_evidence_detected"):
         return True
+    if _broker_ledger_outcomes(step) & {"passed", "failed", "stale", "partial"}:
+        return True
     return step.get("stage") == "test" and step.get("outcome") in {"pass", "fail"} and _step_validation_command_seen(step)
 
 
 def _step_validation_command_seen(step: dict[str, Any]) -> bool:
     facts = _facts(step)
     evidence = _evidence(step)
-    return bool(facts.get("validation_command_detected") or evidence.get("validation_command_seen"))
+    return bool(
+        facts.get("validation_command_detected")
+        or evidence.get("validation_command_seen")
+        or facts.get("validation_broker_command_ledger")
+    )
+
+
+def _step_validation_stale(step: dict[str, Any]) -> bool:
+    facts = _facts(step)
+    negatives = {
+        str(item)
+        for item in facts.get("validation_broker_negative_evidence", []) or []
+    }
+    if "stale_validation" in negatives:
+        return True
+    if "stale" in _broker_ledger_outcomes(step):
+        return True
+    fresh = str(facts.get("validation_result_fresh_after_last_edit") or "").strip().lower()
+    return fresh == "false"
+
+
+def _broker_ledger_outcomes(step: dict[str, Any]) -> set[str]:
+    facts = _facts(step)
+    ledger = facts.get("validation_broker_command_ledger")
+    if not isinstance(ledger, list):
+        return set()
+    return {
+        str(item.get("outcome") or "").strip().lower()
+        for item in ledger
+        if isinstance(item, dict)
+    }
 
 
 def _material_edit(step: dict[str, Any]) -> bool:
@@ -403,6 +597,31 @@ def _material_edit(step: dict[str, Any]) -> bool:
 def _primary_path(step: dict[str, Any]) -> str:
     paths = step.get("paths", []) or []
     return str(paths[0]) if paths else ""
+
+
+def _affected_paths(step: dict[str, Any]) -> list[str]:
+    facts = _facts(step)
+    values: list[str] = []
+    for field in ("changed_paths", "added_paths", "read_paths"):
+        value = facts.get(field)
+        if isinstance(value, list):
+            values.extend(str(item) for item in value if str(item))
+    values.extend(str(item) for item in step.get("paths", []) or [] if str(item))
+    result: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        result.append(value)
+    return result[:80]
+
+
+def _source_suggestion_id(trajectory: dict[str, Any], issue: dict[str, Any]) -> str:
+    session = str(trajectory.get("session_id") or "unknown-session")
+    issue_type = str(issue.get("type") or "trajectory_issue")
+    step_index = int(issue.get("step_index") or 0)
+    return f"trajectory-{session}-{issue_type}-{step_index}"
 
 
 def _evidence(step: dict[str, Any]) -> dict[str, Any]:

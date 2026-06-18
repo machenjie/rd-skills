@@ -18,6 +18,8 @@ ISSUE_SEVERITIES = {
     "route_manifest_incomplete": "high",
     "repeat_failure_without_route_repair": "high",
     "fragile_file_without_preflight": "high",
+    "stale_context_memory": "medium",
+    "unsupported_adapter_overclaim": "medium",
 }
 
 ISSUE_GATES = {
@@ -33,6 +35,8 @@ ISSUE_GATES = {
     "route_manifest_incomplete": "change-forge-router",
     "repeat_failure_without_route_repair": "failure-diagnosis",
     "fragile_file_without_preflight": "implementation-structure-design",
+    "stale_context_memory": "project-memory-governance",
+    "unsupported_adapter_overclaim": "executor-adapter-protocol",
 }
 
 

@@ -11,10 +11,28 @@ from .privacy import (
     sanitize_command_kind,
     validate_bounded_fact,
 )
+from .adapters import (
+    AdapterCapabilities,
+    AdapterEventResult,
+    BaseRuntimeAdapter,
+    ClaudeAdapter,
+    CodexAdapter,
+    CopilotAdapter,
+    adapter_capabilities_for,
+    coverage_matrix,
+    format_coverage_matrix,
+    strict_adapter_capabilities_for,
+)
 
 __all__ = [
     "ClosureContract",
     "ClosureVerdict",
+    "AdapterCapabilities",
+    "AdapterEventResult",
+    "BaseRuntimeAdapter",
+    "ClaudeAdapter",
+    "CodexAdapter",
+    "CopilotAdapter",
     "EventKind",
     "EvidenceEntry",
     "EvidenceLedger",
@@ -28,4 +46,8 @@ __all__ = [
     "redact_sensitive_value",
     "sanitize_command_kind",
     "validate_bounded_fact",
+    "adapter_capabilities_for",
+    "coverage_matrix",
+    "format_coverage_matrix",
+    "strict_adapter_capabilities_for",
 ]

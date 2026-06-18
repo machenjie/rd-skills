@@ -61,6 +61,22 @@ class RepeatFailureGateTests(unittest.TestCase):
         self.assertEqual(decision["failure_count"], 2)
         self.assertFalse(decision["allowed_to_continue"])
 
+    def test_new_kind_and_bounded_paths_are_repeat_failure_evidence(self) -> None:
+        events = [
+            _event("e1", "failed", "2026-06-01T00:00:00Z", use_new_fields=True),
+            _event("e2", "blocked", "2026-06-02T00:00:00Z", use_new_fields=True),
+        ]
+        decision = evaluate_repeat_failure_gate(
+            events,
+            repo_hash="repo",
+            task_fingerprint="task",
+            primary_path="src/app.py",
+            owner_skill="backend-change-builder",
+            mode="warn",
+        )["repeat_failure_gate"]
+        self.assertTrue(decision["repeated"])
+        self.assertEqual(decision["matched_paths"], ["src/app.py"])
+
 
 def _event(
     event_id: str,
@@ -68,8 +84,9 @@ def _event(
     created_at: str,
     *,
     task_fingerprint: str = "task",
+    use_new_fields: bool = False,
 ) -> dict:
-    return {
+    event = {
         "event_id": event_id,
         "repo_hash": "repo",
         "task_fingerprint": task_fingerprint,
@@ -79,6 +96,11 @@ def _event(
         "outcome": outcome,
         "created_at": created_at,
     }
+    if use_new_fields:
+        event["kind"] = "repeat_failure"
+        event["bounded_paths"] = ["src/app.py"]
+        event["timestamp"] = created_at
+    return event
 
 
 if __name__ == "__main__":

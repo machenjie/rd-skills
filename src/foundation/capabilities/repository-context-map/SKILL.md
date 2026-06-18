@@ -17,6 +17,13 @@ When repository-intelligence tooling is available, prefer a freshly generated Re
 
 The generated graph does not replace professional judgment. Agents must still inspect the selected source files, confirm source-of-truth ownership, and label anything the graph cannot prove as `INFERENCE`, `ASSUMPTION`, or `OPEN QUESTION`. If the graph is stale, missing a changed path, or built from a different commit/hash than the current working tree, re-index before using it as evidence.
 
+Implementation preflight may carry bounded repository context facts as:
+`repository_context.context_pack`, `source_of_truth`, `reuse_candidates`,
+`test_candidates`, `rejected_locations`, and `graph_freshness`. These facts are
+selectors for planning and validation-broker routing; they do not prove behavior
+or closure until selected source files are inspected and fresh validation outcomes
+exist for the final material diff.
+
 ## When To Use
 - Before planning a non-trivial engineering change in an unfamiliar or partially inspected repository area.
 - When adding, moving, deleting, or renaming files, capabilities, registry entries, hooks, tests, or docs.

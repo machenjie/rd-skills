@@ -11,6 +11,8 @@ ALLOWED_TARGETS = (
     "evals/pressure",
     "evals/agent-behavior/samples",
     "tests/fixtures/hooks",
+    "tests/fixtures/validation_broker",
+    "tests/fixtures/trajectory",
 )
 
 
@@ -22,24 +24,37 @@ def promotion_skeletons(trajectory: dict[str, Any], report: dict[str, Any]) -> l
     session_id = str(trajectory.get("session_id") or "unknown-session")
     issue_type = str(high_issue.get("type") or "trajectory_issue")
     slug = _slug(f"{session_id}-{issue_type}")
+    source_suggestion_id = f"trajectory-{session_id}-{issue_type}-{high_issue.get('step_index', 0)}"
     return [
         {
             "target": "evals/pressure",
             "path": f"evals/pressure/candidates/{slug}.yaml",
             "requires_human_review": True,
-            "content": _pressure_content(trajectory, high_issue),
+            "content": _pressure_content(trajectory, high_issue, source_suggestion_id),
         },
         {
             "target": "evals/agent-behavior/samples",
             "path": f"evals/agent-behavior/samples/candidates/{slug}.yaml",
             "requires_human_review": True,
-            "content": _behavior_content(trajectory, high_issue),
+            "content": _behavior_content(trajectory, high_issue, source_suggestion_id),
         },
         {
             "target": "tests/fixtures/hooks",
             "path": f"tests/fixtures/hooks/trajectory-{slug}.json",
             "requires_human_review": True,
-            "content": _hook_fixture_content(trajectory, high_issue),
+            "content": _hook_fixture_content(trajectory, high_issue, source_suggestion_id),
+        },
+        {
+            "target": "tests/fixtures/validation_broker",
+            "path": f"tests/fixtures/validation_broker/trajectory-{slug}.json",
+            "requires_human_review": True,
+            "content": _validation_broker_fixture_content(trajectory, high_issue, source_suggestion_id),
+        },
+        {
+            "target": "tests/fixtures/trajectory",
+            "path": f"tests/fixtures/trajectory/{slug}.json",
+            "requires_human_review": True,
+            "content": _trajectory_fixture_content(trajectory, high_issue, source_suggestion_id),
         },
     ]
 
@@ -59,11 +74,13 @@ def write_skeletons(root: Path, skeletons: list[dict[str, Any]], *, write: bool 
     return paths
 
 
-def _pressure_content(trajectory: dict[str, Any], issue: dict[str, Any]) -> str:
+def _pressure_content(trajectory: dict[str, Any], issue: dict[str, Any], source_suggestion_id: str) -> str:
     return "\n".join(
         [
             "schema_version: 1",
+            "generated_from_telemetry: true",
             "requires_human_review: true",
+            f"source_suggestion_id: {source_suggestion_id}",
             "status: skeleton",
             f"source_session_id: {trajectory.get('session_id', '')}",
             f"issue_type: {issue.get('type', '')}",
@@ -80,11 +97,13 @@ def _pressure_content(trajectory: dict[str, Any], issue: dict[str, Any]) -> str:
     )
 
 
-def _behavior_content(trajectory: dict[str, Any], issue: dict[str, Any]) -> str:
+def _behavior_content(trajectory: dict[str, Any], issue: dict[str, Any], source_suggestion_id: str) -> str:
     return "\n".join(
         [
             "schema_version: 1",
+            "generated_from_telemetry: true",
             "requires_human_review: true",
+            f"source_suggestion_id: {source_suggestion_id}",
             "status: skeleton",
             f"source_session_id: {trajectory.get('session_id', '')}",
             "expected:",
@@ -100,10 +119,12 @@ def _behavior_content(trajectory: dict[str, Any], issue: dict[str, Any]) -> str:
     )
 
 
-def _hook_fixture_content(trajectory: dict[str, Any], issue: dict[str, Any]) -> str:
+def _hook_fixture_content(trajectory: dict[str, Any], issue: dict[str, Any], source_suggestion_id: str) -> str:
     payload = {
         "schema_version": 1,
+        "generated_from_telemetry": True,
         "requires_human_review": True,
+        "source_suggestion_id": source_suggestion_id,
         "status": "skeleton",
         "source": "trajectory-inspector",
         "source_session_id": trajectory.get("session_id", ""),
@@ -114,6 +135,53 @@ def _hook_fixture_content(trajectory: dict[str, Any], issue: dict[str, Any]) -> 
             "hook_name": "TODO",
             "runtime": "generic",
             "bounded_facts_only": True,
+        },
+    }
+    return json.dumps(payload, indent=2, sort_keys=True) + "\n"
+
+
+def _validation_broker_fixture_content(
+    trajectory: dict[str, Any],
+    issue: dict[str, Any],
+    source_suggestion_id: str,
+) -> str:
+    payload = {
+        "schema_version": 1,
+        "generated_from_telemetry": True,
+        "requires_human_review": True,
+        "source_suggestion_id": source_suggestion_id,
+        "status": "skeleton",
+        "source": "trajectory-inspector",
+        "source_session_id": trajectory.get("session_id", ""),
+        "issue_type": issue.get("type", ""),
+        "validation_broker_fixture": {
+            "changed_path_mapping": {},
+            "command_ledger": [],
+            "closure_outcome": "TODO",
+            "negative_evidence": ["TODO"],
+        },
+    }
+    return json.dumps(payload, indent=2, sort_keys=True) + "\n"
+
+
+def _trajectory_fixture_content(
+    trajectory: dict[str, Any],
+    issue: dict[str, Any],
+    source_suggestion_id: str,
+) -> str:
+    payload = {
+        "schema_version": 1,
+        "generated_from_telemetry": True,
+        "requires_human_review": True,
+        "source_suggestion_id": source_suggestion_id,
+        "status": "skeleton",
+        "source": "trajectory-inspector",
+        "source_session_id": trajectory.get("session_id", ""),
+        "issue_type": issue.get("type", ""),
+        "trajectory_fixture": {
+            "ordered_events": [],
+            "expected_verdict": "TODO",
+            "expected_findings": [issue.get("type", "")],
         },
     }
     return json.dumps(payload, indent=2, sort_keys=True) + "\n"

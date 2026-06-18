@@ -145,6 +145,7 @@ PRESSURE_CANDIDATE_TYPES = frozenset({
     "missed_implementation_structure",
     "missed_validation_evidence",
     "validation_command_without_outcome",
+    "stale_validation_reused",
     "missed_residual_risk",
     "unverified_completion_claim",
 })
@@ -187,9 +188,22 @@ class SessionSummary:
     manifest_seen: bool = False
     validation_command_seen: bool = False
     validation_seen: bool = False
+    validation_broker_closure_outcomes: set[str] = field(default_factory=set)
+    validation_broker_negative_evidence: set[str] = field(default_factory=set)
+    validation_broker_selected_scopes: set[str] = field(default_factory=set)
+    validation_failed: bool = False
+    adapter_names: set[str] = field(default_factory=set)
+    adapter_unsupported_checks: set[str] = field(default_factory=set)
+    adapter_degraded_capabilities: set[str] = field(default_factory=set)
+    closure_contract_verdicts: set[str] = field(default_factory=set)
+    closure_contract_residual_risk: set[str] = field(default_factory=set)
     residual_risk_seen: bool = False
+    project_memory_residual_risk: set[str] = field(default_factory=set)
+    project_memory_unavailable: bool = False
     references_seen: bool = False
     completion_language_seen: bool = False
+    repair_seen: bool = False
+    review_after_repair_seen: bool = False
     stage_manifest_seen: bool = False
     manifest_current_stage: str = ""
     manifest_selected_skills: set[str] = field(default_factory=set)
@@ -330,7 +344,7 @@ def main(argv: list[str] | None = None) -> int:
     written: list[str] = []
 
     for repo_hash in repo_hashes:
-        summary, suggestions = _analyze_repo(
+        summary, suggestions, memory_candidates = _analyze_repo(
             root,
             repo_hash,
             since,
@@ -344,8 +358,14 @@ def main(argv: list[str] | None = None) -> int:
         total_sessions += summary["sessions"]
         total_high_severity += summary["high_severity_suggestions"]
 
-        report_text = _render_report(args.format, repo_hash, summary, suggestions)
-        suggestions_text = _render_suggestions(repo_hash, summary, suggestions, generated_at)
+        report_text = _render_report(args.format, repo_hash, summary, suggestions, memory_candidates)
+        suggestions_text = _render_suggestions(
+            repo_hash,
+            summary,
+            suggestions,
+            memory_candidates,
+            generated_at,
+        )
         report_path, suggestions_path = _output_paths(
             root, repo_hash, date_stamp, args.format, args.output_dir
         )
@@ -377,7 +397,7 @@ def _analyze_repo(
     until: datetime | None,
     *,
     recency_half_life_days: float,
-) -> tuple[dict[str, Any], list[Suggestion]]:
+) -> tuple[dict[str, Any], list[Suggestion], list[dict[str, Any]]]:
     records = list(iter_session_records(root, repo_hash, since=since, until=until))
     sessions = _session_summaries(records, repo_hash)
     suggestions: list[Suggestion] = []
@@ -385,6 +405,7 @@ def _analyze_repo(
         suggestions.extend(_detect_issues(session))
     latest_seen_at = _latest_seen_at(sessions.values())
     _apply_recency_scores(suggestions, sessions, latest_seen_at, recency_half_life_days)
+    memory_candidates = _memory_candidates(sessions.values(), suggestions)
 
     issue_counts: dict[str, int] = {}
     for suggestion in suggestions:
@@ -446,9 +467,21 @@ def _analyze_repo(
         "validation_command_without_outcome": issue_counts.get(
             "validation_command_without_outcome", 0
         ),
+        "stale_validation_reused": issue_counts.get("stale_validation_reused", 0),
+        "degraded_runtime_adapter_closures": sum(
+            1
+            for session in sessions.values()
+            if session.stop_seen
+            and (
+                "degraded_ready" in session.closure_contract_verdicts
+                or session.adapter_unsupported_checks
+                or session.adapter_degraded_capabilities
+            )
+        ),
         "unverified_completion_claims": issue_counts.get("unverified_completion_claim", 0),
         "residual_risk_missing": issue_counts.get("missed_residual_risk", 0),
         "pressure_candidate_suggestions": sum(1 for s in suggestions if s.pressure_candidate),
+        "memory_candidate_suggestions": len(memory_candidates),
         "primary_suggestions": sum(1 for s in suggestions if not s.cascading),
         "cascading_suggestions": sum(1 for s in suggestions if s.cascading),
         "high_severity_suggestions": sum(1 for s in suggestions if s.severity == "high"),
@@ -456,7 +489,7 @@ def _analyze_repo(
         "weighted_issue_scores": weighted_issue_scores,
         "recent_24h_issue_counts": recent_24h_issue_counts,
     }
-    return summary, suggestions
+    return summary, suggestions, memory_candidates
 
 
 def _session_summaries(
@@ -488,6 +521,48 @@ def _session_summaries(
         if command_program:
             session.command_programs.add(command_program)
         session.validation_command_seen |= bool(record.get("validation_command_detected"))
+        broker_closure = _broker_closure_outcome(record)
+        broker_negative = set(_broker_negative_evidence(record))
+        broker_ledger = _broker_command_ledger(record)
+        broker_ledger_outcomes = {
+            str(item.get("outcome") or "").strip().lower()
+            for item in broker_ledger
+            if isinstance(item, dict)
+        }
+        if broker_closure:
+            session.validation_broker_closure_outcomes.add(broker_closure)
+        session.validation_broker_negative_evidence.update(broker_negative)
+        broker_scope = _broker_selected_scope(record)
+        if broker_scope:
+            session.validation_broker_selected_scopes.add(broker_scope)
+        if broker_ledger:
+            session.validation_command_seen = True
+        if (
+            record.get("validation_result_outcome") == "fail"
+            or "failed" in broker_ledger_outcomes
+            or "validation_failed" in broker_negative
+        ):
+            session.validation_failed = True
+        session.project_memory_residual_risk.update(
+            _string_list(record.get("project_memory_residual_risk"))
+        )
+        if record.get("project_memory_available") is False:
+            session.project_memory_unavailable = True
+        adapter_name = str(record.get("adapter_name") or "").strip()
+        if adapter_name:
+            session.adapter_names.add(adapter_name)
+        session.adapter_unsupported_checks.update(
+            _string_list(record.get("adapter_unsupported_checks"))
+        )
+        session.adapter_degraded_capabilities.update(
+            _string_list(record.get("adapter_degraded_capabilities"))
+        )
+        verdict = str(record.get("closure_contract_verdict") or "").strip()
+        if verdict:
+            session.closure_contract_verdicts.add(verdict)
+        session.closure_contract_residual_risk.update(
+            _string_list(record.get("closure_contract_residual_risk"))
+        )
         session.suggested_skills.update(_string_list(record.get("suggested_skills")))
         session.suggested_capabilities.update(
             _string_list(record.get("suggested_capabilities"))
@@ -500,7 +575,11 @@ def _session_summaries(
         if record.get("hook_name") == "stop_closure_gate":
             session.stop_seen = True
             session.manifest_seen |= bool(record.get("route_manifest_detected"))
-            session.validation_seen |= bool(record.get("validation_evidence_detected"))
+            session.validation_seen |= bool(record.get("validation_evidence_detected")) or _broker_has_closure_validation(
+                broker_closure,
+                broker_negative,
+                broker_ledger_outcomes,
+            )
             session.residual_risk_seen |= bool(record.get("residual_risk_detected"))
             session.references_seen |= bool(record.get("required_references_detected"))
             session.completion_language_seen |= bool(
@@ -528,6 +607,10 @@ def _session_summaries(
             session.manifest_skipped_quality_gates.update(
                 _string_list(record.get("manifest_skipped_quality_gates"))
             )
+        if bool(record.get("repair_evidence_seen")):
+            session.repair_seen = True
+        elif session.repair_seen and bool(record.get("review_evidence_seen")):
+            session.review_after_repair_seen = True
     return sessions
 
 
@@ -542,6 +625,8 @@ def _detect_issues(session: SessionSummary) -> list[Suggestion]:
         _detect_missed_stage_manifest,
         _detect_missed_validation_evidence,
         _detect_validation_command_without_outcome,
+        _detect_stale_validation_reused,
+        _detect_degraded_runtime_adapter_closure,
         _detect_unverified_completion_claim,
         _detect_missed_residual_risk,
         _detect_possible_over_routing,
@@ -713,6 +798,51 @@ def _detect_validation_command_without_outcome(session: SessionSummary) -> Sugge
             "evals/agent-behavior/samples",
         )
     return None
+
+
+def _detect_stale_validation_reused(session: SessionSummary) -> Suggestion | None:
+    if not (session.stop_seen and session.has_engineering_surface):
+        return None
+    if "stale_validation" not in session.validation_broker_negative_evidence:
+        return None
+    return _suggestion(
+        "stale_validation_reused",
+        "high",
+        "validation broker marked closure evidence stale after a material edit",
+        session,
+        "Re-run the relevant validation after the final material edit before claiming completion.",
+        "evals/agent-behavior/samples",
+    )
+
+
+def _detect_degraded_runtime_adapter_closure(session: SessionSummary) -> Suggestion | None:
+    if not session.stop_seen:
+        return None
+    if not (
+        "degraded_ready" in session.closure_contract_verdicts
+        or session.adapter_unsupported_checks
+        or session.adapter_degraded_capabilities
+    ):
+        return None
+    evidence_parts: list[str] = []
+    if session.adapter_names:
+        evidence_parts.append(f"adapter(s): {_short(sorted(session.adapter_names))}")
+    if session.adapter_unsupported_checks:
+        evidence_parts.append(
+            f"unsupported checks: {_short(sorted(session.adapter_unsupported_checks))}"
+        )
+    if session.adapter_degraded_capabilities:
+        evidence_parts.append(
+            f"degraded capabilities: {_short(sorted(session.adapter_degraded_capabilities))}"
+        )
+    return _suggestion(
+        "degraded_runtime_adapter_closure",
+        "medium",
+        "; ".join(evidence_parts) or "stop closure reported degraded adapter capability",
+        session,
+        "Keep unsupported runtime checks as residual risk; do not treat the closure as a full pass.",
+        "evals/agent-behavior/samples",
+    )
 
 
 def _detect_missed_residual_risk(session: SessionSummary) -> Suggestion | None:
@@ -908,6 +1038,156 @@ def _recent_issue_counts(suggestions: list[Suggestion]) -> dict[str, int]:
     return dict(sorted(counts.items()))
 
 
+def _memory_candidates(
+    sessions: Any,
+    suggestions: list[Suggestion],
+) -> list[dict[str, Any]]:
+    """Build human-review-only project-memory promotion candidates."""
+    candidates: list[dict[str, Any]] = []
+    session_list = list(sessions)
+    for suggestion in suggestions:
+        if suggestion.type == "stale_validation_reused":
+            candidates.append(
+                _memory_candidate(
+                    "validation_pattern",
+                    "high",
+                    suggestion.evidence,
+                    affected_session=suggestion.affected_session,
+                    promotion_target="memory",
+                    related_suggestion=suggestion.suggestion_id,
+                )
+            )
+        elif suggestion.type == "missed_reuse_evidence":
+            candidates.append(
+                _memory_candidate(
+                    "module_convention",
+                    "medium",
+                    suggestion.evidence,
+                    affected_session=suggestion.affected_session,
+                    promotion_target="memory",
+                    related_suggestion=suggestion.suggestion_id,
+                )
+            )
+        elif suggestion.type == "hook_false_positive_candidate":
+            candidates.append(
+                _memory_candidate(
+                    "false_positive_hook",
+                    "low",
+                    suggestion.evidence,
+                    affected_session=suggestion.affected_session,
+                    promotion_target="hook_fixture",
+                    related_suggestion=suggestion.suggestion_id,
+                )
+            )
+        elif suggestion.type == "hook_false_negative_candidate":
+            candidates.append(
+                _memory_candidate(
+                    "false_negative_hook",
+                    "medium",
+                    suggestion.evidence,
+                    affected_session=suggestion.affected_session,
+                    promotion_target="hook_fixture",
+                    related_suggestion=suggestion.suggestion_id,
+                )
+            )
+
+    for session in session_list:
+        if session.repair_seen and not session.review_after_repair_seen:
+            candidates.append(
+                _memory_candidate(
+                    "review_finding_pattern",
+                    "medium",
+                    "repair evidence appeared without later re-review evidence",
+                    affected_session=session.session_id,
+                    promotion_target="memory",
+                )
+            )
+        if session.project_memory_unavailable:
+            candidates.append(
+                _memory_candidate(
+                    "generated_source_mapping",
+                    "low",
+                    "project memory was unavailable during Stop closure",
+                    affected_session=session.session_id,
+                    promotion_target="none",
+                )
+            )
+
+    failure_paths: dict[str, set[str]] = {}
+    fragile_paths: dict[str, set[str]] = {}
+    for session in session_list:
+        if session.validation_failed:
+            for path in session.changed_paths:
+                failure_paths.setdefault(path, set()).add(session.session_id)
+        if session.validation_failed or session.structural_findings or session.project_memory_residual_risk:
+            for path in session.changed_paths:
+                fragile_paths.setdefault(path, set()).add(session.session_id)
+    for path, session_ids in sorted(failure_paths.items()):
+        if len(session_ids) < 2:
+            continue
+        candidates.append(
+            _memory_candidate(
+                "repeat_failure",
+                "high",
+                f"same path had failed validation in {len(session_ids)} telemetry sessions: {path}",
+                affected_session=",".join(sorted(session_ids)[:5]),
+                bounded_paths=[path],
+                promotion_target="memory",
+            )
+        )
+    for path, session_ids in sorted(fragile_paths.items()):
+        if len(session_ids) < 2:
+            continue
+        candidates.append(
+            _memory_candidate(
+                "fragile_file",
+                "medium",
+                f"path showed repeated fragile signals in {len(session_ids)} telemetry sessions: {path}",
+                affected_session=",".join(sorted(session_ids)[:5]),
+                bounded_paths=[path],
+                promotion_target="memory",
+            )
+        )
+    return _dedupe_memory_candidates(candidates)
+
+
+def _memory_candidate(
+    candidate_type: str,
+    severity: str,
+    evidence: str,
+    *,
+    affected_session: str,
+    promotion_target: str,
+    bounded_paths: list[str] | None = None,
+    related_suggestion: str = "",
+) -> dict[str, Any]:
+    payload = {
+        "type": candidate_type,
+        "severity": severity,
+        "evidence": evidence,
+        "affected_session": affected_session,
+        "bounded_paths": bounded_paths or [],
+        "promotion_target": promotion_target,
+        "source": "telemetry",
+        "requires_human_review": True,
+        "related_suggestion": related_suggestion,
+    }
+    digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()[:10]
+    return {"id": f"memory-{candidate_type.replace('_', '-')}-{digest}", **payload}
+
+
+def _dedupe_memory_candidates(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen: set[str] = set()
+    result: list[dict[str, Any]] = []
+    for candidate in candidates:
+        candidate_id = str(candidate.get("id") or "")
+        if candidate_id in seen:
+            continue
+        seen.add(candidate_id)
+        result.append(candidate)
+    return result
+
+
 def _expected_language_capabilities(paths: set[str]) -> set[str]:
     expected: set[str] = set()
     for path in paths:
@@ -948,19 +1228,25 @@ def _render_report(
     repo_hash: str,
     summary: dict[str, Any],
     suggestions: list[Suggestion],
+    memory_candidates: list[dict[str, Any]],
 ) -> str:
-    payload = {"summary": summary, "suggestions": [s.as_dict() for s in suggestions]}
+    payload = {
+        "summary": summary,
+        "suggestions": [s.as_dict() for s in suggestions],
+        "memory_candidates": memory_candidates,
+    }
     if report_format == "json":
         return json.dumps(payload, indent=2, sort_keys=True) + "\n"
     if report_format == "yaml":
         return dump_yaml(payload)
-    return _render_markdown(repo_hash, summary, suggestions, payload)
+    return _render_markdown(repo_hash, summary, suggestions, memory_candidates, payload)
 
 
 def _render_markdown(
     repo_hash: str,
     summary: dict[str, Any],
     suggestions: list[Suggestion],
+    memory_candidates: list[dict[str, Any]],
     payload: dict[str, Any],
 ) -> str:
     lines = [
@@ -988,9 +1274,12 @@ def _render_markdown(
         f"- missed gate: {summary['missed_gate']}",
         f"- validation evidence missing: {summary['validation_evidence_missing']}",
         f"- validation command without outcome: {summary['validation_command_without_outcome']}",
+        f"- stale validation reused: {summary['stale_validation_reused']}",
+        f"- degraded runtime adapter closures: {summary['degraded_runtime_adapter_closures']}",
         f"- unverified completion claims: {summary['unverified_completion_claims']}",
         f"- residual risk missing: {summary['residual_risk_missing']}",
         f"- pressure candidate suggestions: {summary['pressure_candidate_suggestions']}",
+        f"- memory candidate suggestions: {summary['memory_candidate_suggestions']}",
         f"- primary suggestions: {summary['primary_suggestions']}",
         f"- cascading suggestions: {summary['cascading_suggestions']}",
         f"- high severity suggestions: {summary['high_severity_suggestions']}",
@@ -1027,6 +1316,24 @@ def _render_markdown(
             ["", f"### Cascading from a missing route manifest ({len(cascading)})", ""]
         )
         lines.extend(_suggestion_table(cascading))
+    lines.extend(["", "## Memory Candidates", ""])
+    if not memory_candidates:
+        lines.append("No project-memory candidates for the reviewed window.")
+    else:
+        lines.append("These candidates are human-review-only and do not mutate skills or routing.")
+        lines.append("")
+        lines.append("| id | type | severity | target | evidence |")
+        lines.append("| --- | --- | --- | --- | --- |")
+        for candidate in memory_candidates:
+            lines.append(
+                "| {id} | {type} | {severity} | {target} | {evidence} |".format(
+                    id=_escape_table(str(candidate.get("id") or "")),
+                    type=_escape_table(str(candidate.get("type") or "")),
+                    severity=_escape_table(str(candidate.get("severity") or "")),
+                    target=_escape_table(str(candidate.get("promotion_target") or "")),
+                    evidence=_escape_table(str(candidate.get("evidence") or "")),
+                )
+            )
     lines.extend(
         [
             "",
@@ -1045,6 +1352,7 @@ def _render_suggestions(
     repo_hash: str,
     summary: dict[str, Any],
     suggestions: list[Suggestion],
+    memory_candidates: list[dict[str, Any]],
     generated_at: str,
 ) -> str:
     data = {
@@ -1055,6 +1363,7 @@ def _render_suggestions(
         "generated_at": generated_at,
         "high_severity_suggestions": summary["high_severity_suggestions"],
         "suggestions": [s.as_dict() for s in suggestions],
+        "memory_candidates": memory_candidates,
     }
     header = (
         "# Generated by scripts/review-agent-telemetry.py from runtime telemetry.\n"
@@ -1093,6 +1402,62 @@ def _string_list(value: Any) -> list[str]:
     return [str(item).strip() for item in value if str(item).strip()]
 
 
+def _broker_result(record: dict[str, Any]) -> dict[str, Any]:
+    value = record.get("validation_broker_result")
+    return value if isinstance(value, dict) else {}
+
+
+def _broker_closure_outcome(record: dict[str, Any]) -> str:
+    value = str(record.get("validation_broker_closure_outcome") or "").strip()
+    if value:
+        return value
+    return str(_broker_result(record).get("closure_outcome") or "").strip()
+
+
+def _broker_selected_scope(record: dict[str, Any]) -> str:
+    value = str(record.get("validation_broker_selected_scope") or "").strip()
+    if value:
+        return value
+    return str(_broker_result(record).get("selected_scope") or "").strip()
+
+
+def _broker_negative_evidence(record: dict[str, Any]) -> list[str]:
+    value = record.get("validation_broker_negative_evidence")
+    if isinstance(value, list):
+        return _string_list(value)
+    return _string_list(_broker_result(record).get("negative_evidence", []))
+
+
+def _broker_command_ledger(record: dict[str, Any]) -> list[dict[str, Any]]:
+    value = record.get("validation_broker_command_ledger")
+    if isinstance(value, list):
+        return [item for item in value if isinstance(item, dict)]
+    nested = _broker_result(record).get("command_ledger")
+    if isinstance(nested, list):
+        return [item for item in nested if isinstance(item, dict)]
+    return []
+
+
+def _broker_has_closure_validation(
+    closure_outcome: str,
+    negative_evidence: set[str],
+    ledger_outcomes: set[str],
+) -> bool:
+    validation_blockers = {
+        "missing_validation",
+        "validation_command_without_outcome",
+        "validation_not_run",
+        "validation_failed",
+        "stale_validation",
+        "coverage_mismatch",
+        "targeted_check_reported_as_full",
+        "changed_path_without_validator",
+    }
+    if validation_blockers & negative_evidence:
+        return False
+    return closure_outcome in {"ready", "degraded_ready"} or bool(ledger_outcomes & {"passed"})
+
+
 def _short(items: list[str], limit: int = 3) -> str:
     head = items[:limit]
     suffix = "" if len(items) <= limit else ", ..."
@@ -1105,6 +1470,10 @@ def _format_adoption(summary: dict[str, Any]) -> str:
     present = int(summary.get("route_manifest_closures", 0) or 0)
     rate = float(summary.get("route_manifest_adoption", 0.0) or 0.0)
     return f"{present}/{closures} ({rate * 100:.0f}%)"
+
+
+def _escape_table(value: str) -> str:
+    return value.replace("|", "\\|").replace("\n", " ")[:300]
 
 
 def _suggestion_table(suggestions: list[Suggestion]) -> list[str]:

@@ -33,8 +33,13 @@ def main() -> int:
         print(f"promote-memory-candidate: unable to read suggestions: {exc}", file=sys.stderr)
         return 1
     suggestions = doc.get("suggestions") if isinstance(doc, dict) else None
+    memory_candidates = doc.get("memory_candidates") if isinstance(doc, dict) else None
     if not isinstance(suggestions, list):
-        print("promote-memory-candidate: suggestions file has no suggestions list", file=sys.stderr)
+        suggestions = []
+    if isinstance(memory_candidates, list):
+        suggestions.extend(item for item in memory_candidates if isinstance(item, dict))
+    if not suggestions:
+        print("promote-memory-candidate: suggestions file has no suggestions or memory_candidates list", file=sys.stderr)
         return 1
     selected = next(
         (
@@ -64,4 +69,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

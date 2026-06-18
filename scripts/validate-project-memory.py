@@ -17,11 +17,13 @@ if str(SRC) not in sys.path:
 from project_memory.privacy import contains_forbidden_key, repo_hash_for_path, sanitize_memory_event
 from project_memory.review.promote_memory_candidate import supported_target
 from project_memory.store.append_log import append_memory_event, iter_memory_events
+from project_memory.store.projection import build_memory_projection
 
 
 SCHEMA_DIR = SRC / "project_memory" / "schemas"
 REQUIRED_SCHEMAS = (
     "memory-event.v1.schema.json",
+    "memory-projection.v1.schema.json",
     "memory-summary.v1.schema.json",
     "memory-query.v1.schema.json",
     "memory-decision.v1.schema.json",
@@ -38,6 +40,7 @@ def main() -> int:
     _validate_schema_files(errors)
     _validate_python_compile(errors)
     _validate_privacy_sanitization(errors)
+    _validate_projection_determinism(errors)
     _validate_append_log(errors)
     _validate_promotion_bounds(errors)
     _validate_forbidden_paths(errors)
@@ -96,10 +99,49 @@ def _validate_privacy_sanitization(errors: list[str]) -> None:
         errors.append("sanitizer must hash repo/workdir instead of recording absolute path")
     if event["paths"] != ["src/app.py"]:
         errors.append("sanitizer must keep only bounded relative paths")
+    if event["bounded_paths"] != ["src/app.py"]:
+        errors.append("sanitizer must write bounded_paths as the canonical path field")
+    if not event["event_id"].startswith("mem_"):
+        errors.append("sanitizer must write mem_-prefixed deterministic event ids")
+    if event["kind"] != "module_convention":
+        errors.append("sanitizer must map legacy type to governed memory kind")
+    if event["privacy_class"] != "redacted":
+        errors.append("sanitizer must mark secret-bearing raw input as redacted")
     serialized = json.dumps(event)
     for forbidden in ("raw prompt", "TOKEN", "full command output", "/Users/example"):
         if forbidden in serialized:
             errors.append(f"sanitizer leaked forbidden value: {forbidden}")
+
+
+def _validate_projection_determinism(errors: list[str]) -> None:
+    event = sanitize_memory_event(
+        {
+            "repo_hash": "repo",
+            "timestamp": "2026-06-05T10:00:00Z",
+            "kind": "fragile_file",
+            "bounded_paths": ["src/app.py"],
+            "summary": "Repeated fragile edit pattern.",
+            "outcome": "failed",
+            "source": "validator",
+        }
+    )
+    query = {
+        "repo_hash": "repo",
+        "paths": ["src/app.py"],
+        "graph_freshness": "current",
+        "changed_files": [{"path": "src/app.py", "changed_at": "2026-06-05T11:00:00Z"}],
+    }
+    first = build_memory_projection([event], query)
+    second = build_memory_projection([event], query)
+    projection = first.get("project_memory_projection", {})
+    if first != second:
+        errors.append("memory projection must be deterministic for identical inputs")
+    if not projection.get("source_check_required"):
+        errors.append("memory projection must require source inspection")
+    if projection.get("stale_context_gate") != "warn":
+        errors.append("memory projection must warn when memory predates changed source")
+    if not projection.get("included_events"):
+        errors.append("memory projection must include relevant bounded events")
 
 
 def _validate_append_log(errors: list[str]) -> None:
@@ -127,6 +169,9 @@ def _validate_promotion_bounds(errors: list[str]) -> None:
         "evals/pressure",
         "tests/fixtures/hooks",
         "tests/project_memory/fixtures",
+        "memory",
+        "hook_fixture",
+        "eval",
     ):
         if not supported_target(target):
             errors.append(f"promotion allowlist unexpectedly rejects {target}")
@@ -148,4 +193,3 @@ def _validate_forbidden_paths(errors: list[str]) -> None:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

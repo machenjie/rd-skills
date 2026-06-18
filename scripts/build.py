@@ -62,7 +62,7 @@ COPILOT_HOOK_SUPPORT_FILES = (
     "changeforge_copilot_skill_summary.md",
     "changeforge_copilot_professional_contract.md",
 )
-HOOK_SUPPORT_PACKAGES = (SRC_DIR / "validation_broker",)
+HOOK_SUPPORT_PACKAGES = (SRC_DIR / "validation_broker", SRC_DIR / "runtime_governance")
 RUNTIME_ROUTE_INDEX_NAME = "changeforge_runtime_route_index.json"
 UNIVERSAL_BOOTSTRAP_ROOT = DIST_DIR / "universal" / "bootstrap"
 

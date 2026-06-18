@@ -19,6 +19,13 @@ class PromotionBoundaryTests(unittest.TestCase):
         self.assertFalse(supported_target("SKILL.md"))
         self.assertFalse(supported_target("src/registry/routing-rules.yaml"))
         self.assertFalse(supported_target("src/registry/capabilities.yaml"))
+        self.assertFalse(supported_target("docs"))
+        self.assertFalse(supported_target("none"))
+
+    def test_promotion_target_aliases_resolve_to_allowed_skeleton_dirs(self) -> None:
+        self.assertTrue(supported_target("memory"))
+        self.assertTrue(supported_target("hook_fixture"))
+        self.assertTrue(supported_target("eval"))
 
     def test_promotion_writes_only_candidate_fixture_when_explicit(self) -> None:
         suggestion = {
@@ -36,4 +43,3 @@ class PromotionBoundaryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -19,6 +19,7 @@ from changeforge_common import (
     extract_manifest_fields,
     is_stop,
     load_state,
+    memory_closure_advice,
     read_event,
     repo_root,
     session_id_from_event,
@@ -391,8 +392,18 @@ def _main() -> int:
     manifest = extract_manifest_fields(final_text)
     validation_assessment = _validation_broker_assessment(final_text, state, mode)
     validation_result = _validation_result(validation_assessment)
+    validation_broker_result = _validation_broker_result(validation_assessment)
+    memory_advice = memory_closure_advice(repo, state)
     signals = _closure_signals(final_text, state, manifest, validation_assessment)
-    contract = _closure_contract(final_text, state, manifest, runtime, mode, signals)
+    contract = _closure_contract(
+        final_text,
+        state,
+        manifest,
+        runtime,
+        mode,
+        signals,
+        validation_assessment=validation_assessment,
+    )
     write_telemetry_event(
         repo,
         runtime=runtime,
@@ -436,6 +447,31 @@ def _main() -> int:
         validation_result_covered_risk_surfaces=validation_result.get(
             "covered_risk_surfaces", []
         ),
+        validation_broker_closure_outcome=str(
+            validation_broker_result.get("closure_outcome", "")
+        ),
+        validation_broker_selected_scope=str(
+            validation_broker_result.get("selected_scope", "")
+        ),
+        validation_broker_negative_evidence=validation_broker_result.get(
+            "negative_evidence", []
+        ),
+        validation_broker_residual_risk=validation_broker_result.get("residual_risk", []),
+        validation_broker_command_ledger=validation_broker_result.get(
+            "command_ledger", []
+        ),
+        adapter_name=contract.adapter,
+        adapter_supported_checks=contract.supported_checks,
+        adapter_unsupported_checks=contract.unsupported_checks,
+        adapter_degraded_capabilities=contract.degraded_capabilities,
+        closure_contract_verdict=contract.verdict,
+        closure_contract_residual_risk=contract.residual_risk,
+        project_memory_available=bool(memory_advice.get("available", True)),
+        project_memory_projection_key=str(memory_advice.get("projection_key", "")),
+        project_memory_included_events=memory_advice.get("included_events", []),
+        project_memory_excluded_events=memory_advice.get("excluded_events", []),
+        project_memory_stale_context_gate=str(memory_advice.get("stale_context_gate", "")),
+        project_memory_residual_risk=memory_advice.get("residual_risk", []),
         residual_risk_detected=signals["risk"],
         completion_language_detected=signals["completion_language"],
         stage_manifest_detected=bool(manifest.get("stage_present")),
@@ -478,13 +514,26 @@ def _main() -> int:
     if mode == "monitor":
         clear_state(repo, runtime)
         return 0
-    missing = _missing_keyword_groups(final_text, state, manifest, contract)
+    missing = _missing_keyword_groups(
+        final_text,
+        state,
+        manifest,
+        contract,
+        validation_assessment,
+    )
     if _closure_profile(state) == "read_review" and not missing:
         clear_state(repo, runtime)
         return 0
     stop_hook_active = bool(event.get("stop_hook_active") or event.get("stopHookActive"))
     should_block = mode == "block" and bool(missing) and not stop_hook_active
-    message = _closure_message(state, final_text, manifest, contract)
+    message = _closure_message(
+        state,
+        final_text,
+        manifest,
+        contract,
+        validation_assessment,
+        memory_advice,
+    )
     if should_block:
         emit_stop_reminder(runtime, message, continue_turn=True)
     else:
@@ -617,9 +666,17 @@ def _closure_message(
     final_text: str,
     manifest: dict | None = None,
     contract: ClosureContract | None = None,
+    validation_assessment: dict | None = None,
+    memory_advice: dict | None = None,
 ) -> str:
     profile = _closure_profile(state)
-    missing = _missing_keyword_groups(final_text, state, manifest, contract)
+    missing = _missing_keyword_groups(
+        final_text,
+        state,
+        manifest,
+        contract,
+        validation_assessment,
+    )
     route_present = bool(manifest and manifest.get("route_present"))
     details: list[str] = []
     if state.get("structure_findings"):
@@ -672,11 +729,42 @@ def _closure_message(
         details.append(f"- changed paths: {', '.join(state['changed_paths'])}")
     if state.get("validation_command_seen") or state.get("validation_seen"):
         details.append("- validation command was observed")
-    broker_assessment = _validation_broker_assessment(final_text, state, "warn")
+    broker_assessment = (
+        validation_assessment
+        if isinstance(validation_assessment, dict)
+        else _validation_broker_assessment(final_text, state, "warn")
+    )
     broker_issues = broker_assessment.get("issues", []) if broker_assessment else []
     if isinstance(broker_issues, list) and broker_issues:
         details.append(
             f"- validation broker issues: {', '.join(str(issue) for issue in broker_issues[:6])}"
+        )
+    broker_result = _validation_broker_result(broker_assessment)
+    if broker_result.get("closure_outcome"):
+        details.append(f"- validation broker closure: {broker_result.get('closure_outcome')}")
+    if contract is not None:
+        details.append(f"- closure contract verdict: {contract.verdict}")
+        if contract.unsupported_checks:
+            details.append(
+                f"- unsupported runtime checks: {', '.join(contract.unsupported_checks[:8])}"
+            )
+        if contract.degraded_capabilities:
+            details.append(
+                f"- degraded runtime capabilities: {', '.join(contract.degraded_capabilities[:8])}"
+            )
+        if contract.residual_risk:
+            details.append(
+                f"- closure residual risk: {', '.join(contract.residual_risk[:8])}"
+            )
+    memory = memory_advice if isinstance(memory_advice, dict) else {}
+    memory_residual = memory.get("residual_risk") if isinstance(memory, dict) else []
+    if memory.get("available") is False:
+        details.append("- project memory unavailable; closure is degraded, not a pass")
+    if memory.get("stale_context_gate") in {"warn", "block"}:
+        details.append(f"- project memory stale-context gate: {memory.get('stale_context_gate')}")
+    if isinstance(memory_residual, list) and memory_residual:
+        details.append(
+            f"- project memory residual risk: {', '.join(str(item) for item in memory_residual[:6])}"
         )
     if state.get("suggested_domain_extensions"):
         details.append(
@@ -935,6 +1023,7 @@ def _missing_keyword_groups(
     state: dict,
     manifest: dict | None = None,
     contract: ClosureContract | None = None,
+    validation_assessment: dict | None = None,
 ) -> list[str]:
     lowered = text.casefold()
     missing: list[str] = []
@@ -993,6 +1082,10 @@ def _missing_keyword_groups(
     for group in _contract_missing_groups(contract):
         if group not in missing:
             missing.append(group)
+    broker_result = _validation_broker_result(validation_assessment)
+    broker_outcome = str(broker_result.get("closure_outcome") or "")
+    if broker_outcome in {"blocked", "needs_validation"}:
+        missing.append(f"validation_broker_{broker_outcome}")
     return missing
 
 
@@ -1003,8 +1096,10 @@ def _closure_contract(
     runtime: str,
     mode: str,
     signals: dict[str, bool] | None = None,
+    validation_assessment: dict | None = None,
 ) -> ClosureContract:
     signals = signals if isinstance(signals, dict) else _closure_signals(final_text, state, manifest)
+    broker_result = _validation_broker_result(validation_assessment)
     review_evidence_present = bool(
         state.get("review_evidence_seen")
         or state.get("review_artifact_seen")
@@ -1025,6 +1120,8 @@ def _closure_contract(
         residual_risk_present=bool(signals.get("risk")),
         capabilities=adapter_capabilities_for(runtime),
         block_mode=mode == "block",
+        validation_broker_outcome=str(broker_result.get("closure_outcome") or ""),
+        validation_broker_residual_risk=list(broker_result.get("residual_risk", []) or []),
     )
 
 
@@ -1176,9 +1273,20 @@ def _validation_broker_assessment(final_text: str, state: dict, mode: str) -> di
     if assess_validation_closure is None:
         return {}
     try:
+        assessment_state = dict(state)
+        unsupported = list(adapter_capabilities_for(_GATE_RUNTIME).unsupported_events)
+        existing_raw = assessment_state.get("unsupported_adapter_events") or []
+        if isinstance(existing_raw, (list, tuple, set)):
+            existing = list(existing_raw)
+        elif existing_raw:
+            existing = [existing_raw]
+        else:
+            existing = []
+        if unsupported or existing:
+            assessment_state["unsupported_adapter_events"] = [*existing, *unsupported]
         return assess_validation_closure(
             final_text,
-            state,
+            assessment_state,
             block_mode=mode == "block",
         )
     except Exception:
@@ -1189,6 +1297,13 @@ def _validation_result(assessment: dict | None) -> dict:
     if not isinstance(assessment, dict):
         return {}
     result = assessment.get("validation_result")
+    return result if isinstance(result, dict) else {}
+
+
+def _validation_broker_result(assessment: dict | None) -> dict:
+    if not isinstance(assessment, dict):
+        return {}
+    result = assessment.get("validation_broker_result")
     return result if isinstance(result, dict) else {}
 
 
@@ -1235,6 +1350,21 @@ def _has_validation_evidence(
         return False
     if validation_assessment is None and assess_validation_closure is not None:
         validation_assessment = _validation_broker_assessment(text, state, "warn")
+    broker_result = _validation_broker_result(validation_assessment)
+    if broker_result:
+        validation_blockers = {
+            "missing_validation",
+            "validation_command_without_outcome",
+            "validation_not_run",
+            "validation_failed",
+            "stale_validation",
+            "coverage_mismatch",
+            "targeted_check_reported_as_full",
+            "changed_path_without_validator",
+        }
+        negatives = set(str(item) for item in broker_result.get("negative_evidence", []) or [])
+        if negatives & validation_blockers:
+            return False
     result = _validation_result(validation_assessment)
     if result:
         if result.get("fresh_after_last_edit") is False:

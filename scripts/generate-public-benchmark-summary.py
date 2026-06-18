@@ -55,6 +55,7 @@ class EvidenceItem:
     source: str
     detail: str
     command: str
+    evidence_level: str = "structural fixture"
 
 
 def _read_json(path: Path) -> Any | None:
@@ -109,12 +110,13 @@ def _release_readiness_items(root: Path) -> list[EvidenceItem]:
     if not isinstance(readiness, dict):
         return [
             EvidenceItem(
-                "Release readiness",
-                "unknown",
-                "reports/professionalism-release-readiness.json",
-                "report missing or invalid",
-                "python3 scripts/validate-professionalism-regression.py --strict",
-            )
+            "Release readiness",
+            "unknown",
+            "reports/professionalism-release-readiness.json",
+            "report missing or invalid",
+            "python3 scripts/validate-professionalism-regression.py --strict",
+            "structural fixture",
+        )
         ]
 
     routing = readiness.get("routing_coverage_summary")
@@ -149,6 +151,7 @@ def _release_readiness_items(root: Path) -> list[EvidenceItem]:
             "reports/professionalism-release-readiness.json",
             f"strict_regression_status={strict}",
             "python3 scripts/validate-professionalism-regression.py --strict",
+            "promoted golden case",
         ),
     ]
 
@@ -264,6 +267,7 @@ def _additional_status_items(root: Path, scorecard_path: Path | None = None) -> 
             "scripts/validate-installation.py",
             "validator does not emit a committed machine-readable report",
             "python3 scripts/validate-installation.py",
+            "runtime telemetry sample",
         ),
         _scorecard_dimension_item(root, SKILL_EFFICACY_DIMENSION, SKILL_EFFICACY_DIMENSION, scorecard_path),
         _scorecard_dimension_item(root, RUNTIME_GOVERNANCE_DIMENSION, RUNTIME_GOVERNANCE_DIMENSION, scorecard_path),
@@ -302,6 +306,7 @@ def generate_summary(
         },
         "status_counts": status_counts,
         "items": [asdict(item) for item in items],
+        "evidence_levels": _scorecard_evidence_levels(root, scorecard_path),
         "known_unknowns": known_unknowns,
         "refresh_commands": REFRESH_COMMANDS,
         "claim_boundary": "Local deterministic evidence only; skill efficacy fixtures are structural/local evidence, not live pass-rate, empirical before/after performance, external popularity, adoption, marketplace availability, or market claim evidence.",
@@ -327,18 +332,22 @@ def render_markdown(payload: dict[str, Any]) -> str:
     ]
     for status, count in payload["status_counts"].items():
         lines.append(f"- `{status}`: {count}")
+    lines.extend(["", "## Evidence Levels", "", "| Evidence | Status | Meaning |", "| --- | --- | --- |"])
+    for level, detail in payload.get("evidence_levels", {}).items():
+        lines.append(f"| {level} | `{detail.get('status', 'unknown')}` | {detail.get('meaning', '')} |")
     lines.extend(
         [
             "",
             "## Evidence",
             "",
-            "| Area | Status | Source | Detail | Refresh Command |",
-            "| --- | --- | --- | --- | --- |",
+            "| Area | Status | Evidence Level | Source | Detail | Refresh Command |",
+            "| --- | --- | --- | --- | --- | --- |",
         ]
     )
     for item in payload["items"]:
         lines.append(
-            f"| {item['name']} | `{item['status']}` | {item['source']} | {item['detail']} | `{item['command']}` |"
+            f"| {item['name']} | `{item['status']}` | {item.get('evidence_level', 'structural fixture')} | "
+            f"{item['source']} | {item['detail']} | `{item['command']}` |"
         )
     lines.extend(["", "## Known Unknowns / Not Collected", ""])
     if payload["known_unknowns"]:
@@ -350,6 +359,39 @@ def render_markdown(payload: dict[str, Any]) -> str:
     lines.extend(payload["refresh_commands"])
     lines.extend(["```", ""])
     return "\n".join(lines)
+
+
+def _scorecard_evidence_levels(root: Path, scorecard_path: Path | None) -> dict[str, dict[str, str]]:
+    path, _source = _scorecard_path_and_source(root, scorecard_path)
+    scorecard = _read_json(path)
+    if isinstance(scorecard, dict) and isinstance(scorecard.get("evidence_levels"), dict):
+        return scorecard["evidence_levels"]
+    return {
+        "structural fixture": {
+            "status": "unknown",
+            "meaning": "Local deterministic structure sample passed; not evidence of live task success.",
+        },
+        "runtime telemetry sample": {
+            "status": "not_collected",
+            "meaning": "Actual runtime fact sample; may still require human review.",
+        },
+        "promoted golden case": {
+            "status": "unknown",
+            "meaning": "Human-reviewed case admitted to regression coverage.",
+        },
+        "live pass-rate": {
+            "status": "not_collected",
+            "meaning": "Measured real-task success rate.",
+        },
+        "token overhead": {
+            "status": "not_collected",
+            "meaning": "Measured additional token cost.",
+        },
+        "turn overhead": {
+            "status": "not_collected",
+            "meaning": "Measured additional turn cost.",
+        },
+    }
 
 
 def _check_file(path: Path, expected: str) -> list[str]:

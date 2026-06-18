@@ -70,6 +70,10 @@ def _validate_resolver(errors: list[str]) -> None:
             "python3 scripts/validate-hooks.py",
             "python3 -m unittest discover -s tests/hook_runtime",
         ),
+        "scripts/validate-hooks.py": (
+            "python3 scripts/validate-hooks.py",
+            "python3 -m unittest discover -s tests/hook_runtime",
+        ),
         "src/registry/routing-rules.yaml": (
             "python3 scripts/validate-registry.py",
             "python3 scripts/eval-routing.py",
@@ -140,6 +144,41 @@ def _validate_resolver(errors: list[str]) -> None:
             "python3 scripts/validate-validation-broker.py",
             "python3 -m unittest discover -s tests/validation_broker",
         ),
+        "scripts/review-agent-telemetry.py": (
+            "python3 -m unittest discover -s tests/telemetry",
+        ),
+        "tests/telemetry/test_review_agent_telemetry.py": (
+            "python3 -m unittest discover -s tests/telemetry",
+        ),
+        "evals/routing/cases.yaml": (
+            "python3 scripts/eval-routing.py",
+            "python3 scripts/eval-skill-professionalism.py",
+        ),
+        "reports/professional-scorecard.json": (
+            "python3 scripts/build.py --profile recommended",
+            "python3 scripts/validate-runtime-reference-links.py",
+        ),
+        "dist/codex/project/skill/SKILL.md": (
+            "python3 scripts/build.py --profile recommended",
+        ),
+        "installers/install.py": (
+            "python3 scripts/build.py --profile recommended",
+            "python3 scripts/validate-installation.py",
+        ),
+        "scripts/build.py": (
+            "python3 scripts/build.py --profile recommended",
+            "python3 scripts/validate-installation.py",
+        ),
+        "docs/TELEMETRY.md": (
+            "python3 -m unittest discover -s tests/telemetry",
+            "python3 scripts/validate-productization-assets.py",
+        ),
+        "src/unowned/new_module.py": (
+            "python3 -m unittest discover -s tests",
+        ),
+        "tests/unknown/test_sample.py": (
+            "python3 -m unittest discover -s tests",
+        ),
     }
     for changed_path, expected in cases.items():
         plan = resolve_validation_plan([changed_path])
@@ -154,6 +193,9 @@ def _validate_resolver(errors: list[str]) -> None:
         unknown_plan, "recommended_commands"
     ):
         errors.append("unknown path must recommend broad tests")
+    mixed_plan = resolve_validation_plan(["src/validation_broker/validation_policy.py", "unknown/file.bin"])
+    if "unknown/file.bin" not in mixed_plan.get("unknown_paths", []):
+        errors.append("mixed known and unknown paths must retain unknown path residual risk")
 
 
 def _validate_parser_and_policy(errors: list[str]) -> None:
@@ -184,6 +226,26 @@ def _validate_parser_and_policy(errors: list[str]) -> None:
     result = stale["validation_result"]
     if not isinstance(result, dict) or result.get("negative_evidence_reason") != "stale":
         errors.append("validation before final edit must be stale")
+    broker = stale.get("validation_broker_result")
+    if not isinstance(broker, dict) or broker.get("closure_outcome") != "blocked":
+        errors.append("stale validation must block the broker closure outcome")
+    no_outcome = assess_validation_closure(
+        "Ran python3 scripts/validate-hooks.py. Residual risk: pending outcome.",
+        {
+            "changed_paths": ["src/hook-runtime/scripts/changeforge_common.py"],
+            "risk_surfaces": ["hook-runtime"],
+        },
+    ).get("validation_broker_result")
+    if not isinstance(no_outcome, dict) or "validation_command_without_outcome" not in no_outcome.get(
+        "negative_evidence",
+        [],
+    ):
+        errors.append("command without outcome must be broker negative evidence")
+    read_only = assess_validation_closure("Reviewed files only.", {"read_evidence_seen": True}).get(
+        "validation_broker_result"
+    )
+    if not isinstance(read_only, dict) or read_only.get("closure_outcome") != "ready":
+        errors.append("read-only turns must not require validation")
 
 
 def _commands(plan: dict[str, object], field: str) -> list[str]:
