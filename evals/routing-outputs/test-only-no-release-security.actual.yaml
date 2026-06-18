@@ -4,7 +4,7 @@ actual:
   complexity: L2
   risk_level: medium
   skills: [quality-test-gate]
-  capabilities: [test-strategy, language-testing-strategy, typescript-professional-usage]
+  capabilities: [test-strategy, plan-execution-consistency, language-testing-strategy, typescript-professional-usage]
   domain_extensions: []
   quality_gates: [test gate]
   required_references:
@@ -13,6 +13,7 @@ actual:
     - references/capability-index.md
     - references/domain-extension-index.md
     - references/capabilities/58-test-strategy.md
+    - references/capabilities/122-plan-execution-consistency.md
     - references/capabilities/86-language-testing-strategy.md
     - references/capabilities/91-typescript-professional-usage.md
   stage_route_manifest:
@@ -22,13 +23,13 @@ actual:
     product_surface: none
     language_surface: typescript
     selected_skills: [quality-test-gate]
-    selected_capabilities: [test-strategy, language-testing-strategy, typescript-professional-usage]
+    selected_capabilities: [test-strategy, plan-execution-consistency, language-testing-strategy, typescript-professional-usage]
     selected_domain_extensions: []
     skipped_capabilities:
       - capability: release-rollback
         reason: no release or deployment action is requested
     context_budget_mode: single-stage
     context_budget_rationale: L2 test-only TS route uses test gate and language test capability only
-    required_evidence: [risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected]
+    required_evidence: [risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected, validation freshness after final material edits]
     required_quality_gates: [test gate]
     handoff_target: code-review

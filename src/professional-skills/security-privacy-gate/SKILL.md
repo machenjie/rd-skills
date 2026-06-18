@@ -46,6 +46,7 @@ Risk-escalation gate across all stages; deepest in coding, code-review, and rele
 - **Prompt injection is a trust boundary**: any LLM prompt that includes user-controlled content is a potential prompt injection vector — treat LLM output as untrusted and validate before executing actions.
 - **Cloud IAM and exposure changes are security changes**: a Terraform diff that adds wildcard IAM, public object storage, permissive security group rules, weak KMS key policy, or public gateway/DNS exposure must be reviewed as a security boundary change.
 - **Compliance evidence must be audit-ready at the time of change**: control objective, evidence artifact, owner, approval, exception, and retention metadata cannot be reconstructed reliably after the fact.
+- **Risky tools require permission and sandbox evidence**: shell commands, connector/MCP actions, secret-bearing operations, network writes, scanners, IaC plans/applies, and destructive file or data operations must record the tool, permission state, sandbox boundary, dry-run or revert path, and secret/output redaction rule before execution.
 
 ## Industry Benchmarks
 - **OWASP Top 10 (2021)**: A01 Broken Access Control (IDOR, privilege escalation), A02 Cryptographic Failures (weak ciphers, unencrypted PII), A03 Injection (SQLi, XSS, command injection), A07 Identification and Authentication Failures, A10 SSRF. The baseline checklist for web application security reviews.
@@ -114,6 +115,7 @@ Select the security/privacy mode before approving a change, review, fix, depende
 - **Signal:** cloud IAM, bucket, KMS, gateway, DNS/CDN/WAF, ingress, or network policy broadens access. **Hidden risk:** public exposure or privilege escalation. **Required professional action:** review effective policy and rollback. **Route to:** `delivery-release-gate`, `kubernetes-gateway`. **Evidence required:** plan diff, effective permission, rollback.
 - **Signal:** LLM/RAG path retrieves user data or can call tools without permission-aware retrieval and output validation. **Hidden risk:** prompt injection or data exfiltration. **Required professional action:** threat model AI tool chain. **Route to:** `ai-product-extension`, `threat-modeling`. **Evidence required:** red-team prompt, allowlist, retrieval auth test.
 - **Signal:** regulated/audited change lacks control objective, evidence owner, exception, freshness, or retention. **Hidden risk:** missing audit evidence and compliance failure despite code correctness. **Required professional action:** produce evidence chain with owner and freshness before release. **Route to:** `change-documentation-gate`, `delivery-release-gate`. **Evidence required:** audit-ready packet metadata with control owner, evidence owner, freshness date, and retention proof.
+- **Signal:** a tool can read secrets, mutate cloud/IAM/data/security state, execute shell, call a connector, or expose untrusted command output without sandbox/permission classification. **Hidden risk:** security review approves code while the agent action path leaks credentials or mutates state outside review. **Required professional action:** require tool permission/sandbox evidence before action or approval. **Route to:** `agent-tool-permission-sandbox`, `agent-execution-discipline`. **Evidence required:** tool/action class, permission state, sandbox boundary, dry-run/revert path, and secret redaction rule.
 
 ## Compliance Evidence
 
@@ -221,6 +223,7 @@ Return a security and privacy review with:
 - **Privacy impact**: Personal data processed, legal basis, retention, and minimization assessment.
 - **Cloud governance review**: Cloud IAM escalation, public bucket exposure, SG/NACL/WAF/DNS/CDN/gateway exposure, KMS key policy, account/project boundary, and resource tagging risks.
 - **Compliance evidence**: Control objective, evidence artifact, control owner, evidence owner, exception owner, evidence freshness, retention period, and audit-ready packet status.
+- **Tool permission/sandbox review**: shell/connector/MCP/scanner/IaC/secret-bearing action class, permission state, sandbox boundary, dry-run or revert path, network write scope, and redaction rule.
 - **Reuse and placement rationale**: why each authz, validation, encoding, secret, dependency, AI/RAG, or audit control belongs at the selected boundary.
 - **Behavior preservation**: existing permissions, tenant isolation, privacy promises, secret lifecycle, dependency posture, and audit controls preserved or intentionally changed.
 - **Required fixes**: All Critical and High findings are blocking — fixes are required before merge.
@@ -251,6 +254,7 @@ Close a security and privacy review only when all five canonical answers are con
 10. All Critical and High findings are resolved or have approved remediation plans before merge.
 11. Cloud IAM, public exposure, network exposure, and KMS policy changes are reviewed against effective policy and least privilege.
 12. Regulated changes include control, evidence, owner, exception, freshness, and retention metadata.
+13. Risky shell, connector/MCP, scanner, IaC, secret-bearing, network-write, and destructive actions have tool permission/sandbox evidence before execution or approval.
 
 ## Handoff
 - **backend-change-builder** — for implementation of authorization checks, input validation, parameterized queries, and CSRF protection.

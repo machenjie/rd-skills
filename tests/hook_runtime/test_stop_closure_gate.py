@@ -375,7 +375,10 @@ class StopClosureGateTests(unittest.TestCase):
             "last_assistant_message": (
                 "I used the ChangeForge skill path. Changed files are listed. "
                 "Validation: ran pytest -q, 12 passed, exit 0. Residual risk is none. "
-                "Next steps: deploy.\n\n"
+                "Repository context: owning surface and caller/callee flow inspected. "
+                "Workflow state: current stage testing, allowed transition handoff, owner/reviewer split recorded. "
+                "Plan-execution consistency: accepted plan vs actual changed files and validation commands reconciled. "
+                "Validation freshness: latest edit covered by the pytest run. Next steps: deploy.\n\n"
                 f"{PREFLIGHT_MANIFEST}\n"
                 "```yaml\n"
                 "changeforge_route:\n"
@@ -407,7 +410,10 @@ class StopClosureGateTests(unittest.TestCase):
             "last_assistant_message": (
                 "I used the ChangeForge skill path. Changed files are listed. "
                 "Validation: ran go test ./..., exit 0. Residual risk is none. "
-                "Next steps: review.\n\n"
+                "Repository context: owning surface and caller/callee flow inspected. "
+                "Workflow state: current stage testing, allowed transition review, owner/reviewer split recorded. "
+                "Plan-execution consistency: accepted plan vs actual changed files and validation commands reconciled. "
+                "Validation freshness: latest edit covered by go test. Next steps: review.\n\n"
                 f"{PREFLIGHT_MANIFEST}\n"
                 "```yaml\n"
                 "changeforge_route:\n"

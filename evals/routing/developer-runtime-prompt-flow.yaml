@@ -44,7 +44,10 @@ expected:
     - context-packaging
     - task-dag-decomposition
     - engineering-stage-professionalism
+    - repository-context-map
+    - agent-workflow-state-machine
     - agent-execution-discipline
+    - plan-execution-consistency
     - code-review
     - regression-testing
   domain_extensions: []

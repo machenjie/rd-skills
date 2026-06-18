@@ -51,6 +51,7 @@ Owns release-delivery; also serves infrastructure-deployment, kubernetes-helm, a
 - **Helm rollback must not be treated as full system rollback.** Database schema, external config, CRDs, secrets, cloud resources, and migrated data may need separate rollback or forward-fix.
 - **No repeated deploy retry without route repair.** After two failed pipeline or deployment attempts on the same signature, require inspected evidence, a new hypothesis, and a changed route before another attempt.
 - **Prefer existing release controls before new release machinery** — use current CI jobs, platform feature flags, staged rollout controls, rendered diff checks, config validation, and rollback paths before adding a new pipeline wrapper, deployment tool, environment switch, hook, or script.
+- **Release tools require permission and sandbox evidence** — before deploy, migration, rollback, IaC apply, Helm/Kubernetes command, secret rotation, cloud change, or network write, record the tool, permission state, sandbox boundary, dry-run/rendered diff, rollback/revert path, and secret/output redaction rule.
 
 ## Industry Benchmarks
 - **DORA Metrics (Accelerate — Forsgren, Humble, Kim)**: Deployment frequency, Lead time for changes, Mean time to restore (MTTR), Change failure rate — the four metrics that measure delivery health. Elite teams: deployment frequency daily+, MTTR < 1 hour, change failure rate < 5%.
@@ -116,6 +117,7 @@ Select the release mode before approving deployment, migration, config, IaC, rol
 - **Signal:** release lacks post-release owner, watch window, or dashboard. **Hidden risk:** regression discovered by users. **Required professional action:** assign operational watch. **Route to:** `reliability-observability-gate`. **Evidence required:** owner, duration, metrics, rollback trigger.
 - **Signal:** regulated release lacks approval, artifact digest, SBOM/scan, deploy audit event, or retention metadata. **Hidden risk:** missing evidence causes audit failure after release. **Required professional action:** block until the release evidence chain exists. **Route to:** `change-documentation-gate`, `security-privacy-gate`. **Evidence required:** audit packet with approval, artifact digest, scan report, deploy event, retention owner, and freshness date.
 - **Signal:** release work adds a new CI/CD wrapper, deploy script, hook, feature-flag branch, config switch, or IaC abstraction while the existing platform can express the rollout, validation, and rollback requirement. **Hidden risk:** release complexity becomes another failure surface and bypasses known audit paths. **Required professional action:** run minimal-correctness review and keep any shortcut tied to a rollback owner and cleanup trigger. **Route to:** `minimal-correct-implementation`, `configuration-runtime-policy`, `cleanup-deletion-governance`. **Evidence required:** existing release control considered, rejected new machinery or justification, rollback proof, cleanup owner, and validation command.
+- **Signal:** deploy, migration, Helm/Kubernetes, IaC, cloud, secret, or rollback command lacks permission/sandbox classification. **Hidden risk:** the agent mutates live release state without reviewed boundary or rollback evidence. **Required professional action:** classify tool permission and sandbox before execution. **Route to:** `agent-tool-permission-sandbox`, `security-privacy-gate`. **Evidence required:** command/action class, permission state, sandbox/dry-run/rendered diff, rollback path, and redaction rule.
 
 ## Foundation Capability Support
 
@@ -217,6 +219,7 @@ Return a structured release plan with:
 - **Compliance evidence**: Change approval, deploy audit event, artifact digest, SBOM/vulnerability scan evidence, evidence owner, and retention period.
 - **Post-release monitoring plan**: Named owner, dashboards, metrics, SLO burn rate, duration of watch window.
 - **Execution discipline evidence**: Deployment commands or pipeline links, exit status, failed-attempt ledger when applicable, route repair decision, and closure package.
+- **Tool permission/sandbox evidence**: deploy/migration/IaC/Helm/Kubernetes/cloud/secret action class, permission state, sandbox boundary, dry-run/rendered diff, rollback or revert path, and redaction rule.
 - **Validation evidence**: pipeline, staging, rollback, Helm/IaC, config, canary, post-release, or audit checks run, with outcomes tied to the release obligation.
 - **Reuse and placement rationale**: why migration, config, flag, Helm/IaC, pipeline, watch, and rollback responsibilities sit in the selected release boundary.
 - **Minimal Correctness Decision**: existing release control selected or rejected, new release machinery avoided or justified, stale flag/config/script deletion plan, and shortcut ceiling with rollback trigger.
@@ -250,6 +253,7 @@ Close a release plan only when all five canonical answers are concrete (answer s
 12. Regulated releases retain approval, audit event, artifact digest, SBOM/vulnerability scan evidence, owner, and retention period.
 13. Incident hotfixes distinguish mitigation from resolution and identify incident commander, technical lead, communications owner, and validation signal.
 14. Agent-assisted release work includes evidence inventory, route repair after repeated failure, residual risks, and handoff target.
+15. Release-affecting tools have permission/sandbox evidence before execution, including dry-run/rendered diff when available, rollback/revert path, and redaction rules for secrets and command output.
 
 ## Handoff
 - **reliability-observability-gate** — for SLO burn rate targets, canary metric baselines, and post-release alert thresholds.

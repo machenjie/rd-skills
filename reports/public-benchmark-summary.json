@@ -32,7 +32,7 @@
     },
     {
       "command": "python3 scripts/eval-skill-professionalism.py",
-      "detail": "average_score=41.45",
+      "detail": "average_score=41.57",
       "name": "Skill professionalism report",
       "source": "reports/skill-professionalism-eval.json",
       "status": "pass"
@@ -60,7 +60,7 @@
     },
     {
       "command": "python3 scripts/build.py --profile dev",
-      "detail": "top_level=143, expected=143",
+      "detail": "top_level=148, expected=148",
       "name": "Profile build: dev",
       "source": "dist/universal/skills/dev/.changeforge-build-manifest.json",
       "status": "pass"

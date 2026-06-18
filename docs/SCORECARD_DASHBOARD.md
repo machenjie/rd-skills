@@ -14,14 +14,14 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 
 | Evidence | Status | Detail |
 | --- | --- | --- |
-| Profile build reproducibility | `pass` | {"dev": {"detail": "dev top-level count is 143", "manifest": "dist/universal/skills/dev/.changeforge-build-manifest.json", "status": "pass"}, "full": {"detail": "full top-level count is 26", "manifest": "dist/universal/skills/full/.changeforge-build-manifest.json", "status": "pass"}, "recommended": {"detail": "recommended top-level count is 19", "manifest": "dist/universal/skills/recommended/.changeforge-build-manifest.json", "status": "pass"}} |
+| Profile build reproducibility | `pass` | {"dev": {"detail": "dev top-level count is 148", "manifest": "dist/universal/skills/dev/.changeforge-build-manifest.json", "status": "pass"}, "full": {"detail": "full top-level count is 26", "manifest": "dist/universal/skills/full/.changeforge-build-manifest.json", "status": "pass"}, "recommended": {"detail": "recommended top-level count is 19", "manifest": "dist/universal/skills/recommended/.changeforge-build-manifest.json", "status": "pass"}} |
 | Open-source readiness | `partial` | config_present=True, selected_license_non_null=False, selected_license_allowed=True, license_file=False, pyproject_license_not_proprietary=False, contribution_licensing_confirmed=False, contribution_licensing_evidence=False, security_contact_confirmed=False, security_contact_evidence=False, dist_release_policy_explicit=True, dist_release_policy_valid=True |
 | Example coverage | `pass` | showcase examples validate |
 | Marketplace index validation | `pass` | recommended, full, and dev marketplace indexes validate |
 
 ## Profile Counts
 
-- `dev`: `pass` - dev top-level count is 143
+- `dev`: `pass` - dev top-level count is 148
 - `full`: `pass` - full top-level count is 26
 - `recommended`: `pass` - recommended top-level count is 19
 

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-17T09:40:45.112774+00:00",
+  "generated_at": "2026-06-18T05:18:25.469055+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -267,7 +267,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (7)",
-      "score": 50,
+      "score": 51,
       "status": "acceptable",
       "warnings": []
     },
@@ -753,7 +753,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (25)",
-      "score": 59,
+      "score": 58,
       "status": "sample-grade",
       "warnings": []
     },
@@ -915,7 +915,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (28)",
-      "score": 55,
+      "score": 56,
       "status": "sample-grade",
       "warnings": []
     },
@@ -1023,7 +1023,7 @@
       "quality_gate": "yes",
       "reference_loading_hint": "yes",
       "routing_coverage": "yes (33)",
-      "score": 57,
+      "score": 58,
       "status": "sample-grade",
       "warnings": []
     },

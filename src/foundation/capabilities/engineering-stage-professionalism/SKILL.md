@@ -67,16 +67,16 @@ Map the stage to its launch set using the compact matrix below:
 | --- | --- | --- |
 | requirement-intake | `requirement-clarification`, `requirement-structuring`, `non-goal-boundary-definition`, `acceptance-standard-definition`, `scenario-decomposition` | coding, language, testing, refactoring, release |
 | architecture-design | `architecture-style-selection`, `module-boundary-design`, `layered-architecture-design`, `architecture-tradeoff-analysis`, `extensibility-design`, `solution-optimality-evaluation` | language idiom, coding, test authoring |
-| implementation-planning | `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` | full architecture review, release, deep performance profiling |
+| implementation-planning | `repository-context-map`, `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` | full architecture review, release, deep performance profiling |
 | coding | matching language professional usage capability, `language-idiom-enforcement`, `input-validation`, `logging-error-handling` | architecture deep review, release, full regression suite design |
 | debugging-diagnosis | `failure-diagnosis`, `agent-execution-discipline`, `observability` | refactoring, new design |
 | bug-fix | `agent-execution-discipline`, `regression-testing`, `code-review`; add `minimal-correct-implementation` only for minimal fix, delete/shrink, dependency, abstraction, wrapper-only delegation, shortcut, or overengineering signals | architecture redesign |
-| code-review | `code-review`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `minimal-correct-implementation` only for complexity/delete/shrink/dependency/abstraction/wrapper/shortcut signals; add `ai-code-review-refactor` as the professional owner for generated code | release, deployment, infrastructure |
+| code-review | `code-review`, `plan-execution-consistency`, `implementation-structure-design`, `code-clarity-maintainability`, `language-idiom-enforcement`; add `minimal-correct-implementation` only for complexity/delete/shrink/dependency/abstraction/wrapper/shortcut signals; add `ai-code-review-refactor` as the professional owner for generated code | release, deployment, infrastructure |
 | refactoring | `refactoring`, `implementation-structure-design`, `code-clarity-maintainability`, `code-review`, `regression-testing` | feature design, release |
-| testing | `test-strategy`, `language-testing-strategy`, `test-data-management`, matching test capability | architecture redesign, new feature coding |
+| testing | `test-strategy`, `plan-execution-consistency`, `language-testing-strategy`, `test-data-management`, matching test capability | architecture redesign, new feature coding |
 | release-delivery | `ci-cd`, `release-rollback`, `containerization`, `kubernetes-gateway`, `observability`, `backup-recovery` | language deep checks, coding |
-| documentation-handoff | `documentation-generation`, `agent-execution-discipline` | coding capabilities |
-| skill-authoring | `skill-authoring-expert`, `documentation-generation`, `agent-execution-discipline` | product coding, language runtime, release |
+| documentation-handoff | `agent-workflow-state-machine`, `plan-execution-consistency`, `documentation-generation`, `agent-execution-discipline` | coding capabilities |
+| skill-authoring | `repository-context-map`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `documentation-generation`, `agent-execution-discipline`, `plan-execution-consistency` | product coding, language runtime, release |
 
 Select the product surface and language surface for the change, and launch only the
 matching professional skill and capabilities. Pair with `change-forge-router` for the overall

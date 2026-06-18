@@ -40,6 +40,9 @@ Launched across stages as the execution kernel, with emphasis in debugging-diagn
 - **Evidence-based completion.** A change is not complete until concrete evidence (test output, validator output, fixture diff, screenshot, log excerpt, or measured result) is attached to the completion claim.
 - **No engineering action before requirement clarification.** For target-project engineering prompts, the agent must first record current behavior, desired behavior, non-goals, constraints, acceptance/TDD signal, blocking questions, assumptions, and proceed/block status. If blocking questions remain, the agent stops and asks them instead of reading, planning, or editing around the gap.
 - **No plan before target-project inspection.** A plan is invalid until the agent has inspected relevant target-project code, tests, configs, docs, existing implementation, conventions, and likely call chain, or has explicitly limited the work to non-executing advice with not-inspected risk.
+- **Repository context before plan or action.** Before planning or editing, record the owning surface, related files, caller/callee flow, local conventions, tests, configs/docs, generated artifacts, rejected locations, and not-inspected boundaries. A generic plan without repository context is not a plan.
+- **Workflow state before and after phase transitions.** Record current phase, allowed next phase, owner skill, reviewer skill, validation freshness, open findings, repair/re-review state, and closure readiness before moving from read to plan, plan to edit, edit to test, test to review, repair to re-review, or review to handoff.
+- **Tool permission/sandbox before risky action.** Before shell commands, connector/MCP actions, destructive filesystem operations, migrations, deploys, network writes, secret-bearing calls, or untrusted tool output handling, record tool/action class, permission state, sandbox boundary, dry-run/revert path, and redaction rule.
 - **No implementation before TDD or validation signal.** Before editing behavior, the agent names the failing, new, or updated test, eval, validation command, acceptance check, or explicit not-verified residual risk that will prove the change.
 - **No action closure without independent review.** Each action must name an owner skill or capability and a different review skill or capability. The action owner may not substitute self-review for an independent review gate.
 - **No review closure while findings remain.** When review finds issues, route repair to the owner skill or appropriate specialist, then re-run the independent review. Handoff is blocked until findings are repaired and re-reviewed, or explicitly carried as not-verified residual risk with an owner.
@@ -51,6 +54,7 @@ Launched across stages as the execution kernel, with emphasis in debugging-diagn
 - **Same-pattern scan before local fix.** Before applying a local fix to a bug, defect, or wrong call, the agent must scan for the same pattern in the rest of the codebase. If the pattern exists elsewhere, the fix must either cover all instances or explicitly justify why it is local-only.
 - **Reuse and placement rationale before new structure.** No new function, class, file, directory, component, hook, service, repository, adapter, utility, or abstraction may be added without an explicit reuse search, placement decision, and shared/common/utils audit. This rule delegates to `implementation-structure-design` for the placement schema.
 - **Proactive closure with risk, boundary, and validation result.** Every handoff or task closure must include: the change boundary, the validation results that were actually run, the residual risks, and the next-skill or human handoff target. When the change was routed, the closure also restates the `changeforge_route` manifest (and `changeforge_stage_route` for non-trivial work) instead of dropping it after the first turn. Silent handoff is rejected.
+- **Plan-execution consistency before final review or handoff.** Compare accepted plan, actual changed files, validation commands, skipped work, stale evidence, unplanned behavior changes, and residual risk. Any mismatch routes back to planning or review.
 - **Local convention scan before naming.**
   Before adding or renaming any file, function, method, class, directory, component, hook, service, repository, adapter, helper, or utility, the agent must inspect same-file, same-directory, parent-module, sibling-module, and test naming conventions.
 - **Reuse ladder before new code.**
@@ -181,10 +185,14 @@ Return an Execution Discipline Report alongside any non-trivial agent-assisted c
 - **Evidence inventory**: list of commands run, outputs captured, artifacts produced, outcomes.
 - **Runtime prompt flow ledger**: requirement clarification, inspected boundaries before plan, TDD/validation signal, action owner/review map, and repair/re-review record.
 - **Completion claim status**: verified (with the backing command and outcome), partially verified (with the gap named), or not verified (with the not-verified disclosure: status, why not run, residual risk, exact command).
+- **Repository context map**: owning surface, related files, caller/callee flow, conventions, tests/config/docs, generated artifacts, rejected locations, and not-inspected boundaries.
+- **Workflow state summary**: current phase, allowed transition, owner/reviewer split, validation freshness, open findings, repair/re-review status, and closure readiness.
+- **Tool permission/sandbox record**: risky tool/action class, permission state, sandbox boundary, dry-run/revert path, and redaction rule.
 - **Verified cause statement** (when a diagnosis is part of the change): symptom, hypothesis, method, verified cause, counter-evidence.
 - **Route repair ledger** (when applicable): attempt 1, attempt 2, failure signature, route change, new hypothesis.
 - **Same-pattern scan record** (when a local fix is applied): pattern signature, scope, other occurrences, decision.
 - **Proactive closure package**: boundary, validation results, residual risk, handoff target.
+- **Plan-execution consistency record**: accepted plan, actual changed files, validation commands, skipped work, stale evidence, unplanned behavior changes, and residual-risk reconciliation.
 - **Professional evidence contract answer set**: basis; files and boundaries inspected; reuse/placement rationale; behavior preservation when applicable; validation commands; residual risk; next gate.
 - **Discipline violations**: any rule violation that was accepted with justification, or "none".
 - **Local convention scan record**: same file, same directory, parent module, sibling module, tests, selected convention.
@@ -218,6 +226,10 @@ Return an Execution Discipline Report alongside any non-trivial agent-assisted c
 22. When the change is a review, spec compliance (requirement, acceptance criteria, non-goals, plan, compatibility, old-behavior preservation) is confirmed before code-quality judgement, and implementer self-review does not replace independent review.
 23. AI-generated code is rejected or repaired when it shows local-only fixing, invented helpers, missing reuse search, wrong shared/common placement, hidden scope expansion, or validation overclaim.
 24. Every professional skill closure answers the full evidence contract set: inspected boundaries, judgment, reuse/placement rationale, behavior preservation, validation evidence, residual risk, and next gate.
+25. Repository context is present before planning or action for target-project engineering and skill-authoring work.
+26. Workflow state is explicit before phase transitions and at handoff.
+27. Risky shell, connector/MCP, destructive, deploy, migration, network-write, secret-bearing, or untrusted-output actions carry tool permission/sandbox evidence.
+28. Final review and handoff include plan-execution consistency and disclose stale validation or unplanned changes.
 
 # Used By
 
@@ -252,4 +264,4 @@ Return an Execution Discipline Report alongside any non-trivial agent-assisted c
 
 # Completion Criteria
 
-The capability is complete for a given change when the Execution Discipline Report is attached, the evidence inventory is non-empty, every completion claim names a fresh verification that ran against the current change (or a not-verified disclosure replaces it), any diagnosis carries a verified cause, any repeated failure carries a route repair ledger, any local fix carries a same-pattern scan, any new structure carries reuse and placement rationale, and the closure package documents boundary, validation results, residual risks, and handoff target.
+The capability is complete for a given change when the Execution Discipline Report is attached, the evidence inventory is non-empty, repository context exists before planning, workflow state is current, risky tools have permission/sandbox evidence, every completion claim names a fresh verification that ran against the current change (or a not-verified disclosure replaces it), any diagnosis carries a verified cause, any repeated failure carries a route repair ledger, any local fix carries a same-pattern scan, any new structure carries reuse and placement rationale, plan-execution consistency reconciles the final work, and the closure package documents boundary, validation results, residual risks, and handoff target.

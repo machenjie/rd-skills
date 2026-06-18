@@ -69,6 +69,7 @@ stages:
   - name: implementation-planning
     purpose: code placement, reuse decision, object/function/class/file/directory design, naming, readable main flow, public/private/internal boundaries
     default_capabilities:
+      - repository-context-map
       - implementation-structure-design
       - module-boundary-design
       - code-clarity-maintainability
@@ -83,12 +84,15 @@ stages:
       - data-side-effect-flow-tracing
       - cleanup-deletion-governance
       - minimal-correct-implementation
+      - agent-workflow-state-machine
+      - plan-execution-consistency
     skip_by_default:
       - full architecture review
       - release
       - deep performance profiling
     required_evidence:
       - target boundaries inspected before plan
+      - repository context map with owning surface and caller/callee evidence
       - reuse candidates
       - simplicity ladder result
       - deleted or rejected complexity
@@ -118,6 +122,9 @@ stages:
       - configuration-runtime-policy
       - data-side-effect-flow-tracing
       - minimal-correct-implementation
+      - agent-tool-permission-sandbox
+      - agent-workflow-state-machine
+      - plan-execution-consistency
     skip_by_default:
       - architecture deep review
       - release
@@ -130,6 +137,7 @@ stages:
       - released resources
       - minimal scope diff
       - deleted or rejected complexity
+      - tool permission and sandbox classification when risky tools or commands are used
     required_quality_gates:
       - implementation gate
     allowed_next_stages:
@@ -173,6 +181,8 @@ stages:
       - code-review
     conditional_capabilities:
       - minimal-correct-implementation
+      - plan-execution-consistency
+      - agent-workflow-state-machine
     skip_by_default:
       - architecture redesign
       - release
@@ -182,6 +192,7 @@ stages:
       - same-pattern scan record
       - regression test
       - blast-radius note
+      - plan versus actual changed-file consistency
     required_quality_gates:
       - implementation gate
       - test gate
@@ -197,11 +208,13 @@ stages:
     purpose: correctness, structure, naming, reuse, readability, security, reliability, test evidence, hallucinated-API check
     default_capabilities:
       - code-review
+      - plan-execution-consistency
       - implementation-structure-design
       - code-clarity-maintainability
       - language-idiom-enforcement
     conditional_capabilities:
       - minimal-correct-implementation
+      - agent-workflow-state-machine
     skip_by_default:
       - release
       - deployment
@@ -215,6 +228,7 @@ stages:
       - validation required
       - independent reviewer
       - repair and re-review result
+      - final diff covered by review scope
     required_quality_gates:
       - implementation gate
     allowed_next_stages:
@@ -266,6 +280,7 @@ stages:
     purpose: unit, integration, contract, e2e, regression, fixtures, mocks, concurrency, language-specific tests
     default_capabilities:
       - test-strategy
+      - plan-execution-consistency
       - language-testing-strategy
       - test-data-management
     conditional_capabilities:
@@ -280,6 +295,7 @@ stages:
       - model-boundary-mapping
       - data-side-effect-flow-tracing
       - minimal-correct-implementation
+      - agent-workflow-state-machine
     skip_by_default:
       - architecture redesign
       - coding of new features
@@ -289,6 +305,7 @@ stages:
       - observable-behavior assertions
       - evidence of gaps
       - minimal check rationale when lower-depth validation is selected
+      - validation freshness after final material edits
     required_quality_gates:
       - test gate
     allowed_next_stages:
@@ -310,6 +327,8 @@ stages:
       - backup-recovery
     conditional_capabilities:
       - configuration-runtime-policy
+      - agent-tool-permission-sandbox
+      - plan-execution-consistency
       - architecture-enforcement-tooling
       - consumer-impact-analysis
       - cleanup-deletion-governance
@@ -324,6 +343,7 @@ stages:
       - health checks
       - alert ownership
       - shortcut ceiling and upgrade trigger when shortcuts remain
+      - tool permission and rollback classification for release commands
     required_quality_gates:
       - delivery gate
     allowed_next_stages:
@@ -336,12 +356,15 @@ stages:
   - name: documentation-handoff
     purpose: change boundary, validation evidence, residual risk, runbook, API docs, changelog, next actions
     default_capabilities:
+      - agent-workflow-state-machine
+      - plan-execution-consistency
       - documentation-generation
       - agent-execution-discipline
     skip_by_default:
       - coding capabilities
     required_evidence:
       - validated boundary
+      - validation freshness and plan-execution consistency
       - residual risk
       - updated docs list
       - handoff target
@@ -358,11 +381,15 @@ stages:
   - name: skill-authoring
     purpose: author, review, slim, split, or maintain ChangeForge skills, capabilities, references, registry, or routing rules
     default_capabilities:
+      - repository-context-map
       - skill-authoring-expert
+      - skill-efficacy-benchmark
       - documentation-generation
       - agent-execution-discipline
+      - plan-execution-consistency
     conditional_capabilities:
       - minimal-correct-implementation
+      - agent-workflow-state-machine
     skip_by_default:
       - product coding
       - language runtime
@@ -372,6 +399,7 @@ stages:
       - trigger precision
       - output contract
       - registry/routing/validation impact
+      - skill-efficacy benchmark impact when behavior claims change
       - minimal scope diff
       - deleted or rejected complexity
       - shortcut ceiling and upgrade trigger when shortcuts remain
@@ -470,7 +498,7 @@ product_surfaces:
   - surface: skill-authoring
     signals: [skill, capability, registry, routing rule, stage model]
     required_skill: change-forge-router
-    default_capabilities: [skill-authoring-expert, engineering-stage-professionalism]
+    default_capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency]
     conditional_capabilities: [minimal-correct-implementation]
 
 language_surfaces:

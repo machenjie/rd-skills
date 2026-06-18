@@ -78,6 +78,7 @@ actual:
       - config compatibility
       - health checks
       - alert ownership
+      - tool permission and rollback classification for release commands
     required_quality_gates:
       - requirement gate
       - impact gate

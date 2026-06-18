@@ -73,6 +73,7 @@ actual:
       - deleted or rejected complexity
       - regression test
       - blast-radius note
+      - plan versus actual changed-file consistency
     required_quality_gates:
       - requirement gate
       - domain gate

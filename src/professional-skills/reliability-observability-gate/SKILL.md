@@ -45,6 +45,7 @@ Launched for debugging-diagnosis and release-delivery production-risk review. Pe
 - **Cardinality limits on metric labels**: high-cardinality labels (user_id, request_id, URL path with IDs) destroy time-series databases — use aggregated label values (endpoint name, status class) instead.
 - **Cost and capacity budgets are reliability budgets**: an autoscaling rule, storage growth pattern, query scan, or egress path that can exceed budget without alerting is an operational risk, not only a finance concern.
 - **Reliability closure requires verified cause**: do not accept environment blame, intermittent flakiness claims, or incident closure without evidence tied to metrics, logs, traces, configuration, dependency version, or input.
+- **Production tools require permission and sandbox evidence**: before running incident, diagnostic, cloud, deploy, rollback, migration, load, profiling, connector/MCP, or network-write actions, record the tool, permission state, sandbox boundary, dry-run/read-only scope, rollback/revert path, and output redaction rule.
 
 ## Industry Benchmarks
 - **Google SRE Book (Beyer et al.) — Chapters 3, 4, 6**: SLIs, SLOs, error budgets, toil reduction. The canonical reference for production reliability engineering. SLO = reliability commitment; error budget = innovation vs. stability balance.
@@ -109,6 +110,7 @@ Select the reliability mode before approving production behavior, performance wo
 - **Signal:** feature flag, kill switch, runtime mode, or config default changes reliability behavior without typed validation, owner, or rollout/rollback evidence. **Hidden risk:** production mitigation or degradation policy depends on ungoverned config. **Required professional action:** apply runtime configuration policy before accepting reliability readiness. **Route to:** `configuration-runtime-policy`, `delivery-release-gate`. **Evidence required:** config schema, default, validation, owner, kill-switch behavior, rollout/rollback, and cleanup path.
 - **Signal:** incident closure lacks verified cause, false hypotheses, customer impact, or corrective action owner. **Hidden risk:** missing verified cause repeats the incident and weakens the postmortem. **Required professional action:** keep the incident open or route diagnosis/docs until cause and owner are proven. **Route to:** `failure-diagnosis`, `change-documentation-gate`. **Evidence required:** incident timeline, metric/log proof, false-hypothesis notes, and corrective-action owner.
 - **Signal:** autoscaling, storage, egress, full scan, or batch retry can exceed budget without anomaly alert. **Hidden risk:** unbounded spend, cost leak, or budget incident as a reliability failure. **Required professional action:** add cost/capacity guardrail with alertable threshold and owner. **Route to:** `performance-budgeting`, `delivery-release-gate`. **Evidence required:** unit-cost report, capacity forecast, anomaly alert query, and alert owner.
+- **Signal:** reliability diagnosis, load/profile, cloud, deploy, rollback, migration, or incident command can mutate state, stress production, call a connector, or expose sensitive output without permission/sandbox classification. **Hidden risk:** the investigation or fix becomes a production incident. **Required professional action:** classify tool permission/sandbox before execution. **Route to:** `agent-tool-permission-sandbox`, `security-privacy-gate`. **Evidence required:** tool/action class, permission state, sandbox/read-only boundary, rollback/revert path, and output redaction rule.
 
 ## Cost And Capacity Guardrails
 
@@ -224,6 +226,7 @@ Return a reliability and observability plan with:
 - **Reuse and placement rationale**: why each metric, log field, span, alert, dashboard, runbook, fallback, or capacity guardrail belongs at the selected boundary.
 - **Recovery plan**: runbook location, tested recovery steps, rollback decision criteria.
 - **Execution discipline evidence**: Verified-cause statement, evidence inventory, false hypotheses, route-repair ledger when repeated investigation failed, and closure package.
+- **Tool permission/sandbox evidence**: diagnostic/load/profile/cloud/deploy/rollback/migration/connector action class, permission state, sandbox or read-only boundary, rollback/revert path, and redaction rule.
 - **Validation evidence**: load/profile/query/dashboard/alert/incident artifacts run or inspected, with outcomes tied to the reliability obligation.
 - **Behavior preservation**: SLO semantics, alert meaning, fallback behavior, logging privacy, and existing runbook actions preserved or intentionally changed.
 - **Chaos/game day obligations**: failure mode scenarios to test in staging before production deployment.
@@ -258,6 +261,7 @@ Close a reliability and observability plan only when all five canonical answers 
 15. Retry, fallback, timeout, cancellation, and partial-failure states are distinguishable in logs, metrics, traces, alerts, and user-safe responses.
 16. Hot paths with unbounded or high-volume inputs have explicit complexity, memory, streaming/chunking, and benchmark/profile evidence.
 17. Side effects are visible at service, adapter, repository, job, or message-consumer boundaries and preserve transaction/event ordering.
+18. Reliability-affecting tools have permission/sandbox evidence before execution, including read-only scope or dry-run where available, rollback/revert path, and output redaction rules.
 
 ## Handoff
 - **delivery-release-gate** — for canary traffic thresholds, rollout monitoring windows, and rollback decision signals.

@@ -1,7 +1,7 @@
 {
   "dimensions": [
     {
-      "detail": "{\"domain_extensions\": 7, \"foundation_capabilities\": 117, \"professional_skills\": 19}",
+      "detail": "{\"domain_extensions\": 7, \"foundation_capabilities\": 122, \"professional_skills\": 19}",
       "fix_hint": "Fix registry entries or expected count constants so they agree.",
       "name": "Registry source counts",
       "source": "src/registry/*.yaml",
@@ -9,7 +9,7 @@
       "verification_command": "python3 scripts/validate-registry.py"
     },
     {
-      "detail": "{\"dev\": {\"detail\": \"dev top-level count is 143\", \"manifest\": \"dist/universal/skills/dev/.changeforge-build-manifest.json\", \"status\": \"pass\"}, \"full\": {\"detail\": \"full top-level count is 26\", \"manifest\": \"dist/universal/skills/full/.changeforge-build-manifest.json\", \"status\": \"pass\"}, \"recommended\": {\"detail\": \"recommended top-level count is 19\", \"manifest\": \"dist/universal/skills/recommended/.changeforge-build-manifest.json\", \"status\": \"pass\"}}",
+      "detail": "{\"dev\": {\"detail\": \"dev top-level count is 148\", \"manifest\": \"dist/universal/skills/dev/.changeforge-build-manifest.json\", \"status\": \"pass\"}, \"full\": {\"detail\": \"full top-level count is 26\", \"manifest\": \"dist/universal/skills/full/.changeforge-build-manifest.json\", \"status\": \"pass\"}, \"recommended\": {\"detail\": \"recommended top-level count is 19\", \"manifest\": \"dist/universal/skills/recommended/.changeforge-build-manifest.json\", \"status\": \"pass\"}}",
       "fix_hint": "Rebuild all profiles and investigate any manifest count mismatch.",
       "name": "Profile build reproducibility",
       "source": "dist/universal/skills/*/.changeforge-build-manifest.json",
@@ -116,7 +116,7 @@
   "generated_by": "scripts/generate-professional-scorecard.py",
   "profile_counts": {
     "dev": {
-      "detail": "dev top-level count is 143",
+      "detail": "dev top-level count is 148",
       "manifest": "dist/universal/skills/dev/.changeforge-build-manifest.json",
       "status": "pass"
     },
@@ -134,7 +134,7 @@
   "schema_version": 1,
   "source_counts": {
     "domain_extensions": 7,
-    "foundation_capabilities": 117,
+    "foundation_capabilities": 122,
     "professional_skills": 19
   },
   "status_summary": {

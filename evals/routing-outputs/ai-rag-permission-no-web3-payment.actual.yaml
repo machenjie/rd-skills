@@ -29,6 +29,6 @@ actual:
         reason: retrieval permission filtering is not Web3 auth or wallet verification
     context_budget_mode: staged-plan
     context_budget_rationale: L3 RAG permission bug fix selects AI/security without adjacent domains
-    required_evidence: [minimal diff, deleted or rejected complexity when selected, same-pattern scan record, regression test, blast-radius note]
+    required_evidence: [minimal diff, deleted or rejected complexity when selected, same-pattern scan record, regression test, blast-radius note, plan versus actual changed-file consistency]
     required_quality_gates: [implementation gate, security gate, test gate]
     handoff_target: testing

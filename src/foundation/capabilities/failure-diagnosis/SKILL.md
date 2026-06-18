@@ -36,6 +36,10 @@ Owns debugging-diagnosis; also supports release-delivery and incident triage. Pe
 - **Hypotheses must be falsifiable.** Every hypothesis must have: a specific prediction ("if this hypothesis is correct, metric X should show pattern Y"), a test or evidence that would confirm it, and a test or evidence that would refute it. A hypothesis that cannot be refuted by any evidence is not a hypothesis — it's a guess.
 - **The smallest fix that addresses root cause.** Resist the impulse to refactor, rearchitect, or broadly "improve" the system during incident response. The fix must be the minimal correct change that eliminates the root cause or its pathway. Improvements belong in follow-up work after the blameless post-mortem.
 - **Reproduction is required for diagnosis completion.** A failure is not considered diagnosed until it can be reproduced in a controlled environment OR a specific, documented evidence chain explains precisely why it occurred and why controlled reproduction is not feasible (e.g., race condition that requires specific production traffic pattern). "We think we know what it was" is not sufficient.
+- **Hypothesis elimination table required.** Diagnosis must list confirmed, refuted, and still-open hypotheses with prediction, confirming evidence, refuting evidence, status, freshness, and next diagnostic command. Single-hypothesis diagnosis is not enough for non-trivial failures.
+- **Minimum reproduction before fix.** Before code mutation, define the smallest failing input, fixture, command, request, timeline, or evidence chain that reproduces the symptom or proves why controlled reproduction is infeasible.
+- **Environment blame is rejected without evidence.** "Environment", "flaky", "cache", "network", or "user setup" can be accepted only after repository, configuration, dependency, data, command, and runtime-path evidence has been checked.
+- **Failed-fix history is part of diagnosis.** Record attempted fixes, command/output, shared failure signature, what was learned, and why the next route is different after two failed attempts.
 - **Change-failure correlation is mandatory first step.** For every production failure, the first investigative step is: what changed in the last 24–48 hours? Deployments, configuration changes, infrastructure changes, dependency upgrades, database migrations, upstream service changes. DORA change failure rate: > 15% change failure rate is a signal the change process needs review.
 - **Post-mortem action items must be specific and verifiable.** Action items in post-mortems must have: owner, due date, specific outcome (not "improve monitoring" but "add alert for DB connection pool utilization > 80% with 2-minute sustained threshold"), and a verification test. Vague action items are not action items.
 - **Incident command roles must be explicit during customer-impacting incidents.** A SEV0/SEV1/SEV2 incident without an incident commander, technical lead, communications lead, mitigation owner, and customer communication cadence will drift into parallel, conflicting work.
@@ -102,6 +106,8 @@ Timeline format:
 | Memory leak causing OOM | Heap/RSS growing monotonically pre-failure | Memory graph trending up 2h before alert | Memory stable; sudden spike at event | (fill in) |
 | Upstream service degraded | Upstream latency increase precedes errors | `http.client.duration` upstream spike | Upstream health check green | (fill in) |
 
+For agent-assisted failures, extend this into an elimination table with `next_diagnostic_command`, `freshness`, and `decision` columns. Evidence older than the latest code, config, fixture, dependency, or command-path change is stale unless re-validated or explicitly scoped.
+
 ## Incident Response Protocol
 
 Use this protocol for customer-impacting or production-critical incidents before deep root-cause work:
@@ -132,6 +138,8 @@ Escalate diagnosis to senior engineers or incident commander when: the failure h
 
 Escalate to `agent-execution-discipline` when an agent repeats the same diagnostic route twice, skips counter-evidence, or attempts to close a diagnosis without evidence inventory and closure package.
 
+Escalate to `repository-context-map` when the diagnosis lacks owning surface, caller/callee flow, related tests, configs/docs, and same-pattern scope. Escalate to `plan-execution-consistency` when attempted fixes or validation evidence drift from the accepted diagnostic plan.
+
 # Critical Details
 
 Most incorrect diagnoses come from stopping at the trigger rather than the root cause, or from generating a hypothesis before gathering evidence. Precision failures:
@@ -141,6 +149,8 @@ Most incorrect diagnoses come from stopping at the trigger rather than the root 
 - **"Human error" as root cause.** An engineer misconfigured a parameter. Root cause = human error. Action item: "be more careful." This is not useful. Human error is a symptom of a system that allowed the error to reach production. The real root causes: no validation of the config value type, no pre-deploy canary phase, no automated test that would have failed with this configuration.
 - **Correlation ≠ causation.** CPU utilization increased during the incident. A new background job also started at the same time. The assumption: background job caused CPU spike. Evidence: background job CPU usage = 2%. The real cause: a different query started doing a full table scan due to a dropped index. Always quantify correlation strength before accepting causal hypothesis.
 - **Unverifiable reproduction.** "We fixed it; it hasn't happened again; that proves the fix was right." This is not reproduction or verification. If the fix cannot be verified by a test that would fail before and pass after, the confidence in the fix is uncertain.
+- **Same-pattern taxonomy.** A failure pattern must be classified before a local fix closes: input validation, permission, mapping, state transition, concurrency, cache, queue, retry/idempotency, dependency lifecycle, configuration, migration, generated artifact, or test harness. Scan the matching taxonomy scope before declaring the defect local-only.
+- **Next diagnostic command.** Every open hypothesis names the next command, file read, fixture, log query, metric query, trace lookup, or reproduction step that would confirm or refute it.
 
 ### Anti-examples
 
@@ -182,6 +192,10 @@ Return a failure diagnosis report with:
 - `timeline` (chronological list: timestamp, event type, description, source)
 - `customer_comms` (customer-facing update cadence, status page entry, support handoff, and last update)
 - `hypotheses` (list, each with: statement, prediction, confirming evidence, refuting evidence, status)
+- `hypothesis_elimination_table` (confirmed/refuted/open hypotheses, prediction, confirming/refuting evidence, freshness, next diagnostic command, decision)
+- `minimum_reproduction` (smallest input, fixture, command, request, timeline, or reason controlled reproduction is infeasible)
+- `failed_fix_history` (attempts, commands/output, shared failure signature, learned facts, route change)
+- `same_pattern_taxonomy` (pattern class, scope scanned, related occurrences, local/broad decision)
 - `root_cause` (specific, verifiable statement; the Why chain)
 - `contributing_factors` (conditions that amplified impact)
 - `fix` (minimal code/config/infra change; PR link or description)
@@ -212,9 +226,14 @@ The diagnosis is complete only when:
 8. All post-mortem action items have owner, due date, and verifiable outcome.
 9. Process gaps identified — why was root cause able to reach production?
 10. False hypotheses documented with rejection evidence.
-11. Customer-impacting incidents include severity, incident roles, mitigation decision, customer communication cadence, and status page decision.
-12. CAPA/postmortem actions are tracked with owner, due date, and verification evidence.
-13. Agent-assisted diagnosis includes evidence inventory, counter-evidence, no third same-path retry, and closure package.
+11. Minimum reproduction or formal not-reproducible evidence chain is present before the fix is accepted.
+12. Environment, flake, cache, network, or user-setup blame has specific evidence ruling out code, config, dependency, data, command, and runtime-path causes.
+13. Failed-fix history records attempted fixes, failure signatures, learned facts, and route changes after repeated attempts.
+14. Same-pattern taxonomy and scope scan are documented for local fixes.
+15. Open hypotheses name the next diagnostic command or evidence lookup.
+16. Customer-impacting incidents include severity, incident roles, mitigation decision, customer communication cadence, and status page decision.
+17. CAPA/postmortem actions are tracked with owner, due date, and verification evidence.
+18. Agent-assisted diagnosis includes evidence inventory, counter-evidence, no third same-path retry, and closure package.
 
 # Used By
 

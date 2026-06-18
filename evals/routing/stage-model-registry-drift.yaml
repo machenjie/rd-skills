@@ -19,10 +19,13 @@ expected:
     - change-documentation-gate
     - quality-test-gate
   capabilities:
+    - repository-context-map
     - skill-authoring-expert
     - engineering-stage-professionalism
+    - skill-efficacy-benchmark
     - documentation-generation
     - agent-execution-discipline
+    - plan-execution-consistency
   domain_extensions: []
   quality_gates:
     - documentation gate

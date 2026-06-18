@@ -92,6 +92,12 @@ class TelemetryWriterTests(unittest.TestCase):
             "required_references_detected",
             "validation_evidence_detected",
             "residual_risk_detected",
+            "repository_context_seen",
+            "workflow_state_seen",
+            "tool_permission_sandbox_seen",
+            "skill_efficacy_benchmark_seen",
+            "plan_execution_consistency_seen",
+            "validation_freshness_seen",
         ):
             self.assertIn(field, record)
         self.assertRegex(record["session_id"], r"^sess-1:[0-9a-f]{12}$")
@@ -384,6 +390,34 @@ class TelemetryWriterTests(unittest.TestCase):
         self.assertTrue(record["implementation_preflight_blocked"])
         self.assertTrue(record["edit_without_preflight_seen"])
         self.assertTrue(record["post_edit_confirmed_preflight_gap"])
+
+    def test_workflow_signal_telemetry_fields_recorded(self) -> None:
+        common = load_common()
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            os.environ["XDG_CACHE_HOME"] = cache
+            os.environ.pop("CHANGEFORGE_TELEMETRY", None)
+            common.write_telemetry_event(
+                Path(cwd),
+                runtime="codex",
+                hook_name="stop_closure_gate",
+                event_name="Stop",
+                mode="warn",
+                repository_context_seen=True,
+                workflow_state_seen=True,
+                tool_permission_sandbox_seen=True,
+                skill_efficacy_benchmark_seen=True,
+                plan_execution_consistency_seen=True,
+                validation_freshness_seen=True,
+            )
+            records = read_records(Path(cache))
+        self.assertEqual(len(records), 1)
+        record = records[0]
+        self.assertTrue(record["repository_context_seen"])
+        self.assertTrue(record["workflow_state_seen"])
+        self.assertTrue(record["tool_permission_sandbox_seen"])
+        self.assertTrue(record["skill_efficacy_benchmark_seen"])
+        self.assertTrue(record["plan_execution_consistency_seen"])
+        self.assertTrue(record["validation_freshness_seen"])
 
 
 if __name__ == "__main__":

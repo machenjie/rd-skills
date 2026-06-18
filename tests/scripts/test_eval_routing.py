@@ -96,6 +96,7 @@ actual:
       - deleted or rejected complexity
       - regression test
       - blast-radius note
+      - plan versus actual changed-file consistency
     required_quality_gates:
       - requirement gate
       - impact gate
@@ -205,6 +206,7 @@ class EvalRoutingCandidateTests(unittest.TestCase):
             "      - deleted or rejected complexity\n"
             "      - regression test\n"
             "      - blast-radius note\n"
+            "      - plan versus actual changed-file consistency\n"
             "    required_quality_gates:\n"
             "      - requirement gate\n"
             "      - impact gate\n"

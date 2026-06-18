@@ -76,6 +76,7 @@ actual:
       - released resources
       - minimal scope diff
       - deleted or rejected complexity
+      - tool permission and sandbox classification when risky tools or commands are used
     required_quality_gates:
       - requirement gate
       - domain gate

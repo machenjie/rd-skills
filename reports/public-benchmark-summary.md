@@ -24,11 +24,11 @@ This generated summary reports local deterministic ChangeForge evidence. It does
 | Professional skill coverage | `partial` | reports/professionalism-release-readiness.json | {"count": 19, "statuses": {"sample-grade": 19}} | `python3 scripts/eval-skill-professionalism.py` |
 | Foundation capability coverage | `partial` | reports/professionalism-release-readiness.json | {"count": 40, "statuses": {"acceptable": 29, "needs-review": 10, "sample-grade": 1}} | `python3 scripts/eval-skill-professionalism.py --coverage-matrix` |
 | Strict regression | `pass` | reports/professionalism-release-readiness.json | strict_regression_status=pass | `python3 scripts/validate-professionalism-regression.py --strict` |
-| Skill professionalism report | `pass` | reports/skill-professionalism-eval.json | average_score=41.45 | `python3 scripts/eval-skill-professionalism.py` |
+| Skill professionalism report | `pass` | reports/skill-professionalism-eval.json | average_score=41.57 | `python3 scripts/eval-skill-professionalism.py` |
 | Professional coverage matrix | `pass` | reports/professional-coverage-matrix.json | rows=59 | `python3 scripts/eval-skill-professionalism.py --coverage-matrix` |
 | Profile build: recommended | `pass` | dist/universal/skills/recommended/.changeforge-build-manifest.json | top_level=19, expected=19 | `python3 scripts/build.py --profile recommended` |
 | Profile build: full | `pass` | dist/universal/skills/full/.changeforge-build-manifest.json | top_level=26, expected=26 | `python3 scripts/build.py --profile full` |
-| Profile build: dev | `pass` | dist/universal/skills/dev/.changeforge-build-manifest.json | top_level=143, expected=143 | `python3 scripts/build.py --profile dev` |
+| Profile build: dev | `pass` | dist/universal/skills/dev/.changeforge-build-manifest.json | top_level=148, expected=148 | `python3 scripts/build.py --profile dev` |
 | Installation validation | `not_collected` | scripts/validate-installation.py | validator does not emit a committed machine-readable report | `python3 scripts/validate-installation.py` |
 | Marketplace index validation | `pass` | reports/professional-scorecard.json | recommended, full, and dev marketplace indexes validate | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` |
 

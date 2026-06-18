@@ -36,6 +36,52 @@ CLOSURE_KEYWORDS = {
     "risk": ["risk", "residual", "风险", "未验证"],
     "next": ["next", "下一步", "后续"],
 }
+WORKFLOW_CLOSURE_KEYWORDS = {
+    "repository_context": [
+        "repository context",
+        "owning surface",
+        "caller/callee",
+        "caller-callee",
+        "local convention",
+    ],
+    "workflow_state": [
+        "workflow state",
+        "current stage",
+        "allowed transition",
+        "owner/reviewer",
+        "repair/re-review",
+    ],
+    "tool_permission_sandbox": [
+        "tool permission",
+        "sandbox",
+        "permission state",
+        "dry-run",
+        "dry run",
+        "redaction",
+    ],
+    "skill_efficacy": [
+        "skill efficacy",
+        "baseline",
+        "treatment",
+        "overhead",
+        "eval fixture",
+    ],
+    "plan_execution_consistency": [
+        "plan-execution consistency",
+        "plan execution consistency",
+        "accepted plan",
+        "actual changed files",
+        "plan vs",
+    ],
+    "validation_freshness": [
+        "validation freshness",
+        "fresh validation",
+        "stale",
+        "re-run",
+        "rerun",
+        "latest edit",
+    ],
+}
 
 # Success-implying completion language. Presence detection only: the gate never
 # judges whether a claim is true, it only notices a completion claim so the
@@ -371,6 +417,12 @@ def _main() -> int:
         repair_evidence_seen=bool(state.get("repair_evidence_seen")),
         permission_gate_seen=bool(state.get("permission_gate_seen")),
         professional_contract_seen=bool(state.get("professional_contract_seen")),
+        repository_context_seen=signals["repository_context"],
+        workflow_state_seen=signals["workflow_state"],
+        tool_permission_sandbox_seen=signals["tool_permission_sandbox"],
+        skill_efficacy_benchmark_seen=signals["skill_efficacy"],
+        plan_execution_consistency_seen=signals["plan_execution_consistency"],
+        validation_freshness_seen=signals["validation_freshness"],
         implementation_preflight_required=bool(
             state.get("implementation_preflight_required")
         ),
@@ -466,6 +518,22 @@ def _closure_signals(final_text: str, state: dict, manifest: dict) -> dict[str, 
         "risk": has("risk"),
         "references": bool(manifest.get("required_references")) or "reference" in lowered,
         "skills": has("skills"),
+        "repository_context": _has_workflow_keyword(lowered, "repository_context")
+        or bool(state.get("repository_context_seen")),
+        "workflow_state": _has_workflow_keyword(lowered, "workflow_state")
+        or bool(state.get("workflow_state_seen")),
+        "tool_permission_sandbox": _has_workflow_keyword(
+            lowered, "tool_permission_sandbox"
+        )
+        or bool(state.get("tool_permission_sandbox_seen")),
+        "skill_efficacy": _has_workflow_keyword(lowered, "skill_efficacy")
+        or bool(state.get("skill_efficacy_benchmark_seen")),
+        "plan_execution_consistency": _has_workflow_keyword(
+            lowered, "plan_execution_consistency"
+        )
+        or bool(state.get("plan_execution_consistency_seen")),
+        "validation_freshness": _has_workflow_keyword(lowered, "validation_freshness")
+        or bool(state.get("validation_freshness_seen")),
         "completion_language": any(
             phrase.casefold() in lowered for phrase in COMPLETION_LANGUAGE
         ),
@@ -543,6 +611,16 @@ def _closure_message(state: dict, final_text: str, manifest: dict | None = None)
         details.append(f"- review targets: {', '.join(state['review_targets'][:8])}")
     if state.get("permission_decisions"):
         details.append(f"- permission decisions: {', '.join(state['permission_decisions'][:8])}")
+    for label, state_key in (
+        ("repository context", "repository_context_seen"),
+        ("workflow state", "workflow_state_seen"),
+        ("tool permission/sandbox", "tool_permission_sandbox_seen"),
+        ("skill efficacy benchmark", "skill_efficacy_benchmark_seen"),
+        ("plan-execution consistency", "plan_execution_consistency_seen"),
+        ("validation freshness", "validation_freshness_seen"),
+    ):
+        if state.get(state_key):
+            details.append(f"- {label} signal was observed")
     if state.get("changed_paths"):
         details.append(f"- changed paths: {', '.join(state['changed_paths'])}")
     if state.get("validation_command_seen") or state.get("validation_seen"):
@@ -610,9 +688,15 @@ This turn changed files, read code, reviewed artifacts, or triggered risk surfac
 - for non-trivial engineering work, the changeforge_stage_route manifest: current stage, launched and explicitly skipped capabilities, and next-stage handoff
 - required references: the router self-use references plus the selected capability references
 - changed files
+- repository context map: owning surface, related files, caller/callee flow, local conventions, and not-inspected boundaries
+- workflow state summary: current stage, allowed transition, owner/reviewer split, validation freshness, and repair/re-review state
+- tool permission/sandbox record when risky tools, connectors, network writes, deploys, migrations, destructive actions, or secret-bearing commands were used
 - changeforge_implementation_preflight summary when edits occurred: read evidence, placement decision, reuse ladder, object/module boundary, test plan, risk and rollback/revert path
 - structure/reuse/placement rationale if structure gate fired
+- plan-execution consistency: accepted plan vs actual changed files, validation commands, skipped work, stale evidence, and residual risk
+- skill-efficacy benchmark evidence when skill, routing, stage, hook, eval, or benchmark behavior changed
 - validation commands and results
+- validation freshness after the final material edit
 - residual risks and unverified items
 - next actions{evidence_text}"""
 
@@ -822,6 +906,21 @@ def _missing_keyword_groups(
             continue
         if not any(keyword.casefold() in lowered for keyword in keywords):
             missing.append(group)
+    if profile == "engineering":
+        workflow_required = ("repository_context", "workflow_state", "plan_execution_consistency", "validation_freshness")
+        for group in workflow_required:
+            if not _has_workflow_keyword(lowered, group) and not state.get(_workflow_state_key(group)):
+                missing.append(group)
+        if _tool_permission_required(state) and not (
+            _has_workflow_keyword(lowered, "tool_permission_sandbox")
+            or state.get("tool_permission_sandbox_seen")
+        ):
+            missing.append("tool_permission_sandbox")
+        if _skill_efficacy_required(state) and not (
+            _has_workflow_keyword(lowered, "skill_efficacy")
+            or state.get("skill_efficacy_benchmark_seen")
+        ):
+            missing.append("skill_efficacy")
     for state_key, group in CONDITIONAL_GROUP_BY_STATE.items():
         if not state.get(state_key):
             continue
@@ -884,6 +983,45 @@ def _review_stage_missing_groups(lowered_text: str, state: dict) -> list[str]:
     if not _has_any_keyword(lowered_text, REVIEW_FINDING_KEYWORDS):
         missing.append("review_findings")
     return missing
+
+
+def _has_workflow_keyword(lowered_text: str, group: str) -> bool:
+    return _has_any_keyword(lowered_text, WORKFLOW_CLOSURE_KEYWORDS.get(group, []))
+
+
+def _workflow_state_key(group: str) -> str:
+    return {
+        "repository_context": "repository_context_seen",
+        "workflow_state": "workflow_state_seen",
+        "tool_permission_sandbox": "tool_permission_sandbox_seen",
+        "skill_efficacy": "skill_efficacy_benchmark_seen",
+        "plan_execution_consistency": "plan_execution_consistency_seen",
+        "validation_freshness": "validation_freshness_seen",
+    }.get(group, "")
+
+
+def _tool_permission_required(state: dict) -> bool:
+    return bool(
+        state.get("permission_gate_seen")
+        or state.get("permission_decisions")
+        or state.get("command_risk_surfaces")
+        or state.get("closure_risk_surfaces")
+    )
+
+
+def _skill_efficacy_required(state: dict) -> bool:
+    paths = [str(path).casefold() for path in state.get("changed_paths", [])]
+    registry_path_marker = "/".join(("src", "registry")) + "/"
+    return any(
+        "skill.md" in path
+        or registry_path_marker in path
+        or "routing-rules.yaml" in path
+        or "stage-model.yaml" in path
+        or "hook-runtime" in path
+        or path.startswith("evals/")
+        or "benchmark" in path
+        for path in paths
+    )
 
 
 def _has_any_keyword(lowered_text: str, keywords: list[str]) -> bool:

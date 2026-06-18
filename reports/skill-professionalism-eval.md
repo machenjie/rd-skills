@@ -1,9 +1,9 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-17T09:40:44.173777+00:00
-- Skills/capabilities checked: 136
+- Generated: 2026-06-18T05:18:25.331064+00:00
+- Skills/capabilities checked: 141
 - Warning count: 4
-- Average score: 41.45/60
+- Average score: 41.57/60
 
 ## Scores
 
@@ -87,6 +87,7 @@
 | `src/foundation/capabilities/module-boundary-design/SKILL.md` | foundation-capability | 41/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cleanup-deletion-governance/SKILL.md` | foundation-capability | 42/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/design-pattern-selection/SKILL.md` | foundation-capability | 42/60 | acceptable | 0 | 1 |
+| `src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md` | foundation-capability | 42/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/context-packaging/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/message-queue-design/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/observability/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
@@ -101,14 +102,18 @@
 | `src/foundation/capabilities/testability-seam-design/SKILL.md` | foundation-capability | 44/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/transaction-consistency/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/unit-testing/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/agent-workflow-state-machine/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cache-design/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/ci-cd/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/idempotency-retry-design/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/repository-context-map/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/agent-tool-permission-sandbox/SKILL.md` | foundation-capability | 46/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/code-clarity-maintainability/SKILL.md` | foundation-capability | 46/60 | acceptable | 1 | 0 |
+| `src/foundation/capabilities/plan-execution-consistency/SKILL.md` | foundation-capability | 46/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/agent-execution-discipline/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md` | foundation-capability | 47/60 | needs-review | 1 | 1 |
 | `src/foundation/capabilities/language-performance-safety/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/test-strategy/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/agent-execution-discipline/SKILL.md` | foundation-capability | 48/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cpp-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/go-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/implementation-structure-design/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
@@ -119,15 +124,15 @@
 | `src/foundation/capabilities/sql-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/code-review/SKILL.md` | foundation-capability | 50/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/e2e-testing/SKILL.md` | foundation-capability | 50/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/failure-diagnosis/SKILL.md` | foundation-capability | 50/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/typescript-professional-usage/SKILL.md` | foundation-capability | 50/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/failure-diagnosis/SKILL.md` | foundation-capability | 51/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/language-idiom-enforcement/SKILL.md` | foundation-capability | 51/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/language-testing-strategy/SKILL.md` | foundation-capability | 51/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/shell-cli-professional-usage/SKILL.md` | foundation-capability | 51/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/python-professional-usage/SKILL.md` | foundation-capability | 53/60 | acceptable | 0 | 0 |
 | `src/professional-skills/experience-impact-modeler/SKILL.md` | professional-skill | 54/60 | sample-grade | 0 | 0 |
-| `src/professional-skills/delivery-release-gate/SKILL.md` | professional-skill | 55/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/data-middleware-change-builder/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/delivery-release-gate/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/domain-impact-modeler/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/task-dag-planner/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/minimal-correct-implementation/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
@@ -135,13 +140,13 @@
 | `src/professional-skills/change-impact-analyzer/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/change-intake-compiler/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/integration-change-builder/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
-| `src/professional-skills/reliability-observability-gate/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/security-privacy-gate/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/ai-code-review-refactor/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/architecture-impact-reviewer/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/change-documentation-gate/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/data-api-contract-changer/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/frontend-change-builder/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
-| `src/professional-skills/ai-code-review-refactor/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/reliability-observability-gate/SKILL.md` | professional-skill | 58/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/change-forge-router/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/quality-test-gate/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/backend-change-builder/SKILL.md` | professional-skill | 60/60 | sample-grade | 0 | 0 |

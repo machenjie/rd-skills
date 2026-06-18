@@ -12,7 +12,7 @@ expected:
   expected_language_surface: none
   risk_triggers: []
   skills: [change-documentation-gate]
-  capabilities: [documentation-generation]
+  capabilities: [agent-workflow-state-machine, plan-execution-consistency, documentation-generation]
   domain_extensions: []
   quality_gates: [documentation gate]
 forbidden:

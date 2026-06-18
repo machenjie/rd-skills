@@ -265,7 +265,13 @@ SURFACE_CAPABILITIES = {
     "sdk-library": ("sdk-library-contract-design", "version-compatibility", "package-dependency-management"),
     "cli-daemon": ("cli-daemon-interface-design", "logging-error-handling"),
     "documentation-only": ("documentation-generation",),
-    "skill-authoring": ("skill-authoring-expert", "engineering-stage-professionalism"),
+    "skill-authoring": (
+        "repository-context-map",
+        "skill-authoring-expert",
+        "engineering-stage-professionalism",
+        "skill-efficacy-benchmark",
+        "plan-execution-consistency",
+    ),
 }
 
 STAGE_CAPABILITIES = {
@@ -285,6 +291,7 @@ STAGE_CAPABILITIES = {
         "solution-optimality-evaluation",
     ),
     "implementation-planning": (
+        "repository-context-map",
         "implementation-structure-design",
         "module-boundary-design",
         "code-clarity-maintainability",
@@ -295,6 +302,7 @@ STAGE_CAPABILITIES = {
     "bug-fix": ("agent-execution-discipline", "regression-testing", "code-review"),
     "code-review": (
         "code-review",
+        "plan-execution-consistency",
         "implementation-structure-design",
         "code-clarity-maintainability",
         "language-idiom-enforcement",
@@ -306,7 +314,12 @@ STAGE_CAPABILITIES = {
         "code-review",
         "regression-testing",
     ),
-    "testing": ("test-strategy", "language-testing-strategy", "test-data-management"),
+    "testing": (
+        "test-strategy",
+        "plan-execution-consistency",
+        "language-testing-strategy",
+        "test-data-management",
+    ),
     "release-delivery": (
         "ci-cd",
         "release-rollback",
@@ -315,11 +328,19 @@ STAGE_CAPABILITIES = {
         "observability",
         "backup-recovery",
     ),
-    "documentation-handoff": ("documentation-generation", "agent-execution-discipline"),
-    "skill-authoring": (
-        "skill-authoring-expert",
+    "documentation-handoff": (
+        "agent-workflow-state-machine",
+        "plan-execution-consistency",
         "documentation-generation",
         "agent-execution-discipline",
+    ),
+    "skill-authoring": (
+        "repository-context-map",
+        "skill-authoring-expert",
+        "skill-efficacy-benchmark",
+        "documentation-generation",
+        "agent-execution-discipline",
+        "plan-execution-consistency",
     ),
 }
 
@@ -441,6 +462,11 @@ CAPABILITY_IDS = {
     "consumer-impact-analysis": "115",
     "cleanup-deletion-governance": "116",
     "minimal-correct-implementation": "117",
+    "repository-context-map": "118",
+    "agent-workflow-state-machine": "119",
+    "agent-tool-permission-sandbox": "120",
+    "skill-efficacy-benchmark": "121",
+    "plan-execution-consistency": "122",
 }
 
 

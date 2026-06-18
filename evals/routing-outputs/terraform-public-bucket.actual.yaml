@@ -22,6 +22,6 @@ actual:
         reason: infrastructure rollout does not launch language deep checks
     context_budget_mode: staged-plan
     context_budget_rationale: L4 public cloud exposure needs staged release and documentation evidence
-    required_evidence: [rollout sequence, rollback trigger, shortcut ceiling and upgrade trigger when shortcuts remain, config compatibility, health checks, alert ownership]
+    required_evidence: [rollout sequence, rollback trigger, shortcut ceiling and upgrade trigger when shortcuts remain, config compatibility, health checks, alert ownership, tool permission and rollback classification for release commands]
     required_quality_gates: [security gate, reliability gate, test gate, delivery gate, documentation gate]
     handoff_target: documentation-handoff

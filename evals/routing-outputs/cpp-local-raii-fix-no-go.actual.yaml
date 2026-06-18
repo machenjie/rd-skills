@@ -30,6 +30,6 @@ actual:
         reason: no .go file or Go runtime signal
     context_budget_mode: single-stage
     context_budget_rationale: L2 native RAII bug fix stays in low-level C++ route
-    required_evidence: [minimal diff, deleted or rejected complexity when selected, same-pattern scan record, regression test, blast-radius note]
+    required_evidence: [minimal diff, deleted or rejected complexity when selected, same-pattern scan record, regression test, blast-radius note, plan versus actual changed-file consistency]
     required_quality_gates: [implementation gate, reliability gate, test gate]
     handoff_target: testing

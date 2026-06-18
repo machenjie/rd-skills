@@ -64,6 +64,7 @@ actual:
     context_budget_rationale: L4 API compatibility work needs a staged plan while executing implementation-planning first
     required_evidence:
       - target boundaries inspected before plan
+      - repository context map with owning surface and caller/callee evidence
       - reuse candidates
       - simplicity ladder result
       - deleted or rejected complexity

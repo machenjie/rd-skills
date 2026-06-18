@@ -4,7 +4,7 @@ actual:
   complexity: L2
   risk_level: medium
   skills: [change-forge-router, quality-test-gate]
-  capabilities: [skill-authoring-expert, engineering-stage-professionalism]
+  capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency]
   domain_extensions: []
   quality_gates: [documentation gate, test gate]
   required_references:
@@ -12,8 +12,11 @@ actual:
     - references/skill-registry.md
     - references/capability-index.md
     - references/domain-extension-index.md
+    - references/capabilities/118-repository-context-map.md
     - references/capabilities/103-skill-authoring-expert.md
     - references/capabilities/104-engineering-stage-professionalism.md
+    - references/capabilities/121-skill-efficacy-benchmark.md
+    - references/capabilities/122-plan-execution-consistency.md
   stage_route_manifest:
     schema_version: 1
     current_stage: skill-authoring
@@ -21,13 +24,13 @@ actual:
     product_surface: skill-authoring
     language_surface: none
     selected_skills: [change-forge-router, quality-test-gate]
-    selected_capabilities: [skill-authoring-expert, engineering-stage-professionalism]
+    selected_capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency]
     selected_domain_extensions: []
     skipped_capabilities:
       - capability: implementation-structure-design
         reason: registry authoring does not change target product code structure
     context_budget_mode: single-stage
     context_budget_rationale: L2 skill authoring route selects router authoring and validation only
-    required_evidence: [boundary, trigger precision, output contract, registry/routing/validation impact, minimal scope diff, deleted or rejected complexity, shortcut ceiling and upgrade trigger when shortcuts remain]
+    required_evidence: [boundary, trigger precision, output contract, registry/routing/validation impact, skill-efficacy benchmark impact when behavior claims change, minimal scope diff, deleted or rejected complexity, shortcut ceiling and upgrade trigger when shortcuts remain]
     required_quality_gates: [documentation gate, test gate]
     handoff_target: documentation-handoff

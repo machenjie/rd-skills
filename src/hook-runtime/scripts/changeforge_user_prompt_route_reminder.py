@@ -35,12 +35,15 @@ ROUTE_REMINDER = (
     "authoring), run change-forge-router before acting and emit a changeforge_route "
     "manifest naming selected_skills, selected_capabilities, required_references, and "
     "required_quality_gates. Runtime protocol: clarify requirements before action; "
-    "inspect relevant target-project code, tests, configs, docs, and call chain before "
-    "planning; name TDD or validation evidence before implementation; assign each "
+    "capture repository context before planning; name TDD or validation evidence before "
+    "implementation; classify tool permission/sandbox before risky commands, connectors, "
+    "deploys, migrations, destructive actions, or secret-bearing operations; assign each "
     "action an owner skill and a different review skill; repair and re-review findings; "
-    "restate route manifests, validation evidence, residual risk, and next gate at "
-    "handoff. A route described only in prose is not closure evidence. Skip routing "
-    "only for a pure question, explanation, or translation with no engineering action."
+    "include plan-execution consistency, validation freshness, residual risk, and next "
+    "gate at handoff. For skill/routing/eval changes, include skill-efficacy baseline "
+    "and treatment evidence. A route described only in prose is not closure evidence. "
+    "Skip routing only for a pure question, explanation, or translation with no "
+    "engineering action."
 )
 
 

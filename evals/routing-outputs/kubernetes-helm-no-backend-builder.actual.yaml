@@ -30,6 +30,6 @@ actual:
         reason: Helm chart paths are delivery artifacts, not backend code
     context_budget_mode: single-stage
     context_budget_rationale: L2 Helm edit needs delivery and Kubernetes references only
-    required_evidence: [rollout sequence, rollback trigger, config compatibility, health checks, alert ownership, shortcut ceiling and upgrade trigger when shortcuts remain]
+    required_evidence: [rollout sequence, rollback trigger, config compatibility, health checks, alert ownership, shortcut ceiling and upgrade trigger when shortcuts remain, tool permission and rollback classification for release commands]
     required_quality_gates: [delivery gate, test gate]
     handoff_target: documentation-handoff

@@ -29,6 +29,6 @@ actual:
         reason: wallet login signature is not a payment ledger or settlement change
     context_budget_mode: staged-plan
     context_budget_rationale: L3 Web3 auth route selects security and Web3 only
-    required_evidence: [target boundaries inspected before plan, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal]
+    required_evidence: [target boundaries inspected before plan, repository context map with owning surface and caller/callee evidence, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal]
     required_quality_gates: [implementation gate, security gate, test gate]
     handoff_target: coding

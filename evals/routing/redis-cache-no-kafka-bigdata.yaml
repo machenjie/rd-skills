@@ -12,7 +12,7 @@ expected:
   expected_language_surface: none
   risk_triggers: []
   skills: [data-middleware-change-builder, reliability-observability-gate, quality-test-gate]
-  capabilities: [implementation-structure-design, cache-design, concurrency-control]
+  capabilities: [repository-context-map, implementation-structure-design, cache-design, concurrency-control]
   domain_extensions: []
   quality_gates: [implementation gate, reliability gate, test gate]
 forbidden:

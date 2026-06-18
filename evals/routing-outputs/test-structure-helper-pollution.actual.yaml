@@ -22,6 +22,6 @@ actual:
         reason: fixture ownership is tested without architecture redesign
     context_budget_mode: single-stage
     context_budget_rationale: L2 test helper pollution is contained to testing and review
-    required_evidence: [risk-based layer selection, deterministic data, minimal check rationale when lower-depth validation is selected, observable-behavior assertions, evidence of gaps]
+    required_evidence: [risk-based layer selection, deterministic data, minimal check rationale when lower-depth validation is selected, observable-behavior assertions, evidence of gaps, validation freshness after final material edits]
     required_quality_gates: [implementation gate, test gate]
     handoff_target: code-review

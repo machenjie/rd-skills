@@ -128,6 +128,30 @@
     "repair_evidence_seen": { "type": "boolean" },
     "permission_gate_seen": { "type": "boolean" },
     "professional_contract_seen": { "type": "boolean" },
+    "repository_context_seen": {
+      "description": "Presence-only signal that repository context evidence was seen this turn.",
+      "type": "boolean"
+    },
+    "workflow_state_seen": {
+      "description": "Presence-only signal that workflow state evidence was seen this turn.",
+      "type": "boolean"
+    },
+    "tool_permission_sandbox_seen": {
+      "description": "Presence-only signal that tool permission/sandbox evidence was seen this turn.",
+      "type": "boolean"
+    },
+    "skill_efficacy_benchmark_seen": {
+      "description": "Presence-only signal that skill-efficacy benchmark evidence was seen this turn.",
+      "type": "boolean"
+    },
+    "plan_execution_consistency_seen": {
+      "description": "Presence-only signal that plan-execution consistency evidence was seen this turn.",
+      "type": "boolean"
+    },
+    "validation_freshness_seen": {
+      "description": "Presence-only signal that validation freshness evidence was seen this turn.",
+      "type": "boolean"
+    },
     "implementation_preflight_seen": { "type": "boolean" },
     "implementation_preflight_complete": {
       "description": "Whether a required implementation preflight manifest was present and satisfied the fields required for the observed edit. implementation_preflight_seen only means the manifest was present.",

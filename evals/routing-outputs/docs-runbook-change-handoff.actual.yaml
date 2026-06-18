@@ -22,6 +22,6 @@ actual:
         reason: no code review is active during runbook handoff
     context_budget_mode: single-stage
     context_budget_rationale: L2 operational handoff keeps runtime evidence and docs in one stage
-    required_evidence: [validated boundary, residual risk, updated docs list, handoff target]
+    required_evidence: [validated boundary, validation freshness and plan-execution consistency, residual risk, updated docs list, handoff target]
     required_quality_gates: [documentation gate, reliability gate]
     handoff_target: closed

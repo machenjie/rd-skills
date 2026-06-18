@@ -35,6 +35,8 @@ Decompose a complex product or code change into a directed acyclic graph (DAG) o
 - **Feature flag tasks must precede feature implementation tasks**: a feature behind a flag requires the flag to be registered and defaulted off before any implementation ships.
 - **Parallelism must be explicit**: tasks that can safely run concurrently must be identified — undetected sequential bottlenecks delay delivery; undetected parallel conflicts corrupt work.
 - **Every task must be agent-executable**: each task names the exact files to inspect, the exact files to create/modify/delete, the reuse candidates considered, the placement and public/private boundary decision, the validation command and its expected output, the rollback or revert note, the review gate, and the completion evidence required. A task a fresh agent cannot execute from its own text is not planned.
+- **Every plan starts from repository context**: before the DAG is accepted, it must name the owning surface, caller/callee path, sibling conventions, tests, configs, docs, generated artifacts, and rejected placement locations from `repository-context-map`.
+- **Every plan closes with consistency evidence**: before handoff, compare planned nodes against actual changed files, validation commands, skipped work, stale evidence, and residual risks using `plan-execution-consistency`.
 - **No plan placeholders**: reject "TBD", "TODO", "add proper error handling", "write tests" without named test targets, "handle edge cases" without listing the edge cases, and "similar to above" without naming the exact files and behavior. A placeholder is an unplanned task.
 - **Code-change tasks carry an implementation-structure-design decision**: why a new file, function, or directory is created instead of reusing existing structure, and whether shared/common/utils placement is rejected or justified.
 - **Test tasks carry a quality-test-gate decision**: the test level, the test data, the regression target, and the deterministic evidence the task must produce.
@@ -91,6 +93,7 @@ These triggers are hidden-risk escalators, not ordinary checklist items.
 - **Signal:** A migration or rollout task has no rollback or old/new coexistence node. **Hidden risk:** deploy order creates unrecoverable state or version skew failure. **Required professional action:** add expand/contract or rollback task before implementation starts. **Route to:** `release-rollback`, `delivery-release-gate`. **Evidence required:** rollback command/procedure, compatibility window, verification gate.
 - **Signal:** Parallel tasks modify shared table, API contract, generated file, config, fixture, or common utility. **Hidden risk:** parallel work collides and corrupts boundary ownership. **Required professional action:** serialize or split ownership boundary before parallel execution. **Route to:** `architecture-impact-reviewer`, `implementation-structure-design`. **Evidence required:** shared-resource scan, owner, conflict edge, blocked/unblocked rationale.
 - **Signal:** Plan has no explicit stop condition after failed validation or uncertain diagnosis. **Hidden risk:** unverified diagnosis repeats the same path and mutates code without new evidence. **Required professional action:** add stop node and route-repair handoff. **Route to:** `failure-diagnosis`, `agent-execution-discipline`. **Evidence required:** failed command/output, alternate diagnostic route, max-retry rule, and residual risk owner.
+- **Signal:** Plan is written before repository context or later changed files do not match the plan. **Hidden risk:** implementation follows a plausible plan that ignores actual ownership or drifts after editing. **Required professional action:** add repository-context-map before planning and plan-execution-consistency before handoff. **Route to:** `repository-context-map`, `plan-execution-consistency`. **Evidence required:** inspected boundaries, planned nodes, actual diff/file list, validation freshness, and residual-risk reconciliation.
 
 ### Decision Tree: Task Sequencing for Data + Code + Deploy
 
@@ -188,6 +191,7 @@ Examples:
 ## Output Contract
 Return a task DAG with:
 - **Mode selected**: Planning mode and trigger signal that selected it.
+- **Repository context map**: owning surface, caller/callee flow, local conventions, tests/config/docs, generated artifacts, rejected locations, and not-inspected boundaries.
 - **Task nodes**: Each with ID, title, goal, owner surface, files to inspect, files to modify/create/delete, reuse candidates, placement and visibility decision, dependencies (IDs), parallelism flag, validation command, expected output, rollback note, review gate, and completion evidence required (see Agent-Executable Task Contract).
 - **Plan handoff (L1/L2)**: for low-complexity work, the minimal handoff — files touched, validation command, residual risk — in place of a full DAG.
 - **Dependency graph**: Explicit directed edges showing which tasks must complete before which.
@@ -204,16 +208,17 @@ Return a task DAG with:
 - **Reuse and placement rationale**: existing modules, helpers, fixtures, and task patterns reused before new structure is introduced.
 - **Behavior preservation statement**: old behavior preserved per node or intentionally changed with acceptance link.
 - **Validation evidence**: commands/checks per node, expected output, and not-verified disclosure where execution is deferred.
+- **Plan-execution consistency**: accepted plan nodes compared to actual changed files, validation commands, skipped work, stale evidence, unplanned behavior changes, and residual risk.
 - **Evidence limits**: what the DAG proves and does not prove about runtime scale, unknown owners, and rollback.
 - **Next gate / handoff**: first unblocked implementation/gate node or blocked owner question.
 
 ## Evidence Contract
 Close a task DAG only when all five canonical answers are concrete (answer schema: `agent-execution-discipline`):
 - **Basis**: the change request and dependency facts each task and edge rests on.
-- **Files and boundaries inspected**: the surfaces, owners, and shared artifacts each task touches, and the tasks that therefore cannot run concurrently because they would collide on the same file or resource.
+- **Files and boundaries inspected**: the repository context map, surfaces, owners, caller/callee paths, and shared artifacts each task touches, and the tasks that therefore cannot run concurrently because they would collide on the same file or resource.
 - **Placement rationale**: why each node is a single reviewable patch unit with a named input, output, owner, and dependency edge, and why the parallelism map is safe.
 - **Validation commands**: the verification node attached to each task — the literal command or check that must pass before downstream work unblocks — and the rollback procedure for each irreversible task.
-- **Planning judgment and evidence limits**: mode selected, behavior preservation, stop condition, what evidence proves, what it does not prove, residual risk, and next gate.
+- **Planning judgment and evidence limits**: mode selected, behavior preservation, workflow state, plan-execution consistency, stop condition, what evidence proves, what it does not prove, residual risk, and next gate.
 - **Residual risk**: the sequencing or rollback assumption that remains unproven, with the named owner.
 
 ## Quality Gate
@@ -231,6 +236,8 @@ Close a task DAG only when all five canonical answers are concrete (answer schem
 12. No task uses a placeholder (TBD, TODO, "write tests", "handle edge cases", "similar to above") in place of named files, targets, or behavior.
 13. Every code-change task carries an implementation-structure-design decision (reuse-vs-new and placement); every test task carries a quality-test-gate decision (level, data, regression target, evidence).
 14. No L3-or-higher task spans more than one independent subsystem; oversized tasks are split further.
+15. Repository context is present before planning begins, including owning surface, caller/callee path, local conventions, tests/config/docs, generated artifacts, and rejected placement locations.
+16. Handoff includes plan-execution consistency: accepted plan vs. changed files, validation commands, skipped work, stale evidence, unplanned behavior, and residual risk.
 
 ## Handoff
 - **backend-change-builder** — receives backend task nodes with dependencies, completion criteria, and rollback notes.

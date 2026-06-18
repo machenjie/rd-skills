@@ -22,6 +22,6 @@ actual:
         reason: testing stage validates evidence without architecture redesign
     context_budget_mode: single-stage
     context_budget_rationale: L2 completion claim needs test evidence in the active testing stage
-    required_evidence: [risk-based layer selection, deterministic data, minimal check rationale when lower-depth validation is selected, observable-behavior assertions, evidence of gaps]
+    required_evidence: [risk-based layer selection, deterministic data, minimal check rationale when lower-depth validation is selected, observable-behavior assertions, evidence of gaps, validation freshness after final material edits]
     required_quality_gates: [implementation gate, test gate, execution discipline gate]
     handoff_target: code-review

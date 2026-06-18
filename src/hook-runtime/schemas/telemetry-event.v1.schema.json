@@ -135,6 +135,30 @@
     "repair_evidence_seen": { "type": "boolean" },
     "permission_gate_seen": { "type": "boolean" },
     "professional_contract_seen": { "type": "boolean" },
+    "repository_context_seen": {
+      "description": "Presence-only signal that repository context evidence was detected in closure.",
+      "type": "boolean"
+    },
+    "workflow_state_seen": {
+      "description": "Presence-only signal that workflow state evidence was detected in closure.",
+      "type": "boolean"
+    },
+    "tool_permission_sandbox_seen": {
+      "description": "Presence-only signal that tool permission/sandbox evidence was detected in closure.",
+      "type": "boolean"
+    },
+    "skill_efficacy_benchmark_seen": {
+      "description": "Presence-only signal that skill-efficacy benchmark evidence was detected in closure.",
+      "type": "boolean"
+    },
+    "plan_execution_consistency_seen": {
+      "description": "Presence-only signal that plan-execution consistency evidence was detected in closure.",
+      "type": "boolean"
+    },
+    "validation_freshness_seen": {
+      "description": "Presence-only signal that validation freshness evidence was detected in closure.",
+      "type": "boolean"
+    },
     "implementation_preflight_required": { "type": "boolean" },
     "implementation_preflight_seen": { "type": "boolean" },
     "implementation_preflight_complete": {

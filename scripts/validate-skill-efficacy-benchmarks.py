@@ -1,0 +1,241 @@
+#!/usr/bin/env python3
+"""Validate ChangeForge skill efficacy benchmark definitions."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+from typing import Any
+
+from validation_utils import (
+    NAME_RE,
+    ValidationProblem,
+    fail_many,
+    load_yaml_file,
+    registry_items,
+    relpath,
+    validate_no_personal_references,
+)
+
+
+ROOT = Path(__file__).resolve().parents[1]
+BENCHMARK_DIR = ROOT / "evals" / "skill-efficacy"
+REGISTRY_PATH = ROOT / "src" / "registry" / "capabilities.yaml"
+
+VALID_RISK_LEVELS = {"L1", "L2", "L3", "L4", "L5"}
+VALID_VERDICTS = {
+    "structural_pass",
+    "measured_pass",
+    "inconclusive",
+    "blocked",
+}
+REQUIRED_ROOT_FIELDS = (
+    "id",
+    "capability",
+    "task",
+    "baseline",
+    "treatment",
+    "metrics",
+    "verdict",
+)
+REQUIRED_RUN_FIELDS = (
+    "description",
+    "selected_capabilities",
+    "token_cost",
+    "turn_count",
+)
+
+
+def _load_capability_names(errors: list[str]) -> set[str]:
+    try:
+        loaded = load_yaml_file(REGISTRY_PATH)
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+        return set()
+    names: set[str] = set()
+    for entry in registry_items(loaded, "capabilities", REGISTRY_PATH, errors):
+        if isinstance(entry, dict) and isinstance(entry.get("name"), str):
+            names.add(entry["name"])
+    return names
+
+
+def _as_string_list(value: Any) -> list[str] | None:
+    if not isinstance(value, list):
+        return None
+    values: list[str] = []
+    for item in value:
+        if not isinstance(item, str) or not item.strip():
+            return None
+        values.append(item.strip())
+    return values
+
+
+def _cost_value_is_valid(value: Any) -> bool:
+    if value == "not_collected":
+        return True
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and value >= 0
+
+
+def _validate_run_block(
+    data: dict[str, Any],
+    field: str,
+    rel: str,
+    capabilities: set[str],
+    errors: list[str],
+) -> list[str]:
+    block = data.get(field)
+    if not isinstance(block, dict):
+        errors.append(f"{rel}: '{field}' must be a mapping")
+        return []
+
+    for required in REQUIRED_RUN_FIELDS:
+        if required not in block:
+            errors.append(f"{rel}: {field}.{required} is required")
+
+    description = block.get("description")
+    if not isinstance(description, str) or len(description.strip()) < 40:
+        errors.append(f"{rel}: {field}.description must be a specific sentence")
+
+    selected = _as_string_list(block.get("selected_capabilities"))
+    if selected is None or not selected:
+        errors.append(f"{rel}: {field}.selected_capabilities must be a non-empty string list")
+        selected = []
+    for capability in selected:
+        if capability not in capabilities:
+            errors.append(
+                f"{rel}: {field}.selected_capabilities contains unknown capability '{capability}'"
+            )
+
+    for cost_field in ("token_cost", "turn_count"):
+        if not _cost_value_is_valid(block.get(cost_field)):
+            errors.append(
+                f"{rel}: {field}.{cost_field} must be a non-negative number or 'not_collected'"
+            )
+
+    return selected
+
+
+def _validate_metrics(
+    data: dict[str, Any],
+    rel: str,
+    errors: list[str],
+) -> None:
+    metrics = data.get("metrics")
+    if not isinstance(metrics, dict):
+        errors.append(f"{rel}: 'metrics' must be a mapping")
+        return
+
+    behavior_delta = _as_string_list(metrics.get("behavior_delta"))
+    if behavior_delta is None or len(behavior_delta) < 2:
+        errors.append(f"{rel}: metrics.behavior_delta must contain at least two strings")
+
+    for field in ("token_overhead_pct", "turn_overhead_pct"):
+        if field not in metrics:
+            errors.append(f"{rel}: metrics.{field} is required")
+        elif not _cost_value_is_valid(metrics.get(field)):
+            errors.append(f"{rel}: metrics.{field} must be a non-negative number or 'not_collected'")
+
+
+def _all_costs_collected(data: dict[str, Any]) -> bool:
+    metrics = data.get("metrics")
+    if not isinstance(metrics, dict):
+        return False
+    run_blocks = [data.get("baseline"), data.get("treatment")]
+    for block in run_blocks:
+        if not isinstance(block, dict):
+            return False
+        if block.get("token_cost") == "not_collected":
+            return False
+        if block.get("turn_count") == "not_collected":
+            return False
+    return (
+        metrics.get("token_overhead_pct") != "not_collected"
+        and metrics.get("turn_overhead_pct") != "not_collected"
+    )
+
+
+def _validate_verdict(data: dict[str, Any], rel: str, errors: list[str]) -> None:
+    verdict = data.get("verdict")
+    if not isinstance(verdict, dict):
+        errors.append(f"{rel}: 'verdict' must be a mapping")
+        return
+    status = verdict.get("status")
+    if status not in VALID_VERDICTS:
+        errors.append(f"{rel}: verdict.status must be one of {sorted(VALID_VERDICTS)}")
+    rationale = verdict.get("rationale")
+    if not isinstance(rationale, str) or len(rationale.strip()) < 40:
+        errors.append(f"{rel}: verdict.rationale must explain the evidence limits")
+    if status == "measured_pass" and not _all_costs_collected(data):
+        errors.append(f"{rel}: measured_pass requires numeric baseline, treatment, and overhead data")
+
+
+def _validate_benchmark(path: Path, capabilities: set[str], errors: list[str]) -> None:
+    rel = relpath(ROOT, path)
+    if not NAME_RE.fullmatch(path.stem):
+        errors.append(f"{rel}: benchmark filename must be lowercase kebab-case")
+
+    text = path.read_text(encoding="utf-8")
+    validate_no_personal_references(text, rel, errors)
+
+    try:
+        data = load_yaml_file(path)
+    except ValidationProblem as exc:
+        errors.append(str(exc))
+        return
+    if not isinstance(data, dict):
+        errors.append(f"{rel}: benchmark must be a mapping")
+        return
+
+    for field in REQUIRED_ROOT_FIELDS:
+        if field not in data:
+            errors.append(f"{rel}: '{field}' is required")
+
+    if data.get("id") != path.stem:
+        errors.append(f"{rel}: id must match filename stem")
+    if data.get("risk_level") is not None and data.get("risk_level") not in VALID_RISK_LEVELS:
+        errors.append(f"{rel}: risk_level must be one of {sorted(VALID_RISK_LEVELS)}")
+
+    capability = data.get("capability")
+    if not isinstance(capability, str) or capability not in capabilities:
+        errors.append(f"{rel}: capability must reference a capability in src/registry/capabilities.yaml")
+        capability = ""
+
+    _validate_run_block(data, "baseline", rel, capabilities, errors)
+    treatment_capabilities = _validate_run_block(data, "treatment", rel, capabilities, errors)
+    if capability and capability not in treatment_capabilities:
+        errors.append(f"{rel}: treatment.selected_capabilities must include '{capability}'")
+
+    _validate_metrics(data, rel, errors)
+    _validate_verdict(data, rel, errors)
+
+
+def main() -> int:
+    """Validate all skill efficacy benchmark definitions."""
+    errors: list[str] = []
+    if not BENCHMARK_DIR.is_dir():
+        print("validate-skill-efficacy-benchmarks: missing evals/skill-efficacy directory.", file=sys.stderr)
+        return 1
+
+    capabilities = _load_capability_names(errors)
+    benchmark_paths = sorted(BENCHMARK_DIR.glob("*.yaml"))
+    if len(benchmark_paths) < 3:
+        errors.append("evals/skill-efficacy: expected at least 3 benchmark YAML files")
+
+    for path in benchmark_paths:
+        _validate_benchmark(path, capabilities, errors)
+
+    readme = BENCHMARK_DIR / "README.md"
+    if not readme.is_file():
+        errors.append("evals/skill-efficacy/README.md: missing benchmark README")
+    else:
+        validate_no_personal_references(readme.read_text(encoding="utf-8"), relpath(ROOT, readme), errors)
+
+    if errors:
+        return fail_many("validate-skill-efficacy-benchmarks", errors)
+
+    print(f"validate-skill-efficacy-benchmarks: validated {len(benchmark_paths)} benchmark(s).")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

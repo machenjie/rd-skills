@@ -1,0 +1,33 @@
+id: plan-execution-consistency-drift
+capability: plan-execution-consistency
+task: Detect when an implementation changes files or behavior outside the accepted plan during a skill authoring update.
+risk_level: L4
+baseline:
+  description: Agent reports completion from the original plan and tests without reconciling the final diff against planned files and accepted scope.
+  selected_capabilities:
+    - agent-execution-discipline
+  token_cost: not_collected
+  turn_count: not_collected
+  expected_failure_modes:
+    - Extra generated or report files are not disclosed.
+    - Newly changed behavior is not mapped back to the accepted plan.
+treatment:
+  description: Agent applies plan-execution-consistency before handoff and records planned files, actual files, scope changes, validation freshness, and residual drift.
+  selected_capabilities:
+    - plan-execution-consistency
+    - agent-execution-discipline
+  token_cost: not_collected
+  turn_count: not_collected
+  expected_outputs:
+    - Plan Execution Consistency Report with planned files, actual files, added behavior, removed behavior, tests, and drift disposition.
+    - Handoff disclosure for any approved or residual drift.
+metrics:
+  behavior_delta:
+    - Requires actual diff reconciliation against the accepted plan.
+    - Forces validation evidence to match the final changed files.
+  token_overhead_pct: not_collected
+  turn_overhead_pct: not_collected
+verdict:
+  status: structural_pass
+  rationale: The fixture confirms the consistency capability is selected and its report fields are required; no measured efficiency claim is made.
+

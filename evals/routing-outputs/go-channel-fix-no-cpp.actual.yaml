@@ -30,6 +30,6 @@ actual:
         reason: no C/C++ extension or native binding signal
     context_budget_mode: single-stage
     context_budget_rationale: L2 Go worker fix needs backend owner and Go capability only
-    required_evidence: [minimal diff, deleted or rejected complexity when selected, same-pattern scan record, regression test, blast-radius note]
+    required_evidence: [minimal diff, deleted or rejected complexity when selected, same-pattern scan record, regression test, blast-radius note, plan versus actual changed-file consistency]
     required_quality_gates: [implementation gate, test gate]
     handoff_target: testing

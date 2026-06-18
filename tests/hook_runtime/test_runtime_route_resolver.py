@@ -136,7 +136,10 @@ class RuntimeRouteResolverTests(unittest.TestCase):
         context = _context_for(_edit_event("src/registry/routing-rules.yaml"))
         self.assertEqual(context["owner_skill"], "change-forge-router")
         self.assertIn("skill-authoring", context["product_surfaces"])
+        self.assertIn("repository-context-map", context["selected_capabilities"])
         self.assertIn("skill-authoring-expert", context["selected_capabilities"])
+        self.assertIn("skill-efficacy-benchmark", context["selected_capabilities"])
+        self.assertIn("plan-execution-consistency", context["selected_capabilities"])
         self.assertNotIn("backend-change-builder", context["selected_skills"])
 
     def test_prompt_only_skill_authoring_update_routes_skill_authoring(self) -> None:

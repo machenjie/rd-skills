@@ -12,7 +12,7 @@ expected:
   expected_language_surface: sql
   risk_triggers: []
   skills: [data-api-contract-changer, data-middleware-change-builder, delivery-release-gate, quality-test-gate]
-  capabilities: [data-migration-design, transaction-consistency, version-compatibility, release-rollback, test-strategy, language-testing-strategy, sql-professional-usage]
+  capabilities: [data-migration-design, transaction-consistency, version-compatibility, release-rollback, test-strategy, plan-execution-consistency, language-testing-strategy, sql-professional-usage]
   domain_extensions: []
   quality_gates: [API/data gate, delivery gate, test gate]
 forbidden:

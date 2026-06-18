@@ -18,7 +18,7 @@ PROFILES = ("auto", "recommended", "full", "dev")
 EXPECTED_SKILL_COUNTS = {
     "recommended": 19,
     "full": 26,
-    "dev": 143,
+    "dev": 148,
 }
 NEXT_PROMPTS = {
     "codex": "Use change-forge-router to classify this request before implementation.",

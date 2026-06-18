@@ -1116,3 +1116,61 @@ capabilities:
       - deliberate shortcut ceiling upgrade trigger changeforge-shortcut shortcut ledger
     risk_notes: [Overengineered AI changes add dependencies abstractions files configuration and future-proof scaffolding that increase maintenance cost without improving correctness]
     expected_outputs: [Minimal Correctness Decision with existence check simplicity ladder result delete or shrink findings dependency abstraction and file decisions shortcut ledger validation evidence residual risk and next gate]
+  - id: "118"
+    name: repository-context-map
+    group: engineering-workflow
+    path: src/foundation/capabilities/repository-context-map
+    status: implemented
+    used_by: [change-forge-router, change-impact-analyzer, architecture-impact-reviewer, task-dag-planner, ai-code-review-refactor, quality-test-gate, change-documentation-gate, skill-authoring-expert, agent-execution-discipline]
+    triggers:
+      - repository context map read before plan files inspected ownership caller callee tests configs docs local conventions source of truth generated artifact source dist boundary
+      - plan before repository inspection wrong placement missing call graph no repo map unfamiliar codebase registry hook runtime skill authoring
+    risk_notes: [Prompt-only plans miss owners callers tests generated artifacts docs and source-of-truth boundaries causing wrong placement stale validation and broad unreviewed changes]
+    expected_outputs: [Repository Context Map with inspected files searches ownership caller callee dependent tests docs configs local conventions source-of-truth boundary evidence limits and next gate]
+  - id: "119"
+    name: agent-workflow-state-machine
+    group: engineering-workflow
+    path: src/foundation/capabilities/agent-workflow-state-machine
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, task-dag-planner, quality-test-gate, ai-code-review-refactor, delivery-release-gate, reliability-observability-gate, change-documentation-gate, skill-authoring-expert, agent-execution-discipline]
+    triggers:
+      - agent workflow state machine current stage next stage legal transition owner reviewer repair re-review validation freshness stop condition closure evidence
+      - illegal workflow transition self approval stale validation review repair loop state drift compaction handoff stage manifest
+    risk_notes: [Agent work drifts across stages when clarification read planning coding testing review repair and handoff are not explicit and evidence-gated]
+    expected_outputs: [Workflow State Summary with current stage entry evidence exit criteria owner reviewer transition history validation freshness review repair ledger stop condition and closure status]
+  - id: "120"
+    name: agent-tool-permission-sandbox
+    group: engineering-workflow
+    path: src/foundation/capabilities/agent-tool-permission-sandbox
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, security-privacy-gate, delivery-release-gate, reliability-observability-gate, quality-test-gate, ai-code-review-refactor, skill-authoring-expert, agent-execution-discipline]
+    triggers:
+      - agent tool permission sandbox command risk destructive command approval policy sandbox mode external side effect secret exposure MCP tool untrusted connector
+      - rm reset clean force chmod chown sudo deploy push publish migrate apply delete overwrite credential token key raw command output
+    risk_notes: [Unsafe tool execution can delete source mutate external systems expose secrets bypass approval policy or produce unreviewed release side effects]
+    expected_outputs: [Tool Permission Sandbox Record with risk class sandbox approval state target boundary side effects safety controls telemetry boundary residual risk and next gate]
+  - id: "121"
+    name: skill-efficacy-benchmark
+    group: engineering-workflow
+    path: src/foundation/capabilities/skill-efficacy-benchmark
+    status: implemented
+    used_by: [change-forge-router, skill-authoring-expert, quality-test-gate, ai-code-review-refactor, change-documentation-gate, agent-execution-discipline]
+    triggers:
+      - skill efficacy benchmark baseline treatment agent behavior improvement claim routing quality evidence quality review defects token overhead turn overhead over routing under routing
+      - eval fixture professional benchmark skill benchmark no baseline unsupported efficacy claim skill authoring validation behavior regression
+    risk_notes: [Skill changes can claim quality improvements without baseline treatment evidence overhead tracking or caveats separating structural fixtures from real-world performance]
+    expected_outputs: [Skill Efficacy Benchmark with task baseline treatment metrics token and turn overhead over under routing verdict caveats and regression command]
+  - id: "122"
+    name: plan-execution-consistency
+    group: engineering-workflow
+    path: src/foundation/capabilities/plan-execution-consistency
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, task-dag-planner, quality-test-gate, ai-code-review-refactor, delivery-release-gate, reliability-observability-gate, change-documentation-gate, skill-authoring-expert, agent-execution-discipline]
+    triggers:
+      - plan execution consistency planned files actual changed files extra file stale validation unplanned behavior review scope repair re-review final handoff
+      - plan drift actual diff differs validation before final edit partial validation reported as full extra generated file missing planned file
+    risk_notes: [Agent handoffs can hide scope drift stale validation extra files unreviewed repairs and claims that no longer match the final patch]
+    expected_outputs: [Plan Execution Consistency Report with plan summary actual diff variance table behavior mapping validation freshness review scope docs registry consistency residual risk and closure decision]

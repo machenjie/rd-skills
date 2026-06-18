@@ -1,0 +1,34 @@
+id: repository-context-map-placement
+capability: repository-context-map
+task: Select the correct implementation target for a ChangeForge registry routing update before planning edits.
+risk_level: L4
+baseline:
+  description: Agent plans from the request and target file name without inspecting sibling registries, generated docs, resolver coupling, or tests.
+  selected_capabilities:
+    - skill-authoring-expert
+  token_cost: not_collected
+  turn_count: not_collected
+  expected_failure_modes:
+    - Edits only the obvious registry file and misses source generators.
+    - Omits caller and validation boundary evidence from the plan.
+treatment:
+  description: Agent loads repository-context-map before planning and records target, sibling, caller, test, generated-artifact, and boundary evidence.
+  selected_capabilities:
+    - repository-context-map
+    - skill-authoring-expert
+    - implementation-structure-design
+  token_cost: not_collected
+  turn_count: not_collected
+  expected_outputs:
+    - Repository Context Map with target files, sibling files, generated artifacts, tests, and rejected locations.
+    - Placement rationale before edit.
+metrics:
+  behavior_delta:
+    - Requires target, sibling, caller, tests, generated artifact, and rejected-location evidence before plan.
+    - Rejects planning from a single visible file name.
+  token_overhead_pct: not_collected
+  turn_overhead_pct: not_collected
+verdict:
+  status: structural_pass
+  rationale: The fixture validates routing and evidence shape only; measured token and turn overhead are not collected.
+

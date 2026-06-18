@@ -4,7 +4,7 @@ actual:
   complexity: L2
   risk_level: high
   skills: [data-api-contract-changer, data-middleware-change-builder, delivery-release-gate, quality-test-gate]
-  capabilities: [data-migration-design, transaction-consistency, version-compatibility, release-rollback, test-strategy, language-testing-strategy, sql-professional-usage]
+  capabilities: [data-migration-design, transaction-consistency, version-compatibility, release-rollback, test-strategy, plan-execution-consistency, language-testing-strategy, sql-professional-usage]
   domain_extensions: []
   quality_gates: [API/data gate, delivery gate, test gate]
   required_references:
@@ -17,6 +17,7 @@ actual:
     - references/capabilities/29-version-compatibility.md
     - references/capabilities/75-release-rollback.md
     - references/capabilities/58-test-strategy.md
+    - references/capabilities/122-plan-execution-consistency.md
     - references/capabilities/86-language-testing-strategy.md
     - references/capabilities/96-sql-professional-usage.md
   stage_route_manifest:
@@ -26,13 +27,13 @@ actual:
     product_surface: database-migration
     language_surface: sql
     selected_skills: [data-api-contract-changer, data-middleware-change-builder, delivery-release-gate, quality-test-gate]
-    selected_capabilities: [data-migration-design, transaction-consistency, release-rollback, test-strategy, language-testing-strategy, sql-professional-usage]
+    selected_capabilities: [data-migration-design, transaction-consistency, release-rollback, test-strategy, plan-execution-consistency, language-testing-strategy, sql-professional-usage]
     selected_domain_extensions: []
     skipped_capabilities:
       - capability: typescript-professional-usage
         reason: migration file is SQL and no frontend path is affected
     context_budget_mode: single-stage
     context_budget_rationale: L2 SQL migration validation selects data/API and SQL testing only
-    required_evidence: [risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected]
+    required_evidence: [risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected, validation freshness after final material edits]
     required_quality_gates: [API/data gate, delivery gate, test gate]
     handoff_target: code-review

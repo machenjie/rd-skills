@@ -75,7 +75,11 @@ def main() -> int:
         )
         if not findings or mode == "monitor":
             return 0
-        emit_warning(runtime, event_name(event) or "PreToolUse", _preview_message(findings))
+        emit_warning(
+            runtime,
+            event_name(event) or "PreToolUse",
+            _preview_message(findings, tool=tool, command=command, paths=paths),
+        )
         return 0
     except Exception as exc:  # noqa: BLE001 - preview must fail open
         emit_warning(
@@ -86,16 +90,58 @@ def main() -> int:
         return 0
 
 
-def _preview_message(findings: list[dict[str, object]]) -> str:
+def _preview_message(
+    findings: list[dict[str, object]],
+    *,
+    tool: str,
+    command: str,
+    paths: list[str],
+) -> str:
     surfaces = ", ".join(str(finding["name"]) for finding in findings)
     gates = _collect(findings, "gates")
     gate_text = ", ".join(gates) if gates else "the matching ChangeForge gate"
+    sandbox = _sandbox_classification(tool=tool, command=command, paths=paths)
     return (
         "ChangeForge pre-edit risk preview (advisory, does not block): this pending "
         f"change touches {surfaces}. Run change-forge-router and select {gate_text} "
-        "before applying it, and emit a changeforge_route manifest. The post-edit risk "
-        "gate will re-check after the change lands."
+        "before applying it, and emit a changeforge_route manifest. "
+        f"Tool permission/sandbox: {sandbox}. The post-edit risk gate will re-check "
+        "after the change lands."
     )
+
+
+def _sandbox_classification(tool: str, command: str, paths: list[str]) -> str:
+    """Return a short permission/sandbox classification without storing content."""
+    lowered_command = command.casefold()
+    lowered_tool = tool.casefold()
+    if lowered_command:
+        if any(
+            marker in lowered_command
+            for marker in (
+                " rm ",
+                "rm -",
+                "git " + "reset",
+                "git " + "checkout --",
+                "kubectl apply",
+                "kubectl delete",
+                "helm upgrade",
+                "helm rollback",
+                "terraform apply",
+                "terraform destroy",
+                "aws ",
+                "gcloud ",
+                "az ",
+                "psql ",
+                "mysql ",
+            )
+        ):
+            return "high-risk command; record permission state, dry-run or rollback path, and redaction rule"
+        return "shell command; record whether it is read-only or state-mutating and what sandbox applies"
+    if paths:
+        if lowered_tool in {"apply_patch", "edit", "multiedit", "write"}:
+            return "filesystem edit; record changed-path boundary and rollback/revert path"
+        return "path-scoped tool action; record changed-path boundary"
+    return "tool action; record permission state and sandbox boundary if it can mutate state or expose sensitive output"
 
 
 if __name__ == "__main__":

@@ -27,6 +27,9 @@ Critically review, validate, and safely refactor AI-generated or AI-assisted cod
 
 ## Non-Negotiable Rules
 - **Direct use still runs the runtime prompt flow.** When `ai-code-review-refactor` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
+- **Independent review starts from the spec and plan**: a review cannot approve generated code until it has inspected the requirement, acceptance criteria, non-goals, accepted plan, changed files, tests, validation output, and repository context. Code quality is reviewed only after spec compliance passes.
+- **Approval scope is explicit**: every approval names the exact files, behavior, tests, and validation it covers and what it does not cover. Implementer self-approval is not independent review.
+- **Repair requires targeted re-review**: any fix after a review finding must identify the finding, repair owner, changed files, validation evidence, and the specific review stage that was re-run.
 - Verify every import and API call exists in the declared version — AI models hallucinate method names and parameter signatures with high confidence.
 - Challenge every hidden assumption: if a function assumes a non-null argument, a sorted collection, or a singleton pattern, require explicit documentation or enforcement.
 - Prefer existing local patterns over novel AI-invented abstractions — pattern novelty is a risk signal, not a quality signal.
@@ -125,6 +128,8 @@ Select the AI review/refactor mode before approving or changing generated code. 
 - **Signal:** generated code catches and suppresses errors or returns default/null fallback. **Hidden risk:** silent failure. **Required professional action:** require typed error/log/metric or safe fallback rationale. **Route to:** `logging-error-handling`, `reliability-observability-gate`. **Evidence required:** negative test and observability.
 - **Signal:** AI expands scope from local fix to broad refactor, new abstraction, dependency, or architecture change without boundary statement. **Hidden risk:** unbounded scope means review cannot prove behavior preservation. **Required professional action:** split the change or document scope, unchanged boundaries, and evidence. **Route to:** `agent-execution-discipline`, `change-impact-analyzer`. **Evidence required:** boundary statement, changed/unchanged file list, validation command output, and residual risk owner.
 - **Signal:** completion claim lacks command output or uses stale validation from before generated changes. **Hidden risk:** unverified AI code. **Required professional action:** block approval until fresh evidence or not-verified disclosure. **Route to:** `agent-execution-discipline`. **Evidence required:** command, exit code, outcome, residual risk.
+- **Signal:** review approves AI code without the requirement, accepted plan, final diff, test evidence, or validation freshness. **Hidden risk:** clean-looking code can miss the requested behavior or approve stale proof. **Required professional action:** run spec-compliance review first, then code-quality review with approval scope. **Route to:** `plan-execution-consistency`, `quality-test-gate`. **Evidence required:** requirement/plan match, final diff covered, changed-code-to-test map, validation freshness, and explicit approval limits.
+- **Signal:** an implementer claims their own generated patch is reviewed or a repair closes without re-review. **Hidden risk:** review findings are silently bypassed. **Required professional action:** require independent review or targeted re-review after repair. **Route to:** `code-review`, `agent-workflow-state-machine`. **Evidence required:** reviewer skill/capability, finding ID, repair diff, validation, and re-review result.
 
 ### Decision Tree: Accept or Return for Remediation
 
@@ -249,6 +254,8 @@ Return a structured review with:
 - **Re-review Required**: which stage must be re-reviewed after the fix.
 - **Approval Scope**: what the approval covers and what it explicitly does not.
 - **Approval status**: Approved with evidence / Returned for remediation with numbered action items.
+- **Independent review record**: requirement, accepted plan, final diff, test/validation evidence, reviewer skill/capability, implementer separation, and repair/re-review result.
+- **Plan-execution consistency**: accepted plan compared to actual changed files, validation commands, skipped work, stale evidence, unplanned behavior changes, and residual risk before approval.
 - **Local naming evidence**:
   same-directory file names inspected;
   parent-module naming pattern inspected;
@@ -298,7 +305,7 @@ Close an AI-code review or refactor only when all five canonical answers are con
 - **Files and boundaries inspected**: requirements, acceptance criteria, non-goals, same-pattern scan across the codebase, call sites, public contracts, tests, dependencies, and security/performance boundaries read, and the duplication or boundary drift found.
 - **Placement rationale**: the reuse-versus-new and placement decision for each added or moved element (via `implementation-structure-design`), with the rejected alternative.
 - **Validation commands**: hallucinated-API check, typecheck/build, characterization/regression tests, security/performance checks, and generated-test review run, each with its outcome, what evidence proves, and what evidence does not prove.
-- **AI review judgment and handoff**: mode selected, accept/return/refactor judgment, behavior preservation, evidence limits, and re-review or next gate.
+- **AI review judgment and handoff**: mode selected, spec-compliance result, code-quality result, approval scope, accept/return/refactor judgment, behavior preservation, evidence limits, and re-review or next gate.
 - **Residual risk**: unreviewed path, untested branch, accepted finding, stale validation, hidden behavior-change risk, or broad refactor boundary that remains, and the named owner of the follow-up.
 
 ## Quality Gate
@@ -331,9 +338,12 @@ Close an AI-code review or refactor only when all five canonical answers are con
 27. Reject AI-generated feature flags, deprecated API use, compatibility branches, dead code, and TODO cleanup without owner, expiry, and removal plan.
 28. Findings are severity-classified and ordered by impact; approvals without findings severity and validation evidence are rejected.
 29. AI-generated fixes include same-pattern scan and behavior-preservation evidence before approval.
-28. Reject AI-generated test helpers that place business fixtures in shared/common test utilities instead of the owning module boundary.
-29. Reject completion claims that use success-implying language ("done", "fixed", "should pass", "works") without a fresh command output, validator result, or artifact from the current change.
-30. Reject partial verification reported as full: a lint-only or single-test pass presented as "all tests pass" or "build is green" is returned for honest scoping with the gap named.
+30. Reject AI-generated test helpers that place business fixtures in shared/common test utilities instead of the owning module boundary.
+31. Reject completion claims that use success-implying language ("done", "fixed", "should pass", "works") without a fresh command output, validator result, or artifact from the current change.
+32. Reject partial verification reported as full: a lint-only or single-test pass presented as "all tests pass" or "build is green" is returned for honest scoping with the gap named.
+33. Reject approvals that do not explicitly cover requirement compliance, accepted plan match, final diff scope, changed-code-to-test mapping, validation freshness, and approval limits.
+34. Reject implementer self-approval as independent review.
+35. Reject repaired findings that have not been re-reviewed at the stage where the finding was raised.
 
 ## Handoff
 - **security-privacy-gate** — for auth, permission, payment, or sensitive data code that requires adversarial review.

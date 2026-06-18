@@ -41,9 +41,14 @@ Define the minimum evidence needed to prove a change works correctly, does not r
 - **Experiment and model rollout tests require data validity checks**: exposure logging, sample ratio mismatch, feature point-in-time correctness, training-serving skew, drift metrics, and rollback version must be verified like code behavior.
 - **Affected-test selection must be proven against a full-suite baseline**: monorepo speedups are valid only when module graph, dependency edges, cache keys, and generated inputs cannot skip impacted tests.
 - **Agent-provided test evidence must be concrete**: accept command output, exit codes, logs, fixtures, screenshots, or recorded validator results; reject "tests should pass", undocumented local runs, and partial runs reported as full (a lint or type-check pass is not a test pass; one green test is not full-suite success).
+- **Changed code maps to tests**: every material changed branch, public contract, migration, fixture, generated artifact, or integration seam must map to a specific test, validation command, or explicitly accepted residual risk.
+- **Validation freshness is mandatory**: if source, fixtures, configs, generated inputs, lockfiles, migrations, or test data change after a validation run, the affected validation is stale and must be re-run or reported as not verified.
+- **Flaky tests need classification**: a flaky, retried, quarantined, or skipped test must be classified by signature, owner, affected risk, quarantine/remediation path, and why its missing signal does or does not block the change.
 - **Minimal validation is risk-bound**: L1 low-risk changes may use the smallest meaningful runnable check, but a smoke check is not evidence for money, security, auth, data migration, retry/idempotency, or production reliability correctness. Do not delete a meaningful smoke or self-check as bloat.
 - **Test structure follows module structure**: test files, fixtures, factories, mocks, and golden data must have an owning module or contract boundary; shared test helpers must not become business-fixture dumping grounds.
 - **Tests exercise public behavior by default**: refactors and splits are verified through public APIs, module contracts, or observable behavior, not private helper calls that freeze implementation details.
+- **Assertions must be mutation-resistant enough for the risk**: tests for material behavior must fail when the implementation branch, permission check, mapping, calculation, side effect, or failure contract is removed or inverted; shallow existence and call-count assertions are not sufficient.
+- **AI patch test debt is explicit**: generated or agent-assisted patches must list tests added, tests reused, tests intentionally not added, stale validations, and follow-up debt with an owner when full coverage is deferred.
 
 ## Industry Benchmarks
 - **Test Pyramid (Mike Cohn)**: Many unit tests, fewer integration tests, few E2E tests. Unit tests are fast and cheap; E2E tests are slow and expensive — invert the pyramid at your peril.
@@ -112,6 +117,8 @@ Select the testing mode by risk. Do not request tests generically; name the fail
 - **Signal:** cleanup deletes flags, fallbacks, deprecated APIs, compatibility branches, or dead code without caller-search and rollback tests. **Hidden risk:** deletion removes runtime or generated references that ordinary unit tests miss. **Required professional action:** test cleanup/deletion governance before closure. **Route to:** `cleanup-deletion-governance`, `regression-testing`. **Evidence required:** caller search, telemetry or retained-risk decision, removed/preserved behavior tests, and rollback path.
 - **Signal:** test confidence depends on import boundaries, generated-file policy, public/private exports, affected-test rules, or forbidden dependencies that are not enforced in CI. **Hidden risk:** missing CI enforcement lets tests be skipped or wrong architecture violations merge unnoticed. **Required professional action:** require architecture enforcement evidence or mark the test gate incomplete. **Route to:** `architecture-enforcement-tooling`, `ci-cd`. **Evidence required:** rule list, CI command, representative failure, generated-code exception, and affected-test proof.
 - **Signal:** test plan lacks negative case for permission, idempotency, concurrency, invalid input, or partial failure. **Hidden risk:** missing negative-path regression leaves happy-path confidence only. **Required professional action:** add a mutation-like negative case for the named risk. **Route to:** `backend-change-builder`, `security-privacy-gate`, `data-middleware-change-builder`. **Evidence required:** denied/invalid/retry/partial-failure test output and what evidence proves.
+- **Signal:** changed files, branches, fixtures, or generated inputs are not mapped to test obligations, or validation evidence predates the final edit. **Hidden risk:** handoff reports green evidence for code that was never exercised. **Required professional action:** build a changed-code-to-test map and re-run stale checks. **Route to:** `plan-execution-consistency`, `regression-testing`. **Evidence required:** changed path, covered behavior, command, outcome, stale/not-run disclosure, and residual risk owner.
+- **Signal:** assertions only check existence, snapshot shape, mock calls, or private helper internals. **Hidden risk:** hidden wrong branch, permission check, mapping, or failure contract survives because the test has no behavior-sensitive assertion. **Required professional action:** require public-behavior proof and verify mutation-style assertion quality for the named risk. **Route to:** `testability-seam-design`, `code-clarity-maintainability`. **Evidence required:** behavior boundary map, mutation or inversion test output that would fail, rejected private-helper assertion, and residual assertion-debt owner.
 
 ### Decision Tree: Test Depth Required
 
@@ -222,6 +229,7 @@ Return a test strategy with:
 - **Boundaries inspected**: changed code paths, branches, public contracts, fixtures, mocks, generated files, DB/cache/queue/provider seams, UI states, CI selection, and release boundaries inspected or skipped with reason.
 - **Professional judgment**: test depth decision, risk accepted or ruled out, and why cheaper or heavier evidence is insufficient or unnecessary.
 - **Risk-to-test mapping**: Each identified risk paired with its required test type, depth, and pass criteria.
+- **Changed-code-to-test map**: every material changed path, branch, public contract, fixture, generated input, and integration seam paired with covering tests/validators or residual risk.
 - **Proof statement**: for every proposed or executed test, what this test proves and what it does not prove.
 - **Test level breakdown**: Unit / integration / contract / E2E / migration count and rationale.
 - **Fixture strategy**: Data setup, isolation approach, and test data generation method.
@@ -240,6 +248,9 @@ Return a test strategy with:
 - **MLOps test obligations**: model version registry check, feature store point-in-time correctness, training-serving skew test, drift metric threshold, fairness/bias evaluation, shadow/canary plan, and rollback model verification.
 - **Monorepo test obligations**: module graph, affected tests, cache key inputs, generated file policy, and full-test fallback cadence.
 - **Validation evidence**: Commands run, exit codes, relevant output, artifacts produced, and any unrun test obligations with rationale.
+- **Validation freshness**: source/config/fixture/generated inputs covered by each validation, last material edit after the run, stale checks re-run, and checks intentionally not re-run.
+- **Assertion quality review**: public behavior boundary, mutation-style failure expectation, private-helper rejection, shallow assertion debt, and mock-call-only findings.
+- **Flaky classification**: flaky or skipped tests, signature, owner, quarantine/remediation path, blocked risk, and accepted residual risk.
 - **Evidence limits**: what each test proves and what it does not prove about integration seams, scale, browsers, production data, flake risk, or release readiness.
 - **Residual risks**: Accepted gaps with explicit business justification and mitigating controls.
 - **Next gate/handoff**: implementation, contract, security, reliability, release, or no-next-gate rationale.
@@ -250,7 +261,7 @@ Close a test strategy only when all five canonical answers are concrete (answer 
 - **Files and boundaries inspected**: code paths, branches, public contracts, fixtures, mocks, generated files, integration seams, UI states, CI selection, and release boundaries the strategy covers, and the mock-versus-real boundary chosen for each dependency.
 - **Placement rationale**: why each test sits at its level (unit/integration/contract/E2E/migration) instead of a cheaper or more expensive one.
 - **Validation commands**: the literal test suites and validators run, each with its exit code, the obligation it satisfies, what evidence proves, and what evidence does not prove.
-- **Testing judgment and handoff**: mode selected, risk-to-test judgment, behavior preservation when applicable, evidence limits, and next gate.
+- **Testing judgment and handoff**: mode selected, changed-code-to-test mapping, risk-to-test judgment, validation freshness, assertion quality, behavior preservation when applicable, evidence limits, and next gate.
 - **Residual risk**: the accepted coverage gap, flaky signal, mock limitation, untested negative case, or non-automatable obligation with its compensating manual evidence, and the named owner of the follow-up.
 
 ## Quality Gate
@@ -285,6 +296,11 @@ Close a test strategy only when all five canonical answers are concrete (answer 
 29. Private helpers are not exported only for tests; tests exercise public behavior or explicit seams.
 30. Time, randomness, UUIDs, concurrency, and external I/O are deterministic or explicitly isolated in tests.
 31. Failure contracts and model mappings have negative-path and compatibility coverage when they cross boundaries.
+32. Every material changed code path, fixture, generated artifact, or public contract maps to a test/validator or an explicit residual risk.
+33. Validation evidence is fresh against the final changed files, configs, fixtures, generated inputs, and lockfiles.
+34. Material assertions would fail on an inverted, removed, or bypassed implementation branch; shallow existence, snapshot, mock-call, and private-helper assertions are flagged.
+35. Flaky, skipped, retried, or quarantined tests have a signature, owner, risk classification, and remediation path.
+36. Agent-assisted patches list test debt and not-run obligations explicitly; missing tests cannot be hidden behind a clean partial run.
 
 ## Handoff
 - **backend-change-builder** — with test obligations for service, repository, and API layers.
