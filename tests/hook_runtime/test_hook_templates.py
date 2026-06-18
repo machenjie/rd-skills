@@ -280,6 +280,13 @@ class HookTemplateTests(unittest.TestCase):
     def test_new_hook_runtime_scripts_listed_in_build_manifest(self) -> None:
         build_text = (ROOT / "scripts" / "build.py").read_text(encoding="utf-8")
         for script in (
+            "changeforge_adapter_capabilities",
+            "changeforge_normalized_event",
+            "changeforge_lifecycle_state",
+            "changeforge_evidence_ledger",
+            "changeforge_gate_result",
+            "changeforge_closure_contract",
+            "changeforge_executor_adapter_core",
             "changeforge_hook_policy",
             "changeforge_state_reducer",
             "changeforge_pre_edit_structure_gate",

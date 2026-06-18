@@ -1,9 +1,9 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-18T06:55:09.848935+00:00
+- Generated: 2026-06-18T08:32:24.574092+00:00
 - Skills/capabilities checked: 141
 - Warning count: 2
-- Average score: 41.62/60
+- Average score: 41.64/60
 
 ## Scores
 
@@ -88,13 +88,13 @@
 | `src/foundation/capabilities/cleanup-deletion-governance/SKILL.md` | foundation-capability | 42/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/design-pattern-selection/SKILL.md` | foundation-capability | 42/60 | acceptable | 0 | 1 |
 | `src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md` | foundation-capability | 42/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/context-packaging/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/message-queue-design/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/observability/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/relational-database/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/release-rollback/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/solution-optimality-evaluation/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/async-job-design/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/context-packaging/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/contract-testing/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/integration-testing/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/logging-error-handling/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
@@ -105,10 +105,10 @@
 | `src/foundation/capabilities/cache-design/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/ci-cd/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/idempotency-retry-design/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/repository-context-map/SKILL.md` | foundation-capability | 45/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/agent-tool-permission-sandbox/SKILL.md` | foundation-capability | 46/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/code-clarity-maintainability/SKILL.md` | foundation-capability | 46/60 | acceptable | 1 | 0 |
 | `src/foundation/capabilities/plan-execution-consistency/SKILL.md` | foundation-capability | 46/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/repository-context-map/SKILL.md` | foundation-capability | 46/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/agent-execution-discipline/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/language-performance-safety/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/skill-authoring-expert/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |

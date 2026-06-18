@@ -22,6 +22,7 @@ Do not use this capability to dump an entire repository or codebase into context
 # Non-Negotiable Rules
 
 - **Source-grounded, not paraphrased.** Every factual claim in the context package must cite a specific file path, line range, ADR number, specification section, or test name. "The service uses JWT" is only acceptable if followed by `(src/auth/middleware.ts:12–28)`. Uncited claims are inferences, not facts; mark them as such.
+- **Prefer generated repository intelligence when available.** Start from a fresh RepositoryGraph and TaskContextPack when the repository provides them, then inspect the selected files directly. A stale graph, missing changed path, mismatched commit, or changed repo hash invalidates the package until re-indexed.
 - **Minimum sufficient size.** Include only what the agent *must know* to act correctly on this task. Irrelevant context is not neutral — it competes with relevant context and degrades output quality. Omitting irrelevant information is as important as including relevant information.
 - **Explicit non-goals and do-not-touch zones.** Every context package declares what the agent must NOT change, even if it appears related. Missing non-goals → scope creep → unintended side effects.
 - **Freshness dates and drift triggers.** Each major context element is dated: "Schema as of commit `abc1234` (2026-05-10)" or "ADR-012 supersedes ADR-007 as of 2026-03-01." Context becomes unsafe when the sources it references change; list the specific events that invalidate it.
@@ -66,6 +67,7 @@ A context package is both a **knowledge transfer artifact and a commitment about
 - **Session vs cross-session context.** Within a session, context accumulates; the agent can refer to earlier decisions. Across sessions (or after compaction), the context package is the only reliable record. Cross-session packages must be self-contained; they cannot rely on implied session memory.
 - **Redaction of sensitive references.** Instead of a real DB connection string, use `$DB_URL (env var, see secret-configuration-security capability)`. Instead of a real user record, use a synthetic test fixture. Real production data in context = GDPR/compliance exposure.
 - **Versioned context packages.** For long-running tasks, version the package itself: `context-v1.md` → `context-v2.md` (after schema bump). Enables rollback understanding and handoff audit trail.
+- **Generated graph is a selector, not a payload.** Use graph walks and relevance ranking to choose source-of-truth files, callers, tests, validators, docs, and generated-artifact references. Do not paste the entire graph or repository inventory into an AI-agent handoff.
 
 # Failure Modes
 
@@ -88,6 +90,7 @@ A context package is both a **knowledge transfer artifact and a commitment about
 Return a context package with:
 
 - `task_goal` (one sentence; objective; citable against requirement)
+- `repository_graph_evidence` (graph path or artifact id, repo hash, indexed commit or fallback mtime, indexed_at, and stale/re-index status)
 - `source_evidence` (per item: source type, path/url, cited section/line, date/commit, fact_class: FACT/INFERENCE/ASSUMPTION)
 - `relevant_files` (per file: path, purpose, permitted changes: read-only / modify / create)
 - `architecture_boundaries` (per rule: boundary, constraint statement, source ADR/doc, owner)
@@ -119,6 +122,8 @@ The context package passes only when:
 9. Drift triggers are specific (not "if anything changes").
 10. The package is scoped to a single named task; not a project-wide dump.
 11. "Excluded context" section explains what was deliberately omitted.
+12. Generated graph/context-pack facts are separated from agent inferences, assumptions, and open questions.
+13. RepositoryGraph content is pruned by task relevance and graph distance; it is never copied as an all-files dump.
 
 # Used By
 

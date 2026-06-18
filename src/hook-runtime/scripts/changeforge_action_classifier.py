@@ -16,6 +16,7 @@ from changeforge_common import (
     summarize_command_program,
     tool_name,
 )
+from changeforge_normalized_event import NormalizedEvent
 from changeforge_runtime_route_resolver import (
     detect_domain_extensions,
     detect_language_surfaces,
@@ -114,6 +115,25 @@ NO_INJECTION_STAGES = {"question", "unknown", "no_engineering_action", "compacti
 
 def classify_event(event: dict) -> dict[str, Any]:
     """Return stage, surfaces, and compact prompt signals for an event."""
+    return normalize_event(event).to_classifier_dict()
+
+
+def normalize_event(event: dict) -> NormalizedEvent:
+    """Return the normalized event object while preserving classifier semantics."""
+    classification = _classify_event_dict(event)
+    read_evidence = (
+        extract_read_evidence(event)
+        if is_read_tool(event) or classification.get("stage") == "read"
+        else {}
+    )
+    return NormalizedEvent.from_event(
+        event,
+        classification=classification,
+        read_evidence=read_evidence,
+    )
+
+
+def _classify_event_dict(event: dict) -> dict[str, Any]:
     tool = compact_name(tool_name(event))
     hook = compact_name(event_name(event))
     command = extract_bash_command(event)

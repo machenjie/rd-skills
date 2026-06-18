@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "changeforge.repository-graph.v1",
+  "title": "ChangeForge RepositoryGraph v1",
+  "type": "object",
+  "required": ["repository_graph"],
+  "properties": {
+    "repository_graph": {
+      "type": "object",
+      "required": ["schema_version", "repo_hash", "indexed_at", "indexed_commit", "files", "edges"],
+      "properties": {
+        "schema_version": {"const": 1},
+        "repo_hash": {"type": "string"},
+        "indexed_at": {"type": "string"},
+        "indexed_commit": {"type": ["string", "null"]},
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "kind", "role", "symbols", "references"],
+            "properties": {
+              "path": {"type": "string"},
+              "kind": {"type": "string"},
+              "role": {"type": "string"},
+              "symbols": {"type": "array"},
+              "frontmatter": {"type": "object"},
+              "headings": {"type": "array"},
+              "references": {"type": "array"}
+            }
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "to", "type"],
+            "properties": {
+              "from": {"type": "string"},
+              "to": {"type": "string"},
+              "type": {"type": "string"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

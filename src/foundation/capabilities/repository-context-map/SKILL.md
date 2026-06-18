@@ -12,6 +12,11 @@ changeforge_version: 0.1.0
 ## Mission
 Create a small, evidence-backed map of the repository area affected by a proposed change before planning or editing. The map identifies ownership, local conventions, callers and callees, tests, configuration, documentation, generated artifacts, and unknowns so the implementation plan is based on inspected project context rather than prompt-only assumptions.
 
+## Repository Intelligence Tooling
+When repository-intelligence tooling is available, prefer a freshly generated RepositoryGraph and TaskContextPack as the first evidence layer for this capability. The generated graph supplies deterministic file roles, Python symbol/import edges, Markdown/SKILL heading and reference edges, YAML/JSON registry references, skill-capability-registry relationships, hook-template/build-output relationships, test links, and freshness metadata.
+
+The generated graph does not replace professional judgment. Agents must still inspect the selected source files, confirm source-of-truth ownership, and label anything the graph cannot prove as `INFERENCE`, `ASSUMPTION`, or `OPEN QUESTION`. If the graph is stale, missing a changed path, or built from a different commit/hash than the current working tree, re-index before using it as evidence.
+
 ## When To Use
 - Before planning a non-trivial engineering change in an unfamiliar or partially inspected repository area.
 - When adding, moving, deleting, or renaming files, capabilities, registry entries, hooks, tests, or docs.
@@ -67,10 +72,12 @@ Create a small, evidence-backed map of the repository area affected by a propose
 - **Hidden caller breakage**: A public output contract changes but dependents and tests were not mapped.
 - **Stale validation**: Tests are chosen before generated outputs or registry references are updated, so the validation no longer proves the final patch.
 - **Boundary leak**: A local helper or fixture is placed in shared code because owner conventions were not inspected.
+- **Graph dump bloat**: The agent treats a repository graph as a full-repo prompt dump instead of selecting the smallest task-relevant context.
 
 ## Output Contract
 Return a `repository_context_map` with:
 - **Change basis**: request, intended behavior, non-goals, and risk level.
+- **Generated evidence**: repository graph path/hash, context-pack path/hash when available, indexed commit or fallback mtime, and whether the graph was refreshed for the current task.
 - **Source of truth**: files or registries that own the behavior, plus generated or installed artifacts explicitly excluded from source edits.
 - **Files inspected**: exact paths read before planning, including sibling files, parent module files, tests, docs, configs, validators, and build scripts.
 - **Searches run**: patterns searched, paths or globs searched, and what was found or not found.
@@ -78,6 +85,7 @@ Return a `repository_context_map` with:
 - **Caller/callee and dependent map**: imports, references, registry links, generated references, tests, docs, and consumers affected or ruled out.
 - **Local conventions**: naming, placement, structure, frontmatter, schema, test, and documentation conventions observed.
 - **Plan inputs**: reuse candidates, placement constraints, affected validation commands, and docs to update.
+- **Fact classification**: mark each generated or inspected claim as `FACT`, `INFERENCE`, `ASSUMPTION`, or `OPEN QUESTION`.
 - **Evidence limits**: what was not inspected and what risk remains.
 - **Next gate**: owner skill and independent review skill for the planned action.
 
@@ -89,6 +97,8 @@ Return a `repository_context_map` with:
 5. Placement and reuse decisions cite local convention evidence.
 6. Evidence freshness is stated when validation depends on files that may change later.
 7. Unknowns and skipped surfaces include rationale and next owner.
+8. Generated repository graph/context-pack evidence is bounded to task-relevant files and is not used as a full-repository dump.
+9. Stale or mismatched graph freshness markers trigger re-indexing before implementation planning.
 
 ## Used By
 - `change-forge-router`

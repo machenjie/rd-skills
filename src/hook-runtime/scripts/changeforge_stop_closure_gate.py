@@ -23,6 +23,8 @@ from changeforge_common import (
     session_id_from_event,
     write_telemetry_event,
 )
+from changeforge_adapter_capabilities import adapter_capabilities_for
+from changeforge_closure_contract import ClosureContract
 from changeforge_hook_policy import gate_mode, run_gate_with_policy
 
 
@@ -374,6 +376,7 @@ def _main() -> int:
     final_text = _final_text(event)
     manifest = extract_manifest_fields(final_text)
     signals = _closure_signals(final_text, state, manifest)
+    contract = _closure_contract(final_text, state, manifest, runtime, mode, signals)
     write_telemetry_event(
         repo,
         runtime=runtime,
@@ -441,13 +444,13 @@ def _main() -> int:
     if mode == "monitor":
         clear_state(repo, runtime)
         return 0
-    missing = _missing_keyword_groups(final_text, state, manifest)
+    missing = _missing_keyword_groups(final_text, state, manifest, contract)
     if _closure_profile(state) == "read_review" and not missing:
         clear_state(repo, runtime)
         return 0
     stop_hook_active = bool(event.get("stop_hook_active") or event.get("stopHookActive"))
     should_block = mode == "block" and bool(missing) and not stop_hook_active
-    message = _closure_message(state, final_text, manifest)
+    message = _closure_message(state, final_text, manifest, contract)
     if should_block:
         emit_stop_reminder(runtime, message, continue_turn=True)
     else:
@@ -570,9 +573,14 @@ def _stop_findings(state: dict) -> dict[str, list[str]]:
     }
 
 
-def _closure_message(state: dict, final_text: str, manifest: dict | None = None) -> str:
+def _closure_message(
+    state: dict,
+    final_text: str,
+    manifest: dict | None = None,
+    contract: ClosureContract | None = None,
+) -> str:
     profile = _closure_profile(state)
-    missing = _missing_keyword_groups(final_text, state, manifest)
+    missing = _missing_keyword_groups(final_text, state, manifest, contract)
     route_present = bool(manifest and manifest.get("route_present"))
     details: list[str] = []
     if state.get("structure_findings"):
@@ -881,6 +889,7 @@ def _missing_keyword_groups(
     text: str,
     state: dict,
     manifest: dict | None = None,
+    contract: ClosureContract | None = None,
 ) -> list[str]:
     lowered = text.casefold()
     missing: list[str] = []
@@ -936,7 +945,53 @@ def _missing_keyword_groups(
     for group in _stage_missing_groups(text, state):
         if group not in missing:
             missing.append(group)
+    for group in _contract_missing_groups(contract):
+        if group not in missing:
+            missing.append(group)
     return missing
+
+
+def _closure_contract(
+    final_text: str,
+    state: dict,
+    manifest: dict,
+    runtime: str,
+    mode: str,
+    signals: dict[str, bool] | None = None,
+) -> ClosureContract:
+    signals = signals if isinstance(signals, dict) else _closure_signals(final_text, state, manifest)
+    review_evidence_present = bool(
+        state.get("review_evidence_seen")
+        or state.get("review_artifact_seen")
+        or state.get("review_targets")
+        or state.get("reviewed_diff_evidence_seen")
+    )
+    return ClosureContract.from_state(
+        state,
+        route_manifest_complete=bool(manifest.get("route_present")),
+        stage_route_present=bool(manifest.get("stage_present")),
+        repository_context_present=bool(signals.get("repository_context")),
+        implementation_preflight_complete=(
+            not _implementation_preflight_required(state)
+            or _has_implementation_preflight_evidence(final_text, state)
+        ),
+        validation_evidence_present=bool(signals.get("validation")),
+        review_evidence_present=review_evidence_present,
+        residual_risk_present=bool(signals.get("risk")),
+        capabilities=adapter_capabilities_for(runtime),
+        block_mode=mode == "block",
+    )
+
+
+def _contract_missing_groups(contract: ClosureContract | None) -> list[str]:
+    if contract is None:
+        return []
+    groups: list[str] = []
+    for item in contract.missing_items:
+        if item == "review_evidence":
+            continue
+        groups.append(item)
+    return groups
 
 
 def _stage_missing_groups(text: str, state: dict) -> list[str]:

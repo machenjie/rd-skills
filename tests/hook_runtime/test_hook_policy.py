@@ -16,14 +16,21 @@ SCRIPT_DIR = ROOT / "src" / "hook-runtime" / "scripts"
 
 
 def load_policy():
-    spec = importlib.util.spec_from_file_location(
-        "changeforge_hook_policy_for_test",
-        SCRIPT_DIR / "changeforge_hook_policy.py",
-    )
-    module = importlib.util.module_from_spec(spec)
-    assert spec.loader is not None
-    spec.loader.exec_module(module)
-    return module
+    sys.path.insert(0, str(SCRIPT_DIR))
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "changeforge_hook_policy_for_test",
+            SCRIPT_DIR / "changeforge_hook_policy.py",
+        )
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(module)
+        return module
+    finally:
+        try:
+            sys.path.remove(str(SCRIPT_DIR))
+        except ValueError:
+            pass
 
 
 def load_permission_gate():

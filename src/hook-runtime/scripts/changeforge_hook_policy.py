@@ -7,6 +7,8 @@ import os
 from collections.abc import Callable
 from typing import Any
 
+from changeforge_gate_result import GateResult
+
 
 HOOK_MODES = {"off", "monitor", "warn", "block"}
 FAILURE_MODES = {"fail_open", "fail_closed"}
@@ -91,15 +93,36 @@ def run_gate_with_policy(
 
 def should_block(gate_name: str, confidence: str = "high") -> bool:
     """Block only when the gate is configured to block and confidence is high."""
-    return (
-        gate_mode(gate_name) == "block"
-        and str(confidence).strip().casefold() in CONFIDENCE_BLOCK_VALUES
-    )
+    return gate_result(gate_name, confidence=confidence).should_block
 
 
 def should_emit_context(gate_name: str) -> bool:
     """Return true when the gate should emit advisory context."""
-    return gate_mode(gate_name) in {"warn", "block"}
+    return gate_result(gate_name).should_emit
+
+
+def gate_result(
+    gate_name: str,
+    *,
+    confidence: str = "medium",
+    severity: str = "warning",
+    message: str = "",
+    facts: dict | None = None,
+    residual_risk: str = "",
+) -> GateResult:
+    """Return the normalized GateResult for legacy policy helpers."""
+    confidence_value = str(confidence).strip().casefold()
+    if confidence_value not in {"low", "medium", *CONFIDENCE_BLOCK_VALUES}:
+        confidence_value = "medium"
+    return GateResult.from_policy(
+        gate_name,
+        mode=gate_mode(gate_name),
+        confidence=confidence_value,
+        severity=severity,
+        message=message,
+        facts=facts,
+        residual_risk=residual_risk,
+    )
 
 
 def _normalize_gate(value: str) -> str:
@@ -126,6 +149,7 @@ def _int_env(name: str, default: int) -> int:
 
 __all__ = [
     "failure_mode",
+    "gate_result",
     "gate_mode",
     "policy_for",
     "run_gate_with_policy",

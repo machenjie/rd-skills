@@ -22,7 +22,7 @@ DIST_COPILOT_HOOK_SUPPORT = (
     / "changeforge"
     / "changeforge_copilot_skill_summary.md"
 )
-EXPECTED_HOOK_SCRIPT_COUNT = 22
+EXPECTED_HOOK_SCRIPT_COUNT = 29
 RUNTIME_ROUTE_RESOLVER_NAME = "changeforge_runtime_route_resolver.py"
 RUNTIME_ROUTE_INDEX_NAME = "changeforge_runtime_route_index.json"
 EXPECTED_COMMON_SUPPORT_FILES = [

@@ -47,9 +47,16 @@ REQUIRED_DIST_DIRS = (
 
 HOOK_SCRIPT_FILENAMES = (
     "changeforge_common.py",
+    "changeforge_adapter_capabilities.py",
     "changeforge_runtime_adapters.py",
     "changeforge_hook_policy.py",
     "changeforge_state_reducer.py",
+    "changeforge_normalized_event.py",
+    "changeforge_lifecycle_state.py",
+    "changeforge_evidence_ledger.py",
+    "changeforge_gate_result.py",
+    "changeforge_closure_contract.py",
+    "changeforge_executor_adapter_core.py",
     "changeforge_action_classifier.py",
     "changeforge_runtime_route_resolver.py",
     "changeforge_skill_index.py",

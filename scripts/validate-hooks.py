@@ -99,7 +99,6 @@ COPILOT_EVENT_SCRIPTS = {
     ),
     "Stop": ("changeforge_stop_closure_gate",),
 }
-COPILOT_UNSUPPORTED_ADVISORY_EVENTS = ("UserPromptSubmit", "PreToolUse", "SubagentStop")
 BOOTSTRAP_TEMPLATE = (
     HOOK_RUNTIME_ROOT / "templates" / "bootstrap" / "changeforge-route-preflight.md"
 )
@@ -113,9 +112,16 @@ COPILOT_PROFESSIONAL_CONTRACT = (
 )
 REQUIRED_HOOK_SCRIPTS = (
     "changeforge_common.py",
+    "changeforge_adapter_capabilities.py",
     "changeforge_runtime_adapters.py",
     "changeforge_hook_policy.py",
     "changeforge_state_reducer.py",
+    "changeforge_normalized_event.py",
+    "changeforge_lifecycle_state.py",
+    "changeforge_evidence_ledger.py",
+    "changeforge_gate_result.py",
+    "changeforge_closure_contract.py",
+    "changeforge_executor_adapter_core.py",
     "changeforge_action_classifier.py",
     "changeforge_runtime_route_resolver.py",
     "changeforge_skill_index.py",
@@ -183,6 +189,7 @@ def main() -> int:
 
     _validate_required_files(errors)
     _validate_python_files(errors)
+    _validate_adapter_capabilities(errors)
     _validate_schema_files(errors)
     _validate_bootstrap_fragment(errors)
     codex = _load_json(CODEX_TEMPLATE, errors)
@@ -238,6 +245,64 @@ def _validate_required_files(errors: list[str]) -> None:
     ):
         if not path.is_file():
             errors.append(f"missing hook template: {relpath(ROOT, path)}")
+
+
+def _load_adapter_capabilities(errors: list[str]) -> Any:
+    sys.path.insert(0, str(HOOK_SCRIPTS_DIR))
+    try:
+        import changeforge_adapter_capabilities as capabilities
+    except Exception as exc:
+        errors.append(f"adapter capabilities import failed: {exc}")
+        return None
+    finally:
+        try:
+            sys.path.remove(str(HOOK_SCRIPTS_DIR))
+        except ValueError:
+            pass
+    return capabilities
+
+
+def _validate_adapter_capabilities(errors: list[str]) -> None:
+    capabilities = _load_adapter_capabilities(errors)
+    if capabilities is None:
+        return
+    for runtime in ("codex", "claude", "copilot", "generic"):
+        adapter = capabilities.adapter_capabilities_for(runtime)
+        if adapter.runtime != runtime:
+            errors.append(f"adapter capabilities: {runtime} returned {adapter.runtime}")
+        data = adapter.to_dict()
+        for field in (
+            "supports_session_start",
+            "supports_user_prompt_submit",
+            "supports_pre_tool_use",
+            "supports_post_tool_use",
+            "supports_stop",
+            "supports_subagent_start",
+            "supports_subagent_stop",
+            "supports_permission_decision",
+            "supports_blocking",
+            "supports_context_injection",
+            "supports_tool_result_inspection",
+        ):
+            if not isinstance(data.get(field), bool):
+                errors.append(f"adapter capabilities: {runtime}.{field} must be boolean")
+        if data.get("default_failure_mode") != "fail_open":
+            errors.append(f"adapter capabilities: {runtime} must default to fail_open")
+        if not isinstance(data.get("unsupported_events"), list):
+            errors.append(f"adapter capabilities: {runtime}.unsupported_events must be a list")
+    copilot = capabilities.adapter_capabilities_for("copilot")
+    for event in ("UserPromptSubmit", "PreToolUse", "SubagentStop"):
+        if event not in copilot.unsupported_events:
+            errors.append(f"adapter capabilities: Copilot must mark {event} unsupported")
+        if copilot.supports_event(event):
+            errors.append(f"adapter capabilities: Copilot must not support {event}")
+
+
+def _copilot_unsupported_advisory_events(errors: list[str]) -> tuple[str, ...]:
+    capabilities = _load_adapter_capabilities(errors)
+    if capabilities is None:
+        return ()
+    return tuple(capabilities.unsupported_events_for("copilot"))
 
 
 def _validate_schema_files(errors: list[str]) -> None:
@@ -602,7 +667,7 @@ def _validate_copilot_template(
         errors.append(f"{relpath(ROOT, path)}: hooks must be a JSON object")
         return
 
-    for event in COPILOT_UNSUPPORTED_ADVISORY_EVENTS:
+    for event in _copilot_unsupported_advisory_events(errors):
         if event in hooks:
             errors.append(
                 f"{relpath(ROOT, path)}: Copilot must not wire unsupported advisory {event}"
