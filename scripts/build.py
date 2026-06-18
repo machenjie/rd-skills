@@ -73,6 +73,8 @@ HOOK_SUPPORT_PACKAGE_INCLUDE_FILES = {
         "__init__.py",
         "cache/__init__.py",
         "cache/repo_hash.py",
+        "graph/__init__.py",
+        "graph/file_classifier.py",
     ),
     "project_memory": (
         "__init__.py",

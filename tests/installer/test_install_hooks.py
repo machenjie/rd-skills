@@ -64,6 +64,12 @@ def _built_manifest_has_support_packages(path: Path) -> bool:
     return manifest.get("support_packages") == EXPECTED_SUPPORT_PACKAGES
 
 
+def _built_repository_intelligence_subset_complete(hooks_dir: Path) -> bool:
+    return (
+        hooks_dir / "repository_intelligence" / "graph" / "file_classifier.py"
+    ).is_file()
+
+
 def _run_install(project: Path, *extra: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [
@@ -99,6 +105,27 @@ def _assert_action_classifier_smoke(test_case: unittest.TestCase, scripts_dir: P
     test_case.assertEqual(result.returncode, 0, result.stderr)
 
 
+def _assert_hook_support_import_smoke(test_case: unittest.TestCase, hooks_dir: Path) -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import validation_broker;"
+                "import runtime_governance;"
+                "import project_memory.hook_safe.adapter;"
+                "import repository_intelligence.cache.repo_hash"
+            ),
+        ],
+        text=True,
+        capture_output=True,
+        cwd=str(hooks_dir),
+        env=os.environ.copy(),
+        check=False,
+    )
+    test_case.assertEqual(result.returncode, 0, result.stderr)
+
+
 class InstallHooksTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -106,6 +133,8 @@ class InstallHooksTests(unittest.TestCase):
             DIST_CODEX_HOOKS / "hooks" / RUNTIME_ROUTE_INDEX_NAME
         ).is_file() or not _built_manifest_has_support_packages(
             DIST_CODEX_HOOKS / ".changeforge-hook-manifest.json"
+        ) or not _built_repository_intelligence_subset_complete(
+            DIST_CODEX_HOOKS / "hooks"
         ):
             _build_recommended()
 
@@ -146,6 +175,7 @@ class InstallHooksTests(unittest.TestCase):
             self.assertTrue(manifest.is_file())
             self.assertTrue(hooks_json.is_file())
             _assert_action_classifier_smoke(self, codex_dir / "hooks")
+            _assert_hook_support_import_smoke(self, codex_dir / "hooks")
 
     def test_merge_preserves_existing_user_hook(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -219,6 +249,7 @@ class InstallHooksTests(unittest.TestCase):
             self.assertTrue(
                 (codex_dir / "hooks" / "project_memory" / "hook_safe" / "adapter.py").is_file()
             )
+            _assert_hook_support_import_smoke(self, codex_dir / "hooks")
 
     def test_hook_support_package_manifest_rejects_path_like_names(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -241,6 +272,7 @@ class InstallCopilotHooksTests(unittest.TestCase):
             or not _built_manifest_has_support_packages(
                 DIST_COPILOT_HOOK_SUPPORT.parent / ".changeforge-hook-manifest.json"
             )
+            or not _built_repository_intelligence_subset_complete(DIST_COPILOT_HOOK_SUPPORT.parent)
         ):
             _build_recommended()
 
@@ -294,6 +326,7 @@ class InstallCopilotHooksTests(unittest.TestCase):
             self.assertTrue((scripts_dir / "repository_intelligence" / "__init__.py").is_file())
             self.assertTrue((scripts_dir / "project_memory" / "__init__.py").is_file())
             self.assertTrue((scripts_dir / "project_memory" / "hook_safe" / "adapter.py").is_file())
+            _assert_hook_support_import_smoke(self, scripts_dir)
             # The manifest is nested so VS Code does not parse it as a hook config.
             self.assertFalse((hooks_dir / ".changeforge-hook-manifest.json").exists())
             payload = json.loads(config.read_text(encoding="utf-8"))
@@ -404,6 +437,68 @@ class InstallCopilotHooksTests(unittest.TestCase):
             self.assertTrue(
                 (hooks_dir / "changeforge" / "project_memory" / "hook_safe" / "adapter.py").is_file()
             )
+            _assert_hook_support_import_smoke(self, hooks_dir / "changeforge")
+
+
+class InstallClaudeHooksTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        claude_hooks = ROOT / "dist" / "claude" / "project" / ".claude" / "hooks"
+        if not (claude_hooks / RUNTIME_ROUTE_INDEX_NAME).is_file() or not (
+            ROOT / "dist" / "claude" / "project" / ".claude" / ".changeforge-hook-manifest.json"
+        ).is_file() or not _built_repository_intelligence_subset_complete(claude_hooks):
+            _build_recommended()
+
+    def test_claude_project_hook_support_packages_import(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(INSTALL_SCRIPT),
+                    "--agent",
+                    "claude",
+                    "--scope",
+                    "project",
+                    "--target",
+                    str(project),
+                    "--profile",
+                    "recommended",
+                    "--with-hooks",
+                ],
+                text=True,
+                capture_output=True,
+                cwd=str(ROOT),
+                env=os.environ.copy(),
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            _assert_hook_support_import_smoke(self, project / ".claude" / "hooks")
+
+    def test_claude_user_hook_support_packages_import(self) -> None:
+        with tempfile.TemporaryDirectory() as home:
+            env = os.environ.copy()
+            env["HOME"] = home
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(INSTALL_SCRIPT),
+                    "--agent",
+                    "claude",
+                    "--scope",
+                    "user",
+                    "--profile",
+                    "recommended",
+                    "--with-hooks",
+                ],
+                text=True,
+                capture_output=True,
+                cwd=str(ROOT),
+                env=env,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            _assert_hook_support_import_smoke(self, Path(home) / ".claude" / "hooks")
 
 
 class InstallBootstrapTests(unittest.TestCase):

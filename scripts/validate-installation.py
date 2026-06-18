@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -108,6 +110,8 @@ REPOSITORY_INTELLIGENCE_SUPPORT_FILES = (
     "repository_intelligence/__init__.py",
     "repository_intelligence/cache/__init__.py",
     "repository_intelligence/cache/repo_hash.py",
+    "repository_intelligence/graph/__init__.py",
+    "repository_intelligence/graph/file_classifier.py",
 )
 PROJECT_MEMORY_SUPPORT_FILES = (
     "project_memory/__init__.py",
@@ -203,6 +207,23 @@ ROUTER_INDEX_FILES = (
     "skill-registry.md",
     "capability-index.md",
     "domain-extension-index.md",
+)
+HOOK_SUPPORT_IMPORT_MODULES = (
+    "validation_broker",
+    "runtime_governance",
+    "project_memory.hook_safe.adapter",
+    "repository_intelligence.cache.repo_hash",
+)
+HOOK_SUPPORT_IMPORT_ROOTS = (
+    "codex/project/.codex/hooks",
+    "codex/user/.codex/hooks",
+    "claude/project/.claude/hooks",
+    "claude/user/.claude/hooks",
+    "copilot/project/.github/hooks/changeforge",
+    "copilot/user/.copilot/hooks/changeforge",
+)
+HOOK_SAFE_SOURCE_REFERENCE_FILES = (
+    "repository_intelligence/graph/file_classifier.py",
 )
 
 
@@ -374,10 +395,17 @@ def _validate_dist_guardrails(errors: list[str]) -> None:
             except UnicodeDecodeError:
                 continue
             validate_no_personal_references(text, relative, errors)
-            if "src/registry" in text or "src\\registry" in text:
+            if (
+                "src/registry" in text or "src\\registry" in text
+            ) and not _is_hook_safe_source_reference(relative):
                 errors.append(f"{relative}: raw src/registry reference installed")
             if "toolbox-mapping.md" in text:
                 errors.append(f"{relative}: toolbox mapping reference installed")
+
+
+def _is_hook_safe_source_reference(relative: str) -> bool:
+    normalized = relative.replace("\\", "/")
+    return any(normalized.endswith(suffix) for suffix in HOOK_SAFE_SOURCE_REFERENCE_FILES)
 
 
 def _validate_profile_roots(
@@ -442,6 +470,7 @@ def _validate_hook_runtime(errors: list[str]) -> None:
         path = DIST_DIR / relative
         if not path.is_file():
             errors.append(f"missing hook runtime file: dist/{relative}")
+    _validate_hook_support_imports(errors)
     _validate_hook_manifest(
         DIST_DIR / "codex/project/.codex/.changeforge-hook-manifest.json",
         agent="codex",
@@ -478,6 +507,27 @@ def _validate_hook_runtime(errors: list[str]) -> None:
         scope="user",
         errors=errors,
     )
+
+
+def _validate_hook_support_imports(errors: list[str]) -> None:
+    import_statement = ";".join(f"import {module}" for module in HOOK_SUPPORT_IMPORT_MODULES)
+    command = [sys.executable, "-c", import_statement]
+    for relative in HOOK_SUPPORT_IMPORT_ROOTS:
+        path = DIST_DIR / relative
+        if not path.is_dir():
+            continue
+        result = subprocess.run(
+            command,
+            text=True,
+            capture_output=True,
+            cwd=str(path),
+            check=False,
+        )
+        if result.returncode == 0:
+            continue
+        output = (result.stderr or result.stdout).strip().splitlines()
+        detail = output[-1] if output else "no Python output"
+        errors.append(f"hook support package import failed in dist/{relative}: {detail}")
 
 
 def _validate_hook_manifest(path: Path, *, agent: str, scope: str, errors: list[str]) -> None:
