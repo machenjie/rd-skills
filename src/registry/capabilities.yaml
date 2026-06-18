@@ -1121,7 +1121,7 @@ capabilities:
     group: engineering-workflow
     path: src/foundation/capabilities/repository-context-map
     status: implemented
-    used_by: [change-forge-router, change-impact-analyzer, architecture-impact-reviewer, task-dag-planner, ai-code-review-refactor, quality-test-gate, change-documentation-gate, skill-authoring-expert, agent-execution-discipline]
+    used_by: [change-forge-router, backend-change-builder, frontend-change-builder, data-api-contract-changer, data-middleware-change-builder, integration-change-builder, delivery-release-gate, change-impact-analyzer, architecture-impact-reviewer, task-dag-planner, ai-code-review-refactor, quality-test-gate, change-documentation-gate, skill-authoring-expert, agent-execution-discipline]
     triggers:
       - repository context map read before plan files inspected ownership caller callee tests configs docs local conventions source of truth generated artifact source dist boundary
       - plan before repository inspection wrong placement missing call graph no repo map unfamiliar codebase registry hook runtime skill authoring

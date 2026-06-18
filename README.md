@@ -172,6 +172,7 @@ python3 scripts/validate-skill-content-size.py
 python3 scripts/validate-examples.py
 python3 scripts/validate-productization-assets.py
 python3 scripts/audit-skill-content.py
+python3 scripts/validate-skill-efficacy-benchmarks.py
 python3 scripts/eval-routing.py
 python3 scripts/eval-agent-behavior.py
 python3 scripts/eval-skill-professionalism.py

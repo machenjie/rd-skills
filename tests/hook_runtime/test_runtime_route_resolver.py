@@ -77,6 +77,86 @@ class RuntimeRouteResolverTests(unittest.TestCase):
         self.assertIn("kubernetes-helm", context["product_surfaces"])
         self.assertNotIn("backend-change-builder", context["selected_skills"])
 
+    def test_permission_action_selects_tool_permission_sandbox(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="permission",
+            surfaces=[],
+            event_name="PermissionRequest",
+            state={},
+            classification={"stage": "permission", "product_surfaces": [], "risk_surfaces": []},
+        )
+        self.assertIn("agent-tool-permission-sandbox", context["selected_capabilities"])
+        self.assertIn(
+            "references/capabilities/120-agent-tool-permission-sandbox.md",
+            context["required_references"],
+        )
+
+    def test_risky_command_state_selects_tool_permission_sandbox(self) -> None:
+        state = {
+            **_coding_ready_state(),
+            "command_risk_surfaces": ["tool-permission-sandbox"],
+        }
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state=state,
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+            },
+        )
+        self.assertIn("agent-tool-permission-sandbox", context["selected_capabilities"])
+        self.assertIn(
+            "references/capabilities/120-agent-tool-permission-sandbox.md",
+            context["required_references"],
+        )
+
+    def test_classification_permission_state_selects_tool_permission_sandbox(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state=_coding_ready_state(),
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+                "tool_permission_sandbox_seen": True,
+            },
+        )
+        self.assertIn("agent-tool-permission-sandbox", context["selected_capabilities"])
+        self.assertIn(
+            "references/capabilities/120-agent-tool-permission-sandbox.md",
+            context["required_references"],
+        )
+
+    def test_release_delivery_deploy_migration_selects_tool_permission_sandbox(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="release",
+            surfaces=["database-migration"],
+            event_name="PreToolUse",
+            state={},
+            classification={
+                "stage": "release",
+                "product_surfaces": ["database-migration"],
+                "risk_surfaces": ["delivery"],
+            },
+        )
+        self.assertEqual(context["current_stage"], "release-delivery")
+        self.assertIn("agent-tool-permission-sandbox", context["selected_capabilities"])
+        self.assertIn(
+            "references/capabilities/120-agent-tool-permission-sandbox.md",
+            context["required_references"],
+        )
+
     def test_redis_routes_cache_not_kafka_bigdata(self) -> None:
         context = _context_for(_edit_event("src/cache/redis_store.py", "Redis TTL invalidation"))
         self.assertIn("cache", context["product_surfaces"])

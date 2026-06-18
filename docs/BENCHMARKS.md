@@ -13,6 +13,7 @@ ChangeForge benchmarks are release evidence, not marketing claims. They are loca
 | Hook validation | Hook runtime validators and tests. | `python3 scripts/validate-hooks.py` |
 | Profile build reproducibility | Build manifests for `recommended`, `full`, and `dev`. | `python3 scripts/build.py --profile recommended && python3 scripts/build.py --profile full && python3 scripts/build.py --profile dev` |
 | Installation validation | Installer/doctor validation. | `python3 scripts/validate-installation.py` |
+| Skill efficacy structural fixtures | evals/skill-efficacy | `python3 scripts/validate-skill-efficacy-benchmarks.py` |
 | Codegen benchmark smoke | Codegen benchmark manifest and limited run. | `python3 scripts/validate-codegen-benchmarks.py` and `python3 scripts/run-codegen-benchmarks.py --limit 3` |
 | Professionalism regression | Baseline-aware regression check. | `python3 scripts/validate-professionalism-regression.py --strict` |
 
@@ -45,6 +46,11 @@ python3 scripts/generate-public-benchmark-summary.py --source-commit "$GITHUB_SH
 
 The generator does not mark a validator as passed just because a command name exists. If a tool does not emit a machine-readable report, that status is reported as `not_collected` and the verification command is listed.
 
+Skill efficacy benchmarks are currently structural/local evidence. The current
+fixtures validate routing and evidence shape; they do not provide live pass-rate
+evidence, empirical before/after agent performance, or measured token/turn
+overhead.
+
 ## Recommended Evidence Refresh
 
 Before publishing a scorecard, refresh the relevant evidence:
@@ -54,6 +60,7 @@ python3 scripts/eval-routing.py
 python3 scripts/eval-skill-professionalism.py
 python3 scripts/eval-skill-professionalism.py --coverage-matrix
 python3 scripts/eval-professional-benchmarks.py
+python3 scripts/validate-skill-efficacy-benchmarks.py
 python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/eval-professional-agent-samples.py --promoted-only --strict

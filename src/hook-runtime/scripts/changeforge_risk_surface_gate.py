@@ -230,6 +230,40 @@ SHELL_WRAPPER_PROGRAMS = {"bash", "sh", "zsh"}
 COMMAND_SEPARATORS = {"|", "|&", "&&", "||", ";"}
 WRITE_REDIRECT_TOKENS = {">", ">>", "1>", "1>>", "2>", "2>>", "&>", "&>>"}
 FIND_MUTATING_TOKENS = {"-delete", "-exec", "-execdir"}
+HIGH_RISK_TOOL_PERMISSION_PROGRAMS = {
+    "az",
+    "aws",
+    "chmod",
+    "chown",
+    "gcloud",
+    "helm",
+    "kubectl",
+    "mysql",
+    "psql",
+    "rm",
+    "sudo",
+    "terraform",
+    "tofu",
+}
+HIGH_RISK_GIT_SUBCOMMANDS = {
+    "checkout",
+    "clean",
+    "push",
+    "reset",
+    "restore",
+}
+HIGH_RISK_COMMAND_MARKERS = (
+    " apply",
+    " credential",
+    " delete",
+    " deploy",
+    " destroy",
+    " migrate",
+    " migration",
+    " publish",
+    " secret",
+    " token",
+)
 
 
 def main() -> int:
@@ -254,13 +288,19 @@ def main() -> int:
         command = extract_bash_command(event)
         path_findings = _risk_findings(paths, "")
         command_findings = _risk_findings([], command)
-        findings = _merge_findings(path_findings + command_findings)
+        tool_permission_findings = _tool_permission_findings(tool, command, paths)
+        findings = _merge_findings(path_findings + command_findings + tool_permission_findings)
         closure_command_findings = (
             command_findings if _command_risk_is_closure_relevant(paths, command) else []
         )
-        closure_findings = _merge_findings(path_findings + closure_command_findings)
+        closure_findings = _merge_findings(
+            path_findings + closure_command_findings + tool_permission_findings
+        )
         path_surfaces = [str(finding["name"]) for finding in path_findings]
-        command_surfaces = [str(finding["name"]) for finding in command_findings]
+        command_surfaces = [
+            str(finding["name"])
+            for finding in [*command_findings, *tool_permission_findings]
+        ]
         closure_surfaces = [str(finding["name"]) for finding in closure_findings]
         debug_log(
             repo,
@@ -279,6 +319,7 @@ def main() -> int:
             suggested_domain_extensions=_collect(closure_findings, "domain_extensions"),
             suggested_gates=_collect(closure_findings, "gates"),
             validation_command_seen=_looks_like_validation(command),
+            tool_permission_sandbox_seen=bool(tool_permission_findings),
         )
         write_telemetry_event(
             repo,
@@ -307,6 +348,7 @@ def main() -> int:
             closure_risk_surfaces=closure_surfaces,
             validation_command_detected=_looks_like_validation(command),
             validation_evidence_detected=False,
+            tool_permission_sandbox_seen=bool(tool_permission_findings),
         )
         if not closure_findings or mode == "monitor":
             return 0
@@ -349,6 +391,50 @@ def _risk_findings(paths: list[str], command: str) -> list[dict[str, object]]:
         if matched:
             findings.append({**rule, "evidence": _unique(matched)})
     return findings
+
+
+def _tool_permission_findings(tool: str, command: str, paths: list[str]) -> list[dict[str, object]]:
+    """Return command permission findings without storing full command arguments."""
+    if not command or not _command_risk_is_closure_relevant(paths, command):
+        return []
+    high_risk = _command_has_high_tool_permission_risk(command)
+    finding = {
+        "name": "tool-permission-sandbox",
+        "skills": ["security-privacy-gate", "agent-execution-discipline"],
+        "capabilities": ["agent-tool-permission-sandbox"],
+        "gates": ["security gate"],
+        "evidence": _unique([summarize_command_program(command)]),
+        "risk_class": "high" if high_risk else "local-write",
+    }
+    if high_risk:
+        finding["skills"] = [
+            "security-privacy-gate",
+            "delivery-release-gate",
+            "reliability-observability-gate",
+            "agent-execution-discipline",
+        ]
+        finding["gates"] = ["security gate", "delivery gate", "reliability gate"]
+    return [finding]
+
+
+def _command_has_high_tool_permission_risk(command: str, *, depth: int = 0) -> bool:
+    if depth > 3:
+        return True
+    tokens = _command_tokens(command)
+    if not tokens:
+        return False
+    inner_command = _shell_wrapper_inner_command(tokens)
+    if inner_command is not None:
+        return _command_has_high_tool_permission_risk(inner_command, depth=depth + 1)
+
+    program, index = _program_token(tokens)
+    if program in HIGH_RISK_TOOL_PERMISSION_PROGRAMS:
+        return True
+    if program == "git":
+        return _git_subcommand(tokens[index + 1 :]) in HIGH_RISK_GIT_SUBCOMMANDS
+
+    lowered = f" {command.casefold()} "
+    return any(marker in lowered for marker in HIGH_RISK_COMMAND_MARKERS)
 
 
 def _merge_findings(findings: list[dict[str, object]]) -> list[dict[str, object]]:

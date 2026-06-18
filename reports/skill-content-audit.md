@@ -16,7 +16,7 @@
 | Split candidates (score ≥ 60) | 0 |
 | Low-professionalism candidates (< 70) | 0 |
 | Move-to-reference candidates | 1 |
-| Shared duplicated lines (≥ 3 files) | 14 |
+| Shared duplicated lines (≥ 3 files) | 15 |
 
 Suggested-action distribution:
 
@@ -37,15 +37,15 @@ Suggested-action distribution:
 | Skill | Kind | Lines | Efficiency | Top finding |
 | --- | --- | --- | --- | --- |
 | `ai-code-review-refactor` | professional-skill | 360 | 58 | body 360 lines exceeds heavy threshold 350 |
+| `backend-change-builder` | professional-skill | 268 | 67 | body 268 lines exceeds review threshold 250 |
+| `delivery-release-gate` | professional-skill | 262 | 67 | body 262 lines exceeds review threshold 250 |
 | `architecture-impact-reviewer` | professional-skill | 254 | 67 | body 254 lines exceeds review threshold 250 |
 | `quality-test-gate` | professional-skill | 318 | 69 | body 318 lines exceeds review threshold 250 |
 | `reliability-observability-gate` | professional-skill | 276 | 69 | body 276 lines exceeds review threshold 250 |
-| `backend-change-builder` | professional-skill | 267 | 69 | body 267 lines exceeds review threshold 250 |
 | `security-privacy-gate` | professional-skill | 263 | 69 | body 263 lines exceeds review threshold 250 |
-| `delivery-release-gate` | professional-skill | 261 | 69 | body 261 lines exceeds review threshold 250 |
 | `change-forge-router` | professional-skill | 331 | 73 | body 331 lines exceeds review threshold 250 |
 | `agent-execution-discipline` | foundation-capability | 259 | 75 | description: long (365 chars); keep it to trigger conditions, not a body summary |
-| `task-dag-planner` | professional-skill | 244 | 82 | - |
+| `frontend-change-builder` | professional-skill | 244 | 82 | - |
 
 ### 2.2 Lowest Professionalism
 
@@ -58,7 +58,7 @@ Suggested-action distribution:
 | `agent-tool-permission-sandbox` | foundation-capability | 100 | section 'Agent Tool Permission Sandbox' is 96 lines (> 80) — reference candidate |
 | `plan-execution-consistency` | foundation-capability | 100 | section 'Plan Execution Consistency' is 98 lines (> 80) — reference candidate |
 | `agent-workflow-state-machine` | foundation-capability | 100 | section 'Agent Workflow State Machine' is 99 lines (> 80) — reference candidate |
-| `repository-context-map` | foundation-capability | 100 | section 'Repository Context Map' is 99 lines (> 80) — reference candidate |
+| `repository-context-map` | foundation-capability | 100 | section 'Repository Context Map' is 105 lines (> 80) — reference candidate |
 | `version-compatibility` | foundation-capability | 100 | - |
 | `architecture-enforcement-tooling` | foundation-capability | 100 | - |
 
@@ -90,7 +90,7 @@ Suggested-action distribution:
 | `form-validation-design` | foundation-capability | 203 | 26 | Industry Benchmarks (86) |
 | `quality-test-gate` | professional-skill | 318 | 18 | - |
 | `reliability-observability-gate` | professional-skill | 276 | 18 | - |
-| `backend-change-builder` | professional-skill | 267 | 18 | - |
+| `backend-change-builder` | professional-skill | 268 | 18 | - |
 
 ### 2.5 Description Risk (frontmatter triggers)
 
@@ -107,12 +107,12 @@ Suggested-action distribution:
 
 | Skill | Lines | Words | Prof | Ctx | Route | Split | Classification | Phase | Risk |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `frontend-change-builder` | 244 | 4474 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `task-dag-planner` | 244 | 4091 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `frontend-change-builder` | 243 | 4452 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-documentation-gate` | 234 | 3792 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `integration-change-builder` | 233 | 4344 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
-| `data-api-contract-changer` | 230 | 3916 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
-| `data-middleware-change-builder` | 228 | 4058 | 100 | 84 | 100 | 0 | KEEP_AS_IS | - | low |
+| `integration-change-builder` | 234 | 4366 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
+| `data-api-contract-changer` | 231 | 3938 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
+| `data-middleware-change-builder` | 229 | 4080 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `experience-impact-modeler` | 220 | 3429 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `acceptance-criteria-builder` | 217 | 3037 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-impact-analyzer` | 215 | 3386 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -122,9 +122,9 @@ Suggested-action distribution:
 | `change-forge-router` | 331 | 6554 | 100 | 73 | 100 | 32 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
 | `quality-test-gate` | 318 | 5870 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `reliability-observability-gate` | 276 | 4949 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `backend-change-builder` | 267 | 4739 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `backend-change-builder` | 268 | 4761 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `security-privacy-gate` | 263 | 4449 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `delivery-release-gate` | 261 | 4497 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `delivery-release-gate` | 262 | 4519 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `architecture-impact-reviewer` | 254 | 4005 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 
 #### Detailed findings — Professional Skills
@@ -149,7 +149,7 @@ Suggested-action distribution:
 - **`backend-change-builder`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/backend-change-builder/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 267 lines exceeds review threshold 250
+  - Finding: body 268 lines exceeds review threshold 250
 - **`security-privacy-gate`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/security-privacy-gate/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
@@ -157,7 +157,7 @@ Suggested-action distribution:
 - **`delivery-release-gate`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/delivery-release-gate/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 261 lines exceeds review threshold 250
+  - Finding: body 262 lines exceeds review threshold 250
 - **`architecture-impact-reviewer`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/architecture-impact-reviewer/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
@@ -169,13 +169,13 @@ Suggested-action distribution:
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `implementation-structure-design` | 244 | 5218 | 100 | 82 | 100 | 14 | KEEP_AS_IS | - | low |
 | `failure-diagnosis` | 243 | 3478 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
+| `skill-authoring-expert` | 242 | 2271 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `ci-cd` | 241 | 3227 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
-| `skill-authoring-expert` | 238 | 2207 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
+| `engineering-stage-professionalism` | 240 | 2470 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `cache-design` | 225 | 3312 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `refactoring` | 224 | 3765 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `async-job-design` | 222 | 2987 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `module-boundary-design` | 222 | 3105 | 100 | 82 | 100 | 14 | KEEP_AS_IS | - | low |
-| `engineering-stage-professionalism` | 214 | 2269 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `authentication-security` | 210 | 2779 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `code-clarity-maintainability` | 210 | 2647 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `concurrency-control` | 210 | 2872 | 100 | 82 | 100 | 26 | KEEP_AS_IS | - | low |
@@ -280,8 +280,8 @@ Suggested-action distribution:
 | `consumer-impact-analysis` | 115 | 743 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `architecture-enforcement-tooling` | 113 | 771 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `version-compatibility` | 107 | 1866 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `repository-context-map` | 106 | 1126 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `agent-workflow-state-machine` | 100 | 955 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
-| `repository-context-map` | 100 | 1114 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `plan-execution-consistency` | 99 | 924 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `agent-tool-permission-sandbox` | 97 | 1076 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `skill-efficacy-benchmark` | 95 | 894 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
@@ -327,19 +327,20 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | Files | Excerpt |
 | --- | --- |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 18 | do not load every reference by default. treat references as targeted support selected by t |
-| 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
 | 18 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
+| 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
+| 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 9 | these triggers are hidden-risk escalators, not ordinary checklist items. |
-| 8 | **accepted exceptions** with owner / scope / expiration |
 | 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
+| 8 | **accepted exceptions** with owner / scope / expiration |
 | 7 | **residual risk**: untested runtime behavior, owner, and next gate. |
 | 7 | **block/pass decision** with required conditions for approval. |
+| 6 | non-trivial direct use still requires `repository-context-map` before planning when affect |
 
 > Note: the `Reference Loading Policy` L1-L5 lines and the capability-path examples are intentionally uniform across all professional skills and are **required** by `validate-skills.py`. They are a deliberate shared contract, not a dedup defect, and are excluded from merge recommendations.
 

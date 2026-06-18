@@ -24,6 +24,7 @@ actual:
     - observability
     - integration-testing
     - release-rollback
+    - agent-tool-permission-sandbox
   domain_extensions: []
   quality_gates:
     - requirement gate
@@ -44,6 +45,7 @@ actual:
     - references/capabilities/69-observability.md
     - references/capabilities/70-backup-recovery.md
     - references/capabilities/75-release-rollback.md
+    - references/capabilities/120-agent-tool-permission-sandbox.md
     - references/capability-index.md
     - references/domain-extension-index.md
     - references/routing-rules.md

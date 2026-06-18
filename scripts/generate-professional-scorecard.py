@@ -67,6 +67,7 @@ VALIDATION_COMMANDS = [
     "python3 scripts/validate-registry.py",
     "python3 scripts/validate-skill-body-links.py",
     "python3 scripts/validate-skill-content-size.py",
+    "python3 scripts/validate-skill-efficacy-benchmarks.py",
     "python3 scripts/audit-skill-content.py",
     "python3 scripts/eval-routing.py",
     "python3 scripts/eval-agent-behavior.py",
@@ -234,6 +235,57 @@ def marketplace_index_status(root: Path) -> tuple[str, str]:
     return "pass", "recommended, full, and dev marketplace indexes validate"
 
 
+def skill_efficacy_status(root: Path) -> tuple[str, str]:
+    """Return conservative structural status for local skill efficacy fixtures."""
+    benchmark_dir = root / "evals" / "skill-efficacy"
+    if not benchmark_dir.is_dir():
+        return "fail", "evals/skill-efficacy directory missing"
+
+    paths = sorted(benchmark_dir.glob("*.yaml"))
+    if len(paths) < 3:
+        return "fail", f"fixtures={len(paths)}, expected_at_least=3"
+
+    valid_verdicts = {"structural_pass", "measured_pass", "inconclusive", "blocked"}
+    verdicts: dict[str, int] = {}
+    token_not_collected = 0
+    turn_not_collected = 0
+    invalid: list[str] = []
+    for path in paths:
+        data = load_yaml_file(path)
+        if not isinstance(data, dict):
+            invalid.append(path.name)
+            continue
+        verdict = data.get("verdict")
+        status = verdict.get("status") if isinstance(verdict, dict) else None
+        if not isinstance(status, str) or status not in valid_verdicts:
+            invalid.append(path.name)
+            continue
+        verdicts[status] = verdicts.get(status, 0) + 1
+        metrics = data.get("metrics")
+        if isinstance(metrics, dict):
+            if metrics.get("token_overhead_pct") == "not_collected":
+                token_not_collected += 1
+            if metrics.get("turn_overhead_pct") == "not_collected":
+                turn_not_collected += 1
+
+    detail = {
+        "fixtures": len(paths),
+        "verdicts": verdicts,
+        "live_pass_rate": "not_collected",
+        "token_overhead": "not_collected"
+        if token_not_collected == len(paths)
+        else "partially_collected",
+        "turn_overhead": "not_collected"
+        if turn_not_collected == len(paths)
+        else "partially_collected",
+        "evidence_boundary": "structural/local fixtures only; no empirical before/after agent performance",
+    }
+    if invalid:
+        detail["invalid"] = invalid
+        return "fail", json.dumps(detail, sort_keys=True)
+    return "pass", json.dumps(detail, sort_keys=True)
+
+
 def _summary_status(name: str, value: dict[str, Any]) -> str:
     if name == "Routing coverage":
         if value.get("hidden_risks_needing_manual_review", 0) or value.get("cases_without_forbidden", 0):
@@ -381,6 +433,18 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
                 fix_hint="Repair promoted samples that miss route, evidence, or residual risk obligations.",
             ),
         ]
+    )
+
+    skill_efficacy_dimension_status, skill_efficacy_detail = skill_efficacy_status(root)
+    dimensions.append(
+        Dimension(
+            "Skill efficacy structural fixtures",
+            skill_efficacy_dimension_status,
+            "evals/skill-efficacy and scripts/validate-skill-efficacy-benchmarks.py",
+            "python3 scripts/validate-skill-efficacy-benchmarks.py",
+            "Repair skill-efficacy fixture structure; do not claim live pass-rate evidence without measured runs.",
+            skill_efficacy_detail,
+        )
     )
 
     example_status, example_detail = examples_status(root)

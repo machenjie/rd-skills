@@ -23,6 +23,7 @@ jobs:
           python3 scripts/validate-registry.py
           python3 scripts/validate-skill-body-links.py
           python3 scripts/validate-skill-content-size.py
+          python3 scripts/validate-skill-efficacy-benchmarks.py
           python3 scripts/validate-examples.py
           python3 scripts/validate-productization-assets.py
           python3 scripts/validate-open-source-readiness.py

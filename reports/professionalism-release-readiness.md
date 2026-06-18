@@ -1,14 +1,14 @@
 # Professionalism Release Readiness
 
-- Generated: 2026-06-18T05:18:33.581282+00:00
+- Generated: 2026-06-18T06:30:57.710263+00:00
 - Status: strict-release-ready
 - Authoring ready: ready
 - Release ready: ready
 - Strict release ready: ready
 - Release-blocking professionalism warnings: 0
-- Release review required warnings: 2
+- Release review required warnings: 0
 - Release review decision: accepted
-- Release review reason: All 2 release-review-required warning(s) have accepted_for_current_release decisions.
+- Release review reason: No release-review-required warnings are present.
 - Regression status: pass
 - Default regression status: pass
 - Strict regression status: pass
@@ -58,39 +58,36 @@
 ## Skill Professionalism Warning Reconciliation
 
 - accepted_known_warnings: 0
-- enhanced_foundation_review_warnings: 2
+- enhanced_foundation_review_warnings: 0
 - key_foundation_follow_up_warnings: 0
 - new_unaccepted_release_warnings: 0
 - non_key_foundation_advisory_warnings: 2
 - policy: Professional skill warnings block release. Enhanced foundation warnings require release review. Key foundation warnings are follow-up unless evidence or reference precision is weak. Non-key foundation warnings are advisory-only.
 - release_blocking_warnings: 0
-- release_review_required_warnings: 2
-- total_skill_professionalism_warnings: 4
+- release_review_required_warnings: 0
+- total_skill_professionalism_warnings: 2
 - tracked_release_warnings: 0
 
 | Warning | Scope | Release Relevance | Reason | Follow-up |
 | --- | --- | --- | --- | --- |
 | `src/foundation/capabilities/api-contract-design/SKILL.md`: long Markdown table in SKILL.md body (16 rows); consider moving deep table to references | non-key-foundation-capability | advisory-only | Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release. | Track as advisory cleanup; no release action required. |
 | `src/foundation/capabilities/design-pattern-selection/SKILL.md`: long Markdown table in SKILL.md body (37 rows); consider moving deep table to references | non-key-foundation-capability | advisory-only | Non-key foundation or authoring-template advisory warning is reported for transparency and does not block the current release. | Track as advisory cleanup; no release action required. |
-| `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md`: Evidence Contract weak: evidence_contract_strength score 2/5 needs review | enhanced-foundation-capability | release-review-required | Enhanced foundation capabilities amplify into multiple professional skills; the warning needs release review but is not automatically blocking unless a required gate is missing. | Review during release readiness; promote to blocker only if evidence/reference weakness affects the selected release surface. |
-| `src/foundation/capabilities/skill-authoring-expert/SKILL.md`: Evidence Contract weak: evidence_contract_strength score 2/5 needs review | enhanced-foundation-capability | release-review-required | Enhanced foundation capabilities amplify into multiple professional skills; the warning needs release review but is not automatically blocking unless a required gate is missing. | Review during release readiness; promote to blocker only if evidence/reference weakness affects the selected release surface. |
 
 ## Release Review Decisions
 
-- accepted_for_current_release: 2
+- accepted_for_current_release: 0
 - blocks_release: 0
 - defer_to_followup: 0
 - missing: 0
 - stale: 0
 
 - Decision: accepted
-- Reason: All 2 release-review-required warning(s) have accepted_for_current_release decisions.
+- Reason: No release-review-required warnings are present.
 - Config: `config/professionalism-release-review.yaml`
 
 | Target | Warning | Decision | Reason | Follow-up | Review After |
 | --- | --- | --- | --- | --- | --- |
-| `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md` | Evidence Contract weak: evidence_contract_strength score 2/5 needs review | accepted_for_current_release | Reviewed for this release. The warning is advisory hardening for the stage launcher and does not affect the selected release surface because professional skill routing, key foundation coverage, strict regression, benchmarks, and routing coverage are passing. | P2 enhanced-foundation-hardening | 2026-07-15 |
-| `src/foundation/capabilities/skill-authoring-expert/SKILL.md` | Evidence Contract weak: evidence_contract_strength score 2/5 needs review | accepted_for_current_release | Reviewed for this release. The warning is advisory hardening for skill-authoring review depth and does not affect runtime skill execution or selected release gates. | P2 enhanced-foundation-hardening | 2026-07-15 |
+| None | - | - | - | - | - |
 
 ## Content Bloat Status
 
@@ -120,8 +117,8 @@
 - promoted_agent_sample_strict_warnings: 0
 - promoted_agent_samples_strict_checked: 5
 - release_blocking_professionalism_warnings: 0
-- skill_professionalism_average_score: 41.57
-- skill_professionalism_warnings: 4
+- skill_professionalism_average_score: 41.62
+- skill_professionalism_warnings: 2
 
 ## Release Blockers
 

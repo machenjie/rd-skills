@@ -4,7 +4,7 @@ actual:
   complexity: L2
   risk_level: high
   skills: [delivery-release-gate, quality-test-gate]
-  capabilities: [kubernetes-gateway, ci-cd, release-rollback]
+  capabilities: [kubernetes-gateway, ci-cd, release-rollback, agent-tool-permission-sandbox]
   domain_extensions: []
   quality_gates: [delivery gate, test gate]
   required_references:
@@ -15,6 +15,7 @@ actual:
     - references/capabilities/74-kubernetes-gateway.md
     - references/capabilities/73-ci-cd.md
     - references/capabilities/75-release-rollback.md
+    - references/capabilities/120-agent-tool-permission-sandbox.md
   stage_route_manifest:
     schema_version: 1
     current_stage: release-delivery

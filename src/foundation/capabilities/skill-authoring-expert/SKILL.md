@@ -82,6 +82,10 @@ Use this capability when:
 - Pair with `implementation-structure-design` when new directories, files, references, or registry structure need a placement rationale.
 - Pair with `agent-execution-discipline` when an agent must attach evidence, a same-pattern scan, and a validation handoff after editing skills.
 
+# Stage Fit
+
+Use during skill-authoring stage work and keep the active artifact type explicit: skill body edit, registry edit, routing rule edit, hook/runtime edit, benchmark/eval edit, or generated report/doc sync. Inspect the matching source-of-truth files, generated artifacts, validators, routing impact, and claim boundary; update generated artifacts only through their generator and record the source command.
+
 # Risk Escalation Rules
 
 - When a change touches the router, registry, or runtime profiles, escalate to `architecture-impact-reviewer`.
@@ -198,7 +202,7 @@ When slimming or restructuring, also return a Skill Slimming Decision:
 
 # Evidence Contract
 
-Close a skill-authoring change only when the output names the selected authoring mode, skill/capability/reference/registry boundaries inspected, body-vs-reference placement rationale, reuse of existing skill patterns, routing impact, runtime profile impact, validation commands run, what those commands prove, what they do not prove, residual weak spots, and the next gate. A skill prose diff without fixture/eval or explicit not-verified disclosure is not sufficient evidence.
+Close a skill-authoring change only when the output names selected authoring mode, active artifact type, source-of-truth files inspected, body-vs-reference placement rationale, reuse of existing skill patterns, routing impact, runtime profile impact, generated artifacts impacted, validator impacted, validation commands run, what each proves and does not prove, skill-efficacy fixture decision, residual weak spots, and the next gate. A skill prose diff without fixture/eval evidence or explicit not-verified disclosure is not sufficient.
 
 # Quality Gate
 

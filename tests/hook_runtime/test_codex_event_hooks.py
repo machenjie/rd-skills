@@ -122,25 +122,51 @@ class PreToolRiskPreviewTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertIn("data-api", payload["hookSpecificOutput"]["additionalContext"])
 
+    def test_destructive_commands_emit_tool_permission_advisory(self) -> None:
+        commands = ["rm -rf tmp/generated", "git clean -fd"]
+        for command in commands:
+            with self.subTest(command=command):
+                event = {
+                    "hook_event_name": "PreToolUse",
+                    "tool_name": "Bash",
+                    "tool_input": {"command": command},
+                }
+                result = _run(self.SCRIPT, event)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                payload = json.loads(result.stdout)
+                context = payload["hookSpecificOutput"]["additionalContext"]
+                self.assertIn("tool-permission-sandbox", context)
+                self.assertIn("agent-tool-permission-sandbox", context)
+                self.assertIn("high-risk command", context)
+
     def test_read_only_bash_command_is_silent(self) -> None:
-        event = {
-            "hook_event_name": "PreToolUse",
-            "tool_name": "Bash",
-            "tool_input": {"command": 'bash -lc "rg data-api src | head"'},
-        }
-        result = _run(self.SCRIPT, event)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.strip(), "")
+        commands = ['bash -lc "rg data-api src | head"', "cat README.md", "git diff README.md"]
+        for command in commands:
+            with self.subTest(command=command):
+                event = {
+                    "hook_event_name": "PreToolUse",
+                    "tool_name": "Bash",
+                    "tool_input": {"command": command},
+                }
+                result = _run(self.SCRIPT, event)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stdout.strip(), "")
 
     def test_validation_command_is_silent(self) -> None:
-        event = {
-            "hook_event_name": "PreToolUse",
-            "tool_name": "Bash",
-            "tool_input": {"command": "python3 scripts/eval-skill-professionalism.py"},
-        }
-        result = _run(self.SCRIPT, event)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.strip(), "")
+        commands = [
+            "python3 scripts/eval-skill-professionalism.py",
+            "pytest tests/hook_runtime/test_codex_event_hooks.py",
+        ]
+        for command in commands:
+            with self.subTest(command=command):
+                event = {
+                    "hook_event_name": "PreToolUse",
+                    "tool_name": "Bash",
+                    "tool_input": {"command": command},
+                }
+                result = _run(self.SCRIPT, event)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stdout.strip(), "")
 
     def test_off_mode_is_silent(self) -> None:
         event = {

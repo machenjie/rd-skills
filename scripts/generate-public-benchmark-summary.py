@@ -19,6 +19,7 @@ PROFILES = ("recommended", "full", "dev")
 STATUS_ORDER = ("pass", "partial", "fail", "unknown", "not_collected")
 COMMITTED_SOURCE_COMMIT = "provided by release artifact / CI metadata"
 MARKETPLACE_DIMENSION = "Marketplace index validation"
+SKILL_EFFICACY_DIMENSION = "Skill efficacy structural fixtures"
 SCORECARD_REFRESH_COMMAND = (
     "python3 scripts/generate-professional-scorecard.py "
     "--out reports/professional-scorecard.md "
@@ -29,6 +30,7 @@ REFRESH_COMMANDS = [
     "python3 scripts/eval-skill-professionalism.py",
     "python3 scripts/eval-skill-professionalism.py --coverage-matrix",
     "python3 scripts/eval-professional-benchmarks.py",
+    "python3 scripts/validate-skill-efficacy-benchmarks.py",
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
     "python3 scripts/build.py --profile recommended",
@@ -262,6 +264,7 @@ def _additional_status_items(root: Path, scorecard_path: Path | None = None) -> 
             "validator does not emit a committed machine-readable report",
             "python3 scripts/validate-installation.py",
         ),
+        _scorecard_dimension_item(root, SKILL_EFFICACY_DIMENSION, SKILL_EFFICACY_DIMENSION, scorecard_path),
         _scorecard_dimension_item(root, MARKETPLACE_DIMENSION, MARKETPLACE_DIMENSION, scorecard_path),
     ]
 
@@ -299,7 +302,7 @@ def generate_summary(
         "items": [asdict(item) for item in items],
         "known_unknowns": known_unknowns,
         "refresh_commands": REFRESH_COMMANDS,
-        "claim_boundary": "Local deterministic evidence only; not external popularity, adoption, marketplace availability, or market claim evidence.",
+        "claim_boundary": "Local deterministic evidence only; skill efficacy fixtures are structural/local evidence, not live pass-rate, empirical before/after performance, external popularity, adoption, marketplace availability, or market claim evidence.",
     }
 
 
@@ -309,7 +312,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
     lines = [
         "# Public Benchmark Summary",
         "",
-        "This generated summary reports local deterministic ChangeForge evidence. It does not claim external popularity, marketplace availability, or market adoption.",
+        "This generated summary reports local deterministic ChangeForge evidence. Skill efficacy fixtures are structural/local evidence, not live pass-rate or empirical before/after agent-performance proof. It does not claim external popularity, marketplace availability, or market adoption.",
         "",
         "## Repository",
         "",

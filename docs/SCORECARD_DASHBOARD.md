@@ -4,7 +4,7 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 
 ## Status Summary
 
-- `pass`: 9
+- `pass`: 10
 - `partial`: 3
 - `fail`: 0
 - `unknown`: 0
@@ -56,6 +56,7 @@ python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
 python3 scripts/validate-skill-content-size.py
+python3 scripts/validate-skill-efficacy-benchmarks.py
 python3 scripts/audit-skill-content.py
 python3 scripts/eval-routing.py
 python3 scripts/eval-agent-behavior.py

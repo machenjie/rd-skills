@@ -701,6 +701,8 @@ def build_active_skill_context(
         language_surfaces,
         risk_surfaces,
         domain_extensions,
+        state,
+        classification,
     )
     selected_skills = _selected_skills(owner, reviewer, product_surfaces, risk_surfaces)
     quality_gates = _quality_gates(current_stage, product_surfaces, risk_surfaces, selected_skills)
@@ -923,6 +925,8 @@ def _selected_capabilities(
     language_surfaces: list[str],
     risk_surfaces: list[str],
     domain_extensions: list[str],
+    state: dict[str, Any] | None = None,
+    classification: dict[str, Any] | None = None,
 ) -> list[str]:
     capabilities: list[str] = []
     if current_stage in STAGE_CAPABILITIES:
@@ -941,7 +945,55 @@ def _selected_capabilities(
         capabilities.append("agent-execution-discipline")
     if domain_extensions and "low-level-systems-extension" in domain_extensions:
         capabilities.append("language-performance-safety")
+    if _tool_permission_sandbox_required(
+        action_stage,
+        current_stage,
+        product_surfaces,
+        risk_surfaces,
+        state or {},
+        classification or {},
+    ):
+        capabilities.append("agent-tool-permission-sandbox")
     return _unique(capabilities)
+
+
+def _tool_permission_sandbox_required(
+    action_stage: str,
+    current_stage: str,
+    product_surfaces: list[str],
+    risk_surfaces: list[str],
+    state: dict[str, Any],
+    classification: dict[str, Any],
+) -> bool:
+    """Return True when tool permission/sandbox evidence should be injected."""
+    if action_stage == "permission":
+        return True
+
+    permission_keys = (
+        "permission_gate_seen",
+        "permission_decisions",
+        "tool_permission_sandbox_seen",
+        "command_risk_surfaces",
+        "closure_risk_surfaces",
+    )
+    for key in permission_keys:
+        if state.get(key):
+            return True
+        if classification.get(key):
+            return True
+
+    release_surfaces = (
+        "database-migration",
+        "infrastructure-deployment",
+        "kubernetes-helm",
+        "ci-cd",
+    )
+    if current_stage == "release-delivery" and (
+        _has_any(product_surfaces, release_surfaces) or "delivery" in risk_surfaces
+    ):
+        return True
+
+    return False
 
 
 def _quality_gates(

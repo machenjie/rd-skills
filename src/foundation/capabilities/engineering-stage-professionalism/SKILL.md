@@ -50,6 +50,19 @@ capabilities should launch. Use before doing the work, and again when the active
 14. **No default coding at documentation.** The documentation-handoff stage launches coding capabilities only when docs contain API or code examples.
 15. **Skill-authoring uses its owner.** The skill-authoring stage always launches `skill-authoring-expert`.
 
+# Stage Fit
+
+Use this capability to launch the current stage only. If the request spans multiple
+stages, record the current stage, required evidence, and next-stage handoff rather
+than loading every stage at once.
+
+- Start only the capabilities needed by the active stage, product surface,
+  language surface, or explicit risk trigger.
+- Do not cross into heavy out-of-stage capabilities unless the current evidence
+  shows their trigger; record skipped heavy capabilities and the reason.
+- For the current stage, name the evidence that must exist before transition, the
+  next gate, and any stage conflict or skip rationale.
+
 # Industry Benchmarks
 
 - Phase-gate and stage-gate engineering review.
@@ -179,11 +192,24 @@ stage.
 
 # Evidence Contract
 
-Close a stage launch only when the plan states the **mode selected** as current
-engineering stage, the product/language/risk boundaries inspected, the professional judgment
-behind selected versus skipped capabilities, the validation evidence required for this stage,
-validation commands or review artifacts with exit code when available, what that evidence proves
-and does not prove, residual risk, and the next gate or handoff.
+Close a stage launch only when the plan states:
+
+- `current_stage` and the stage evidence that selected it.
+- Selected capabilities and the stage, product, language, or risk trigger for each.
+- Skipped heavy capabilities with a concrete reason.
+- Boundaries inspected: product surface, language surface, risk surface, source files,
+  callers, docs, configs, validators, and generated artifacts relevant to this stage.
+- Reuse and placement rationale: why the selected stage owner and capabilities are the
+  minimum sufficient launch set and why skipped stages are deferred.
+- Behavior preservation: old runtime profile, routing, skill, registry, docs, and
+  source/dist behavior preserved or intentionally changed.
+- Repository context dependency: inspected files, callers, docs, configs, validators,
+  generated artifacts, or the accepted not-inspected risk.
+- Validation freshness: commands or review artifacts, exit code when available, and
+  whether files changed after the evidence was produced.
+- Validation evidence and evidence limits: what evidence proves, what evidence does not
+  prove, and residual risk.
+- Next-stage handoff: next gate, owner, and transition condition.
 
 # Quality Gate
 

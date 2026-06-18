@@ -92,6 +92,12 @@ Return a `repository_context_map` with:
 
 ## Used By
 - `change-forge-router`
+- `backend-change-builder`
+- `frontend-change-builder`
+- `data-api-contract-changer`
+- `data-middleware-change-builder`
+- `integration-change-builder`
+- `delivery-release-gate`
 - `change-impact-analyzer`
 - `architecture-impact-reviewer`
 - `task-dag-planner`

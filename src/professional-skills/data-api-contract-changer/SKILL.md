@@ -28,6 +28,7 @@ Design, modify, and safely roll out changes to data models, schemas, API contrac
 
 ## Non-Negotiable Rules
 - **Direct use still runs the runtime prompt flow.** When `data-api-contract-changer` is invoked directly and router reclassification is skipped, target-project engineering work must still clarify requirements before action, inspect relevant code/tests/config/docs before planning, name a TDD or validation signal before implementation, map each action to an owner skill and a different review skill, repair and re-review findings, and hand off with validation evidence, residual risk, and route/stage manifests when routed.
+- Non-trivial direct use still requires `repository-context-map` before planning when affected files, callers, local conventions, or source-of-truth boundaries are not already inspected.
 - **Backward compatibility is the default obligation**: any change that removes fields, changes types, narrows allowed values, or breaks client assumptions is a breaking change and must be versioned or staged.
 - **Expand/migrate/contract (EMC) discipline**: never combine remove-old with add-new in the same deployment; expand first (add new), migrate clients, then contract (remove old).
 - **Rollback migration required before forward migration ships**: every migration that alters schema must have a tested, executable rollback migration before the forward migration is reviewed.

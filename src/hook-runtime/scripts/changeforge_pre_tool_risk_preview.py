@@ -40,6 +40,7 @@ from changeforge_risk_surface_gate import (
     _command_risk_is_closure_relevant,
     _merge_findings,
     _risk_findings,
+    _tool_permission_findings,
 )
 
 
@@ -65,10 +66,13 @@ def main() -> int:
         command = extract_bash_command(event)
         path_findings = _risk_findings(paths, "")
         command_findings = _risk_findings([], command)
+        tool_permission_findings = _tool_permission_findings(tool, command, paths)
         closure_command_findings = (
             command_findings if _command_risk_is_closure_relevant(paths, command) else []
         )
-        findings = _merge_findings(path_findings + closure_command_findings)
+        findings = _merge_findings(
+            path_findings + closure_command_findings + tool_permission_findings
+        )
         debug_log(
             repo,
             f"pre-tool risk preview runtime={runtime} tool={tool_name(event)} findings={findings}",
@@ -100,11 +104,15 @@ def _preview_message(
     surfaces = ", ".join(str(finding["name"]) for finding in findings)
     gates = _collect(findings, "gates")
     gate_text = ", ".join(gates) if gates else "the matching ChangeForge gate"
+    capabilities = _collect(findings, "capabilities")
+    capability_text = (
+        f" Required capabilities: {', '.join(capabilities)}." if capabilities else ""
+    )
     sandbox = _sandbox_classification(tool=tool, command=command, paths=paths)
     return (
         "ChangeForge pre-edit risk preview (advisory, does not block): this pending "
         f"change touches {surfaces}. Run change-forge-router and select {gate_text} "
-        "before applying it, and emit a changeforge_route manifest. "
+        f"before applying it, and emit a changeforge_route manifest.{capability_text} "
         f"Tool permission/sandbox: {sandbox}. The post-edit risk gate will re-check "
         "after the change lands."
     )
@@ -120,8 +128,15 @@ def _sandbox_classification(tool: str, command: str, paths: list[str]) -> str:
             for marker in (
                 " rm ",
                 "rm -",
+                "git " + "clean",
                 "git " + "reset",
                 "git " + "checkout --",
+                " mv ",
+                "mv ",
+                " chmod",
+                "chmod ",
+                " chown",
+                "chown ",
                 "kubectl apply",
                 "kubectl delete",
                 "helm upgrade",

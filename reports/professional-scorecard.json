@@ -65,6 +65,14 @@
       "verification_command": "python3 scripts/eval-professional-agent-samples.py --promoted-only --strict"
     },
     {
+      "detail": "{\"evidence_boundary\": \"structural/local fixtures only; no empirical before/after agent performance\", \"fixtures\": 3, \"live_pass_rate\": \"not_collected\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\", \"verdicts\": {\"structural_pass\": 3}}",
+      "fix_hint": "Repair skill-efficacy fixture structure; do not claim live pass-rate evidence without measured runs.",
+      "name": "Skill efficacy structural fixtures",
+      "source": "evals/skill-efficacy and scripts/validate-skill-efficacy-benchmarks.py",
+      "status": "pass",
+      "verification_command": "python3 scripts/validate-skill-efficacy-benchmarks.py"
+    },
+    {
       "detail": "showcase examples validate",
       "fix_hint": "Repair showcase scenario prompts, expected routes, evidence files, or routing fixture links.",
       "name": "Example coverage",
@@ -141,7 +149,7 @@
     "fail": 0,
     "not_collected": 2,
     "partial": 3,
-    "pass": 9,
+    "pass": 10,
     "unknown": 0
   },
   "validation_commands": [
@@ -172,6 +180,11 @@
     },
     {
       "command": "python3 scripts/validate-skill-content-size.py",
+      "note": "Run command directly; this scorecard does not infer pass/fail from stdout.",
+      "status": "not_collected"
+    },
+    {
+      "command": "python3 scripts/validate-skill-efficacy-benchmarks.py",
       "note": "Run command directly; this scorecard does not infer pass/fail from stdout.",
       "status": "not_collected"
     },

@@ -4,7 +4,7 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 
 ## Summary
 
-- `pass`: 9
+- `pass`: 10
 - `partial`: 3
 - `fail`: 0
 - `unknown`: 0
@@ -22,6 +22,7 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 | Professional benchmarks | `pass` | reports/professionalism-release-readiness.json | `python3 scripts/eval-professional-benchmarks.py` |
 | Professionalism regression | `pass` | reports/professionalism-release-readiness.json | `python3 scripts/validate-professionalism-regression.py --strict` |
 | Promoted agent samples | `pass` | reports/professionalism-release-readiness.json | `python3 scripts/eval-professional-agent-samples.py --promoted-only --strict` |
+| Skill efficacy structural fixtures | `pass` | evals/skill-efficacy and scripts/validate-skill-efficacy-benchmarks.py | `python3 scripts/validate-skill-efficacy-benchmarks.py` |
 | Example coverage | `pass` | examples/ and scripts/validate-examples.py | `python3 scripts/validate-examples.py` |
 | Productization assets | `pass` | docs/productization assets, schemas, and scripts | `python3 scripts/validate-productization-assets.py` |
 | Marketplace index validation | `pass` | scripts/validate-marketplace-index.py | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` |

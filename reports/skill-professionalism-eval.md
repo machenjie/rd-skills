@@ -1,9 +1,9 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-18T05:18:25.331064+00:00
+- Generated: 2026-06-18T06:29:54.044799+00:00
 - Skills/capabilities checked: 141
-- Warning count: 4
-- Average score: 41.57/60
+- Warning count: 2
+- Average score: 41.62/60
 
 ## Scores
 
@@ -93,7 +93,6 @@
 | `src/foundation/capabilities/observability/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/relational-database/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/release-rollback/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/skill-authoring-expert/SKILL.md` | foundation-capability | 43/60 | needs-review | 1 | 1 |
 | `src/foundation/capabilities/solution-optimality-evaluation/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/async-job-design/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/contract-testing/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |
@@ -111,8 +110,8 @@
 | `src/foundation/capabilities/code-clarity-maintainability/SKILL.md` | foundation-capability | 46/60 | acceptable | 1 | 0 |
 | `src/foundation/capabilities/plan-execution-consistency/SKILL.md` | foundation-capability | 46/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/agent-execution-discipline/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
-| `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md` | foundation-capability | 47/60 | needs-review | 1 | 1 |
 | `src/foundation/capabilities/language-performance-safety/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/skill-authoring-expert/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/test-strategy/SKILL.md` | foundation-capability | 47/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cpp-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/go-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
@@ -124,6 +123,7 @@
 | `src/foundation/capabilities/sql-professional-usage/SKILL.md` | foundation-capability | 49/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/code-review/SKILL.md` | foundation-capability | 50/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/e2e-testing/SKILL.md` | foundation-capability | 50/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md` | foundation-capability | 50/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/typescript-professional-usage/SKILL.md` | foundation-capability | 50/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/failure-diagnosis/SKILL.md` | foundation-capability | 51/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/language-idiom-enforcement/SKILL.md` | foundation-capability | 51/60 | acceptable | 0 | 0 |
@@ -164,17 +164,3 @@ Recommended fixes:
 
 Recommended fixes:
 - Move low-frequency tables/examples into owned references and remove duplicated template prose.
-
-### `src/foundation/capabilities/engineering-stage-professionalism/SKILL.md`
-- likely missing sections: Stage Fit
-- message: Evidence Contract weak: evidence_contract_strength score 2/5 needs review | type: weak_evidence_contract_strength | scope: enhanced-foundation-capability | release_relevance: release-review-required | reason: Enhanced foundation capabilities amplify into multiple professional skills; the warning needs release review but is not automatically blocking unless a required gate is missing.
-
-Recommended fixes:
-- Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.
-
-### `src/foundation/capabilities/skill-authoring-expert/SKILL.md`
-- likely missing sections: Stage Fit
-- message: Evidence Contract weak: evidence_contract_strength score 2/5 needs review | type: weak_evidence_contract_strength | scope: enhanced-foundation-capability | release_relevance: release-review-required | reason: Enhanced foundation capabilities amplify into multiple professional skills; the warning needs release review but is not automatically blocking unless a required gate is missing.
-
-Recommended fixes:
-- Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.

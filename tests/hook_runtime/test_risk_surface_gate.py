@@ -44,6 +44,31 @@ def read_records(cache: Path) -> list[dict]:
     return records
 
 
+def run_risk_with_state(event: dict) -> tuple[subprocess.CompletedProcess[str], dict, list[dict]]:
+    with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+        cwd = Path(cwd_s)
+        cache = Path(cache_s)
+        event = dict(event)
+        event["cwd"] = str(cwd)
+        env = os.environ.copy()
+        env["XDG_CACHE_HOME"] = str(cache)
+        env.pop("CHANGEFORGE_HOOK_MODE", None)
+        env.pop("CHANGEFORGE_AGENT", None)
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT_DIR / "changeforge_risk_surface_gate.py")],
+            input=json.dumps(event),
+            text=True,
+            capture_output=True,
+            cwd=str(cwd),
+            env=env,
+            check=False,
+        )
+        state_files = list(cache.glob("changeforge/hooks/*/current-turn.json"))
+        state = json.loads(state_files[0].read_text(encoding="utf-8")) if state_files else {}
+        records = read_records(cache)
+        return result, state, records
+
+
 class RiskSurfaceGateTests(unittest.TestCase):
     def test_auth_path_triggers_security_gate(self) -> None:
         event = {
@@ -239,6 +264,52 @@ class RiskSurfaceGateTests(unittest.TestCase):
         self.assertTrue(state["validation_command_seen"])
         self.assertEqual(records[-1]["closure_risk_surfaces"], [])
         self.assertTrue(records[-1]["validation_command_detected"])
+
+    def test_destructive_commands_record_tool_permission_sandbox(self) -> None:
+        commands = {
+            "rm -rf tmp/generated": "tmp/generated",
+            "git clean -fd": "-fd",
+        }
+        for command, sensitive_arg in commands.items():
+            with self.subTest(command=command):
+                event = {
+                    "runtime": "codex",
+                    "hookEventName": "PostToolUse",
+                    "toolName": "Bash",
+                    "toolInput": {"command": command},
+                }
+                result, state, records = run_risk_with_state(event)
+                self.assertEqual(result.returncode, 0)
+                self.assertIn("tool-permission-sandbox", result.stdout)
+                self.assertNotIn(sensitive_arg, result.stdout)
+                self.assertTrue(state["tool_permission_sandbox_seen"])
+                self.assertIn("tool-permission-sandbox", state["closure_risk_surfaces"])
+                self.assertIn("agent-tool-permission-sandbox", state["suggested_capabilities"])
+                self.assertTrue(records[-1]["tool_permission_sandbox_seen"])
+                self.assertIn("agent-tool-permission-sandbox", records[-1]["suggested_capabilities"])
+
+    def test_read_only_and_validation_commands_do_not_record_tool_permission(self) -> None:
+        commands = [
+            "pytest tests/hook_runtime/test_risk_surface_gate.py",
+            "rg data-api src",
+            "cat README.md",
+            "git diff README.md",
+        ]
+        for command in commands:
+            with self.subTest(command=command):
+                event = {
+                    "runtime": "codex",
+                    "hookEventName": "PostToolUse",
+                    "toolName": "Bash",
+                    "toolInput": {"command": command},
+                }
+                result, state, records = run_risk_with_state(event)
+                self.assertEqual(result.returncode, 0)
+                self.assertEqual(result.stdout, "")
+                self.assertFalse(state["tool_permission_sandbox_seen"])
+                self.assertNotIn("agent-tool-permission-sandbox", state["suggested_capabilities"])
+                self.assertFalse(records[-1]["tool_permission_sandbox_seen"])
+                self.assertNotIn("agent-tool-permission-sandbox", records[-1]["suggested_capabilities"])
 
     def test_read_only_wrappers_and_pipelines_do_not_emit_warning(self) -> None:
         commands = [
