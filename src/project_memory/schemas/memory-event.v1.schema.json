@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/project-memory/memory-event.v1.schema.json",
+  "title": "ChangeForge Project Memory Event",
+  "description": "Append-only bounded project memory fact. It must not contain raw prompts, environment variables, secrets, full command output, or absolute user paths.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "repo_hash",
+    "task_fingerprint",
+    "type",
+    "paths",
+    "symbols",
+    "owner_skill",
+    "reviewer_skill",
+    "route_manifest_hash",
+    "outcome",
+    "evidence_refs",
+    "confidence",
+    "promotion_status",
+    "created_at"
+  ],
+  "$defs": {
+    "boundedStringList": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "type": "string", "maxLength": 300 }
+    },
+    "boundedPathList": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "string",
+        "maxLength": 200,
+        "not": { "pattern": "^(/|~|\\.\\.)" }
+      }
+    }
+  },
+  "properties": {
+    "schema_version": { "const": 1 },
+    "event_id": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "repo_hash": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "task_fingerprint": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "type": {
+      "type": "string",
+      "enum": [
+        "route_decision",
+        "context_pack",
+        "implementation_attempt",
+        "validation_result",
+        "review_finding",
+        "repair_attempt",
+        "accepted_decision",
+        "rejected_decision",
+        "fragile_file",
+        "validated_command",
+        "hook_false_positive",
+        "hook_false_negative",
+        "repeat_failure"
+      ]
+    },
+    "paths": { "$ref": "#/$defs/boundedPathList" },
+    "symbols": { "$ref": "#/$defs/boundedStringList" },
+    "owner_skill": { "type": "string", "maxLength": 300 },
+    "reviewer_skill": { "type": "string", "maxLength": 300 },
+    "route_manifest_hash": { "type": "string", "maxLength": 300 },
+    "outcome": {
+      "type": "string",
+      "enum": ["success", "failed", "partial", "blocked", "unknown"]
+    },
+    "evidence_refs": { "$ref": "#/$defs/boundedStringList" },
+    "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+    "promotion_status": {
+      "type": "string",
+      "enum": ["raw", "candidate", "approved", "rejected"]
+    },
+    "created_at": { "type": "string", "maxLength": 80 }
+  }
+}
+

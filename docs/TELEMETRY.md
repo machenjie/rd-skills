@@ -234,6 +234,99 @@ never fixes telemetry and never promotes anything.
 
 Telemetry makes the loop observable. Humans keep the authority.
 
+## Project Memory Governance
+
+Project Memory Governance extends telemetry with a cache-side engineering memory
+layer. It is not an online learning system and it does not replace telemetry,
+repository graph, context packs, or human review.
+
+The intended flow is:
+
+```text
+hook telemetry facts
+  -> optional project memory events in the user cache
+  -> deterministic projection and retrieval
+  -> warning-only memory gates
+  -> review-project-memory.py suggestions
+  -> human promotes selected candidates
+  -> validation/eval/build verify any authored change
+```
+
+Project memory inherits telemetry boundaries:
+
+- It is append-only operational memory, not automatic skill improvement.
+- It never auto-edits `SKILL.md`, `src/registry/*.yaml`, routing rules, or
+  capabilities.
+- Runtime memory writes only under
+  `${XDG_CACHE_HOME:-~/.cache}/changeforge/memory/<repo_hash>/`.
+- It stores repo/workdir hashes, relative paths, bounded symbols, skill names,
+  outcomes, confidence, promotion status, and evidence references.
+- It does not store raw prompts, environment variables, secrets, full command
+  stdout/stderr, user absolute paths, personal archives, or toolbox mappings.
+
+The memory cache layout is:
+
+```text
+${XDG_CACHE_HOME:-~/.cache}/changeforge/memory/<repo_hash>/
+  events/       # append-only JSONL MemoryEvent records
+  projections/  # generated MemorySummary JSON projections
+  suggestions/  # human-review-only candidate suggestions
+  promoted/     # optional audit trail for approved promotions
+```
+
+Memory events use
+[`memory-event.v1.schema.json`](../src/project_memory/schemas/memory-event.v1.schema.json).
+Memory summaries use
+[`memory-summary.v1.schema.json`](../src/project_memory/schemas/memory-summary.v1.schema.json).
+The first implementation uses deterministic retrieval only; no vector database
+or embedding index is introduced.
+
+### Memory Review And Promotion
+
+Use the memory review command to generate projections and candidate
+suggestions:
+
+```bash
+python3 scripts/review-project-memory.py
+```
+
+Use promotion only after human review:
+
+```bash
+python3 scripts/promote-memory-candidate.py --id <id> --suggestions <path> --write
+```
+
+Promotion can generate only candidate skeletons under:
+
+- `evals/agent-behavior/samples`
+- `evals/pressure`
+- `tests/fixtures/hooks`
+- `tests/project_memory/fixtures`
+
+Promotion refuses direct skill, registry, routing, capability, `dist/`, or
+runtime skill edits.
+
+### Memory Gates
+
+Memory gates are pure decision logic with hook runtime integration kept
+warning-first and fail-open.
+
+- Repeat Failure Gate: when the same `repo_hash + task_fingerprint +
+  primary_path + owner_skill` has two consecutive `failed` or `blocked`
+  outcomes, the third same-path strategy must route through failure diagnosis,
+  `quality-test-gate`, or `architecture-impact-reviewer`. In block mode it may
+  continue only with new evidence or a repair route manifest.
+- Fragile File Gate: a file with repeated `review_finding`,
+  failed/blocked `validation_result`, `repair_attempt`, or `fragile_file`
+  events requires read-file evidence, nearby-test evidence, memory summary
+  evidence, and an implementation preflight before edit.
+- Stale Context Gate: a context pack whose freshness marker predates changed
+  files or a drift trigger cannot be treated as fact. The agent must refresh the
+  repository graph/context pack or label the old content as a stale assumption.
+
+Memory evidence is experience evidence. It cannot override repository source,
+fresh context packs, validation output, or human review.
+
 ## Action-Aware Fields
 
 The v1 telemetry schema is extended compatibly with action-aware hook facts:

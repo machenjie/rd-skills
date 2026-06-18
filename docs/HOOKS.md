@@ -201,6 +201,28 @@ Telemetry is enabled by default and can be disabled with `CHANGEFORGE_TELEMETRY=
 See [TELEMETRY.md](TELEMETRY.md) for the data model, the offline review tool, and
 the human promotion workflow.
 
+## Project Memory In Hooks
+
+Project memory is a lightweight layer on top of hook telemetry. When telemetry
+is enabled, selected bounded telemetry records are mirrored into
+`${XDG_CACHE_HOME:-~/.cache}/changeforge/memory/<repo_hash>/events/` as
+append-only `MemoryEvent` JSONL records. Memory can be disabled separately with
+`CHANGEFORGE_MEMORY=off`.
+
+Hook integration is intentionally narrow:
+
+- Stop closure telemetry can append a memory event after a turn closes.
+- Pre-edit implementation structure checks can query cache-side memory for
+  fragile-file and repeat-failure warnings.
+- The default behavior is warning-only and fail-open.
+- Memory never changes skills, routing rules, capabilities, registry files, or
+  `dist/`.
+
+The pre-edit fragile-file warning requires the same evidence expected by the
+offline memory gate: read-file evidence, nearby-test evidence, memory summary
+evidence, and an implementation preflight. If the evidence is incomplete, the
+hook warns; block behavior still depends on the existing pre-edit hook mode.
+
 ## Why Hooks Do Not Replace change-forge-router
 
 `change-forge-router` remains the semantic entry point for classifying a request,

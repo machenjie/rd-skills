@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/project-memory/memory-query.v1.schema.json",
+  "title": "ChangeForge Project Memory Query",
+  "description": "Bounded deterministic retrieval query. It carries only hashes, relative paths, symbols, skill names, and limits.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "repo_hash": { "type": "string", "maxLength": 300 },
+    "task_fingerprint": { "type": "string", "maxLength": 300 },
+    "paths": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "string",
+        "maxLength": 200,
+        "not": { "pattern": "^(/|~|\\.\\.)" }
+      }
+    },
+    "symbols": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "type": "string", "maxLength": 300 }
+    },
+    "owner_skill": { "type": "string", "maxLength": 300 },
+    "reviewer_skill": { "type": "string", "maxLength": 300 },
+    "limit": { "type": "integer", "minimum": 1, "maximum": 100 }
+  }
+}
+

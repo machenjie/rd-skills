@@ -111,6 +111,24 @@ HOOK_MODES = {"off", "monitor", "warn", "block"}
 TELEMETRY_SCHEMA_VERSION = "1"
 TELEMETRY_DISABLED_VALUES = {"0", "off", "false", "no"}
 TELEMETRY_SUBDIRS = ("sessions", "reports", "suggestions", "promoted")
+MEMORY_SCHEMA_VERSION = 1
+MEMORY_SUBDIRS = ("events", "projections", "suggestions", "promoted")
+MEMORY_TYPES = {
+    "route_decision",
+    "context_pack",
+    "implementation_attempt",
+    "validation_result",
+    "review_finding",
+    "repair_attempt",
+    "accepted_decision",
+    "rejected_decision",
+    "fragile_file",
+    "validated_command",
+    "hook_false_positive",
+    "hook_false_negative",
+    "repeat_failure",
+}
+MEMORY_OUTCOMES = {"success", "failed", "partial", "blocked", "unknown"}
 MAX_TELEMETRY_ITEMS = 50
 MAX_TELEMETRY_VALUE_LEN = 300
 MAX_STATE_ITEMS = 50
@@ -737,6 +755,17 @@ def telemetry_root(repo: Path) -> Path:
     return _cache_base() / "changeforge" / "telemetry" / _repo_hash(repo)
 
 
+def memory_enabled() -> bool:
+    """Project memory follows telemetry's opt-out and adds CHANGEFORGE_MEMORY=off."""
+    value = os.environ.get("CHANGEFORGE_MEMORY", "").strip().casefold()
+    return telemetry_enabled() and value not in TELEMETRY_DISABLED_VALUES
+
+
+def memory_root(repo: Path) -> Path:
+    """Per-repository memory directory under the user cache (path-free hash)."""
+    return _cache_base() / "changeforge" / "memory" / _repo_hash(repo)
+
+
 def session_id_from_event(event: dict) -> str:
     """Best-effort session/turn identifier from the hook event, never a prompt."""
     for key in (
@@ -900,8 +929,60 @@ def write_telemetry_event(
         line = json.dumps(record, sort_keys=True)
         with target.open("a", encoding="utf-8") as handle:
             handle.write(line + "\n")
+        _write_memory_event_from_telemetry_record(repo, record)
     except Exception as exc:
         debug_log(repo, f"telemetry write failed open: {exc}")
+
+
+def write_memory_event(repo: Path, event: dict[str, Any]) -> None:
+    """Append one bounded project memory event. Fails open on any error."""
+    if not memory_enabled():
+        return
+    try:
+        root = memory_root(repo)
+        for sub in MEMORY_SUBDIRS:
+            (root / sub).mkdir(parents=True, exist_ok=True)
+        record = _sanitize_memory_event(repo, event)
+        target = root / "events" / f"{_utc_date()}.jsonl"
+        with target.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, sort_keys=True) + "\n")
+    except Exception as exc:
+        debug_log(repo, f"memory write failed open: {exc}")
+
+
+def memory_pre_edit_advice(
+    repo: Path,
+    changed_paths: Iterable[str],
+    state: dict | None = None,
+    assistant_text: str = "",
+) -> dict[str, Any]:
+    """Return warning-only memory advice for pre-edit gates."""
+    try:
+        events = _read_memory_events(repo)
+        paths = _capped_items(changed_paths)
+        fragile_paths = _memory_fragile_paths(events, paths)
+        owner = str((state or {}).get("owner_skill", "")).strip()
+        task = _memory_task_fingerprint(paths, owner, str((state or {}).get("turn_stage", "")))
+        repeat = _memory_repeat_failure(events, repo_hash=_repo_hash(repo), task=task, paths=paths, owner=owner)
+        evidence = _memory_pre_edit_evidence(state or {}, assistant_text)
+        missing: list[str] = []
+        if fragile_paths:
+            if not evidence["read_file_evidence"]:
+                missing.append("read_file_evidence")
+            if not evidence["nearby_test_evidence"]:
+                missing.append("nearby_test_evidence")
+            if not evidence["memory_summary_evidence"]:
+                missing.append("memory_summary_evidence")
+            if not evidence["implementation_preflight"]:
+                missing.append("implementation_preflight")
+        return {
+            "fragile_paths": fragile_paths,
+            "repeat_failure": repeat,
+            "missing": missing,
+        }
+    except Exception as exc:
+        debug_log(repo, f"memory pre-edit advice failed open: {exc}")
+        return {"fragile_paths": [], "repeat_failure": {}, "missing": []}
 
 
 def _utc_date() -> str:
@@ -1288,6 +1369,255 @@ def _capped_items(values: Iterable[str]) -> list[str]:
         if len(out) >= MAX_TELEMETRY_ITEMS:
             break
     return _unique(out)
+
+
+def _sanitize_memory_event(repo: Path, event: dict[str, Any]) -> dict[str, Any]:
+    source = event if isinstance(event, dict) else {}
+    paths = _memory_clean_paths(repo, source.get("paths", []))
+    owner = str(source.get("owner_skill", "")).strip()[:MAX_TELEMETRY_VALUE_LEN]
+    event_type = str(source.get("type", "implementation_attempt")).strip()
+    if event_type not in MEMORY_TYPES:
+        event_type = "implementation_attempt"
+    outcome = str(source.get("outcome", "unknown")).strip()
+    if outcome not in MEMORY_OUTCOMES:
+        outcome = "unknown"
+    return {
+        "schema_version": MEMORY_SCHEMA_VERSION,
+        "event_id": str(source.get("event_id") or f"mem-{uuid.uuid4().hex[:24]}")[:MAX_TELEMETRY_VALUE_LEN],
+        "repo_hash": str(source.get("repo_hash") or _repo_hash(repo))[:MAX_TELEMETRY_VALUE_LEN],
+        "task_fingerprint": str(
+            source.get("task_fingerprint") or _memory_task_fingerprint(paths, owner, source.get("type", ""))
+        )[:MAX_TELEMETRY_VALUE_LEN],
+        "type": event_type,
+        "paths": paths,
+        "symbols": _capped_items(source.get("symbols", [])),
+        "owner_skill": owner,
+        "reviewer_skill": str(source.get("reviewer_skill", "")).strip()[:MAX_TELEMETRY_VALUE_LEN],
+        "route_manifest_hash": str(source.get("route_manifest_hash", "")).strip()[:MAX_TELEMETRY_VALUE_LEN],
+        "outcome": outcome,
+        "evidence_refs": _capped_items(source.get("evidence_refs", [])),
+        "confidence": _memory_confidence(source.get("confidence")),
+        "promotion_status": _memory_promotion_status(source.get("promotion_status")),
+        "created_at": str(source.get("created_at") or datetime.now(timezone.utc).isoformat())[:80],
+    }
+
+
+def _write_memory_event_from_telemetry_record(repo: Path, record: dict[str, Any]) -> None:
+    event = _memory_event_from_telemetry_record(repo, record)
+    if event:
+        write_memory_event(repo, event)
+
+
+def _memory_event_from_telemetry_record(repo: Path, record: dict[str, Any]) -> dict[str, Any] | None:
+    paths = _unique(
+        _capped_items(record.get("changed_paths", []))
+        + _capped_items(record.get("added_paths", []))
+    )
+    if not paths and not record.get("validation_command_detected") and not record.get("hook_findings"):
+        return None
+    owner = str(record.get("owner_skill") or "").strip()
+    event_type = _memory_type_from_telemetry(record)
+    outcome = _memory_outcome_from_telemetry(record)
+    evidence_refs = [
+        f"hook:{record.get('hook_name', '')}",
+        f"event:{record.get('event_name', '')}",
+    ]
+    if record.get("route_manifest_detected"):
+        evidence_refs.append("route_manifest_detected")
+    if record.get("validation_evidence_detected"):
+        evidence_refs.append("validation_evidence_detected")
+    if record.get("implementation_preflight_blocked"):
+        evidence_refs.append("implementation_preflight_blocked")
+    return {
+        "repo_hash": record.get("repo_hash") or _repo_hash(repo),
+        "task_fingerprint": _memory_task_fingerprint(paths, owner, record.get("turn_stage", "")),
+        "type": event_type,
+        "paths": paths,
+        "symbols": [],
+        "owner_skill": owner,
+        "reviewer_skill": record.get("reviewer_skill", ""),
+        "route_manifest_hash": _memory_route_manifest_hash(record),
+        "outcome": outcome,
+        "evidence_refs": evidence_refs,
+        "confidence": "medium",
+        "promotion_status": "raw",
+        "created_at": record.get("timestamp_utc") or datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def _memory_type_from_telemetry(record: dict[str, Any]) -> str:
+    hook_name = str(record.get("hook_name", ""))
+    if hook_name == "stop_closure_gate":
+        return "validation_result"
+    if hook_name == "pre_edit_structure_gate":
+        return "implementation_attempt"
+    if record.get("validation_command_detected"):
+        return "validated_command"
+    findings = record.get("hook_findings")
+    if isinstance(findings, dict) and findings.get("review_findings"):
+        return "review_finding"
+    return "implementation_attempt"
+
+
+def _memory_outcome_from_telemetry(record: dict[str, Any]) -> str:
+    if record.get("implementation_preflight_blocked"):
+        return "blocked"
+    if record.get("validation_evidence_detected") and record.get("residual_risk_detected"):
+        return "success"
+    if record.get("completion_language_detected") and not record.get("validation_evidence_detected"):
+        return "failed"
+    if record.get("changed_paths") and not record.get("validation_evidence_detected"):
+        return "partial"
+    return "unknown"
+
+
+def _memory_route_manifest_hash(record: dict[str, Any]) -> str:
+    parts: list[str] = []
+    for key in (
+        "manifest_selected_skills",
+        "manifest_selected_capabilities",
+        "manifest_selected_domain_extensions",
+        "manifest_required_references",
+        "manifest_required_quality_gates",
+    ):
+        parts.extend(_capped_items(record.get(key, [])))
+    if not parts:
+        return ""
+    return _hash_text("|".join(parts))
+
+
+def _read_memory_events(repo: Path, *, max_events: int = 500) -> list[dict[str, Any]]:
+    events_dir = memory_root(repo) / "events"
+    if not events_dir.is_dir():
+        return []
+    events: list[dict[str, Any]] = []
+    for path in sorted(events_dir.glob("*.jsonl"), reverse=True):
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for line in reversed(lines):
+            if not line.strip():
+                continue
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(event, dict):
+                events.append(event)
+            if len(events) >= max_events:
+                return events
+    return events
+
+
+def _memory_fragile_paths(events: list[dict[str, Any]], paths: list[str]) -> list[str]:
+    counts: dict[str, int] = {}
+    for event in events:
+        if not _memory_fragile_signal(event):
+            continue
+        for path in event.get("paths", []) or []:
+            item = str(path)
+            counts[item] = counts.get(item, 0) + 1
+    return [path for path in paths if counts.get(path, 0) >= 2][:MAX_TELEMETRY_ITEMS]
+
+
+def _memory_fragile_signal(event: dict[str, Any]) -> bool:
+    if event.get("type") in {"review_finding", "repair_attempt", "fragile_file"}:
+        return True
+    return event.get("type") == "validation_result" and event.get("outcome") in {"failed", "blocked"}
+
+
+def _memory_repeat_failure(
+    events: list[dict[str, Any]],
+    *,
+    repo_hash: str,
+    task: str,
+    paths: list[str],
+    owner: str,
+) -> dict[str, Any]:
+    failures = [
+        event
+        for event in events
+        if event.get("repo_hash") == repo_hash
+        and event.get("task_fingerprint") == task
+        and (not owner or event.get("owner_skill") == owner)
+        and set(paths) & set(event.get("paths", []) or [])
+        and event.get("outcome") in {"failed", "blocked"}
+    ]
+    failures.sort(key=lambda event: str(event.get("created_at", "")), reverse=True)
+    return {
+        "repeated": len(failures) >= 2,
+        "failure_count": min(len(failures), 2),
+        "matched_paths": _unique(
+            path for event in failures[:2] for path in event.get("paths", []) or []
+        ),
+        "required_next_gate": "failure-diagnosis",
+        "allowed_to_continue": True,
+    }
+
+
+def _memory_pre_edit_evidence(state: dict, assistant_text: str) -> dict[str, bool]:
+    lowered = assistant_text.casefold()
+    return {
+        "read_file_evidence": bool(
+            state.get("read_evidence_seen")
+            or state.get("read_paths")
+            or "read_evidence" in lowered
+        ),
+        "nearby_test_evidence": bool(
+            state.get("validation_command_seen")
+            or "test_plan" in lowered
+            or "nearby test" in lowered
+        ),
+        "memory_summary_evidence": bool(
+            "project_memory_summary" in lowered
+            or "memory summary" in lowered
+            or "project memory summary" in lowered
+        ),
+        "implementation_preflight": bool(
+            state.get("implementation_preflight_seen")
+            or "changeforge_implementation_preflight" in lowered
+        ),
+    }
+
+
+def _memory_clean_paths(repo: Path, values: Iterable[str]) -> list[str]:
+    out: list[str] = []
+    for raw in values:
+        text = str(raw).replace("\\", "/").strip()
+        if not text or text.startswith("~"):
+            continue
+        if Path(text).is_absolute():
+            try:
+                text = Path(text).resolve().relative_to(repo.resolve()).as_posix()
+            except (OSError, ValueError):
+                continue
+        else:
+            if text.startswith("../") or "/../" in text or text == "..":
+                continue
+            text = text.lstrip("./")
+        if text.startswith("../") or "/../" in text or text == "..":
+            continue
+        out.append(text[:MAX_TELEMETRY_VALUE_LEN])
+        if len(out) >= MAX_TELEMETRY_ITEMS:
+            break
+    return _unique(out)
+
+
+def _memory_task_fingerprint(paths: Iterable[str], owner: object, task_hint: object) -> str:
+    parts = [str(owner or "").strip(), str(task_hint or "").strip()]
+    parts.extend(sorted(str(path).strip() for path in paths if str(path).strip())[:10])
+    return _hash_text("|".join(part for part in parts if part) or "unknown-task")
+
+
+def _memory_confidence(value: object) -> str:
+    text = str(value or "").strip()
+    return text if text in {"low", "medium", "high"} else "medium"
+
+
+def _memory_promotion_status(value: object) -> str:
+    text = str(value or "").strip()
+    return text if text in {"raw", "candidate", "approved", "rejected"} else "raw"
 
 
 def _clean_findings(findings: dict[str, Iterable[str]] | None) -> dict[str, list[str]]:

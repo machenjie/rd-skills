@@ -17,6 +17,7 @@ from changeforge_common import (
     extract_implementation_preflight_fields,
     is_pre_tool_use,
     load_state,
+    memory_pre_edit_advice,
     merge_state,
     normalize_path,
     read_event,
@@ -213,6 +214,23 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
     if structural and not manifest.get("risk"):
         missing.append("risk")
         findings.append("structural edit lacks rollback or residual-risk note")
+    memory_advice = (
+        memory_pre_edit_advice(repo, changed_paths, state, assistant_text)
+        if repo is not None
+        else {"fragile_paths": [], "repeat_failure": {}, "missing": []}
+    )
+    if memory_advice.get("fragile_paths"):
+        findings.append(
+            "fragile file memory gate requires read/test/memory/preflight evidence"
+        )
+        for item in memory_advice.get("missing", []):
+            if item not in missing:
+                missing.append(item)
+    repeat_failure = memory_advice.get("repeat_failure") or {}
+    if repeat_failure.get("repeated"):
+        findings.append(
+            "repeat failure memory gate requires failure diagnosis or repair route"
+        )
     preflight_complete = bool(manifest.get("present")) and not missing
     code_edit_without_read_preflight = (
         compact_name(tool_name(event)) in EDIT_TOOLS

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/project-memory/memory-summary.v1.schema.json",
+  "title": "ChangeForge Project Memory Summary",
+  "description": "Generated projection over append-only memory events. It is evidence for review and gates, not a source of repository truth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["project_memory_summary"],
+  "properties": {
+    "project_memory_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "repo_hash",
+        "task_fingerprint",
+        "generated_at",
+        "relevant_prior_decisions",
+        "prior_failures",
+        "fragile_files",
+        "validated_commands",
+        "repeated_review_findings",
+        "stale_context_warnings",
+        "promotion_candidates",
+        "evidence_limits"
+      ],
+      "$defs": {
+        "boundedList": {
+          "type": "array",
+          "maxItems": 50,
+          "items": { "type": "object" }
+        }
+      },
+      "properties": {
+        "schema_version": { "const": 1 },
+        "repo_hash": { "type": "string", "maxLength": 300 },
+        "task_fingerprint": { "type": "string", "maxLength": 300 },
+        "generated_at": { "type": "string", "maxLength": 80 },
+        "relevant_prior_decisions": { "$ref": "#/properties/project_memory_summary/$defs/boundedList" },
+        "prior_failures": { "$ref": "#/properties/project_memory_summary/$defs/boundedList" },
+        "fragile_files": { "$ref": "#/properties/project_memory_summary/$defs/boundedList" },
+        "validated_commands": { "$ref": "#/properties/project_memory_summary/$defs/boundedList" },
+        "repeated_review_findings": { "$ref": "#/properties/project_memory_summary/$defs/boundedList" },
+        "stale_context_warnings": { "$ref": "#/properties/project_memory_summary/$defs/boundedList" },
+        "promotion_candidates": { "$ref": "#/properties/project_memory_summary/$defs/boundedList" },
+        "evidence_limits": {
+          "type": "array",
+          "maxItems": 50,
+          "items": { "type": "string", "maxLength": 300 }
+        }
+      }
+    }
+  }
+}
+

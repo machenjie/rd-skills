@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.dev/schemas/project-memory/memory-decision.v1.schema.json",
+  "title": "ChangeForge Project Memory Gate Decision",
+  "description": "Decision payload emitted by pure memory gates. Default hook use is warning/fail-open.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "repeat_failure_gate": { "type": "object" },
+    "fragile_file_gate": { "type": "object" },
+    "stale_context_gate": { "type": "object" },
+    "repeated_review_finding_gate": { "type": "object" }
+  }
+}
+
