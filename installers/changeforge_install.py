@@ -134,6 +134,8 @@ COPILOT_HOOK_SUPPORT_FILES = (
     "changeforge_copilot_skill_summary.md",
     "changeforge_copilot_professional_contract.md",
 )
+COMMON_HOOK_SUPPORT_PACKAGES = ("validation_broker",)
+HOOK_SUPPORT_PACKAGE_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 # Advisory route-preflight bootstrap. The fragment is plain guidance text, not an
 # executable hook, so it can be installed for any project scope and never needs
@@ -164,6 +166,7 @@ class HookPlan:
     target_root: Path
     script_actions: list[tuple[Path, Path, str]] = field(default_factory=list)
     support_actions: list[tuple[Path, Path, str]] = field(default_factory=list)
+    support_package_actions: list[tuple[Path, Path, str]] = field(default_factory=list)
     manifest_action: tuple[Path, Path, str] | None = None
     bootstrap_action: tuple[Path, Path, str] | None = None
     config_target: Path | None = None
@@ -496,6 +499,24 @@ def _hook_support_files_from_manifest(manifest_source: Path, agent: str) -> tupl
     return tuple(dict.fromkeys(files))
 
 
+def _hook_support_packages_from_manifest(manifest_source: Path) -> tuple[str, ...]:
+    if not manifest_source.is_file():
+        return COMMON_HOOK_SUPPORT_PACKAGES
+    try:
+        manifest = json.loads(manifest_source.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return COMMON_HOOK_SUPPORT_PACKAGES
+    support_packages = manifest.get("support_packages") if isinstance(manifest, dict) else None
+    if not isinstance(support_packages, list):
+        return COMMON_HOOK_SUPPORT_PACKAGES
+    packages: list[str] = []
+    for item in support_packages:
+        if not isinstance(item, str) or not HOOK_SUPPORT_PACKAGE_RE.fullmatch(item.strip()):
+            return COMMON_HOOK_SUPPORT_PACKAGES
+        packages.append(item.strip())
+    return tuple(dict.fromkeys(packages))
+
+
 def plan_hook_install(agent: str, scope: str, target: Path | None) -> HookPlan:
     """Compute a merge-safe hook install plan without writing anything.
 
@@ -545,6 +566,15 @@ def plan_hook_install(agent: str, scope: str, target: Path | None) -> HookPlan:
         destination = target_root / scripts_subdir / file_name
         action = "overwrite" if destination.exists() else "create"
         plan.support_actions.append((source_file, destination, action))
+
+    support_packages = _hook_support_packages_from_manifest(manifest_source)
+    for package_name in support_packages:
+        source_package = source_root / scripts_subdir / package_name
+        if not source_package.is_dir():
+            raise InstallError(f"missing built hook support package {source_package.relative_to(ROOT)}")
+        destination = target_root / scripts_subdir / package_name
+        action = "overwrite" if destination.exists() else "create"
+        plan.support_package_actions.append((source_package, destination, action))
 
     manifest_target = target_root / aux_subdir / HOOK_MANIFEST_NAME
     plan.manifest_action = (
@@ -726,6 +756,11 @@ def apply_hook_install(plan: HookPlan, dry_run: bool) -> None:
     for source_file, destination, _action in plan.support_actions:
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source_file, destination)
+    for source_package, destination, _action in plan.support_package_actions:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        if destination.exists():
+            shutil.rmtree(destination)
+        shutil.copytree(source_package, destination)
     if plan.manifest_action is not None:
         manifest_source, manifest_target, _ = plan.manifest_action
         manifest_target.parent.mkdir(parents=True, exist_ok=True)
@@ -749,6 +784,8 @@ def render_hook_plan(plan: HookPlan) -> list[str]:
         lines.append(f"hooks: {action} script {destination.name}")
     for _source, destination, action in plan.support_actions:
         lines.append(f"hooks: {action} support {destination.name}")
+    for _source, destination, action in plan.support_package_actions:
+        lines.append(f"hooks: {action} support package {destination.name}")
     if plan.manifest_action is not None:
         lines.append(f"hooks: {plan.manifest_action[2]} {HOOK_MANIFEST_NAME}")
     if plan.bootstrap_action is not None:

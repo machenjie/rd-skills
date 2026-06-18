@@ -8,6 +8,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from installers import changeforge_install
+
 
 ROOT = Path(__file__).resolve().parents[2]
 INSTALL_SCRIPT = ROOT / "installers" / "install.py"
@@ -36,6 +38,7 @@ EXPECTED_COPILOT_SUPPORT_FILES = sorted(
         "changeforge_copilot_skill_summary.md",
     ]
 )
+EXPECTED_SUPPORT_PACKAGES = ["validation_broker"]
 
 
 def _build_recommended() -> None:
@@ -46,6 +49,14 @@ def _build_recommended() -> None:
         text=True,
         cwd=str(ROOT),
     )
+
+
+def _built_manifest_has_support_packages(path: Path) -> bool:
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return False
+    return manifest.get("support_packages") == EXPECTED_SUPPORT_PACKAGES
 
 
 def _run_install(project: Path, *extra: str) -> subprocess.CompletedProcess[str]:
@@ -88,7 +99,9 @@ class InstallHooksTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         if not (DIST_CODEX_HOOKS / "hooks.json").is_file() or not (
             DIST_CODEX_HOOKS / "hooks" / RUNTIME_ROUTE_INDEX_NAME
-        ).is_file():
+        ).is_file() or not _built_manifest_has_support_packages(
+            DIST_CODEX_HOOKS / ".changeforge-hook-manifest.json"
+        ):
             _build_recommended()
 
     def test_hooks_dry_run_writes_no_hook_files(self) -> None:
@@ -193,6 +206,15 @@ class InstallHooksTests(unittest.TestCase):
             self.assertEqual(manifest["scope"], "user")
             self.assertEqual(manifest["agent"], "codex")
             self.assertEqual(manifest["support_files"], EXPECTED_COMMON_SUPPORT_FILES)
+            self.assertEqual(manifest["support_packages"], EXPECTED_SUPPORT_PACKAGES)
+            self.assertTrue((codex_dir / "hooks" / "validation_broker" / "__init__.py").is_file())
+
+    def test_hook_support_package_manifest_rejects_path_like_names(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = Path(tmp) / ".changeforge-hook-manifest.json"
+            manifest.write_text(json.dumps({"support_packages": [".."]}), encoding="utf-8")
+            packages = changeforge_install._hook_support_packages_from_manifest(manifest)
+        self.assertEqual(packages, tuple(EXPECTED_SUPPORT_PACKAGES))
 
 
 class InstallCopilotHooksTests(unittest.TestCase):
@@ -205,6 +227,9 @@ class InstallCopilotHooksTests(unittest.TestCase):
             not (DIST_CODEX_HOOKS / "hooks.json").is_file()
             or not DIST_COPILOT_HOOK_SUPPORT.is_file()
             or not copilot_index.is_file()
+            or not _built_manifest_has_support_packages(
+                DIST_COPILOT_HOOK_SUPPORT.parent / ".changeforge-hook-manifest.json"
+            )
         ):
             _build_recommended()
 
@@ -252,6 +277,8 @@ class InstallCopilotHooksTests(unittest.TestCase):
                 (scripts_dir / ".changeforge-hook-manifest.json").read_text(encoding="utf-8")
             )
             self.assertEqual(sorted(manifest["support_files"]), EXPECTED_COPILOT_SUPPORT_FILES)
+            self.assertEqual(manifest["support_packages"], EXPECTED_SUPPORT_PACKAGES)
+            self.assertTrue((scripts_dir / "validation_broker" / "__init__.py").is_file())
             # The manifest is nested so VS Code does not parse it as a hook config.
             self.assertFalse((hooks_dir / ".changeforge-hook-manifest.json").exists())
             payload = json.loads(config.read_text(encoding="utf-8"))
@@ -346,6 +373,10 @@ class InstallCopilotHooksTests(unittest.TestCase):
             self.assertEqual(manifest["scope"], "user")
             self.assertEqual(manifest["agent"], "copilot")
             self.assertEqual(sorted(manifest["support_files"]), EXPECTED_COPILOT_SUPPORT_FILES)
+            self.assertEqual(manifest["support_packages"], EXPECTED_SUPPORT_PACKAGES)
+            self.assertTrue(
+                (hooks_dir / "changeforge" / "validation_broker" / "__init__.py").is_file()
+            )
 
 
 class InstallBootstrapTests(unittest.TestCase):

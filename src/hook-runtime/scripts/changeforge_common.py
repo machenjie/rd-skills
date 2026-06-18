@@ -1024,7 +1024,7 @@ def memory_pre_edit_advice(
         paths = _capped_items(changed_paths)
         fragile_paths = _memory_fragile_paths(events, paths)
         owner = str((state or {}).get("owner_skill", "")).strip()
-        task = _memory_task_fingerprint(paths, owner, str((state or {}).get("turn_stage", "")))
+        task = _memory_task_fingerprint(paths, owner, "")
         repeat = _memory_repeat_failure(events, repo_hash=_repo_hash(repo), task=task, paths=paths, owner=owner)
         evidence = _memory_pre_edit_evidence(state or {}, assistant_text)
         if repeat.get("repeated") and evidence["failure_diagnosis_route"]:
@@ -1474,7 +1474,7 @@ def _sanitize_memory_event(repo: Path, event: dict[str, Any]) -> dict[str, Any]:
         "event_id": _memory_clean_scalar(source.get("event_id") or f"mem-{uuid.uuid4().hex[:24]}"),
         "repo_hash": _memory_clean_scalar(source.get("repo_hash") or _repo_hash(repo)),
         "task_fingerprint": str(
-            source.get("task_fingerprint") or _memory_task_fingerprint(paths, owner, source.get("type", ""))
+            source.get("task_fingerprint") or _memory_task_fingerprint(paths, owner, "")
         )[:MAX_TELEMETRY_VALUE_LEN],
         "type": event_type,
         "paths": paths,
@@ -1524,7 +1524,7 @@ def _memory_event_from_telemetry_record(repo: Path, record: dict[str, Any]) -> d
         evidence_refs.append("implementation_preflight_blocked")
     return {
         "repo_hash": record.get("repo_hash") or _repo_hash(repo),
-        "task_fingerprint": _memory_task_fingerprint(paths, owner, record.get("turn_stage", "")),
+        "task_fingerprint": _memory_task_fingerprint(paths, owner, ""),
         "type": event_type,
         "paths": paths,
         "symbols": [],
@@ -1635,15 +1635,22 @@ def _memory_repeat_failure(
     paths: list[str],
     owner: str,
 ) -> dict[str, Any]:
-    failures = [
-        event
-        for event in events
-        if event.get("repo_hash") == repo_hash
-        and event.get("task_fingerprint") == task
-        and (not owner or event.get("owner_skill") == owner)
-        and set(paths) & set(event.get("paths", []) or [])
-        and event.get("outcome") in {"failed", "blocked"}
-    ]
+    exact = _memory_matching_failures(
+        events,
+        repo_hash=repo_hash,
+        task=task,
+        paths=paths,
+        owner=owner,
+        require_task=True,
+    )
+    failures = exact if len(exact) >= 2 else _memory_matching_failures(
+        events,
+        repo_hash=repo_hash,
+        task=task,
+        paths=paths,
+        owner=owner,
+        require_task=False,
+    )
     failures.sort(key=lambda event: str(event.get("created_at", "")), reverse=True)
     repeated = len(failures) >= 2
     return {
@@ -1655,6 +1662,32 @@ def _memory_repeat_failure(
         "required_next_gate": "failure-diagnosis",
         "allowed_to_continue": not repeated,
     }
+
+
+def _memory_matching_failures(
+    events: list[dict[str, Any]],
+    *,
+    repo_hash: str,
+    task: str,
+    paths: list[str],
+    owner: str,
+    require_task: bool,
+) -> list[dict[str, Any]]:
+    path_set = set(paths)
+    failures: list[dict[str, Any]] = []
+    for event in events:
+        if event.get("repo_hash") != repo_hash:
+            continue
+        if require_task and event.get("task_fingerprint") != task:
+            continue
+        if owner and event.get("owner_skill") != owner:
+            continue
+        if not (path_set & set(event.get("paths", []) or [])):
+            continue
+        if event.get("outcome") not in {"failed", "blocked"}:
+            continue
+        failures.append(event)
+    return failures
 
 
 def _memory_pre_edit_evidence(state: dict, assistant_text: str) -> dict[str, bool]:

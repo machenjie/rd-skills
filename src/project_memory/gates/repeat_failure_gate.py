@@ -23,14 +23,21 @@ def evaluate_repeat_failure_gate(
 ) -> dict[str, Any]:
     """Evaluate whether a third same-path same-strategy attempt should pause."""
     path = clean_path(primary_path)
-    matched = [
-        event
-        for event in events
-        if event.get("repo_hash") == repo_hash
-        and event.get("task_fingerprint") == task_fingerprint
-        and event.get("owner_skill") == owner_skill
-        and path in (event.get("paths") or [])
-    ]
+    event_list = list(events)
+    exact = _matching_events(
+        event_list,
+        repo_hash=repo_hash,
+        task_fingerprint=task_fingerprint,
+        path=path,
+        owner_skill=owner_skill,
+    )
+    matched = exact if len(exact) >= 2 else _matching_events(
+        event_list,
+        repo_hash=repo_hash,
+        task_fingerprint="",
+        path=path,
+        owner_skill=owner_skill,
+    )
     matched.sort(key=lambda event: str(event.get("created_at", "")), reverse=True)
     failure_count = 0
     matched_paths: list[str] = []
@@ -59,10 +66,31 @@ def evaluate_repeat_failure_gate(
     }
 
 
+def _matching_events(
+    events: Iterable[dict[str, Any]],
+    *,
+    repo_hash: str,
+    task_fingerprint: str,
+    path: str,
+    owner_skill: str,
+) -> list[dict[str, Any]]:
+    matched: list[dict[str, Any]] = []
+    for event in events:
+        if event.get("repo_hash") != repo_hash:
+            continue
+        if task_fingerprint and event.get("task_fingerprint") != task_fingerprint:
+            continue
+        if event.get("owner_skill") != owner_skill:
+            continue
+        if path not in (event.get("paths") or []):
+            continue
+        matched.append(event)
+    return matched
+
+
 def _required_next_gate(events: list[dict[str, Any]]) -> str:
     if any(event.get("type") == "validation_result" for event in events):
         return "quality-test-gate"
     if any("architecture" in str(event.get("owner_skill", "")) for event in events):
         return "architecture-impact-reviewer"
     return "failure-diagnosis"
-

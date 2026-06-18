@@ -55,8 +55,11 @@ class CommandResolverTests(unittest.TestCase):
     def test_project_memory_trajectory_and_broker_paths_select_validators(self) -> None:
         cases = {
             "src/project_memory/privacy.py": "python3 scripts/validate-project-memory.py",
+            "scripts/review-project-memory.py": "python3 scripts/validate-project-memory.py",
             "src/trajectory/trajectory_analyzer.py": "python3 scripts/validate-trajectory.py",
+            "scripts/inspect-trajectory.py": "python3 scripts/validate-trajectory.py",
             "src/validation_broker/validation_result_parser.py": "python3 scripts/validate-validation-broker.py",
+            "scripts/resolve-validation.py": "python3 scripts/validate-validation-broker.py",
         }
         for path, expected in cases.items():
             with self.subTest(path=path):

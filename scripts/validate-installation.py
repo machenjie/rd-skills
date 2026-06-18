@@ -483,6 +483,9 @@ def _validate_hook_manifest(path: Path, *, agent: str, scope: str, errors: list[
     ):
         expected = ", ".join(sorted(expected_support_files)) or "(none)"
         errors.append(f"{relpath(ROOT, path)}: support_files must be {expected}")
+    support_packages = data.get("support_packages")
+    if support_packages != ["validation_broker"]:
+        errors.append(f"{relpath(ROOT, path)}: support_packages must be validation_broker")
     if data.get("session_bootstrap_hook") is not True:
         errors.append(
             f"{relpath(ROOT, path)}: session_bootstrap_hook must be True"

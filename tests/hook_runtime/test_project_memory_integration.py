@@ -175,6 +175,35 @@ class ProjectMemoryIntegrationTests(unittest.TestCase):
         self.assertIn("failure_diagnosis_route", result["missing"])
         self.assertTrue(result["block"])
 
+    def test_repeat_failure_blocks_when_prior_failures_have_different_stages(self) -> None:
+        common = load_common()
+        gate = load_pre_edit_gate()
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd = Path(cwd_s)
+            cache = Path(cache_s)
+            previous_cache = os.environ.get("XDG_CACHE_HOME")
+            previous_mode = os.environ.get("CHANGEFORGE_PRE_EDIT_MODE")
+            os.environ["XDG_CACHE_HOME"] = str(cache)
+            os.environ["CHANGEFORGE_PRE_EDIT_MODE"] = "block"
+            try:
+                _seed_stage_specific_repeat_failures(common, cwd)
+                result = gate.evaluate_pre_edit(
+                    _patch_event(_complete_preflight()),
+                    {"read_evidence_seen": True, "turn_stage": "plan"},
+                    cwd,
+                )
+            finally:
+                if previous_cache is None:
+                    os.environ.pop("XDG_CACHE_HOME", None)
+                else:
+                    os.environ["XDG_CACHE_HOME"] = previous_cache
+                if previous_mode is None:
+                    os.environ.pop("CHANGEFORGE_PRE_EDIT_MODE", None)
+                else:
+                    os.environ["CHANGEFORGE_PRE_EDIT_MODE"] = previous_mode
+        self.assertIn("failure_diagnosis_route", result["missing"])
+        self.assertTrue(result["block"])
+
     def test_repeat_failure_allows_edit_with_diagnosis_route_evidence(self) -> None:
         common = load_common()
         gate = load_pre_edit_gate()
@@ -258,6 +287,22 @@ def _seed_repeat_failures(common, cwd: Path) -> None:
             {
                 "event_id": event_id,
                 "task_fingerprint": task,
+                "type": "validation_result",
+                "paths": ["src/services/order_service.py"],
+                "outcome": "failed",
+            },
+        )
+
+
+def _seed_stage_specific_repeat_failures(common, cwd: Path) -> None:
+    for event_id, stage in (("failed-1", "edit"), ("failed-2", "repair")):
+        common.write_memory_event(
+            cwd,
+            {
+                "event_id": event_id,
+                "task_fingerprint": common._memory_task_fingerprint(
+                    ["src/services/order_service.py"], "", stage
+                ),
                 "type": "validation_result",
                 "paths": ["src/services/order_service.py"],
                 "outcome": "failed",

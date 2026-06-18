@@ -35,17 +35,25 @@ PASS_RE = re.compile(
 )
 PASS_NEUTRAL_RE = re.compile(
     r"\b("
-    r"0\s+(?:errors?|failures?|issues?)|"
-    r"no\s+(?:errors?|failures?|issues?)|"
+    r"0\s+(?:errors?|failures?|failed|issues?)|"
+    r"no\s+(?:errors?|failures?|failed|issues?)|"
     r"without\s+errors?"
     r")\b",
     re.IGNORECASE,
 )
-FAIL_RE = re.compile(
+NONZERO_FAIL_RE = re.compile(
     r"\b("
-    r"fail(?:ed|ing|ures?)?|error(?:s)?|[1-9]\d*\s+(?:errors?|failures?)|"
-    r"(?:errors?|failures?)\s*[:=]\s*[1-9]\d*|exit\s*(?:code)?\s*[1-9]\d*|"
-    r"return\s*(?:code)?\s*[1-9]\d*|red|失败|错误"
+    r"[1-9]\d*\s+(?:errors?|failures?|failed)|"
+    r"(?:errors?|failures?|failed)\s*[:=]\s*[1-9]\d*|"
+    r"exit\s*(?:code)?\s*[:=]?\s*[1-9]\d*|"
+    r"return\s*(?:code)?\s*[:=]?\s*[1-9]\d*"
+    r")\b",
+    re.IGNORECASE,
+)
+BARE_FAILED_RE = re.compile(r"(?<!0\s)\bfailed\b(?!\s*[:=]\s*0\b)", re.IGNORECASE)
+GENERIC_FAIL_RE = re.compile(
+    r"\b("
+    r"fail(?:ing|ures?)?|error(?:s)?|red|失败|错误"
     r")\b",
     re.IGNORECASE,
 )
@@ -143,9 +151,11 @@ def _outcome(
         return "not_run"
     if exit_code is not None:
         return "pass" if exit_code == 0 else "fail"
+    if NONZERO_FAIL_RE.search(text) or BARE_FAILED_RE.search(text):
+        return "fail"
     if PASS_NEUTRAL_RE.search(text):
         return "pass" if validation_looking else "unknown"
-    if FAIL_RE.search(text):
+    if GENERIC_FAIL_RE.search(text):
         return "fail"
     if PASS_RE.search(text) and validation_looking:
         return "pass"

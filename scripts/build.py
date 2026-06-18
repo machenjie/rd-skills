@@ -790,6 +790,7 @@ def _write_hook_manifest(
         "source_version": _source_version(),
         "hooks": hooks,
         "support_files": list(dict.fromkeys((*support_files, RUNTIME_ROUTE_INDEX_NAME))),
+        "support_packages": [source.name for source in HOOK_SUPPORT_PACKAGES],
         "bootstrap_fragment": BOOTSTRAP_FRAGMENT_NAME,
         "session_bootstrap_hook": True,
     }

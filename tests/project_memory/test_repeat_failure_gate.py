@@ -44,12 +44,35 @@ class RepeatFailureGateTests(unittest.TestCase):
         )["repeat_failure_gate"]
         self.assertTrue(decision["allowed_to_continue"])
 
+    def test_path_owner_fallback_catches_stage_specific_fingerprints(self) -> None:
+        events = [
+            _event("e1", "failed", "2026-06-01T00:00:00Z", task_fingerprint="edit-task"),
+            _event("e2", "failed", "2026-06-02T00:00:00Z", task_fingerprint="repair-task"),
+        ]
+        decision = evaluate_repeat_failure_gate(
+            events,
+            repo_hash="repo",
+            task_fingerprint="new-turn-task",
+            primary_path="src/app.py",
+            owner_skill="backend-change-builder",
+            mode="block",
+        )["repeat_failure_gate"]
+        self.assertTrue(decision["repeated"])
+        self.assertEqual(decision["failure_count"], 2)
+        self.assertFalse(decision["allowed_to_continue"])
 
-def _event(event_id: str, outcome: str, created_at: str) -> dict:
+
+def _event(
+    event_id: str,
+    outcome: str,
+    created_at: str,
+    *,
+    task_fingerprint: str = "task",
+) -> dict:
     return {
         "event_id": event_id,
         "repo_hash": "repo",
-        "task_fingerprint": "task",
+        "task_fingerprint": task_fingerprint,
         "type": "implementation_attempt",
         "paths": ["src/app.py"],
         "owner_skill": "backend-change-builder",
@@ -60,4 +83,3 @@ def _event(event_id: str, outcome: str, created_at: str) -> dict:
 
 if __name__ == "__main__":
     unittest.main()
-

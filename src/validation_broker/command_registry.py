@@ -102,6 +102,10 @@ REGISTRY: dict[str, dict[str, object]] = {
         "path_patterns": (
             "src/repository_intelligence/**",
             "tests/repository_intelligence/**",
+            "scripts/index-repository.py",
+            "scripts/build-context-pack.py",
+            "scripts/validate-repository-graph.py",
+            "scripts/validate-context-pack.py",
         ),
         "risk_surfaces": ("repository-intelligence", "context-pack", "source-freshness"),
         "narrow": (
@@ -138,6 +142,9 @@ REGISTRY: dict[str, dict[str, object]] = {
         "path_patterns": (
             "src/project_memory/**",
             "tests/project_memory/**",
+            "scripts/review-project-memory.py",
+            "scripts/promote-memory-candidate.py",
+            "scripts/validate-project-memory.py",
         ),
         "risk_surfaces": ("project-memory", "privacy", "agent-workflow-state"),
         "narrow": (
@@ -156,6 +163,8 @@ REGISTRY: dict[str, dict[str, object]] = {
         "path_patterns": (
             "src/trajectory/**",
             "tests/trajectory/**",
+            "scripts/inspect-trajectory.py",
+            "scripts/validate-trajectory.py",
         ),
         "risk_surfaces": ("trajectory", "telemetry", "agent-execution-discipline"),
         "narrow": (
@@ -174,6 +183,8 @@ REGISTRY: dict[str, dict[str, object]] = {
         "path_patterns": (
             "src/validation_broker/**",
             "tests/validation_broker/**",
+            "scripts/resolve-validation.py",
+            "scripts/validate-validation-broker.py",
         ),
         "risk_surfaces": ("validation-broker", "validation-closure", "test-evidence"),
         "narrow": (

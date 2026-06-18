@@ -23,9 +23,20 @@ class CommandRegistryTests(unittest.TestCase):
     def test_runtime_governance_paths_match_registry_categories(self) -> None:
         cases = {
             "src/repository_intelligence/cache/repo_hash.py": "repository_intelligence",
+            "scripts/index-repository.py": "repository_intelligence",
+            "scripts/build-context-pack.py": "repository_intelligence",
+            "scripts/validate-repository-graph.py": "repository_intelligence",
+            "scripts/validate-context-pack.py": "repository_intelligence",
             "src/project_memory/privacy.py": "project_memory",
+            "scripts/review-project-memory.py": "project_memory",
+            "scripts/promote-memory-candidate.py": "project_memory",
+            "scripts/validate-project-memory.py": "project_memory",
             "src/trajectory/trajectory_analyzer.py": "trajectory",
+            "scripts/inspect-trajectory.py": "trajectory",
+            "scripts/validate-trajectory.py": "trajectory",
             "src/validation_broker/validation_result_parser.py": "validation_broker",
+            "scripts/resolve-validation.py": "validation_broker",
+            "scripts/validate-validation-broker.py": "validation_broker",
         }
         for path, category in cases.items():
             with self.subTest(path=path):

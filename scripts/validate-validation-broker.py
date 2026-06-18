@@ -86,7 +86,33 @@ def _validate_resolver(errors: list[str]) -> None:
             "python3 scripts/validate-repository-graph.py --graph /tmp/changeforge-repo-graph.json",
             "python3 scripts/validate-context-pack.py --context-pack /tmp/changeforge-context-pack.json",
         ),
+        "scripts/index-repository.py": (
+            "python3 scripts/index-repository.py --target . --out /tmp/changeforge-repo-graph.json",
+            "python3 scripts/validate-repository-graph.py --graph /tmp/changeforge-repo-graph.json",
+        ),
+        "scripts/build-context-pack.py": (
+            "python3 scripts/build-context-pack.py --task \"repository intelligence validation\" --target . --graph /tmp/changeforge-repo-graph.json --out /tmp/changeforge-context-pack.json",
+            "python3 scripts/validate-context-pack.py --context-pack /tmp/changeforge-context-pack.json",
+        ),
+        "scripts/validate-repository-graph.py": (
+            "python3 scripts/validate-repository-graph.py --graph /tmp/changeforge-repo-graph.json",
+        ),
+        "scripts/validate-context-pack.py": (
+            "python3 scripts/validate-context-pack.py --context-pack /tmp/changeforge-context-pack.json",
+        ),
         "src/project_memory/privacy.py": (
+            "python3 scripts/validate-project-memory.py",
+            "python3 -m unittest discover -s tests/project_memory",
+        ),
+        "scripts/review-project-memory.py": (
+            "python3 scripts/validate-project-memory.py",
+            "python3 -m unittest discover -s tests/project_memory",
+        ),
+        "scripts/promote-memory-candidate.py": (
+            "python3 scripts/validate-project-memory.py",
+            "python3 -m unittest discover -s tests/project_memory",
+        ),
+        "scripts/validate-project-memory.py": (
             "python3 scripts/validate-project-memory.py",
             "python3 -m unittest discover -s tests/project_memory",
         ),
@@ -94,7 +120,23 @@ def _validate_resolver(errors: list[str]) -> None:
             "python3 scripts/validate-trajectory.py",
             "python3 -m unittest discover -s tests/trajectory",
         ),
+        "scripts/inspect-trajectory.py": (
+            "python3 scripts/validate-trajectory.py",
+            "python3 -m unittest discover -s tests/trajectory",
+        ),
+        "scripts/validate-trajectory.py": (
+            "python3 scripts/validate-trajectory.py",
+            "python3 -m unittest discover -s tests/trajectory",
+        ),
         "src/validation_broker/validation_result_parser.py": (
+            "python3 scripts/validate-validation-broker.py",
+            "python3 -m unittest discover -s tests/validation_broker",
+        ),
+        "scripts/resolve-validation.py": (
+            "python3 scripts/validate-validation-broker.py",
+            "python3 -m unittest discover -s tests/validation_broker",
+        ),
+        "scripts/validate-validation-broker.py": (
             "python3 scripts/validate-validation-broker.py",
             "python3 -m unittest discover -s tests/validation_broker",
         ),
