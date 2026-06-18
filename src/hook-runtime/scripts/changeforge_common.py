@@ -29,6 +29,23 @@ except ModuleNotFoundError:  # pragma: no cover - importlib test loading fallbac
     _reducer_spec.loader.exec_module(_reducer_module)
     reduce_state_update = _reducer_module.reduce_state_update
 
+_SRC_ROOT = Path(__file__).resolve().parents[2]
+if (_SRC_ROOT / "project_memory").is_dir() and str(_SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SRC_ROOT))
+
+try:
+    from project_memory.hook_safe.adapter import (
+        closure_advice as _hook_memory_closure_advice,
+        pre_edit_advice as _hook_memory_pre_edit_advice,
+        sanitize_event as _hook_memory_sanitize_event,
+        write_event as _hook_memory_write_event,
+    )
+except Exception:  # pragma: no cover - hook runtime must fail open without support packages.
+    _hook_memory_closure_advice = None
+    _hook_memory_pre_edit_advice = None
+    _hook_memory_sanitize_event = None
+    _hook_memory_write_event = None
+
 
 STATE_LIST_FIELDS = (
     "changed_paths",
@@ -1106,6 +1123,9 @@ def write_memory_event(repo: Path, event: dict[str, Any]) -> None:
     if not memory_enabled():
         return
     try:
+        if _hook_memory_write_event is not None:
+            _hook_memory_write_event(repo, event)
+            return
         root = memory_root(repo)
         for sub in MEMORY_SUBDIRS:
             (root / sub).mkdir(parents=True, exist_ok=True)
@@ -1125,6 +1145,8 @@ def memory_pre_edit_advice(
 ) -> dict[str, Any]:
     """Return warning-only memory advice for pre-edit gates."""
     try:
+        if _hook_memory_pre_edit_advice is not None:
+            return _hook_memory_pre_edit_advice(repo, changed_paths, state, assistant_text)
         events = _read_memory_events(repo)
         paths = _capped_items(changed_paths)
         fragile_paths = _memory_fragile_paths(events, paths)
@@ -1163,14 +1185,17 @@ def memory_pre_edit_advice(
 def memory_closure_advice(repo: Path, state: dict | None = None) -> dict[str, Any]:
     """Return fail-open project-memory closure facts for Stop telemetry."""
     changed_paths = _capped_items((state or {}).get("changed_paths", []))
+    if _hook_memory_closure_advice is not None:
+        return _hook_memory_closure_advice(repo, state)
     if not memory_enabled():
         return {
             "available": False,
+            "status": "disabled_by_policy",
             "projection_key": "",
             "included_events": [],
             "excluded_events": [],
-            "stale_context_gate": "warn" if changed_paths else "pass",
-            "residual_risk": ["project_memory_unavailable"] if changed_paths else [],
+            "stale_context_gate": "not_applicable",
+            "residual_risk": [],
         }
     try:
         events = _read_memory_events(repo)
@@ -1199,6 +1224,7 @@ def memory_closure_advice(repo: Path, state: dict | None = None) -> dict[str, An
         stale_context_gate = "warn" if residual else "pass"
         return {
             "available": True,
+            "status": "available",
             "projection_key": _memory_projection_key(changed_paths, included, excluded),
             "included_events": [_memory_event_id(event) for event in included[:MAX_TELEMETRY_ITEMS]],
             "excluded_events": excluded[:MAX_TELEMETRY_ITEMS],
@@ -1209,6 +1235,7 @@ def memory_closure_advice(repo: Path, state: dict | None = None) -> dict[str, An
         debug_log(repo, f"memory closure advice failed open: {exc}")
         return {
             "available": False,
+            "status": "unavailable_due_error",
             "projection_key": "",
             "included_events": [],
             "excluded_events": [],
@@ -1297,6 +1324,7 @@ def _telemetry_session_id(repo: Path, repo_hash: str, provided: str) -> str:
 ROUTE_MANIFEST_KEY = "changeforge_route"
 STAGE_MANIFEST_KEY = "changeforge_stage_route"
 IMPLEMENTATION_PREFLIGHT_KEY = "changeforge_implementation_preflight"
+REPOSITORY_CONTEXT_KEY = "repository_context"
 _MANIFEST_LIST_KEYS = (
     "selected_skills",
     "selected_capabilities",
@@ -1406,6 +1434,59 @@ def extract_implementation_preflight_fields(text: str) -> dict:
     return result
 
 
+def extract_repository_context_fields(text: str) -> dict:
+    """Extract structured repository_context closure facts from text. Fail open."""
+    result: dict[str, Any] = {
+        "present": False,
+        "context_pack": [],
+        "source_of_truth": [],
+        "reuse_candidates": [],
+        "no_reuse_candidate_found": False,
+        "test_candidates": [],
+        "validation_candidates": [],
+        "rejected_locations": [],
+        "graph_freshness": "",
+        "residual_risk": [],
+        "complete": False,
+    }
+    if not isinstance(text, str) or not text:
+        return result
+    try:
+        block = _manifest_block(text, REPOSITORY_CONTEXT_KEY)
+        if not block:
+            return result
+        result["present"] = f"{REPOSITORY_CONTEXT_KEY}:" in block
+        if not result["present"]:
+            return result
+        result["context_pack"] = _manifest_field_values(block, "context_pack")
+        result["source_of_truth"] = _manifest_field_values(block, "source_of_truth")
+        result["reuse_candidates"] = _manifest_field_values(block, "reuse_candidates")
+        result["no_reuse_candidate_found"] = _manifest_explicit_boolean(
+            block,
+            "no_reuse_candidate_found",
+        )
+        result["test_candidates"] = _manifest_field_values(block, "test_candidates")
+        result["validation_candidates"] = _manifest_field_values(block, "validation_candidates")
+        result["rejected_locations"] = _manifest_field_values(block, "rejected_locations")
+        graph_values = _manifest_field_values(block, "graph_freshness")
+        result["graph_freshness"] = graph_values[0] if graph_values else ""
+        result["residual_risk"] = _manifest_field_values(
+            block,
+            "residual_risk",
+            allow_none=True,
+        )
+        result["complete"] = bool(
+            (result["context_pack"] or result["source_of_truth"])
+            and (result["reuse_candidates"] or result["no_reuse_candidate_found"])
+            and (result["test_candidates"] or result["validation_candidates"])
+            and result["graph_freshness"]
+            and result["residual_risk"]
+        )
+    except Exception:
+        return result
+    return result
+
+
 def _fenced_blocks(text: str) -> list[str]:
     blocks: list[str] = []
     buffer: list[str] = []
@@ -1479,6 +1560,40 @@ def _manifest_scalar_field(segment: str, key: str) -> str:
     pattern = re.compile(r"^\s*" + re.escape(key) + r":\s*(.+?)\s*$", re.MULTILINE)
     match = pattern.search(segment)
     return _manifest_unquote(match.group(1)) if match else ""
+
+
+def _manifest_field_values(segment: str, key: str, *, allow_none: bool = False) -> list[str]:
+    values = [
+        value
+        for value in _manifest_list_field(segment, key)
+        if _manifest_explicit_value(value, allow_none=allow_none)
+    ]
+    if values:
+        return values
+    scalar = _manifest_scalar_field(segment, key)
+    if _manifest_explicit_value(scalar, allow_none=allow_none):
+        return [scalar]
+    if _manifest_section_has_value(segment, key):
+        return [key]
+    return []
+
+
+def _manifest_explicit_boolean(segment: str, key: str) -> bool:
+    scalar = _manifest_scalar_field(segment, key).casefold()
+    if scalar in {"true", "yes", "1", "no_reuse_candidate_found"}:
+        return True
+    if scalar in {"false", "no", "0", "", "none", "n/a", "na"}:
+        return False
+    return _manifest_explicit_value(scalar, allow_none=False)
+
+
+def _manifest_explicit_value(value: str, *, allow_none: bool = False) -> bool:
+    text = _manifest_unquote(str(value or ""))
+    if not text:
+        return False
+    if allow_none and text.casefold() in {"none", "n/a", "na", "not_applicable"}:
+        return True
+    return _manifest_meaningful_value(text)
 
 
 def _manifest_section_block(segment: str, key: str) -> str:
@@ -1706,6 +1821,8 @@ def _telemetry_runtime(value: object) -> str:
 
 
 def _sanitize_memory_event(repo: Path, event: dict[str, Any]) -> dict[str, Any]:
+    if _hook_memory_sanitize_event is not None:
+        return _hook_memory_sanitize_event(repo, event)
     source = event if isinstance(event, dict) else {}
     raw_kind = _memory_enum(source.get("kind"), MEMORY_KINDS, "")
     event_type = _memory_enum(

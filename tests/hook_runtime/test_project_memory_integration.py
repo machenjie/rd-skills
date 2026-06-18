@@ -259,6 +259,24 @@ class ProjectMemoryIntegrationTests(unittest.TestCase):
         for forbidden in ("raw prompt", "API_KEY", "full stdout", "full stderr", "/Users/example", "Bearer", "token=SECRET"):
             self.assertNotIn(forbidden, text)
 
+    def test_memory_disabled_by_policy_is_not_degraded(self) -> None:
+        common = load_common()
+        with tempfile.TemporaryDirectory() as cwd_s:
+            cwd = Path(cwd_s)
+            previous = os.environ.get("CHANGEFORGE_MEMORY")
+            os.environ["CHANGEFORGE_MEMORY"] = "off"
+            try:
+                advice = common.memory_closure_advice(cwd, {"changed_paths": ["src/app.py"]})
+            finally:
+                if previous is None:
+                    os.environ.pop("CHANGEFORGE_MEMORY", None)
+                else:
+                    os.environ["CHANGEFORGE_MEMORY"] = previous
+        self.assertFalse(advice["available"])
+        self.assertEqual(advice["status"], "disabled_by_policy")
+        self.assertEqual(advice["stale_context_gate"], "not_applicable")
+        self.assertEqual(advice["residual_risk"], [])
+
 
 def _patch_event(message: str) -> dict:
     return {

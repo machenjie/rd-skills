@@ -498,7 +498,8 @@ The v1 telemetry schema is extended compatibly with action-aware hook facts:
   `project_memory_available`, `project_memory_projection_key`,
   `project_memory_included_events`, `project_memory_excluded_events`,
   `project_memory_stale_context_gate`, and `project_memory_residual_risk`.
-  Unavailable or degraded memory becomes residual risk; it does not become a
+  Memory disabled by user policy is recorded as not applicable, while expected
+  but unreadable memory remains degraded residual risk. Memory never becomes a
   pass condition.
 
 ### Telemetry Memory Candidates

@@ -30,6 +30,8 @@ _EVENT_KIND_ALIASES = {
     "user_prompt_submit": EventKind.USER_PROMPT_SUBMIT,
     "pretooluse": EventKind.PRE_TOOL_USE,
     "pre_tool_use": EventKind.PRE_TOOL_USE,
+    "permissionrequest": EventKind.PRE_TOOL_USE,
+    "permission_request": EventKind.PRE_TOOL_USE,
     "posttooluse": EventKind.POST_TOOL_USE,
     "post_tool_use": EventKind.POST_TOOL_USE,
     "stop": EventKind.STOP,

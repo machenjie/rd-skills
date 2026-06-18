@@ -356,11 +356,17 @@ available:
 ```yaml
 repository_context:
   context_pack: "/tmp/changeforge-context-pack.json"
-  source_of_truth: []
-  reuse_candidates: []
-  test_candidates: []
+  source_of_truth:
+    - src/hook-runtime/scripts/changeforge_stop_closure_gate.py
+  reuse_candidates:
+    - src/runtime_governance/closure.py
+  # Use no_reuse_candidate_found: true only after checking local reuse paths.
+  validation_candidates:
+    - python3 scripts/validate-hooks.py
   rejected_locations: []
   graph_freshness: current
+  residual_risk:
+    - none
 ```
 
 These fields are context selectors, not completion evidence. A stale graph,

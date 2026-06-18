@@ -289,6 +289,37 @@ class PreEditStructureGateTests(unittest.TestCase):
         self.assertFalse(result["test_plan"])
         self.assertFalse(result["risk"])
 
+    def test_repository_context_parser_requires_structured_fields(self) -> None:
+        common = load_common()
+        negative = "repository context was not checked; owning surface and caller/callee are unknown"
+        self.assertFalse(common.extract_repository_context_fields(negative)["complete"])
+        structured = (
+            "```yaml\n"
+            "repository_context:\n"
+            "  source_of_truth:\n"
+            "    - src/hook-runtime/scripts/changeforge_common.py\n"
+            "  no_reuse_candidate_found: true\n"
+            "  test_candidates:\n"
+            "    - python3 -m unittest tests/hook_runtime/test_pre_edit_structure_gate.py\n"
+            "  graph_freshness: current\n"
+            "  residual_risk:\n"
+            "    - none\n"
+            "```\n"
+        )
+        result = common.extract_repository_context_fields(structured)
+        self.assertTrue(result["complete"])
+        self.assertTrue(result["no_reuse_candidate_found"])
+
+    def test_structural_edit_without_repository_context_or_preflight_read_warns(self) -> None:
+        event = {
+            **patch_event(),
+            "last_assistant_message": "repository context was not checked; owning surface remains unknown",
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            result = run_gate(event, Path(cwd_s), Path(cache_s))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("repository_context", result.stdout)
+
     def test_incomplete_manifest_records_seen_but_not_complete(self) -> None:
         manifest = (
             "```yaml\n"

@@ -1,11 +1,33 @@
 #!/usr/bin/env python3
-"""Final handoff closure contract for ChangeForge hook runtime."""
+"""Compatibility wrapper around canonical runtime_governance closure facts."""
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from changeforge_adapter_capabilities import AdapterCapabilities, adapter_capabilities_for
+
+try:
+    from runtime_governance.closure import ClosureContract as GovernanceClosureContract
+    from runtime_governance.evidence import (
+        EvidenceEntry,
+        EvidenceLedger as GovernanceEvidenceLedger,
+        EvidenceStrength,
+        Freshness,
+    )
+except ModuleNotFoundError:  # Source tree layout: hook scripts live under src/hook-runtime.
+    _src_root = Path(__file__).resolve().parents[2]
+    if str(_src_root) not in sys.path:
+        sys.path.insert(0, str(_src_root))
+    from runtime_governance.closure import ClosureContract as GovernanceClosureContract
+    from runtime_governance.evidence import (
+        EvidenceEntry,
+        EvidenceLedger as GovernanceEvidenceLedger,
+        EvidenceStrength,
+        Freshness,
+    )
 
 
 @dataclass(frozen=True)
@@ -47,6 +69,7 @@ class ClosureContract:
     ) -> "ClosureContract":
         state = state if isinstance(state, dict) else {}
         capabilities = capabilities or adapter_capabilities_for(runtime)
+        profile = _profile(state)
         supported_checks = _list(getattr(capabilities, "supported_checks", ()))
         unsupported_checks = _list(getattr(capabilities, "unsupported_checks", ()))
         degraded_capabilities = [
@@ -54,20 +77,28 @@ class ClosureContract:
             for check in unsupported_checks
         ]
         residual = _list(validation_broker_residual_risk or [])
-        profile = _profile(state)
         if profile == "silent":
+            governance = GovernanceClosureContract.from_ledger(
+                GovernanceEvidenceLedger(),
+                supported_checks=supported_checks,
+                unsupported_checks=unsupported_checks,
+                degraded_capabilities=degraded_capabilities,
+                adapter=capabilities.runtime,
+                required_evidence=[],
+            )
             return cls(
                 adapter=capabilities.runtime,
                 supported_checks=supported_checks,
                 unsupported_checks=unsupported_checks,
                 degraded_capabilities=degraded_capabilities,
-                verdict="ready" if not unsupported_checks else "degraded_ready",
-                residual_risk=residual,
+                verdict=governance.verdict,
+                residual_risk=_unique([*residual, *governance.residual_risk]),
                 requires_route_manifest=False,
                 requires_validation_evidence=False,
                 requires_residual_risk=False,
                 adapter_supports_blocking=capabilities.supports_blocking,
             )
+
         engineering = profile == "engineering"
         requires_route = engineering
         requires_repo = engineering
@@ -78,41 +109,58 @@ class ClosureContract:
             or state.get("post_edit_confirmed_preflight_gap")
         )
         requires_validation = engineering
-        requires_review = str(state.get("turn_stage") or "") in {"review", "code-review", "repair", "bug-fix"}
+        requires_review = str(state.get("turn_stage") or "") in {
+            "review",
+            "code-review",
+            "repair",
+            "bug-fix",
+        }
         requires_risk = True
-        missing: list[str] = []
-        if requires_route and not route_manifest_complete:
-            missing.append("route_manifest")
-        if engineering and bool(state.get("stage_route_present")) and not stage_route_present:
-            missing.append("stage_route")
-        if requires_repo and not repository_context_present:
-            missing.append("repository_context")
-        if requires_preflight and not implementation_preflight_complete:
-            missing.append("implementation_preflight")
-        if requires_validation and not validation_evidence_present:
-            missing.append("validation")
-        if requires_review and not review_evidence_present:
-            missing.append("review_evidence")
-        if requires_risk and not residual_risk_present:
-            missing.append("risk")
-        status = "pass"
-        if missing:
-            status = "block" if block_mode and capabilities.supports_blocking else "warn"
-        verdict = _verdict(
-            missing,
-            unsupported_checks,
-            status,
-            validation_broker_outcome,
+        required_evidence: list[str] = []
+        if requires_route:
+            required_evidence.append("route_manifest")
+        if engineering and bool(state.get("stage_route_present")):
+            required_evidence.append("stage_route")
+        if requires_repo:
+            required_evidence.append("repository_context")
+        if requires_preflight:
+            required_evidence.append("implementation_preflight")
+        if requires_validation:
+            required_evidence.append("validation")
+        if requires_review:
+            required_evidence.append("review")
+        if requires_risk:
+            required_evidence.append("residual_risk")
+
+        ledger = _governance_ledger(
+            route_manifest_complete=route_manifest_complete,
+            repository_context_present=repository_context_present,
+            implementation_preflight_complete=implementation_preflight_complete,
+            validation_evidence_present=validation_evidence_present,
+            review_evidence_present=review_evidence_present,
+            residual_risk_present=residual_risk_present,
         )
-        if unsupported_checks:
-            residual.append("unsupported runtime checks remain")
+        governance = GovernanceClosureContract.from_ledger(
+            ledger,
+            supported_checks=supported_checks,
+            unsupported_checks=unsupported_checks,
+            degraded_capabilities=degraded_capabilities,
+            adapter=capabilities.runtime,
+            required_evidence=required_evidence,
+        )
+        missing = _compat_missing(governance.missing_evidence)
+        if "stage_route" in required_evidence and not stage_route_present:
+            missing.append("stage_route")
+        missing = _unique(missing)
+        status = "block" if missing and block_mode and capabilities.supports_blocking else "warn" if missing else "pass"
+        verdict = _compat_verdict(governance.verdict, status, validation_broker_outcome)
         return cls(
             adapter=capabilities.runtime,
             supported_checks=supported_checks,
             unsupported_checks=unsupported_checks,
-            degraded_capabilities=degraded_capabilities,
+            degraded_capabilities=governance.degraded_capabilities or degraded_capabilities,
             verdict=verdict,
-            residual_risk=_unique(residual),
+            residual_risk=_unique([*residual, *governance.residual_risk]),
             requires_route_manifest=requires_route,
             requires_stage_route=engineering and bool(state.get("stage_route_present")),
             requires_repository_context=requires_repo,
@@ -122,7 +170,7 @@ class ClosureContract:
             requires_residual_risk=requires_risk,
             adapter_supports_blocking=capabilities.supports_blocking,
             closure_status=status,
-            missing_items=_unique(missing),
+            missing_items=missing,
         )
 
     def to_dict(self) -> dict[str, object]:
@@ -146,6 +194,37 @@ class ClosureContract:
         }
 
 
+def _governance_ledger(
+    *,
+    route_manifest_complete: bool,
+    repository_context_present: bool,
+    implementation_preflight_complete: bool,
+    validation_evidence_present: bool,
+    review_evidence_present: bool,
+    residual_risk_present: bool,
+) -> GovernanceEvidenceLedger:
+    ledger = GovernanceEvidenceLedger()
+    _mark(ledger.route_manifest, route_manifest_complete)
+    _mark(ledger.repository_context, repository_context_present)
+    _mark(ledger.implementation_preflight, implementation_preflight_complete)
+    _mark(ledger.validation, validation_evidence_present)
+    _mark(ledger.review, review_evidence_present)
+    _mark(ledger.residual_risk, residual_risk_present)
+    return ledger
+
+
+def _mark(entry: EvidenceEntry, present: bool) -> None:
+    if present:
+        entry.merge(
+            EvidenceEntry(
+                entry.kind,
+                EvidenceStrength.STRONG.value,
+                Freshness.CURRENT.value,
+                ["hook-compat"],
+            )
+        )
+
+
 def _profile(state: dict) -> str:
     stage = str(state.get("turn_stage") or "").strip()
     if stage in {"", "question", "unknown", "no_engineering_action"}:
@@ -155,26 +234,20 @@ def _profile(state: dict) -> str:
     return "engineering"
 
 
-def _verdict(
-    missing: list[str],
-    unsupported_checks: list[str],
-    closure_status: str,
-    validation_broker_outcome: str,
-) -> str:
+def _compat_missing(items: list[str]) -> list[str]:
+    mapping = {"review": "review_evidence", "residual_risk": "risk"}
+    return [mapping.get(item, item) for item in items]
+
+
+def _compat_verdict(governance_verdict: str, closure_status: str, validation_broker_outcome: str) -> str:
     broker = str(validation_broker_outcome or "").strip()
-    if broker in {"blocked", "needs_validation"}:
+    if broker in {"blocked", "needs_validation", "degraded_ready"}:
         return broker
-    if broker == "degraded_ready":
-        return "degraded_ready"
+    if broker == "ready":
+        return governance_verdict
     if closure_status == "block":
         return "blocked"
-    if missing:
-        return "needs_validation"
-    if unsupported_checks:
-        return "degraded_ready"
-    if broker == "ready":
-        return "ready"
-    return "ready"
+    return governance_verdict
 
 
 def _check_token(value: str) -> str:

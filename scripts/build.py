@@ -62,7 +62,28 @@ COPILOT_HOOK_SUPPORT_FILES = (
     "changeforge_copilot_skill_summary.md",
     "changeforge_copilot_professional_contract.md",
 )
-HOOK_SUPPORT_PACKAGES = (SRC_DIR / "validation_broker", SRC_DIR / "runtime_governance")
+HOOK_SUPPORT_PACKAGES = (
+    SRC_DIR / "validation_broker",
+    SRC_DIR / "runtime_governance",
+    SRC_DIR / "repository_intelligence",
+    SRC_DIR / "project_memory",
+)
+HOOK_SUPPORT_PACKAGE_INCLUDE_FILES = {
+    "repository_intelligence": (
+        "__init__.py",
+        "cache/__init__.py",
+        "cache/repo_hash.py",
+    ),
+    "project_memory": (
+        "__init__.py",
+        "privacy.py",
+        "store/__init__.py",
+        "store/append_log.py",
+        "store/projection.py",
+        "hook_safe/__init__.py",
+        "hook_safe/adapter.py",
+    ),
+}
 RUNTIME_ROUTE_INDEX_NAME = "changeforge_runtime_route_index.json"
 UNIVERSAL_BOOTSTRAP_ROOT = DIST_DIR / "universal" / "bootstrap"
 
@@ -618,11 +639,29 @@ def _copy_hook_support_packages(target: Path) -> None:
         destination = target / source.name
         if destination.exists():
             shutil.rmtree(destination)
+        include_files = HOOK_SUPPORT_PACKAGE_INCLUDE_FILES.get(source.name)
+        if include_files is not None:
+            _copy_hook_support_package_subset(source, destination, include_files)
+            continue
         shutil.copytree(
             source,
             destination,
             ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
         )
+
+
+def _copy_hook_support_package_subset(
+    source: Path,
+    destination: Path,
+    include_files: tuple[str, ...],
+) -> None:
+    for rel_file in include_files:
+        source_file = source / rel_file
+        if not source_file.is_file():
+            raise BuildError(f"missing hook support package file: {source_file.relative_to(ROOT)}")
+        target_file = destination / rel_file
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_file, target_file)
 
 
 def _copy_hook_support_files(target: Path, support_files: tuple[str, ...]) -> None:

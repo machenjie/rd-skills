@@ -64,6 +64,7 @@ class ClosureContract:
         entries = {
             "route_manifest": ledger.route_manifest,
             "read_evidence": ledger.read_evidence,
+            "repository_context": ledger.repository_context,
             "implementation_preflight": ledger.implementation_preflight,
             "validation": ledger.validation,
             "review": ledger.review,

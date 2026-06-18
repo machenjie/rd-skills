@@ -43,6 +43,19 @@ class EvidenceLedgerTests(unittest.TestCase):
         self.assertEqual(ledger.validation.freshness, Freshness.CURRENT.value)
         self.assertEqual(ledger.changed_files, ["src/runtime_governance/events.py"])
 
+    def test_repository_context_seen_is_canonical_evidence(self) -> None:
+        ledger = EvidenceLedger.from_telemetry_facts(
+            [{"event_name": "Stop", "repository_context_seen": True}]
+        )
+        self.assertEqual(ledger.repository_context.strength, EvidenceStrength.STRONG.value)
+        self.assertEqual(ledger.repository_context.freshness, Freshness.CURRENT.value)
+
+    def test_permission_request_does_not_degrade_adapter(self) -> None:
+        ledger = EvidenceLedger.from_telemetry_facts(
+            [{"event_name": "PermissionRequest", "runtime": "codex"}]
+        )
+        self.assertEqual(ledger.adapter_degradation.strength, EvidenceStrength.NONE.value)
+
     def test_validation_command_without_outcome_is_weak(self) -> None:
         ledger = EvidenceLedger.from_telemetry_facts(
             [{"event_name": "PostToolUse", "validation_command_detected": True}]

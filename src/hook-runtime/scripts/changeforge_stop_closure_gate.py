@@ -17,6 +17,7 @@ from changeforge_common import (
     event_name,
     extract_implementation_preflight_fields,
     extract_manifest_fields,
+    extract_repository_context_fields,
     is_stop,
     load_state,
     memory_closure_advice,
@@ -599,6 +600,7 @@ def _closure_signals(
     keyword scan.
     """
     lowered = final_text.casefold()
+    repository_context = extract_repository_context_fields(final_text)
 
     def has(group: str) -> bool:
         return any(keyword.casefold() in lowered for keyword in CLOSURE_KEYWORDS[group])
@@ -609,8 +611,7 @@ def _closure_signals(
         "risk": has("risk"),
         "references": bool(manifest.get("required_references")) or "reference" in lowered,
         "skills": has("skills"),
-        "repository_context": _has_workflow_keyword(lowered, "repository_context")
-        or bool(state.get("repository_context_seen")),
+        "repository_context": bool(repository_context.get("complete")),
         "workflow_state": _has_workflow_keyword(lowered, "workflow_state")
         or bool(state.get("workflow_state_seen")),
         "tool_permission_sandbox": _has_workflow_keyword(
@@ -758,7 +759,9 @@ def _closure_message(
             )
     memory = memory_advice if isinstance(memory_advice, dict) else {}
     memory_residual = memory.get("residual_risk") if isinstance(memory, dict) else []
-    if memory.get("available") is False:
+    if memory.get("status") == "disabled_by_policy":
+        details.append("- project memory: disabled_by_policy")
+    elif memory.get("available") is False:
         details.append("- project memory unavailable; closure is degraded, not a pass")
     if memory.get("stale_context_gate") in {"warn", "block"}:
         details.append(f"- project memory stale-context gate: {memory.get('stale_context_gate')}")
@@ -829,7 +832,7 @@ This turn changed files, read code, reviewed artifacts, or triggered risk surfac
 - for non-trivial engineering work, the changeforge_stage_route manifest: current stage, launched and explicitly skipped capabilities, and next-stage handoff
 - required references: the router self-use references plus the selected capability references
 - changed files
-- repository context map: owning surface, related files, caller/callee flow, local conventions, and not-inspected boundaries
+- structured repository_context: context_pack or source_of_truth, reuse_candidates or no_reuse_candidate_found, test_candidates or validation_candidates, graph_freshness, and residual_risk
 - workflow state summary: current stage, allowed transition, owner/reviewer split, validation freshness, and repair/re-review state
 - tool permission/sandbox record when risky tools, connectors, network writes, deploys, migrations, destructive actions, or secret-bearing commands were used
 - changeforge_implementation_preflight summary when edits occurred: read evidence, placement decision, reuse ladder, object/module boundary, test plan, risk and rollback/revert path
@@ -1026,6 +1029,7 @@ def _missing_keyword_groups(
     validation_assessment: dict | None = None,
 ) -> list[str]:
     lowered = text.casefold()
+    repository_context = extract_repository_context_fields(text)
     missing: list[str] = []
     profile = _closure_profile(state)
     if profile == "silent":
@@ -1052,6 +1056,10 @@ def _missing_keyword_groups(
     if profile == "engineering":
         workflow_required = ("repository_context", "workflow_state", "plan_execution_consistency", "validation_freshness")
         for group in workflow_required:
+            if group == "repository_context":
+                if not repository_context.get("complete"):
+                    missing.append(group)
+                continue
             if not _has_workflow_keyword(lowered, group) and not state.get(_workflow_state_key(group)):
                 missing.append(group)
         if _tool_permission_required(state) and not (

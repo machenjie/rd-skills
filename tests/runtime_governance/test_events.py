@@ -36,6 +36,13 @@ class NormalizedEventTests(unittest.TestCase):
         self.assertEqual(event.event_kind, EventKind.UNKNOWN.value)
         self.assertIn("unsupported_event:RuntimeThing", event.capability_degradation)
 
+    def test_permission_request_maps_to_pre_tool_without_degradation(self) -> None:
+        event = NormalizedEvent.from_telemetry_fact(
+            {"event_name": "PermissionRequest", "runtime": "codex"}
+        )
+        self.assertEqual(event.event_kind, EventKind.PRE_TOOL_USE.value)
+        self.assertEqual(event.capability_degradation, [])
+
     def test_json_round_trip(self) -> None:
         event = NormalizedEvent.from_telemetry_fact(
             {"event_name": "Stop", "runtime": "codex", "hook_name": "stop_closure_gate"}

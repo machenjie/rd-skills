@@ -96,6 +96,7 @@ class EvidenceEntry:
 class EvidenceLedger:
     route_manifest: EvidenceEntry = field(default_factory=lambda: EvidenceEntry("route_manifest"))
     read_evidence: EvidenceEntry = field(default_factory=lambda: EvidenceEntry("read_evidence"))
+    repository_context: EvidenceEntry = field(default_factory=lambda: EvidenceEntry("repository_context"))
     implementation_preflight: EvidenceEntry = field(
         default_factory=lambda: EvidenceEntry("implementation_preflight")
     )
@@ -132,6 +133,7 @@ class EvidenceLedger:
         self._record_paths(fact)
         self._record_route(fact, ref, timestamp)
         self._record_read(fact, ref, timestamp)
+        self._record_repository_context(fact, ref, timestamp)
         self._record_preflight(fact, ref, timestamp)
         self._record_validation(fact, ref, timestamp)
         self._record_review_repair_risk(fact, ref, timestamp)
@@ -147,6 +149,10 @@ class EvidenceLedger:
         return cls(
             route_manifest=EvidenceEntry.from_json_dict(data.get("route_manifest") or {}, kind="route_manifest"),
             read_evidence=EvidenceEntry.from_json_dict(data.get("read_evidence") or {}, kind="read_evidence"),
+            repository_context=EvidenceEntry.from_json_dict(
+                data.get("repository_context") or {},
+                kind="repository_context",
+            ),
             implementation_preflight=EvidenceEntry.from_json_dict(
                 data.get("implementation_preflight") or {},
                 kind="implementation_preflight",
@@ -229,6 +235,29 @@ class EvidenceLedger:
         self.read_evidence.merge(
             EvidenceEntry("read_evidence", strength, Freshness.CURRENT.value, [ref], timestamp=timestamp)
         )
+
+    def _record_repository_context(self, fact: Mapping[str, Any], ref: str, timestamp: str | None) -> None:
+        if fact.get("repository_context_seen"):
+            self.repository_context.merge(
+                EvidenceEntry(
+                    "repository_context",
+                    EvidenceStrength.STRONG.value,
+                    Freshness.CURRENT.value,
+                    [ref],
+                    timestamp=timestamp,
+                )
+            )
+        elif fact.get("repository_context_required"):
+            self.repository_context.merge(
+                EvidenceEntry(
+                    "repository_context",
+                    EvidenceStrength.PARTIAL.value,
+                    Freshness.CURRENT.value,
+                    [ref],
+                    summary="repository context was required but not complete",
+                    timestamp=timestamp,
+                )
+            )
 
     def _record_preflight(self, fact: Mapping[str, Any], ref: str, timestamp: str | None) -> None:
         if fact.get("implementation_preflight_complete"):

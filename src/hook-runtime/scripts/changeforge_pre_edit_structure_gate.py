@@ -15,6 +15,7 @@ from changeforge_common import (
     event_name,
     extract_changed_paths,
     extract_implementation_preflight_fields,
+    extract_repository_context_fields,
     is_pre_tool_use,
     load_state,
     memory_pre_edit_advice,
@@ -123,6 +124,7 @@ def _main() -> int:
         implementation_preflight_seen=bool(manifest.get("present")),
         implementation_preflight_complete=bool(result["preflight_complete"]),
         implementation_preflight_blocked=bool(result["block"]),
+        repository_context_seen=bool(result["repository_context"].get("complete")),
         pre_edit_missing_read_evidence="read_evidence" in missing,
         pre_edit_missing_reuse_decision="reuse_decision" in missing,
         pre_edit_missing_placement_decision="placement_decision" in missing,
@@ -145,6 +147,7 @@ def _main() -> int:
         suggested_capabilities=["implementation-structure-design", "test-strategy"],
         suggested_gates=["quality-test-gate"],
         read_evidence_seen=bool(result["has_read_evidence"]),
+        repository_context_seen=bool(result["repository_context"].get("complete")),
         implementation_preflight_required=True,
         implementation_preflight_seen=bool(manifest.get("present")),
         implementation_preflight_complete=bool(result["preflight_complete"]),
@@ -172,6 +175,7 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
     helper_paths = detect_new_helper_like_paths([*changed_paths, *added_paths])
     assistant_text = _assistant_text_from_event(event)
     manifest = extract_implementation_preflight_fields(assistant_text)
+    repository_context = extract_repository_context_fields(assistant_text)
     has_read_evidence = _has_read_evidence(state, manifest)
     structural = _is_structural_edit(
         changed_paths, added_paths, helper_paths, patch_text, content_text
@@ -185,6 +189,7 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
             missing=[],
             findings=[],
             manifest=manifest,
+            repository_context=repository_context,
             changed_paths=changed_paths,
             added_paths=added_paths,
             helper_paths=helper_paths,
@@ -194,6 +199,9 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
     if not has_read_evidence:
         missing.append("read_evidence")
         findings.append("no read evidence before edit")
+    if not repository_context.get("complete") and not manifest.get("read_evidence"):
+        missing.append("repository_context")
+        findings.append("no structured repository_context or preflight read evidence before edit")
     if not manifest.get("present"):
         missing.append("implementation_preflight")
         findings.append("no changeforge_implementation_preflight manifest")
@@ -259,6 +267,7 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
         missing=_unique(missing),
         findings=_unique(findings),
         manifest=manifest,
+        repository_context=repository_context,
         changed_paths=changed_paths,
         added_paths=added_paths,
         helper_paths=helper_paths,
@@ -285,6 +294,9 @@ def render_message(result: dict) -> str:
         "    object_boundary: artifact type, owner, invariant, API compatibility\n"
         "    test_plan: nearby tests and validation commands\n"
         "    risk: residual risk and rollback/revert path\n"
+        "  repository_context:\n"
+        "    source_of_truth/context_pack, reuse candidates, validation candidates,\n"
+        "    graph_freshness, and residual_risk\n"
         "- action: read more / emit preflight / then edit"
     )
 
@@ -529,6 +541,7 @@ def _result(
     has_read_evidence: bool,
     block: bool,
     preflight_complete: bool = False,
+    repository_context: dict | None = None,
 ) -> dict:
     fields = []
     if manifest.get("present"):
@@ -549,6 +562,7 @@ def _result(
         "missing": missing,
         "findings": findings,
         "manifest": manifest,
+        "repository_context": repository_context if isinstance(repository_context, dict) else {},
         "changed_paths": _unique(changed_paths),
         "added_paths": _unique(added_paths),
         "helper_paths": _unique(helper_paths),
