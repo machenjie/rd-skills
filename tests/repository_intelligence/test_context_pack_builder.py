@@ -37,6 +37,8 @@ class ContextPackBuilderTests(unittest.TestCase):
                 ["src/hook-runtime/scripts/changeforge_runtime_adapters.py"],
                 root,
                 max_files=8,
+                graph_path="/tmp/graph.json",
+                context_pack_path="/tmp/pack.json",
             )["task_context_pack"]
 
         self.assertEqual(context_pack["source_of_truth"][0]["path"], "src/hook-runtime/scripts/changeforge_runtime_adapters.py")
@@ -44,8 +46,29 @@ class ContextPackBuilderTests(unittest.TestCase):
         commands = {candidate["command"] for candidate in context_pack["validation_candidates"]}
         self.assertIn("python3 scripts/validate-hooks.py", commands)
         self.assertIn("python3 scripts/build.py --profile recommended", commands)
+        self.assertIn("python3 scripts/validate-repository-graph.py --graph /tmp/graph.json", commands)
+        self.assertIn("python3 scripts/validate-context-pack.py --context-pack /tmp/pack.json", commands)
         self.assertTrue(context_pack["freshness_markers"]["repo_hash"])
+        self.assertTrue(context_pack["freshness_markers"]["artifact_hash"])
         self.assertTrue(any(item["path"] == "dist/" for item in context_pack["excluded_context"]))
+
+    def test_missing_graph_and_output_paths_use_placeholders(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "src").mkdir()
+            (root / "src/app.py").write_text("VALUE = 1\n", encoding="utf-8")
+            graph = build_repository_graph(root)
+            context_pack = build_context_pack(graph, "source change", ["src/app.py"], root)["task_context_pack"]
+
+        commands = {candidate["command"] for candidate in context_pack["validation_candidates"]}
+        self.assertIn(
+            "python3 scripts/validate-repository-graph.py --graph <repository_graph_json>",
+            commands,
+        )
+        self.assertIn(
+            "python3 scripts/validate-context-pack.py --context-pack <task_context_pack_json>",
+            commands,
+        )
 
 
 if __name__ == "__main__":

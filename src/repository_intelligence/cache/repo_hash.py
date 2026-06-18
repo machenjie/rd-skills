@@ -5,11 +5,11 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-from repository_intelligence.graph.file_classifier import should_index
+from repository_intelligence.graph.file_classifier import classify_role, should_index
 
 
 def iter_indexed_files(repo_root: str | Path) -> list[Path]:
-    """Return indexed source files in deterministic relative-path order."""
+    """Return indexed files in deterministic relative-path order."""
     root = Path(repo_root).resolve()
     files: list[Path] = []
     for path in root.rglob("*"):
@@ -24,14 +24,45 @@ def iter_indexed_files(repo_root: str | Path) -> list[Path]:
     return sorted(files, key=lambda item: item.as_posix())
 
 
+def iter_source_files(repo_root: str | Path) -> list[Path]:
+    """Return indexed source-of-truth files, excluding generated artifacts."""
+    return [
+        relative
+        for relative in iter_indexed_files(repo_root)
+        if classify_role(relative) != "generated_artifact"
+    ]
+
+
+def iter_generated_artifact_files(repo_root: str | Path) -> list[Path]:
+    """Return indexed generated artifact files separately from source freshness."""
+    return [
+        relative
+        for relative in iter_indexed_files(repo_root)
+        if classify_role(relative) == "generated_artifact"
+    ]
+
+
 def stable_repo_hash(repo_root: str | Path) -> str:
-    """Hash indexed file paths and bytes without recording absolute paths."""
+    """Hash indexed source file paths and bytes without recording absolute paths."""
+    return stable_source_hash(repo_root)
+
+
+def stable_source_hash(repo_root: str | Path) -> str:
+    """Hash indexed source-of-truth files without generated artifacts."""
+    return _stable_hash(repo_root, iter_source_files(repo_root))
+
+
+def stable_artifact_hash(repo_root: str | Path) -> str:
+    """Hash indexed generated artifact files separately from source freshness."""
+    return _stable_hash(repo_root, iter_generated_artifact_files(repo_root))
+
+
+def _stable_hash(repo_root: str | Path, files: list[Path]) -> str:
     root = Path(repo_root).resolve()
     digest = hashlib.sha256()
-    for relative in iter_indexed_files(root):
+    for relative in files:
         digest.update(relative.as_posix().encode("utf-8"))
         digest.update(b"\0")
         digest.update((root / relative).read_bytes())
         digest.update(b"\0")
     return digest.hexdigest()
-

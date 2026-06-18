@@ -98,6 +98,96 @@ REGISTRY: dict[str, dict[str, object]] = {
             ("python3 scripts/build.py --profile recommended", "professional skill must build into runtime skills"),
         ),
     },
+    "repository_intelligence": {
+        "path_patterns": (
+            "src/repository_intelligence/**",
+            "tests/repository_intelligence/**",
+        ),
+        "risk_surfaces": ("repository-intelligence", "context-pack", "source-freshness"),
+        "narrow": (
+            (
+                "python3 scripts/index-repository.py --target . --out /tmp/changeforge-repo-graph.json",
+                "repository intelligence graph output changed",
+            ),
+            (
+                "python3 scripts/validate-repository-graph.py --graph /tmp/changeforge-repo-graph.json",
+                "repository graph schema and safety invariants must hold",
+            ),
+            (
+                "python3 scripts/build-context-pack.py --task \"repository intelligence validation\" --target . --graph /tmp/changeforge-repo-graph.json --out /tmp/changeforge-context-pack.json",
+                "context pack candidates and freshness markers may change",
+            ),
+            (
+                "python3 scripts/validate-context-pack.py --context-pack /tmp/changeforge-context-pack.json",
+                "context pack schema and safety invariants must hold",
+            ),
+            (
+                "python3 -m unittest discover -s tests/repository_intelligence",
+                "repository intelligence tests changed",
+            ),
+        ),
+        "full": (
+            (
+                "python3 -m unittest discover -s tests",
+                "repository intelligence changes can affect shared runtime tests",
+            ),
+            ("python3 scripts/build.py --profile recommended", "repository intelligence support must build"),
+        ),
+    },
+    "project_memory": {
+        "path_patterns": (
+            "src/project_memory/**",
+            "tests/project_memory/**",
+        ),
+        "risk_surfaces": ("project-memory", "privacy", "agent-workflow-state"),
+        "narrow": (
+            ("python3 scripts/validate-project-memory.py", "project memory schemas and privacy rules changed"),
+            ("python3 -m unittest discover -s tests/project_memory", "project memory tests changed"),
+        ),
+        "full": (
+            (
+                "python3 -m unittest discover -s tests",
+                "project memory changes can affect telemetry and hook tests",
+            ),
+            ("python3 scripts/validate-hooks.py", "hook runtime consumes project memory records"),
+        ),
+    },
+    "trajectory": {
+        "path_patterns": (
+            "src/trajectory/**",
+            "tests/trajectory/**",
+        ),
+        "risk_surfaces": ("trajectory", "telemetry", "agent-execution-discipline"),
+        "narrow": (
+            ("python3 scripts/validate-trajectory.py", "trajectory schemas and analyzer rules changed"),
+            ("python3 -m unittest discover -s tests/trajectory", "trajectory tests changed"),
+        ),
+        "full": (
+            (
+                "python3 -m unittest discover -s tests",
+                "trajectory changes can affect telemetry regressions",
+            ),
+            ("python3 scripts/eval-agent-behavior.py", "trajectory semantics inform agent behavior review"),
+        ),
+    },
+    "validation_broker": {
+        "path_patterns": (
+            "src/validation_broker/**",
+            "tests/validation_broker/**",
+        ),
+        "risk_surfaces": ("validation-broker", "validation-closure", "test-evidence"),
+        "narrow": (
+            ("python3 scripts/validate-validation-broker.py", "validation broker registry, schemas, and parser changed"),
+            ("python3 -m unittest discover -s tests/validation_broker", "validation broker tests changed"),
+        ),
+        "full": (
+            (
+                "python3 -m unittest discover -s tests",
+                "validation broker changes can affect closure and hook tests",
+            ),
+            ("python3 scripts/validate-hooks.py", "hook runtime consumes validation broker results"),
+        ),
+    },
     "docs": {
         "path_patterns": (
             "docs/**",
@@ -226,6 +316,9 @@ def command_coverage(command: str) -> dict[str, object]:
 
 
 def is_validation_looking(command: str) -> bool:
+    normalized = _normalize_command(command)
+    if any(_normalize_command(spec.command) == normalized for spec in registry_commands()):
+        return True
     lowered = command.casefold()
     return any(marker in lowered for marker in VALIDATION_COMMAND_MARKERS)
 

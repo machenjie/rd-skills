@@ -33,7 +33,7 @@
     },
     "validation_freshness": {
       "type": "string",
-      "enum": ["fresh", "stale", "unknown", "not_run"]
+      "enum": ["fresh", "stale", "unknown", "not_run", "not_applicable"]
     },
     "review_integrity": { "type": "string", "enum": ["pass", "warn", "fail"] },
     "recommended_promotions": {

@@ -308,7 +308,7 @@ def _fragile_file_issues(steps: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def _validation_freshness(steps: list[dict[str, Any]]) -> str:
     material_edit_indexes = [int(step.get("index") or 0) for step in steps if _material_edit(step)]
     if not material_edit_indexes:
-        return "not_run"
+        return "not_applicable"
     validation_steps = [step for step in steps if _step_validation_seen(step)]
     if not validation_steps:
         return "not_run"

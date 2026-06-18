@@ -228,9 +228,14 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
                 missing.append(item)
     repeat_failure = memory_advice.get("repeat_failure") or {}
     if repeat_failure.get("repeated"):
-        findings.append(
-            "repeat failure memory gate requires failure diagnosis or repair route"
-        )
+        if repeat_failure.get("allowed_to_continue", True):
+            findings.append("repeat failure memory gate satisfied by diagnosis or repair route")
+        else:
+            findings.append(
+                "repeat failure memory gate requires failure diagnosis or repair route"
+            )
+            if "failure_diagnosis_route" not in missing:
+                missing.append("failure_diagnosis_route")
     preflight_complete = bool(manifest.get("present")) and not missing
     code_edit_without_read_preflight = (
         compact_name(tool_name(event)) in EDIT_TOOLS
@@ -239,9 +244,12 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
         and "implementation_preflight" in missing
     )
     high_confidence = (
-        "read_evidence" in missing
-        and "implementation_preflight" in missing
-        and bool(added_paths or helper_paths or code_edit_without_read_preflight)
+        (
+            "read_evidence" in missing
+            and "implementation_preflight" in missing
+            and bool(added_paths or helper_paths or code_edit_without_read_preflight)
+        )
+        or "failure_diagnosis_route" in missing
     )
     block = should_block(
         "pre_edit_structure", confidence="high" if high_confidence else "medium"

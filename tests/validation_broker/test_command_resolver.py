@@ -40,6 +40,29 @@ class CommandResolverTests(unittest.TestCase):
             commands(plan),
         )
 
+    def test_repository_intelligence_path_selects_graph_and_context_pack_validators(self) -> None:
+        plan = resolve_validation_plan(["src/repository_intelligence/cache/repo_hash.py"])
+        selected = commands(plan)
+        self.assertIn(
+            "python3 scripts/validate-repository-graph.py --graph /tmp/changeforge-repo-graph.json",
+            selected,
+        )
+        self.assertIn(
+            "python3 scripts/validate-context-pack.py --context-pack /tmp/changeforge-context-pack.json",
+            selected,
+        )
+
+    def test_project_memory_trajectory_and_broker_paths_select_validators(self) -> None:
+        cases = {
+            "src/project_memory/privacy.py": "python3 scripts/validate-project-memory.py",
+            "src/trajectory/trajectory_analyzer.py": "python3 scripts/validate-trajectory.py",
+            "src/validation_broker/validation_result_parser.py": "python3 scripts/validate-validation-broker.py",
+        }
+        for path, expected in cases.items():
+            with self.subTest(path=path):
+                plan = resolve_validation_plan([path])
+                self.assertIn(expected, commands(plan))
+
     def test_unknown_path_returns_conservative_recommendation(self) -> None:
         plan = resolve_validation_plan(["unknown/path.txt"])
         self.assertTrue(plan["conservative"])

@@ -82,6 +82,22 @@ def _validate_resolver(errors: list[str]) -> None:
             "python3 scripts/validate-skills.py",
             "python3 scripts/eval-skill-professionalism.py",
         ),
+        "src/repository_intelligence/cache/repo_hash.py": (
+            "python3 scripts/validate-repository-graph.py --graph /tmp/changeforge-repo-graph.json",
+            "python3 scripts/validate-context-pack.py --context-pack /tmp/changeforge-context-pack.json",
+        ),
+        "src/project_memory/privacy.py": (
+            "python3 scripts/validate-project-memory.py",
+            "python3 -m unittest discover -s tests/project_memory",
+        ),
+        "src/trajectory/trajectory_analyzer.py": (
+            "python3 scripts/validate-trajectory.py",
+            "python3 -m unittest discover -s tests/trajectory",
+        ),
+        "src/validation_broker/validation_result_parser.py": (
+            "python3 scripts/validate-validation-broker.py",
+            "python3 -m unittest discover -s tests/validation_broker",
+        ),
     }
     for changed_path, expected in cases.items():
         plan = resolve_validation_plan([changed_path])
@@ -108,6 +124,12 @@ def _validate_parser_and_policy(errors: list[str]) -> None:
     negative = parse_validation_result("完成。未验证，无法运行。")
     if negative["evidence_strength"] != "negative":
         errors.append("negative validation disclosure must be negative evidence")
+    zero_errors = parse_validation_result("Ran python3 scripts/validate-hooks.py: 0 errors.")
+    if zero_errors["outcome"] != "pass":
+        errors.append("zero-error validation output must parse as pass")
+    nonzero_errors = parse_validation_result("Ran python3 scripts/validate-hooks.py: 1 error.")
+    if nonzero_errors["outcome"] != "fail":
+        errors.append("nonzero error validation output must parse as fail")
     stale = assess_validation_closure(
         "Done. Ran python3 scripts/validate-hooks.py, passed, exit 0.",
         {

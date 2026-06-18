@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shlex
 from pathlib import Path
 from typing import Any
 
@@ -49,15 +50,29 @@ def _edge_reason(path: str, seed_paths: set[str], edges: list[dict[str, str]]) -
     return "test" if role == "test" else "doc" if role == "docs" else "config"
 
 
-def _validation_candidates(relevant_paths: list[str], changed_paths: list[str]) -> list[dict[str, str]]:
+def _command_path(value: str | Path | None, placeholder: str) -> str:
+    if value is None or str(value).strip() == "":
+        return placeholder
+    return shlex.quote(str(value))
+
+
+def _validation_candidates(
+    relevant_paths: list[str],
+    changed_paths: list[str],
+    *,
+    graph_path: str | Path | None = None,
+    context_pack_path: str | Path | None = None,
+) -> list[dict[str, str]]:
     paths = set(relevant_paths) | set(changed_paths)
+    graph_arg = _command_path(graph_path, "<repository_graph_json>")
+    context_pack_arg = _command_path(context_pack_path, "<task_context_pack_json>")
     candidates = [
         {
-            "command": "python3 scripts/validate-repository-graph.py --graph /tmp/changeforge-repo-graph.json",
+            "command": f"python3 scripts/validate-repository-graph.py --graph {graph_arg}",
             "proves": "repository graph schema, path, dist, and secret-safety invariants",
         },
         {
-            "command": "python3 scripts/validate-context-pack.py --context-pack /tmp/changeforge-context-pack.json",
+            "command": f"python3 scripts/validate-context-pack.py --context-pack {context_pack_arg}",
             "proves": "context pack schema, source-of-truth, freshness, validation, and secret-safety invariants",
         },
         {
@@ -123,6 +138,8 @@ def build_context_pack(
     changed_paths: list[str],
     repo_root: str | Path | None = None,
     max_files: int = MAX_RELEVANT_FILES,
+    graph_path: str | Path | None = None,
+    context_pack_path: str | Path | None = None,
 ) -> dict[str, Any]:
     """Build a bounded AI-agent task context pack from a repository graph."""
     payload = _graph_payload(graph)
@@ -177,7 +194,12 @@ def build_context_pack(
         if files_by_path.get(path, {}).get("role") == "test"
     ]
 
-    validation_candidates = _validation_candidates(relevant_paths, normalized_changed)
+    validation_candidates = _validation_candidates(
+        relevant_paths,
+        normalized_changed,
+        graph_path=graph_path,
+        context_pack_path=context_pack_path,
+    )
 
     pack = {
         "task_context_pack": {
@@ -209,12 +231,14 @@ def build_context_pack(
             ],
             "freshness_markers": {
                 "repo_hash": payload.get("repo_hash"),
+                "artifact_hash": payload.get("artifact_hash"),
                 "indexed_at": payload.get("indexed_at"),
                 "indexed_commit": payload.get("indexed_commit"),
                 **({"fallback_mtime": payload.get("fallback_mtime")} if payload.get("fallback_mtime") is not None else {}),
             },
             "drift_triggers": [
                 "Reindex when current repo hash differs from `freshness_markers.repo_hash`.",
+                "Rebuild generated artifacts when artifact hash differs from `freshness_markers.artifact_hash`.",
                 "Reindex when current git HEAD differs from `freshness_markers.indexed_commit`.",
                 "Reindex when a changed path is absent from the graph or when no git commit is available and source mtimes advance.",
             ],

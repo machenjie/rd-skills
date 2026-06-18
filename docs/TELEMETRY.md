@@ -282,6 +282,12 @@ calls a model and prints `no samples found` (exit 0) when empty.
 | `eval-pressure-behavior.py` | Does a captured agent result hold up under a declared pressure scenario? |
 | `review-agent-telemetry.py` | What did real agent runs miss? (advisory only) |
 | `inspect-trajectory.py` | Did a session follow a coherent, evidence-backed execution trajectory? |
+| `index-repository.py` | Did repository intelligence produce a current graph for context-pack validation? |
+| `validate-repository-graph.py` | Does the repository graph satisfy schema, path, and generated-artifact safety rules? |
+| `build-context-pack.py` | Can a bounded task context pack be built from the repository graph? |
+| `validate-context-pack.py` | Does the task context pack satisfy source-of-truth, freshness, validation, and safety rules? |
+| `validate-project-memory.py` | Do Project Memory schemas, privacy rules, and repeat-failure gates remain valid? |
+| `validate-validation-broker.py` | Do Validation Broker registry, parser, freshness, and closure policy rules remain valid? |
 | `validate-trajectory.py` | Are trajectory schemas, analyzer rules, renderers, and promotion skeletons valid? |
 | `validate-hooks.py` | Are hook scripts safe, offline, and protocol-correct? |
 | `validate-installation.py` | Are built `dist/` outputs and hook artifacts correct? |

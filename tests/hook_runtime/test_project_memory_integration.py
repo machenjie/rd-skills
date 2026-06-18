@@ -10,7 +10,12 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
 SCRIPT_DIR = ROOT / "src" / "hook-runtime" / "scripts"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from project_memory.privacy import sanitize_memory_event
 
 
 def load_common():
@@ -141,6 +146,90 @@ class ProjectMemoryIntegrationTests(unittest.TestCase):
                     os.environ["XDG_CACHE_HOME"] = previous_cache
         self.assertEqual(records[0]["paths"], ["src/app.py"])
 
+    def test_repeat_failure_blocks_third_same_path_edit_without_diagnosis(self) -> None:
+        common = load_common()
+        gate = load_pre_edit_gate()
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd = Path(cwd_s)
+            cache = Path(cache_s)
+            previous_cache = os.environ.get("XDG_CACHE_HOME")
+            previous_mode = os.environ.get("CHANGEFORGE_PRE_EDIT_MODE")
+            os.environ["XDG_CACHE_HOME"] = str(cache)
+            os.environ["CHANGEFORGE_PRE_EDIT_MODE"] = "block"
+            try:
+                _seed_repeat_failures(common, cwd)
+                result = gate.evaluate_pre_edit(
+                    _patch_event(_complete_preflight()),
+                    {"read_evidence_seen": True},
+                    cwd,
+                )
+            finally:
+                if previous_cache is None:
+                    os.environ.pop("XDG_CACHE_HOME", None)
+                else:
+                    os.environ["XDG_CACHE_HOME"] = previous_cache
+                if previous_mode is None:
+                    os.environ.pop("CHANGEFORGE_PRE_EDIT_MODE", None)
+                else:
+                    os.environ["CHANGEFORGE_PRE_EDIT_MODE"] = previous_mode
+        self.assertIn("failure_diagnosis_route", result["missing"])
+        self.assertTrue(result["block"])
+
+    def test_repeat_failure_allows_edit_with_diagnosis_route_evidence(self) -> None:
+        common = load_common()
+        gate = load_pre_edit_gate()
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd = Path(cwd_s)
+            cache = Path(cache_s)
+            previous_cache = os.environ.get("XDG_CACHE_HOME")
+            os.environ["XDG_CACHE_HOME"] = str(cache)
+            try:
+                _seed_repeat_failures(common, cwd)
+                result = gate.evaluate_pre_edit(
+                    _patch_event(_complete_preflight() + "\nfailure-diagnosis completed\n"),
+                    {"read_evidence_seen": True},
+                    cwd,
+                )
+            finally:
+                if previous_cache is None:
+                    os.environ.pop("XDG_CACHE_HOME", None)
+                else:
+                    os.environ["XDG_CACHE_HOME"] = previous_cache
+        self.assertNotIn("failure_diagnosis_route", result["missing"])
+        self.assertFalse(result["block"])
+
+    def test_hook_and_project_memory_sanitizers_share_privacy_contract(self) -> None:
+        common = load_common()
+        with tempfile.TemporaryDirectory() as cwd_s:
+            cwd = Path(cwd_s)
+            (cwd / "src").mkdir()
+            raw = {
+                "event_id": "privacy-equivalence",
+                "task_fingerprint": "task",
+                "type": "implementation_attempt",
+                "paths": [str(cwd / "src" / "app.py"), "/Users/example/private.py", "../escape.py"],
+                "symbols": ["OrderService", "token=SHOULD_DROP"],
+                "prompt": "raw prompt",
+                "raw_prompt": "raw prompt",
+                "env": {"API_KEY": "secret"},
+                "stdout": "full stdout",
+                "stderr": "full stderr",
+                "secret": "secret",
+                "api_key": "secret",
+                "evidence_refs": ["cmd:pytest -q", "Bearer abcdefghijklmnop", "token=SECRET123"],
+                "outcome": "failed",
+            }
+            hook_record = common._sanitize_memory_event(cwd, raw)
+            project_record = sanitize_memory_event(raw, repo=cwd)
+        self.assertEqual(hook_record["paths"], ["src/app.py"])
+        self.assertEqual(project_record["paths"], ["src/app.py"])
+        self.assertEqual(hook_record["evidence_refs"], ["cmd:pytest -q"])
+        self.assertEqual(project_record["evidence_refs"], ["cmd:pytest -q"])
+        self.assertEqual(set(hook_record), set(project_record))
+        text = json.dumps({"hook": hook_record, "project": project_record})
+        for forbidden in ("raw prompt", "API_KEY", "full stdout", "full stderr", "/Users/example", "Bearer", "token=SECRET"):
+            self.assertNotIn(forbidden, text)
+
 
 def _patch_event(message: str) -> dict:
     return {
@@ -159,6 +248,21 @@ def _patch_event(message: str) -> dict:
         },
         "last_assistant_message": message,
     }
+
+
+def _seed_repeat_failures(common, cwd: Path) -> None:
+    task = common._memory_task_fingerprint(["src/services/order_service.py"], "", "")
+    for event_id in ("failed-1", "failed-2"):
+        common.write_memory_event(
+            cwd,
+            {
+                "event_id": event_id,
+                "task_fingerprint": task,
+                "type": "validation_result",
+                "paths": ["src/services/order_service.py"],
+                "outcome": "failed",
+            },
+        )
 
 
 def _complete_preflight() -> str:

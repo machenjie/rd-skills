@@ -170,6 +170,13 @@ python3 scripts/validate-skills.py
 python3 scripts/validate-capabilities.py
 python3 scripts/validate-domain-extensions.py
 python3 scripts/validate-registry.py
+python3 scripts/index-repository.py --target . --out /tmp/changeforge-repo-graph.json
+python3 scripts/validate-repository-graph.py --graph /tmp/changeforge-repo-graph.json
+python3 scripts/build-context-pack.py --task "release validation" --target . --graph /tmp/changeforge-repo-graph.json --out /tmp/changeforge-context-pack.json
+python3 scripts/validate-context-pack.py --context-pack /tmp/changeforge-context-pack.json
+python3 scripts/validate-project-memory.py
+python3 scripts/validate-validation-broker.py
+python3 scripts/validate-trajectory.py
 python3 scripts/validate-skill-body-links.py
 python3 scripts/validate-skill-content-size.py
 python3 scripts/validate-examples.py

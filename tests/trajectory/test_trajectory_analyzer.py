@@ -121,6 +121,35 @@ class TrajectoryAnalyzerTests(unittest.TestCase):
         assert trajectory is not None
         report = analyze_trajectory(trajectory)
         self.assertNotIn("missing_validation", report["issue_counts"])
+        self.assertEqual(report["validation_freshness"], "not_applicable")
+        self.assertEqual(report["closure_status"], "pass")
+
+    def test_review_only_session_has_not_applicable_validation_freshness(self) -> None:
+        trajectory = build_trajectory(
+            [
+                {
+                    "timestamp_utc": "2026-06-01T00:00:00Z",
+                    "session_id": "sess",
+                    "event_name": "PostToolUse",
+                    "runtime": "codex",
+                    "turn_stage": "review",
+                    "review_evidence_seen": True,
+                    "review_findings": ["no issues"],
+                },
+                {
+                    "timestamp_utc": "2026-06-01T00:01:00Z",
+                    "session_id": "sess",
+                    "event_name": "Stop",
+                    "runtime": "codex",
+                },
+            ],
+            repo_hash="repo",
+            session_id="sess",
+        )
+        assert trajectory is not None
+        report = analyze_trajectory(trajectory)
+        self.assertEqual(report["validation_freshness"], "not_applicable")
+        self.assertEqual(report["closure_status"], "pass")
 
 
 if __name__ == "__main__":

@@ -37,7 +37,14 @@ def main(argv: list[str] | None = None) -> int:
 
     target = Path(args.target).resolve()
     graph = _load_graph(args.graph, target)
-    context_pack = build_context_pack(graph, args.task, args.changed_path, target)
+    context_pack = build_context_pack(
+        graph,
+        args.task,
+        args.changed_path,
+        target,
+        graph_path=args.graph,
+        context_pack_path=args.out,
+    )
     json_payload = json.dumps(context_pack, indent=2, sort_keys=True)
 
     markdown_path = Path(args.markdown_out) if args.markdown_out else None

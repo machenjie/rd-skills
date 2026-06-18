@@ -24,6 +24,31 @@ class ValidationResultParserTests(unittest.TestCase):
         self.assertEqual(result["outcome"], "unknown")
         self.assertEqual(result["evidence_strength"], "weak")
 
+    def test_zero_errors_is_pass_not_fail(self) -> None:
+        result = parse_validation_result("Ran python3 scripts/validate-hooks.py: 0 errors.")
+        self.assertEqual(result["outcome"], "pass")
+        self.assertEqual(result["evidence_strength"], "strong")
+
+    def test_zero_failures_and_zero_errors_is_pass_not_fail(self) -> None:
+        result = parse_validation_result(
+            "Ran python3 scripts/validate-hooks.py: 0 failures, 0 errors."
+        )
+        self.assertEqual(result["outcome"], "pass")
+
+    def test_no_errors_without_command_is_not_fail(self) -> None:
+        result = parse_validation_result("No errors.")
+        self.assertNotEqual(result["outcome"], "fail")
+        self.assertEqual(result["evidence_strength"], "weak")
+
+    def test_nonzero_error_count_is_fail(self) -> None:
+        result = parse_validation_result("Ran python3 scripts/validate-hooks.py: 1 error.")
+        self.assertEqual(result["outcome"], "fail")
+        self.assertEqual(result["evidence_strength"], "negative")
+
+    def test_nonzero_exit_code_is_fail(self) -> None:
+        result = parse_validation_result("Ran python3 scripts/validate-hooks.py, exit code 1.")
+        self.assertEqual(result["outcome"], "fail")
+
     def test_negative_chinese_disclosure_is_negative(self) -> None:
         result = parse_validation_result("未验证，因为无法运行。")
         self.assertEqual(result["outcome"], "not_run")

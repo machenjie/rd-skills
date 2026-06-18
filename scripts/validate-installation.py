@@ -82,31 +82,44 @@ COPILOT_HOOK_SUPPORT_FILES = (
     "changeforge_copilot_professional_contract.md",
 )
 RUNTIME_ROUTE_INDEX_NAME = "changeforge_runtime_route_index.json"
+VALIDATION_BROKER_SUPPORT_FILES = (
+    "validation_broker/__init__.py",
+    "validation_broker/validation_policy.py",
+    "validation_broker/validation_result_parser.py",
+    "validation_broker/validation_freshness.py",
+    "validation_broker/command_registry.py",
+    "validation_broker/command_resolver.py",
+)
 REQUIRED_HOOK_DIST_FILES = (
     "codex/project/.codex/hooks.json",
     "codex/project/.codex/.changeforge-hook-manifest.json",
     "codex/project/.codex/changeforge-route-preflight.md",
     "codex/project/.codex/hooks/changeforge_professional_contract.md",
     *(f"codex/project/.codex/hooks/{name}" for name in HOOK_SCRIPT_FILENAMES),
+    *(f"codex/project/.codex/hooks/{name}" for name in VALIDATION_BROKER_SUPPORT_FILES),
     "codex/user/.codex/hooks.json",
     "codex/user/.codex/.changeforge-hook-manifest.json",
     "codex/user/.codex/changeforge-route-preflight.md",
     "codex/user/.codex/hooks/changeforge_professional_contract.md",
     *(f"codex/user/.codex/hooks/{name}" for name in HOOK_SCRIPT_FILENAMES),
+    *(f"codex/user/.codex/hooks/{name}" for name in VALIDATION_BROKER_SUPPORT_FILES),
     "claude/project/.claude/settings.changeforge-hooks.fragment.json",
     "claude/project/.claude/.changeforge-hook-manifest.json",
     "claude/project/.claude/changeforge-route-preflight.md",
     "claude/project/.claude/hooks/changeforge_professional_contract.md",
     *(f"claude/project/.claude/hooks/{name}" for name in HOOK_SCRIPT_FILENAMES),
+    *(f"claude/project/.claude/hooks/{name}" for name in VALIDATION_BROKER_SUPPORT_FILES),
     "claude/user/.claude/settings.changeforge-hooks.fragment.json",
     "claude/user/.claude/.changeforge-hook-manifest.json",
     "claude/user/.claude/changeforge-route-preflight.md",
     "claude/user/.claude/hooks/changeforge_professional_contract.md",
     *(f"claude/user/.claude/hooks/{name}" for name in HOOK_SCRIPT_FILENAMES),
+    *(f"claude/user/.claude/hooks/{name}" for name in VALIDATION_BROKER_SUPPORT_FILES),
     "copilot/project/.github/hooks/changeforge-hooks.json",
     "copilot/project/.github/hooks/changeforge/.changeforge-hook-manifest.json",
     "copilot/project/.github/hooks/changeforge/changeforge-route-preflight.md",
     *(f"copilot/project/.github/hooks/changeforge/{name}" for name in HOOK_SCRIPT_FILENAMES),
+    *(f"copilot/project/.github/hooks/changeforge/{name}" for name in VALIDATION_BROKER_SUPPORT_FILES),
     *(
         f"copilot/project/.github/hooks/changeforge/{name}"
         for name in (*COMMON_HOOK_SUPPORT_FILES, *COPILOT_HOOK_SUPPORT_FILES)
@@ -115,6 +128,7 @@ REQUIRED_HOOK_DIST_FILES = (
     "copilot/user/.copilot/hooks/changeforge/.changeforge-hook-manifest.json",
     "copilot/user/.copilot/hooks/changeforge/changeforge-route-preflight.md",
     *(f"copilot/user/.copilot/hooks/changeforge/{name}" for name in HOOK_SCRIPT_FILENAMES),
+    *(f"copilot/user/.copilot/hooks/changeforge/{name}" for name in VALIDATION_BROKER_SUPPORT_FILES),
     *(
         f"copilot/user/.copilot/hooks/changeforge/{name}"
         for name in (*COMMON_HOOK_SUPPORT_FILES, *COPILOT_HOOK_SUPPORT_FILES)

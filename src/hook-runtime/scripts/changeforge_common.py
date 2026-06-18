@@ -133,6 +133,10 @@ MEMORY_TYPES = {
     "hook_false_negative",
     "repeat_failure",
 }
+MEMORY_SECRET_VALUE_RE = re.compile(
+    r"(secret|password|api[_-]?key|bearer\s+[a-z0-9._-]{12,}|token=)",
+    re.IGNORECASE,
+)
 MEMORY_OUTCOMES = {"success", "failed", "partial", "blocked", "unknown"}
 MAX_TELEMETRY_ITEMS = 50
 MAX_TELEMETRY_VALUE_LEN = 300
@@ -1023,6 +1027,8 @@ def memory_pre_edit_advice(
         task = _memory_task_fingerprint(paths, owner, str((state or {}).get("turn_stage", "")))
         repeat = _memory_repeat_failure(events, repo_hash=_repo_hash(repo), task=task, paths=paths, owner=owner)
         evidence = _memory_pre_edit_evidence(state or {}, assistant_text)
+        if repeat.get("repeated") and evidence["failure_diagnosis_route"]:
+            repeat = {**repeat, "allowed_to_continue": True}
         missing: list[str] = []
         if fragile_paths:
             if not evidence["read_file_evidence"]:
@@ -1429,6 +1435,25 @@ def _capped_items(values: Iterable[str]) -> list[str]:
     return _unique(out)
 
 
+def _memory_capped_items(values: Iterable[str]) -> list[str]:
+    out: list[str] = []
+    for raw in values:
+        text = _memory_clean_scalar(raw)
+        if not text:
+            continue
+        out.append(text)
+        if len(out) >= MAX_TELEMETRY_ITEMS:
+            break
+    return _unique(out)
+
+
+def _memory_clean_scalar(value: object) -> str:
+    text = str(value or "").replace("\x00", "").replace("\r", " ").replace("\n", " ").strip()
+    if not text or MEMORY_SECRET_VALUE_RE.search(text):
+        return ""
+    return text[:MAX_TELEMETRY_VALUE_LEN]
+
+
 def _telemetry_enum(value: object, allowed: set[str]) -> str:
     text = str(value or "").strip()
     return text if text in allowed else ""
@@ -1437,7 +1462,7 @@ def _telemetry_enum(value: object, allowed: set[str]) -> str:
 def _sanitize_memory_event(repo: Path, event: dict[str, Any]) -> dict[str, Any]:
     source = event if isinstance(event, dict) else {}
     paths = _memory_clean_paths(repo, source.get("paths", []))
-    owner = str(source.get("owner_skill", "")).strip()[:MAX_TELEMETRY_VALUE_LEN]
+    owner = _memory_clean_scalar(source.get("owner_skill", ""))
     event_type = str(source.get("type", "implementation_attempt")).strip()
     if event_type not in MEMORY_TYPES:
         event_type = "implementation_attempt"
@@ -1446,19 +1471,19 @@ def _sanitize_memory_event(repo: Path, event: dict[str, Any]) -> dict[str, Any]:
         outcome = "unknown"
     return {
         "schema_version": MEMORY_SCHEMA_VERSION,
-        "event_id": str(source.get("event_id") or f"mem-{uuid.uuid4().hex[:24]}")[:MAX_TELEMETRY_VALUE_LEN],
-        "repo_hash": str(source.get("repo_hash") or _repo_hash(repo))[:MAX_TELEMETRY_VALUE_LEN],
+        "event_id": _memory_clean_scalar(source.get("event_id") or f"mem-{uuid.uuid4().hex[:24]}"),
+        "repo_hash": _memory_clean_scalar(source.get("repo_hash") or _repo_hash(repo)),
         "task_fingerprint": str(
             source.get("task_fingerprint") or _memory_task_fingerprint(paths, owner, source.get("type", ""))
         )[:MAX_TELEMETRY_VALUE_LEN],
         "type": event_type,
         "paths": paths,
-        "symbols": _capped_items(source.get("symbols", [])),
+        "symbols": _memory_capped_items(source.get("symbols", [])),
         "owner_skill": owner,
-        "reviewer_skill": str(source.get("reviewer_skill", "")).strip()[:MAX_TELEMETRY_VALUE_LEN],
-        "route_manifest_hash": str(source.get("route_manifest_hash", "")).strip()[:MAX_TELEMETRY_VALUE_LEN],
+        "reviewer_skill": _memory_clean_scalar(source.get("reviewer_skill", "")),
+        "route_manifest_hash": _memory_clean_scalar(source.get("route_manifest_hash", "")),
         "outcome": outcome,
-        "evidence_refs": _capped_items(source.get("evidence_refs", [])),
+        "evidence_refs": _memory_capped_items(source.get("evidence_refs", [])),
         "confidence": _memory_confidence(source.get("confidence")),
         "promotion_status": _memory_promotion_status(source.get("promotion_status")),
         "created_at": str(source.get("created_at") or datetime.now(timezone.utc).isoformat())[:80],
@@ -1620,14 +1645,15 @@ def _memory_repeat_failure(
         and event.get("outcome") in {"failed", "blocked"}
     ]
     failures.sort(key=lambda event: str(event.get("created_at", "")), reverse=True)
+    repeated = len(failures) >= 2
     return {
-        "repeated": len(failures) >= 2,
+        "repeated": repeated,
         "failure_count": min(len(failures), 2),
         "matched_paths": _unique(
             path for event in failures[:2] for path in event.get("paths", []) or []
         ),
         "required_next_gate": "failure-diagnosis",
-        "allowed_to_continue": True,
+        "allowed_to_continue": not repeated,
     }
 
 
@@ -1652,6 +1678,14 @@ def _memory_pre_edit_evidence(state: dict, assistant_text: str) -> dict[str, boo
         "implementation_preflight": bool(
             state.get("implementation_preflight_seen")
             or "changeforge_implementation_preflight" in lowered
+        ),
+        "failure_diagnosis_route": bool(
+            state.get("repair_evidence_seen")
+            or "failure-diagnosis" in lowered
+            or "failure diagnosis" in lowered
+            or "route repair" in lowered
+            or "quality-test-gate" in lowered
+            or "quality test gate" in lowered
         ),
     }
 
