@@ -122,6 +122,23 @@ class PreToolRiskPreviewTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertIn("data-api", payload["hookSpecificOutput"]["additionalContext"])
 
+    def test_script_name_marker_previews_high_risk_tool_permission(self) -> None:
+        # Regression: preview must share PostToolUse marker boundaries for script paths.
+        event = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Bash",
+            "tool_input": {"command": "python scripts/run_migration.py"},
+        }
+        result = _run(self.SCRIPT, event)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        context = payload["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("tool-permission-sandbox", context)
+        self.assertIn("agent-tool-permission-sandbox", context)
+        self.assertIn("delivery gate", context)
+        self.assertIn("reliability gate", context)
+        self.assertIn("high-risk command", context)
+
     def test_destructive_commands_emit_tool_permission_advisory(self) -> None:
         commands = ["rm -rf tmp/generated", "git clean -fd"]
         for command in commands:

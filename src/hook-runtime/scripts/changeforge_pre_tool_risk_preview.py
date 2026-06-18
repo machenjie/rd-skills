@@ -37,6 +37,7 @@ from changeforge_common import (
 from changeforge_risk_surface_gate import (
     WATCHED_TOOLS,
     _collect,
+    _command_has_high_tool_permission_risk,
     _command_risk_is_closure_relevant,
     _merge_findings,
     _risk_findings,
@@ -123,6 +124,8 @@ def _sandbox_classification(tool: str, command: str, paths: list[str]) -> str:
     lowered_command = command.casefold()
     lowered_tool = tool.casefold()
     if lowered_command:
+        if _command_has_high_tool_permission_risk(command):
+            return "high-risk command; record permission state, dry-run or rollback path, and redaction rule"
         if any(
             marker in lowered_command
             for marker in (

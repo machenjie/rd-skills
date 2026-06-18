@@ -288,6 +288,65 @@ class RiskSurfaceGateTests(unittest.TestCase):
                 self.assertTrue(records[-1]["tool_permission_sandbox_seen"])
                 self.assertIn("agent-tool-permission-sandbox", records[-1]["suggested_capabilities"])
 
+    def test_script_name_markers_record_high_risk_tool_permission_sandbox(self) -> None:
+        # Regression: command markers inside script paths must not depend on spaces.
+        commands = [
+            "python scripts/migrate_schema.py",
+            "python scripts/run_migration.py",
+            "python scripts/backfill_orders.py",
+            "python scripts/deploy_app.py",
+            "python scripts/apply_migration.py",
+        ]
+        for command in commands:
+            with self.subTest(command=command):
+                event = {
+                    "runtime": "codex",
+                    "hookEventName": "PostToolUse",
+                    "toolName": "Bash",
+                    "toolInput": {"command": command},
+                }
+                result, state, records = run_risk_with_state(event)
+                self.assertEqual(result.returncode, 0)
+                self.assertIn("tool-permission-sandbox", result.stdout)
+                self.assertIn("delivery gate", result.stdout)
+                self.assertIn("reliability gate", result.stdout)
+                self.assertIn("rollback note", result.stdout)
+                self.assertIn("tool-permission-sandbox", state["closure_risk_surfaces"])
+                self.assertIn("agent-tool-permission-sandbox", state["suggested_capabilities"])
+                self.assertIn("delivery-release-gate", state["suggested_skills"])
+                self.assertIn("reliability-observability-gate", state["suggested_skills"])
+                self.assertIn("delivery gate", state["suggested_gates"])
+                self.assertIn("reliability gate", state["suggested_gates"])
+                self.assertIn(
+                    "agent-tool-permission-sandbox",
+                    records[-1]["suggested_capabilities"],
+                )
+                self.assertIn("delivery gate", records[-1]["suggested_gates"])
+                self.assertIn("reliability gate", records[-1]["suggested_gates"])
+
+    def test_marker_substrings_do_not_escalate_tool_permission_sandbox(self) -> None:
+        # Boundary guard: words containing marker text are still ordinary local writes.
+        commands = [
+            "python scripts/application_report.py",
+            "python scripts/tokenizer.py",
+        ]
+        for command in commands:
+            with self.subTest(command=command):
+                event = {
+                    "runtime": "codex",
+                    "hookEventName": "PostToolUse",
+                    "toolName": "Bash",
+                    "toolInput": {"command": command},
+                }
+                result, state, records = run_risk_with_state(event)
+                self.assertEqual(result.returncode, 0)
+                self.assertIn("tool-permission-sandbox", result.stdout)
+                self.assertIn("agent-tool-permission-sandbox", state["suggested_capabilities"])
+                self.assertNotIn("delivery gate", state["suggested_gates"])
+                self.assertNotIn("reliability gate", state["suggested_gates"])
+                self.assertNotIn("delivery gate", records[-1]["suggested_gates"])
+                self.assertNotIn("reliability gate", records[-1]["suggested_gates"])
+
     def test_read_only_and_validation_commands_do_not_record_tool_permission(self) -> None:
         commands = [
             "pytest tests/hook_runtime/test_risk_surface_gate.py",

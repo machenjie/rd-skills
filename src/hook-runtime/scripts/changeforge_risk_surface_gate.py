@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 import shlex
 
 from changeforge_common import (
@@ -252,17 +253,10 @@ HIGH_RISK_GIT_SUBCOMMANDS = {
     "reset",
     "restore",
 }
-HIGH_RISK_COMMAND_MARKERS = (
-    " apply",
-    " credential",
-    " delete",
-    " deploy",
-    " destroy",
-    " migrate",
-    " migration",
-    " publish",
-    " secret",
-    " token",
+HIGH_RISK_COMMAND_MARKER_RE = re.compile(
+    r"(^|[/_\-\s])"
+    r"(?:migrate|migration|backfill|deploy|apply|destroy|publish|delete|credential|secret|token)"
+    r"($|[/_\-\s.])"
 )
 
 
@@ -433,8 +427,8 @@ def _command_has_high_tool_permission_risk(command: str, *, depth: int = 0) -> b
     if program == "git":
         return _git_subcommand(tokens[index + 1 :]) in HIGH_RISK_GIT_SUBCOMMANDS
 
-    lowered = f" {command.casefold()} "
-    return any(marker in lowered for marker in HIGH_RISK_COMMAND_MARKERS)
+    lowered = command.casefold().replace("\\", "/")
+    return bool(HIGH_RISK_COMMAND_MARKER_RE.search(lowered))
 
 
 def _merge_findings(findings: list[dict[str, object]]) -> list[dict[str, object]]:
