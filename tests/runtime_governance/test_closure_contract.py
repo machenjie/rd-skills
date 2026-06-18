@@ -1,0 +1,119 @@
+from __future__ import annotations
+
+import sys
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from runtime_governance import ClosureContract, ClosureVerdict, EvidenceLedger, Freshness  # noqa: E402
+
+
+class ClosureContractTests(unittest.TestCase):
+    def test_ready_when_required_evidence_is_strong_and_current(self) -> None:
+        ledger = EvidenceLedger.from_telemetry_facts(
+            [
+                {
+                    "event_name": "Stop",
+                    "route_manifest_detected": True,
+                    "manifest_selected_skills": ["change-forge-router"],
+                    "manifest_selected_capabilities": ["implementation-structure-design"],
+                    "manifest_required_references": ["references/routing-rules.md"],
+                    "manifest_required_quality_gates": ["test gate"],
+                    "validation_command_detected": True,
+                    "validation_evidence_detected": True,
+                    "validation_result_outcome": "pass",
+                    "validation_result_evidence_strength": "strong",
+                    "validation_result_fresh_after_last_edit": "true",
+                    "residual_risk_detected": True,
+                }
+            ]
+        )
+        contract = ClosureContract.from_ledger(ledger)
+        self.assertEqual(contract.verdict, ClosureVerdict.READY.value)
+        self.assertEqual(contract.missing_evidence, [])
+
+    def test_unsupported_runtime_can_be_degraded_ready(self) -> None:
+        ledger = EvidenceLedger.from_telemetry_facts(
+            [
+                {
+                    "event_name": "Stop",
+                    "route_manifest_detected": True,
+                    "manifest_selected_skills": ["change-forge-router"],
+                    "manifest_selected_capabilities": ["implementation-structure-design"],
+                    "manifest_required_references": ["references/routing-rules.md"],
+                    "manifest_required_quality_gates": ["test gate"],
+                    "validation_command_detected": True,
+                    "validation_evidence_detected": True,
+                    "validation_result_outcome": "pass",
+                    "validation_result_evidence_strength": "strong",
+                    "validation_result_fresh_after_last_edit": "true",
+                    "residual_risk_detected": True,
+                    "capability_degradation": ["copilot_stop_unsupported"],
+                }
+            ]
+        )
+        contract = ClosureContract.from_ledger(ledger)
+        self.assertEqual(contract.verdict, ClosureVerdict.DEGRADED_READY.value)
+        self.assertIn("runtime_adapter_degradation", contract.unsupported_checks)
+
+    def test_validation_command_without_outcome_needs_validation(self) -> None:
+        ledger = EvidenceLedger.from_telemetry_facts(
+            [
+                {
+                    "event_name": "Stop",
+                    "route_manifest_detected": True,
+                    "manifest_selected_skills": ["change-forge-router"],
+                    "manifest_selected_capabilities": ["implementation-structure-design"],
+                    "manifest_required_references": ["references/routing-rules.md"],
+                    "manifest_required_quality_gates": ["test gate"],
+                    "validation_command_detected": True,
+                    "residual_risk_detected": True,
+                }
+            ]
+        )
+        contract = ClosureContract.from_ledger(ledger)
+        self.assertEqual(contract.verdict, ClosureVerdict.NEEDS_VALIDATION.value)
+        self.assertIn("validation", contract.missing_evidence)
+        self.assertIn("validation command was observed without outcome", contract.residual_risk)
+
+    def test_stale_validation_needs_blocked_repair_signal(self) -> None:
+        ledger = EvidenceLedger.from_telemetry_facts(
+            [
+                {
+                    "event_name": "Stop",
+                    "route_manifest_detected": True,
+                    "manifest_selected_skills": ["change-forge-router"],
+                    "manifest_selected_capabilities": ["implementation-structure-design"],
+                    "manifest_required_references": ["references/routing-rules.md"],
+                    "manifest_required_quality_gates": ["test gate"],
+                    "validation_command_detected": True,
+                    "validation_evidence_detected": True,
+                    "validation_result_outcome": "pass",
+                    "validation_result_evidence_strength": "strong",
+                    "validation_result_fresh_after_last_edit": "false",
+                    "residual_risk_detected": True,
+                }
+            ]
+        )
+        contract = ClosureContract.from_ledger(ledger)
+        self.assertEqual(contract.verdict, ClosureVerdict.BLOCKED.value)
+        self.assertIn("validation", contract.negative_evidence)
+        self.assertEqual(contract.freshness["validation"], Freshness.STALE.value)
+
+    def test_json_round_trip(self) -> None:
+        contract = ClosureContract(
+            supported_checks=["validation"],
+            required_evidence=["validation"],
+            missing_evidence=["validation"],
+            verdict=ClosureVerdict.NEEDS_VALIDATION.value,
+        )
+        self.assertEqual(ClosureContract.from_json(contract.to_json()), contract)
+
+
+if __name__ == "__main__":
+    unittest.main()
