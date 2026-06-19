@@ -98,6 +98,12 @@ prefer not to trust an executable hook. Install only that fragment for any
 project with `installers/install.py --with-bootstrap`, and inspect it with
 `installers/doctor.py --check-bootstrap`.
 
+`scripts/quickstart.py` exposes this choice through
+`--activation-level none|bootstrap|hooks|professional-injection`. Project-scope
+quickstart defaults to `bootstrap`, which installs only the non-executable
+route-preflight fragment. `hooks` and `professional-injection` request
+executable hook installation and make doctor inspect hook status explicitly.
+
 See [HOOKS.md](HOOKS.md) for hook modes, the session bootstrap, validation,
 enablement, and troubleshooting.
 

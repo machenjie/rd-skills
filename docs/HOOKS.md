@@ -683,6 +683,12 @@ The installer can place hooks for Codex, Claude, and Copilot in **project** or
 and are written only when neither `--dry-run` nor `--hooks-dry-run` is set.
 Existing hook configuration is always preserved.
 
+The quickstart wrapper has an activation selector:
+`--activation-level none|bootstrap|hooks|professional-injection`. For project
+scope it defaults to `bootstrap`, which installs only the non-executable
+`.changeforge/changeforge-route-preflight.md` fragment. Executable hooks remain
+opt-in through `hooks` or `professional-injection`.
+
 Project hooks install under the project root's `.codex`/`.claude`/`.github`; user
 hooks install under the agent home (`~/.codex`, `~/.claude`, `~/.copilot`) and
 apply to every project, so `--target` does not relocate them. Sandbox a

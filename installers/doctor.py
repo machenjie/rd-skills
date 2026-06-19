@@ -11,6 +11,10 @@ from typing import Any
 from changeforge_install import (
     AGENTS,
     DEFAULT_TARGET_DIRS,
+    HOOK_AUX_SUBDIR,
+    HOOK_PROJECT_SUBPATH,
+    HOOK_SCRIPTS_SUBDIR,
+    HOOK_USER_HOME_SUBDIR,
     MANIFEST_NAME,
     PROFILES,
     PROJECT_SUBPATHS,
@@ -19,6 +23,7 @@ from changeforge_install import (
     InstallError,
     read_manifest,
     resolve_target_dir,
+    hooks_supported,
     source_version,
     skill_metadata,
 )
@@ -103,7 +108,7 @@ def main() -> int:
         _report_telemetry(args.telemetry_report, args.telemetry_root, args.repo_hash)
 
     if args.check_hooks:
-        _check_project_hooks(args.target, issues)
+        _check_hooks(args.agent, args.scope, args.target, issues)
 
     if args.check_bootstrap:
         _check_project_bootstrap(args.target, issues)
@@ -284,102 +289,174 @@ def _report_telemetry(
     print("- telemetry is advisory; review suggestions before any human promotion")
 
 
-def _check_project_hooks(target: Path | None, issues: list[str]) -> None:
-    """Inspect optional project hook files and config references.
+def _check_hooks(
+    agent_filter: str | None,
+    scope_filter: str | None,
+    target: Path | None,
+    issues: list[str],
+) -> None:
+    """Inspect optional hook files and config references.
 
-    Hooks are never required. This reports presence of hook scripts, the hook
-    manifest, and whether the project hook config references the generated hook
-    scripts. It only adds an issue when hooks look partially installed.
+    Hooks are never required. This reports whether hook files and config are
+    installed for the requested runtime and only adds an issue when hooks look
+    partially installed.
     """
-    project_root = (target.expanduser().resolve() if target is not None else Path.cwd().resolve())
-    print(f"doctor: project hooks ({project_root})")
-    # Each spec: agent, config dir, scripts dir, manifest/bootstrap dir, config file.
-    # Codex/Claude keep scripts and aux files at the agent config root; VS Code
-    # Copilot nests them under .github/hooks/changeforge/ with the config json at
-    # .github/hooks/changeforge-hooks.json.
-    codex_root = project_root / ".codex"
-    claude_root = project_root / ".claude"
-    copilot_hooks = project_root / ".github" / "hooks"
-    copilot_scripts = copilot_hooks / "changeforge"
-    hook_specs = (
-        ("codex", codex_root, codex_root / "hooks", codex_root, codex_root / "hooks.json"),
-        (
-            "claude",
-            claude_root,
-            claude_root / "hooks",
-            claude_root,
-            claude_root / "settings.changeforge-hooks.fragment.json",
-        ),
-        (
-            "copilot",
-            copilot_hooks,
-            copilot_scripts,
-            copilot_scripts,
-            copilot_hooks / "changeforge-hooks.json",
-        ),
-    )
+    print("doctor: hook activation status")
+    hook_specs = _hook_specs(agent_filter, scope_filter, target, issues)
     any_present = False
-    for agent, _config_root, scripts_dir, aux_dir, config_path in hook_specs:
+    for label, agent, _scope, scripts_dir, aux_dir, config_path, unsupported in hook_specs:
+        if unsupported:
+            print(f"- {label}: hooks enabled: unsupported")
+            continue
         manifest_path = aux_dir / ".changeforge-hook-manifest.json"
         config_name = config_path.name
         present_signals = [scripts_dir.is_dir(), manifest_path.is_file(), config_path.is_file()]
         if not any(present_signals):
+            print(f"- {label}: hooks enabled: no (no hook files or config found)")
             continue
         any_present = True
         scripts = sorted(scripts_dir.glob("changeforge_*.py")) if scripts_dir.is_dir() else []
-        print(f"- {agent}: hook scripts: {len(scripts)} found in {scripts_dir}")
-        if not scripts:
-            issues.append(f"{agent}: hook config or manifest present but no changeforge_* hook scripts")
-        if manifest_path.is_file():
-            print(f"- {agent}: manifest present")
-        else:
-            issues.append(f"{agent}: missing {manifest_path.name}")
         expected_support = list(COMMON_HOOK_SUPPORT_FILES)
         if agent == "copilot":
             expected_support.extend(COPILOT_HOOK_SUPPORT_FILES)
+        required_paths = [
+            manifest_path,
+            *(scripts_dir / support_file for support_file in expected_support),
+            scripts_dir / "changeforge_professional_injector.py",
+            scripts_dir / "changeforge_pre_edit_structure_gate.py",
+            scripts_dir / "changeforge_hook_policy.py",
+            scripts_dir / "changeforge_state_reducer.py",
+            scripts_dir / "changeforge_stop_closure_gate.py",
+        ]
+        references = _config_references_hooks(config_path) if config_path.is_file() else False
+        complete = (
+            bool(scripts)
+            and config_path.is_file()
+            and all(path.is_file() for path in required_paths)
+        )
+        state = _hook_enabled_state(agent, config_path.is_file(), references, complete)
+        print(f"- {label}: hooks enabled: {state}")
+        print(f"- {label}: hook scripts: {len(scripts)} found in {scripts_dir}")
+        if not scripts:
+            issues.append(f"{label}: hook config or manifest present but no changeforge_* hook scripts")
+        if manifest_path.is_file():
+            print(f"- {label}: manifest present")
+        else:
+            issues.append(f"{label}: missing {manifest_path.name}")
         for support_file in expected_support:
             support_path = scripts_dir / support_file
             if support_path.is_file():
-                print(f"- {agent}: support file present: {support_file}")
+                print(f"- {label}: support file present: {support_file}")
             else:
-                issues.append(f"{agent}: missing {support_file}")
+                issues.append(f"{label}: missing {support_file}")
         if not (scripts_dir / "changeforge_professional_injector.py").is_file():
-            issues.append(f"{agent}: missing professional injection hook")
+            issues.append(f"{label}: missing professional injection hook")
         if not (scripts_dir / "changeforge_pre_edit_structure_gate.py").is_file():
-            issues.append(f"{agent}: missing pre-edit structure gate")
+            issues.append(f"{label}: missing pre-edit structure gate")
         if not (scripts_dir / "changeforge_hook_policy.py").is_file():
-            issues.append(f"{agent}: missing hook policy support")
+            issues.append(f"{label}: missing hook policy support")
         if not (scripts_dir / "changeforge_state_reducer.py").is_file():
-            issues.append(f"{agent}: missing state reducer support")
+            issues.append(f"{label}: missing state reducer support")
         if not (scripts_dir / "changeforge_stop_closure_gate.py").is_file():
-            issues.append(f"{agent}: missing stage-aware Stop closure hook")
+            issues.append(f"{label}: missing stage-aware Stop closure hook")
         if config_path.is_file():
-            references = _config_references_hooks(config_path)
-            state = "references generated hooks" if references else "does NOT reference changeforge hooks"
-            print(f"- {agent}: {config_name} {state}")
+            reference_state = (
+                "references generated hooks"
+                if references
+                else "does NOT reference changeforge hooks"
+            )
+            print(f"- {label}: {config_name} {reference_state}")
             if not references:
-                issues.append(f"{agent}: {config_name} does not reference changeforge hook scripts")
+                issues.append(f"{label}: {config_name} does not reference changeforge hook scripts")
             config_text = config_path.read_text(encoding="utf-8", errors="replace")
             if agent in {"codex", "claude"} and "changeforge_pre_edit_structure_gate" not in config_text:
-                issues.append(f"{agent}: {config_name} does not reference pre-edit structure gate")
+                issues.append(f"{label}: {config_name} does not reference pre-edit structure gate")
             if agent == "copilot" and (
                 '"PreToolUse"' in config_text or "changeforge_pre_edit_structure_gate" in config_text
             ):
-                issues.append(f"{agent}: {config_name} wires unsupported PreToolUse advisory")
+                issues.append(f"{label}: {config_name} wires unsupported PreToolUse advisory")
         else:
-            print(f"- {agent}: {config_name} not found (manual merge may be pending)")
+            print(f"- {label}: {config_name} not found (manual merge may be pending)")
         bootstrap_path = aux_dir / "changeforge-route-preflight.md"
         if bootstrap_path.is_file():
             wired = (scripts_dir / "changeforge_session_bootstrap.py").is_file()
             detail = "SessionStart hook script present" if wired else "SessionStart hook script missing"
-            print(f"- {agent}: route-preflight bootstrap fragment present ({detail})")
+            print(f"- {label}: route-preflight bootstrap fragment present ({detail})")
         else:
-            print(f"- {agent}: route-preflight bootstrap fragment not found (optional)")
+            print(f"- {label}: route-preflight bootstrap fragment not found (optional)")
         professional_path = scripts_dir / "changeforge_professional_contract.md"
         if professional_path.is_file():
-            print(f"- {agent}: professional contract support present")
+            print(f"- {label}: professional contract support present")
     if not any_present:
-        print("- no project hooks installed (this is fine; hooks are optional)")
+        print("- no hooks installed for inspected target(s) (this is fine; hooks are optional)")
+
+
+def _hook_specs(
+    agent_filter: str | None,
+    scope_filter: str | None,
+    target: Path | None,
+    issues: list[str],
+) -> list[tuple[str, str, str, Path, Path, Path, bool]]:
+    """Return hook inspection specs for the selected runtime boundary."""
+    if agent_filter is not None and scope_filter is not None:
+        if not hooks_supported(agent_filter, scope_filter):
+            label = f"{agent_filter}:{scope_filter}"
+            return [(label, agent_filter, scope_filter, Path(), Path(), Path(), True)]
+        target_root = _hook_target_root(agent_filter, scope_filter, target)
+        return [_hook_spec(agent_filter, scope_filter, target_root)]
+
+    project_root = target.expanduser().resolve() if target is not None else Path.cwd().resolve()
+    specs: list[tuple[str, str, str, Path, Path, Path, bool]] = []
+    for agent in ("codex", "claude", "copilot"):
+        try:
+            specs.append(_hook_spec(agent, "project", project_root / HOOK_PROJECT_SUBPATH[agent]))
+        except KeyError as exc:
+            issues.append(f"{agent}: missing hook layout constant: {exc}")
+    return specs
+
+
+def _hook_target_root(agent: str, scope: str, target: Path | None) -> Path:
+    if scope == "project":
+        project_root = target.expanduser().resolve() if target is not None else Path.cwd().resolve()
+        return project_root / HOOK_PROJECT_SUBPATH[agent]
+    return (Path.home() / HOOK_USER_HOME_SUBDIR[agent]).expanduser().resolve()
+
+
+def _hook_spec(
+    agent: str,
+    scope: str,
+    target_root: Path,
+) -> tuple[str, str, str, Path, Path, Path, bool]:
+    scripts_dir = target_root / HOOK_SCRIPTS_SUBDIR[agent]
+    aux_dir = target_root / HOOK_AUX_SUBDIR[agent]
+    config_path = _hook_config_path(agent, target_root)
+    label = f"{agent}:{scope}"
+    return (label, agent, scope, scripts_dir, aux_dir, config_path, False)
+
+
+def _hook_config_path(agent: str, target_root: Path) -> Path:
+    if agent == "codex":
+        return target_root / "hooks.json"
+    if agent == "claude":
+        return target_root / "settings.changeforge-hooks.fragment.json"
+    return target_root / "hooks" / "changeforge-hooks.json"
+
+
+def _hook_enabled_state(
+    agent: str,
+    config_present: bool,
+    references: bool,
+    complete: bool,
+) -> str:
+    if not config_present:
+        return "partial (hook files found but config is missing)"
+    if not references:
+        return "partial (config does not reference generated hooks)"
+    if not complete:
+        return "partial (config references hooks but required hook files are missing)"
+    if agent == "claude":
+        return "pending manual merge (settings fragment references generated hooks)"
+    return "yes (config references generated hooks; runtime trust state not inspectable)"
 
 
 def _check_project_bootstrap(target: Path | None, issues: list[str]) -> None:

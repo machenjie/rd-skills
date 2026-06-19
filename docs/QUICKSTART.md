@@ -46,6 +46,15 @@ python3 scripts/quickstart.py --agent copilot --scope project --target /path/to/
 python3 scripts/quickstart.py --agent cline --scope project --target /path/to/project
 ```
 
+Project-scope quickstart also installs the non-executable
+`.changeforge/changeforge-route-preflight.md` bootstrap fragment by default.
+Use `--activation-level none` to skip it. Executable hooks are still opt-in:
+
+```bash
+python3 scripts/quickstart.py --agent codex --scope project --target /path/to/project --activation-level hooks
+python3 scripts/quickstart.py --agent codex --scope project --target /path/to/project --activation-level professional-injection
+```
+
 OpenAI API zip output:
 
 ```bash
@@ -53,7 +62,8 @@ python3 scripts/quickstart.py --agent openai-api
 ```
 
 `scripts/quickstart.py` orchestrates the existing build, installer, and doctor
-commands. It does not implement official marketplace installation.
+commands. Its final summary prints the selected activation status as well as
+the next prompt. It does not implement official marketplace installation.
 
 ## Manual Path
 

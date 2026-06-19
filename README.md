@@ -36,6 +36,10 @@ python3 scripts/quickstart.py --agent codex --scope user --dry-run
 
 Use `recommended` for global installs, `full` for project installs that should expose domain extensions, and `dev` only when explicitly authoring/debugging ChangeForge. See [docs/QUICKSTART.md](docs/QUICKSTART.md) for Codex, Claude Code, GitHub Copilot, OpenAI API, and first-prompt examples.
 
+Project-scope quickstart installs the non-executable route-preflight bootstrap
+fragment by default. Executable hooks remain opt-in with
+`--activation-level hooks` or `--activation-level professional-injection`.
+
 ## Usage
 
 For day-to-day use, build a runtime profile, install the generated skills into the target agent runtime, then ask the agent to use the relevant ChangeForge skill for the change you are making.
@@ -93,8 +97,8 @@ These signals are generated or validator-backed local evidence, not external pop
 
 Stable profile counts are `recommended=19`, `full=26`, and `dev=153`. Local install starts with `python3 scripts/quickstart.py --agent codex --scope user`; official Codex/Claude marketplace publishing is intentionally not implemented.
 
-Optional project-level hook artifacts are also built for Codex and Claude Code.
-They are warning-only execution reminders, not skills and not a replacement for
+Optional hook artifacts are also built for Codex, Claude Code, and GitHub
+Copilot. They are execution reminders, not skills and not a replacement for
 `change-forge-router`. See [docs/HOOKS.md](docs/HOOKS.md).
 
 ## Community And Governance

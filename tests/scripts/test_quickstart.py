@@ -32,6 +32,7 @@ def _args(**overrides):
         "target": None,
         "profile": "auto",
         "dry_run": False,
+        "activation_level": None,
         "with_hooks": False,
         "with_bootstrap": False,
         "no_doctor": False,
@@ -94,7 +95,10 @@ class QuickstartTests(unittest.TestCase):
         )
         self.assertEqual(plan.selected_profile, "full")
         self.assertEqual(plan.expected_skill_count, 26)
+        self.assertEqual(plan.activation_level, "bootstrap")
         self.assertIn("--target", plan.commands[1])
+        self.assertIn("--with-bootstrap", plan.commands[1])
+        self.assertIn("--check-bootstrap", plan.commands[2])
 
     def test_cline_project_command_plan(self) -> None:
         module = _load_module()
@@ -112,7 +116,9 @@ class QuickstartTests(unittest.TestCase):
             "full",
         ])
         self.assertIn(str(target), plan.commands[1])
+        self.assertIn("--with-bootstrap", plan.commands[1])
         self.assertEqual(plan.commands[2][2:6], ["--agent", "cline", "--scope", "project"])
+        self.assertIn("--check-bootstrap", plan.commands[2])
 
     def test_user_scope_defaults_to_recommended(self) -> None:
         module = _load_module()
@@ -125,6 +131,38 @@ class QuickstartTests(unittest.TestCase):
         explicit_plan = module.build_plan(_args(agent="codex", scope="user", profile="dev"))
         self.assertNotEqual(auto_plan.selected_profile, "dev")
         self.assertEqual(explicit_plan.selected_profile, "dev")
+
+    def test_activation_level_hooks_adds_hook_install_and_doctor_check(self) -> None:
+        module = _load_module()
+        plan = module.build_plan(
+            _args(agent="codex", scope="user", activation_level="hooks")
+        )
+        self.assertEqual(plan.activation_level, "hooks")
+        self.assertIn("--with-hooks", plan.commands[1])
+        self.assertIn("--check-hooks", plan.commands[2])
+        self.assertNotIn("--with-bootstrap", plan.commands[1])
+
+    def test_activation_level_professional_injection_installs_hooks(self) -> None:
+        module = _load_module()
+        plan = module.build_plan(
+            _args(agent="claude", scope="user", activation_level="professional-injection")
+        )
+        self.assertEqual(plan.activation_level, "professional-injection")
+        self.assertIn("--with-hooks", plan.commands[1])
+        self.assertIn("--professional-injection", plan.commands[1])
+        self.assertIn("--check-hooks", plan.commands[2])
+
+    def test_hooks_activation_rejects_unsupported_runtime(self) -> None:
+        module = _load_module()
+        with self.assertRaisesRegex(ValueError, "hooks activation"):
+            module.build_plan(
+                _args(
+                    agent="cline",
+                    scope="project",
+                    target=Path("/tmp/project"),
+                    activation_level="hooks",
+                )
+            )
 
     def test_dry_run_does_not_execute_commands(self) -> None:
         module = _load_module()

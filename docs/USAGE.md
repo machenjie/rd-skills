@@ -51,18 +51,22 @@ python3 scripts/build.py --profile dev
 
 The build writes deterministic runtime outputs under `dist/`, including agent-specific layouts for Codex, Claude Code, GitHub Copilot, and OpenAI API zip bundles.
 
-The build also refreshes optional Codex and Claude project hook artifacts, plus
-the advisory route-preflight bootstrap fragment. Hooks are warning-only
-execution reminders; the Claude `SessionStart` bootstrap adds a route preflight
-at session start, and Codex uses the advisory fragment instead:
+The build also refreshes optional Codex, Claude, and Copilot hook artifacts,
+plus the advisory route-preflight bootstrap fragment. Hooks are execution
+reminders; the Claude `SessionStart` bootstrap adds a route preflight at session
+start, and Codex can use either executable hooks or the advisory fragment:
 
 ```text
 dist/codex/project/.codex
 dist/claude/project/.claude
+dist/copilot/project/.github
 dist/universal/bootstrap/changeforge-route-preflight.md
 ```
 
-See [HOOKS.md](HOOKS.md) before enabling hooks manually.
+For project-scope quickstart, the advisory bootstrap fragment is the default
+activation level. Executable hooks remain opt-in with `--activation-level hooks`
+or `--activation-level professional-injection`. See [HOOKS.md](HOOKS.md) before
+enabling hooks manually.
 
 ## Install For GitHub Copilot
 

@@ -14,6 +14,30 @@ DOCTOR_SCRIPT = ROOT / "installers" / "doctor.py"
 
 
 class DoctorTelemetryTests(unittest.TestCase):
+    def test_doctor_reports_absent_user_hooks_explicitly(self) -> None:
+        with tempfile.TemporaryDirectory() as home:
+            env = os.environ.copy()
+            env["HOME"] = home
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(DOCTOR_SCRIPT),
+                    "--agent",
+                    "codex",
+                    "--scope",
+                    "user",
+                    "--check-hooks",
+                ],
+                text=True,
+                capture_output=True,
+                cwd=str(ROOT),
+                env=env,
+                check=False,
+            )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("doctor: hook activation status", result.stdout)
+        self.assertIn("codex:user: hooks enabled: no", result.stdout)
+
     def test_doctor_reports_missing_copilot_support_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_s:
             project = Path(tmp_s)
@@ -48,6 +72,7 @@ class DoctorTelemetryTests(unittest.TestCase):
                 check=False,
             )
         self.assertEqual(result.returncode, 1)
+        self.assertIn("copilot:project: hooks enabled: partial", result.stdout)
         self.assertIn("missing changeforge_copilot_skill_summary.md", result.stdout)
 
     def test_telemetry_summary_includes_unverified_completion_claims(self) -> None:

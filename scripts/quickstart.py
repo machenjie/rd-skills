@@ -15,6 +15,10 @@ ROOT = Path(__file__).resolve().parents[1]
 AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
 SCOPES = ("project", "user", "admin")
 PROFILES = ("auto", "recommended", "full", "dev")
+ACTIVATION_LEVELS = ("none", "bootstrap", "hooks", "professional-injection")
+HOOK_AGENTS = ("codex", "claude", "copilot")
+HOOK_SCOPES = ("project", "user")
+BOOTSTRAP_AGENTS = ("codex", "claude", "copilot", "cline")
 EXPECTED_SKILL_COUNTS = {
     "recommended": 19,
     "full": 26,
@@ -43,6 +47,8 @@ class CommandPlan:
     installed_target: str
     expected_skill_count: int
     next_prompt: str
+    activation_level: str
+    activation_status: str
 
 
 def resolve_profile(agent: str, scope: str | None, requested_profile: str) -> str:
@@ -64,9 +70,90 @@ def validate_request(agent: str, scope: str | None, target: Path | None) -> None
         raise ValueError("--target is required for project scope")
 
 
+@dataclass(frozen=True)
+class ActivationPlan:
+    """Resolved quickstart activation behavior for installer and doctor commands."""
+
+    level: str
+    install_hooks: bool
+    install_bootstrap: bool
+    professional_injection: bool
+    status: str
+
+
+def resolve_activation(args: argparse.Namespace) -> ActivationPlan:
+    """Resolve activation flags while keeping executable hooks opt-in."""
+    if args.activation_level is not None and (args.with_hooks or args.with_bootstrap):
+        raise ValueError(
+            "--activation-level cannot be combined with --with-hooks or --with-bootstrap"
+        )
+
+    if args.activation_level is not None:
+        level = args.activation_level
+        legacy_bootstrap = False
+    elif args.with_hooks:
+        level = "hooks"
+        legacy_bootstrap = bool(args.with_bootstrap)
+    elif args.with_bootstrap:
+        level = "bootstrap"
+        legacy_bootstrap = False
+    elif args.scope == "project" and args.agent in BOOTSTRAP_AGENTS:
+        level = "bootstrap"
+        legacy_bootstrap = False
+    else:
+        level = "none"
+        legacy_bootstrap = False
+
+    if args.agent == "openai-api" and level != "none":
+        raise ValueError("--activation-level is not supported for openai-api zip output")
+
+    install_hooks = level in {"hooks", "professional-injection"}
+    professional_injection = level == "professional-injection"
+    install_bootstrap = level == "bootstrap" or legacy_bootstrap
+
+    if install_hooks and (args.agent not in HOOK_AGENTS or args.scope not in HOOK_SCOPES):
+        raise ValueError(
+            "hooks activation is supported only for codex, claude, or copilot project/user scope"
+        )
+    if install_bootstrap and not (args.scope == "project" and args.agent in BOOTSTRAP_AGENTS):
+        raise ValueError(
+            "bootstrap activation is supported only for codex, claude, copilot, "
+            "or cline project scope"
+        )
+
+    status = _activation_status(level, install_hooks, install_bootstrap, professional_injection)
+    return ActivationPlan(
+        level=level,
+        install_hooks=install_hooks,
+        install_bootstrap=install_bootstrap,
+        professional_injection=professional_injection,
+        status=status,
+    )
+
+
+def _activation_status(
+    level: str,
+    install_hooks: bool,
+    install_bootstrap: bool,
+    professional_injection: bool,
+) -> str:
+    if level == "none":
+        return "none (skills only; no bootstrap or hooks requested)"
+    if professional_injection:
+        return "professional-injection (executable hooks requested; runtime trust must be confirmed)"
+    if install_hooks and install_bootstrap:
+        return "hooks + bootstrap (executable hooks and advisory bootstrap requested)"
+    if install_hooks:
+        return "hooks (executable hooks requested; runtime trust must be confirmed)"
+    if install_bootstrap:
+        return "bootstrap (non-executable route-preflight fragment)"
+    return level
+
+
 def build_plan(args: argparse.Namespace) -> CommandPlan:
     """Build the command sequence without executing it."""
     validate_request(args.agent, args.scope, args.target)
+    activation = resolve_activation(args)
     selected_profile = resolve_profile(args.agent, args.scope, args.profile)
     commands: list[list[str]] = [
         ["python3", "scripts/build.py", "--profile", selected_profile],
@@ -77,9 +164,11 @@ def build_plan(args: argparse.Namespace) -> CommandPlan:
         install_command.extend(["--scope", str(args.scope), "--profile", selected_profile])
         if args.target is not None:
             install_command.extend(["--target", str(args.target)])
-        if args.with_hooks:
+        if activation.install_hooks:
             install_command.append("--with-hooks")
-        if args.with_bootstrap:
+        if activation.professional_injection:
+            install_command.append("--professional-injection")
+        if activation.install_bootstrap:
             install_command.append("--with-bootstrap")
         if args.dry_run:
             install_command.append("--dry-run")
@@ -101,6 +190,10 @@ def build_plan(args: argparse.Namespace) -> CommandPlan:
         ]
         if args.target is not None:
             doctor_command.extend(["--target", str(args.target)])
+        if activation.install_hooks:
+            doctor_command.append("--check-hooks")
+        if activation.install_bootstrap:
+            doctor_command.append("--check-bootstrap")
         commands.append(doctor_command)
 
     return CommandPlan(
@@ -114,6 +207,8 @@ def build_plan(args: argparse.Namespace) -> CommandPlan:
         installed_target=_installed_target(args.agent, args.scope, args.target),
         expected_skill_count=EXPECTED_SKILL_COUNTS[selected_profile],
         next_prompt=NEXT_PROMPTS[args.agent],
+        activation_level=activation.level,
+        activation_status=activation.status,
     )
 
 
@@ -145,6 +240,7 @@ def print_summary(plan: CommandPlan, doctor_status: str) -> None:
     print(f"- selected profile: {plan.selected_profile}")
     print(f"- installed target: {plan.installed_target}")
     print(f"- expected top-level skills: {plan.expected_skill_count}")
+    print(f"- activation status: {plan.activation_status}")
     print(f"- doctor status: {doctor_status}")
     print(f"- next prompt: {plan.next_prompt}")
 
@@ -194,6 +290,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--target", type=Path)
     parser.add_argument("--profile", choices=PROFILES, default="auto")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--activation-level",
+        choices=ACTIVATION_LEVELS,
+        help=(
+            "Activation behavior: none, bootstrap, hooks, or professional-injection. "
+            "Defaults to bootstrap for project scope and none elsewhere."
+        ),
+    )
     parser.add_argument("--with-hooks", action="store_true")
     parser.add_argument("--with-bootstrap", action="store_true")
     parser.add_argument("--no-doctor", action="store_true")
