@@ -1315,12 +1315,38 @@ def _tool_category_from_payload(
         return "git"
     if command in _NETWORK_COMMANDS:
         return "network"
-    raw = _raw_command_from_payload(payload).casefold()
-    if command in _TEST_COMMANDS or any(token in raw for token in _TEST_COMMAND_TOKENS):
+    if is_validation_command(_raw_command_from_payload(payload), command_kind):
         return "test"
     if tool in {"bash", "shell", "terminal", "runterminalcommand"} or command:
         return "bash"
     return "unknown"
+
+
+def is_validation_command(raw_command: object, command_kind: str | None = None) -> bool:
+    """Return whether a shell command is validation evidence without storing raw output."""
+    command = str(raw_command or "").strip()
+    tokens = _command_tokens(command)
+    program = _program_token(command_kind or (tokens[0] if tokens else "") or sanitize_command_kind(command))
+    if not command and not program:
+        return False
+    if program in _TEST_COMMANDS:
+        return True
+    if program in {"python", "python3", "py"} and len(tokens) >= 3:
+        module = _program_token(tokens[2])
+        if tokens[1] == "-m" and module in {"unittest", "pytest"}:
+            return True
+    if program == "go" and len(tokens) >= 2 and tokens[1] == "test":
+        return True
+    if program == "cargo" and len(tokens) >= 2 and tokens[1] == "test":
+        return True
+    if program in {"npm", "pnpm", "yarn"} and any(token == "test" for token in tokens[1:4]):
+        return True
+    if _looks_like_validation_script(program):
+        return True
+    if any(_looks_like_validation_script(token) for token in tokens):
+        return True
+    raw = f" {command.casefold()} "
+    return any(token in raw for token in _TEST_COMMAND_TOKENS)
 
 
 def _raw_command_from_payload(payload: Mapping[str, Any]) -> str:
@@ -1621,6 +1647,21 @@ def _command_tokens(command: str) -> list[str]:
     return cleaned
 
 
+def _program_token(value: object) -> str:
+    token = str(value or "").strip().casefold()
+    while token.startswith("./"):
+        token = token[2:]
+    return token.rsplit("/", 1)[-1]
+
+
+def _looks_like_validation_script(value: object) -> bool:
+    token = str(value or "").strip().casefold()
+    while token.startswith("./"):
+        token = token[2:]
+    basename = token.rsplit("/", 1)[-1]
+    return basename.startswith("validate-") or basename.startswith("eval-")
+
+
 def _is_safe_read_command(program: str, tokens: list[str]) -> bool:
     if program in {"cat", "rg", "grep", "find", "ls", "pwd", "head", "tail", "wc"}:
         return True
@@ -1735,6 +1776,7 @@ __all__ = [
     "adapter_capabilities_for",
     "coverage_matrix",
     "format_coverage_matrix",
+    "is_validation_command",
     "runtime_adapter_for",
     "strict_adapter_capabilities_for",
     "unsupported_events_for",

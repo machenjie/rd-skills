@@ -1,0 +1,48 @@
+id: codex-targeted-test-reported-as-full
+runtime: codex
+description: A targeted validator reported as full regression is not accepted as ready closure evidence.
+coverage_targets:
+  - event_recognition
+  - validation_outcome
+  - closure_verdict
+pressure_cases:
+  - targeted_test_reported_as_full
+input_payload:
+  hook_event_name: Stop
+  event_id: codex-targeted-test-reported-as-full
+  evidence_facts:
+    - event_name: Stop
+      event_id: codex-targeted-test-reported-as-full-evidence
+      route_manifest_detected: true
+      manifest_selected_skills:
+        - change-forge-router
+      manifest_selected_capabilities:
+        - executor-adapter-protocol
+      manifest_required_references:
+        - references/capabilities/123-executor-adapter-protocol.md
+      manifest_required_quality_gates:
+        - executor adapter eval
+      validation_broker_closure_outcome: needs_validation
+      validation_broker_negative_evidence:
+        - targeted_check_reported_as_full
+      validation_broker_command_ledger:
+        - command_kind: pytest
+          scope: targeted
+          outcome: passed
+      residual_risk_detected: true
+expected_normalized_event:
+  adapter: codex
+  event_kind: stop
+expected_gate_result:
+  outcome: pass
+expected_evidence_delta:
+  normalized_event_supported: true
+  validation_strength: weak
+  validation_freshness: current
+  validation_outcome: pass
+expected_closure_effect:
+  verdict: needs_validation
+  missing_evidence_contains:
+    - validation
+privacy_expectations:
+  forbid_absolute_paths: true

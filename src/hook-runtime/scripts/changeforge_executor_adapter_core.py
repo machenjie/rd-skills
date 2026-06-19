@@ -84,6 +84,7 @@ def state_update_from_snapshot(snapshot: ExecutorAdapterSnapshot) -> dict[str, A
         "adapter": capabilities.runtime,
         "supported_checks": list(capabilities.supported_checks),
         "unsupported_checks": list(capabilities.unsupported_checks),
+        "active_degradation": degraded,
         "degraded_capabilities": degraded,
     }
     validation_results = _validation_results(event)
@@ -132,10 +133,6 @@ def _degraded_capabilities(
     capabilities: AdapterCapabilities, event: NormalizedEvent
 ) -> list[str]:
     values = [str(item) for item in getattr(event, "capability_degradation", [])]
-    values.extend(
-        f"{capabilities.runtime}:{check}:unsupported"
-        for check in getattr(capabilities, "unsupported_checks", ())
-    )
     return _unique(values)
 
 

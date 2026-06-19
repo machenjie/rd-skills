@@ -34,7 +34,24 @@ class ExecutorAdapterCoreTests(unittest.TestCase):
         self.assertEqual(update["changed_paths"], ["src/app.py"])
         self.assertIn("event=PostToolUse", update["normalized_events"][0])
         self.assertIn("supported_checks", update["runtime_adapter"])
+        self.assertEqual(update["runtime_adapter"]["active_degradation"], [])
         self.assertNotIn("tool_input", str(update))
+
+    def test_snapshot_uses_canonical_changed_paths_without_classifier_paths(self) -> None:
+        snapshot = snapshot_from_event_state(
+            {
+                "runtime": "codex",
+                "hook_event_name": "PostToolUse",
+                "tool_name": "Edit",
+                "tool_input": {"file_path": "src/canonical.py"},
+            },
+            {},
+            classification={"stage": "unknown", "tool": "Edit"},
+            gate_name="post_edit_structure",
+        )
+        update = state_update_from_snapshot(snapshot)
+
+        self.assertEqual(update["changed_paths"], ["src/canonical.py"])
 
     def test_snapshot_includes_gate_result(self) -> None:
         snapshot = snapshot_from_event_state(
@@ -78,7 +95,10 @@ class ExecutorAdapterCoreTests(unittest.TestCase):
             gate_name="executor_adapter",
         )
         self.assertEqual(snapshot.capabilities.runtime, "roo")
-        self.assertIn("roo:pre_tool_block:unsupported", state_update_from_snapshot(snapshot)["runtime_adapter"]["degraded_capabilities"])
+        runtime_adapter = state_update_from_snapshot(snapshot)["runtime_adapter"]
+        self.assertIn("roo_post_tool_use_unsupported", runtime_adapter["degraded_capabilities"])
+        self.assertIn("roo_review_mode_edit_tools_unsupported", runtime_adapter["active_degradation"])
+        self.assertNotIn("roo:pre_tool_block:unsupported", runtime_adapter["degraded_capabilities"])
 
 
 if __name__ == "__main__":

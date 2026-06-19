@@ -109,8 +109,12 @@ class NormalizedEvent:
         paths = _string_list(classification.get("paths"))
         if not paths:
             paths = [normalize_path(path) for path in extract_changed_paths(event)]
-        changed_paths = paths if stage in {"edit", "repair", "refactor", "release", "skill_authoring"} else []
-        read_paths = _string_list(read_evidence.get("paths"))
+        canonical_changed = _string_list(canonical_data.get("changed_paths"))
+        canonical_read = _string_list(canonical_data.get("read_paths"))
+        changed_paths = canonical_changed or (
+            paths if stage in {"edit", "repair", "refactor", "release", "skill_authoring"} else []
+        )
+        read_paths = canonical_read or _string_list(read_evidence.get("paths"))
         if stage in {"read", "review"} and not read_paths:
             read_paths = paths
         return cls(

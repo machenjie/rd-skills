@@ -22,6 +22,7 @@ from runtime_governance.adapters import (  # noqa: E402
     runtime_adapter_for,
 )
 from executor_backends.openhands import BackendEvent, FakeOpenHandsBackend  # noqa: E402
+from runtime_governance.evidence import EvidenceLedger  # noqa: E402
 from runtime_governance.gates import GateOutcome  # noqa: E402
 
 
@@ -71,6 +72,75 @@ class RuntimeAdapterTranslatorTests(unittest.TestCase):
         self.assertEqual(event.command_outcome, "pass")
         self.assertTrue(event.validation_candidate)
         self.assert_no_leak(event.to_json(), "TOKEN=abc123", "abc123")
+
+    def test_shell_validation_commands_are_classified_across_adapters(self) -> None:
+        cases = (
+            (
+                "codex",
+                {
+                    "runtime": "codex",
+                    "hook_event_name": "PostToolUse",
+                    "tool_name": "Bash",
+                    "tool_input": {"command": "go test ./..."},
+                    "exit_code": 0,
+                },
+                "go",
+            ),
+            (
+                "claude",
+                {
+                    "runtime": "claude",
+                    "hookEventName": "PostToolUse",
+                    "toolName": "Bash",
+                    "toolInput": {"command": "cargo test"},
+                    "exitCode": 0,
+                },
+                "cargo",
+            ),
+            (
+                "copilot",
+                {
+                    "runtime": "copilot",
+                    "eventName": "PostToolUse",
+                    "toolName": "RunTerminalCommand",
+                    "toolInput": {"command": "npm test"},
+                    "exitCode": 0,
+                },
+                "npm",
+            ),
+            (
+                "openhands",
+                {
+                    "runtime": "openhands",
+                    "event_type": "shell_command",
+                    "command": "scripts/validate-hooks.py",
+                    "exit_code": 0,
+                },
+                "validate-hooks.py",
+            ),
+            (
+                "codex",
+                {
+                    "runtime": "codex",
+                    "hook_event_name": "PostToolUse",
+                    "tool_name": "Bash",
+                    "tool_input": {"command": "python -m unittest discover -s tests"},
+                    "exit_code": 0,
+                },
+                "python",
+            ),
+        )
+        for runtime, payload, command_kind in cases:
+            with self.subTest(runtime=runtime, command_kind=command_kind):
+                event = runtime_adapter_for(runtime).normalize_event(payload).normalized_event
+                self.assertEqual(event.tool_category, "test")
+                self.assertEqual(event.command_kind, command_kind)
+                self.assertEqual(event.command_outcome, "pass")
+                self.assertTrue(event.validation_candidate)
+                ledger = EvidenceLedger()
+                ledger.add_normalized_event(event)
+                self.assertEqual(ledger.validation.outcome, "pass")
+                self.assertEqual(ledger.validation.freshness, "current")
 
     def test_codex_permission_request_records_destructive_denial(self) -> None:
         result = runtime_adapter_for("codex").normalize_event(

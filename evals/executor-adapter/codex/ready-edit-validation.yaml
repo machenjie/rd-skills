@@ -1,0 +1,51 @@
+id: codex-ready-edit-validation
+runtime: codex
+description: Codex ordinary edit evidence with route, current validation, and residual risk closes ready without catalog-only degradation.
+coverage_targets:
+  - event_recognition
+  - closure_verdict
+pressure_cases:
+  - ready_closure
+input_payload:
+  hook_event_name: Stop
+  event_id: codex-ready-edit-validation
+  evidence_facts:
+    - event_name: Stop
+      event_id: codex-ready-edit-validation-evidence
+      route_manifest_detected: true
+      manifest_selected_skills:
+        - change-forge-router
+      manifest_selected_capabilities:
+        - executor-adapter-protocol
+      manifest_required_references:
+        - references/capabilities/123-executor-adapter-protocol.md
+      manifest_required_quality_gates:
+        - executor adapter eval
+      changed_paths:
+        - src/app.py
+      repository_context_seen: true
+      implementation_preflight_complete: true
+      validation_command_detected: true
+      validation_evidence_detected: true
+      validation_result_outcome: pass
+      validation_result_evidence_strength: strong
+      validation_result_fresh_after_last_edit: true
+      residual_risk_detected: true
+expected_normalized_event:
+  adapter: codex
+  event_kind: stop
+expected_gate_result:
+  outcome: pass
+expected_evidence_delta:
+  normalized_event_supported: true
+  changed_files:
+    - src/app.py
+  validation_strength: strong
+  validation_freshness: current
+  validation_outcome: pass
+expected_closure_effect:
+  verdict: ready
+  unsupported_checks: []
+  degraded_capabilities: []
+privacy_expectations:
+  forbid_absolute_paths: true

@@ -40,6 +40,7 @@
         },
         "supported_checks": { "$ref": "#/$defs/stringList" },
         "unsupported_checks": { "$ref": "#/$defs/stringList" },
+        "active_degradation": { "$ref": "#/$defs/stringList" },
         "degraded_capabilities": { "$ref": "#/$defs/stringList" }
       }
     }

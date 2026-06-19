@@ -33,6 +33,7 @@ expected_closure_effect:
   verdict: needs_validation
   unsupported_checks_contains:
     - runtime_adapter_degradation
+  unsupported_checks_not_contains:
     - pre_tool_advisory_context
 privacy_expectations:
   redactions_include:

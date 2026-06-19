@@ -1,12 +1,14 @@
 {
   "closure_verdicts": {
     "blocked": 2,
+    "degraded_ready": 1,
     "needs_repair": 1,
     "needs_review": 1,
-    "needs_validation": 11
+    "needs_validation": 13,
+    "ready": 2
   },
   "degraded_event_count": 4,
-  "event_count": 15,
+  "event_count": 20,
   "generated_by": "scripts/eval-executor-adapters.py",
   "normalized_event_kinds": [
     "file_changed",
@@ -21,10 +23,10 @@
   "privacy_redaction_count": 9,
   "runtime": "mixed-fixture-runtime-sample",
   "runtime_counts": {
-    "claude": 3,
+    "claude": 5,
     "cline": 2,
-    "codex": 4,
-    "copilot": 3,
+    "codex": 6,
+    "copilot": 4,
     "openhands": 2,
     "roo": 1
   },
@@ -37,35 +39,8 @@
     "status": "not_collected"
   },
   "unsupported_checks": [
-    "changed_files",
-    "checkpoint_or_rollback",
-    "codebase_index",
-    "command_outcome",
-    "compact_direction",
-    "config_change_event",
-    "file_change_event",
-    "mode_or_role_switch",
-    "path_observation",
-    "permission_decision",
-    "permission_signal",
-    "plan_act_mode",
-    "post_tool_context",
-    "post_tool_failure_context",
     "pre_tool_advisory_context",
-    "pre_tool_block",
-    "residual_risk",
-    "route_manifest",
-    "runtime_adapter_degradation",
-    "session_end",
-    "stop_decision",
-    "subagent_start_context",
-    "subagent_stop_context",
-    "task_lifecycle",
-    "tool_batch_context",
-    "user_prompt_advisory_context",
-    "validation_broker",
-    "validation_freshness",
-    "worktree_lifecycle"
+    "runtime_adapter_degradation"
   ],
   "validation_freshness_cases": [
     {
@@ -77,7 +52,27 @@
       "validation_freshness": "current"
     },
     {
+      "case_id": "claude-ready-after-rereview",
+      "validation_freshness": "current"
+    },
+    {
+      "case_id": "claude-validation-pass-then-filechanged",
+      "validation_freshness": "stale"
+    },
+    {
       "case_id": "codex-full-command-output-redaction",
+      "validation_freshness": "current"
+    },
+    {
+      "case_id": "codex-ready-edit-validation",
+      "validation_freshness": "current"
+    },
+    {
+      "case_id": "codex-targeted-test-reported-as-full",
+      "validation_freshness": "current"
+    },
+    {
+      "case_id": "copilot-degraded-ready-required-unsupported",
       "validation_freshness": "current"
     },
     {

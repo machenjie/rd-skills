@@ -1,0 +1,50 @@
+id: copilot-degraded-ready-required-unsupported
+runtime: copilot
+description: Copilot closes degraded_ready only when a current closure-required unsupported check is active.
+coverage_targets:
+  - event_recognition
+  - closure_verdict
+  - degradation
+pressure_cases:
+  - required_unsupported_check_degraded_ready
+active_unsupported_checks:
+  - pre_tool_advisory_context
+input_payload:
+  eventName: Stop
+  event_id: copilot-degraded-ready-required-unsupported
+  evidence_facts:
+    - event_name: Stop
+      event_id: copilot-degraded-ready-required-unsupported-evidence
+      route_manifest_detected: true
+      manifest_selected_skills:
+        - change-forge-router
+      manifest_selected_capabilities:
+        - executor-adapter-protocol
+      manifest_required_references:
+        - references/capabilities/123-executor-adapter-protocol.md
+      manifest_required_quality_gates:
+        - pre_tool_advisory_context
+      validation_command_detected: true
+      validation_evidence_detected: true
+      validation_result_outcome: pass
+      validation_result_evidence_strength: strong
+      validation_result_fresh_after_last_edit: true
+      residual_risk_detected: true
+expected_normalized_event:
+  adapter: copilot
+  event_kind: stop
+expected_gate_result:
+  outcome: pass
+expected_evidence_delta:
+  normalized_event_supported: true
+  validation_strength: strong
+  validation_freshness: current
+  validation_outcome: pass
+expected_closure_effect:
+  verdict: degraded_ready
+  unsupported_checks:
+    - pre_tool_advisory_context
+  degraded_capabilities_contains:
+    - copilot_pre_tool_advisory_context_unsupported
+privacy_expectations:
+  forbid_absolute_paths: true

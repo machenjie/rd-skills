@@ -13,6 +13,7 @@ from .base import (
     _classify_command_risk,
     _compact_token,
     _paths_from_payload,
+    is_validation_command,
 )
 
 
@@ -69,7 +70,7 @@ class OpenHandsAdapter(BaseRuntimeAdapter):
             return "network"
         if action in {"shellcommand", "shellcommandfailed", "command"}:
             command_kind = self.extract_command_kind(payload)
-            return "test" if command_kind in {"pytest", "unittest", "tox", "nox"} else "bash"
+            return "test" if is_validation_command(_raw_command(payload), command_kind) else "bash"
         return super().classify_tool_category(payload)
 
     def extract_paths(

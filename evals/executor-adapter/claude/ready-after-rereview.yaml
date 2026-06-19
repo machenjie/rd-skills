@@ -1,0 +1,55 @@
+id: claude-ready-after-rereview
+runtime: claude
+description: Claude closure is ready after review finding, repair evidence, re-review, current validation, and residual risk.
+coverage_targets:
+  - event_recognition
+  - closure_verdict
+pressure_cases:
+  - ready_after_rereview
+input_payload:
+  hookEventName: Stop
+  event_id: claude-ready-after-rereview
+  evidence_facts:
+    - event_name: Stop
+      event_id: claude-ready-after-rereview-evidence
+      route_manifest_detected: true
+      manifest_selected_skills:
+        - change-forge-router
+      manifest_selected_capabilities:
+        - executor-adapter-protocol
+      manifest_required_references:
+        - references/capabilities/123-executor-adapter-protocol.md
+      manifest_required_quality_gates:
+        - executor adapter eval
+      validation_command_detected: true
+      validation_evidence_detected: true
+      validation_result_outcome: pass
+      validation_result_evidence_strength: strong
+      validation_result_fresh_after_last_edit: true
+      review_findings:
+        - P1 fixture finding was repaired and re-reviewed
+      repair_evidence_seen: true
+      review_after_repair_seen: true
+      residual_risk_detected: true
+expected_normalized_event:
+  adapter: claude
+  event_kind: stop
+expected_gate_result:
+  outcome: pass
+expected_evidence_delta:
+  normalized_event_supported: true
+  validation_strength: strong
+  validation_freshness: current
+  validation_outcome: pass
+  review_strength: strong
+  review_outcome: finding
+  repair_strength: partial
+  rereview_strength: strong
+expected_closure_effect:
+  verdict: ready
+  review_status:
+    review_outcome: finding
+    repair_present: true
+    rereview_present: true
+privacy_expectations:
+  forbid_absolute_paths: true

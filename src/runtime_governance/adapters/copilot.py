@@ -13,6 +13,7 @@ from .base import (
     _classify_command_risk,
     _compact_token,
     _paths_from_payload,
+    is_validation_command,
 )
 
 
@@ -65,7 +66,7 @@ class CopilotAdapter(BaseRuntimeAdapter):
             return "edit"
         if tool in {"runterminalcommand", "terminal", "bash", "shell"}:
             command_kind = self.extract_command_kind(payload)
-            if command_kind in {"pytest", "unittest", "tox", "nox"}:
+            if is_validation_command(_raw_command(payload), command_kind):
                 return "test"
             return "bash"
         return super().classify_tool_category(payload)

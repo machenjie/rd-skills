@@ -76,11 +76,9 @@ class ClosureContract:
         capabilities = capabilities or adapter_capabilities_for(runtime)
         profile = _profile(state)
         supported_checks = _list(getattr(capabilities, "supported_checks", ()))
-        unsupported_checks = _list(getattr(capabilities, "unsupported_checks", ()))
-        degraded_capabilities = [
-            f"{capabilities.runtime}_{_check_token(check)}_unsupported"
-            for check in unsupported_checks
-        ]
+        unsupported_catalog = _list(getattr(capabilities, "unsupported_checks", ()))
+        unsupported_checks = _active_unsupported_checks(state, unsupported_catalog)
+        degraded_capabilities = _active_degraded_capabilities(state, capabilities, unsupported_checks)
         residual = _list(validation_broker_residual_risk or [])
         if profile == "silent":
             governance = GovernanceClosureContract.from_ledger(
@@ -374,13 +372,14 @@ def _governance_ledger(
             )
         )
     adapter = state.get("runtime_adapter")
-    if isinstance(adapter, dict) and _list(adapter.get("degraded_capabilities")):
+    active_degradation = _runtime_active_degradation(state)
+    if isinstance(adapter, dict) and active_degradation:
         ledger.adapter_degradation.merge(
             EvidenceEntry(
                 "adapter_degradation",
                 EvidenceStrength.PARTIAL.value,
                 Freshness.CURRENT.value,
-                ["hook-compat"],
+                active_degradation,
                 summary="runtime adapter reported degraded capabilities",
             )
         )
@@ -461,6 +460,84 @@ def _compat_verdict(governance_verdict: str, closure_status: str, validation_bro
     if closure_status == "block":
         return "blocked"
     return governance_verdict
+
+
+def _active_unsupported_checks(
+    state: dict,
+    unsupported_catalog: list[str],
+) -> list[str]:
+    requested = _active_requirement_text(state)
+    adapter = state.get("runtime_adapter")
+    if isinstance(adapter, dict):
+        requested.extend(_list(adapter.get("active_unsupported_checks")))
+        requested.extend(_list(adapter.get("required_unsupported_checks")))
+    requested.extend(_list(state.get("active_unsupported_checks")))
+    requested.extend(_list(state.get("required_unsupported_checks")))
+    requested.extend(_list(state.get("closure_required_checks")))
+    active: list[str] = []
+    for check in unsupported_catalog:
+        token = _check_token(check).casefold()
+        if any(_check_matches(check, token, item) for item in requested):
+            active.append(check)
+    return _unique(active)
+
+
+def _active_degraded_capabilities(
+    state: dict,
+    capabilities: AdapterCapabilities,
+    unsupported_checks: list[str],
+) -> list[str]:
+    active = _runtime_active_degradation(state)
+    active.extend(
+        f"{capabilities.runtime}_{_check_token(check)}_unsupported"
+        for check in unsupported_checks
+    )
+    return _unique(active)
+
+
+def _runtime_active_degradation(state: dict) -> list[str]:
+    values = _list(state.get("active_degradation"))
+    adapter = state.get("runtime_adapter")
+    if isinstance(adapter, dict):
+        values.extend(_list(adapter.get("active_degradation")))
+    return _unique(values)
+
+
+def _active_requirement_text(state: dict) -> list[str]:
+    values: list[str] = []
+    for field_name in (
+        "suggested_capabilities",
+        "suggested_gates",
+        "required_gates",
+        "closure_risk_surfaces",
+        "command_risk_surfaces",
+        "risk_surfaces",
+        "prompt_signals",
+        "reference_loads",
+    ):
+        values.extend(_list(state.get(field_name)))
+    values.extend(_runtime_active_degradation(state))
+    context = state.get("active_skill_context")
+    if isinstance(context, dict):
+        for key, value in context.items():
+            values.append(str(key))
+            if isinstance(value, dict):
+                for child_key, child_value in value.items():
+                    values.append(str(child_key))
+                    values.append(str(child_value))
+            elif isinstance(value, (list, tuple, set)):
+                values.extend(str(item) for item in value)
+            else:
+                values.append(str(value))
+    return _unique(values)
+
+
+def _check_matches(check: str, token: str, value: object) -> bool:
+    raw = str(value or "").strip().casefold()
+    if not raw:
+        return False
+    compact = _check_token(raw).casefold()
+    return raw == str(check).casefold() or compact == token or token in compact
 
 
 def _check_token(value: str) -> str:

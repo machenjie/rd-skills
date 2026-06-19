@@ -17,7 +17,7 @@ from runtime_governance.adapters import adapter_capabilities_for  # noqa: E402
 
 
 class ClosureContractByAdapterTests(unittest.TestCase):
-    def test_copilot_contract_keeps_unsupported_checks_degraded(self) -> None:
+    def test_copilot_ready_when_unsupported_checks_are_catalog_only(self) -> None:
         contract = ClosureContract.from_state(
             {"turn_stage": "coding", "changed_paths": ["src/app.py"]},
             route_manifest_complete=True,
@@ -29,7 +29,27 @@ class ClosureContractByAdapterTests(unittest.TestCase):
             validation_broker_outcome="ready",
         )
         self.assertEqual(contract.adapter, "copilot")
-        self.assertIn("pre_tool_advisory_context", contract.unsupported_checks)
+        self.assertEqual(contract.unsupported_checks, [])
+        self.assertEqual(contract.degraded_capabilities, [])
+        self.assertEqual(contract.verdict, "ready")
+
+    def test_copilot_degraded_ready_when_required_check_is_active(self) -> None:
+        contract = ClosureContract.from_state(
+            {
+                "turn_stage": "coding",
+                "changed_paths": ["src/app.py"],
+                "suggested_gates": ["pre_tool_advisory_context"],
+            },
+            route_manifest_complete=True,
+            repository_context_present=True,
+            implementation_preflight_complete=True,
+            validation_evidence_present=True,
+            residual_risk_present=True,
+            capabilities=adapter_capabilities_for("copilot"),
+            validation_broker_outcome="ready",
+        )
+        self.assertEqual(contract.adapter, "copilot")
+        self.assertEqual(contract.unsupported_checks, ["pre_tool_advisory_context"])
         self.assertIn(
             "copilot_pre_tool_advisory_context_unsupported",
             contract.degraded_capabilities,

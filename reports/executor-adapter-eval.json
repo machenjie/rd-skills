@@ -17,21 +17,14 @@
           "validation"
         ],
         "residual_risk": [
-          "validation: stale",
-          "unsupported runtime checks remain"
+          "validation: stale"
         ],
         "review_status": {
           "repair_present": false,
           "rereview_present": false,
           "review_outcome": ""
         },
-        "unsupported_checks": [
-          "worktree_lifecycle",
-          "checkpoint_or_rollback",
-          "plan_act_mode",
-          "codebase_index",
-          "mode_or_role_switch"
-        ],
+        "unsupported_checks": [],
         "validation_status": {
           "freshness": "stale",
           "outcome": "pass",
@@ -136,21 +129,13 @@
         "negative_evidence": [
           "validation"
         ],
-        "residual_risk": [
-          "unsupported runtime checks remain"
-        ],
+        "residual_risk": [],
         "review_status": {
           "repair_present": false,
           "rereview_present": false,
           "review_outcome": ""
         },
-        "unsupported_checks": [
-          "worktree_lifecycle",
-          "checkpoint_or_rollback",
-          "plan_act_mode",
-          "codebase_index",
-          "mode_or_role_switch"
-        ],
+        "unsupported_checks": [],
         "validation_status": {
           "freshness": "current",
           "outcome": "fail",
@@ -261,11 +246,6 @@
           "review_outcome": ""
         },
         "unsupported_checks": [
-          "worktree_lifecycle",
-          "checkpoint_or_rollback",
-          "plan_act_mode",
-          "codebase_index",
-          "mode_or_role_switch",
           "runtime_adapter_degradation"
         ],
         "validation_status": {
@@ -355,6 +335,223 @@
     },
     {
       "closure_effect": {
+        "degraded_capabilities": [],
+        "freshness": {
+          "repair": "current",
+          "rereview": "current",
+          "residual_risk": "current",
+          "review": "current",
+          "route_manifest": "current",
+          "validation": "current"
+        },
+        "missing_evidence": [],
+        "negative_evidence": [],
+        "residual_risk": [],
+        "review_status": {
+          "repair_present": true,
+          "rereview_present": true,
+          "review_outcome": "finding"
+        },
+        "unsupported_checks": [],
+        "validation_status": {
+          "freshness": "current",
+          "outcome": "pass",
+          "strength": "strong"
+        },
+        "verdict": "ready"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "closure_verdict"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 0,
+        "changed_files": [],
+        "command_risk_outcome": "",
+        "deleted_files": [],
+        "event_count": 2,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 0,
+        "read_paths": [],
+        "repair_strength": "partial",
+        "rereview_strength": "strong",
+        "review_outcome": "finding",
+        "review_strength": "strong",
+        "validation_freshness": "current",
+        "validation_outcome": "pass",
+        "validation_strength": "strong"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "claude-ready-after-rereview"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "claude-ready-after-rereview",
+      "normalized_event": {
+        "action_type": null,
+        "adapter": "claude",
+        "bounded_paths": [],
+        "capability_degradation": [],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": null,
+        "command_outcome": "not_observable",
+        "command_risk": "unknown",
+        "deleted_paths": [],
+        "event_id": "claude-ready-after-rereview",
+        "event_kind": "stop",
+        "executor_event_name": "Stop",
+        "executor_event_phase": "end",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "stop",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "unknown",
+        "validation_candidate": false,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/claude/ready-after-rereview.yaml",
+      "pressure_cases": [
+        "ready_after_rereview"
+      ],
+      "runtime": "claude",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [],
+        "freshness": {
+          "command_risk": "current",
+          "implementation_preflight": "current",
+          "residual_risk": "current",
+          "route_manifest": "current",
+          "validation": "stale"
+        },
+        "missing_evidence": [
+          "validation"
+        ],
+        "negative_evidence": [
+          "validation"
+        ],
+        "residual_risk": [
+          "validation: stale"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [],
+        "validation_status": {
+          "freshness": "stale",
+          "outcome": "pass",
+          "strength": "negative"
+        },
+        "verdict": "needs_validation"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "path_normalization",
+        "validation_freshness_after_edits",
+        "closure_verdict"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 1,
+        "changed_files": [
+          "src/service.py"
+        ],
+        "command_risk_outcome": "mutation",
+        "deleted_files": [],
+        "event_count": 2,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 0,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "stale",
+        "validation_outcome": "pass",
+        "validation_strength": "negative"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "claude-validation-pass-then-filechanged"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "claude-validation-pass-then-filechanged",
+      "normalized_event": {
+        "action_type": "Edit",
+        "adapter": "claude",
+        "bounded_paths": [
+          "src/service.py"
+        ],
+        "capability_degradation": [],
+        "changed_paths": [
+          "src/service.py"
+        ],
+        "checkpoint_id": null,
+        "command_kind": null,
+        "command_outcome": "not_observable",
+        "command_risk": "mutation",
+        "deleted_paths": [],
+        "event_id": "claude-validation-pass-then-filechanged",
+        "event_kind": "file_changed",
+        "executor_event_name": "FileChanged",
+        "executor_event_phase": "after",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "file",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "edit",
+        "validation_candidate": false,
+        "validation_freshness": "stale",
+        "validation_outcome": "stale"
+      },
+      "path": "evals/executor-adapter/claude/validation-pass-then-filechanged.yaml",
+      "pressure_cases": [
+        "validation_pass_then_file_changed"
+      ],
+      "runtime": "claude",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
         "degraded_capabilities": [
           "cline_user_prompt_submit_unsupported",
           "cline_plan_mode_edit_evidence_unsupported",
@@ -379,31 +576,6 @@
           "review_outcome": ""
         },
         "unsupported_checks": [
-          "route_manifest",
-          "changed_files",
-          "validation_broker",
-          "validation_freshness",
-          "residual_risk",
-          "stop_decision",
-          "pre_tool_advisory_context",
-          "post_tool_context",
-          "subagent_start_context",
-          "subagent_stop_context",
-          "permission_signal",
-          "permission_decision",
-          "pre_tool_block",
-          "tool_batch_context",
-          "post_tool_failure_context",
-          "file_change_event",
-          "config_change_event",
-          "worktree_lifecycle",
-          "compact_direction",
-          "session_end",
-          "task_lifecycle",
-          "checkpoint_or_rollback",
-          "codebase_index",
-          "command_outcome",
-          "path_observation",
           "runtime_adapter_degradation"
         ],
         "validation_status": {
@@ -521,31 +693,6 @@
           "review_outcome": ""
         },
         "unsupported_checks": [
-          "route_manifest",
-          "changed_files",
-          "validation_broker",
-          "validation_freshness",
-          "residual_risk",
-          "stop_decision",
-          "pre_tool_advisory_context",
-          "post_tool_context",
-          "subagent_start_context",
-          "subagent_stop_context",
-          "permission_signal",
-          "permission_decision",
-          "pre_tool_block",
-          "tool_batch_context",
-          "post_tool_failure_context",
-          "file_change_event",
-          "config_change_event",
-          "worktree_lifecycle",
-          "compact_direction",
-          "session_end",
-          "task_lifecycle",
-          "checkpoint_or_rollback",
-          "codebase_index",
-          "command_outcome",
-          "path_observation",
           "runtime_adapter_degradation"
         ],
         "validation_status": {
@@ -652,26 +799,14 @@
         ],
         "residual_risk": [
           "permission: destructive git command denied",
-          "permission denied for dangerous command class",
-          "unsupported runtime checks remain"
+          "permission denied for dangerous command class"
         ],
         "review_status": {
           "repair_present": false,
           "rereview_present": false,
           "review_outcome": ""
         },
-        "unsupported_checks": [
-          "post_tool_failure_context",
-          "file_change_event",
-          "config_change_event",
-          "worktree_lifecycle",
-          "session_end",
-          "task_lifecycle",
-          "checkpoint_or_rollback",
-          "plan_act_mode",
-          "codebase_index",
-          "mode_or_role_switch"
-        ],
+        "unsupported_checks": [],
         "validation_status": {
           "freshness": "unknown",
           "outcome": "",
@@ -771,26 +906,13 @@
           "residual_risk"
         ],
         "negative_evidence": [],
-        "residual_risk": [
-          "unsupported runtime checks remain"
-        ],
+        "residual_risk": [],
         "review_status": {
           "repair_present": false,
           "rereview_present": false,
           "review_outcome": ""
         },
-        "unsupported_checks": [
-          "post_tool_failure_context",
-          "file_change_event",
-          "config_change_event",
-          "worktree_lifecycle",
-          "session_end",
-          "task_lifecycle",
-          "checkpoint_or_rollback",
-          "plan_act_mode",
-          "codebase_index",
-          "mode_or_role_switch"
-        ],
+        "unsupported_checks": [],
         "validation_status": {
           "freshness": "current",
           "outcome": "pass",
@@ -892,26 +1014,13 @@
           "residual_risk"
         ],
         "negative_evidence": [],
-        "residual_risk": [
-          "unsupported runtime checks remain"
-        ],
+        "residual_risk": [],
         "review_status": {
           "repair_present": false,
           "rereview_present": false,
           "review_outcome": ""
         },
-        "unsupported_checks": [
-          "post_tool_failure_context",
-          "file_change_event",
-          "config_change_event",
-          "worktree_lifecycle",
-          "session_end",
-          "task_lifecycle",
-          "checkpoint_or_rollback",
-          "plan_act_mode",
-          "codebase_index",
-          "mode_or_role_switch"
-        ],
+        "unsupported_checks": [],
         "validation_status": {
           "freshness": "unknown",
           "outcome": "",
@@ -1151,6 +1260,109 @@
     {
       "closure_effect": {
         "degraded_capabilities": [],
+        "freshness": {
+          "implementation_preflight": "current",
+          "repository_context": "current",
+          "residual_risk": "current",
+          "route_manifest": "current",
+          "validation": "current"
+        },
+        "missing_evidence": [],
+        "negative_evidence": [],
+        "residual_risk": [],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [],
+        "validation_status": {
+          "freshness": "current",
+          "outcome": "pass",
+          "strength": "strong"
+        },
+        "verdict": "ready"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "closure_verdict"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 0,
+        "changed_files": [
+          "src/app.py"
+        ],
+        "command_risk_outcome": "",
+        "deleted_files": [],
+        "event_count": 2,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 0,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "current",
+        "validation_outcome": "pass",
+        "validation_strength": "strong"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "codex-ready-edit-validation"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "codex-ready-edit-validation",
+      "normalized_event": {
+        "action_type": null,
+        "adapter": "codex",
+        "bounded_paths": [],
+        "capability_degradation": [],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": null,
+        "command_outcome": "not_observable",
+        "command_risk": "unknown",
+        "deleted_paths": [],
+        "event_id": "codex-ready-edit-validation",
+        "event_kind": "stop",
+        "executor_event_name": "Stop",
+        "executor_event_phase": "end",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "stop",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "unknown",
+        "validation_candidate": false,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/codex/ready-edit-validation.yaml",
+      "pressure_cases": [
+        "ready_closure"
+      ],
+      "runtime": "codex",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [],
         "freshness": {},
         "missing_evidence": [
           "route_manifest",
@@ -1158,26 +1370,13 @@
           "residual_risk"
         ],
         "negative_evidence": [],
-        "residual_risk": [
-          "unsupported runtime checks remain"
-        ],
+        "residual_risk": [],
         "review_status": {
           "repair_present": false,
           "rereview_present": false,
           "review_outcome": ""
         },
-        "unsupported_checks": [
-          "post_tool_failure_context",
-          "file_change_event",
-          "config_change_event",
-          "worktree_lifecycle",
-          "session_end",
-          "task_lifecycle",
-          "checkpoint_or_rollback",
-          "plan_act_mode",
-          "codebase_index",
-          "mode_or_role_switch"
-        ],
+        "unsupported_checks": [],
         "validation_status": {
           "freshness": "unknown",
           "outcome": "",
@@ -1266,6 +1465,216 @@
       "closure_effect": {
         "degraded_capabilities": [],
         "freshness": {
+          "residual_risk": "current",
+          "route_manifest": "current",
+          "validation": "current"
+        },
+        "missing_evidence": [
+          "validation"
+        ],
+        "negative_evidence": [],
+        "residual_risk": [
+          "validation command was observed without outcome"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [],
+        "validation_status": {
+          "freshness": "current",
+          "outcome": "pass",
+          "strength": "weak"
+        },
+        "verdict": "needs_validation"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "validation_outcome",
+        "closure_verdict"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 0,
+        "changed_files": [],
+        "command_risk_outcome": "",
+        "deleted_files": [],
+        "event_count": 2,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 0,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "current",
+        "validation_outcome": "pass",
+        "validation_strength": "weak"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "codex-targeted-test-reported-as-full"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "codex-targeted-test-reported-as-full",
+      "normalized_event": {
+        "action_type": null,
+        "adapter": "codex",
+        "bounded_paths": [],
+        "capability_degradation": [],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": null,
+        "command_outcome": "not_observable",
+        "command_risk": "unknown",
+        "deleted_paths": [],
+        "event_id": "codex-targeted-test-reported-as-full",
+        "event_kind": "stop",
+        "executor_event_name": "Stop",
+        "executor_event_phase": "end",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "stop",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "unknown",
+        "validation_candidate": false,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/codex/targeted-test-reported-as-full.yaml",
+      "pressure_cases": [
+        "targeted_test_reported_as_full"
+      ],
+      "runtime": "codex",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [
+          "copilot_pre_tool_advisory_context_unsupported"
+        ],
+        "freshness": {
+          "residual_risk": "current",
+          "route_manifest": "current",
+          "validation": "current"
+        },
+        "missing_evidence": [],
+        "negative_evidence": [],
+        "residual_risk": [
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "pre_tool_advisory_context"
+        ],
+        "validation_status": {
+          "freshness": "current",
+          "outcome": "pass",
+          "strength": "strong"
+        },
+        "verdict": "degraded_ready"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "closure_verdict",
+        "degradation"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 0,
+        "changed_files": [],
+        "command_risk_outcome": "",
+        "deleted_files": [],
+        "event_count": 2,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 0,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "current",
+        "validation_outcome": "pass",
+        "validation_strength": "strong"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "copilot-degraded-ready-required-unsupported"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "copilot-degraded-ready-required-unsupported",
+      "normalized_event": {
+        "action_type": null,
+        "adapter": "copilot",
+        "bounded_paths": [],
+        "capability_degradation": [],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": null,
+        "command_outcome": "not_observable",
+        "command_risk": "unknown",
+        "deleted_paths": [],
+        "event_id": "copilot-degraded-ready-required-unsupported",
+        "event_kind": "stop",
+        "executor_event_name": "Stop",
+        "executor_event_phase": "end",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "stop",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "unknown",
+        "validation_candidate": false,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/copilot/degraded-ready-required-unsupported.yaml",
+      "pressure_cases": [
+        "required_unsupported_check_degraded_ready"
+      ],
+      "runtime": "copilot",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [],
+        "freshness": {
           "repair": "current",
           "residual_risk": "current",
           "route_manifest": "current",
@@ -1276,24 +1685,14 @@
         ],
         "negative_evidence": [],
         "residual_risk": [
-          "repair evidence requires re-review",
-          "unsupported runtime checks remain"
+          "repair evidence requires re-review"
         ],
         "review_status": {
           "repair_present": true,
           "rereview_present": false,
           "review_outcome": ""
         },
-        "unsupported_checks": [
-          "pre_tool_advisory_context",
-          "user_prompt_advisory_context",
-          "subagent_stop_context",
-          "permission_signal",
-          "permission_decision",
-          "pre_tool_block",
-          "tool_batch_context",
-          "post_tool_failure_context"
-        ],
+        "unsupported_checks": [],
         "validation_status": {
           "freshness": "current",
           "outcome": "pass",
@@ -1390,24 +1789,14 @@
         ],
         "negative_evidence": [],
         "residual_risk": [
-          "review finding requires repair evidence",
-          "unsupported runtime checks remain"
+          "review finding requires repair evidence"
         ],
         "review_status": {
           "repair_present": false,
           "rereview_present": false,
           "review_outcome": "finding"
         },
-        "unsupported_checks": [
-          "pre_tool_advisory_context",
-          "user_prompt_advisory_context",
-          "subagent_stop_context",
-          "permission_signal",
-          "permission_decision",
-          "pre_tool_block",
-          "tool_batch_context",
-          "post_tool_failure_context"
-        ],
+        "unsupported_checks": [],
         "validation_status": {
           "freshness": "current",
           "outcome": "pass",
@@ -1517,14 +1906,6 @@
           "review_outcome": ""
         },
         "unsupported_checks": [
-          "pre_tool_advisory_context",
-          "user_prompt_advisory_context",
-          "subagent_stop_context",
-          "permission_signal",
-          "permission_decision",
-          "pre_tool_block",
-          "tool_batch_context",
-          "post_tool_failure_context",
           "runtime_adapter_degradation"
         ],
         "validation_status": {
@@ -1629,31 +2010,13 @@
           "residual_risk"
         ],
         "negative_evidence": [],
-        "residual_risk": [
-          "unsupported runtime checks remain"
-        ],
+        "residual_risk": [],
         "review_status": {
           "repair_present": false,
           "rereview_present": false,
           "review_outcome": ""
         },
-        "unsupported_checks": [
-          "route_manifest",
-          "stop_decision",
-          "pre_tool_advisory_context",
-          "subagent_start_context",
-          "subagent_stop_context",
-          "permission_signal",
-          "permission_decision",
-          "pre_tool_block",
-          "tool_batch_context",
-          "config_change_event",
-          "worktree_lifecycle",
-          "compact_direction",
-          "plan_act_mode",
-          "codebase_index",
-          "mode_or_role_switch"
-        ],
+        "unsupported_checks": [],
         "validation_status": {
           "freshness": "unknown",
           "outcome": "",
@@ -1754,31 +2117,13 @@
           "residual_risk"
         ],
         "negative_evidence": [],
-        "residual_risk": [
-          "unsupported runtime checks remain"
-        ],
+        "residual_risk": [],
         "review_status": {
           "repair_present": false,
           "rereview_present": false,
           "review_outcome": ""
         },
-        "unsupported_checks": [
-          "route_manifest",
-          "stop_decision",
-          "pre_tool_advisory_context",
-          "subagent_start_context",
-          "subagent_stop_context",
-          "permission_signal",
-          "permission_decision",
-          "pre_tool_block",
-          "tool_batch_context",
-          "config_change_event",
-          "worktree_lifecycle",
-          "compact_direction",
-          "plan_act_mode",
-          "codebase_index",
-          "mode_or_role_switch"
-        ],
+        "unsupported_checks": [],
         "validation_status": {
           "freshness": "current",
           "outcome": "pass",
@@ -1894,32 +2239,6 @@
           "review_outcome": ""
         },
         "unsupported_checks": [
-          "route_manifest",
-          "changed_files",
-          "validation_broker",
-          "validation_freshness",
-          "residual_risk",
-          "stop_decision",
-          "pre_tool_advisory_context",
-          "post_tool_context",
-          "subagent_start_context",
-          "subagent_stop_context",
-          "permission_signal",
-          "permission_decision",
-          "pre_tool_block",
-          "tool_batch_context",
-          "post_tool_failure_context",
-          "file_change_event",
-          "config_change_event",
-          "worktree_lifecycle",
-          "compact_direction",
-          "session_end",
-          "task_lifecycle",
-          "checkpoint_or_rollback",
-          "plan_act_mode",
-          "codebase_index",
-          "command_outcome",
-          "path_observation",
           "runtime_adapter_degradation"
         ],
         "validation_status": {
@@ -2018,7 +2337,7 @@
   "schema_version": 1,
   "status": "pass",
   "summary": {
-    "case_count": 15,
+    "case_count": 20,
     "coverage_targets": [
       "closure_verdict",
       "command_risk",
@@ -2037,7 +2356,7 @@
       "detail": "deterministic local fixtures do not measure real-task success rate",
       "status": "not_collected"
     },
-    "passed": 15,
+    "passed": 20,
     "pressure_cases": [
       "absolute_user_path",
       "claude_post_tool_failure",
@@ -2047,17 +2366,22 @@
       "failed_validation",
       "full_command_output_field",
       "large_path_list_cap",
+      "ready_after_rereview",
+      "ready_closure",
       "repair_without_rereview",
+      "required_unsupported_check_degraded_ready",
       "review_finding_without_repair",
       "secret_like_payload_field",
+      "targeted_test_reported_as_full",
       "unknown_event",
-      "unsupported_runtime_event"
+      "unsupported_runtime_event",
+      "validation_pass_then_file_changed"
     ],
     "runtime_counts": {
-      "claude": 3,
+      "claude": 5,
       "cline": 2,
-      "codex": 4,
-      "copilot": 3,
+      "codex": 6,
+      "copilot": 4,
       "openhands": 2,
       "roo": 1
     },

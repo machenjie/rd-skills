@@ -65,6 +65,11 @@ REQUIRED_PRESSURE_CASES = {
     "copilot_unsupported_pre_tool",
     "claude_post_tool_failure",
     "codex_destructive_permission_request",
+    "ready_closure",
+    "ready_after_rereview",
+    "required_unsupported_check_degraded_ready",
+    "validation_pass_then_file_changed",
+    "targeted_test_reported_as_full",
 }
 
 
@@ -133,17 +138,34 @@ def _closure_effect(contract: ClosureContract) -> dict[str, Any]:
     }
 
 
+def _active_unsupported_checks(
+    fixture: Mapping[str, Any],
+    capabilities: Any,
+) -> list[str]:
+    raw = fixture.get("active_unsupported_checks") or fixture.get("required_unsupported_checks") or []
+    if not isinstance(raw, list):
+        return []
+    catalog = {str(check) for check in getattr(capabilities, "unsupported_checks", ())}
+    values: list[str] = []
+    for item in raw:
+        check = str(item).strip()
+        if check and check in catalog and check not in values:
+            values.append(check)
+    return values
+
+
+def _degraded_for_unsupported(runtime: str, unsupported_checks: list[str]) -> list[str]:
+    values: list[str] = []
+    for check in unsupported_checks:
+        token = str(check).strip().replace("-", "_").replace(" ", "_")
+        if token:
+            values.append(f"{runtime}_{token}_unsupported")
+    return values
+
+
 def _compare_subset(expected: Mapping[str, Any], actual: Mapping[str, Any], prefix: str) -> list[str]:
     failures: list[str] = []
     for key, expected_value in expected.items():
-        if key.endswith("_contains"):
-            actual_key = key[: -len("_contains")]
-            actual_value = actual.get(actual_key)
-            actual_items = actual_value if isinstance(actual_value, list) else []
-            missing = [item for item in expected_value if item not in actual_items]
-            if missing:
-                failures.append(f"{prefix}.{actual_key} missing expected items {missing!r}")
-            continue
         if key.endswith("_not_contains"):
             actual_key = key[: -len("_not_contains")]
             actual_value = actual.get(actual_key)
@@ -151,6 +173,14 @@ def _compare_subset(expected: Mapping[str, Any], actual: Mapping[str, Any], pref
             present = [item for item in expected_value if item in actual_items]
             if present:
                 failures.append(f"{prefix}.{actual_key} unexpectedly contains {present!r}")
+            continue
+        if key.endswith("_contains"):
+            actual_key = key[: -len("_contains")]
+            actual_value = actual.get(actual_key)
+            actual_items = actual_value if isinstance(actual_value, list) else []
+            missing = [item for item in expected_value if item not in actual_items]
+            if missing:
+                failures.append(f"{prefix}.{actual_key} missing expected items {missing!r}")
             continue
         actual_value = actual.get(key)
         if isinstance(expected_value, Mapping):
@@ -233,12 +263,16 @@ def evaluate_fixture(path: Path) -> dict[str, Any]:
     for fact in evidence_facts:
         ledger.add_fact(fact)
     ledger.add_normalized_event(event)
+    active_unsupported = _active_unsupported_checks(fixture, result.capabilities)
     contract = ClosureContract.from_ledger(
         ledger,
         adapter=runtime,
         supported_checks=result.capabilities.supported_checks,
-        unsupported_checks=result.capabilities.unsupported_checks,
-        degraded_capabilities=event.capability_degradation,
+        unsupported_checks=active_unsupported,
+        degraded_capabilities=[
+            *event.capability_degradation,
+            *_degraded_for_unsupported(runtime, active_unsupported),
+        ],
     )
 
     event_payload = event.to_json_dict()
