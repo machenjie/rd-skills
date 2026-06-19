@@ -802,6 +802,51 @@ class StopClosureGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertNotIn("no complete changeforge_route manifest", result.stdout)
 
+    def test_copilot_stop_degrades_for_manifest_required_unsupported_gate(self) -> None:
+        # Regression: manifest-only required gates must count as active unsupported checks.
+        manifest_text = (
+            "Change prepared. Changed files listed. "
+            "Validation: ran python3 scripts/validate-hooks.py, passed, exit 0. "
+            "Validation freshness: current after final material edit. "
+            "Residual risk: unsupported runtime pre-tool advisory context remains. "
+            "Next steps: review.\n\n"
+            f"{REPOSITORY_CONTEXT_MANIFEST}\n"
+            f"{PREFLIGHT_MANIFEST}\n"
+            "```yaml\n"
+            "changeforge_route:\n"
+            "  selected_skills:\n"
+            "    - quality-test-gate\n"
+            "  selected_capabilities:\n"
+            "    - regression-testing\n"
+            "  required_references:\n"
+            "    - references/routing-rules.md\n"
+            "  required_quality_gates:\n"
+            "    - pre_tool_advisory_context\n"
+            "```\n"
+        )
+        event = {"hook_event_name": "Stop", "runtime": "copilot", "response": manifest_text}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd, cache = Path(cwd_s), Path(cache_s)
+            seed_state(
+                cwd,
+                cache,
+                runtime="copilot",
+                changed_paths=["src/hook-runtime/scripts/changeforge_stop_closure_gate.py"],
+                implementation_preflight_required=True,
+                implementation_preflight_seen=True,
+                implementation_preflight_complete=True,
+                validation_command_seen=True,
+                validation_seen=True,
+                validation_freshness_seen=True,
+            )
+            result = run_stop(event, cwd, cache, agent="copilot")
+            records = read_telemetry(cache)
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["closure_contract_verdict"], "degraded_ready")
+        self.assertIn("pre_tool_advisory_context", records[0]["adapter_unsupported_checks"])
+
     def test_closure_reminder_flags_incomplete_route_manifest(self) -> None:
         manifest_text = (
             "Change prepared. Changed files and risk are noted. "

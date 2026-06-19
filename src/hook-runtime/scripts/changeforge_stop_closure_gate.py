@@ -1165,8 +1165,25 @@ def _closure_contract(
         or state.get("review_targets")
         or state.get("reviewed_diff_evidence_seen")
     )
+    # Manifest requirements are active closure inputs even when reducer state
+    # did not see them earlier in the turn.
+    closure_state = dict(state)
+    closure_required_checks: list[object] = []
+    existing_required = closure_state.get("closure_required_checks")
+    if isinstance(existing_required, (list, tuple, set)):
+        closure_required_checks.extend(existing_required)
+    elif existing_required:
+        closure_required_checks.append(existing_required)
+    for key in ("required_quality_gates", "required_references", "selected_capabilities"):
+        values = manifest.get(key, [])
+        if isinstance(values, (list, tuple, set)):
+            closure_required_checks.extend(values)
+        elif values:
+            closure_required_checks.append(values)
+    if closure_required_checks:
+        closure_state["closure_required_checks"] = closure_required_checks
     return ClosureContract.from_state(
-        state,
+        closure_state,
         route_manifest_complete=bool(manifest.get("route_present")),
         stage_route_present=bool(manifest.get("stage_present")),
         repository_context_present=bool(signals.get("repository_context")),
