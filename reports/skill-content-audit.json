@@ -2702,29 +2702,29 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 7,
-      "bullet_count": 58,
+      "bullet_count": 60,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 92,
-      "critical_details_length": 8,
+      "critical_details_length": 10,
       "description_findings": [],
       "description_length": 174,
       "findings": [
-        "section 'Executor Adapter Protocol' is 91 lines (> 80) \u2014 reference candidate"
+        "section 'Executor Adapter Protocol' is 93 lines (> 80) \u2014 reference candidate"
       ],
       "has_shared_optimality": false,
       "heading_count": 15,
       "kind": "foundation-capability",
-      "largest_section_lines": 91,
+      "largest_section_lines": 93,
       "largest_section_title": "Executor Adapter Protocol",
       "largest_table_rows": 0,
-      "line_count": 92,
+      "line_count": 94,
       "name": "executor-adapter-protocol",
       "optimality_section_length": 0,
       "output_contract_length": 9,
       "oversized_sections": [
         {
-          "lines": 91,
+          "lines": 93,
           "title": "Executor Adapter Protocol"
         }
       ],
@@ -2740,7 +2740,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 7,
-      "word_count": 878
+      "word_count": 970
     },
     {
       "anti_example_section_length": 13,

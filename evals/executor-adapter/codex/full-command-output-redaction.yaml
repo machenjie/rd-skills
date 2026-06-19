@@ -1,0 +1,51 @@
+id: codex-full-command-output-redaction
+runtime: codex
+description: Codex post-tool validation redacts full output fields while preserving command kind and pass evidence.
+coverage_targets:
+  - event_recognition
+  - tool_category
+  - validation_outcome
+  - privacy_redaction
+pressure_cases:
+  - full_command_output_field
+input_payload:
+  hook_event_name: PostToolUse
+  event_id: codex-full-command-output-redaction
+  tool_name: bash
+  tool_input:
+    command: pytest tests
+  exit_code: 0
+  command_output: SYNTHETIC_FULL_OUTPUT_SHOULD_BE_IGNORED
+  stdout: SYNTHETIC_STDOUT_SHOULD_BE_IGNORED
+expected_normalized_event:
+  adapter: codex
+  event_kind: post_tool_use
+  tool_category: test
+  command_kind: pytest
+  command_risk: safe
+  command_outcome: pass
+  validation_candidate: true
+expected_gate_result:
+  outcome: pass
+expected_evidence_delta:
+  normalized_event_supported: true
+  validation_strength: strong
+  validation_freshness: current
+  validation_outcome: pass
+  command_risk_outcome: safe
+  privacy_redaction_count: 3
+expected_closure_effect:
+  verdict: needs_validation
+  validation_status:
+    strength: strong
+    freshness: current
+    outcome: pass
+privacy_expectations:
+  redactions_include:
+    - "command_output:ignored"
+    - "stdout:ignored"
+    - "command:kind_only"
+  blocked_strings:
+    - SYNTHETIC_FULL_OUTPUT_SHOULD_BE_IGNORED
+    - SYNTHETIC_STDOUT_SHOULD_BE_IGNORED
+  forbid_absolute_paths: true

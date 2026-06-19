@@ -87,7 +87,13 @@ Stop telemetry records adapter/closure-contract facts as bounded strings:
 `adapter_degraded_capabilities`, `closure_contract_verdict`, and
 `closure_contract_residual_risk`. These fields let review and trajectory tools
 distinguish `ready` from `degraded_ready` when a runtime could not observe a
-check such as Copilot `PreToolUse` advisory context.
+check such as Copilot `PreToolUse` advisory context. Stop telemetry also writes
+a bounded `changeforge_closure` object. It contains adapter, verdict,
+supported/unsupported checks, degraded capabilities, present/missing/negative
+evidence, validation outcome/freshness/scope/command kind, review repair and
+re-review state, changed/deleted/generated path sets, residual risk, and next
+owner. `closure_contract_verdict` can be `ready`, `needs_validation`,
+`needs_review`, `needs_repair`, `degraded_ready`, or `blocked`.
 
 Repository graph evidence may feed context packs and validation candidates, but
 it is a source-evidence helper only. It should name bounded symbols, imports,
@@ -103,8 +109,10 @@ Validation Broker facts classify validation command selection and freshness. A
 command without outcome, a failed command, a negative validation disclosure, or a
 command that finished before the last material edit remains non-closure evidence.
 The broker closure outcome is one of `ready`, `needs_validation`,
-`degraded_ready`, or `blocked`; degraded adapter coverage is reported as residual
-risk instead of a pass.
+`degraded_ready`, or `blocked`; the closure contract may further distinguish
+`needs_review` and `needs_repair` when review findings, repair evidence, or
+missing re-review prevent a ready closure. Degraded adapter coverage is reported
+as residual risk instead of a pass.
 
 Trajectory facts are review-only. The trajectory inspector reconstructs stage
 order and evidence freshness from bounded telemetry and memory fields, and it
@@ -132,7 +140,9 @@ or registry-derived. It does not record raw stdout, prompts, secrets,
 environment variables, full command output, or dangerous full command arguments.
 Stop telemetry also records adapter closure-contract facts. Unsupported adapter
 checks are residual-risk evidence and do not satisfy a full validation or
-closure pass.
+closure pass. The structured `changeforge_closure` object intentionally keeps
+validation metadata separate from present closure evidence so a targeted,
+stale, failed, or no-outcome validator cannot be inflated into a ready verdict.
 
 Hooks still cannot replace `change-forge-router`. They never call a model, never
 reach the network, never modify project source, and never load every compiled

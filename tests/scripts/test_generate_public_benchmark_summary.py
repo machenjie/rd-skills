@@ -97,6 +97,66 @@ class GeneratePublicBenchmarkSummaryTests(unittest.TestCase):
         self.assertEqual(marketplace["source"], "reports/professional-scorecard.json")
         self.assertIn("all profiles validate", marketplace["detail"])
 
+    def test_executor_adapter_statuses_come_from_scorecard_without_live_claims(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "[project]\nname = \"sample\"\nversion = \"0.1.0\"\n",
+                encoding="utf-8",
+            )
+            (root / "reports").mkdir()
+            (root / "reports" / "professional-scorecard.json").write_text(
+                json.dumps(
+                    {
+                        "dimensions": [
+                            {
+                                "name": "Executor adapter structural fixtures",
+                                "status": "pass",
+                                "detail": "case_count=15",
+                                "verification_command": "python3 scripts/eval-executor-adapters.py",
+                            },
+                            {
+                                "name": "Runtime telemetry sample",
+                                "status": "pass",
+                                "detail": "sanitized sample generated",
+                                "verification_command": "python3 scripts/eval-executor-adapters.py",
+                            },
+                            {
+                                "name": "Executor adapter live pass-rate",
+                                "status": "not_collected",
+                                "detail": "not measured",
+                                "verification_command": "python3 scripts/eval-executor-adapters.py",
+                            },
+                            {
+                                "name": "Executor adapter token overhead",
+                                "status": "not_collected",
+                                "detail": "not measured",
+                                "verification_command": "python3 scripts/eval-executor-adapters.py",
+                            },
+                            {
+                                "name": "Executor adapter turn overhead",
+                                "status": "not_collected",
+                                "detail": "not measured",
+                                "verification_command": "python3 scripts/eval-executor-adapters.py",
+                            },
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            payload = module.generate_summary(root)
+
+        items = {item["name"]: item for item in payload["items"]}
+        self.assertEqual(items["Executor adapter structural fixtures"]["status"], "pass")
+        self.assertEqual(items["Runtime telemetry sample"]["evidence_level"], "runtime telemetry sample")
+        self.assertEqual(items["Runtime telemetry sample"]["status"], "pass")
+        self.assertEqual(items["Executor adapter live pass-rate"]["status"], "not_collected")
+        self.assertEqual(items["Executor adapter live pass-rate"]["evidence_level"], "live pass-rate")
+        self.assertEqual(items["Executor adapter token overhead"]["evidence_level"], "token overhead")
+        self.assertEqual(items["Executor adapter turn overhead"]["evidence_level"], "turn overhead")
+        self.assertEqual(items["Installation validation"]["evidence_level"], "structural fixture")
+
     def test_cli_scorecard_argument_controls_scorecard_source(self) -> None:
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:

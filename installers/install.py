@@ -90,7 +90,7 @@ def main() -> int:
     try:
         scope = args.scope or ("project" if args.agent == "openai-api" else None)
         if scope is None:
-            raise InstallError("--scope is required for codex, claude, and copilot installs")
+            raise InstallError("--scope is required for runtime skill installs")
 
         if args.agent == "openai-api":
             source_dir = resolve_source_profile_dir(args.agent, scope, args.profile)

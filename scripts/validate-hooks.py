@@ -160,6 +160,17 @@ STATE_FINDING_FIELDS = (
     "extension_reuse_findings",
     "advanced_refactor_findings",
     "comment_findings",
+    "post_edit_structure_findings",
+)
+ADAPTER_SNAPSHOT_SCRIPTS = (
+    "changeforge_pre_edit_structure_gate.py",
+    "changeforge_post_edit_structure_gate.py",
+    "changeforge_permission_policy_gate.py",
+    "changeforge_risk_surface_gate.py",
+    "changeforge_read_context_gate.py",
+    "changeforge_review_gate.py",
+    "changeforge_compaction_snapshot.py",
+    "changeforge_stop_closure_gate.py",
 )
 SESSION_COMPACTION_ORDER = (
     "changeforge_compaction_snapshot",
@@ -269,7 +280,22 @@ def _validate_adapter_capabilities(errors: list[str]) -> None:
     capabilities = _load_adapter_capabilities(errors)
     if capabilities is None:
         return
-    for runtime in ("codex", "claude", "copilot", "generic", "cline", "openhands", "gemini-cli", "goose"):
+    if not hasattr(capabilities, "runtime_adapter_for"):
+        errors.append("adapter capabilities: runtime_adapter_for factory is required")
+        return
+    canonical_events = tuple(capabilities.CANONICAL_EVENTS)
+    expected_visibility = {"none", "partial", "full"}
+    for runtime in (
+        "codex",
+        "claude",
+        "copilot",
+        "generic",
+        "cline",
+        "roo",
+        "openhands",
+        "gemini-cli",
+        "goose",
+    ):
         adapter = capabilities.adapter_capabilities_for(runtime)
         if adapter.runtime != runtime:
             errors.append(f"adapter capabilities: {runtime} returned {adapter.runtime}")
@@ -286,9 +312,33 @@ def _validate_adapter_capabilities(errors: list[str]) -> None:
             "supports_blocking",
             "supports_context_injection",
             "supports_tool_result_inspection",
+            "supports_pre_tool_block",
+            "supports_post_tool_success",
+            "supports_post_tool_failure",
+            "supports_tool_batch",
+            "supports_file_changed_event",
+            "supports_config_changed_event",
+            "supports_worktree_lifecycle",
+            "supports_pre_compact",
+            "supports_post_compact",
+            "supports_session_end",
+            "supports_task_lifecycle",
+            "supports_checkpoint_or_rollback",
+            "supports_plan_act_mode",
+            "supports_codebase_index",
+            "supports_mode_or_role_switch",
         ):
             if not isinstance(data.get(field), bool):
                 errors.append(f"adapter capabilities: {runtime}.{field} must be boolean")
+        for field in (
+            "command_output_visibility",
+            "changed_path_visibility",
+            "validation_output_visibility",
+        ):
+            if data.get(field) not in expected_visibility:
+                errors.append(
+                    f"adapter capabilities: {runtime}.{field} must be one of {sorted(expected_visibility)}"
+                )
         if data.get("default_failure_mode") != "fail_open":
             errors.append(f"adapter capabilities: {runtime} must default to fail_open")
         if not isinstance(data.get("unsupported_events"), list):
@@ -306,11 +356,60 @@ def _validate_adapter_capabilities(errors: list[str]) -> None:
             errors.append(f"adapter capabilities: {runtime}.default_gate_modes must be a dict")
         if not data.get("degradation_policy"):
             errors.append(f"adapter capabilities: {runtime}.degradation_policy is required")
-        if runtime in {"cline", "openhands", "gemini-cli", "goose"}:
+        supported_events = set(data.get("supported_events") or [])
+        unsupported_events = set(data.get("unsupported_events") or [])
+        translator = capabilities.runtime_adapter_for(runtime)
+        if translator.capabilities.runtime != adapter.runtime:
+            errors.append(
+                f"adapter factory: {runtime} returned {translator.capabilities.runtime}"
+            )
+        if runtime in {"codex", "claude", "copilot", "cline", "roo", "openhands"}:
+            expected_class = f"{runtime.title()}Adapter"
+            if runtime == "openhands":
+                expected_class = "OpenHandsAdapter"
+            if translator.__class__.__name__ != expected_class:
+                errors.append(
+                    f"adapter factory: {runtime} must return {expected_class}, got {translator.__class__.__name__}"
+                )
+        for event in canonical_events[:-1]:
+            if event not in supported_events and event not in unsupported_events:
+                errors.append(
+                    f"adapter capabilities: {runtime} must explicitly mark {event} unsupported"
+                )
+        if runtime == "generic" and data.get("command_output_visibility") != "none":
+            errors.append("adapter capabilities: generic command output visibility must be none")
+        if runtime in {"gemini-cli", "goose"}:
             if not data.get("placeholder"):
                 errors.append(f"adapter capabilities: {runtime} must be a placeholder")
             if data.get("supported_events"):
                 errors.append(f"adapter capabilities: {runtime} must not claim supported events")
+            missing = [event for event in canonical_events[:-1] if event not in unsupported_events]
+            if missing:
+                errors.append(
+                    f"adapter capabilities: {runtime} placeholder must mark all events unsupported: {missing}"
+                )
+        if runtime in {"cline", "roo"}:
+            if data.get("placeholder"):
+                errors.append(f"adapter capabilities: {runtime} must be a staged adapter, not a placeholder")
+            if data.get("supported_events"):
+                errors.append(f"adapter capabilities: {runtime} must not claim hook lifecycle events")
+            if data.get("stop_block_supported"):
+                errors.append(f"adapter capabilities: {runtime} must not claim stop blocking")
+            if not data.get("supports_mode_or_role_switch"):
+                errors.append(f"adapter capabilities: {runtime} must expose mode or role switch support")
+        if runtime == "cline" and not data.get("supports_plan_act_mode"):
+            errors.append("adapter capabilities: cline must expose Plan/Act mode support")
+        if runtime == "openhands":
+            if data.get("placeholder"):
+                errors.append("adapter capabilities: openhands must be a backend-protocol adapter")
+            for event in ("PostToolUse", "PostToolUseFailure", "FileChanged", "TaskCreated", "TaskCompleted"):
+                if event not in supported_events:
+                    errors.append(f"adapter capabilities: OpenHands must support {event}")
+            for event in ("PreToolUse", "PermissionRequest", "SubagentStart", "SubagentStop"):
+                if event not in unsupported_events:
+                    errors.append(f"adapter capabilities: OpenHands must mark {event} unsupported")
+            if data.get("command_output_visibility") == "full":
+                errors.append("adapter capabilities: OpenHands must not claim full command output visibility")
     copilot = capabilities.adapter_capabilities_for("copilot")
     for event in ("UserPromptSubmit", "PreToolUse", "SubagentStop"):
         if event not in copilot.unsupported_events:
@@ -320,6 +419,20 @@ def _validate_adapter_capabilities(errors: list[str]) -> None:
     for check in ("pre_tool_advisory_context", "user_prompt_advisory_context", "subagent_stop_context"):
         if check not in copilot.unsupported_checks:
             errors.append(f"adapter capabilities: Copilot must mark {check} unsupported")
+    claude = capabilities.adapter_capabilities_for("claude")
+    for event in (
+        "PostToolUseFailure",
+        "StopFailure",
+        "SessionEnd",
+        "TaskCreated",
+        "TaskCompleted",
+        "FileChanged",
+        "ConfigChanged",
+        "PreCompact",
+        "PostCompact",
+    ):
+        if not claude.supports_event(event):
+            errors.append(f"adapter capabilities: Claude must support {event}")
 
 
 def _copilot_unsupported_advisory_events(errors: list[str]) -> tuple[str, ...]:
@@ -425,6 +538,20 @@ def _validate_python_files(errors: list[str]) -> None:
             errors.append(
                 "changeforge_post_edit_structure_gate.py: must record post-edit preflight gaps"
             )
+        if "post_edit_structure_findings" not in structure_text:
+            errors.append(
+                "changeforge_post_edit_structure_gate.py: must record post_edit_structure_findings"
+            )
+
+    for script_name in ADAPTER_SNAPSHOT_SCRIPTS:
+        path = HOOK_SCRIPTS_DIR / script_name
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        if "snapshot_from_event_state" not in text:
+            errors.append(f"{script_name}: must use shared adapter snapshot creation")
+        if script_name != "changeforge_stop_closure_gate.py" and "state_update_from_snapshot" not in text:
+            errors.append(f"{script_name}: must persist bounded adapter snapshot state")
 
     pre_edit_script = HOOK_SCRIPTS_DIR / "changeforge_pre_edit_structure_gate.py"
     if pre_edit_script.is_file():
@@ -479,6 +606,21 @@ def _validate_python_files(errors: list[str]) -> None:
                 errors.append(
                     f"changeforge_common.py: hook state must track {field}"
                 )
+        for field in (
+            "runtime_adapter",
+            "normalized_events",
+            "deleted_paths",
+            "generated_paths",
+            "external_file_changes",
+            "config_changes",
+            "validation_results",
+            "repair_events",
+            "rereview_events",
+            "command_risks",
+            "rollback_points",
+        ):
+            if f'"{field}"' not in common_text:
+                errors.append(f"changeforge_common.py: hook state must track {field}")
 
 
 def _validate_bootstrap_fragment(errors: list[str]) -> None:
@@ -1012,6 +1154,18 @@ def _validate_hook_behavior(errors: list[str]) -> None:
         "implementation_preflight_required",
         "edit_without_preflight_seen",
         "post_edit_confirmed_preflight_gap",
+        "runtime_adapter",
+        "normalized_events",
+        "deleted_paths",
+        "generated_paths",
+        "external_file_changes",
+        "config_changes",
+        "validation_results",
+        "repair_events",
+        "rereview_events",
+        "command_risks",
+        "rollback_points",
+        "post_edit_structure_findings",
     ):
         if f'"{field}"' not in state_schema:
             errors.append(f"hook state schema must include {field}")
@@ -1024,6 +1178,15 @@ def _validate_hook_behavior(errors: list[str]) -> None:
         "implementation_preflight_blocked",
         "edit_without_preflight_seen",
         "post_edit_confirmed_preflight_gap",
+        "normalized_events",
+        "deleted_paths",
+        "generated_paths",
+        "external_file_changes",
+        "config_changes",
+        "validation_results",
+        "command_risk",
+        "permission_decision",
+        "post_edit_structure_findings",
     ):
         if f'"{field}"' not in telemetry_schema:
             errors.append(f"telemetry schema must include {field}")

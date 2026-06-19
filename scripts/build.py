@@ -39,6 +39,8 @@ AGENT_SKILL_ROOTS = (
     DIST_DIR / "claude" / "user" / ".claude" / "skills",
     DIST_DIR / "copilot" / "project" / ".github" / "skills",
     DIST_DIR / "copilot" / "user" / ".copilot" / "skills",
+    DIST_DIR / "cline" / "project" / ".cline" / "skills",
+    DIST_DIR / "cline" / "user" / ".cline" / "skills",
 )
 
 HOOK_OUTPUT_ROOTS = {

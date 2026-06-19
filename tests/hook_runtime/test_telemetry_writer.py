@@ -150,6 +150,58 @@ class TelemetryWriterTests(unittest.TestCase):
             )
             self.assertEqual(read_records(Path(cache)), [])
 
+    def test_writes_bounded_changeforge_closure_object(self) -> None:
+        common = load_common()
+        with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:
+            os.environ["XDG_CACHE_HOME"] = cache
+            os.environ.pop("CHANGEFORGE_TELEMETRY", None)
+            repo = Path(cwd)
+            common.write_telemetry_event(
+                repo,
+                runtime="codex",
+                hook_name="stop_closure_gate",
+                event_name="Stop",
+                mode="warn",
+                closure_contract_verdict="needs_review",
+                changeforge_closure={
+                    "adapter": "codex",
+                    "verdict": "needs_review",
+                    "supported_checks": ["validation"],
+                    "unsupported_checks": [],
+                    "present_evidence": ["route_manifest"],
+                    "missing_evidence": ["review"],
+                    "negative_evidence": [],
+                    "validation": {
+                        "outcome": "pass",
+                        "freshness": "current",
+                        "scope": "module",
+                        "command_kind": "module",
+                    },
+                    "review": {
+                        "review_outcome": "finding",
+                        "repair_present": True,
+                        "rereview_present": False,
+                    },
+                    "changed_files": {
+                        "changed": ["src/runtime_governance/closure.py"],
+                        "deleted": [],
+                        "generated": [],
+                    },
+                    "residual_risk": ["repair requires re-review"],
+                    "next_owner": "agent",
+                },
+            )
+            records = read_records(Path(cache))
+        self.assertEqual(len(records), 1)
+        record = records[0]
+        self.assertEqual(record["closure_contract_verdict"], "needs_review")
+        self.assertEqual(record["changeforge_closure"]["verdict"], "needs_review")
+        self.assertEqual(
+            record["changeforge_closure"]["changed_files"]["changed"],
+            ["src/runtime_governance/closure.py"],
+        )
+        self.assertEqual(record["changeforge_closure"]["validation"]["scope"], "module")
+
     def test_write_failure_is_fail_open(self) -> None:
         common = load_common()
         with tempfile.TemporaryDirectory() as cwd:

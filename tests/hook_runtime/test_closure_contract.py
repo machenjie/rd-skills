@@ -55,6 +55,38 @@ class ClosureContractTests(unittest.TestCase):
         self.assertFalse(contract.requires_route_manifest)
         self.assertNotIn("route_manifest", contract.missing_items)
 
+    def test_structured_changeforge_closure_reports_review_repair_state(self) -> None:
+        contract = ClosureContract.from_state(
+            {
+                "turn_stage": "repair",
+                "changed_paths": ["src/runtime_governance/closure.py"],
+                "review_findings": ["P1: repair requires re-review"],
+                "repair_evidence_seen": True,
+            },
+            route_manifest_complete=True,
+            repository_context_present=True,
+            implementation_preflight_complete=True,
+            validation_evidence_present=True,
+            review_evidence_present=True,
+            residual_risk_present=True,
+            capabilities=adapter_capabilities_for("codex"),
+        )
+        self.assertEqual(contract.verdict, "needs_review")
+        closure = contract.changeforge_closure
+        self.assertEqual(closure["verdict"], "needs_review")
+        self.assertEqual(
+            closure["changed_files"],
+            {"changed": ["src/runtime_governance/closure.py"], "deleted": [], "generated": []},
+        )
+        self.assertEqual(
+            closure["review"],
+            {
+                "review_outcome": "finding",
+                "repair_present": True,
+                "rereview_present": False,
+            },
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

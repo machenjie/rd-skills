@@ -14,6 +14,7 @@ ChangeForge benchmarks are release evidence, not marketing claims. They are loca
 | Profile build reproducibility | Build manifests for `recommended`, `full`, and `dev`. | `python3 scripts/build.py --profile recommended && python3 scripts/build.py --profile full && python3 scripts/build.py --profile dev` |
 | Installation validation | Installer/doctor validation. | `python3 scripts/validate-installation.py` |
 | Skill efficacy structural fixtures | evals/skill-efficacy | `python3 scripts/validate-skill-efficacy-benchmarks.py` |
+| Executor adapter structural fixtures | Deterministic adapter fixtures and sanitized telemetry sample under `evals/executor-adapter` and `reports/`. | `python3 scripts/eval-executor-adapters.py` |
 | Codegen benchmark smoke | Codegen benchmark manifest and limited run. | `python3 scripts/validate-codegen-benchmarks.py` and `python3 scripts/run-codegen-benchmarks.py --limit 3` |
 | Professionalism regression | Baseline-aware regression check. | `python3 scripts/validate-professionalism-regression.py --strict` |
 
@@ -51,6 +52,13 @@ fixtures validate routing and evidence shape; they do not provide live pass-rate
 evidence, empirical before/after agent performance, or measured token/turn
 overhead.
 
+Executor adapter benchmarks are also structural/local evidence. They validate
+canonical event recognition, adapter degradation, privacy redaction, validation
+freshness, and closure effects across supported executor runtimes. The generated
+runtime telemetry sample is bounded and sanitized; live pass-rate, token
+overhead, and turn overhead remain `not_collected` unless a separate measured
+run is added.
+
 ## Recommended Evidence Refresh
 
 Before publishing a scorecard, refresh the relevant evidence:
@@ -61,6 +69,7 @@ python3 scripts/eval-skill-professionalism.py
 python3 scripts/eval-skill-professionalism.py --coverage-matrix
 python3 scripts/eval-professional-benchmarks.py
 python3 scripts/validate-skill-efficacy-benchmarks.py
+python3 scripts/eval-executor-adapters.py
 python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/eval-professional-agent-samples.py --promoted-only --strict
@@ -96,7 +105,10 @@ Release snapshot artifacts are committed for reader context but are not guarante
 - `reports/professional-scorecard.json`
 - `docs/SCORECARD_DASHBOARD.md`
 - the README scorecard summary block generated from `reports/professional-scorecard.json`
+- `reports/executor-adapter-eval.md`
+- `reports/executor-adapter-eval.json`
+- `reports/runtime-telemetry-sample.json`
 
-When updating release snapshots, rebuild all three profiles, refresh the scorecard, render the dashboard and README block, then regenerate the public benchmark summary. The public benchmark summary reuses the scorecard marketplace dimension so those two artifacts do not disagree about marketplace validation status.
+When updating release snapshots, refresh executor adapter evidence, rebuild all three profiles, refresh the scorecard, render the dashboard and README block, then regenerate the public benchmark summary. The public benchmark summary reuses scorecard dimensions for marketplace and executor adapter status so those artifacts do not disagree about generated evidence.
 
 See [SCORECARD.md](SCORECARD.md) and [SCORECARD_DASHBOARD.md](SCORECARD_DASHBOARD.md) for the reader-facing scorecard interpretation.

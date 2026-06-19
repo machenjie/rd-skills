@@ -1,0 +1,42 @@
+id: copilot-unsupported-pre-tool
+runtime: copilot
+description: Copilot pre-tool event degrades because pre-tool advisory context is unsupported.
+coverage_targets:
+  - degradation
+  - tool_category
+  - privacy_redaction
+pressure_cases:
+  - copilot_unsupported_pre_tool
+input_payload:
+  eventName: PreToolUse
+  event_id: copilot-unsupported-pre-tool
+  toolName: RunTerminalCommand
+  toolInput:
+    command: pytest tests/test_api.py
+expected_normalized_event:
+  adapter: copilot
+  event_kind: pre_tool_use
+  tool_category: test
+  command_kind: pytest
+  capability_degradation_contains:
+    - copilot_pre_tool_use_unsupported
+expected_gate_result:
+  outcome: degraded
+expected_evidence_delta:
+  normalized_event_supported: false
+  adapter_degradation_strength: partial
+  validation_strength: weak
+  validation_freshness: current
+  validation_outcome: no_outcome
+  privacy_redaction_count: 1
+expected_closure_effect:
+  verdict: needs_validation
+  unsupported_checks_contains:
+    - runtime_adapter_degradation
+    - pre_tool_advisory_context
+privacy_expectations:
+  redactions_include:
+    - "command:kind_only"
+  blocked_strings:
+    - pytest tests/test_api.py
+  forbid_absolute_paths: true

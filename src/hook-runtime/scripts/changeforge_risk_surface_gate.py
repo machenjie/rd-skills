@@ -28,6 +28,10 @@ from changeforge_common import (
     tool_name,
     write_telemetry_event,
 )
+from changeforge_executor_adapter_core import (
+    snapshot_from_event_state,
+    state_update_from_snapshot,
+)
 
 
 # Compacted (lowercase, alphanumeric-only) watched tool names across runtimes:
@@ -280,6 +284,8 @@ def main() -> int:
         repo = repo_root(cwd_from_event(event))
         paths = extract_changed_paths(event)
         command = extract_bash_command(event)
+        command_risk = _command_risk_class(command, paths)
+        validation_results = _validation_results(command, event)
         path_findings = _risk_findings(paths, "")
         command_findings = _risk_findings([], command)
         tool_permission_findings = _tool_permission_findings(tool, command, paths)
@@ -300,10 +306,31 @@ def main() -> int:
             repo,
             f"risk gate runtime={runtime} event={event_name(event)} tool={tool_name(event)} paths={paths} command={command!r} findings={findings} closure={closure_findings}",
         )
+        snapshot = snapshot_from_event_state(
+            event,
+            {},
+            classification={
+                "stage": "test" if _looks_like_validation(command) else "edit",
+                "paths": paths,
+                "tool": tool_name(event),
+                "command_program": summarize_command_program(command),
+                "risk_surfaces": closure_surfaces,
+            },
+            gate_name="risk_surface",
+            gate_mode=mode,
+            gate_facts={"command_risk": command_risk, "risk_surfaces": closure_surfaces},
+        )
+        snapshot_update = state_update_from_snapshot(snapshot)
+        snapshot_update["changed_paths"] = paths
+        snapshot_update["command_risks"] = [
+            f"{command_risk}:{summarize_command_program(command) or 'unknown'}"
+        ]
+        snapshot_update["validation_results"] = validation_results
+        snapshot_update["validation_command_seen"] = _looks_like_validation(command) or None
         state = merge_state(
             repo,
             runtime,
-            changed_paths=paths,
+            **snapshot_update,
             risk_surfaces=closure_surfaces,
             changed_path_risk_surfaces=path_surfaces,
             command_risk_surfaces=command_surfaces,
@@ -312,7 +339,6 @@ def main() -> int:
             suggested_capabilities=_collect(closure_findings, "capabilities"),
             suggested_domain_extensions=_collect(closure_findings, "domain_extensions"),
             suggested_gates=_collect(closure_findings, "gates"),
-            validation_command_seen=_looks_like_validation(command),
             tool_permission_sandbox_seen=bool(tool_permission_findings),
         )
         write_telemetry_event(
@@ -324,8 +350,10 @@ def main() -> int:
             session_id=session_id_from_event(event),
             cwd=cwd_from_event(event),
             tool_name=tool_name(event),
+            normalized_events=snapshot_update["normalized_events"],
             changed_paths=paths,
             command_program=summarize_command_program(command),
+            command_risk=command_risk,
             hook_findings={
                 "risk_surfaces": closure_surfaces,
                 "changed_path_risk_surfaces": path_surfaces,
@@ -341,6 +369,7 @@ def main() -> int:
             command_risk_surfaces=command_surfaces,
             closure_risk_surfaces=closure_surfaces,
             validation_command_detected=_looks_like_validation(command),
+            validation_results=validation_results,
             validation_evidence_detected=False,
             tool_permission_sandbox_seen=bool(tool_permission_findings),
         )
@@ -592,6 +621,60 @@ def _collect(findings: list[dict[str, object]], key: str) -> list[str]:
 def _looks_like_validation(command: str) -> bool:
     lowered = f" {command.casefold()} "
     return any(marker in lowered for marker in VALIDATION_MARKERS)
+
+
+def _command_risk_class(command: str, paths: list[str]) -> str:
+    if paths and not command:
+        return "mutation"
+    if not command:
+        return "unknown"
+    if _looks_like_validation(command) or _command_is_read_only(command):
+        return "safe"
+    tokens = _command_tokens(command)
+    program, index = _program_token(tokens)
+    subcommand = _git_subcommand(tokens[index + 1 :]) if program == "git" else ""
+    lowered = command.casefold()
+    if any(token in lowered for token in ("alembic", "prisma migrate", "db:migrate")):
+        return "migration"
+    if any(token in lowered for token in ("kubectl", "helm", "terraform", "docker compose")):
+        return "release"
+    if _command_has_high_tool_permission_risk(command) and (
+        program in {"rm", "sudo"} or subcommand in {"reset", "clean", "push", "restore"}
+    ):
+        return "destructive"
+    if any(token in lowered for token in ("npm install", "pnpm add", "yarn add", "pip install")):
+        return "dependency"
+    if program in {"curl", "wget", "ssh", "scp", "rsync"}:
+        return "network"
+    return "mutation"
+
+
+def _validation_results(command: str, event: dict) -> list[str]:
+    if not _looks_like_validation(command):
+        return []
+    return [
+        "{outcome}:unknown:{program}".format(
+            outcome=_observable_command_outcome(event),
+            program=summarize_command_program(command) or "unknown",
+        )
+    ]
+
+
+def _observable_command_outcome(event: dict) -> str:
+    for key in ("exit_code", "exitCode", "status", "returncode", "return_code"):
+        value = event.get(key)
+        if isinstance(value, bool):
+            continue
+        if isinstance(value, int):
+            return "pass" if value == 0 else "fail"
+        if isinstance(value, str) and value.strip().isdigit():
+            return "pass" if int(value.strip()) == 0 else "fail"
+    outcome = str(event.get("outcome") or event.get("result") or "").strip().casefold()
+    if outcome in {"success", "succeeded", "pass", "passed"}:
+        return "pass"
+    if outcome in {"failure", "failed", "fail", "error"}:
+        return "fail"
+    return "unknown"
 
 
 def _warning_message(

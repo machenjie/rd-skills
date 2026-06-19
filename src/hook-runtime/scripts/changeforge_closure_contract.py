@@ -48,6 +48,7 @@ class ClosureContract:
     adapter_supports_blocking: bool = False
     closure_status: str = "pass"
     missing_items: list[str] = field(default_factory=list)
+    changeforge_closure: dict[str, object] = field(default_factory=dict)
 
     @classmethod
     def from_state(
@@ -66,6 +67,10 @@ class ClosureContract:
         block_mode: bool = False,
         validation_broker_outcome: str = "",
         validation_broker_residual_risk: list[str] | None = None,
+        validation_result_outcome: str = "",
+        validation_result_freshness: str = "",
+        validation_result_scope: str = "",
+        validation_result_command_kind: str = "",
     ) -> "ClosureContract":
         state = state if isinstance(state, dict) else {}
         capabilities = capabilities or adapter_capabilities_for(runtime)
@@ -97,6 +102,14 @@ class ClosureContract:
                 requires_validation_evidence=False,
                 requires_residual_risk=False,
                 adapter_supports_blocking=capabilities.supports_blocking,
+                changeforge_closure=_changeforge_closure(
+                    governance,
+                    validation_broker_outcome=validation_broker_outcome,
+                    validation_result_outcome=validation_result_outcome,
+                    validation_result_freshness=validation_result_freshness,
+                    validation_result_scope=validation_result_scope,
+                    validation_result_command_kind=validation_result_command_kind,
+                ),
             )
 
         engineering = profile == "engineering"
@@ -133,6 +146,7 @@ class ClosureContract:
             required_evidence.append("residual_risk")
 
         ledger = _governance_ledger(
+            state=state,
             route_manifest_complete=route_manifest_complete,
             repository_context_present=repository_context_present,
             implementation_preflight_complete=implementation_preflight_complete,
@@ -171,6 +185,14 @@ class ClosureContract:
             adapter_supports_blocking=capabilities.supports_blocking,
             closure_status=status,
             missing_items=missing,
+            changeforge_closure=_changeforge_closure(
+                governance,
+                validation_broker_outcome=validation_broker_outcome,
+                validation_result_outcome=validation_result_outcome,
+                validation_result_freshness=validation_result_freshness,
+                validation_result_scope=validation_result_scope,
+                validation_result_command_kind=validation_result_command_kind,
+            ),
         )
 
     def to_dict(self) -> dict[str, object]:
@@ -191,11 +213,13 @@ class ClosureContract:
             "adapter_supports_blocking": self.adapter_supports_blocking,
             "closure_status": self.closure_status,
             "missing_items": list(self.missing_items),
+            "changeforge_closure": dict(self.changeforge_closure),
         }
 
 
 def _governance_ledger(
     *,
+    state: dict | None = None,
     route_manifest_complete: bool,
     repository_context_present: bool,
     implementation_preflight_complete: bool,
@@ -207,9 +231,159 @@ def _governance_ledger(
     _mark(ledger.route_manifest, route_manifest_complete)
     _mark(ledger.repository_context, repository_context_present)
     _mark(ledger.implementation_preflight, implementation_preflight_complete)
-    _mark(ledger.validation, validation_evidence_present)
     _mark(ledger.review, review_evidence_present)
     _mark(ledger.residual_risk, residual_risk_present)
+    state = state if isinstance(state, dict) else {}
+    changed_paths = _list(state.get("changed_paths"))
+    deleted_paths = _list(state.get("deleted_paths"))
+    generated_paths = _list(state.get("generated_paths"))
+    if changed_paths or deleted_paths or generated_paths:
+        ledger.changed_files = changed_paths
+        ledger.deleted_files = deleted_paths
+        ledger.generated_files = generated_paths
+        ledger.changed_files_by_status = {
+            "changed": changed_paths,
+            "deleted": deleted_paths,
+            "generated": generated_paths,
+        }
+    validation_status = _validation_status_from_results(state.get("validation_results"))
+    if validation_status == "stale":
+        ledger.validation.merge(
+            EvidenceEntry(
+                "validation",
+                EvidenceStrength.NEGATIVE.value,
+                Freshness.STALE.value,
+                ["hook-compat"],
+                summary="validation stale after material change",
+                outcome="stale",
+            )
+        )
+    elif validation_status == "fail":
+        ledger.validation.merge(
+            EvidenceEntry(
+                "validation",
+                EvidenceStrength.NEGATIVE.value,
+                Freshness.CURRENT.value,
+                ["hook-compat"],
+                summary="validation command reported failure",
+                outcome="fail",
+            )
+        )
+    elif validation_status == "pass":
+        ledger.validation.merge(
+            EvidenceEntry(
+                "validation",
+                EvidenceStrength.STRONG.value,
+                Freshness.CURRENT.value,
+                ["hook-compat"],
+                summary="structured validation result reported pass",
+                outcome="pass",
+            )
+        )
+    elif validation_status == "unknown":
+        ledger.validation.merge(
+            EvidenceEntry(
+                "validation",
+                EvidenceStrength.PARTIAL.value,
+                Freshness.UNKNOWN.value,
+                ["hook-compat"],
+                summary="validation command observed without outcome",
+                outcome="unknown",
+            )
+        )
+    else:
+        _mark(ledger.validation, validation_evidence_present)
+    review_findings = _list(state.get("review_findings"))
+    if review_findings:
+        ledger.review.merge(
+            EvidenceEntry(
+                "review",
+                EvidenceStrength.STRONG.value,
+                Freshness.CURRENT.value,
+                ["hook-compat"],
+                summary="review finding requires repair evidence",
+                outcome="finding",
+            )
+        )
+    if state.get("repair_evidence_seen") or _list(state.get("repair_findings")):
+        ledger.repair.merge(
+            EvidenceEntry(
+                "repair",
+                EvidenceStrength.PARTIAL.value,
+                Freshness.CURRENT.value,
+                ["hook-compat"],
+            )
+        )
+    if state.get("review_after_repair_seen") or state.get("re_review_evidence_seen"):
+        ledger.rereview.merge(
+            EvidenceEntry(
+                "rereview",
+                EvidenceStrength.STRONG.value,
+                Freshness.CURRENT.value,
+                ["hook-compat"],
+            )
+        )
+    if _list(state.get("external_file_changes")):
+        ledger.external_file_change.merge(
+            EvidenceEntry(
+                "external_file_change",
+                EvidenceStrength.PARTIAL.value,
+                Freshness.CURRENT.value,
+                ["hook-compat"],
+                summary="external file change observed by adapter",
+            )
+        )
+    if _list(state.get("config_changes")):
+        ledger.config_change.merge(
+            EvidenceEntry(
+                "config_change",
+                EvidenceStrength.PARTIAL.value,
+                Freshness.CURRENT.value,
+                ["hook-compat"],
+                summary="configuration change observed by adapter",
+            )
+        )
+    if _list(state.get("permission_decisions")):
+        ledger.permission.merge(
+            EvidenceEntry(
+                "permission",
+                EvidenceStrength.PARTIAL.value,
+                Freshness.CURRENT.value,
+                ["hook-compat"],
+                summary="permission decision recorded",
+            )
+        )
+    if _list(state.get("command_risks")):
+        ledger.command_risk.merge(
+            EvidenceEntry(
+                "command_risk",
+                EvidenceStrength.PARTIAL.value,
+                Freshness.CURRENT.value,
+                ["hook-compat"],
+                summary="command risk recorded",
+            )
+        )
+    if _list(state.get("rollback_points")):
+        ledger.rollback.merge(
+            EvidenceEntry(
+                "rollback",
+                EvidenceStrength.PARTIAL.value,
+                Freshness.CURRENT.value,
+                ["hook-compat"],
+                summary="rollback point recorded",
+            )
+        )
+    adapter = state.get("runtime_adapter")
+    if isinstance(adapter, dict) and _list(adapter.get("degraded_capabilities")):
+        ledger.adapter_degradation.merge(
+            EvidenceEntry(
+                "adapter_degradation",
+                EvidenceStrength.PARTIAL.value,
+                Freshness.CURRENT.value,
+                ["hook-compat"],
+                summary="runtime adapter reported degraded capabilities",
+            )
+        )
     return ledger
 
 
@@ -225,9 +399,48 @@ def _mark(entry: EvidenceEntry, present: bool) -> None:
         )
 
 
+def _changeforge_closure(
+    governance: GovernanceClosureContract,
+    *,
+    validation_broker_outcome: str = "",
+    validation_result_outcome: str = "",
+    validation_result_freshness: str = "",
+    validation_result_scope: str = "",
+    validation_result_command_kind: str = "",
+) -> dict[str, object]:
+    validation = dict(governance.validation_status)
+    if validation_result_outcome:
+        validation["outcome"] = validation_result_outcome
+    elif validation_broker_outcome and validation.get("outcome") in {"", None}:
+        validation["outcome"] = validation_broker_outcome
+    if validation_result_freshness:
+        validation["freshness"] = validation_result_freshness
+    validation["scope"] = validation_result_scope or validation.get("scope") or "unknown"
+    validation["command_kind"] = (
+        validation_result_command_kind or validation.get("command_kind") or "unknown"
+    )
+    return {
+        "adapter": governance.adapter,
+        "verdict": governance.verdict,
+        "supported_checks": list(governance.supported_checks),
+        "unsupported_checks": list(governance.unsupported_checks),
+        "degraded_capabilities": list(governance.degraded_capabilities),
+        "present_evidence": list(governance.present_evidence),
+        "missing_evidence": list(governance.missing_evidence),
+        "negative_evidence": list(governance.negative_evidence),
+        "validation": validation,
+        "review": dict(governance.review_status),
+        "changed_files": dict(governance.changed_files),
+        "residual_risk": list(governance.residual_risk),
+        "next_owner": governance.next_owner,
+    }
+
+
 def _profile(state: dict) -> str:
     stage = str(state.get("turn_stage") or "").strip()
-    if stage in {"", "question", "unknown", "no_engineering_action"}:
+    if stage in {"question", "unknown", "no_engineering_action"}:
+        return "silent"
+    if stage == "" and not state.get("changed_paths"):
         return "silent"
     if stage in {"read", "review", "requirement-intake", "code-review"} and not state.get("changed_paths"):
         return "read_review"
@@ -258,6 +471,21 @@ def _list(values: object) -> list[str]:
     if not isinstance(values, (list, tuple, set)):
         return []
     return _unique([str(item) for item in values])
+
+
+def _validation_status_from_results(values: object) -> str:
+    results = " ".join(_list(values)).casefold()
+    if not results:
+        return ""
+    if "stale_after_material_change" in results or "stale" in results:
+        return "stale"
+    if "fail" in results or "failed" in results:
+        return "fail"
+    if "pass" in results or "passed" in results:
+        return "pass"
+    if "unknown" in results or "candidate" in results:
+        return "unknown"
+    return ""
 
 
 def _unique(values: list[str]) -> list[str]:

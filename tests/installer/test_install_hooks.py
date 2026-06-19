@@ -258,6 +258,16 @@ class InstallHooksTests(unittest.TestCase):
             packages = changeforge_install._hook_support_packages_from_manifest(manifest)
         self.assertEqual(packages, tuple(EXPECTED_SUPPORT_PACKAGES))
 
+    def test_cline_skill_install_layout_is_skills_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            self.assertEqual(
+                changeforge_install.resolve_target_dir("cline", "project", project),
+                project.resolve() / ".cline" / "skills",
+            )
+        self.assertEqual(changeforge_install.supported_scopes("cline"), ("project", "user"))
+        self.assertFalse(changeforge_install.hooks_supported("cline", "project"))
+
 
 class InstallCopilotHooksTests(unittest.TestCase):
     @classmethod

@@ -1,0 +1,36 @@
+id: codex-large-path-list-cap
+runtime: codex
+description: Codex edit payload with many paths is capped to bounded evidence size.
+coverage_targets:
+  - event_recognition
+  - tool_category
+  - path_normalization
+pressure_cases:
+  - large_path_list_cap
+input_payload:
+  hook_event_name: PostToolUse
+  event_id: codex-large-path-list-cap
+  tool_name: edit
+  generate_path_list:
+    field: changed_files
+    prefix: /workspace/project/src/generated/file-
+    suffix: .py
+    count: 60
+expected_normalized_event:
+  adapter: codex
+  event_kind: post_tool_use
+  tool_category: edit
+  command_risk: mutation
+expected_gate_result:
+  outcome: pass
+expected_evidence_delta:
+  normalized_event_supported: true
+  bounded_path_count: 50
+  command_risk_outcome: mutation
+expected_closure_effect:
+  verdict: needs_validation
+privacy_expectations:
+  blocked_strings:
+    - /workspace/project
+  forbid_absolute_paths: true
+  max_bounded_path_count: 50

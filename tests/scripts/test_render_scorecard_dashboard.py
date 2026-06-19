@@ -37,6 +37,10 @@ def _payload() -> dict[str, object]:
                 "status": "pass",
                 "meaning": "Local deterministic structure sample passed.",
             },
+            "runtime telemetry sample": {
+                "status": "pass",
+                "meaning": "Sanitized bounded runtime fact sample.",
+            },
             "live pass-rate": {
                 "status": "not_collected",
                 "meaning": "Measured real-task success rate.",
@@ -80,6 +84,20 @@ def _payload() -> dict[str, object]:
                 "fix_hint": "Run marketplace validators.",
             },
             {
+                "name": "Executor adapter structural fixtures",
+                "status": "pass",
+                "detail": "case_count=15",
+                "source": "reports/executor-adapter-eval.json",
+                "fix_hint": "Repair executor adapter fixtures.",
+            },
+            {
+                "name": "Runtime telemetry sample",
+                "status": "pass",
+                "detail": "sanitized sample generated",
+                "source": "reports/runtime-telemetry-sample.json",
+                "fix_hint": "Regenerate telemetry sample.",
+            },
+            {
                 "name": "Installation validation",
                 "status": "not_collected",
                 "detail": "not collected",
@@ -109,10 +127,17 @@ class RenderScorecardDashboardTests(unittest.TestCase):
         module = _load_module()
         rendered = module.render_dashboard(_payload())
         self.assertIn("## Evidence Levels", rendered)
+        self.assertIn("| runtime telemetry sample | `pass` |", rendered)
         self.assertIn("| live pass-rate | `not_collected` |", rendered)
         self.assertIn("| token overhead | `not_collected` |", rendered)
         self.assertIn("| turn overhead | `not_collected` |", rendered)
         self.assertNotIn("| live pass-rate | `pass` |", rendered)
+
+    def test_executor_adapter_key_statuses_are_visible(self) -> None:
+        module = _load_module()
+        rendered = module.render_dashboard(_payload())
+        self.assertIn("| Executor adapter structural fixtures | `pass` | case_count=15 |", rendered)
+        self.assertIn("| Runtime telemetry sample | `pass` | sanitized sample generated |", rendered)
 
     def test_open_source_partial_is_visible(self) -> None:
         module = _load_module()

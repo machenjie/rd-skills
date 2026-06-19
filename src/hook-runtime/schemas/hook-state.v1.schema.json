@@ -29,6 +29,19 @@
       "type": "array",
       "maxItems": 50,
       "items": { "type": "string", "maxLength": 300 }
+    },
+    "runtimeAdapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {
+          "type": "string",
+          "enum": ["codex", "claude", "copilot", "generic", "unknown"]
+        },
+        "supported_checks": { "$ref": "#/$defs/stringList" },
+        "unsupported_checks": { "$ref": "#/$defs/stringList" },
+        "degraded_capabilities": { "$ref": "#/$defs/stringList" }
+      }
     }
   },
   "properties": {
@@ -36,10 +49,16 @@
       "type": "string",
       "enum": ["codex", "claude", "copilot", "generic", "unknown"]
     },
+    "runtime_adapter": { "$ref": "#/$defs/runtimeAdapter" },
+    "normalized_events": { "$ref": "#/$defs/stringList" },
     "changed_paths": { "$ref": "#/$defs/stringList" },
+    "deleted_paths": { "$ref": "#/$defs/stringList" },
+    "generated_paths": { "$ref": "#/$defs/stringList" },
     "read_paths": { "$ref": "#/$defs/stringList" },
     "read_tools": { "$ref": "#/$defs/stringList" },
     "searched_patterns": { "$ref": "#/$defs/stringList" },
+    "external_file_changes": { "$ref": "#/$defs/stringList" },
+    "config_changes": { "$ref": "#/$defs/stringList" },
     "structure_findings": { "$ref": "#/$defs/stringList" },
     "file_naming_findings": { "$ref": "#/$defs/stringList" },
     "reuse_findings": { "$ref": "#/$defs/stringList" },
@@ -47,9 +66,13 @@
     "advanced_refactor_findings": { "$ref": "#/$defs/stringList" },
     "comment_findings": { "$ref": "#/$defs/stringList" },
     "structure_quality_findings": { "$ref": "#/$defs/stringList" },
+    "post_edit_structure_findings": { "$ref": "#/$defs/stringList" },
     "review_targets": { "$ref": "#/$defs/stringList" },
     "review_findings": { "$ref": "#/$defs/stringList" },
     "repair_findings": { "$ref": "#/$defs/stringList" },
+    "repair_events": { "$ref": "#/$defs/stringList" },
+    "rereview_events": { "$ref": "#/$defs/stringList" },
+    "validation_results": { "$ref": "#/$defs/stringList" },
     "risk_surfaces": { "$ref": "#/$defs/stringList" },
     "changed_path_risk_surfaces": {
       "description": "Risk surfaces matched from changed file paths only.",
@@ -59,12 +82,14 @@
       "description": "Risk surfaces matched from a command string only. The full command is never stored.",
       "$ref": "#/$defs/stringList"
     },
+    "command_risks": { "$ref": "#/$defs/stringList" },
     "closure_risk_surfaces": {
       "description": "Risk surfaces counted as closure-relevant engineering work. Read-only command matches are intentionally excluded.",
       "$ref": "#/$defs/stringList"
     },
     "professional_injections": { "$ref": "#/$defs/stringList" },
     "permission_decisions": { "$ref": "#/$defs/stringList" },
+    "rollback_points": { "$ref": "#/$defs/stringList" },
     "reference_loads": { "$ref": "#/$defs/stringList" },
     "subagent_contracts": { "$ref": "#/$defs/stringList" },
     "compaction_snapshots": { "$ref": "#/$defs/stringList" },

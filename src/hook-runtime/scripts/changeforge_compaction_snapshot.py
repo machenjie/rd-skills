@@ -14,6 +14,10 @@ from changeforge_common import (
     read_event,
     repo_root,
 )
+from changeforge_executor_adapter_core import (
+    snapshot_from_event_state,
+    state_update_from_snapshot,
+)
 
 
 def main() -> int:
@@ -24,9 +28,20 @@ def main() -> int:
     repo = repo_root(cwd_from_event(event))
     state = load_state(repo)
     snapshot = _snapshot_label(state, event_name(event))
+    adapter_snapshot = snapshot_from_event_state(
+        event,
+        state,
+        classification={"stage": "compaction"},
+        read_evidence={
+            "paths": state.get("read_paths", []),
+            "patterns": state.get("searched_patterns", []),
+        },
+        gate_name="compaction_snapshot",
+    )
     merge_state(
         repo,
         runtime,
+        **state_update_from_snapshot(adapter_snapshot),
         compaction_snapshots=[snapshot],
         turn_stage="compaction",
         suggested_capabilities=["context-packaging", "agent-execution-discipline"],
@@ -40,9 +55,20 @@ def _snapshot_label(state: dict, hook_event: str) -> str:
     reviewer = state.get("reviewer_skill") or "unknown"
     changed = len(state.get("changed_paths", []))
     reads = len(state.get("read_paths", []))
-    return f"{hook_event or 'compact'}:stage={stage}:owner={owner}:reviewer={reviewer}:changed={changed}:reads={reads}"
+    validations = len(state.get("validation_results", []))
+    review = len(state.get("review_findings", []))
+    repair = len(state.get("repair_events", [])) + len(state.get("repair_findings", []))
+    rereview = len(state.get("rereview_events", []))
+    unsupported = len((state.get("runtime_adapter") or {}).get("unsupported_checks", []))
+    residual = len(state.get("closure_risk_surfaces", []))
+    gates = len(state.get("suggested_gates", []))
+    return (
+        f"{hook_event or 'compact'}:stage={stage}:owner={owner}:reviewer={reviewer}:"
+        f"changed={changed}:reads={reads}:validation={validations}:review={review}:"
+        f"repair={repair}:rereview={rereview}:unsupported={unsupported}:"
+        f"gates={gates}:residual={residual}"
+    )
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

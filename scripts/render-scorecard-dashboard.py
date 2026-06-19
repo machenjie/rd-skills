@@ -123,6 +123,8 @@ def render_dashboard(payload: dict[str, Any]) -> str:
         "Profile build reproducibility",
         "Open-source readiness",
         "Example coverage",
+        "Executor adapter structural fixtures",
+        "Runtime telemetry sample",
         "Marketplace index validation",
     ):
         lines.append(f"| {name} | `{_status(payload, name)}` | {_escape(_detail(payload, name))} |")

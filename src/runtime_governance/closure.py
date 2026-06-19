@@ -31,6 +31,9 @@ class ClosureContract:
     missing_evidence: list[str] = field(default_factory=list)
     negative_evidence: list[str] = field(default_factory=list)
     freshness: dict[str, str] = field(default_factory=dict)
+    validation_status: dict[str, str] = field(default_factory=dict)
+    review_status: dict[str, Any] = field(default_factory=dict)
+    changed_files: dict[str, list[str]] = field(default_factory=dict)
     verdict: str = ClosureVerdict.NEEDS_VALIDATION.value
     residual_risk: list[str] = field(default_factory=list)
     next_owner: str = "agent"
@@ -69,7 +72,13 @@ class ClosureContract:
             "validation": ledger.validation,
             "review": ledger.review,
             "repair": ledger.repair,
+            "rereview": ledger.rereview,
             "residual_risk": ledger.residual_risk,
+            "external_file_change": ledger.external_file_change,
+            "config_change": ledger.config_change,
+            "permission": ledger.permission,
+            "command_risk": ledger.command_risk,
+            "rollback": ledger.rollback,
             "adapter_degradation": ledger.adapter_degradation,
         }
 
@@ -80,6 +89,8 @@ class ClosureContract:
                 negative.append(name)
                 if entry.summary:
                     residual.append(f"{name}: {entry.summary}")
+                if name == "validation" and entry.freshness == Freshness.STALE.value:
+                    missing.append("validation")
             elif entry.is_closure_evidence:
                 present.append(name)
 
@@ -99,9 +110,55 @@ class ClosureContract:
                 if entry.freshness == Freshness.STALE.value:
                     residual.append(f"{name} is stale")
 
+        changed_files = _changed_files(ledger)
+        has_material_change = any(changed_files.values()) or any(
+            entry.strength != EvidenceStrength.NONE.value
+            for entry in (ledger.external_file_change, ledger.config_change)
+        )
+        validation_current = ledger.validation.is_closure_evidence
+        review_has_finding = ledger.review.outcome == "finding"
+        repair_present = ledger.repair.strength != EvidenceStrength.NONE.value
+        rereview_present = ledger.rereview.is_closure_evidence
+        dangerous_permission_denied = (
+            ledger.permission.outcome == "deny"
+            and ledger.command_risk.outcome in {"destructive", "release", "migration"}
+        )
+        preflight_negative = ledger.implementation_preflight.strength == EvidenceStrength.NEGATIVE.value
+        preflight_required_missing = (
+            has_material_change
+            and ledger.implementation_preflight.strength == EvidenceStrength.PARTIAL.value
+            and "implementation_preflight" not in present
+        )
+
+        if has_material_change and not validation_current and "validation" not in missing:
+            missing.append("validation")
+            residual.append("changed files require fresh validation evidence")
+        if review_has_finding and not repair_present and "repair" not in missing:
+            missing.append("repair")
+            residual.append("review finding requires repair evidence")
+        if repair_present and not rereview_present and "review" not in missing:
+            missing.append("review")
+            residual.append("repair evidence requires re-review")
+        if dangerous_permission_denied:
+            negative.append("permission")
+            residual.append("permission denied for dangerous command class")
+
         if unsupported:
             residual.append("unsupported runtime checks remain")
-        verdict = _verdict(required, missing, negative, unsupported)
+        verdict = _verdict(
+            required,
+            missing,
+            negative,
+            unsupported,
+            validation_stale=ledger.validation.freshness == Freshness.STALE.value,
+            validation_failed=ledger.validation.outcome in {"fail", "failed"},
+            review_has_finding=review_has_finding,
+            repair_present=repair_present,
+            rereview_present=rereview_present,
+            dangerous_permission_denied=dangerous_permission_denied,
+            preflight_negative=preflight_negative,
+            preflight_required_missing=preflight_required_missing,
+        )
         return cls(
             adapter=redact_sensitive_value(adapter),
             supported_checks=supported,
@@ -112,6 +169,17 @@ class ClosureContract:
             missing_evidence=cap_list(missing),
             negative_evidence=cap_list(negative),
             freshness={key: str(value) for key, value in sorted(freshness.items())},
+            validation_status={
+                "strength": ledger.validation.strength,
+                "freshness": ledger.validation.freshness,
+                "outcome": ledger.validation.outcome or "",
+            },
+            review_status={
+                "review_outcome": ledger.review.outcome or "",
+                "repair_present": repair_present,
+                "rereview_present": rereview_present,
+            },
+            changed_files=changed_files,
             verdict=verdict,
             residual_risk=cap_list(residual),
             next_owner=redact_sensitive_value(next_owner) or "agent",
@@ -139,6 +207,9 @@ class ClosureContract:
                 str(key): str(value)
                 for key, value in (freshness.items() if isinstance(freshness, dict) else [])
             },
+            validation_status=_string_mapping(data.get("validation_status")),
+            review_status=_review_mapping(data.get("review_status")),
+            changed_files=_changed_files_mapping(data.get("changed_files")),
             verdict=_closure_verdict(data.get("verdict")),
             residual_risk=cap_list(data.get("residual_risk") or []),
             next_owner=redact_sensitive_value(data.get("next_owner")) or "agent",
@@ -149,13 +220,37 @@ class ClosureContract:
         return cls.from_json_dict(json_loads(text))
 
 
-def _verdict(required: list[str], missing: list[str], negative: list[str], unsupported: list[str]) -> str:
+def _verdict(
+    required: list[str],
+    missing: list[str],
+    negative: list[str],
+    unsupported: list[str],
+    *,
+    validation_stale: bool = False,
+    validation_failed: bool = False,
+    review_has_finding: bool = False,
+    repair_present: bool = False,
+    rereview_present: bool = False,
+    dangerous_permission_denied: bool = False,
+    preflight_negative: bool = False,
+    preflight_required_missing: bool = False,
+) -> str:
+    if validation_failed or dangerous_permission_denied or preflight_negative:
+        return ClosureVerdict.BLOCKED.value
+    if validation_stale:
+        return ClosureVerdict.NEEDS_VALIDATION.value
+    if review_has_finding and not repair_present:
+        return ClosureVerdict.NEEDS_REPAIR.value
+    if repair_present and not rereview_present:
+        return ClosureVerdict.NEEDS_REVIEW.value
     if negative:
         if "repair" in negative:
             return ClosureVerdict.NEEDS_REPAIR.value
         return ClosureVerdict.BLOCKED.value
     if "validation" in missing:
         return ClosureVerdict.NEEDS_VALIDATION.value
+    if preflight_required_missing:
+        return ClosureVerdict.NEEDS_REVIEW.value
     if "review" in missing:
         return ClosureVerdict.NEEDS_REVIEW.value
     if "repair" in required and "repair" in missing:
@@ -171,3 +266,40 @@ def _closure_verdict(value: object) -> str:
     text = str(value or "").strip()
     allowed = {item.value for item in ClosureVerdict}
     return text if text in allowed else ClosureVerdict.NEEDS_VALIDATION.value
+
+
+def _changed_files(ledger: EvidenceLedger) -> dict[str, list[str]]:
+    if ledger.changed_files_by_status:
+        return _changed_files_mapping(ledger.changed_files_by_status)
+    return {
+        "changed": cap_list(ledger.changed_files),
+        "deleted": cap_list(ledger.deleted_files),
+        "generated": cap_list(ledger.generated_files),
+    }
+
+
+def _changed_files_mapping(value: object) -> dict[str, list[str]]:
+    raw = value if isinstance(value, Mapping) else {}
+    if not raw:
+        return {}
+    return {
+        "changed": cap_list(raw.get("changed") or []),
+        "deleted": cap_list(raw.get("deleted") or []),
+        "generated": cap_list(raw.get("generated") or []),
+    }
+
+
+def _string_mapping(value: object) -> dict[str, str]:
+    raw = value if isinstance(value, Mapping) else {}
+    return {str(key): redact_sensitive_value(item) for key, item in raw.items()}
+
+
+def _review_mapping(value: object) -> dict[str, Any]:
+    raw = value if isinstance(value, Mapping) else {}
+    if not raw:
+        return {}
+    return {
+        "review_outcome": redact_sensitive_value(raw.get("review_outcome")),
+        "repair_present": bool(raw.get("repair_present")),
+        "rereview_present": bool(raw.get("rereview_present")),
+    }

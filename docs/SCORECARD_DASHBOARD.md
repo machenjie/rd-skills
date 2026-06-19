@@ -4,11 +4,11 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 
 ## Status Summary
 
-- `pass`: 11
+- `pass`: 13
 - `partial`: 3
 - `fail`: 0
 - `unknown`: 0
-- `not_collected`: 2
+- `not_collected`: 5
 
 ## Evidence Levels
 
@@ -16,7 +16,7 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 | --- | --- | --- |
 | live pass-rate | `not_collected` | Measured real-task success rate. |
 | promoted golden case | `pass` | Human-reviewed case admitted to regression coverage. |
-| runtime telemetry sample | `not_collected` | Actual runtime fact sample; may still require human review. |
+| runtime telemetry sample | `pass` | Sanitized bounded runtime fact sample; may still require human review. |
 | structural fixture | `pass` | Local deterministic structure sample passed; not evidence of live task success. |
 | token overhead | `not_collected` | Measured additional token cost. |
 | turn overhead | `not_collected` | Measured additional turn cost. |
@@ -28,6 +28,8 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 | Profile build reproducibility | `pass` | {"dev": {"detail": "dev top-level count is 153", "manifest": "dist/universal/skills/dev/.changeforge-build-manifest.json", "status": "pass"}, "full": {"detail": "full top-level count is 26", "manifest": "dist/universal/skills/full/.changeforge-build-manifest.json", "status": "pass"}, "recommended": {"detail": "recommended top-level count is 19", "manifest": "dist/universal/skills/recommended/.changeforge-build-manifest.json", "status": "pass"}} |
 | Open-source readiness | `partial` | config_present=True, selected_license_non_null=False, selected_license_allowed=True, license_file=False, pyproject_license_not_proprietary=False, contribution_licensing_confirmed=False, contribution_licensing_evidence=False, security_contact_confirmed=False, security_contact_evidence=False, dist_release_policy_explicit=True, dist_release_policy_valid=True |
 | Example coverage | `pass` | showcase examples validate |
+| Executor adapter structural fixtures | `pass` | {"case_count": 15, "coverage_targets": ["closure_verdict", "command_risk", "degradation", "event_recognition", "path_normalization", "permission_decision", "privacy_redaction", "tool_category", "validation_freshness_after_edits", "validation_outcome"], "evidence_boundary": "deterministic local fixtures only; no live runtime pass-rate or overhead measurement", "failed": 0, "live_pass_rate": "not_collected", "passed": 15, "pressure_cases": ["absolute_user_path", "claude_post_tool_failure", "codex_destructive_permission_request", "copilot_unsupported_pre_tool", "edit_after_validation", "failed_validation", "full_command_output_field", "large_path_list_cap", "repair_without_rereview", "review_finding_without_repair", "secret_like_payload_field", "unknown_event", "unsupported_runtime_event"], "token_overhead": "not_collected", "turn_overhead": "not_collected"} |
+| Runtime telemetry sample | `pass` | {"degraded_event_count": 4, "event_count": 15, "privacy_redaction_count": 9, "runtime": "mixed-fixture-runtime-sample", "source": "deterministic-fixture-bounded-facts", "token_overhead": "not_collected", "turn_overhead": "not_collected"} |
 | Marketplace index validation | `pass` | recommended, full, and dev marketplace indexes validate |
 
 ## Profile Counts
@@ -38,6 +40,9 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 
 ## Release-Only Evidence Not Collected
 
+- Executor adapter live pass-rate: reports/executor-adapter-eval.json
+- Executor adapter token overhead: reports/executor-adapter-eval.json
+- Executor adapter turn overhead: reports/executor-adapter-eval.json
 - Hook safety: scripts/validate-hooks.py does not emit a machine-readable report
 - Installation validation: scripts/validate-installation.py does not emit a machine-readable report
 
@@ -55,6 +60,9 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 
 ### Low
 
+- `not_collected` Executor adapter live pass-rate: Collect a real measured run before changing this status from not_collected.
+- `not_collected` Executor adapter token overhead: Collect a real measured run before changing this status from not_collected.
+- `not_collected` Executor adapter turn overhead: Collect a real measured run before changing this status from not_collected.
 - `not_collected` Hook safety: Run hook validation and inspect hook runtime changes; hooks must remain advisory and fail-open unless explicitly stricter.
 - `not_collected` Installation validation: Run installation validation after rebuilding all profiles.
 
@@ -68,6 +76,7 @@ python3 scripts/validate-registry.py
 python3 scripts/validate-skill-body-links.py
 python3 scripts/validate-skill-content-size.py
 python3 scripts/validate-skill-efficacy-benchmarks.py
+python3 scripts/eval-executor-adapters.py
 python3 scripts/audit-skill-content.py
 python3 scripts/eval-routing.py
 python3 scripts/eval-agent-behavior.py

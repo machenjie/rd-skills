@@ -1,0 +1,11 @@
+{
+  "runtime": "copilot",
+  "eventName": "PostToolUse",
+  "toolName": "replace_string_in_file",
+  "toolInput": {
+    "filePath": "src/auth/login.py"
+  },
+  "result": {
+    "success": true
+  }
+}

@@ -48,10 +48,15 @@ except Exception:  # pragma: no cover - hook runtime must fail open without supp
 
 
 STATE_LIST_FIELDS = (
+    "normalized_events",
     "changed_paths",
+    "deleted_paths",
+    "generated_paths",
     "read_paths",
     "read_tools",
     "searched_patterns",
+    "external_file_changes",
+    "config_changes",
     "structure_findings",
     "file_naming_findings",
     "reuse_findings",
@@ -59,15 +64,21 @@ STATE_LIST_FIELDS = (
     "advanced_refactor_findings",
     "comment_findings",
     "structure_quality_findings",
+    "post_edit_structure_findings",
     "review_targets",
     "review_findings",
     "repair_findings",
+    "repair_events",
+    "rereview_events",
+    "validation_results",
     "risk_surfaces",
     "changed_path_risk_surfaces",
     "command_risk_surfaces",
+    "command_risks",
     "closure_risk_surfaces",
     "professional_injections",
     "permission_decisions",
+    "rollback_points",
     "reference_loads",
     "subagent_contracts",
     "compaction_snapshots",
@@ -118,7 +129,7 @@ STATE_BOOL_FIELDS = (
     "post_edit_confirmed_preflight_gap",
     "route_preflight_emitted",
 )
-KNOWN_RUNTIMES = {"codex", "claude", "copilot", "generic"}
+KNOWN_RUNTIMES = {"codex", "claude", "copilot", "generic", "cline", "roo", "openhands"}
 # Runtimes that consume structured JSON stdout. Codex and Claude wrap
 # event-specific context in hookSpecificOutput; Copilot command hooks consume
 # top-level additionalContext only for context-capable events and top-level
@@ -265,7 +276,7 @@ def read_event() -> dict:
 
 
 def detect_runtime(event: dict) -> str:
-    """Return codex / claude / copilot / unknown.
+    """Return the detected executor runtime or unknown.
 
     Claude Code, VS Code Copilot, and Codex can all send snake_case event keys,
     so the payload alone is not authoritative. The forced
@@ -286,6 +297,12 @@ def detect_runtime(event: dict) -> str:
             return "codex"
         if "claude" in runtime:
             return "claude"
+        if "openhands" in runtime or "open-hands" in runtime:
+            return "openhands"
+        if "cline" in runtime:
+            return "cline"
+        if "roo" in runtime:
+            return "roo"
         if "generic" in runtime:
             return "generic"
 
@@ -423,8 +440,9 @@ def load_state(repo: Path) -> dict:
     for key in STATE_LIST_FIELDS:
         if not isinstance(state.get(key), list):
             state[key] = []
-    if not isinstance(state.get("active_skill_context"), dict):
-        state["active_skill_context"] = {}
+    for key in ("active_skill_context", "runtime_adapter"):
+        if not isinstance(state.get(key), dict):
+            state[key] = {}
     for key in STATE_SCALAR_STRING_FIELDS:
         if not isinstance(state.get(key), str):
             state[key] = ""
@@ -453,12 +471,11 @@ def save_state(repo: Path, state: dict) -> None:
     next_state.update({key: value for key, value in state.items() if key in next_state})
     for key in STATE_LIST_FIELDS:
         next_state[key] = _capped_state_items(next_state.get(key, []))
-    if not isinstance(next_state.get("active_skill_context"), dict):
-        next_state["active_skill_context"] = {}
-    else:
-        next_state["active_skill_context"] = _clean_state_mapping(
-            next_state["active_skill_context"]
-        )
+    for key in ("active_skill_context", "runtime_adapter"):
+        if not isinstance(next_state.get(key), dict):
+            next_state[key] = {}
+        else:
+            next_state[key] = _clean_state_mapping(next_state[key])
     for key in STATE_SCALAR_STRING_FIELDS:
         next_state[key] = str(next_state.get(key, "")).strip()[:MAX_STATE_VALUE_LEN]
     for key in STATE_SCALAR_INT_FIELDS:
@@ -665,10 +682,16 @@ def merge_state(
     repo: Path,
     runtime: str,
     *,
+    runtime_adapter: dict | None = None,
+    normalized_events: Iterable[str] = (),
     changed_paths: Iterable[str] = (),
+    deleted_paths: Iterable[str] = (),
+    generated_paths: Iterable[str] = (),
     read_paths: Iterable[str] = (),
     read_tools: Iterable[str] = (),
     searched_patterns: Iterable[str] = (),
+    external_file_changes: Iterable[str] = (),
+    config_changes: Iterable[str] = (),
     structure_findings: Iterable[str] = (),
     file_naming_findings: Iterable[str] = (),
     reuse_findings: Iterable[str] = (),
@@ -676,15 +699,21 @@ def merge_state(
     advanced_refactor_findings: Iterable[str] = (),
     comment_findings: Iterable[str] = (),
     structure_quality_findings: Iterable[str] = (),
+    post_edit_structure_findings: Iterable[str] = (),
     review_targets: Iterable[str] = (),
     review_findings: Iterable[str] = (),
     repair_findings: Iterable[str] = (),
+    repair_events: Iterable[str] = (),
+    rereview_events: Iterable[str] = (),
+    validation_results: Iterable[str] = (),
     risk_surfaces: Iterable[str] = (),
     changed_path_risk_surfaces: Iterable[str] = (),
     command_risk_surfaces: Iterable[str] = (),
+    command_risks: Iterable[str] = (),
     closure_risk_surfaces: Iterable[str] = (),
     professional_injections: Iterable[str] = (),
     permission_decisions: Iterable[str] = (),
+    rollback_points: Iterable[str] = (),
     reference_loads: Iterable[str] = (),
     subagent_contracts: Iterable[str] = (),
     compaction_snapshots: Iterable[str] = (),
@@ -735,11 +764,22 @@ def merge_state(
     next_event_index = int(state.get("event_index") or 0) + 1
     state["event_index"] = next_event_index
     changed_path_values = list(changed_paths or ())
+    deleted_path_values = list(deleted_paths or ())
+    generated_path_values = list(generated_paths or ())
+    external_change_values = list(external_file_changes or ())
+    config_change_values = list(config_changes or ())
+    validation_result_values = list(validation_results or ())
     update = {
+        "runtime_adapter": runtime_adapter,
+        "normalized_events": normalized_events,
         "changed_paths": changed_path_values,
+        "deleted_paths": deleted_path_values,
+        "generated_paths": generated_path_values,
         "read_paths": read_paths,
         "read_tools": read_tools,
         "searched_patterns": searched_patterns,
+        "external_file_changes": external_change_values,
+        "config_changes": config_change_values,
         "structure_findings": structure_findings,
         "file_naming_findings": file_naming_findings,
         "reuse_findings": reuse_findings,
@@ -747,15 +787,21 @@ def merge_state(
         "advanced_refactor_findings": advanced_refactor_findings,
         "comment_findings": comment_findings,
         "structure_quality_findings": structure_quality_findings,
+        "post_edit_structure_findings": post_edit_structure_findings,
         "review_targets": review_targets,
         "review_findings": review_findings,
         "repair_findings": repair_findings,
+        "repair_events": repair_events,
+        "rereview_events": rereview_events,
+        "validation_results": validation_result_values,
         "risk_surfaces": risk_surfaces,
         "changed_path_risk_surfaces": changed_path_risk_surfaces,
         "command_risk_surfaces": command_risk_surfaces,
+        "command_risks": command_risks,
         "closure_risk_surfaces": closure_risk_surfaces,
         "professional_injections": professional_injections,
         "permission_decisions": permission_decisions,
+        "rollback_points": rollback_points,
         "reference_loads": reference_loads,
         "subagent_contracts": subagent_contracts,
         "compaction_snapshots": compaction_snapshots,
@@ -806,7 +852,24 @@ def merge_state(
         state["validation_seen"] = state["validation_command_seen"]
         if command_seen:
             state["last_validation_command_index"] = next_event_index
-    if changed_path_values:
+    material_path_values = [
+        *changed_path_values,
+        *deleted_path_values,
+        *generated_path_values,
+        *external_change_values,
+        *config_change_values,
+    ]
+    if material_path_values:
+        prior_validation_index = int(state.get("last_validation_command_index") or 0)
+        if prior_validation_index and prior_validation_index < next_event_index:
+            state = reduce_state_update(
+                state,
+                {
+                    "validation_results": [
+                        "stale_after_material_change:validation_before_latest_edit"
+                    ]
+                },
+            )
         state["last_material_edit_index"] = next_event_index
     save_state(repo, state)
     return state
@@ -901,10 +964,18 @@ def write_telemetry_event(
     session_id: str = "",
     cwd: str | None = None,
     tool_name: str = "",
+    normalized_events: Iterable[str] = (),
     changed_paths: Iterable[str] = (),
+    deleted_paths: Iterable[str] = (),
+    generated_paths: Iterable[str] = (),
+    external_file_changes: Iterable[str] = (),
+    config_changes: Iterable[str] = (),
     added_paths: Iterable[str] = (),
     command_program: str = "",
+    command_risk: str = "",
+    permission_decision: str = "",
     hook_findings: dict[str, Iterable[str]] | None = None,
+    post_edit_structure_findings: Iterable[str] = (),
     suggested_skills: Iterable[str] = (),
     suggested_capabilities: Iterable[str] = (),
     suggested_gates: Iterable[str] = (),
@@ -916,6 +987,7 @@ def write_telemetry_event(
     route_manifest_detected: bool = False,
     required_references_detected: bool = False,
     validation_command_detected: bool = False,
+    validation_results: Iterable[str] = (),
     validation_evidence_detected: bool = False,
     residual_risk_detected: bool = False,
     completion_language_detected: bool = False,
@@ -960,6 +1032,7 @@ def write_telemetry_event(
     adapter_degraded_capabilities: Iterable[str] = (),
     closure_contract_verdict: str = "",
     closure_contract_residual_risk: Iterable[str] = (),
+    changeforge_closure: dict[str, Any] | None = None,
     project_memory_available: bool = True,
     project_memory_projection_key: str = "",
     project_memory_included_events: Iterable[str] = (),
@@ -997,10 +1070,24 @@ def write_telemetry_event(
             "session_id": _telemetry_session_id(repo, repo_hash, session_id),
             "mode": mode,
             "tool_name": tool_name,
+            "normalized_events": _capped_items(normalized_events),
             "changed_paths": _capped_items(changed_paths),
+            "deleted_paths": _capped_items(deleted_paths),
+            "generated_paths": _capped_items(generated_paths),
+            "external_file_changes": _capped_items(external_file_changes),
+            "config_changes": _capped_items(config_changes),
             "added_paths": _capped_items(added_paths),
             "command_program": command_program[:MAX_COMMAND_PROGRAM_LEN],
+            "command_risk": _telemetry_enum(
+                command_risk,
+                {"", "safe", "mutation", "destructive", "release", "migration", "dependency", "network", "unknown"},
+            ),
+            "permission_decision": _telemetry_enum(
+                permission_decision,
+                {"", "allow", "warn", "block", "deny", "unknown"},
+            ),
             "hook_findings": _clean_findings(hook_findings),
+            "post_edit_structure_findings": _capped_items(post_edit_structure_findings),
             "suggested_skills": _capped_items(suggested_skills),
             "suggested_capabilities": _capped_items(suggested_capabilities),
             "suggested_gates": _capped_items(suggested_gates),
@@ -1012,6 +1099,7 @@ def write_telemetry_event(
             "route_manifest_detected": bool(route_manifest_detected),
             "required_references_detected": bool(required_references_detected),
             "validation_command_detected": bool(validation_command_detected),
+            "validation_results": _capped_items(validation_results),
             "validation_evidence_detected": bool(validation_evidence_detected),
             "residual_risk_detected": bool(residual_risk_detected),
             "completion_language_detected": bool(completion_language_detected),
@@ -1041,11 +1129,11 @@ def write_telemetry_event(
             "validation_freshness_seen": bool(validation_freshness_seen),
             "validation_result_outcome": _telemetry_enum(
                 validation_result_outcome,
-                {"", "pass", "fail", "unknown", "not_run"},
+                {"", "pass", "fail", "stale", "unknown", "not_run"},
             ),
             "validation_result_evidence_strength": _telemetry_enum(
                 validation_result_evidence_strength,
-                {"", "strong", "weak", "negative"},
+                {"", "strong", "partial", "weak", "negative"},
             ),
             "validation_result_negative_reason": _telemetry_enum(
                 validation_result_negative_reason,
@@ -1088,9 +1176,18 @@ def write_telemetry_event(
             "adapter_degraded_capabilities": _capped_items(adapter_degraded_capabilities),
             "closure_contract_verdict": _telemetry_enum(
                 closure_contract_verdict,
-                {"", "ready", "needs_validation", "degraded_ready", "blocked"},
+                {
+                    "",
+                    "ready",
+                    "needs_validation",
+                    "needs_review",
+                    "needs_repair",
+                    "degraded_ready",
+                    "blocked",
+                },
             ),
             "closure_contract_residual_risk": _capped_items(closure_contract_residual_risk),
+            "changeforge_closure": _clean_changeforge_closure(changeforge_closure),
             "project_memory_available": bool(project_memory_available),
             "project_memory_projection_key": _memory_clean_scalar(
                 project_memory_projection_key
@@ -1769,6 +1866,69 @@ def _clean_validation_broker_command_ledger(values: Iterable[dict[str, Any]]) ->
     return out
 
 
+def _clean_changeforge_closure(value: dict[str, Any] | None) -> dict[str, object]:
+    source = value if isinstance(value, dict) else {}
+    validation = source.get("validation")
+    validation_source = validation if isinstance(validation, dict) else {}
+    review = source.get("review")
+    review_source = review if isinstance(review, dict) else {}
+    changed_files = source.get("changed_files")
+    changed_source = changed_files if isinstance(changed_files, dict) else {}
+    return {
+        "adapter": _telemetry_runtime(source.get("adapter")),
+        "verdict": _telemetry_enum(
+            source.get("verdict"),
+            {
+                "",
+                "ready",
+                "needs_validation",
+                "needs_review",
+                "needs_repair",
+                "degraded_ready",
+                "blocked",
+            },
+        ),
+        "supported_checks": _capped_items(source.get("supported_checks", []) or []),
+        "unsupported_checks": _capped_items(source.get("unsupported_checks", []) or []),
+        "degraded_capabilities": _capped_items(source.get("degraded_capabilities", []) or []),
+        "present_evidence": _capped_items(source.get("present_evidence", []) or []),
+        "missing_evidence": _capped_items(source.get("missing_evidence", []) or []),
+        "negative_evidence": _capped_items(source.get("negative_evidence", []) or []),
+        "validation": {
+            "outcome": _telemetry_enum(
+                validation_source.get("outcome"),
+                {"", "pass", "fail", "failed", "stale", "not_run", "not_verified", "no_outcome", "unknown"},
+            ),
+            "freshness": _telemetry_enum(
+                validation_source.get("freshness"),
+                {"", "current", "stale", "unknown", "not_applicable"},
+            ),
+            "scope": _telemetry_enum(
+                validation_source.get("scope"),
+                {"", "narrow", "module", "full", "none", "unknown"},
+            ),
+            "command_kind": _telemetry_enum(
+                validation_source.get("command_kind"),
+                {"", "narrow", "module", "full", "unknown"},
+            ),
+        },
+        "review": {
+            "review_outcome": str(review_source.get("review_outcome") or "").strip()[
+                :MAX_TELEMETRY_VALUE_LEN
+            ],
+            "repair_present": bool(review_source.get("repair_present")),
+            "rereview_present": bool(review_source.get("rereview_present")),
+        },
+        "changed_files": {
+            "changed": _capped_items(changed_source.get("changed", []) or []),
+            "deleted": _capped_items(changed_source.get("deleted", []) or []),
+            "generated": _capped_items(changed_source.get("generated", []) or []),
+        },
+        "residual_risk": _capped_items(source.get("residual_risk", []) or []),
+        "next_owner": str(source.get("next_owner") or "").strip()[:MAX_TELEMETRY_VALUE_LEN],
+    }
+
+
 def _memory_capped_items(values: Iterable[str]) -> list[str]:
     out: list[str] = []
     for raw in values:
@@ -1813,6 +1973,7 @@ def _telemetry_runtime(value: object) -> str:
         "generic",
         "unknown",
         "cline",
+        "roo",
         "openhands",
         "gemini-cli",
         "goose",
@@ -2345,10 +2506,16 @@ def _repo_hash(repo: Path) -> str:
 def _empty_state() -> dict:
     return {
         "runtime": "unknown",
+        "runtime_adapter": {},
+        "normalized_events": [],
         "changed_paths": [],
+        "deleted_paths": [],
+        "generated_paths": [],
         "read_paths": [],
         "read_tools": [],
         "searched_patterns": [],
+        "external_file_changes": [],
+        "config_changes": [],
         "structure_findings": [],
         "file_naming_findings": [],
         "reuse_findings": [],
@@ -2356,15 +2523,21 @@ def _empty_state() -> dict:
         "advanced_refactor_findings": [],
         "comment_findings": [],
         "structure_quality_findings": [],
+        "post_edit_structure_findings": [],
         "review_targets": [],
         "review_findings": [],
         "repair_findings": [],
+        "repair_events": [],
+        "rereview_events": [],
+        "validation_results": [],
         "risk_surfaces": [],
         "changed_path_risk_surfaces": [],
         "command_risk_surfaces": [],
+        "command_risks": [],
         "closure_risk_surfaces": [],
         "professional_injections": [],
         "permission_decisions": [],
+        "rollback_points": [],
         "reference_loads": [],
         "subagent_contracts": [],
         "compaction_snapshots": [],

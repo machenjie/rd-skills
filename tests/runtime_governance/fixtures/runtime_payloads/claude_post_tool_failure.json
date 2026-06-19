@@ -1,0 +1,13 @@
+{
+  "runtime": "claude",
+  "hookEventName": "PostToolUseFailure",
+  "toolName": "Bash",
+  "toolInput": {
+    "command": "python3 scripts/deploy.py --token=sk-fake-not-real",
+    "exitCode": 1
+  },
+  "result": {
+    "status": "failed",
+    "isError": true
+  }
+}

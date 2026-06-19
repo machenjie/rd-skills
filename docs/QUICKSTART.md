@@ -43,6 +43,7 @@ Project installs default to the `full` profile and require `--target`:
 ```bash
 python3 scripts/quickstart.py --agent claude --scope project --target /path/to/project
 python3 scripts/quickstart.py --agent copilot --scope project --target /path/to/project
+python3 scripts/quickstart.py --agent cline --scope project --target /path/to/project
 ```
 
 OpenAI API zip output:
@@ -95,6 +96,12 @@ GitHub Copilot project install:
 
 ```bash
 python3 scripts/quickstart.py --agent copilot --scope project --target /path/to/project
+```
+
+Cline project install:
+
+```bash
+python3 scripts/quickstart.py --agent cline --scope project --target /path/to/project
 ```
 
 OpenAI API zip bundles:

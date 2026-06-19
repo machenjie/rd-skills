@@ -7,21 +7,29 @@ from .base import (
     adapter_capabilities_for,
     coverage_matrix,
     format_coverage_matrix,
+    runtime_adapter_for,
     strict_adapter_capabilities_for,
 )
 from .claude import ClaudeAdapter
+from .cline import ClineAdapter
 from .codex import CodexAdapter
 from .copilot import CopilotAdapter
+from .openhands import OpenHandsAdapter
+from .roo import RooAdapter
 
 __all__ = [
     "AdapterCapabilities",
     "AdapterEventResult",
     "BaseRuntimeAdapter",
     "ClaudeAdapter",
+    "ClineAdapter",
     "CodexAdapter",
     "CopilotAdapter",
+    "OpenHandsAdapter",
+    "RooAdapter",
     "adapter_capabilities_for",
     "coverage_matrix",
     "format_coverage_matrix",
+    "runtime_adapter_for",
     "strict_adapter_capabilities_for",
 ]

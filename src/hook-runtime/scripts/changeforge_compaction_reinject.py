@@ -24,13 +24,15 @@ def main() -> int:
     runtime = detect_runtime(event)
     state = load_state(repo_root(cwd_from_event(event)))
     context = state.get("active_skill_context") if isinstance(state.get("active_skill_context"), dict) else {}
-    if not context:
+    state_lines = _bounded_state_lines(state)
+    if not context and not state_lines:
         return 0
     message = "\n".join(
         [
             "ChangeForge Compaction Reinject",
             "- context was compacted; continue from the active professional context below",
             *context_lines(context),
+            *state_lines,
         ]
     )
     if hook_mode() != "monitor":
@@ -38,6 +40,26 @@ def main() -> int:
     return 0
 
 
+def _bounded_state_lines(state: dict) -> list[str]:
+    adapter = state.get("runtime_adapter") if isinstance(state.get("runtime_adapter"), dict) else {}
+    unsupported = adapter.get("unsupported_checks") if isinstance(adapter, dict) else []
+    lines: list[str] = []
+    for label, key in (
+        ("changed_paths", "changed_paths"),
+        ("validation_results", "validation_results"),
+        ("review_findings", "review_findings"),
+        ("repair_events", "repair_events"),
+        ("rereview_events", "rereview_events"),
+        ("closure_risk_surfaces", "closure_risk_surfaces"),
+        ("compaction_snapshots", "compaction_snapshots"),
+    ):
+        values = state.get(key)
+        if isinstance(values, list) and values:
+            lines.append(f"- {label}: {', '.join(str(item)[:80] for item in values[:6])}")
+    if isinstance(unsupported, list) and unsupported:
+        lines.append(f"- unsupported_runtime_checks: {', '.join(str(item)[:80] for item in unsupported[:6])}")
+    return lines
+
+
 if __name__ == "__main__":
     raise SystemExit(main())
-

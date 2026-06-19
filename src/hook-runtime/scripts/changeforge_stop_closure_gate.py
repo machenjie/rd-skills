@@ -28,6 +28,10 @@ from changeforge_common import (
 )
 from changeforge_adapter_capabilities import adapter_capabilities_for
 from changeforge_closure_contract import ClosureContract
+from changeforge_executor_adapter_core import (
+    snapshot_from_event_state,
+    state_update_from_snapshot,
+)
 from changeforge_hook_policy import gate_mode, run_gate_with_policy
 
 try:
@@ -405,6 +409,19 @@ def _main() -> int:
         signals,
         validation_assessment=validation_assessment,
     )
+    snapshot = snapshot_from_event_state(
+        event,
+        state,
+        classification={"stage": "stop"},
+        read_evidence={
+            "paths": state.get("read_paths", []),
+            "patterns": state.get("searched_patterns", []),
+        },
+        gate_name="stop_closure",
+        gate_mode=mode,
+        closure_contract=contract,
+    )
+    snapshot_update = state_update_from_snapshot(snapshot)
     write_telemetry_event(
         repo,
         runtime=runtime,
@@ -413,7 +430,12 @@ def _main() -> int:
         mode=mode,
         session_id=session_id_from_event(event),
         cwd=cwd_from_event(event),
+        normalized_events=snapshot_update["normalized_events"],
         changed_paths=state.get("changed_paths", []),
+        deleted_paths=state.get("deleted_paths", []),
+        generated_paths=state.get("generated_paths", []),
+        external_file_changes=state.get("external_file_changes", []),
+        config_changes=state.get("config_changes", []),
         hook_findings=_stop_findings(state),
         suggested_skills=state.get("suggested_skills", []),
         suggested_capabilities=state.get("suggested_capabilities", []),
@@ -429,6 +451,7 @@ def _main() -> int:
         validation_command_detected=bool(
             state.get("validation_command_seen") or state.get("validation_seen")
         ),
+        validation_results=state.get("validation_results", []),
         validation_evidence_detected=signals["validation"],
         validation_result_outcome=str(validation_result.get("outcome", "")),
         validation_result_evidence_strength=str(
@@ -467,6 +490,7 @@ def _main() -> int:
         adapter_degraded_capabilities=contract.degraded_capabilities,
         closure_contract_verdict=contract.verdict,
         closure_contract_residual_risk=contract.residual_risk,
+        changeforge_closure=contract.changeforge_closure,
         project_memory_available=bool(memory_advice.get("available", True)),
         project_memory_projection_key=str(memory_advice.get("projection_key", "")),
         project_memory_included_events=memory_advice.get("included_events", []),
@@ -550,6 +574,10 @@ def _has_closure_surface(state: dict) -> bool:
     explicit_engineering_stage = stage in ENGINEERING_STAGES
     return bool(
         state.get("changed_paths")
+        or state.get("deleted_paths")
+        or state.get("generated_paths")
+        or state.get("validation_results")
+        or _has_non_safe_command_risk(state)
         or state.get("closure_risk_surfaces")
         or state.get("risk_surfaces")
         or state.get("structure_findings")
@@ -574,6 +602,14 @@ def _has_closure_surface(state: dict) -> bool:
         or state.get("subagent_contracts")
         or state.get("compaction_snapshots")
     )
+
+
+def _has_non_safe_command_risk(state: dict) -> bool:
+    for value in state.get("command_risks", []):
+        risk = str(value).split(":", 1)[0].strip()
+        if risk and risk != "safe":
+            return True
+    return False
 
 
 def _closure_profile(state: dict) -> str:
@@ -643,16 +679,22 @@ def _stop_findings(state: dict) -> dict[str, list[str]]:
             "advanced_refactor_findings",
             "comment_findings",
             "structure_quality_findings",
+            "post_edit_structure_findings",
             "read_paths",
             "searched_patterns",
             "review_targets",
             "review_findings",
             "repair_findings",
+            "repair_events",
+            "rereview_events",
+            "validation_results",
             "changed_path_risk_surfaces",
             "command_risk_surfaces",
+            "command_risks",
             "closure_risk_surfaces",
             "professional_injections",
             "permission_decisions",
+            "rollback_points",
             "reference_loads",
             "subagent_contracts",
             "compaction_snapshots",
@@ -728,6 +770,14 @@ def _closure_message(
             details.append(f"- {label} signal was observed")
     if state.get("changed_paths"):
         details.append(f"- changed paths: {', '.join(state['changed_paths'])}")
+    if state.get("deleted_paths"):
+        details.append(f"- deleted paths: {', '.join(state['deleted_paths'][:8])}")
+    if state.get("generated_paths"):
+        details.append(f"- generated paths: {', '.join(state['generated_paths'][:8])}")
+    if state.get("validation_results"):
+        details.append(f"- validation results: {', '.join(state['validation_results'][:8])}")
+    if state.get("command_risks"):
+        details.append(f"- command risks: {', '.join(state['command_risks'][:8])}")
     if state.get("validation_command_seen") or state.get("validation_seen"):
         details.append("- validation command was observed")
     broker_assessment = (
@@ -1108,6 +1158,7 @@ def _closure_contract(
 ) -> ClosureContract:
     signals = signals if isinstance(signals, dict) else _closure_signals(final_text, state, manifest)
     broker_result = _validation_broker_result(validation_assessment)
+    validation_result = _validation_result(validation_assessment)
     review_evidence_present = bool(
         state.get("review_evidence_seen")
         or state.get("review_artifact_seen")
@@ -1130,6 +1181,14 @@ def _closure_contract(
         block_mode=mode == "block",
         validation_broker_outcome=str(broker_result.get("closure_outcome") or ""),
         validation_broker_residual_risk=list(broker_result.get("residual_risk", []) or []),
+        validation_result_outcome=str(validation_result.get("outcome", "")),
+        validation_result_freshness=(
+            "current"
+            if state.get("validation_freshness_seen")
+            else _validation_freshness_label(validation_result.get("fresh_after_last_edit"))
+        ),
+        validation_result_scope=str(broker_result.get("selected_scope", "")),
+        validation_result_command_kind=str(validation_result.get("command_kind", "")),
     )
 
 
@@ -1320,6 +1379,16 @@ def _telemetry_truth(value: object) -> str:
         return "true"
     if value is False:
         return "false"
+    if value == "unknown":
+        return "unknown"
+    return ""
+
+
+def _validation_freshness_label(value: object) -> str:
+    if value is True:
+        return "current"
+    if value is False:
+        return "stale"
     if value == "unknown":
         return "unknown"
     return ""

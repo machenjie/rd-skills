@@ -1,5 +1,5 @@
 {
-  "claim_boundary": "Local deterministic evidence only; skill efficacy fixtures are structural/local evidence, not live pass-rate, empirical before/after performance, external popularity, adoption, marketplace availability, or market claim evidence.",
+  "claim_boundary": "Local deterministic evidence only; skill efficacy and executor adapter fixtures are structural/local evidence, not live pass-rate, empirical before/after performance, external popularity, adoption, marketplace availability, or market claim evidence.",
   "evidence_levels": {
     "live pass-rate": {
       "meaning": "Measured real-task success rate.",
@@ -10,8 +10,8 @@
       "status": "pass"
     },
     "runtime telemetry sample": {
-      "meaning": "Actual runtime fact sample; may still require human review.",
-      "status": "not_collected"
+      "meaning": "Sanitized bounded runtime fact sample; may still require human review.",
+      "status": "pass"
     },
     "structural fixture": {
       "meaning": "Local deterministic structure sample passed; not evidence of live task success.",
@@ -62,7 +62,7 @@
     },
     {
       "command": "python3 scripts/eval-skill-professionalism.py",
-      "detail": "average_score=41.64",
+      "detail": "average_score=41.66",
       "evidence_level": "structural fixture",
       "name": "Skill professionalism report",
       "source": "reports/skill-professionalism-eval.json",
@@ -103,7 +103,7 @@
     {
       "command": "python3 scripts/validate-installation.py",
       "detail": "validator does not emit a committed machine-readable report",
-      "evidence_level": "runtime telemetry sample",
+      "evidence_level": "structural fixture",
       "name": "Installation validation",
       "source": "scripts/validate-installation.py",
       "status": "not_collected"
@@ -125,6 +125,46 @@
       "status": "pass"
     },
     {
+      "command": "python3 scripts/eval-executor-adapters.py",
+      "detail": "{\"case_count\": 15, \"coverage_targets\": [\"closure_verdict\", \"command_risk\", \"degradation\", \"event_recognition\", \"path_normalization\", \"permission_decision\", \"privacy_redaction\", \"tool_category\", \"validation_freshness_after_edits\", \"validation_outcome\"], \"evidence_boundary\": \"deterministic local fixtures only; no live runtime pass-rate or overhead measurement\", \"failed\": 0, \"live_pass_rate\": \"not_collected\", \"passed\": 15, \"pressure_cases\": [\"absolute_user_path\", \"claude_post_tool_failure\", \"codex_destructive_permission_request\", \"copilot_unsupported_pre_tool\", \"edit_after_validation\", \"failed_validation\", \"full_command_output_field\", \"large_path_list_cap\", \"repair_without_rereview\", \"review_finding_without_repair\", \"secret_like_payload_field\", \"unknown_event\", \"unsupported_runtime_event\"], \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
+      "evidence_level": "structural fixture",
+      "name": "Executor adapter structural fixtures",
+      "source": "reports/professional-scorecard.json",
+      "status": "pass"
+    },
+    {
+      "command": "python3 scripts/eval-executor-adapters.py",
+      "detail": "{\"degraded_event_count\": 4, \"event_count\": 15, \"privacy_redaction_count\": 9, \"runtime\": \"mixed-fixture-runtime-sample\", \"source\": \"deterministic-fixture-bounded-facts\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
+      "evidence_level": "runtime telemetry sample",
+      "name": "Runtime telemetry sample",
+      "source": "reports/professional-scorecard.json",
+      "status": "pass"
+    },
+    {
+      "command": "python3 scripts/eval-executor-adapters.py",
+      "detail": "deterministic local fixtures do not measure real-task success rate",
+      "evidence_level": "live pass-rate",
+      "name": "Executor adapter live pass-rate",
+      "source": "reports/professional-scorecard.json",
+      "status": "not_collected"
+    },
+    {
+      "command": "python3 scripts/eval-executor-adapters.py",
+      "detail": "deterministic local fixture run does not measure token overhead",
+      "evidence_level": "token overhead",
+      "name": "Executor adapter token overhead",
+      "source": "reports/professional-scorecard.json",
+      "status": "not_collected"
+    },
+    {
+      "command": "python3 scripts/eval-executor-adapters.py",
+      "detail": "deterministic local fixture run does not measure turn overhead",
+      "evidence_level": "turn overhead",
+      "name": "Executor adapter turn overhead",
+      "source": "reports/professional-scorecard.json",
+      "status": "not_collected"
+    },
+    {
       "command": "python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev",
       "detail": "recommended, full, and dev marketplace indexes validate",
       "evidence_level": "structural fixture",
@@ -134,7 +174,10 @@
     }
   ],
   "known_unknowns": [
-    "Installation validation"
+    "Installation validation",
+    "Executor adapter live pass-rate",
+    "Executor adapter token overhead",
+    "Executor adapter turn overhead"
   ],
   "refresh_commands": [
     "python3 scripts/eval-routing.py",
@@ -142,6 +185,7 @@
     "python3 scripts/eval-skill-professionalism.py --coverage-matrix",
     "python3 scripts/eval-professional-benchmarks.py",
     "python3 scripts/validate-skill-efficacy-benchmarks.py",
+    "python3 scripts/eval-executor-adapters.py",
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
     "python3 scripts/build.py --profile recommended",
@@ -162,9 +206,9 @@
   "schema_version": 1,
   "status_counts": {
     "fail": 0,
-    "not_collected": 1,
+    "not_collected": 4,
     "partial": 2,
-    "pass": 10,
+    "pass": 12,
     "unknown": 0
   }
 }

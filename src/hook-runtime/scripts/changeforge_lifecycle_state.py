@@ -20,9 +20,20 @@ class LifecycleState:
     review_evidence_seen: bool = False
     repair_evidence_seen: bool = False
     validation_freshness_seen: bool = False
+    runtime_adapter: dict[str, object] = field(default_factory=dict)
+    normalized_events: list[str] = field(default_factory=list)
     changed_paths: list[str] = field(default_factory=list)
+    deleted_paths: list[str] = field(default_factory=list)
+    generated_paths: list[str] = field(default_factory=list)
     read_paths: list[str] = field(default_factory=list)
     searched_patterns: list[str] = field(default_factory=list)
+    validation_results: list[str] = field(default_factory=list)
+    review_findings: list[str] = field(default_factory=list)
+    repair_events: list[str] = field(default_factory=list)
+    rereview_events: list[str] = field(default_factory=list)
+    command_risks: list[str] = field(default_factory=list)
+    permission_decisions: list[str] = field(default_factory=list)
+    rollback_points: list[str] = field(default_factory=list)
     risk_surfaces: list[str] = field(default_factory=list)
 
     @classmethod
@@ -43,9 +54,20 @@ class LifecycleState:
             review_evidence_seen=bool(state.get("review_evidence_seen")),
             repair_evidence_seen=bool(state.get("repair_evidence_seen")),
             validation_freshness_seen=bool(state.get("validation_freshness_seen")),
+            runtime_adapter=_clean_mapping(state.get("runtime_adapter")),
+            normalized_events=_string_list(state.get("normalized_events")),
             changed_paths=_string_list(state.get("changed_paths")),
+            deleted_paths=_string_list(state.get("deleted_paths")),
+            generated_paths=_string_list(state.get("generated_paths")),
             read_paths=_string_list(state.get("read_paths")),
             searched_patterns=_string_list(state.get("searched_patterns")),
+            validation_results=_string_list(state.get("validation_results")),
+            review_findings=_string_list(state.get("review_findings")),
+            repair_events=_string_list(state.get("repair_events")),
+            rereview_events=_string_list(state.get("rereview_events")),
+            command_risks=_string_list(state.get("command_risks")),
+            permission_decisions=_string_list(state.get("permission_decisions")),
+            rollback_points=_string_list(state.get("rollback_points")),
             risk_surfaces=_string_list(state.get("risk_surfaces")),
         )
 
@@ -63,9 +85,20 @@ class LifecycleState:
             "review_evidence_seen": self.review_evidence_seen,
             "repair_evidence_seen": self.repair_evidence_seen,
             "validation_freshness_seen": self.validation_freshness_seen,
+            "runtime_adapter": dict(self.runtime_adapter),
+            "normalized_events": list(self.normalized_events),
             "changed_paths": list(self.changed_paths),
+            "deleted_paths": list(self.deleted_paths),
+            "generated_paths": list(self.generated_paths),
             "read_paths": list(self.read_paths),
             "searched_patterns": list(self.searched_patterns),
+            "validation_results": list(self.validation_results),
+            "review_findings": list(self.review_findings),
+            "repair_events": list(self.repair_events),
+            "rereview_events": list(self.rereview_events),
+            "command_risks": list(self.command_risks),
+            "permission_decisions": list(self.permission_decisions),
+            "rollback_points": list(self.rollback_points),
             "risk_surfaces": list(self.risk_surfaces),
         }
 
@@ -86,6 +119,21 @@ def _string_list(value: object) -> list[str]:
         seen.add(text)
         result.append(text)
     return result
+
+
+def _clean_mapping(value: object) -> dict[str, object]:
+    if not isinstance(value, dict):
+        return {}
+    cleaned: dict[str, object] = {}
+    for key, raw in value.items():
+        name = str(key).strip()[:80]
+        if not name:
+            continue
+        if isinstance(raw, list):
+            cleaned[name] = _string_list(raw)
+        else:
+            cleaned[name] = _text(raw)
+    return cleaned
 
 
 __all__ = ["LifecycleState"]

@@ -33,6 +33,10 @@ from changeforge_common import (
     tool_name,
     write_telemetry_event,
 )
+from changeforge_executor_adapter_core import (
+    snapshot_from_event_state,
+    state_update_from_snapshot,
+)
 from changeforge_runtime_route_resolver import CODE_FILE_EXTENSIONS
 
 
@@ -393,6 +397,28 @@ def main() -> int:
             state_before.get("implementation_preflight_required")
             and not state_before.get("implementation_preflight_complete")
         )
+        snapshot = snapshot_from_event_state(
+            event,
+            state_before,
+            classification={"stage": "edit", "paths": paths, "tool": tool_name(event)},
+            read_evidence={
+                "paths": state_before.get("read_paths", []),
+                "patterns": state_before.get("searched_patterns", []),
+            },
+            gate_name="post_edit_structure",
+            gate_mode=mode,
+        )
+        snapshot_update = state_update_from_snapshot(snapshot)
+        snapshot_update["changed_paths"] = paths
+        post_edit_structure_findings = _post_edit_structure_summaries(
+            file_naming_findings=file_naming_findings,
+            reuse_findings=reuse_findings,
+            extension_reuse_findings=extension_reuse_findings,
+            structure_findings=structure_findings,
+            structure_quality_findings=structure_quality_findings,
+            advanced_refactor_findings=advanced_refactor_findings,
+            comment_findings=comment_findings,
+        )
         debug_log(
             repo,
             "structure gate runtime={runtime} event={event} tool={tool} paths={paths} "
@@ -412,7 +438,7 @@ def main() -> int:
         merge_state(
             repo,
             runtime,
-            changed_paths=paths,
+            **snapshot_update,
             structure_findings=structure_findings,
             file_naming_findings=file_naming_findings,
             reuse_findings=reuse_findings,
@@ -420,6 +446,7 @@ def main() -> int:
             advanced_refactor_findings=advanced_refactor_findings,
             comment_findings=comment_findings,
             structure_quality_findings=structure_quality_findings,
+            post_edit_structure_findings=post_edit_structure_findings,
             edit_without_preflight_seen=preflight_gap,
             post_edit_confirmed_preflight_gap=preflight_gap,
             pre_edit_structure_findings=[
@@ -448,8 +475,14 @@ def main() -> int:
             session_id=session_id_from_event(event),
             cwd=cwd_from_event(event),
             tool_name=tool_name(event),
+            normalized_events=snapshot_update["normalized_events"],
             changed_paths=paths,
+            deleted_paths=snapshot_update["deleted_paths"],
+            generated_paths=snapshot_update["generated_paths"],
+            external_file_changes=snapshot_update["external_file_changes"],
+            config_changes=snapshot_update["config_changes"],
             added_paths=sorted(added_paths),
+            post_edit_structure_findings=post_edit_structure_findings,
             hook_findings={
                 "structure_findings": structure_findings,
                 "file_naming_findings": file_naming_findings,
@@ -1041,6 +1074,32 @@ def _suggested_skills(any_findings: bool) -> list[str]:
     if not any_findings:
         return []
     return ["change-forge-router", "ai-code-review-refactor"]
+
+
+def _post_edit_structure_summaries(
+    *,
+    file_naming_findings: list[str],
+    reuse_findings: list[str],
+    extension_reuse_findings: list[str],
+    structure_findings: list[str],
+    structure_quality_findings: list[str],
+    advanced_refactor_findings: list[str],
+    comment_findings: list[str],
+) -> list[str]:
+    module_boundary_count = sum(
+        1
+        for finding in structure_quality_findings
+        if "shared/common/utils" in finding or "filename uses broad role token" in finding
+    )
+    return [
+        f"file_naming:count={len(file_naming_findings)}",
+        f"reuse_ladder:count={len(reuse_findings)}",
+        f"extension_reuse:count={len(extension_reuse_findings)}",
+        f"object_boundary:count={len(structure_findings) + len(structure_quality_findings)}",
+        f"module_boundary:count={module_boundary_count}",
+        f"advanced_refactor:count={len(advanced_refactor_findings)}",
+        f"comment_quality:count={len(comment_findings)}",
+    ]
 
 
 def _suggested_capabilities(

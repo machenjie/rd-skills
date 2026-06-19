@@ -1,0 +1,41 @@
+id: claude-post-tool-failure
+runtime: claude
+description: Claude post-tool failure captures failed release command class without leaking token-like arguments.
+coverage_targets:
+  - event_recognition
+  - command_risk
+  - privacy_redaction
+pressure_cases:
+  - claude_post_tool_failure
+input_payload:
+  hookEventName: PostToolUseFailure
+  event_id: claude-post-tool-failure
+  toolName: Bash
+  toolInput:
+    command: python3 deploy.py --token SYNTHETIC_TOKEN_SHOULD_BE_IGNORED
+  exitCode: 1
+expected_normalized_event:
+  adapter: claude
+  event_kind: post_tool_use_failure
+  tool_category: bash
+  command_kind: python3
+  command_risk: release
+  command_outcome: fail
+expected_gate_result:
+  outcome: pass
+expected_evidence_delta:
+  normalized_event_supported: true
+  adapter_degradation_strength: partial
+  command_risk_outcome: release
+  privacy_redaction_count: 1
+expected_closure_effect:
+  verdict: needs_validation
+  degraded_capabilities_contains:
+    - claude-post-tool-failure
+privacy_expectations:
+  redactions_include:
+    - "command:kind_only"
+  blocked_strings:
+    - SYNTHETIC_TOKEN_SHOULD_BE_IGNORED
+    - deploy.py --token
+  forbid_absolute_paths: true

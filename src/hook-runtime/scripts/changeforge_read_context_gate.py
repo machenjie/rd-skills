@@ -16,6 +16,10 @@ from changeforge_common import (
     tool_name,
     write_telemetry_event,
 )
+from changeforge_executor_adapter_core import (
+    snapshot_from_event_state,
+    state_update_from_snapshot,
+)
 from changeforge_runtime_adapters import adapter_for
 
 
@@ -32,12 +36,22 @@ def main() -> int:
     paths = evidence["paths"]
     patterns = evidence["patterns"]
     diff_seen = is_review_diff_tool(event)
+    snapshot = snapshot_from_event_state(
+        event,
+        {},
+        classification={"stage": "read", "paths": paths, "tool": tool_name(event)},
+        read_evidence={"paths": paths, "patterns": patterns},
+        gate_name="read_context",
+        gate_mode=mode,
+    )
+    snapshot_update = state_update_from_snapshot(snapshot)
+    snapshot_update["read_paths"] = paths
+    snapshot_update["searched_patterns"] = patterns
     state = merge_state(
         repo,
         runtime,
-        read_paths=paths,
+        **snapshot_update,
         read_tools=[tool_name(event) or "read"],
-        searched_patterns=patterns,
         turn_stage="read",
         read_intent_seen=True,
         read_evidence_seen=True,
@@ -57,6 +71,7 @@ def main() -> int:
         session_id=session_id_from_event(event),
         cwd=cwd_from_event(event),
         tool_name=tool_name(event),
+        normalized_events=snapshot_update["normalized_events"],
         hook_findings={"read_paths": paths, "searched_patterns": patterns},
         turn_stage="read",
         read_evidence_seen=True,

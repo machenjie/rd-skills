@@ -81,6 +81,46 @@
       "verification_command": "python3 scripts/validate-professional-routing-coverage.py"
     },
     {
+      "detail": "{\"case_count\": 15, \"coverage_targets\": [\"closure_verdict\", \"command_risk\", \"degradation\", \"event_recognition\", \"path_normalization\", \"permission_decision\", \"privacy_redaction\", \"tool_category\", \"validation_freshness_after_edits\", \"validation_outcome\"], \"evidence_boundary\": \"deterministic local fixtures only; no live runtime pass-rate or overhead measurement\", \"failed\": 0, \"live_pass_rate\": \"not_collected\", \"passed\": 15, \"pressure_cases\": [\"absolute_user_path\", \"claude_post_tool_failure\", \"codex_destructive_permission_request\", \"copilot_unsupported_pre_tool\", \"edit_after_validation\", \"failed_validation\", \"full_command_output_field\", \"large_path_list_cap\", \"repair_without_rereview\", \"review_finding_without_repair\", \"secret_like_payload_field\", \"unknown_event\", \"unsupported_runtime_event\"], \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
+      "fix_hint": "Repair executor adapter fixture expectations or adapter normalization until deterministic cases pass.",
+      "name": "Executor adapter structural fixtures",
+      "source": "evals/executor-adapter and reports/executor-adapter-eval.json",
+      "status": "pass",
+      "verification_command": "python3 scripts/eval-executor-adapters.py"
+    },
+    {
+      "detail": "{\"degraded_event_count\": 4, \"event_count\": 15, \"privacy_redaction_count\": 9, \"runtime\": \"mixed-fixture-runtime-sample\", \"source\": \"deterministic-fixture-bounded-facts\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
+      "fix_hint": "Generate a sanitized bounded telemetry sample; do not store raw prompts, secrets, env, personal paths, or full command output.",
+      "name": "Runtime telemetry sample",
+      "source": "reports/runtime-telemetry-sample.json",
+      "status": "pass",
+      "verification_command": "python3 scripts/eval-executor-adapters.py"
+    },
+    {
+      "detail": "deterministic local fixtures do not measure real-task success rate",
+      "fix_hint": "Collect a real measured run before changing this status from not_collected.",
+      "name": "Executor adapter live pass-rate",
+      "source": "reports/executor-adapter-eval.json",
+      "status": "not_collected",
+      "verification_command": "python3 scripts/eval-executor-adapters.py"
+    },
+    {
+      "detail": "deterministic local fixture run does not measure token overhead",
+      "fix_hint": "Collect a real measured run before changing this status from not_collected.",
+      "name": "Executor adapter token overhead",
+      "source": "reports/executor-adapter-eval.json",
+      "status": "not_collected",
+      "verification_command": "python3 scripts/eval-executor-adapters.py"
+    },
+    {
+      "detail": "deterministic local fixture run does not measure turn overhead",
+      "fix_hint": "Collect a real measured run before changing this status from not_collected.",
+      "name": "Executor adapter turn overhead",
+      "source": "reports/executor-adapter-eval.json",
+      "status": "not_collected",
+      "verification_command": "python3 scripts/eval-executor-adapters.py"
+    },
+    {
       "detail": "showcase examples validate",
       "fix_hint": "Repair showcase scenario prompts, expected routes, evidence files, or routing fixture links.",
       "name": "Example coverage",
@@ -139,8 +179,8 @@
       "status": "pass"
     },
     "runtime telemetry sample": {
-      "meaning": "Actual runtime fact sample; may still require human review.",
-      "status": "not_collected"
+      "meaning": "Sanitized bounded runtime fact sample; may still require human review.",
+      "status": "pass"
     },
     "structural fixture": {
       "meaning": "Local deterministic structure sample passed; not evidence of live task success.",
@@ -181,9 +221,9 @@
   },
   "status_summary": {
     "fail": 0,
-    "not_collected": 2,
+    "not_collected": 5,
     "partial": 3,
-    "pass": 11,
+    "pass": 13,
     "unknown": 0
   },
   "validation_commands": [
@@ -219,6 +259,11 @@
     },
     {
       "command": "python3 scripts/validate-skill-efficacy-benchmarks.py",
+      "note": "Run command directly; this scorecard does not infer pass/fail from stdout.",
+      "status": "not_collected"
+    },
+    {
+      "command": "python3 scripts/eval-executor-adapters.py",
       "note": "Run command directly; this scorecard does not infer pass/fail from stdout.",
       "status": "not_collected"
     },

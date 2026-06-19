@@ -1,6 +1,6 @@
 # Professionalism Release Readiness
 
-- Generated: 2026-06-18T23:05:41.152819+00:00
+- Generated: 2026-06-19T02:20:49.283654+00:00
 - Status: strict-release-ready
 - Authoring ready: ready
 - Release ready: ready
@@ -117,7 +117,7 @@
 - promoted_agent_sample_strict_warnings: 0
 - promoted_agent_samples_strict_checked: 5
 - release_blocking_professionalism_warnings: 0
-- skill_professionalism_average_score: 41.64
+- skill_professionalism_average_score: 41.66
 - skill_professionalism_warnings: 2
 
 ## Release Blockers

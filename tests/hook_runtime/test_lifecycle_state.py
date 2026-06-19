@@ -21,6 +21,11 @@ class LifecycleStateTests(unittest.TestCase):
                 "read_evidence_seen": False,
                 "turn_stage": "edit",
                 "changed_paths": ["a.py", "b.py"],
+                "deleted_paths": ["old.py"],
+                "generated_paths": ["dist/out.py"],
+                "validation_results": ["pass:current:pytest"],
+                "command_risks": ["safe:pytest"],
+                "permission_decisions": ["allow:pytest"],
                 "risk_surfaces": ["security"],
             },
         )
@@ -28,6 +33,11 @@ class LifecycleStateTests(unittest.TestCase):
         self.assertTrue(lifecycle.read_evidence_seen)
         self.assertEqual(lifecycle.turn_stage, "edit")
         self.assertEqual(lifecycle.changed_paths, ["a.py", "b.py"])
+        self.assertEqual(lifecycle.deleted_paths, ["old.py"])
+        self.assertEqual(lifecycle.generated_paths, ["dist/out.py"])
+        self.assertEqual(lifecycle.validation_results, ["pass:current:pytest"])
+        self.assertEqual(lifecycle.command_risks, ["safe:pytest"])
+        self.assertEqual(lifecycle.permission_decisions, ["allow:pytest"])
         self.assertEqual(lifecycle.risk_surfaces, ["security"])
 
     def test_to_dict_has_expected_lifecycle_fields(self) -> None:

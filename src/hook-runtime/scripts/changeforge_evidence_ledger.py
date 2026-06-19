@@ -34,9 +34,15 @@ class ReadEvidence:
 @dataclass(frozen=True)
 class EditEvidence:
     changed_paths: list[str] = field(default_factory=list)
+    deleted_paths: list[str] = field(default_factory=list)
+    generated_paths: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, object]:
-        return {"changed_paths": list(self.changed_paths)}
+        return {
+            "changed_paths": list(self.changed_paths),
+            "deleted_paths": list(self.deleted_paths),
+            "generated_paths": list(self.generated_paths),
+        }
 
 
 @dataclass(frozen=True)
@@ -118,9 +124,18 @@ class EvidenceLedger:
         validation_commands: list[str] = []
         if event and event.stage == "test" and event.command_program:
             validation_commands.append(event.command_program)
-        validation_present = bool(state.get("validation_command_seen") or state.get("validation_seen"))
+        validation_status = _validation_status_from_results(lifecycle.validation_results)
+        validation_present = bool(
+            validation_status
+            or state.get("validation_command_seen")
+            or state.get("validation_seen")
+        )
         read_paths = _unique([*lifecycle.read_paths, *((event.read_paths if event else []))])
         changed_paths = _unique([*lifecycle.changed_paths, *((event.changed_paths if event else []))])
+        deleted_paths = _unique([*lifecycle.deleted_paths, *((event.deleted_paths if event else []))])
+        generated_paths = _unique(
+            [*lifecycle.generated_paths, *((event.generated_paths if event else []))]
+        )
         governance = GovernanceEvidenceLedger.from_telemetry_facts(
             [
                 {
@@ -142,15 +157,34 @@ class EvidenceLedger:
                         state.get("implementation_preflight_complete")
                     ),
                     "changed_paths": changed_paths,
+                    "deleted_paths": deleted_paths,
+                    "generated_paths": generated_paths,
                     "validation_command_detected": validation_present,
                     "validation_evidence_detected": validation_present,
-                    "validation_result_outcome": "pass" if validation_present else "",
-                    "validation_result_evidence_strength": "strong" if validation_present else "",
+                    "validation_result_outcome": validation_status or ("pass" if validation_present else ""),
+                    "validation_result_evidence_strength": _validation_strength(validation_status)
+                    if validation_status
+                    else ("strong" if validation_present else ""),
                     "validation_result_fresh_after_last_edit": "true"
-                    if lifecycle.validation_freshness_seen
+                    if validation_status == "pass" or lifecycle.validation_freshness_seen
+                    else "false"
+                    if validation_status == "stale"
                     else "",
                     "review_evidence_seen": bool(state.get("review_evidence_seen")),
+                    "review_findings": _string_list(state.get("review_findings")),
                     "repair_evidence_seen": bool(state.get("repair_evidence_seen")),
+                    "review_after_repair_seen": bool(
+                        state.get("review_after_repair_seen")
+                        or state.get("re_review_evidence_seen")
+                    ),
+                    "command_risk": event.command_risk
+                    if event and event.command_risk
+                    else _first_risk(lifecycle.command_risks),
+                    "command_outcome": event.command_outcome if event else "",
+                    "permission_decision": event.permission_decision if event else "",
+                    "permission_reason": event.permission_reason if event else "",
+                    "rollback_available": event.rollback_available if event else None,
+                    "checkpoint_id": event.checkpoint_id if event else "",
                     "residual_risk_detected": residual_risk_present
                     or bool(state.get("closure_risk_surfaces") or lifecycle.risk_surfaces),
                 }
@@ -164,13 +198,17 @@ class EvidenceLedger:
                 ),
             ),
             edit_evidence=EditEvidence(
-                changed_paths=changed_paths
+                changed_paths=changed_paths,
+                deleted_paths=deleted_paths,
+                generated_paths=generated_paths,
             ),
             validation_evidence=ValidationEvidence(
                 commands=_unique(validation_commands),
                 outcome_seen=validation_present,
-                fresh_after_last_edit=True
-                if lifecycle.validation_freshness_seen
+                fresh_after_last_edit=False
+                if validation_status == "stale"
+                else True
+                if validation_status == "pass" or lifecycle.validation_freshness_seen
                 else UNKNOWN,
             ),
             review_evidence=ReviewEvidence(
@@ -179,7 +217,10 @@ class EvidenceLedger:
             ),
             repair_evidence=RepairEvidence(
                 repaired_paths=_unique(_string_list(state.get("repair_findings"))),
-                re_review_seen=bool(state.get("review_evidence_seen") and state.get("repair_evidence_seen")),
+                re_review_seen=bool(
+                    state.get("review_after_repair_seen")
+                    or state.get("re_review_evidence_seen")
+                ),
             ),
             closure_evidence=ClosureEvidence(
                 route_manifest_complete=route_manifest_complete,
@@ -221,6 +262,33 @@ def _unique(values: list[str]) -> list[str]:
         seen.add(text)
         result.append(text)
     return result
+
+
+def _validation_status_from_results(values: list[str]) -> str:
+    joined = " ".join(values).casefold()
+    if not joined:
+        return ""
+    if "stale_after_material_change" in joined or "stale" in joined:
+        return "stale"
+    if "fail" in joined:
+        return "fail"
+    if "pass" in joined:
+        return "pass"
+    return "unknown"
+
+
+def _validation_strength(status: str) -> str:
+    if status == "pass":
+        return "strong"
+    if status in {"fail", "stale"}:
+        return "negative"
+    return "weak"
+
+
+def _first_risk(values: list[str]) -> str:
+    if not values:
+        return ""
+    return values[0].split(":", 1)[0]
 
 
 __all__ = [

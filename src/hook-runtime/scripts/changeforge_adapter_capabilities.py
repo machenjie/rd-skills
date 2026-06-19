@@ -9,10 +9,12 @@ from pathlib import Path
 try:
     from runtime_governance.adapters.base import (
         AdapterCapabilities,
+        BaseRuntimeAdapter,
         CAPABILITIES_BY_RUNTIME,
         CANONICAL_EVENTS,
         CONTEXT_EVENTS_BY_RUNTIME,
         COPILOT_UNSUPPORTED_ADVISORY_EVENTS,
+        EVENT_KIND_BY_CANONICAL,
         EVENT_SUPPORT_FIELDS,
         PLACEHOLDER_CAPABILITIES_BY_RUNTIME,
         PLACEHOLDER_RUNTIMES,
@@ -20,6 +22,7 @@ try:
         adapter_capabilities_for,
         coverage_matrix,
         format_coverage_matrix,
+        runtime_adapter_for,
         strict_adapter_capabilities_for,
         unsupported_events_for,
     )
@@ -35,10 +38,12 @@ except ModuleNotFoundError:
             _runtime_package.__path__.append(_runtime_source_path)
     from runtime_governance.adapters.base import (  # type: ignore[no-redef]
         AdapterCapabilities,
+        BaseRuntimeAdapter,
         CAPABILITIES_BY_RUNTIME,
         CANONICAL_EVENTS,
         CONTEXT_EVENTS_BY_RUNTIME,
         COPILOT_UNSUPPORTED_ADVISORY_EVENTS,
+        EVENT_KIND_BY_CANONICAL,
         EVENT_SUPPORT_FIELDS,
         PLACEHOLDER_CAPABILITIES_BY_RUNTIME,
         PLACEHOLDER_RUNTIMES,
@@ -46,6 +51,7 @@ except ModuleNotFoundError:
         adapter_capabilities_for,
         coverage_matrix,
         format_coverage_matrix,
+        runtime_adapter_for,
         strict_adapter_capabilities_for,
         unsupported_events_for,
     )
@@ -53,10 +59,12 @@ except ModuleNotFoundError:
 
 __all__ = [
     "AdapterCapabilities",
+    "BaseRuntimeAdapter",
     "CAPABILITIES_BY_RUNTIME",
     "CANONICAL_EVENTS",
     "CONTEXT_EVENTS_BY_RUNTIME",
     "COPILOT_UNSUPPORTED_ADVISORY_EVENTS",
+    "EVENT_KIND_BY_CANONICAL",
     "EVENT_SUPPORT_FIELDS",
     "PLACEHOLDER_CAPABILITIES_BY_RUNTIME",
     "PLACEHOLDER_RUNTIMES",
@@ -64,6 +72,7 @@ __all__ = [
     "adapter_capabilities_for",
     "coverage_matrix",
     "format_coverage_matrix",
+    "runtime_adapter_for",
     "strict_adapter_capabilities_for",
     "unsupported_events_for",
 ]

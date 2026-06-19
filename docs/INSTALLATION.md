@@ -31,6 +31,8 @@ python3 scripts/build.py --profile dev
 - Claude Code user: `~/.claude/skills`
 - GitHub Copilot project: `<target>/.github/skills`
 - GitHub Copilot user: `~/.copilot/skills`
+- Cline project: `<target>/.cline/skills`
+- Cline user: `~/.cline/skills`
 - OpenAI API: profile-scoped zip bundles under `dist/openai-api/zips/<profile>`
 
 For project installs, `--target` is the project root. For user and admin installs, omitting `--target` uses the default skills directory; supplying `--target` treats it as an explicit skills directory override.
@@ -65,6 +67,12 @@ both Codex/Claude and VS Code Copilot tool names. Hooks are never installed by
 default; pass `--with-hooks` to `installers/install.py` for Codex, Claude, or
 Copilot project or user scope, and existing hook configuration is always
 preserved.
+
+Cline, Roo, and OpenHands support is staged adapter support, not executable
+hook support. Cline can install skills into `.cline/skills`; Roo mode-policy
+and OpenHands backend-protocol adapters report unsupported lifecycle checks as
+degraded residual risk until deterministic runtime templates or backend wiring
+are added.
 
 Project hooks install under the project root and resolve their command path from
 the git root. User hooks install under the agent home (`~/.codex`, `~/.claude`,
@@ -115,6 +123,13 @@ python3 installers/install.py --agent claude --scope user --profile recommended 
 ```bash
 python3 installers/install.py --agent copilot --scope project --target /path/to/project --profile full --dry-run
 python3 installers/install.py --agent copilot --scope user --profile recommended --dry-run
+```
+
+## Cline
+
+```bash
+python3 installers/install.py --agent cline --scope project --target /path/to/project --profile full --dry-run
+python3 installers/install.py --agent cline --scope user --profile recommended --dry-run
 ```
 
 ## OpenAI API Zip Packaging

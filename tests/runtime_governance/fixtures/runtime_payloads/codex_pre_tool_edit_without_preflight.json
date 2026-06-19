@@ -1,0 +1,10 @@
+{
+  "runtime": "codex",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "apply_patch",
+  "cwd": "/repo",
+  "prompt": "raw user request should not persist",
+  "tool_input": {
+    "patch": "*** Begin Patch\n*** Update File: src/runtime_governance/adapters/base.py\n+def example():\n+    return True\n*** End Patch\n"
+  }
+}

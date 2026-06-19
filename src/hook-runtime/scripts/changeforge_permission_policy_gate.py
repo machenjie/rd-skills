@@ -22,6 +22,10 @@ from changeforge_common import (
     tool_name,
     write_telemetry_event,
 )
+from changeforge_executor_adapter_core import (
+    snapshot_from_event_state,
+    state_update_from_snapshot,
+)
 from changeforge_hook_policy import gate_mode, run_gate_with_policy
 from changeforge_runtime_adapters import adapter_for
 
@@ -42,6 +46,12 @@ HELM_INSTALL_UPGRADE_RE = re.compile(r"\bhelm\s+(install|upgrade)\b", re.IGNOREC
 DEPENDENCY_MUTATION_RE = re.compile(
     r"\b(npm\s+(install|uninstall|update)|pnpm\s+(add|remove|update|install)|"
     r"yarn\s+(add|remove|upgrade|install)|pip\s+(install|uninstall))\b",
+    re.IGNORECASE,
+)
+NETWORK_RE = re.compile(r"\b(curl|wget|ssh|scp|rsync|gh\s+api)\b", re.IGNORECASE)
+MIGRATION_RE = re.compile(r"\b(alembic|prisma\s+migrate|sequelize\s+db:migrate)\b", re.IGNORECASE)
+READ_ONLY_RE = re.compile(
+    r"^\s*(ls|pwd|find|rg|grep|sed|awk|cat|head|tail|git\s+(status|diff|show|log)|python3?\s+-m\s+unittest|pytest|npm\s+test|pnpm\s+test)\b",
     re.IGNORECASE,
 )
 PROD_SIGNAL_RE = re.compile(r"(\bprod(uction)?\b|--namespace\s+prod\b|-n\s+prod\b)", re.IGNORECASE)
@@ -87,14 +97,30 @@ def _main() -> int:
         return 0
     command = extract_bash_command(event)
     decision, reason = _decision(command)
-    if pretool_bash_event and decision == "allow":
-        return 0
+    risk_class = _command_risk_class(command)
     recorded_decision = "warn" if pretool_bash_event else decision
     repo = repo_root(cwd_from_event(event))
+    program = summarize_command_program(command) or "unknown"
+    snapshot = snapshot_from_event_state(
+        event,
+        {},
+        classification={
+            "stage": "permission",
+            "tool": tool_name(event),
+            "command_program": program,
+            "risk_surfaces": _surfaces(command),
+        },
+        gate_name="permission_policy",
+        gate_mode=mode,
+        gate_facts={"command_risk": risk_class, "permission_decision": recorded_decision},
+    )
+    snapshot_update = state_update_from_snapshot(snapshot)
+    snapshot_update["command_risks"] = [f"{risk_class}:{program}"]
+    snapshot_update["permission_decisions"] = [f"{recorded_decision}:{program}"]
     merge_state(
         repo,
         runtime,
-        permission_decisions=[f"{recorded_decision}:{summarize_command_program(command)}"],
+        **snapshot_update,
         risk_surfaces=_surfaces(command),
         turn_stage="permission",
         permission_gate_seen=True,
@@ -110,11 +136,16 @@ def _main() -> int:
         session_id=session_id_from_event(event),
         cwd=cwd_from_event(event),
         tool_name=tool_name(event),
-        command_program=summarize_command_program(command),
+        normalized_events=snapshot_update["normalized_events"],
+        command_program=program,
+        command_risk=risk_class,
+        permission_decision=recorded_decision,
         risk_surfaces=_surfaces(command),
         permission_gate_seen=True,
         turn_stage="permission",
     )
+    if pretool_bash_event and decision == "allow":
+        return 0
     adapter = adapter_for(runtime)
     if permission_event and decision == "block" and mode == "block":
         adapter.emit_permission_decision("block", reason)
@@ -169,6 +200,30 @@ def _surfaces(command: str) -> list[str]:
     if any(token in lowered for token in ("env", "credential", "token", "secret", "chmod", "chown")):
         surfaces.append("security")
     return surfaces or ["permission"]
+
+
+def _command_risk_class(command: str) -> str:
+    if not command:
+        return "safe"
+    if DESTRUCTIVE_RE.search(command):
+        if MIGRATION_RE.search(command):
+            return "migration"
+        if any(token in command.casefold() for token in ("kubectl", "helm", "terraform", "docker compose")):
+            return "release"
+        return "destructive"
+    if HELM_INSTALL_UPGRADE_RE.search(command):
+        return "release"
+    if MIGRATION_RE.search(command):
+        return "migration"
+    if DEPENDENCY_MUTATION_RE.search(command):
+        return "dependency"
+    if NETWORK_RE.search(command):
+        return "network"
+    if READ_ONLY_RE.search(command):
+        return "safe"
+    if command.strip():
+        return "mutation"
+    return "unknown"
 
 
 if __name__ == "__main__":

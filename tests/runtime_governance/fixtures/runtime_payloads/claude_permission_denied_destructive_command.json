@@ -1,0 +1,10 @@
+{
+  "runtime": "claude",
+  "hookEventName": "PermissionRequest",
+  "toolName": "Bash",
+  "toolInput": {
+    "command": "git clean -fd",
+    "permissionDecision": "denied",
+    "denialReason": "destructive cleanup denied"
+  }
+}

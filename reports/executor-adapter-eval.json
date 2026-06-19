@@ -1,0 +1,2079 @@
+{
+  "cases": [
+    {
+      "closure_effect": {
+        "degraded_capabilities": [],
+        "freshness": {
+          "command_risk": "current",
+          "implementation_preflight": "current",
+          "residual_risk": "current",
+          "route_manifest": "current",
+          "validation": "stale"
+        },
+        "missing_evidence": [
+          "validation"
+        ],
+        "negative_evidence": [
+          "validation"
+        ],
+        "residual_risk": [
+          "validation: stale",
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "worktree_lifecycle",
+          "checkpoint_or_rollback",
+          "plan_act_mode",
+          "codebase_index",
+          "mode_or_role_switch"
+        ],
+        "validation_status": {
+          "freshness": "stale",
+          "outcome": "pass",
+          "strength": "negative"
+        },
+        "verdict": "needs_validation"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "path_normalization",
+        "validation_freshness_after_edits",
+        "closure_verdict"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 1,
+        "changed_files": [
+          "src/api/schema.py"
+        ],
+        "command_risk_outcome": "mutation",
+        "deleted_files": [],
+        "event_count": 2,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 0,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "stale",
+        "validation_outcome": "pass",
+        "validation_strength": "negative"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "claude-edit-after-validation"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "claude-edit-after-validation",
+      "normalized_event": {
+        "action_type": "Edit",
+        "adapter": "claude",
+        "bounded_paths": [
+          "src/api/schema.py"
+        ],
+        "capability_degradation": [],
+        "changed_paths": [
+          "src/api/schema.py"
+        ],
+        "checkpoint_id": null,
+        "command_kind": null,
+        "command_outcome": "not_observable",
+        "command_risk": "mutation",
+        "deleted_paths": [],
+        "event_id": "claude-edit-after-validation",
+        "event_kind": "file_changed",
+        "executor_event_name": "FileChanged",
+        "executor_event_phase": "after",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "file",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "edit",
+        "validation_candidate": false,
+        "validation_freshness": "stale",
+        "validation_outcome": "stale"
+      },
+      "path": "evals/executor-adapter/claude/edit-after-validation.yaml",
+      "pressure_cases": [
+        "edit_after_validation"
+      ],
+      "runtime": "claude",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [],
+        "freshness": {
+          "command_risk": "current",
+          "validation": "current"
+        },
+        "missing_evidence": [
+          "route_manifest",
+          "residual_risk"
+        ],
+        "negative_evidence": [
+          "validation"
+        ],
+        "residual_risk": [
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "worktree_lifecycle",
+          "checkpoint_or_rollback",
+          "plan_act_mode",
+          "codebase_index",
+          "mode_or_role_switch"
+        ],
+        "validation_status": {
+          "freshness": "current",
+          "outcome": "fail",
+          "strength": "negative"
+        },
+        "verdict": "blocked"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "tool_category",
+        "validation_outcome",
+        "closure_verdict"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 0,
+        "changed_files": [],
+        "command_risk_outcome": "safe",
+        "deleted_files": [],
+        "event_count": 1,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 1,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "current",
+        "validation_outcome": "fail",
+        "validation_strength": "negative"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "claude-failed-validation"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "claude-failed-validation",
+      "normalized_event": {
+        "action_type": "Bash",
+        "adapter": "claude",
+        "bounded_paths": [],
+        "capability_degradation": [],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": "pytest",
+        "command_outcome": "fail",
+        "command_risk": "safe",
+        "deleted_paths": [],
+        "event_id": "claude-failed-validation",
+        "event_kind": "post_tool_use",
+        "executor_event_name": "PostToolUse",
+        "executor_event_phase": "after",
+        "exit_code": 1,
+        "generated_paths": [],
+        "lifecycle_cadence": "tool",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [
+          "command:kind_only"
+        ],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "test",
+        "validation_candidate": true,
+        "validation_freshness": null,
+        "validation_outcome": "fail"
+      },
+      "path": "evals/executor-adapter/claude/failed-validation.yaml",
+      "pressure_cases": [
+        "failed_validation"
+      ],
+      "runtime": "claude",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [
+          "claude-post-tool-failure"
+        ],
+        "freshness": {
+          "adapter_degradation": "current",
+          "command_risk": "current"
+        },
+        "missing_evidence": [
+          "route_manifest",
+          "validation",
+          "residual_risk"
+        ],
+        "negative_evidence": [],
+        "residual_risk": [
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "worktree_lifecycle",
+          "checkpoint_or_rollback",
+          "plan_act_mode",
+          "codebase_index",
+          "mode_or_role_switch",
+          "runtime_adapter_degradation"
+        ],
+        "validation_status": {
+          "freshness": "unknown",
+          "outcome": "",
+          "strength": "none"
+        },
+        "verdict": "needs_validation"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "command_risk",
+        "privacy_redaction"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "partial",
+        "bounded_path_count": 0,
+        "changed_files": [],
+        "command_risk_outcome": "release",
+        "deleted_files": [],
+        "event_count": 1,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 1,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "unknown",
+        "validation_outcome": "",
+        "validation_strength": "none"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "claude-post-tool-failure"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "claude-post-tool-failure",
+      "normalized_event": {
+        "action_type": "Bash",
+        "adapter": "claude",
+        "bounded_paths": [],
+        "capability_degradation": [],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": "python3",
+        "command_outcome": "fail",
+        "command_risk": "release",
+        "deleted_paths": [],
+        "event_id": "claude-post-tool-failure",
+        "event_kind": "post_tool_use_failure",
+        "executor_event_name": "PostToolUseFailure",
+        "executor_event_phase": "failure",
+        "exit_code": 1,
+        "generated_paths": [],
+        "lifecycle_cadence": "tool",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [
+          "command:kind_only"
+        ],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "bash",
+        "validation_candidate": false,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/claude/post-tool-failure.yaml",
+      "pressure_cases": [
+        "claude_post_tool_failure"
+      ],
+      "runtime": "claude",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [
+          "cline_user_prompt_submit_unsupported",
+          "cline_plan_mode_edit_evidence_unsupported",
+          "cline-plan-mode-edit-degradation"
+        ],
+        "freshness": {
+          "adapter_degradation": "current",
+          "implementation_preflight": "current"
+        },
+        "missing_evidence": [
+          "route_manifest",
+          "validation",
+          "residual_risk"
+        ],
+        "negative_evidence": [],
+        "residual_risk": [
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "route_manifest",
+          "changed_files",
+          "validation_broker",
+          "validation_freshness",
+          "residual_risk",
+          "stop_decision",
+          "pre_tool_advisory_context",
+          "post_tool_context",
+          "subagent_start_context",
+          "subagent_stop_context",
+          "permission_signal",
+          "permission_decision",
+          "pre_tool_block",
+          "tool_batch_context",
+          "post_tool_failure_context",
+          "file_change_event",
+          "config_change_event",
+          "worktree_lifecycle",
+          "compact_direction",
+          "session_end",
+          "task_lifecycle",
+          "checkpoint_or_rollback",
+          "codebase_index",
+          "command_outcome",
+          "path_observation",
+          "runtime_adapter_degradation"
+        ],
+        "validation_status": {
+          "freshness": "unknown",
+          "outcome": "",
+          "strength": "none"
+        },
+        "verdict": "needs_validation"
+      },
+      "coverage_targets": [
+        "degradation",
+        "tool_category"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "partial",
+        "bounded_path_count": 1,
+        "changed_files": [],
+        "command_risk_outcome": "",
+        "deleted_files": [],
+        "event_count": 1,
+        "generated_files": [],
+        "normalized_event_supported": false,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 0,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "unknown",
+        "validation_outcome": "",
+        "validation_strength": "none"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "cline-plan-mode-edit-degradation"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "degraded",
+        "reason": "unsupported runtime event for cline: UserPromptSubmit",
+        "residual_risk": [
+          "cline_user_prompt_submit_unsupported",
+          "cline_plan_mode_edit_evidence_unsupported"
+        ],
+        "severity": "warning"
+      },
+      "id": "cline-plan-mode-edit-degradation",
+      "normalized_event": {
+        "action_type": "write",
+        "adapter": "cline",
+        "bounded_paths": [
+          "src/planned.py"
+        ],
+        "capability_degradation": [
+          "cline_user_prompt_submit_unsupported",
+          "cline_plan_mode_edit_evidence_unsupported"
+        ],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": null,
+        "command_outcome": "not_observable",
+        "command_risk": "unknown",
+        "deleted_paths": [],
+        "event_id": "cline-plan-mode-edit-degradation",
+        "event_kind": "user_prompt_submit",
+        "executor_event_name": "UserPromptSubmit",
+        "executor_event_phase": "before",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "turn",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": "implementation-planning",
+        "timestamp": null,
+        "tool_category": "edit",
+        "validation_candidate": false,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/cline/plan-mode-edit-degradation.yaml",
+      "pressure_cases": [
+        "unsupported_runtime_event"
+      ],
+      "runtime": "cline",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [
+          "cline_unknown_event",
+          "unsupported_event:Unknown",
+          "cline-unknown-event"
+        ],
+        "freshness": {
+          "adapter_degradation": "current"
+        },
+        "missing_evidence": [
+          "route_manifest",
+          "validation",
+          "residual_risk"
+        ],
+        "negative_evidence": [],
+        "residual_risk": [
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "route_manifest",
+          "changed_files",
+          "validation_broker",
+          "validation_freshness",
+          "residual_risk",
+          "stop_decision",
+          "pre_tool_advisory_context",
+          "post_tool_context",
+          "subagent_start_context",
+          "subagent_stop_context",
+          "permission_signal",
+          "permission_decision",
+          "pre_tool_block",
+          "tool_batch_context",
+          "post_tool_failure_context",
+          "file_change_event",
+          "config_change_event",
+          "worktree_lifecycle",
+          "compact_direction",
+          "session_end",
+          "task_lifecycle",
+          "checkpoint_or_rollback",
+          "codebase_index",
+          "command_outcome",
+          "path_observation",
+          "runtime_adapter_degradation"
+        ],
+        "validation_status": {
+          "freshness": "unknown",
+          "outcome": "",
+          "strength": "none"
+        },
+        "verdict": "needs_validation"
+      },
+      "coverage_targets": [
+        "degradation"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "partial",
+        "bounded_path_count": 0,
+        "changed_files": [],
+        "command_risk_outcome": "",
+        "deleted_files": [],
+        "event_count": 1,
+        "generated_files": [],
+        "normalized_event_supported": false,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 0,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "unknown",
+        "validation_outcome": "",
+        "validation_strength": "none"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "cline-unknown-event"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "degraded",
+        "reason": "unsupported runtime event for cline: Unknown",
+        "residual_risk": [
+          "cline_unknown_event",
+          "unsupported_event:Unknown"
+        ],
+        "severity": "warning"
+      },
+      "id": "cline-unknown-event",
+      "normalized_event": {
+        "action_type": null,
+        "adapter": "cline",
+        "bounded_paths": [],
+        "capability_degradation": [
+          "cline_unknown_event",
+          "unsupported_event:Unknown"
+        ],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": null,
+        "command_outcome": "not_observable",
+        "command_risk": "unknown",
+        "deleted_paths": [],
+        "event_id": "cline-unknown-event",
+        "event_kind": "unknown",
+        "executor_event_name": "Unknown",
+        "executor_event_phase": "unknown",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "unknown",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": "implementation-planning",
+        "timestamp": null,
+        "tool_category": "unknown",
+        "validation_candidate": false,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/cline/unknown-event.yaml",
+      "pressure_cases": [
+        "unknown_event"
+      ],
+      "runtime": "cline",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [],
+        "freshness": {
+          "command_risk": "current",
+          "permission": "current"
+        },
+        "missing_evidence": [
+          "route_manifest",
+          "validation",
+          "residual_risk"
+        ],
+        "negative_evidence": [
+          "permission"
+        ],
+        "residual_risk": [
+          "permission: destructive git command denied",
+          "permission denied for dangerous command class",
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "post_tool_failure_context",
+          "file_change_event",
+          "config_change_event",
+          "worktree_lifecycle",
+          "session_end",
+          "task_lifecycle",
+          "checkpoint_or_rollback",
+          "plan_act_mode",
+          "codebase_index",
+          "mode_or_role_switch"
+        ],
+        "validation_status": {
+          "freshness": "unknown",
+          "outcome": "",
+          "strength": "none"
+        },
+        "verdict": "blocked"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "command_risk",
+        "permission_decision",
+        "closure_verdict",
+        "privacy_redaction"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 0,
+        "changed_files": [],
+        "command_risk_outcome": "destructive",
+        "deleted_files": [],
+        "event_count": 1,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "deny",
+        "permission_strength": "negative",
+        "privacy_redaction_count": 1,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "unknown",
+        "validation_outcome": "",
+        "validation_strength": "none"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "codex-destructive-permission-request"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "codex-destructive-permission-request",
+      "normalized_event": {
+        "action_type": "bash",
+        "adapter": "codex",
+        "bounded_paths": [],
+        "capability_degradation": [],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": "git",
+        "command_outcome": "not_observable",
+        "command_risk": "destructive",
+        "deleted_paths": [],
+        "event_id": "codex-destructive-permission-request",
+        "event_kind": "permission_request",
+        "executor_event_name": "PermissionRequest",
+        "executor_event_phase": "before",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "tool",
+        "permission_decision": "deny",
+        "permission_reason": "destructive git command denied",
+        "privacy_redaction": [
+          "command:kind_only"
+        ],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "bash",
+        "validation_candidate": false,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/codex/destructive-permission-request.yaml",
+      "pressure_cases": [
+        "codex_destructive_permission_request"
+      ],
+      "runtime": "codex",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [],
+        "freshness": {
+          "command_risk": "current",
+          "validation": "current"
+        },
+        "missing_evidence": [
+          "route_manifest",
+          "residual_risk"
+        ],
+        "negative_evidence": [],
+        "residual_risk": [
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "post_tool_failure_context",
+          "file_change_event",
+          "config_change_event",
+          "worktree_lifecycle",
+          "session_end",
+          "task_lifecycle",
+          "checkpoint_or_rollback",
+          "plan_act_mode",
+          "codebase_index",
+          "mode_or_role_switch"
+        ],
+        "validation_status": {
+          "freshness": "current",
+          "outcome": "pass",
+          "strength": "strong"
+        },
+        "verdict": "needs_validation"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "tool_category",
+        "validation_outcome",
+        "privacy_redaction"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 0,
+        "changed_files": [],
+        "command_risk_outcome": "safe",
+        "deleted_files": [],
+        "event_count": 1,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 3,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "current",
+        "validation_outcome": "pass",
+        "validation_strength": "strong"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "codex-full-command-output-redaction"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "codex-full-command-output-redaction",
+      "normalized_event": {
+        "action_type": "bash",
+        "adapter": "codex",
+        "bounded_paths": [],
+        "capability_degradation": [],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": "pytest",
+        "command_outcome": "pass",
+        "command_risk": "safe",
+        "deleted_paths": [],
+        "event_id": "codex-full-command-output-redaction",
+        "event_kind": "post_tool_use",
+        "executor_event_name": "PostToolUse",
+        "executor_event_phase": "after",
+        "exit_code": 0,
+        "generated_paths": [],
+        "lifecycle_cadence": "tool",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [
+          "command_output:ignored",
+          "stdout:ignored",
+          "command:kind_only"
+        ],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "test",
+        "validation_candidate": true,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/codex/full-command-output-redaction.yaml",
+      "pressure_cases": [
+        "full_command_output_field"
+      ],
+      "runtime": "codex",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [],
+        "freshness": {
+          "command_risk": "current",
+          "implementation_preflight": "current"
+        },
+        "missing_evidence": [
+          "route_manifest",
+          "validation",
+          "residual_risk"
+        ],
+        "negative_evidence": [],
+        "residual_risk": [
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "post_tool_failure_context",
+          "file_change_event",
+          "config_change_event",
+          "worktree_lifecycle",
+          "session_end",
+          "task_lifecycle",
+          "checkpoint_or_rollback",
+          "plan_act_mode",
+          "codebase_index",
+          "mode_or_role_switch"
+        ],
+        "validation_status": {
+          "freshness": "unknown",
+          "outcome": "",
+          "strength": "none"
+        },
+        "verdict": "needs_validation"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "tool_category",
+        "path_normalization"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 50,
+        "changed_files": [
+          "src/generated/file-1.py",
+          "src/generated/file-2.py",
+          "src/generated/file-3.py",
+          "src/generated/file-4.py",
+          "src/generated/file-5.py",
+          "src/generated/file-6.py",
+          "src/generated/file-7.py",
+          "src/generated/file-8.py",
+          "src/generated/file-9.py",
+          "src/generated/file-10.py",
+          "src/generated/file-11.py",
+          "src/generated/file-12.py",
+          "src/generated/file-13.py",
+          "src/generated/file-14.py",
+          "src/generated/file-15.py",
+          "src/generated/file-16.py",
+          "src/generated/file-17.py",
+          "src/generated/file-18.py",
+          "src/generated/file-19.py",
+          "src/generated/file-20.py",
+          "src/generated/file-21.py",
+          "src/generated/file-22.py",
+          "src/generated/file-23.py",
+          "src/generated/file-24.py",
+          "src/generated/file-25.py",
+          "src/generated/file-26.py",
+          "src/generated/file-27.py",
+          "src/generated/file-28.py",
+          "src/generated/file-29.py",
+          "src/generated/file-30.py",
+          "src/generated/file-31.py",
+          "src/generated/file-32.py",
+          "src/generated/file-33.py",
+          "src/generated/file-34.py",
+          "src/generated/file-35.py",
+          "src/generated/file-36.py",
+          "src/generated/file-37.py",
+          "src/generated/file-38.py",
+          "src/generated/file-39.py",
+          "src/generated/file-40.py",
+          "src/generated/file-41.py",
+          "src/generated/file-42.py",
+          "src/generated/file-43.py",
+          "src/generated/file-44.py",
+          "src/generated/file-45.py",
+          "src/generated/file-46.py",
+          "src/generated/file-47.py",
+          "src/generated/file-48.py",
+          "src/generated/file-49.py",
+          "src/generated/file-50.py"
+        ],
+        "command_risk_outcome": "mutation",
+        "deleted_files": [],
+        "event_count": 1,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 0,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "unknown",
+        "validation_outcome": "",
+        "validation_strength": "none"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "codex-large-path-list-cap"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "codex-large-path-list-cap",
+      "normalized_event": {
+        "action_type": "edit",
+        "adapter": "codex",
+        "bounded_paths": [
+          "src/generated/file-1.py",
+          "src/generated/file-2.py",
+          "src/generated/file-3.py",
+          "src/generated/file-4.py",
+          "src/generated/file-5.py",
+          "src/generated/file-6.py",
+          "src/generated/file-7.py",
+          "src/generated/file-8.py",
+          "src/generated/file-9.py",
+          "src/generated/file-10.py",
+          "src/generated/file-11.py",
+          "src/generated/file-12.py",
+          "src/generated/file-13.py",
+          "src/generated/file-14.py",
+          "src/generated/file-15.py",
+          "src/generated/file-16.py",
+          "src/generated/file-17.py",
+          "src/generated/file-18.py",
+          "src/generated/file-19.py",
+          "src/generated/file-20.py",
+          "src/generated/file-21.py",
+          "src/generated/file-22.py",
+          "src/generated/file-23.py",
+          "src/generated/file-24.py",
+          "src/generated/file-25.py",
+          "src/generated/file-26.py",
+          "src/generated/file-27.py",
+          "src/generated/file-28.py",
+          "src/generated/file-29.py",
+          "src/generated/file-30.py",
+          "src/generated/file-31.py",
+          "src/generated/file-32.py",
+          "src/generated/file-33.py",
+          "src/generated/file-34.py",
+          "src/generated/file-35.py",
+          "src/generated/file-36.py",
+          "src/generated/file-37.py",
+          "src/generated/file-38.py",
+          "src/generated/file-39.py",
+          "src/generated/file-40.py",
+          "src/generated/file-41.py",
+          "src/generated/file-42.py",
+          "src/generated/file-43.py",
+          "src/generated/file-44.py",
+          "src/generated/file-45.py",
+          "src/generated/file-46.py",
+          "src/generated/file-47.py",
+          "src/generated/file-48.py",
+          "src/generated/file-49.py",
+          "src/generated/file-50.py"
+        ],
+        "capability_degradation": [],
+        "changed_paths": [
+          "src/generated/file-1.py",
+          "src/generated/file-2.py",
+          "src/generated/file-3.py",
+          "src/generated/file-4.py",
+          "src/generated/file-5.py",
+          "src/generated/file-6.py",
+          "src/generated/file-7.py",
+          "src/generated/file-8.py",
+          "src/generated/file-9.py",
+          "src/generated/file-10.py",
+          "src/generated/file-11.py",
+          "src/generated/file-12.py",
+          "src/generated/file-13.py",
+          "src/generated/file-14.py",
+          "src/generated/file-15.py",
+          "src/generated/file-16.py",
+          "src/generated/file-17.py",
+          "src/generated/file-18.py",
+          "src/generated/file-19.py",
+          "src/generated/file-20.py",
+          "src/generated/file-21.py",
+          "src/generated/file-22.py",
+          "src/generated/file-23.py",
+          "src/generated/file-24.py",
+          "src/generated/file-25.py",
+          "src/generated/file-26.py",
+          "src/generated/file-27.py",
+          "src/generated/file-28.py",
+          "src/generated/file-29.py",
+          "src/generated/file-30.py",
+          "src/generated/file-31.py",
+          "src/generated/file-32.py",
+          "src/generated/file-33.py",
+          "src/generated/file-34.py",
+          "src/generated/file-35.py",
+          "src/generated/file-36.py",
+          "src/generated/file-37.py",
+          "src/generated/file-38.py",
+          "src/generated/file-39.py",
+          "src/generated/file-40.py",
+          "src/generated/file-41.py",
+          "src/generated/file-42.py",
+          "src/generated/file-43.py",
+          "src/generated/file-44.py",
+          "src/generated/file-45.py",
+          "src/generated/file-46.py",
+          "src/generated/file-47.py",
+          "src/generated/file-48.py",
+          "src/generated/file-49.py",
+          "src/generated/file-50.py"
+        ],
+        "checkpoint_id": null,
+        "command_kind": null,
+        "command_outcome": "not_observable",
+        "command_risk": "mutation",
+        "deleted_paths": [],
+        "event_id": "codex-large-path-list-cap",
+        "event_kind": "post_tool_use",
+        "executor_event_name": "PostToolUse",
+        "executor_event_phase": "after",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "tool",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "edit",
+        "validation_candidate": false,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/codex/large-path-list-cap.yaml",
+      "pressure_cases": [
+        "large_path_list_cap"
+      ],
+      "runtime": "codex",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [],
+        "freshness": {},
+        "missing_evidence": [
+          "route_manifest",
+          "validation",
+          "residual_risk"
+        ],
+        "negative_evidence": [],
+        "residual_risk": [
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "post_tool_failure_context",
+          "file_change_event",
+          "config_change_event",
+          "worktree_lifecycle",
+          "session_end",
+          "task_lifecycle",
+          "checkpoint_or_rollback",
+          "plan_act_mode",
+          "codebase_index",
+          "mode_or_role_switch"
+        ],
+        "validation_status": {
+          "freshness": "unknown",
+          "outcome": "",
+          "strength": "none"
+        },
+        "verdict": "needs_validation"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "privacy_redaction"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 0,
+        "changed_files": [],
+        "command_risk_outcome": "",
+        "deleted_files": [],
+        "event_count": 1,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 1,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "unknown",
+        "validation_outcome": "",
+        "validation_strength": "none"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "codex-secret-like-payload-redaction"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "codex-secret-like-payload-redaction",
+      "normalized_event": {
+        "action_type": null,
+        "adapter": "codex",
+        "bounded_paths": [],
+        "capability_degradation": [],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": null,
+        "command_outcome": "not_observable",
+        "command_risk": "unknown",
+        "deleted_paths": [],
+        "event_id": "codex-secret-like-payload-redaction",
+        "event_kind": "user_prompt_submit",
+        "executor_event_name": "UserPromptSubmit",
+        "executor_event_phase": "before",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "turn",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [
+          "prompt_text:ignored"
+        ],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "unknown",
+        "validation_candidate": false,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/codex/secret-like-payload-redaction.yaml",
+      "pressure_cases": [
+        "secret_like_payload_field"
+      ],
+      "runtime": "codex",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [],
+        "freshness": {
+          "repair": "current",
+          "residual_risk": "current",
+          "route_manifest": "current",
+          "validation": "current"
+        },
+        "missing_evidence": [
+          "review"
+        ],
+        "negative_evidence": [],
+        "residual_risk": [
+          "repair evidence requires re-review",
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": true,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "pre_tool_advisory_context",
+          "user_prompt_advisory_context",
+          "subagent_stop_context",
+          "permission_signal",
+          "permission_decision",
+          "pre_tool_block",
+          "tool_batch_context",
+          "post_tool_failure_context"
+        ],
+        "validation_status": {
+          "freshness": "current",
+          "outcome": "pass",
+          "strength": "strong"
+        },
+        "verdict": "needs_review"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "closure_verdict"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 0,
+        "changed_files": [],
+        "command_risk_outcome": "",
+        "deleted_files": [],
+        "event_count": 2,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 0,
+        "read_paths": [],
+        "repair_strength": "partial",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "current",
+        "validation_outcome": "pass",
+        "validation_strength": "strong"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "copilot-repair-without-rereview"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "copilot-repair-without-rereview",
+      "normalized_event": {
+        "action_type": null,
+        "adapter": "copilot",
+        "bounded_paths": [],
+        "capability_degradation": [],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": null,
+        "command_outcome": "not_observable",
+        "command_risk": "unknown",
+        "deleted_paths": [],
+        "event_id": "copilot-repair-without-rereview",
+        "event_kind": "stop",
+        "executor_event_name": "Stop",
+        "executor_event_phase": "end",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "stop",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "unknown",
+        "validation_candidate": false,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/copilot/repair-without-rereview.yaml",
+      "pressure_cases": [
+        "repair_without_rereview"
+      ],
+      "runtime": "copilot",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [],
+        "freshness": {
+          "residual_risk": "current",
+          "review": "current",
+          "route_manifest": "current",
+          "validation": "current"
+        },
+        "missing_evidence": [
+          "repair"
+        ],
+        "negative_evidence": [],
+        "residual_risk": [
+          "review finding requires repair evidence",
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": "finding"
+        },
+        "unsupported_checks": [
+          "pre_tool_advisory_context",
+          "user_prompt_advisory_context",
+          "subagent_stop_context",
+          "permission_signal",
+          "permission_decision",
+          "pre_tool_block",
+          "tool_batch_context",
+          "post_tool_failure_context"
+        ],
+        "validation_status": {
+          "freshness": "current",
+          "outcome": "pass",
+          "strength": "strong"
+        },
+        "verdict": "needs_repair"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "closure_verdict"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 0,
+        "changed_files": [],
+        "command_risk_outcome": "",
+        "deleted_files": [],
+        "event_count": 2,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 0,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "finding",
+        "review_strength": "strong",
+        "validation_freshness": "current",
+        "validation_outcome": "pass",
+        "validation_strength": "strong"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "copilot-review-finding-without-repair"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "copilot-review-finding-without-repair",
+      "normalized_event": {
+        "action_type": null,
+        "adapter": "copilot",
+        "bounded_paths": [],
+        "capability_degradation": [],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": null,
+        "command_outcome": "not_observable",
+        "command_risk": "unknown",
+        "deleted_paths": [],
+        "event_id": "copilot-review-finding-without-repair",
+        "event_kind": "stop",
+        "executor_event_name": "Stop",
+        "executor_event_phase": "end",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "stop",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "unknown",
+        "validation_candidate": false,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/copilot/review-finding-without-repair.yaml",
+      "pressure_cases": [
+        "review_finding_without_repair"
+      ],
+      "runtime": "copilot",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [
+          "copilot_pre_tool_use_unsupported",
+          "copilot-unsupported-pre-tool"
+        ],
+        "freshness": {
+          "adapter_degradation": "current",
+          "command_risk": "current",
+          "validation": "current"
+        },
+        "missing_evidence": [
+          "route_manifest",
+          "validation",
+          "residual_risk"
+        ],
+        "negative_evidence": [],
+        "residual_risk": [
+          "validation command was observed without outcome",
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "pre_tool_advisory_context",
+          "user_prompt_advisory_context",
+          "subagent_stop_context",
+          "permission_signal",
+          "permission_decision",
+          "pre_tool_block",
+          "tool_batch_context",
+          "post_tool_failure_context",
+          "runtime_adapter_degradation"
+        ],
+        "validation_status": {
+          "freshness": "current",
+          "outcome": "no_outcome",
+          "strength": "weak"
+        },
+        "verdict": "needs_validation"
+      },
+      "coverage_targets": [
+        "degradation",
+        "tool_category",
+        "privacy_redaction"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "partial",
+        "bounded_path_count": 0,
+        "changed_files": [],
+        "command_risk_outcome": "safe",
+        "deleted_files": [],
+        "event_count": 1,
+        "generated_files": [],
+        "normalized_event_supported": false,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 1,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "current",
+        "validation_outcome": "no_outcome",
+        "validation_strength": "weak"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "copilot-unsupported-pre-tool"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "degraded",
+        "reason": "unsupported runtime event for copilot: PreToolUse",
+        "residual_risk": [
+          "copilot_pre_tool_use_unsupported"
+        ],
+        "severity": "warning"
+      },
+      "id": "copilot-unsupported-pre-tool",
+      "normalized_event": {
+        "action_type": "RunTerminalCommand",
+        "adapter": "copilot",
+        "bounded_paths": [],
+        "capability_degradation": [
+          "copilot_pre_tool_use_unsupported"
+        ],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": "pytest",
+        "command_outcome": "not_observable",
+        "command_risk": "safe",
+        "deleted_paths": [],
+        "event_id": "copilot-unsupported-pre-tool",
+        "event_kind": "pre_tool_use",
+        "executor_event_name": "PreToolUse",
+        "executor_event_phase": "before",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "tool",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [
+          "command:kind_only"
+        ],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "test",
+        "validation_candidate": true,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/copilot/unsupported-pre-tool.yaml",
+      "pressure_cases": [
+        "copilot_unsupported_pre_tool"
+      ],
+      "runtime": "copilot",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [],
+        "freshness": {
+          "command_risk": "current",
+          "implementation_preflight": "current"
+        },
+        "missing_evidence": [
+          "route_manifest",
+          "validation",
+          "residual_risk"
+        ],
+        "negative_evidence": [],
+        "residual_risk": [
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "route_manifest",
+          "stop_decision",
+          "pre_tool_advisory_context",
+          "subagent_start_context",
+          "subagent_stop_context",
+          "permission_signal",
+          "permission_decision",
+          "pre_tool_block",
+          "tool_batch_context",
+          "config_change_event",
+          "worktree_lifecycle",
+          "compact_direction",
+          "plan_act_mode",
+          "codebase_index",
+          "mode_or_role_switch"
+        ],
+        "validation_status": {
+          "freshness": "unknown",
+          "outcome": "",
+          "strength": "none"
+        },
+        "verdict": "needs_validation"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "path_normalization"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 1,
+        "changed_files": [
+          "src/app.py"
+        ],
+        "command_risk_outcome": "mutation",
+        "deleted_files": [],
+        "event_count": 1,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 0,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "unknown",
+        "validation_outcome": "",
+        "validation_strength": "none"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "openhands-absolute-path-normalization"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "openhands-absolute-path-normalization",
+      "normalized_event": {
+        "action_type": null,
+        "adapter": "openhands",
+        "bounded_paths": [
+          "src/app.py"
+        ],
+        "capability_degradation": [],
+        "changed_paths": [
+          "src/app.py"
+        ],
+        "checkpoint_id": null,
+        "command_kind": null,
+        "command_outcome": "not_observable",
+        "command_risk": "mutation",
+        "deleted_paths": [],
+        "event_id": "openhands-absolute-path-normalization",
+        "event_kind": "file_changed",
+        "executor_event_name": "FileChanged",
+        "executor_event_phase": "after",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "file",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "edit",
+        "validation_candidate": false,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/openhands/absolute-path-normalization.yaml",
+      "pressure_cases": [
+        "absolute_user_path"
+      ],
+      "runtime": "openhands",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [],
+        "freshness": {
+          "command_risk": "current",
+          "validation": "current"
+        },
+        "missing_evidence": [
+          "route_manifest",
+          "residual_risk"
+        ],
+        "negative_evidence": [],
+        "residual_risk": [
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "route_manifest",
+          "stop_decision",
+          "pre_tool_advisory_context",
+          "subagent_start_context",
+          "subagent_stop_context",
+          "permission_signal",
+          "permission_decision",
+          "pre_tool_block",
+          "tool_batch_context",
+          "config_change_event",
+          "worktree_lifecycle",
+          "compact_direction",
+          "plan_act_mode",
+          "codebase_index",
+          "mode_or_role_switch"
+        ],
+        "validation_status": {
+          "freshness": "current",
+          "outcome": "pass",
+          "strength": "strong"
+        },
+        "verdict": "needs_validation"
+      },
+      "coverage_targets": [
+        "event_recognition",
+        "tool_category",
+        "validation_outcome"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "none",
+        "bounded_path_count": 1,
+        "changed_files": [
+          "tests/test_app.py"
+        ],
+        "command_risk_outcome": "safe",
+        "deleted_files": [],
+        "event_count": 1,
+        "generated_files": [],
+        "normalized_event_supported": true,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 1,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "current",
+        "validation_outcome": "pass",
+        "validation_strength": "strong"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "openhands-test-command-pass"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "pass",
+        "reason": "",
+        "residual_risk": [],
+        "severity": "info"
+      },
+      "id": "openhands-test-command-pass",
+      "normalized_event": {
+        "action_type": null,
+        "adapter": "openhands",
+        "bounded_paths": [
+          "tests/test_app.py"
+        ],
+        "capability_degradation": [],
+        "changed_paths": [
+          "tests/test_app.py"
+        ],
+        "checkpoint_id": null,
+        "command_kind": "pytest",
+        "command_outcome": "pass",
+        "command_risk": "safe",
+        "deleted_paths": [],
+        "event_id": "openhands-test-command-pass",
+        "event_kind": "post_tool_use",
+        "executor_event_name": "PostToolUse",
+        "executor_event_phase": "after",
+        "exit_code": 0,
+        "generated_paths": [],
+        "lifecycle_cadence": "tool",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [
+          "command:kind_only"
+        ],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": null,
+        "timestamp": null,
+        "tool_category": "test",
+        "validation_candidate": true,
+        "validation_freshness": "current",
+        "validation_outcome": "pass"
+      },
+      "path": "evals/executor-adapter/openhands/test-command-pass.yaml",
+      "pressure_cases": [],
+      "runtime": "openhands",
+      "status": "pass"
+    },
+    {
+      "closure_effect": {
+        "degraded_capabilities": [
+          "roo_post_tool_use_unsupported",
+          "roo_review_mode_edit_tools_unsupported",
+          "roo-unsupported-runtime-event"
+        ],
+        "freshness": {
+          "adapter_degradation": "current",
+          "implementation_preflight": "current"
+        },
+        "missing_evidence": [
+          "route_manifest",
+          "validation",
+          "residual_risk"
+        ],
+        "negative_evidence": [],
+        "residual_risk": [
+          "unsupported runtime checks remain"
+        ],
+        "review_status": {
+          "repair_present": false,
+          "rereview_present": false,
+          "review_outcome": ""
+        },
+        "unsupported_checks": [
+          "route_manifest",
+          "changed_files",
+          "validation_broker",
+          "validation_freshness",
+          "residual_risk",
+          "stop_decision",
+          "pre_tool_advisory_context",
+          "post_tool_context",
+          "subagent_start_context",
+          "subagent_stop_context",
+          "permission_signal",
+          "permission_decision",
+          "pre_tool_block",
+          "tool_batch_context",
+          "post_tool_failure_context",
+          "file_change_event",
+          "config_change_event",
+          "worktree_lifecycle",
+          "compact_direction",
+          "session_end",
+          "task_lifecycle",
+          "checkpoint_or_rollback",
+          "plan_act_mode",
+          "codebase_index",
+          "command_outcome",
+          "path_observation",
+          "runtime_adapter_degradation"
+        ],
+        "validation_status": {
+          "freshness": "unknown",
+          "outcome": "",
+          "strength": "none"
+        },
+        "verdict": "needs_validation"
+      },
+      "coverage_targets": [
+        "degradation",
+        "tool_category"
+      ],
+      "evidence_delta": {
+        "adapter_degradation_strength": "partial",
+        "bounded_path_count": 1,
+        "changed_files": [],
+        "command_risk_outcome": "",
+        "deleted_files": [],
+        "event_count": 1,
+        "generated_files": [],
+        "normalized_event_supported": false,
+        "permission_outcome": "",
+        "permission_strength": "none",
+        "privacy_redaction_count": 0,
+        "read_paths": [],
+        "repair_strength": "none",
+        "rereview_strength": "none",
+        "review_outcome": "",
+        "review_strength": "none",
+        "validation_freshness": "unknown",
+        "validation_outcome": "",
+        "validation_strength": "none"
+      },
+      "failures": [],
+      "gate_result": {
+        "evidence_refs": [
+          "roo-unsupported-runtime-event"
+        ],
+        "gate_name": "executor_adapter",
+        "outcome": "degraded",
+        "reason": "unsupported runtime event for roo: PostToolUse",
+        "residual_risk": [
+          "roo_post_tool_use_unsupported",
+          "roo_review_mode_edit_tools_unsupported"
+        ],
+        "severity": "warning"
+      },
+      "id": "roo-unsupported-runtime-event",
+      "normalized_event": {
+        "action_type": "write",
+        "adapter": "roo",
+        "bounded_paths": [
+          "src/security.py"
+        ],
+        "capability_degradation": [
+          "roo_post_tool_use_unsupported",
+          "roo_review_mode_edit_tools_unsupported"
+        ],
+        "changed_paths": [],
+        "checkpoint_id": null,
+        "command_kind": null,
+        "command_outcome": "not_observable",
+        "command_risk": "unknown",
+        "deleted_paths": [],
+        "event_id": "roo-unsupported-runtime-event",
+        "event_kind": "post_tool_use",
+        "executor_event_name": "PostToolUse",
+        "executor_event_phase": "after",
+        "exit_code": null,
+        "generated_paths": [],
+        "lifecycle_cadence": "tool",
+        "permission_decision": null,
+        "permission_reason": null,
+        "privacy_redaction": [],
+        "read_paths": [],
+        "rollback_available": null,
+        "source": null,
+        "stage_signal": "code-review",
+        "timestamp": null,
+        "tool_category": "edit",
+        "validation_candidate": false,
+        "validation_freshness": null,
+        "validation_outcome": null
+      },
+      "path": "evals/executor-adapter/roo/unsupported-runtime-event.yaml",
+      "pressure_cases": [
+        "unsupported_runtime_event"
+      ],
+      "runtime": "roo",
+      "status": "pass"
+    }
+  ],
+  "claim_boundary": "Deterministic local fixtures validate adapter structure, bounded privacy behavior, and closure-policy reactions. They do not measure live pass-rate, empirical performance, token overhead, or turn overhead.",
+  "generated_by": "scripts/eval-executor-adapters.py",
+  "schema_version": 1,
+  "status": "pass",
+  "summary": {
+    "case_count": 15,
+    "coverage_targets": [
+      "closure_verdict",
+      "command_risk",
+      "degradation",
+      "event_recognition",
+      "path_normalization",
+      "permission_decision",
+      "privacy_redaction",
+      "tool_category",
+      "validation_freshness_after_edits",
+      "validation_outcome"
+    ],
+    "failed": 0,
+    "failed_cases": [],
+    "live_pass_rate": {
+      "detail": "deterministic local fixtures do not measure real-task success rate",
+      "status": "not_collected"
+    },
+    "passed": 15,
+    "pressure_cases": [
+      "absolute_user_path",
+      "claude_post_tool_failure",
+      "codex_destructive_permission_request",
+      "copilot_unsupported_pre_tool",
+      "edit_after_validation",
+      "failed_validation",
+      "full_command_output_field",
+      "large_path_list_cap",
+      "repair_without_rereview",
+      "review_finding_without_repair",
+      "secret_like_payload_field",
+      "unknown_event",
+      "unsupported_runtime_event"
+    ],
+    "runtime_counts": {
+      "claude": 3,
+      "cline": 2,
+      "codex": 4,
+      "copilot": 3,
+      "openhands": 2,
+      "roo": 1
+    },
+    "status": "pass",
+    "suite_failures": [],
+    "telemetry_sample": {
+      "detail": "sanitized fixture-derived bounded telemetry sample",
+      "status": "generated"
+    },
+    "token_overhead": {
+      "detail": "deterministic local fixture run does not measure token overhead",
+      "status": "not_collected"
+    },
+    "turn_overhead": {
+      "detail": "deterministic local fixture run does not measure turn overhead",
+      "status": "not_collected"
+    }
+  }
+}

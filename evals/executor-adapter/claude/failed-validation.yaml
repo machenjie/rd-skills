@@ -1,0 +1,45 @@
+id: claude-failed-validation
+runtime: claude
+description: Claude failed validation command becomes negative validation evidence and blocks closure.
+coverage_targets:
+  - event_recognition
+  - tool_category
+  - validation_outcome
+  - closure_verdict
+pressure_cases:
+  - failed_validation
+input_payload:
+  hookEventName: PostToolUse
+  event_id: claude-failed-validation
+  toolName: Bash
+  toolInput:
+    command: pytest tests
+  exitCode: 1
+  validationOutcome: fail
+expected_normalized_event:
+  adapter: claude
+  event_kind: post_tool_use
+  tool_category: test
+  command_kind: pytest
+  command_outcome: fail
+  validation_candidate: true
+  validation_outcome: fail
+expected_gate_result:
+  outcome: pass
+expected_evidence_delta:
+  normalized_event_supported: true
+  validation_strength: negative
+  validation_freshness: current
+  validation_outcome: fail
+  command_risk_outcome: safe
+  privacy_redaction_count: 1
+expected_closure_effect:
+  verdict: blocked
+  negative_evidence_contains:
+    - validation
+privacy_expectations:
+  redactions_include:
+    - "command:kind_only"
+  blocked_strings:
+    - pytest tests
+  forbid_absolute_paths: true

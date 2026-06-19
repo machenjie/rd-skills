@@ -62,6 +62,27 @@ def run_gate(
     )
 
 
+def load_state(cwd: Path, cache: Path) -> dict:
+    sys.path.insert(0, str(SCRIPT_DIR))
+    try:
+        import changeforge_common
+
+        previous_cache = os.environ.get("XDG_CACHE_HOME")
+        os.environ["XDG_CACHE_HOME"] = str(cache)
+        try:
+            return changeforge_common.load_state(cwd)
+        finally:
+            if previous_cache is None:
+                os.environ.pop("XDG_CACHE_HOME", None)
+            else:
+                os.environ["XDG_CACHE_HOME"] = previous_cache
+    finally:
+        try:
+            sys.path.remove(str(SCRIPT_DIR))
+        except ValueError:
+            pass
+
+
 def apply_patch_event(patch: str) -> dict:
     return {
         "runtime": "codex",
@@ -354,6 +375,20 @@ class PostEditStructureGateTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout, "")
         self.assertEqual(len(state_files), 1)
+
+    def test_monitor_mode_records_adapter_and_post_edit_structure_facts(self) -> None:
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            cwd = Path(cwd_s).resolve()
+            cache = Path(cache_s)
+            event = apply_patch_event(
+                add_file_patch("internal/services/order_service.go", "package services")
+            )
+            result = run_gate(event, cwd, cache, mode="monitor", agent="codex")
+            state = load_state(cwd, cache)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(state["runtime_adapter"]["adapter"], "codex")
+        self.assertTrue(state["normalized_events"])
+        self.assertIn("reuse_ladder:count=1", state["post_edit_structure_findings"])
 
     def test_warn_mode_outputs_codex_additional_context(self) -> None:
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:

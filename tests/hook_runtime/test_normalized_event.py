@@ -29,8 +29,10 @@ class NormalizedEventTests(unittest.TestCase):
         normalized = normalize_event(event)
         legacy = classify_event(event)
         self.assertEqual(normalized.event_name, "PreToolUse")
+        self.assertEqual(normalized.event_kind, "pre_tool_use")
         self.assertEqual(normalized.stage, "edit")
         self.assertEqual(normalized.changed_paths, ["src/services/order_service.py"])
+        self.assertIn("src/services/order_service.py", normalized.bounded_paths)
         self.assertEqual(legacy["stage"], "edit")
         self.assertEqual(legacy["paths"], ["src/services/order_service.py"])
         self.assertIn("backend-product", legacy["product_surfaces"])
@@ -57,6 +59,32 @@ class NormalizedEventTests(unittest.TestCase):
         self.assertEqual(normalize_event(test_event).stage, "test")
         self.assertEqual(normalize_event(review_event).stage, "review")
         self.assertEqual(normalize_event(repair_event).stage, "repair")
+
+    def test_hook_compatibility_exposes_new_canonical_fields(self) -> None:
+        event = {
+            "hookEventName": "PostToolBatch",
+            "toolName": "Bash",
+            "toolInput": {"command": "python3 -m unittest discover -s tests"},
+        }
+        normalized = normalize_event(event)
+        data = normalized.to_dict()
+        self.assertEqual(normalized.event_name, "PostToolBatch")
+        self.assertEqual(normalized.event_kind, "post_tool_batch")
+        self.assertEqual(data["lifecycle_cadence"], "tool")
+        self.assertEqual(data["executor_event_phase"], "after")
+        self.assertIn(data["command_outcome"], {"not_observable", "pass", "fail"})
+        for field in (
+            "deleted_paths",
+            "generated_paths",
+            "validation_candidate",
+            "validation_outcome",
+            "validation_freshness",
+            "permission_decision",
+            "checkpoint_id",
+            "rollback_available",
+            "privacy_redaction",
+        ):
+            self.assertIn(field, data)
 
 
 if __name__ == "__main__":

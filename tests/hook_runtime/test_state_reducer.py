@@ -49,6 +49,22 @@ class StateReducerTests(unittest.TestCase):
         self.assertEqual(result["active_skill_context"]["stage"], "edit")
         self.assertEqual(result["active_skill_context"]["refs"], ["a", "b"])
 
+    def test_runtime_adapter_mapping_replace_preserves_empty_update(self) -> None:
+        state = {"runtime_adapter": {"adapter": "codex"}}
+        result = self.reducer.reduce_state_update(
+            state,
+            {
+                "runtime_adapter": {
+                    "adapter": "claude",
+                    "supported_checks": ["stop_closure"],
+                }
+            },
+        )
+        self.assertEqual(result["runtime_adapter"]["adapter"], "claude")
+        self.assertEqual(result["runtime_adapter"]["supported_checks"], ["stop_closure"])
+        result = self.reducer.reduce_state_update(result, {"runtime_adapter": {}})
+        self.assertEqual(result["runtime_adapter"]["adapter"], "claude")
+
     def test_compaction_preserves_old_active_context_on_empty_update(self) -> None:
         state = {"active_skill_context": {"stage": "review"}}
         result = self.reducer.reduce_state_update(state, {"active_skill_context": {}})
@@ -62,6 +78,27 @@ class StateReducerTests(unittest.TestCase):
         values = [f"path-{index}" for index in range(80)]
         result = self.reducer.reduce_state_update({}, {"changed_paths": values})
         self.assertEqual(len(result["changed_paths"]), 50)
+
+    def test_new_evidence_fields_are_bounded_lists(self) -> None:
+        result = self.reducer.reduce_state_update(
+            {},
+            {
+                "normalized_events": ["event=PostToolUse"],
+                "deleted_paths": ["old.py"],
+                "generated_paths": ["dist/out.py"],
+                "external_file_changes": ["outside.py"],
+                "config_changes": ["settings.json"],
+                "validation_results": ["pass:current:pytest"],
+                "repair_events": ["repair:fix-1"],
+                "rereview_events": ["rereview:fix-1"],
+                "command_risks": ["safe:pytest"],
+                "rollback_points": ["checkpoint:abc"],
+                "post_edit_structure_findings": ["file_naming:count=0"],
+            },
+        )
+        self.assertEqual(result["deleted_paths"], ["old.py"])
+        self.assertEqual(result["validation_results"], ["pass:current:pytest"])
+        self.assertEqual(result["post_edit_structure_findings"], ["file_naming:count=0"])
 
 
 if __name__ == "__main__":

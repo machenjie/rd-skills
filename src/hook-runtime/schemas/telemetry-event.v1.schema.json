@@ -69,6 +69,97 @@
           }
         }
       }
+    },
+    "changeforgeClosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {
+          "type": "string",
+          "enum": [
+            "",
+            "codex",
+            "claude",
+            "copilot",
+            "generic",
+            "unknown",
+            "cline",
+            "openhands",
+            "gemini-cli",
+            "goose"
+          ]
+        },
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "",
+            "ready",
+            "needs_validation",
+            "needs_review",
+            "needs_repair",
+            "degraded_ready",
+            "blocked"
+          ]
+        },
+        "supported_checks": { "$ref": "#/$defs/stringList" },
+        "unsupported_checks": { "$ref": "#/$defs/stringList" },
+        "degraded_capabilities": { "$ref": "#/$defs/stringList" },
+        "present_evidence": { "$ref": "#/$defs/stringList" },
+        "missing_evidence": { "$ref": "#/$defs/stringList" },
+        "negative_evidence": { "$ref": "#/$defs/stringList" },
+        "validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "outcome": {
+              "type": "string",
+              "enum": [
+                "",
+                "pass",
+                "fail",
+                "failed",
+                "stale",
+                "not_run",
+                "not_verified",
+                "no_outcome",
+                "unknown"
+              ]
+            },
+            "freshness": {
+              "type": "string",
+              "enum": ["", "current", "stale", "unknown", "not_applicable"]
+            },
+            "scope": {
+              "type": "string",
+              "enum": ["", "narrow", "module", "full", "none", "unknown"]
+            },
+            "command_kind": {
+              "type": "string",
+              "enum": ["", "narrow", "module", "full", "unknown"]
+            }
+          }
+        },
+        "review": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "review_outcome": { "type": "string", "maxLength": 300 },
+            "repair_present": { "type": "boolean" },
+            "rereview_present": { "type": "boolean" }
+          }
+        },
+        "changed_files": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "changed": { "$ref": "#/$defs/stringList" },
+            "deleted": { "$ref": "#/$defs/stringList" },
+            "generated": { "$ref": "#/$defs/stringList" }
+          }
+        },
+        "residual_risk": { "$ref": "#/$defs/stringList" },
+        "next_owner": { "type": "string", "maxLength": 300 }
+      }
     }
   },
   "properties": {
@@ -119,16 +210,40 @@
     },
     "mode": { "type": "string", "enum": ["off", "monitor", "warn", "block"] },
     "tool_name": { "type": "string" },
+    "normalized_events": { "$ref": "#/$defs/stringList" },
     "changed_paths": { "$ref": "#/$defs/stringList" },
+    "deleted_paths": { "$ref": "#/$defs/stringList" },
+    "generated_paths": { "$ref": "#/$defs/stringList" },
+    "external_file_changes": { "$ref": "#/$defs/stringList" },
+    "config_changes": { "$ref": "#/$defs/stringList" },
     "added_paths": { "$ref": "#/$defs/stringList" },
     "command_program": {
       "type": "string",
       "description": "Only the leading executable name of an observed command, truncated. Never full arguments."
     },
+    "command_risk": {
+      "type": "string",
+      "enum": [
+        "",
+        "safe",
+        "mutation",
+        "destructive",
+        "release",
+        "migration",
+        "dependency",
+        "network",
+        "unknown"
+      ]
+    },
+    "permission_decision": {
+      "type": "string",
+      "enum": ["", "allow", "warn", "block", "deny", "unknown"]
+    },
     "hook_findings": {
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/stringList" }
     },
+    "post_edit_structure_findings": { "$ref": "#/$defs/stringList" },
     "suggested_skills": { "$ref": "#/$defs/stringList" },
     "suggested_capabilities": { "$ref": "#/$defs/stringList" },
     "suggested_gates": { "$ref": "#/$defs/stringList" },
@@ -152,15 +267,16 @@
       "type": "boolean",
       "description": "Whether a validation-looking command was observed earlier in the turn. This is not validation evidence without an outcome in the stop closure."
     },
+    "validation_results": { "$ref": "#/$defs/stringList" },
     "validation_evidence_detected": { "type": "boolean" },
     "validation_result_outcome": {
       "type": "string",
-      "enum": ["", "pass", "fail", "unknown", "not_run"],
+      "enum": ["", "pass", "fail", "stale", "unknown", "not_run"],
       "description": "Broker-parsed outcome from bounded closure evidence."
     },
     "validation_result_evidence_strength": {
       "type": "string",
-      "enum": ["", "strong", "weak", "negative"]
+      "enum": ["", "strong", "partial", "weak", "negative"]
     },
     "validation_result_negative_reason": {
       "type": "string",
@@ -213,9 +329,18 @@
     "adapter_degraded_capabilities": { "$ref": "#/$defs/stringList" },
     "closure_contract_verdict": {
       "type": "string",
-      "enum": ["", "ready", "needs_validation", "degraded_ready", "blocked"]
+      "enum": [
+        "",
+        "ready",
+        "needs_validation",
+        "needs_review",
+        "needs_repair",
+        "degraded_ready",
+        "blocked"
+      ]
     },
     "closure_contract_residual_risk": { "$ref": "#/$defs/stringList" },
+    "changeforge_closure": { "$ref": "#/$defs/changeforgeClosure" },
     "project_memory_available": {
       "description": "Whether the cache-side project memory advisory store was readable for this Stop evaluation.",
       "type": "boolean"

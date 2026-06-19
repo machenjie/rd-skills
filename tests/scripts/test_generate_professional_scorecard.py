@@ -167,6 +167,85 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
         self.assertIn("dev", detail)
         self.assertIn("runtime path missing", detail)
 
+    def test_executor_adapter_eval_status_preserves_not_collected_metrics(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "reports").mkdir()
+            (root / "reports" / "executor-adapter-eval.json").write_text(
+                json.dumps(
+                    {
+                        "status": "pass",
+                        "summary": {
+                            "case_count": 15,
+                            "passed": 15,
+                            "failed": 0,
+                            "coverage_targets": ["event_recognition"],
+                            "pressure_cases": ["unknown_event"],
+                            "live_pass_rate": {"status": "not_collected", "detail": "not measured"},
+                            "token_overhead": {"status": "not_collected", "detail": "not measured"},
+                            "turn_overhead": {"status": "not_collected", "detail": "not measured"},
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            status, detail = module.executor_adapter_eval_status(root)
+            token_status, token_detail = module.executor_adapter_metric_status(root, "token_overhead")
+
+        self.assertEqual(status, "pass")
+        self.assertIn('"token_overhead": "not_collected"', detail)
+        self.assertEqual(token_status, "not_collected")
+        self.assertIn("not measured", token_detail)
+
+    def test_runtime_telemetry_sample_status_requires_bounded_fields(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            missing_status, _missing_detail = module.runtime_telemetry_sample_status(root)
+            (reports / "runtime-telemetry-sample.json").write_text(
+                json.dumps(
+                    {
+                        "runtime": "mixed-fixture-runtime-sample",
+                        "event_count": 15,
+                        "normalized_event_kinds": ["edit"],
+                        "degraded_event_count": 3,
+                        "validation_freshness_cases": [],
+                        "closure_verdicts": {"complete": 1},
+                        "unsupported_checks": [],
+                        "privacy_redaction_count": 2,
+                        "token_overhead": {"status": "not_collected"},
+                        "turn_overhead": {"status": "not_collected"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            status, detail = module.runtime_telemetry_sample_status(root)
+
+        self.assertEqual(missing_status, "not_collected")
+        self.assertEqual(status, "pass")
+        self.assertIn('"privacy_redaction_count": 2', detail)
+        self.assertIn('"token_overhead": "not_collected"', detail)
+
+    def test_evidence_levels_include_runtime_sample_without_live_metric_claims(self) -> None:
+        module = _load_module()
+        dimensions = [
+            module.Dimension("Promoted agent samples", "pass", "report", "cmd", "fix", "detail"),
+            module.Dimension("Runtime telemetry sample", "pass", "report", "cmd", "fix", "detail"),
+            module.Dimension("Executor adapter live pass-rate", "not_collected", "report", "cmd", "fix", "detail"),
+            module.Dimension("Executor adapter token overhead", "not_collected", "report", "cmd", "fix", "detail"),
+            module.Dimension("Executor adapter turn overhead", "not_collected", "report", "cmd", "fix", "detail"),
+        ]
+        levels = module._evidence_levels(dimensions)
+
+        self.assertEqual(levels["runtime telemetry sample"]["status"], "pass")
+        self.assertEqual(levels["live pass-rate"]["status"], "not_collected")
+        self.assertEqual(levels["token overhead"]["status"], "not_collected")
+        self.assertEqual(levels["turn overhead"]["status"], "not_collected")
+
     def test_open_source_readiness_no_license_is_partial(self) -> None:
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:

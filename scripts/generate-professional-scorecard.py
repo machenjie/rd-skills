@@ -25,7 +25,7 @@ PROFILES = ("recommended", "full", "dev")
 STATUSES = ("pass", "partial", "fail", "unknown", "not_collected")
 EVIDENCE_LEVELS = {
     "structural fixture": "Local deterministic structure sample passed; not evidence of live task success.",
-    "runtime telemetry sample": "Actual runtime fact sample; may still require human review.",
+    "runtime telemetry sample": "Sanitized bounded runtime fact sample; may still require human review.",
     "promoted golden case": "Human-reviewed case admitted to regression coverage.",
     "live pass-rate": "Measured real-task success rate.",
     "token overhead": "Measured additional token cost.",
@@ -58,11 +58,15 @@ PRODUCTIZATION_ASSETS = (
     "reports/README.md",
     "reports/professional-scorecard.md",
     "reports/professional-scorecard.json",
+    "reports/executor-adapter-eval.md",
+    "reports/executor-adapter-eval.json",
+    "reports/runtime-telemetry-sample.json",
     "reports/public-benchmark-summary.md",
     "reports/public-benchmark-summary.json",
     "config/open-source-release.yaml",
     "schemas/marketplace-index.schema.json",
     "scripts/generate-professional-scorecard.py",
+    "scripts/eval-executor-adapters.py",
     "scripts/generate-public-benchmark-summary.py",
     "scripts/generate-examples-showcase.py",
     "scripts/generate-marketplace-catalog.py",
@@ -83,6 +87,7 @@ VALIDATION_COMMANDS = [
     "python3 scripts/validate-skill-body-links.py",
     "python3 scripts/validate-skill-content-size.py",
     "python3 scripts/validate-skill-efficacy-benchmarks.py",
+    "python3 scripts/eval-executor-adapters.py",
     "python3 scripts/audit-skill-content.py",
     "python3 scripts/eval-routing.py",
     "python3 scripts/eval-agent-behavior.py",
@@ -370,6 +375,74 @@ def runtime_governance_fixture_status(root: Path) -> tuple[str, str]:
     return "pass", json.dumps(detail, sort_keys=True)
 
 
+def executor_adapter_eval_status(root: Path) -> tuple[str, str]:
+    """Return deterministic executor adapter evaluation status."""
+    report = _read_json(root / "reports" / "executor-adapter-eval.json")
+    if not isinstance(report, dict):
+        return "unknown", "reports/executor-adapter-eval.json missing or invalid"
+    summary = report.get("summary")
+    if not isinstance(summary, dict):
+        return "unknown", "executor adapter summary missing"
+    detail = {
+        "case_count": summary.get("case_count", 0),
+        "passed": summary.get("passed", 0),
+        "failed": summary.get("failed", 0),
+        "coverage_targets": summary.get("coverage_targets", []),
+        "pressure_cases": summary.get("pressure_cases", []),
+        "live_pass_rate": (summary.get("live_pass_rate") or {}).get("status", "not_collected"),
+        "token_overhead": (summary.get("token_overhead") or {}).get("status", "not_collected"),
+        "turn_overhead": (summary.get("turn_overhead") or {}).get("status", "not_collected"),
+        "evidence_boundary": "deterministic local fixtures only; no live runtime pass-rate or overhead measurement",
+    }
+    if report.get("status") != "pass" or summary.get("failed"):
+        return "fail", json.dumps(detail, sort_keys=True)
+    return "pass", json.dumps(detail, sort_keys=True)
+
+
+def runtime_telemetry_sample_status(root: Path) -> tuple[str, str]:
+    """Return status for the sanitized runtime telemetry sample."""
+    sample = _read_json(root / "reports" / "runtime-telemetry-sample.json")
+    if not isinstance(sample, dict):
+        return "not_collected", "reports/runtime-telemetry-sample.json missing or invalid"
+    required = {
+        "runtime",
+        "event_count",
+        "normalized_event_kinds",
+        "degraded_event_count",
+        "validation_freshness_cases",
+        "closure_verdicts",
+        "unsupported_checks",
+        "privacy_redaction_count",
+    }
+    missing = sorted(field for field in required if field not in sample)
+    if missing:
+        return "fail", "missing telemetry fields: " + ", ".join(missing)
+    detail = {
+        "source": sample.get("source", ""),
+        "runtime": sample.get("runtime", ""),
+        "event_count": sample.get("event_count"),
+        "degraded_event_count": sample.get("degraded_event_count"),
+        "privacy_redaction_count": sample.get("privacy_redaction_count"),
+        "token_overhead": (sample.get("token_overhead") or {}).get("status", "not_collected"),
+        "turn_overhead": (sample.get("turn_overhead") or {}).get("status", "not_collected"),
+    }
+    return "pass", json.dumps(detail, sort_keys=True)
+
+
+def executor_adapter_metric_status(root: Path, metric: str) -> tuple[str, str]:
+    """Return live/overhead metric collection status from executor adapter report."""
+    report = _read_json(root / "reports" / "executor-adapter-eval.json")
+    if not isinstance(report, dict):
+        return "not_collected", "executor adapter report missing"
+    summary = report.get("summary")
+    metric_payload = summary.get(metric) if isinstance(summary, dict) else None
+    status = metric_payload.get("status") if isinstance(metric_payload, dict) else "not_collected"
+    detail = metric_payload.get("detail") if isinstance(metric_payload, dict) else "not collected"
+    if status == "measured":
+        return "pass", str(detail)
+    return "not_collected", str(detail or "not collected")
+
+
 def _summary_status(name: str, value: dict[str, Any]) -> str:
     if name == "Routing coverage":
         if value.get("hidden_risks_needing_manual_review", 0) or value.get("cases_without_forbidden", 0):
@@ -547,6 +620,47 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
         )
     )
 
+    executor_status, executor_detail = executor_adapter_eval_status(root)
+    dimensions.append(
+        Dimension(
+            "Executor adapter structural fixtures",
+            executor_status,
+            "evals/executor-adapter and reports/executor-adapter-eval.json",
+            "python3 scripts/eval-executor-adapters.py",
+            "Repair executor adapter fixture expectations or adapter normalization until deterministic cases pass.",
+            executor_detail,
+        )
+    )
+
+    telemetry_status, telemetry_detail = runtime_telemetry_sample_status(root)
+    dimensions.append(
+        Dimension(
+            "Runtime telemetry sample",
+            telemetry_status,
+            "reports/runtime-telemetry-sample.json",
+            "python3 scripts/eval-executor-adapters.py",
+            "Generate a sanitized bounded telemetry sample; do not store raw prompts, secrets, env, personal paths, or full command output.",
+            telemetry_detail,
+        )
+    )
+
+    for metric, name in (
+        ("live_pass_rate", "Executor adapter live pass-rate"),
+        ("token_overhead", "Executor adapter token overhead"),
+        ("turn_overhead", "Executor adapter turn overhead"),
+    ):
+        metric_status, metric_detail = executor_adapter_metric_status(root, metric)
+        dimensions.append(
+            Dimension(
+                name,
+                metric_status,
+                "reports/executor-adapter-eval.json",
+                "python3 scripts/eval-executor-adapters.py",
+                "Collect a real measured run before changing this status from not_collected.",
+                metric_detail,
+            )
+        )
+
     example_status, example_detail = examples_status(root)
     dimensions.append(
         Dimension(
@@ -685,9 +799,20 @@ def generate_scorecard(root: Path, reports_dir: Path) -> dict[str, Any]:
 
 def _evidence_levels(dimensions: list[Dimension]) -> dict[str, dict[str, str]]:
     promoted_status = _status_for_dimension(dimensions, "Promoted agent samples")
+    runtime_sample_status = _status_for_dimension(dimensions, "Runtime telemetry sample")
+    live_pass_rate_status = _status_for_dimension(dimensions, "Executor adapter live pass-rate")
+    token_overhead_status = _status_for_dimension(dimensions, "Executor adapter token overhead")
+    turn_overhead_status = _status_for_dimension(dimensions, "Executor adapter turn overhead")
     return {
         level: {
-            "status": _evidence_level_status(level, promoted_status),
+            "status": _evidence_level_status(
+                level,
+                promoted_status,
+                runtime_sample_status,
+                live_pass_rate_status,
+                token_overhead_status,
+                turn_overhead_status,
+            ),
             "meaning": meaning,
         }
         for level, meaning in EVIDENCE_LEVELS.items()
@@ -701,11 +826,26 @@ def _status_for_dimension(dimensions: list[Dimension], name: str) -> str:
     return "unknown"
 
 
-def _evidence_level_status(level: str, promoted_status: str) -> str:
+def _evidence_level_status(
+    level: str,
+    promoted_status: str,
+    runtime_sample_status: str,
+    live_pass_rate_status: str,
+    token_overhead_status: str,
+    turn_overhead_status: str,
+) -> str:
     if level == "structural fixture":
         return "pass"
+    if level == "runtime telemetry sample":
+        return runtime_sample_status if runtime_sample_status in STATUSES else "unknown"
     if level == "promoted golden case":
         return promoted_status if promoted_status in STATUSES else "unknown"
+    if level == "live pass-rate":
+        return live_pass_rate_status if live_pass_rate_status in STATUSES else "not_collected"
+    if level == "token overhead":
+        return token_overhead_status if token_overhead_status in STATUSES else "not_collected"
+    if level == "turn overhead":
+        return turn_overhead_status if turn_overhead_status in STATUSES else "not_collected"
     return "not_collected"
 
 

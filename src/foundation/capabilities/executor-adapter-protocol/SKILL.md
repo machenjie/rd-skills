@@ -53,8 +53,10 @@ Normalize executor-specific hook events into a bounded ChangeForge runtime proto
 - Escalate to a maintainer when an adapter cannot represent a required lifecycle state without changing the runtime contract.
 
 ## Critical Details
-- `AdapterCapabilities` must name supported lifecycle hooks, permission fields, validation fields, stop handling, and degradation modes.
-- `NormalizedEvent` should preserve event kind, bounded paths, command class, timestamp, stage signal, and adapter name.
+- Canonical event names are `SessionStart`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `Stop`, `StopFailure`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `Compact`, and `Unknown`.
+- `Compact` is backward-compatible; new adapters should prefer `PreCompact` and `PostCompact` when the runtime exposes direction-specific compaction phases.
+- `AdapterCapabilities` must name supported/unsupported lifecycle hooks, permission fields, validation fields, stop handling, checkpoint/rollback support, mode/role support, codebase index support, visibility fields, and degradation modes.
+- `NormalizedEvent` should preserve only bounded facts: event kind, lifecycle cadence, executor event name/phase, tool category, command risk/outcome, exit code, bounded read/changed/deleted/generated paths, validation status, permission decision, checkpoint/rollback signal, timestamp, stage signal, adapter name, and privacy redaction markers.
 - `LifecycleState` is action-aware: planning, read, edit, review, repair, test, release, stop, compaction, and handoff are distinct states.
 - Runtime capability degradation is evidence, not failure by itself; closure may proceed only with residual risk disclosure.
 - Fail-open policy still requires warning evidence and must not be reported as a hard pass.
@@ -69,8 +71,8 @@ Normalize executor-specific hook events into a bounded ChangeForge runtime proto
 
 ## Output Contract
 Return an `executor_adapter_protocol_record` with:
-- **AdapterCapabilities**: supported events, unsupported events, permission fields, stop handling, and degradation mode.
-- **NormalizedEvent**: stable event kind, bounded payload fields, source adapter, timestamp, and stage signal.
+- **AdapterCapabilities**: supported events, unsupported events, explicit feature booleans, command/path/validation visibility, permission fields, stop handling, and degradation mode.
+- **NormalizedEvent**: stable event kind, bounded payload fields, source adapter, timestamp, stage signal, validation outcome, permission outcome, rollback/checkpoint signal, and privacy redaction markers.
 - **LifecycleState**: previous state, next state, legal transition status, and evidence reference.
 - **EvidenceLedger**: bounded facts, source event ids, redaction status, and privacy boundary.
 - **GateResult**: gate name, outcome, reason, fail-open/fail-closed policy, and degraded capability flags.

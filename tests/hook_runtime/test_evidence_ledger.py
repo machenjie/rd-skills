@@ -45,7 +45,7 @@ class EvidenceLedgerTests(unittest.TestCase):
         self.assertTrue(data["validation_evidence"]["fresh_after_last_edit"])
         self.assertTrue(data["closure_evidence"]["route_manifest_complete"])
 
-    def test_repair_evidence_tracks_re_review_signal(self) -> None:
+    def test_repair_evidence_without_explicit_re_review_stays_open(self) -> None:
         ledger = EvidenceLedger.from_state(
             {
                 "repair_findings": ["src/app.py: fixed null path"],
@@ -53,8 +53,18 @@ class EvidenceLedgerTests(unittest.TestCase):
                 "review_evidence_seen": True,
             }
         )
-        self.assertTrue(ledger.repair_evidence.re_review_seen)
+        self.assertFalse(ledger.repair_evidence.re_review_seen)
         self.assertEqual(ledger.repair_evidence.repaired_paths, ["src/app.py: fixed null path"])
+
+    def test_repair_evidence_tracks_explicit_re_review_signal(self) -> None:
+        ledger = EvidenceLedger.from_state(
+            {
+                "repair_findings": ["src/app.py: fixed null path"],
+                "repair_evidence_seen": True,
+                "review_after_repair_seen": True,
+            }
+        )
+        self.assertTrue(ledger.repair_evidence.re_review_seen)
 
 
 if __name__ == "__main__":

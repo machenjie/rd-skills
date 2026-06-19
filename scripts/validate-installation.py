@@ -44,6 +44,8 @@ REQUIRED_DIST_DIRS = (
     "claude/user/.claude/skills",
     "copilot/project/.github/skills",
     "copilot/user/.copilot/skills",
+    "cline/project/.cline/skills",
+    "cline/user/.cline/skills",
     "openai-api/zips",
 )
 
@@ -97,8 +99,11 @@ RUNTIME_GOVERNANCE_SUPPORT_FILES = (
     "runtime_governance/adapters/__init__.py",
     "runtime_governance/adapters/base.py",
     "runtime_governance/adapters/claude.py",
+    "runtime_governance/adapters/cline.py",
     "runtime_governance/adapters/codex.py",
     "runtime_governance/adapters/copilot.py",
+    "runtime_governance/adapters/openhands.py",
+    "runtime_governance/adapters/roo.py",
     "runtime_governance/closure.py",
     "runtime_governance/events.py",
     "runtime_governance/evidence.py",
@@ -200,6 +205,8 @@ PROFILE_SKILL_ROOTS = (
     DIST_DIR / "claude" / "user" / ".claude" / "skills",
     DIST_DIR / "copilot" / "project" / ".github" / "skills",
     DIST_DIR / "copilot" / "user" / ".copilot" / "skills",
+    DIST_DIR / "cline" / "project" / ".cline" / "skills",
+    DIST_DIR / "cline" / "user" / ".cline" / "skills",
 )
 
 ROUTER_INDEX_FILES = (

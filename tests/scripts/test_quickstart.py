@@ -46,6 +46,7 @@ class QuickstartTests(unittest.TestCase):
         module = _load_module()
         self.assertEqual(module.resolve_profile("codex", "user", "auto"), "recommended")
         self.assertEqual(module.resolve_profile("claude", "project", "auto"), "full")
+        self.assertEqual(module.resolve_profile("cline", "project", "auto"), "full")
         self.assertEqual(module.resolve_profile("openai-api", None, "auto"), "recommended")
         self.assertEqual(module.resolve_profile("codex", "user", "dev"), "dev")
 
@@ -94,6 +95,24 @@ class QuickstartTests(unittest.TestCase):
         self.assertEqual(plan.selected_profile, "full")
         self.assertEqual(plan.expected_skill_count, 26)
         self.assertIn("--target", plan.commands[1])
+
+    def test_cline_project_command_plan(self) -> None:
+        module = _load_module()
+        target = Path("/tmp/changeforge-cline")
+        plan = module.build_plan(_args(agent="cline", scope="project", target=target))
+        self.assertEqual(plan.selected_profile, "full")
+        self.assertEqual(plan.commands[1][:8], [
+            "python3",
+            "installers/install.py",
+            "--agent",
+            "cline",
+            "--scope",
+            "project",
+            "--profile",
+            "full",
+        ])
+        self.assertIn(str(target), plan.commands[1])
+        self.assertEqual(plan.commands[2][2:6], ["--agent", "cline", "--scope", "project"])
 
     def test_user_scope_defaults_to_recommended(self) -> None:
         module = _load_module()

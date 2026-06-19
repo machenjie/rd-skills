@@ -1,0 +1,36 @@
+id: openhands-absolute-path-normalization
+runtime: openhands
+description: OpenHands file write normalizes absolute workspace paths to repository-relative facts.
+coverage_targets:
+  - event_recognition
+  - path_normalization
+pressure_cases:
+  - absolute_user_path
+input_payload:
+  event_type: file_write
+  event_id: openhands-absolute-path-normalization
+  path: /workspace/project/src/app.py
+expected_normalized_event:
+  adapter: openhands
+  event_kind: file_changed
+  tool_category: edit
+  command_risk: mutation
+  bounded_paths:
+    - src/app.py
+  changed_paths:
+    - src/app.py
+expected_gate_result:
+  outcome: pass
+expected_evidence_delta:
+  normalized_event_supported: true
+  changed_files:
+    - src/app.py
+  bounded_path_count: 1
+  command_risk_outcome: mutation
+expected_closure_effect:
+  verdict: needs_validation
+privacy_expectations:
+  blocked_strings:
+    - /workspace/project
+  forbid_absolute_paths: true
+

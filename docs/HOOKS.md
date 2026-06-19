@@ -16,21 +16,61 @@ adapter policy: fail open for advisory reminders, fail closed only for
 configured high-confidence closure gates, and record the limitation as residual
 risk when it affects handoff evidence.
 
+Codex, Claude, and Copilot use concrete hook-backed runtime translators behind
+the shared adapter protocol. Cline, Roo, and OpenHands are staged adapter
+targets only: Cline has skills/profile install support and Plan/Act mode
+normalization, Roo has mode-policy normalization, and OpenHands has a backend
+protocol event normalizer. They do not ship executable hook templates here.
+Translators record only command kind and risk category, never full command
+arguments, prompts, environment variables, or raw command output.
+
 The adapter capability matrix is the single downstream source for runtime
 differences. `scripts/validate-hooks.py` and `installers/doctor.py` print it as
 part of hook validation.
 
-| Runtime | Supported events | Unsupported events | Advisory context | Stop block | Command outcome |
+| Runtime | Supported events | Unsupported events | Advisory context | Stop block | Visibility |
 | --- | --- | --- | --- | --- | --- |
-| Codex | `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `Stop`, `SubagentStart`, `SubagentStop`, `Compact` | none declared | yes | yes, only when configured | partial |
-| Claude | `SessionStart`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolBatch`, `Stop`, `SubagentStart`, `SubagentStop`, `Compact` | none declared | yes | yes, only when configured | partial |
-| Copilot | `SessionStart`, `PostToolUse`, `Stop`, `SubagentStart` | `UserPromptSubmit`, `PreToolUse`, `SubagentStop` | only supported events | yes for Stop closure | partial |
-| Generic fallback | `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop` | none declared | limited text fallback | no | none |
-| Future placeholders (`Cline`, `OpenHands`, `Gemini CLI`, `Goose`) | none | canonical lifecycle events | no | no | none |
+| Codex | `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `Stop`, `SubagentStart`, `SubagentStop`, `Compact` | Explicit non-templated canonical events, including `UserPromptExpansion`, `PostToolBatch`, failure, session-end, task, file, config, worktree, `PreCompact`, and `PostCompact` events | yes | yes, only when configured | command/read/validation partial |
+| Claude | `SessionStart`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `Stop`, `StopFailure`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `PreCompact`, `PostCompact`, `Compact` | Explicit non-templated canonical events that remain unsupported, including worktree, checkpoint/rollback, plan/act mode, codebase index, and mode/role-switch checks | yes | yes, only when configured | command/read/validation partial |
+| Copilot | `SessionStart`, `PostToolUse`, `Stop`, `SubagentStart` | Explicit canonical events not listed as supported | only supported events | yes for Stop closure | command/read/validation partial |
+| Generic fallback | `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop` | Explicit canonical events not listed as supported | limited text fallback | no | read partial, command/validation none |
+| Cline staged target | none | all canonical lifecycle events; Plan/Act mode is supported only as a mode signal | no | no | none |
+| Roo staged target | none | all canonical lifecycle events; mode/role switching and tool-policy boundaries are supported only as bounded adapter facts | no | no | none |
+| OpenHands backend target | `SessionStart`, `SessionEnd`, `TaskCreated`, `TaskCompleted`, `PostToolUse`, `PostToolUseFailure`, `FileChanged`, `Stop` from backend protocol events | pre-tool, permission, subagent, config, worktree, compact, codebase-index, and mode-switch events | no | no | paths full, command/validation partial |
+| Future placeholders (`Gemini CLI`, `Goose`) | none | all non-`Unknown` canonical events | no | no | none |
 
 Unsupported checks in the closure contract stay unsupported. A runtime that
 cannot observe a lifecycle event or inject advisory context records a degraded
-capability and residual risk; it is never treated as a full pass.
+capability and residual risk; it is never treated as a full pass. `Compact`
+remains a backward-compatible alias, while new adapters should prefer
+`PreCompact` and `PostCompact` when the executor exposes direction-specific
+compaction events.
+
+Every gate that needs runtime facts builds a shared executor snapshot:
+`snapshot_from_event_state(event, state, classification=..., read_evidence=...)`.
+The snapshot contains adapter capabilities, a `NormalizedEvent`, the current
+`LifecycleState`, an `EvidenceLedger`, a `GateResult`, and, for Stop, an
+optional `ClosureContract`. Gates persist only bounded reducer facts derived
+from that snapshot. They do not store raw hook payloads, raw prompts, full
+commands, command output, secrets, environment variables, or personal content
+corpus indexes.
+
+Canonical evidence flow:
+
+1. The runtime adapter normalizes executor-specific event names, tool names,
+   paths, command program/risk class, validation outcome, permission decision,
+   checkpoint/rollback markers, and capability degradation into bounded facts.
+2. The hook gate evaluates policy using normalized facts plus local reducer
+   state. Unsupported checks degrade to advisory residual risk unless the gate
+   is explicitly configured to block a high-confidence condition.
+3. The state reducer merges `runtime_adapter`, `normalized_events`, read,
+   changed, deleted, generated, external, config, validation, review, repair,
+   rereview, permission, command-risk, rollback, and structure-finding facts
+   with caps, dedupe, and OR semantics.
+4. Stop closure consumes the evidence ledger and Validation Broker result,
+   not free-form validation claims alone. Free-form final text can satisfy
+   handoff wording checks, but structured stale, failed, or unknown validation
+   facts control validation closure.
 
 Repository graph and context-pack support are source-evidence helpers. They may
 summarize symbol, import, reference, test, ownership, and generated-artifact
@@ -128,6 +168,15 @@ agent execution.
 
 ## Hook Policy
 
+Permission checks classify command risk as `safe`, `mutation`, `destructive`,
+`release`, `migration`, `dependency`, `network`, or `unknown`. Safe commands
+record bounded facts without warning unless another gate sees risk. Mutation
+commands warn when plan/preflight evidence is missing. Destructive commands
+warn or block according to configured mode and runtime blocking support.
+Release and migration commands escalate delivery, security, and API/data gates;
+dependency commands require dependency/security review; unknown commands warn
+as residual risk. Only the program token and risk class are recorded.
+
 The runtime still accepts the legacy global mode:
 
 ```text
@@ -153,8 +202,17 @@ Only configured enforcement gates block; ordinary hook errors fail open.
 
 Hook state is merged through explicit reducers:
 
+- `runtime_adapter` stores adapter name plus supported, unsupported, and
+  degraded checks;
+- `normalized_events` stores compact event summaries such as event, stage,
+  tool category, risk class, and path count;
 - list fields such as `changed_paths`, `read_paths`, `risk_surfaces`, and
   `implementation_preflights` are additive, deduped, and capped;
+- material and external-change lists include `deleted_paths`,
+  `generated_paths`, `external_file_changes`, and `config_changes`;
+- closure evidence lists include `validation_results`, `review_findings`,
+  `repair_events`, `rereview_events`, `permission_decisions`, `command_risks`,
+  `rollback_points`, and `post_edit_structure_findings`;
 - booleans such as `read_evidence_seen`, `review_evidence_seen`, and
   `implementation_preflight_required` use OR semantics, so `False` cannot erase
   a prior `True`;
@@ -164,6 +222,9 @@ Hook state is merged through explicit reducers:
 
 State remains cache-side only and stores bounded facts, not raw prompts,
 environment variables, secrets, full command output, or personal archives.
+If a material change is recorded after a validation command, the reducer adds a
+stale validation result so Stop closure cannot treat the earlier command as
+fresh evidence.
 
 ## Implementation Preflight Manifest
 
@@ -245,7 +306,14 @@ not counted as route-manifest evidence.
 The Stop closure contract also records `adapter`, `supported_checks`,
 `unsupported_checks`, `degraded_capabilities`, `verdict`, and residual-risk
 labels so unsupported runtime paths degrade explicitly instead of being counted
-as observed checks.
+as observed checks. Stop telemetry also includes a bounded `changeforge_closure`
+object with adapter, verdict, supported/unsupported checks, present/missing/
+negative evidence, validation outcome/freshness/scope, review repair and
+re-review state, changed/deleted/generated path sets, residual risk, and next
+owner. Closure verdicts may be `ready`, `needs_validation`, `needs_review`,
+`needs_repair`, `degraded_ready`, or `blocked`; a broker-degraded validation
+result can populate validation metadata without being counted as present
+closure evidence.
 
 Telemetry is enabled by default and can be disabled with `CHANGEFORGE_TELEMETRY=off`.
 See [TELEMETRY.md](TELEMETRY.md) for the data model, the offline review tool, and
@@ -335,6 +403,15 @@ validation candidates, then evaluates bounded result facts:
   cannot prove the final patch;
 - coverage that does not align with changed paths or risk surfaces is surfaced
   as a broker issue.
+- repair evidence without a later re-review remains open closure work, and
+  review findings without repair cannot close as ready.
+
+Hook post-tool validation detection records structured `validation_results`
+when a validation-looking command is observable. If the executor exposes an
+exit code or explicit outcome, the result is `pass` or `fail`; otherwise it is
+`unknown`. Any material edit, generated file change, deletion, external file
+change, or config change after validation marks that validation stale. Stop
+closure carries this freshness through the ledger and closure contract.
 
 Stop closure remains warning/fail-open by default. In block mode, the gate may
 block high-confidence validation failures such as stale validation, failed
@@ -749,6 +826,13 @@ post-tool, subagent, stop, and session events. Claude templates also include
 recording read context before review context. Copilot templates stay on
 supported flat events only: `SessionStart`, `PostToolUse`, `SubagentStart`, and
 `Stop`.
+
+Normalized runtime events expose only bounded fields: lifecycle cadence,
+executor event name and phase, tool category, command risk/outcome, exit code,
+read/changed/deleted/generated paths, validation status, permission decision,
+checkpoint/rollback signals, and privacy redaction markers. They must not carry
+raw prompts, full commands, command output, secrets, environment variables, or
+personal corpus indexes.
 
 The runtime support files are:
 

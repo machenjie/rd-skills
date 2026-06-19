@@ -36,11 +36,11 @@ class NormalizedEventTests(unittest.TestCase):
         self.assertEqual(event.event_kind, EventKind.UNKNOWN.value)
         self.assertIn("unsupported_event:RuntimeThing", event.capability_degradation)
 
-    def test_permission_request_maps_to_pre_tool_without_degradation(self) -> None:
+    def test_permission_request_uses_its_own_canonical_kind(self) -> None:
         event = NormalizedEvent.from_telemetry_fact(
             {"event_name": "PermissionRequest", "runtime": "codex"}
         )
-        self.assertEqual(event.event_kind, EventKind.PRE_TOOL_USE.value)
+        self.assertEqual(event.event_kind, EventKind.PERMISSION_REQUEST.value)
         self.assertEqual(event.capability_degradation, [])
 
     def test_json_round_trip(self) -> None:
@@ -48,6 +48,69 @@ class NormalizedEventTests(unittest.TestCase):
             {"event_name": "Stop", "runtime": "codex", "hook_name": "stop_closure_gate"}
         )
         self.assertEqual(NormalizedEvent.from_json(event.to_json()), event)
+
+    def test_new_canonical_events_round_trip(self) -> None:
+        for event_name, expected in (
+            ("UserPromptExpansion", EventKind.USER_PROMPT_EXPANSION.value),
+            ("PostToolUseFailure", EventKind.POST_TOOL_USE_FAILURE.value),
+            ("PostToolBatch", EventKind.POST_TOOL_BATCH.value),
+            ("StopFailure", EventKind.STOP_FAILURE.value),
+            ("SessionEnd", EventKind.SESSION_END.value),
+            ("TaskCreated", EventKind.TASK_CREATED.value),
+            ("TaskCompleted", EventKind.TASK_COMPLETED.value),
+            ("FileChanged", EventKind.FILE_CHANGED.value),
+            ("ConfigChanged", EventKind.CONFIG_CHANGED.value),
+            ("WorktreeCreate", EventKind.WORKTREE_CREATE.value),
+            ("WorktreeRemove", EventKind.WORKTREE_REMOVE.value),
+            ("PreCompact", EventKind.PRE_COMPACT.value),
+            ("PostCompact", EventKind.POST_COMPACT.value),
+            ("Compact", EventKind.COMPACT.value),
+        ):
+            with self.subTest(event_name=event_name):
+                event = NormalizedEvent.from_telemetry_fact({"event_name": event_name})
+                self.assertEqual(event.event_kind, expected)
+                self.assertEqual(NormalizedEvent.from_json(event.to_json()), event)
+
+    def test_path_fields_are_normalized_and_capped(self) -> None:
+        event = NormalizedEvent.from_telemetry_fact(
+            {
+                "event_name": "FileChanged",
+                "read_paths": ["/repo/src/read.py"],
+                "changed_paths": [f"/repo/src/changed_{index}.py" for index in range(60)],
+                "deleted_paths": ["/repo/src/old.py"],
+                "generated_paths": ["/repo/dist/new.py"],
+            },
+            base_path="/repo",
+        )
+        self.assertEqual(event.read_paths, ["src/read.py"])
+        self.assertEqual(event.deleted_paths, ["src/old.py"])
+        self.assertEqual(event.generated_paths, ["dist/new.py"])
+        self.assertEqual(len(event.changed_paths), 50)
+        self.assertTrue(all(path.startswith("src/changed_") for path in event.changed_paths))
+        self.assertLessEqual(len(event.bounded_paths), 50)
+
+    def test_prompt_like_and_output_fields_are_ignored_with_redaction_marker(self) -> None:
+        event = NormalizedEvent.from_telemetry_fact(
+            {
+                "event_name": "PostToolUse",
+                "runtime": "codex",
+                "prompt": "summarize the secret plan",
+                "user_prompt": "raw user prompt should not persist",
+                "command_output": "full output should not persist",
+                "full_command": "python3 script.py --token SECRET123",
+                "command_program": "python3 -m unittest discover -s tests",
+                "exit_code": 0,
+            }
+        )
+        encoded = event.to_json()
+        self.assertNotIn("secret plan", encoded)
+        self.assertNotIn("raw user prompt", encoded)
+        self.assertNotIn("full output", encoded)
+        self.assertNotIn("SECRET123", encoded)
+        self.assertIn("prompt:ignored", event.privacy_redaction)
+        self.assertIn("command_output:ignored", event.privacy_redaction)
+        self.assertTrue(event.validation_candidate)
+        self.assertEqual(event.command_outcome, "pass")
 
 
 if __name__ == "__main__":

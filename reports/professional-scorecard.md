@@ -4,18 +4,18 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 
 ## Summary
 
-- `pass`: 11
+- `pass`: 13
 - `partial`: 3
 - `fail`: 0
 - `unknown`: 0
-- `not_collected`: 2
+- `not_collected`: 5
 
 ## Evidence Levels
 
 | Evidence | Status | Meaning |
 | --- | --- | --- |
 | structural fixture | `pass` | Local deterministic structure sample passed; not evidence of live task success. |
-| runtime telemetry sample | `not_collected` | Actual runtime fact sample; may still require human review. |
+| runtime telemetry sample | `pass` | Sanitized bounded runtime fact sample; may still require human review. |
 | promoted golden case | `pass` | Human-reviewed case admitted to regression coverage. |
 | live pass-rate | `not_collected` | Measured real-task success rate. |
 | token overhead | `not_collected` | Measured additional token cost. |
@@ -35,6 +35,11 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 | Promoted agent samples | `pass` | reports/professionalism-release-readiness.json | `python3 scripts/eval-professional-agent-samples.py --promoted-only --strict` |
 | Skill efficacy structural fixtures | `pass` | evals/skill-efficacy and scripts/validate-skill-efficacy-benchmarks.py | `python3 scripts/validate-skill-efficacy-benchmarks.py` |
 | Runtime governance structural fixtures | `pass` | evals/executor-adapters, evals/repository-intelligence, evals/project-memory, evals/validation-broker, evals/trajectory | `python3 scripts/validate-professional-routing-coverage.py` |
+| Executor adapter structural fixtures | `pass` | evals/executor-adapter and reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
+| Runtime telemetry sample | `pass` | reports/runtime-telemetry-sample.json | `python3 scripts/eval-executor-adapters.py` |
+| Executor adapter live pass-rate | `not_collected` | reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
+| Executor adapter token overhead | `not_collected` | reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
+| Executor adapter turn overhead | `not_collected` | reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
 | Example coverage | `pass` | examples/ and scripts/validate-examples.py | `python3 scripts/validate-examples.py` |
 | Productization assets | `pass` | docs/productization assets, schemas, and scripts | `python3 scripts/validate-productization-assets.py` |
 | Marketplace index validation | `pass` | scripts/validate-marketplace-index.py | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` |
@@ -52,6 +57,9 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 
 - Professional skill coverage: Repair weak professional skill sections without keyword stuffing.
 - Foundation capability coverage: Improve selected capability evidence contracts and references.
+- Executor adapter live pass-rate: Collect a real measured run before changing this status from not_collected.
+- Executor adapter token overhead: Collect a real measured run before changing this status from not_collected.
+- Executor adapter turn overhead: Collect a real measured run before changing this status from not_collected.
 - Open-source readiness: Owner must select an OSI license, update package metadata, confirm contribution licensing, and configure private vulnerability reporting before open-source publication.
 - Hook safety: Run hook validation and inspect hook runtime changes; hooks must remain advisory and fail-open unless explicitly stricter.
 - Installation validation: Run installation validation after rebuilding all profiles.

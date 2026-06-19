@@ -21,6 +21,11 @@ COMMITTED_SOURCE_COMMIT = "provided by release artifact / CI metadata"
 MARKETPLACE_DIMENSION = "Marketplace index validation"
 SKILL_EFFICACY_DIMENSION = "Skill efficacy structural fixtures"
 RUNTIME_GOVERNANCE_DIMENSION = "Runtime governance structural fixtures"
+EXECUTOR_ADAPTER_DIMENSION = "Executor adapter structural fixtures"
+RUNTIME_TELEMETRY_DIMENSION = "Runtime telemetry sample"
+EXECUTOR_LIVE_PASS_RATE_DIMENSION = "Executor adapter live pass-rate"
+EXECUTOR_TOKEN_OVERHEAD_DIMENSION = "Executor adapter token overhead"
+EXECUTOR_TURN_OVERHEAD_DIMENSION = "Executor adapter turn overhead"
 SCORECARD_REFRESH_COMMAND = (
     "python3 scripts/generate-professional-scorecard.py "
     "--out reports/professional-scorecard.md "
@@ -32,6 +37,7 @@ REFRESH_COMMANDS = [
     "python3 scripts/eval-skill-professionalism.py --coverage-matrix",
     "python3 scripts/eval-professional-benchmarks.py",
     "python3 scripts/validate-skill-efficacy-benchmarks.py",
+    "python3 scripts/eval-executor-adapters.py",
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
     "python3 scripts/build.py --profile recommended",
@@ -213,6 +219,7 @@ def _scorecard_dimension_item(
     dimension_name: str,
     public_name: str,
     scorecard_path: Path | None = None,
+    evidence_level: str = "structural fixture",
 ) -> EvidenceItem:
     """Return one public evidence item from the generated professional scorecard."""
     path, source = _scorecard_path_and_source(root, scorecard_path)
@@ -248,6 +255,7 @@ def _scorecard_dimension_item(
             source,
             str(dimension.get("detail", "detail missing")),
             str(dimension.get("verification_command", "")) or SCORECARD_REFRESH_COMMAND,
+            evidence_level,
         )
 
     return EvidenceItem(
@@ -267,10 +275,38 @@ def _additional_status_items(root: Path, scorecard_path: Path | None = None) -> 
             "scripts/validate-installation.py",
             "validator does not emit a committed machine-readable report",
             "python3 scripts/validate-installation.py",
-            "runtime telemetry sample",
         ),
         _scorecard_dimension_item(root, SKILL_EFFICACY_DIMENSION, SKILL_EFFICACY_DIMENSION, scorecard_path),
         _scorecard_dimension_item(root, RUNTIME_GOVERNANCE_DIMENSION, RUNTIME_GOVERNANCE_DIMENSION, scorecard_path),
+        _scorecard_dimension_item(root, EXECUTOR_ADAPTER_DIMENSION, EXECUTOR_ADAPTER_DIMENSION, scorecard_path),
+        _scorecard_dimension_item(
+            root,
+            RUNTIME_TELEMETRY_DIMENSION,
+            RUNTIME_TELEMETRY_DIMENSION,
+            scorecard_path,
+            "runtime telemetry sample",
+        ),
+        _scorecard_dimension_item(
+            root,
+            EXECUTOR_LIVE_PASS_RATE_DIMENSION,
+            EXECUTOR_LIVE_PASS_RATE_DIMENSION,
+            scorecard_path,
+            "live pass-rate",
+        ),
+        _scorecard_dimension_item(
+            root,
+            EXECUTOR_TOKEN_OVERHEAD_DIMENSION,
+            EXECUTOR_TOKEN_OVERHEAD_DIMENSION,
+            scorecard_path,
+            "token overhead",
+        ),
+        _scorecard_dimension_item(
+            root,
+            EXECUTOR_TURN_OVERHEAD_DIMENSION,
+            EXECUTOR_TURN_OVERHEAD_DIMENSION,
+            scorecard_path,
+            "turn overhead",
+        ),
         _scorecard_dimension_item(root, MARKETPLACE_DIMENSION, MARKETPLACE_DIMENSION, scorecard_path),
     ]
 
@@ -309,7 +345,7 @@ def generate_summary(
         "evidence_levels": _scorecard_evidence_levels(root, scorecard_path),
         "known_unknowns": known_unknowns,
         "refresh_commands": REFRESH_COMMANDS,
-        "claim_boundary": "Local deterministic evidence only; skill efficacy fixtures are structural/local evidence, not live pass-rate, empirical before/after performance, external popularity, adoption, marketplace availability, or market claim evidence.",
+        "claim_boundary": "Local deterministic evidence only; skill efficacy and executor adapter fixtures are structural/local evidence, not live pass-rate, empirical before/after performance, external popularity, adoption, marketplace availability, or market claim evidence.",
     }
 
 
@@ -319,7 +355,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
     lines = [
         "# Public Benchmark Summary",
         "",
-        "This generated summary reports local deterministic ChangeForge evidence. Skill efficacy fixtures are structural/local evidence, not live pass-rate or empirical before/after agent-performance proof. It does not claim external popularity, marketplace availability, or market adoption.",
+        "This generated summary reports local deterministic ChangeForge evidence. Skill efficacy and executor adapter fixtures are structural/local evidence, not live pass-rate or empirical before/after agent-performance proof. It does not claim external popularity, marketplace availability, or market adoption.",
         "",
         "## Repository",
         "",
@@ -373,7 +409,7 @@ def _scorecard_evidence_levels(root: Path, scorecard_path: Path | None) -> dict[
         },
         "runtime telemetry sample": {
             "status": "not_collected",
-            "meaning": "Actual runtime fact sample; may still require human review.",
+            "meaning": "Sanitized bounded runtime fact sample; may still require human review.",
         },
         "promoted golden case": {
             "status": "unknown",

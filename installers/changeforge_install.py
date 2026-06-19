@@ -24,7 +24,7 @@ MANIFEST_NAME = ".changeforge-install-manifest.json"
 BUILD_MANIFEST_NAME = ".changeforge-build-manifest.json"
 BACKUP_DIR_NAME = ".changeforge-backups"
 PROFILES = ("recommended", "full", "dev")
-AGENTS = ("codex", "claude", "copilot", "openai-api")
+AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
 SCOPES = ("project", "user", "admin")
 
 SOURCE_SKILL_ROOTS = {
@@ -35,12 +35,15 @@ SOURCE_SKILL_ROOTS = {
     ("claude", "user"): ROOT / "dist" / "claude" / "user" / ".claude" / "skills",
     ("copilot", "project"): ROOT / "dist" / "copilot" / "project" / ".github" / "skills",
     ("copilot", "user"): ROOT / "dist" / "copilot" / "user" / ".copilot" / "skills",
+    ("cline", "project"): ROOT / "dist" / "cline" / "project" / ".cline" / "skills",
+    ("cline", "user"): ROOT / "dist" / "cline" / "user" / ".cline" / "skills",
 }
 
 PROJECT_SUBPATHS = {
     "codex": Path(".agents") / "skills",
     "claude": Path(".claude") / "skills",
     "copilot": Path(".github") / "skills",
+    "cline": Path(".cline") / "skills",
 }
 
 DEFAULT_TARGET_DIRS = {
@@ -48,6 +51,7 @@ DEFAULT_TARGET_DIRS = {
     ("codex", "admin"): Path("/etc/codex/skills"),
     ("claude", "user"): Path.home() / ".claude" / "skills",
     ("copilot", "user"): Path.home() / ".copilot" / "skills",
+    ("cline", "user"): Path.home() / ".cline" / "skills",
 }
 
 FOUNDATION_MODES = {
@@ -155,7 +159,7 @@ UNIVERSAL_PROFESSIONAL_BOOTSTRAP_SOURCE = (
     ROOT / "dist" / "universal" / "bootstrap" / PROFESSIONAL_BOOTSTRAP_FRAGMENT_NAME
 )
 BOOTSTRAP_PROJECT_SUBPATH = Path(".changeforge")
-BOOTSTRAP_AGENTS = ("codex", "claude", "copilot")
+BOOTSTRAP_AGENTS = ("codex", "claude", "copilot", "cline")
 
 
 class InstallError(Exception):

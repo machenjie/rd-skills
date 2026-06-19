@@ -10,7 +10,13 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from runtime_governance import EvidenceLedger, EvidenceStrength, Freshness  # noqa: E402
+from runtime_governance import (  # noqa: E402
+    EventKind,
+    EvidenceLedger,
+    EvidenceStrength,
+    Freshness,
+    NormalizedEvent,
+)
 
 
 class EvidenceLedgerTests(unittest.TestCase):
@@ -78,6 +84,91 @@ class EvidenceLedgerTests(unittest.TestCase):
             ]
         )
         self.assertEqual(ledger.validation.strength, EvidenceStrength.NEGATIVE.value)
+        self.assertEqual(ledger.validation.freshness, Freshness.STALE.value)
+
+    def test_later_edit_stales_prior_validation_event(self) -> None:
+        ledger = EvidenceLedger()
+        ledger.add_normalized_event(
+            NormalizedEvent(
+                event_id="validate-1",
+                adapter="codex",
+                event_kind=EventKind.POST_TOOL_USE.value,
+                tool_category="test",
+                command_outcome="pass",
+                validation_candidate=True,
+            )
+        )
+        ledger.add_normalized_event(
+            NormalizedEvent(
+                event_id="edit-1",
+                adapter="codex",
+                event_kind=EventKind.POST_TOOL_USE.value,
+                tool_category="edit",
+                changed_paths=["src/runtime_governance/evidence.py"],
+            )
+        )
+        self.assertEqual(ledger.validation.strength, EvidenceStrength.NEGATIVE.value)
+        self.assertEqual(ledger.validation.freshness, Freshness.STALE.value)
+        self.assertEqual(ledger.validation.outcome, "stale")
+
+    def test_changed_deleted_and_generated_paths_are_kept_separate(self) -> None:
+        ledger = EvidenceLedger.from_telemetry_facts(
+            [
+                {
+                    "event_name": "PostToolUse",
+                    "changed_paths": ["src/a.py"],
+                    "deleted_paths": ["src/old.py"],
+                    "generated_paths": ["dist/a.py"],
+                }
+            ]
+        )
+        self.assertEqual(ledger.changed_files, ["src/a.py"])
+        self.assertEqual(ledger.deleted_files, ["src/old.py"])
+        self.assertEqual(ledger.generated_files, ["dist/a.py"])
+        self.assertEqual(
+            ledger.changed_files_by_status,
+            {"changed": ["src/a.py"], "deleted": ["src/old.py"], "generated": ["dist/a.py"]},
+        )
+
+    def test_permission_denial_records_bounded_decision_without_raw_command(self) -> None:
+        ledger = EvidenceLedger.from_telemetry_facts(
+            [
+                {
+                    "event_name": "PermissionRequest",
+                    "runtime": "codex",
+                    "permission_decision": "deny",
+                    "permission_reason": "raw command rm -rf /tmp/x --token=SECRET",
+                    "command": "rm -rf /tmp/x --token=SECRET",
+                }
+            ]
+        )
+        serialized = ledger.to_json()
+        self.assertEqual(ledger.permission.outcome, "deny")
+        self.assertEqual(ledger.command_risk.outcome, "destructive")
+        self.assertNotIn("SECRET", serialized)
+        self.assertNotIn("--token", serialized)
+
+    def test_config_change_after_validation_marks_validation_stale(self) -> None:
+        ledger = EvidenceLedger()
+        ledger.add_normalized_event(
+            NormalizedEvent(
+                event_id="validate-1",
+                adapter="codex",
+                event_kind=EventKind.POST_TOOL_USE.value,
+                tool_category="test",
+                command_outcome="pass",
+                validation_candidate=True,
+            )
+        )
+        ledger.add_normalized_event(
+            NormalizedEvent(
+                event_id="config-1",
+                adapter="codex",
+                event_kind=EventKind.CONFIG_CHANGED.value,
+                changed_paths=["pyproject.toml"],
+            )
+        )
+        self.assertEqual(ledger.config_change.strength, EvidenceStrength.PARTIAL.value)
         self.assertEqual(ledger.validation.freshness, Freshness.STALE.value)
 
     def test_broker_coverage_blocker_overrides_flat_pass(self) -> None:

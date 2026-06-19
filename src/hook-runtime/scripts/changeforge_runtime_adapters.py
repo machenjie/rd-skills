@@ -10,6 +10,7 @@ from changeforge_adapter_capabilities import (
     AdapterCapabilities,
     CONTEXT_EVENTS_BY_RUNTIME,
     adapter_capabilities_for,
+    runtime_adapter_for,
 )
 from changeforge_common import emit_session_context, emit_stop_reminder, emit_warning
 from changeforge_gate_result import GateResult
@@ -99,5 +100,5 @@ class RuntimeAdapter:
 
 def adapter_for(runtime: str) -> RuntimeAdapter:
     """Return a conservative adapter; unknown runtimes use plain text."""
-    capabilities = adapter_capabilities_for(runtime)
+    capabilities = runtime_adapter_for(runtime).capabilities
     return RuntimeAdapter(capabilities.runtime, capabilities)

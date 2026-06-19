@@ -12,7 +12,7 @@ from typing import Callable, Sequence
 
 
 ROOT = Path(__file__).resolve().parents[1]
-AGENTS = ("codex", "claude", "copilot", "openai-api")
+AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
 SCOPES = ("project", "user", "admin")
 PROFILES = ("auto", "recommended", "full", "dev")
 EXPECTED_SKILL_COUNTS = {
@@ -24,6 +24,7 @@ NEXT_PROMPTS = {
     "codex": "Use change-forge-router to classify this request before implementation.",
     "claude": "Use change-forge-router to classify this request before implementation.",
     "copilot": "Use change-forge-router to classify this request before implementation.",
+    "cline": "Use change-forge-router to classify this request before implementation.",
     "openai-api": "Upload the desired skill zip, then ask the model to use change-forge-router.",
 }
 
@@ -58,7 +59,7 @@ def resolve_profile(agent: str, scope: str | None, requested_profile: str) -> st
 def validate_request(agent: str, scope: str | None, target: Path | None) -> None:
     """Validate quickstart-specific argument requirements before planning."""
     if agent != "openai-api" and scope is None:
-        raise ValueError("--scope is required for codex, claude, and copilot")
+        raise ValueError("--scope is required for runtime skill installs")
     if scope == "project" and target is None:
         raise ValueError("--target is required for project scope")
 

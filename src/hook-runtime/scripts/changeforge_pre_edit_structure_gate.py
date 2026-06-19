@@ -28,6 +28,10 @@ from changeforge_common import (
     write_telemetry_event,
 )
 from changeforge_hook_policy import gate_mode, run_gate_with_policy, should_block, should_emit_context
+from changeforge_executor_adapter_core import (
+    snapshot_from_event_state,
+    state_update_from_snapshot,
+)
 from changeforge_runtime_adapters import adapter_for
 from changeforge_runtime_route_resolver import CODE_FILE_EXTENSIONS
 
@@ -114,10 +118,28 @@ def _main() -> int:
         return 0
     missing = result["missing"]
     manifest = result["manifest"]
+    snapshot = snapshot_from_event_state(
+        event,
+        state,
+        classification={
+            "stage": "edit",
+            "paths": result["changed_paths"],
+            "tool": tool_name(event),
+        },
+        read_evidence={
+            "paths": state.get("read_paths", []),
+            "patterns": state.get("searched_patterns", []),
+        },
+        gate_name="pre_edit_structure",
+        gate_mode=mode,
+        gate_facts={"missing": missing, "findings": result["findings"]},
+    )
+    snapshot_update = state_update_from_snapshot(snapshot)
+    snapshot_update["changed_paths"] = result["changed_paths"]
     merge_state(
         repo,
         runtime,
-        changed_paths=result["changed_paths"],
+        **snapshot_update,
         implementation_preflights=result["preflight_summaries"],
         pre_edit_structure_findings=result["findings"],
         implementation_preflight_required=True,
@@ -141,7 +163,12 @@ def _main() -> int:
         session_id=session_id_from_event(event),
         cwd=cwd_from_event(event),
         tool_name=tool_name(event),
+        normalized_events=snapshot_update["normalized_events"],
         changed_paths=result["changed_paths"],
+        deleted_paths=snapshot_update["deleted_paths"],
+        generated_paths=snapshot_update["generated_paths"],
+        external_file_changes=snapshot_update["external_file_changes"],
+        config_changes=snapshot_update["config_changes"],
         added_paths=result["added_paths"],
         hook_findings={"missing": missing, "findings": result["findings"]},
         suggested_capabilities=["implementation-structure-design", "test-strategy"],
@@ -170,16 +197,29 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
     state = state if isinstance(state, dict) else {}
     patch_text = extract_patch_text(event)
     content_text = extract_edit_content_text(event)
-    changed_paths = [normalize_path(path) for path in extract_changed_paths(event)]
+    raw_changed_paths = [normalize_path(path) for path in extract_changed_paths(event)]
+    snapshot = snapshot_from_event_state(
+        event,
+        state,
+        classification={
+            "stage": "edit",
+            "paths": raw_changed_paths,
+            "tool": tool_name(event),
+        },
+        read_evidence={
+            "paths": state.get("read_paths", []),
+            "patterns": state.get("searched_patterns", []),
+        },
+        gate_name="pre_edit_structure",
+    )
+    changed_paths = snapshot.normalized_event.changed_paths or raw_changed_paths
     added_paths = extract_added_paths(event, repo=repo)
     helper_paths = detect_new_helper_like_paths([*changed_paths, *added_paths])
     assistant_text = _assistant_text_from_event(event)
     manifest = extract_implementation_preflight_fields(assistant_text)
     repository_context = extract_repository_context_fields(assistant_text)
     has_read_evidence = _has_read_evidence(state, manifest)
-    structural = _is_structural_edit(
-        changed_paths, added_paths, helper_paths, patch_text, content_text
-    )
+    structural = _is_structural_edit(changed_paths, added_paths, helper_paths, patch_text, content_text)
     required = _is_pre_edit_event(event) and structural
     missing: list[str] = []
     findings: list[str] = []
@@ -442,7 +482,7 @@ def _is_structural_edit(
 ) -> bool:
     if added_paths or helper_paths:
         return True
-    if any(Path(path).suffix in CODE_EXTENSIONS for path in changed_paths):
+    if any(_is_structural_path(path) for path in changed_paths):
         return True
     return any(
         (
@@ -451,6 +491,34 @@ def _is_structural_edit(
             detect_existing_logic_extension(patch_text, content_text),
         )
     )
+
+
+def _is_structural_path(path: str) -> bool:
+    normalized = normalize_path(path).casefold()
+    suffix = Path(normalized).suffix
+    if suffix in CODE_EXTENSIONS:
+        return True
+    registry_source_prefix = "src/" + "registry/"
+    if normalized.startswith((registry_source_prefix, "registry/", "src/hook-runtime/")):
+        return True
+    if "/adapter/" in normalized or "/adapters/" in normalized:
+        return True
+    if normalized.startswith(("dist/", "generated/")) or "/generated/" in normalized:
+        return True
+    if normalized.startswith("tests/") or "/test/" in normalized or "/tests/" in normalized:
+        return True
+    return Path(normalized).name in {
+        "package.json",
+        "pnpm-lock.yaml",
+        "yarn.lock",
+        "package-lock.json",
+        "pyproject.toml",
+        "requirements.txt",
+        "go.mod",
+        "go.sum",
+        "cargo.toml",
+        "cargo.lock",
+    }
 
 
 def _needs_object_boundary(patch_text: str, content_text: str, helper_paths: list[str]) -> bool:

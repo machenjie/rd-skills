@@ -15,7 +15,7 @@ from runtime_governance.gates import GateOutcome  # noqa: E402
 
 
 class ClaudeAdapterTests(unittest.TestCase):
-    def test_normalizes_post_tool_batch_as_supported_post_tool(self) -> None:
+    def test_normalizes_post_tool_batch_as_supported_canonical_event(self) -> None:
         result = ClaudeAdapter().normalize_event(
             {
                 "hookEventName": "PostToolBatch",
@@ -24,7 +24,7 @@ class ClaudeAdapterTests(unittest.TestCase):
             }
         )
         self.assertEqual(result.gate_result.outcome, GateOutcome.PASS.value)
-        self.assertEqual(result.normalized_event.event_kind, "post_tool_use")
+        self.assertEqual(result.normalized_event.event_kind, "post_tool_batch")
         self.assertEqual(result.normalized_event.command_kind, "python3")
 
     def test_unknown_event_degrades(self) -> None:
