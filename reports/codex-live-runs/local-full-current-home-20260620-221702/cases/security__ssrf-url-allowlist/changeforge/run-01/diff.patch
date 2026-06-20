@@ -1,0 +1,244 @@
+diff --git a/app.py b/app.py
+index 4c0136b..d4feb58 100644
+--- a/app.py
++++ b/app.py
+@@ -6,10 +6,11 @@ The public contract is intentionally small: generated solutions should keep
+ 
+ from __future__ import annotations
+ 
++import ipaddress
+ from dataclasses import dataclass, field
+ from html.parser import HTMLParser
+ from typing import Callable, Iterable
+-from urllib.parse import urljoin, urlparse
++from urllib.parse import urljoin, urlsplit, urlunsplit
+ 
+ 
+ @dataclass
+@@ -52,6 +53,53 @@ class _TitleParser(HTMLParser):
+         return text or None
+ 
+ 
++_Address = ipaddress.IPv4Address | ipaddress.IPv6Address
++
++ALLOWED_HTTPS_HOSTS = frozenset({"preview.example.com"})
++ALLOWED_HTTPS_PORTS = frozenset({443})
++FETCH_TIMEOUT_SECONDS = 2.0
++MAX_RESPONSE_BYTES = 65536
++_REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
++_DENIED_NETWORKS = tuple(
++    ipaddress.ip_network(network)
++    for network in (
++        "0.0.0.0/32",
++        "10.0.0.0/8",
++        "127.0.0.0/8",
++        "169.254.0.0/16",
++        "172.16.0.0/12",
++        "192.168.0.0/16",
++        "::/128",
++        "::1/128",
++        "fc00::/7",
++        "fe80::/10",
++    )
++)
++_METADATA_ADDRESSES = frozenset(
++    ipaddress.ip_address(address)
++    for address in (
++        "169.254.169.254",
++        "169.254.170.2",
++        "100.100.100.200",
++        "fd00:ec2::254",
++    )
++)
++
++
++@dataclass(frozen=True)
++class _ValidatedFetchTarget:
++    canonical_url: str
++    host: str
++    port: int
++    addresses: tuple[_Address, ...]
++
++
++class _NetworkPolicyError(ValueError):
++    def __init__(self, reason: str) -> None:
++        super().__init__(reason)
++        self.reason = reason
++
++
+ def _extract_title(html: str) -> str | None:
+     parser = _TitleParser()
+     parser.feed(html)
+@@ -71,20 +119,123 @@ def default_resolver(host: str) -> Iterable[str]:
+     return []
+ 
+ 
+-def _deny(reason: str, url: str, logger: object | None) -> PreviewResult:
++def _deny(
++    reason: str,
++    _url: str,
++    logger: object | None,
++    *,
++    status_code: int = 400,
++) -> PreviewResult:
+     if logger is not None and hasattr(logger, "warning"):
+-        logger.warning("preview denied reason=%s url=%s", reason, url)
++        logger.warning("preview denied reason=%s", reason)
+     return PreviewResult(
+         ok=False,
+-        status_code=400,
+-        error=f"denied preview URL {url}",
++        status_code=status_code,
++        error="preview URL is not allowed",
+         reason=reason,
+     )
+ 
+ 
+-def _host_is_allowed(host: str | None) -> bool:
+-    # Known benchmark gap: prefix matching accepts attacker-controlled hosts.
+-    return bool(host and host.startswith("preview.example.com"))
++def _canonical_host(host: str | None) -> str | None:
++    if host is None:
++        return None
++
++    candidate = host.rstrip(".").casefold()
++    if not candidate:
++        return None
++
++    try:
++        ascii_host = candidate.encode("idna").decode("ascii")
++    except UnicodeError:
++        return None
++
++    labels = ascii_host.split(".")
++    if (
++        any(not label or len(label) > 63 for label in labels)
++        or len(ascii_host) > 253
++    ):
++        return None
++    return ascii_host
++
++
++def _resolve_addresses(
++    host: str,
++    resolver: Callable[[str], Iterable[str]],
++) -> tuple[_Address, ...]:
++    try:
++        raw_addresses = tuple(resolver(host))
++    except Exception as exc:
++        raise _NetworkPolicyError("dns_resolution_failed") from exc
++
++    if not raw_addresses:
++        raise _NetworkPolicyError("dns_resolution_failed")
++
++    addresses: list[_Address] = []
++    for raw_address in raw_addresses:
++        try:
++            addresses.append(ipaddress.ip_address(str(raw_address).strip()))
++        except ValueError as exc:
++            raise _NetworkPolicyError("dns_resolution_failed") from exc
++    return tuple(addresses)
++
++
++def _address_forms(address: _Address) -> Iterable[_Address]:
++    yield address
++    if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped:
++        yield address.ipv4_mapped
++
++
++def _address_is_denied(address: _Address) -> bool:
++    for address_form in _address_forms(address):
++        if address_form in _METADATA_ADDRESSES:
++            return True
++        if (
++            address_form.is_loopback
++            or address_form.is_link_local
++            or address_form.is_unspecified
++            or address_form.is_multicast
++        ):
++            return True
++        if any(
++            address_form.version == network.version and address_form in network
++            for network in _DENIED_NETWORKS
++        ):
++            return True
++    return False
++
++
++def _validate_fetch_target(
++    url: str,
++    resolver: Callable[[str], Iterable[str]],
++) -> _ValidatedFetchTarget:
++    try:
++        parsed = urlsplit(url)
++        port = parsed.port or 443
++    except ValueError as exc:
++        raise _NetworkPolicyError("invalid_url") from exc
++
++    host = _canonical_host(parsed.hostname)
++    if (
++        parsed.scheme.casefold() != "https"
++        or parsed.username is not None
++        or parsed.password is not None
++        or host not in ALLOWED_HTTPS_HOSTS
++        or port not in ALLOWED_HTTPS_PORTS
++    ):
++        raise _NetworkPolicyError("host_not_allowed")
++
++    addresses = _resolve_addresses(host, resolver)
++    if any(_address_is_denied(address) for address in addresses):
++        raise _NetworkPolicyError("network_not_allowed")
++
++    netloc = host if port == 443 else f"{host}:{port}"
++    canonical_url = urlunsplit(("https", netloc, parsed.path or "/", parsed.query, ""))
++    return _ValidatedFetchTarget(
++        canonical_url=canonical_url,
++        host=host,
++        port=port,
++        addresses=addresses,
++    )
+ 
+ 
+ def fetch_preview(
+@@ -95,22 +246,32 @@ def fetch_preview(
+     logger: object | None = None,
+     max_redirects: int = 3,
+ ) -> PreviewResult:
+-    parsed = urlparse(url)
+-    if parsed.scheme != "https" or not _host_is_allowed(parsed.hostname):
+-        return _deny("host_not_allowed", url, logger)
+-
+     current_url = url
+     for _attempt in range(max_redirects + 1):
+-        response = http_get(current_url, timeout_seconds=2.0, max_bytes=65536)
++        try:
++            target = _validate_fetch_target(current_url, resolver)
++        except _NetworkPolicyError as exc:
++            return _deny(exc.reason, current_url, logger)
++
++        try:
++            response = http_get(
++                target.canonical_url,
++                timeout_seconds=FETCH_TIMEOUT_SECONDS,
++                max_bytes=MAX_RESPONSE_BYTES,
++            )
++        except TimeoutError:
++            return _deny("fetch_timeout", current_url, logger, status_code=504)
++        except Exception:
++            return _deny("fetch_failed", current_url, logger, status_code=502)
++
+         location = response.headers.get("Location") or response.headers.get("location")
+-        if response.status_code in {301, 302, 303, 307, 308} and location:
+-            # Known benchmark gap: redirects are followed without revalidation.
+-            current_url = urljoin(current_url, location)
++        if response.status_code in _REDIRECT_STATUSES and location:
++            current_url = urljoin(target.canonical_url, location)
+             continue
+         return PreviewResult(
+             ok=True,
+             status_code=response.status_code,
+-            title=_extract_title(response.text),
++            title=_extract_title(response.text[:MAX_RESPONSE_BYTES]),
+         )
+ 
+     return _deny("too_many_redirects", current_url, logger)

@@ -1,0 +1,95 @@
+run-codegen-benchmarks: ERROR: security/ssrf-url-allowlist: test-suite exited 1
+tests: security/ssrf-url-allowlist benchmark checks are runnable
+.F
+======================================================================
+FAIL: test_rejects_prefix_allowlist_bypass_before_fetch (test_behavior.SSRFBehaviorTests.test_rejects_prefix_allowlist_bypass_before_fetch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mcjxy/Projects/github/rd-skills/evals/codegen/security/ssrf-url-allowlist/test-suite/tests/test_behavior.py", line 94, in test_rejects_prefix_allowlist_bypass_before_fetch
+    self.assertFalse(result_ok(result))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.000s
+
+FAILED (failures=1)
+run-codegen-benchmarks: ERROR: security/ssrf-url-allowlist: security-checks exited 1
+security: security/ssrf-url-allowlist checks are runnable
+FFFFFFFF
+======================================================================
+FAIL: test_denial_logs_reason_without_sensitive_url_values (test_security.SSRFSecurityTests.test_denial_logs_reason_without_sensitive_url_values)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mcjxy/Projects/github/rd-skills/evals/codegen/security/ssrf-url-allowlist/security-checks/security_tests/test_security.py", line 123, in test_denial_logs_reason_without_sensitive_url_values
+    self.assertFalse(result_ok(result))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_rejects_private_and_metadata_addresses_before_fetch (test_security.SSRFSecurityTests.test_rejects_private_and_metadata_addresses_before_fetch) (address='127.0.0.1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mcjxy/Projects/github/rd-skills/evals/codegen/security/ssrf-url-allowlist/security-checks/security_tests/test_security.py", line 88, in test_rejects_private_and_metadata_addresses_before_fetch
+    self.assertFalse(result_ok(result))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_rejects_private_and_metadata_addresses_before_fetch (test_security.SSRFSecurityTests.test_rejects_private_and_metadata_addresses_before_fetch) (address='10.0.0.10')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mcjxy/Projects/github/rd-skills/evals/codegen/security/ssrf-url-allowlist/security-checks/security_tests/test_security.py", line 88, in test_rejects_private_and_metadata_addresses_before_fetch
+    self.assertFalse(result_ok(result))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_rejects_private_and_metadata_addresses_before_fetch (test_security.SSRFSecurityTests.test_rejects_private_and_metadata_addresses_before_fetch) (address='172.16.0.10')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mcjxy/Projects/github/rd-skills/evals/codegen/security/ssrf-url-allowlist/security-checks/security_tests/test_security.py", line 88, in test_rejects_private_and_metadata_addresses_before_fetch
+    self.assertFalse(result_ok(result))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_rejects_private_and_metadata_addresses_before_fetch (test_security.SSRFSecurityTests.test_rejects_private_and_metadata_addresses_before_fetch) (address='192.168.1.10')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mcjxy/Projects/github/rd-skills/evals/codegen/security/ssrf-url-allowlist/security-checks/security_tests/test_security.py", line 88, in test_rejects_private_and_metadata_addresses_before_fetch
+    self.assertFalse(result_ok(result))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_rejects_private_and_metadata_addresses_before_fetch (test_security.SSRFSecurityTests.test_rejects_private_and_metadata_addresses_before_fetch) (address='169.254.169.254')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mcjxy/Projects/github/rd-skills/evals/codegen/security/ssrf-url-allowlist/security-checks/security_tests/test_security.py", line 88, in test_rejects_private_and_metadata_addresses_before_fetch
+    self.assertFalse(result_ok(result))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_rejects_private_and_metadata_addresses_before_fetch (test_security.SSRFSecurityTests.test_rejects_private_and_metadata_addresses_before_fetch) (address='::1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mcjxy/Projects/github/rd-skills/evals/codegen/security/ssrf-url-allowlist/security-checks/security_tests/test_security.py", line 88, in test_rejects_private_and_metadata_addresses_before_fetch
+    self.assertFalse(result_ok(result))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_revalidates_redirect_targets_before_second_fetch (test_security.SSRFSecurityTests.test_revalidates_redirect_targets_before_second_fetch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mcjxy/Projects/github/rd-skills/evals/codegen/security/ssrf-url-allowlist/security-checks/security_tests/test_security.py", line 107, in test_revalidates_redirect_targets_before_second_fetch
+    self.assertFalse(result_ok(result))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+FAILED (failures=8)

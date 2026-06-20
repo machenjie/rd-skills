@@ -1,0 +1,22 @@
+{
+  "codex_home_mode": "current",
+  "command": [
+    "codex",
+    "exec",
+    "--json",
+    "--sandbox",
+    "workspace-write",
+    "--output-last-message",
+    "<final.md>",
+    "-"
+  ],
+  "cwd": "<candidate>",
+  "env": {
+    "CODEX_API_KEY": "<unset>",
+    "CODEX_HOME": "<default-under-inherited-home-redacted>",
+    "HOME": "<inherited-redacted>",
+    "OPENAI_API_KEY": "<unset>",
+    "local_config_warning": "current mode may inherit user-level Codex config, auth, hooks, and trust state"
+  },
+  "schema_version": 1
+}

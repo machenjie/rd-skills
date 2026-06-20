@@ -1,0 +1,39 @@
+{
+  "average_usage": {
+    "cached_input_tokens": 3038169.6,
+    "input_tokens": 3219191.0,
+    "output_tokens": 24182.2,
+    "reasoning_output_tokens": 10136.8
+  },
+  "case_count": 5,
+  "cases": [
+    "backend/service-method-vs-new-helper",
+    "devex/helper-reuse-search",
+    "devex/minimal-correct-implementation-ladder",
+    "security/ssrf-url-allowlist",
+    "structure/object-method-encapsulation-placement"
+  ],
+  "evidence_level": "local_codex_cli_live_benchmark",
+  "generated_by": "scripts/generate-codex-live-summary.py",
+  "limitations": [
+    "Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.",
+    "Parsed telemetry excludes raw command bodies and assistant/user message content.",
+    "Pass rates cover the selected benchmark cases and variants only."
+  ],
+  "pass_rate": 0.2,
+  "result_count": 10,
+  "run_dir": "/Users/mcjxy/Projects/github/rd-skills/reports/codex-live-runs/local-full-current-home-20260620-221702",
+  "run_id": "local-full-current-home-20260620-221702",
+  "schema_version": 1,
+  "security_pass_rate": 0.2,
+  "status": "partial",
+  "telemetry": {
+    "event_count": 1692,
+    "parse_error_count": 0
+  },
+  "variant_count": 2,
+  "variants": [
+    "baseline",
+    "changeforge"
+  ]
+}

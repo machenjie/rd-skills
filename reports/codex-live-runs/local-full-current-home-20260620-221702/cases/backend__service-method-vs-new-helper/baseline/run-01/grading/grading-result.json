@@ -1,0 +1,19 @@
+{
+  "all_passed": false,
+  "benchmark": "backend/service-method-vs-new-helper",
+  "candidate_dir": "/Users/mcjxy/Projects/github/rd-skills/reports/codex-live-runs/local-full-current-home-20260620-221702/cases/backend__service-method-vs-new-helper/baseline/run-01/candidate",
+  "generated_by": "scripts/grade-codex-live-benchmarks.py",
+  "grading_status": "not_collected",
+  "logs": {
+    "security_checks": "reports/codex-live-runs/local-full-current-home-20260620-221702/cases/backend__service-method-vs-new-helper/baseline/run-01/grading/security-checks.log",
+    "setup": "reports/codex-live-runs/local-full-current-home-20260620-221702/cases/backend__service-method-vs-new-helper/baseline/run-01/grading/setup.log",
+    "stderr": "reports/codex-live-runs/local-full-current-home-20260620-221702/cases/backend__service-method-vs-new-helper/baseline/run-01/grading/run-codegen-benchmarks.stderr.log",
+    "stdout": "reports/codex-live-runs/local-full-current-home-20260620-221702/cases/backend__service-method-vs-new-helper/baseline/run-01/grading/run-codegen-benchmarks.stdout.log",
+    "test_suite": "reports/codex-live-runs/local-full-current-home-20260620-221702/cases/backend__service-method-vs-new-helper/baseline/run-01/grading/test-suite.log"
+  },
+  "returncode": null,
+  "schema_version": 1,
+  "security_checks_passed": false,
+  "setup_passed": false,
+  "test_suite_passed": false
+}

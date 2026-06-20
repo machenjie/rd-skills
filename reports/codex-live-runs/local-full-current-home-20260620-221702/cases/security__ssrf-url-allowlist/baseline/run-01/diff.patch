@@ -1,0 +1,185 @@
+diff --git a/app.py b/app.py
+index 4c0136b..471d7e0 100644
+--- a/app.py
++++ b/app.py
+@@ -8,8 +8,21 @@ from __future__ import annotations
+ 
+ from dataclasses import dataclass, field
+ from html.parser import HTMLParser
++from ipaddress import IPv4Address, IPv6Address, ip_address
+ from typing import Callable, Iterable
+-from urllib.parse import urljoin, urlparse
++from urllib.parse import urljoin, urlsplit, urlunsplit
++
++
++FETCH_TIMEOUT_SECONDS = 2.0
++MAX_RESPONSE_BYTES = 65536
++REDIRECT_STATUSES = {301, 302, 303, 307, 308}
++ALLOWED_HTTPS_ENDPOINTS = frozenset({("preview.example.com", 443)})
++METADATA_SERVICE_ADDRESSES = frozenset(
++    {
++        ip_address("169.254.169.254"),
++        ip_address("100.100.100.200"),
++    }
++)
+ 
+ 
+ @dataclass
+@@ -73,18 +86,111 @@ def default_resolver(host: str) -> Iterable[str]:
+ 
+ def _deny(reason: str, url: str, logger: object | None) -> PreviewResult:
+     if logger is not None and hasattr(logger, "warning"):
+-        logger.warning("preview denied reason=%s url=%s", reason, url)
++        logger.warning("preview denied reason=%s", reason)
+     return PreviewResult(
+         ok=False,
+         status_code=400,
+-        error=f"denied preview URL {url}",
++        error="preview URL is not allowed",
+         reason=reason,
+     )
+ 
+ 
+-def _host_is_allowed(host: str | None) -> bool:
+-    # Known benchmark gap: prefix matching accepts attacker-controlled hosts.
+-    return bool(host and host.startswith("preview.example.com"))
++def _host_is_allowed(host: str | None, port: int = 443) -> bool:
++    return bool(host and (host, port) in ALLOWED_HTTPS_ENDPOINTS)
++
++
++def _canonical_host(host: str | None) -> str | None:
++    if host is None:
++        return None
++
++    host = host.rstrip(".").lower()
++    if not host or ".." in host:
++        return None
++
++    try:
++        ascii_host = host.encode("idna").decode("ascii").lower()
++    except UnicodeError:
++        return None
++
++    labels = ascii_host.split(".")
++    if any(not label or len(label) > 63 for label in labels):
++        return None
++    if len(ascii_host) > 253:
++        return None
++
++    return ascii_host
++
++
++def _canonical_fetch_url(url: str) -> tuple[str | None, str | None, int | None, str | None]:
++    try:
++        parsed = urlsplit(url)
++        port = parsed.port
++    except ValueError:
++        return None, None, None, "invalid_url"
++
++    scheme = parsed.scheme.lower()
++    host = _canonical_host(parsed.hostname)
++    if port is None and scheme == "https":
++        port = 443
++
++    if parsed.username is not None or parsed.password is not None:
++        return None, None, None, "host_not_allowed"
++    if scheme != "https" or host is None or port is None or not _host_is_allowed(host, port):
++        return None, None, None, "host_not_allowed"
++
++    netloc = host if port == 443 else f"{host}:{port}"
++    return urlunsplit((scheme, netloc, parsed.path, parsed.query, "")), host, port, None
++
++
++def _resolved_address(raw_address: str) -> IPv4Address | IPv6Address | None:
++    try:
++        return ip_address(raw_address)
++    except (TypeError, ValueError):
++        return None
++
++
++def _resolved_address_is_allowed(address: IPv4Address | IPv6Address) -> bool:
++    if isinstance(address, IPv6Address) and address.ipv4_mapped is not None:
++        address = address.ipv4_mapped
++
++    if address in METADATA_SERVICE_ADDRESSES:
++        return False
++
++    return bool(
++        address.is_global
++        and not address.is_loopback
++        and not address.is_link_local
++        and not address.is_private
++        and not address.is_reserved
++        and not address.is_multicast
++        and not address.is_unspecified
++    )
++
++
++def _network_policy_denial(
++    url: str,
++    resolver: Callable[..., Iterable[str]],
++) -> tuple[str | None, str | None]:
++    canonical_url, host, _port, reason = _canonical_fetch_url(url)
++    if reason is not None:
++        return None, reason
++
++    try:
++        resolved_addresses = list(resolver(host))
++    except Exception:
++        return None, "dns_failed"
++
++    if not resolved_addresses:
++        return None, "dns_failed"
++
++    parsed_addresses = [_resolved_address(address) for address in resolved_addresses]
++    if any(address is None for address in parsed_addresses):
++        return None, "dns_failed"
++
++    if not all(_resolved_address_is_allowed(address) for address in parsed_addresses if address is not None):
++        return None, "address_not_allowed"
++
++    return canonical_url, None
+ 
+ 
+ def fetch_preview(
+@@ -95,22 +201,31 @@ def fetch_preview(
+     logger: object | None = None,
+     max_redirects: int = 3,
+ ) -> PreviewResult:
+-    parsed = urlparse(url)
+-    if parsed.scheme != "https" or not _host_is_allowed(parsed.hostname):
+-        return _deny("host_not_allowed", url, logger)
+-
+     current_url = url
+     for _attempt in range(max_redirects + 1):
+-        response = http_get(current_url, timeout_seconds=2.0, max_bytes=65536)
++        canonical_url, denial_reason = _network_policy_denial(current_url, resolver)
++        if denial_reason is not None or canonical_url is None:
++            return _deny(denial_reason or "host_not_allowed", current_url, logger)
++
++        try:
++            response = http_get(
++                canonical_url,
++                timeout_seconds=FETCH_TIMEOUT_SECONDS,
++                max_bytes=MAX_RESPONSE_BYTES,
++            )
++        except TimeoutError:
++            return _deny("fetch_timeout", current_url, logger)
++        except Exception:
++            return _deny("fetch_failed", current_url, logger)
++
+         location = response.headers.get("Location") or response.headers.get("location")
+-        if response.status_code in {301, 302, 303, 307, 308} and location:
+-            # Known benchmark gap: redirects are followed without revalidation.
+-            current_url = urljoin(current_url, location)
++        if response.status_code in REDIRECT_STATUSES and location:
++            current_url = urljoin(canonical_url, location)
+             continue
+         return PreviewResult(
+             ok=True,
+             status_code=response.status_code,
+-            title=_extract_title(response.text),
++            title=_extract_title(response.text[:MAX_RESPONSE_BYTES]),
+         )
+ 
+     return _deny("too_many_redirects", current_url, logger)

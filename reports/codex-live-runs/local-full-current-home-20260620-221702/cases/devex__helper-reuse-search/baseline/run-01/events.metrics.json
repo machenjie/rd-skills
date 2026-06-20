@@ -1,0 +1,26 @@
+{
+  "agent_message_count": 31,
+  "command_execution_count": 162,
+  "error_count": 8,
+  "event_count": 209,
+  "event_types": {
+    "item.completed": 117,
+    "item.started": 86,
+    "item.updated": 3,
+    "thread.started": 1,
+    "turn.completed": 1,
+    "turn.started": 1
+  },
+  "file_change_count": 8,
+  "parse_errors": [],
+  "plan_update_count": 0,
+  "turn_completed": 1,
+  "turn_failed": 0,
+  "turn_started": 1,
+  "usage": {
+    "cached_input_tokens": 4066560,
+    "input_tokens": 4215858,
+    "output_tokens": 27490,
+    "reasoning_output_tokens": 11331
+  }
+}

@@ -1,0 +1,9 @@
+command: /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/mcjxy/Projects/github/rd-skills/scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir /Users/mcjxy/Projects/github/rd-skills/reports/codex-live-runs/local-full-current-home-20260620-221702/cases/security__ssrf-url-allowlist/changeforge/run-01/candidate
+returncode: 0
+
+stdout:
+run-codegen-benchmarks: evaluated 1 benchmark(s).
+
+
+stderr:
+
