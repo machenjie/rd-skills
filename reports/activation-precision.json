@@ -1321,9 +1321,7 @@
         "language_surfaces": [
           "sql"
         ],
-        "product_surfaces": [
-          "search-analytics"
-        ],
+        "product_surfaces": [],
         "required_references": [
           "references/routing-rules.md",
           "references/skill-registry.md",
@@ -1334,8 +1332,6 @@
           "references/capabilities/19-module-boundary-design.md",
           "references/capabilities/105-code-clarity-maintainability.md",
           "references/capabilities/85-language-idiom-enforcement.md",
-          "references/capabilities/51-search-analytics-design.md",
-          "references/capabilities/47-indexing-query-optimization.md",
           "references/capabilities/96-sql-professional-usage.md"
         ],
         "risk_surfaces": [
@@ -1347,14 +1343,12 @@
           "module-boundary-design",
           "code-clarity-maintainability",
           "language-idiom-enforcement",
-          "search-analytics-design",
-          "indexing-query-optimization",
           "sql-professional-usage"
         ],
         "selected_domain_extensions": [],
         "selected_skills": [
-          "data-middleware-change-builder",
-          "ai-code-review-refactor"
+          "change-forge-router",
+          "change-impact-analyzer"
         ],
         "stage": "implementation-planning"
       },
@@ -1366,9 +1360,7 @@
           "sql"
         ],
         "paths": [],
-        "product_surfaces": [
-          "search-analytics"
-        ],
+        "product_surfaces": [],
         "prompt_signals": [
           "schema_or_api"
         ],
@@ -1377,9 +1369,7 @@
         ],
         "should_inject": true,
         "stage": "edit",
-        "surfaces": [
-          "search-analytics"
-        ],
+        "surfaces": [],
         "tool": ""
       },
       "deltas": {
@@ -1644,7 +1634,6 @@
     {
       "actual": {
         "language_surfaces": [
-          "sql",
           "typescript"
         ],
         "product_surfaces": [
@@ -1664,7 +1653,6 @@
           "references/capabilities/41-authentication-authorization.md",
           "references/capabilities/42-idempotency-retry-design.md",
           "references/capabilities/44-logging-error-handling.md",
-          "references/capabilities/96-sql-professional-usage.md",
           "references/capabilities/91-typescript-professional-usage.md"
         ],
         "risk_surfaces": [],
@@ -1678,7 +1666,6 @@
           "authentication-authorization",
           "idempotency-retry-design",
           "logging-error-handling",
-          "sql-professional-usage",
           "typescript-professional-usage"
         ],
         "selected_domain_extensions": [],
@@ -1693,7 +1680,6 @@
         "conditional_capabilities": [],
         "domain_extensions": [],
         "language_surfaces": [
-          "sql",
           "typescript"
         ],
         "paths": [],
@@ -1744,11 +1730,20 @@
         "language_surfaces_contains": [
           "typescript"
         ],
+        "language_surfaces_not_contains": [
+          "sql"
+        ],
         "product_surfaces_contains": [
           "backend-product"
         ],
         "product_surfaces_not_contains": [
           "frontend-product"
+        ],
+        "required_references_not_contains": [
+          "references/capabilities/96-sql-professional-usage.md"
+        ],
+        "selected_capabilities_not_contains": [
+          "sql-professional-usage"
         ],
         "selected_skills_not_contains": [
           "frontend-change-builder"
@@ -2523,8 +2518,7 @@
           "python"
         ],
         "product_surfaces": [
-          "backend-product",
-          "search-analytics"
+          "backend-product"
         ],
         "required_references": [
           "references/routing-rules.md",
@@ -2540,8 +2534,6 @@
           "references/capabilities/41-authentication-authorization.md",
           "references/capabilities/42-idempotency-retry-design.md",
           "references/capabilities/44-logging-error-handling.md",
-          "references/capabilities/51-search-analytics-design.md",
-          "references/capabilities/47-indexing-query-optimization.md",
           "references/capabilities/92-python-professional-usage.md"
         ],
         "risk_surfaces": [],
@@ -2555,16 +2547,13 @@
           "authentication-authorization",
           "idempotency-retry-design",
           "logging-error-handling",
-          "search-analytics-design",
-          "indexing-query-optimization",
           "python-professional-usage"
         ],
         "selected_domain_extensions": [],
         "selected_skills": [
           "ai-code-review-refactor",
           "quality-test-gate",
-          "backend-change-builder",
-          "data-middleware-change-builder"
+          "backend-change-builder"
         ],
         "stage": "code-review"
       },
@@ -2577,8 +2566,7 @@
         ],
         "paths": [],
         "product_surfaces": [
-          "backend-product",
-          "search-analytics"
+          "backend-product"
         ],
         "prompt_signals": [
           "review_intent",
@@ -2588,8 +2576,7 @@
         "should_inject": true,
         "stage": "review",
         "surfaces": [
-          "backend-product",
-          "search-analytics"
+          "backend-product"
         ],
         "tool": ""
       },
@@ -2625,12 +2612,17 @@
       },
       "errors": [],
       "expected": {
+        "product_surfaces_not_contains": [
+          "search-analytics"
+        ],
         "selected_capabilities_contains": [
           "code-review",
           "plan-execution-consistency"
         ],
         "selected_capabilities_not_contains": [
-          "validation-broker"
+          "validation-broker",
+          "search-analytics-design",
+          "indexing-query-optimization"
         ],
         "stage": "code-review"
       },

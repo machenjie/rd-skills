@@ -324,8 +324,14 @@ cases:
       product_surfaces_contains: [backend-product]
       product_surfaces_not_contains: [frontend-product]
       language_surfaces_contains: [typescript]
+      language_surfaces_not_contains:
+        - sql
       selected_skills_not_contains:
         - frontend-change-builder
+      selected_capabilities_not_contains:
+        - sql-professional-usage
+      required_references_not_contains:
+        - references/capabilities/96-sql-professional-usage.md
 
   - id: redis-cache-does-not-trigger-queue
     event:
@@ -423,8 +429,12 @@ cases:
       selected_capabilities_contains:
         - code-review
         - plan-execution-consistency
+      product_surfaces_not_contains:
+        - search-analytics
       selected_capabilities_not_contains:
         - validation-broker
+        - search-analytics-design
+        - indexing-query-optimization
 
   - id: test-stage-loads-validation-broker-not-implementation-structure
     event:

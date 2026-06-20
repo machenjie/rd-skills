@@ -459,7 +459,7 @@ product_surfaces:
     required_skill: data-middleware-change-builder
     default_capabilities: [message-queue-design, idempotency-retry-design]
   - surface: search-analytics
-    signals: [search, analytics, index, dashboard, freshness]
+    signals: [search, analytics, search index, dashboard, data freshness, warehouse freshness]
     required_skill: data-middleware-change-builder
     default_capabilities: [search-analytics-design, indexing-query-optimization]
   - surface: external-integration
@@ -576,7 +576,7 @@ language_surfaces:
     capability: sql-professional-usage
     stages: [implementation-planning, coding, bug-fix, code-review, refactoring, testing]
     file_extensions: [.sql]
-    signals: [sql, query, index, transaction, migration]
+    signals: [sql, SQL query, SQL index, .sql]
 
 stage_transitions:
   - from: requirement-intake

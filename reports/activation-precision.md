@@ -40,10 +40,10 @@ This generated report uses deterministic route activation fixtures. It measures 
 | `docs-api-mention-does-not-trigger-api-implementation` | `pass` | `documentation-handoff` | documentation-only | none | data-api, documentation |
 | `business-registry-does-not-trigger-skill-authoring` | `pass` | `implementation-planning` | backend-product, cache, sdk-library | none | none |
 | `sql-migration-distinct-from-query` | `pass` | `implementation-planning` | database-migration | sql | data-api, delivery |
-| `sql-query-does-not-trigger-migration` | `pass` | `implementation-planning` | search-analytics | sql | data-api |
+| `sql-query-does-not-trigger-migration` | `pass` | `implementation-planning` | none | sql | data-api |
 | `c-header-routes-cpp-only` | `pass` | `refactoring` | none | cpp | none |
 | `react-ts-frontend-not-node-backend` | `pass` | `implementation-planning` | frontend-product | typescript | none |
-| `node-ts-backend-not-react-frontend` | `pass` | `implementation-planning` | backend-product | sql, typescript | none |
+| `node-ts-backend-not-react-frontend` | `pass` | `implementation-planning` | backend-product | typescript | none |
 | `redis-cache-does-not-trigger-queue` | `pass` | `implementation-planning` | cache | python | none |
 | `kafka-queue-does-not-trigger-cache` | `pass` | `implementation-planning` | message-queue | python | none |
 | `web3-signature-does-not-trigger-webhook` | `pass` | `implementation-planning` | web3 | none | none |
@@ -51,6 +51,6 @@ This generated report uses deterministic route activation fixtures. It measures 
 | `docs-release-words-not-deployment-config` | `pass` | `documentation-handoff` | documentation-only | none | delivery, documentation |
 | `deployment-config-triggers-release` | `pass` | `release-delivery` | infrastructure-deployment, kubernetes-helm | none | delivery |
 | `refactor-stage-does-not-load-planning-conditional` | `pass` | `refactoring` | backend-product | python | none |
-| `review-stage-uses-review-conditionals-only` | `pass` | `code-review` | backend-product, search-analytics | python | none |
+| `review-stage-uses-review-conditionals-only` | `pass` | `code-review` | backend-product | python | none |
 | `test-stage-loads-validation-broker-not-implementation-structure` | `pass` | `testing` | backend-product, validation-broker | python | none |
 | `repair-stage-loads-workflow-not-planning-conditionals` | `pass` | `code-review` | backend-product, execution-trajectory | python | none |

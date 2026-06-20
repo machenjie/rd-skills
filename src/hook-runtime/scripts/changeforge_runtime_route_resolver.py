@@ -82,7 +82,7 @@ LANGUAGE_SURFACE_SIGNALS = {
     "rust": ("rust", "borrow", "lifetime", "unsafe", "cargo"),
     "cpp": ("c++", "cpp", "C ABI", "native C", "native C++", "raii", "abi", "ffi", "sanitizer"),
     "shell": ("shell", "bash", "sh", "zsh", "cli"),
-    "sql": ("sql", "query", "index", "transaction", "migration"),
+    "sql": ("sql", "SQL query", "SQL index", ".sql"),
 }
 
 PRODUCT_SURFACE_ORDER = (
@@ -201,7 +201,7 @@ PRODUCT_SURFACE_SIGNALS = {
     "database-migration": ("migration", "backfill", "rollback", "schema change", "irreversible data"),
     "cache": ("cache", "redis", "ttl", "invalidation", "stampede"),
     "message-queue": ("queue", "kafka", "consumer", "producer", "dlq", "offset", "dead letter"),
-    "search-analytics": ("search", "analytics", "index", "dashboard", "freshness"),
+    "search-analytics": ("search", "analytics", "search index", "dashboard", "data freshness", "warehouse freshness"),
     "external-integration": ("third-party", "integration", "provider", "timeout", "retry"),
     "webhook": ("webhook", "hmac", "webhook signature", "webhook replay", "webhook idempotency", "provider event"),
     "infrastructure-deployment": (
