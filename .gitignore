@@ -36,7 +36,5 @@ evals/pressure/outputs/*
 !evals/pressure/outputs/.gitkeep
 
 # Codex CLI live benchmark reports
-reports/codex-live-runs/local-20260620-195905/
-reports/codex-live-runs/local-20260620-195944/
 reports/codex-live-runs/**/_isolated-home/
 reports/codex-live-runs/**/candidate/.git/
