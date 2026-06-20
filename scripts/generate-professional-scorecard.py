@@ -31,6 +31,7 @@ EVIDENCE_LEVELS = {
     "live pass-rate": "Measured real-task success rate.",
     "token overhead": "Measured additional token cost.",
     "turn overhead": "Measured additional turn cost.",
+    "local_codex_cli_live_benchmark": "Opt-in local Codex CLI benchmark run with sanitized bounded artifacts.",
 }
 RUNTIME_GOVERNANCE_FIXTURE_SUITES = {
     "executor-adapters": "executor-adapter-protocol",
@@ -112,6 +113,9 @@ VALIDATION_COMMANDS = [
     "python3 -m unittest discover -s tests",
     "python3 scripts/validate-codegen-benchmarks.py",
     "python3 scripts/run-codegen-benchmarks.py --limit 3",
+    "python3 scripts/run-codex-live-benchmarks.py --list",
+    "python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run",
+    "python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run",
     "python3 scripts/build.py --profile recommended",
     "python3 scripts/build.py --profile full",
     "python3 scripts/build.py --profile dev",
@@ -566,6 +570,50 @@ def executor_adapter_metric_status(root: Path, metric: str) -> tuple[str, str]:
     return "not_collected", str(detail or "not collected")
 
 
+def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
+    """Return status for a published opt-in Codex CLI live benchmark summary."""
+    summary = _read_json(root / "reports" / "codex-live-benchmark-summary.json")
+    if not isinstance(summary, dict):
+        return "not_collected", "reports/codex-live-benchmark-summary.json missing or invalid"
+    required = {
+        "schema_version",
+        "generated_by",
+        "status",
+        "evidence_level",
+        "run_id",
+        "case_count",
+        "variant_count",
+        "pass_rate",
+        "security_pass_rate",
+        "average_usage",
+        "limitations",
+    }
+    missing = sorted(field for field in required if field not in summary)
+    if missing:
+        return "fail", "missing Codex live summary fields: " + ", ".join(missing)
+    if summary.get("evidence_level") != "local_codex_cli_live_benchmark":
+        return "fail", "Codex live summary evidence_level must be local_codex_cli_live_benchmark"
+    status = str(summary.get("status"))
+    if status == "collected":
+        scorecard_status = "pass"
+    elif status == "partial":
+        scorecard_status = "partial"
+    elif status == "failed":
+        scorecard_status = "fail"
+    else:
+        scorecard_status = "not_collected"
+    detail = {
+        "evidence_level": summary.get("evidence_level"),
+        "run_id": summary.get("run_id"),
+        "case_count": summary.get("case_count"),
+        "variant_count": summary.get("variant_count"),
+        "pass_rate": summary.get("pass_rate"),
+        "security_pass_rate": summary.get("security_pass_rate"),
+        "limitations": summary.get("limitations"),
+    }
+    return scorecard_status, json.dumps(detail, sort_keys=True)
+
+
 def _summary_status(name: str, value: dict[str, Any]) -> str:
     if name == "Routing coverage":
         if value.get("hidden_risks_needing_manual_review", 0) or value.get("cases_without_forbidden", 0):
@@ -807,6 +855,18 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
             )
         )
 
+    codex_live_status, codex_live_detail = codex_live_benchmark_status(root)
+    dimensions.append(
+        Dimension(
+            "Codex CLI live benchmark",
+            codex_live_status,
+            "reports/codex-live-benchmark-summary.json",
+            "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json",
+            "Run and publish an explicit opt-in Codex CLI live benchmark summary before changing this status from not_collected.",
+            codex_live_detail,
+        )
+    )
+
     example_status, example_detail = examples_status(root)
     dimensions.append(
         Dimension(
@@ -955,6 +1015,7 @@ def _evidence_levels(dimensions: list[Dimension]) -> dict[str, dict[str, str]]:
     live_pass_rate_status = _status_for_dimension(dimensions, "Executor adapter live pass-rate")
     token_overhead_status = _status_for_dimension(dimensions, "Executor adapter token overhead")
     turn_overhead_status = _status_for_dimension(dimensions, "Executor adapter turn overhead")
+    codex_live_benchmark_status_value = _status_for_dimension(dimensions, "Codex CLI live benchmark")
     return {
         level: {
             "status": _evidence_level_status(
@@ -965,6 +1026,7 @@ def _evidence_levels(dimensions: list[Dimension]) -> dict[str, dict[str, str]]:
                 live_pass_rate_status,
                 token_overhead_status,
                 turn_overhead_status,
+                codex_live_benchmark_status_value,
             ),
             "meaning": meaning,
         }
@@ -987,6 +1049,7 @@ def _evidence_level_status(
     live_pass_rate_status: str,
     token_overhead_status: str,
     turn_overhead_status: str,
+    codex_live_benchmark_status_value: str,
 ) -> str:
     if level == "structural fixture":
         return "pass"
@@ -1002,6 +1065,12 @@ def _evidence_level_status(
         return token_overhead_status if token_overhead_status in STATUSES else "not_collected"
     if level == "turn overhead":
         return turn_overhead_status if turn_overhead_status in STATUSES else "not_collected"
+    if level == "local_codex_cli_live_benchmark":
+        return (
+            codex_live_benchmark_status_value
+            if codex_live_benchmark_status_value in STATUSES
+            else "not_collected"
+        )
     return "not_collected"
 
 

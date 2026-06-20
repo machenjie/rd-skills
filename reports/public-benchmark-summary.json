@@ -9,6 +9,10 @@
       "meaning": "Sanitized bounded facts from an actual hook runtime execution.",
       "status": "not_collected"
     },
+    "local_codex_cli_live_benchmark": {
+      "meaning": "Opt-in local Codex CLI benchmark run with sanitized bounded artifacts.",
+      "status": "not_collected"
+    },
     "promoted golden case": {
       "meaning": "Human-reviewed case admitted to regression coverage.",
       "status": "pass"
@@ -193,6 +197,14 @@
       "status": "not_collected"
     },
     {
+      "command": "python3 scripts/run-codex-live-benchmarks.py --list",
+      "detail": "Codex live benchmark summary missing or invalid",
+      "evidence_level": "local_codex_cli_live_benchmark",
+      "name": "Codex CLI live benchmark",
+      "source": "reports/codex-live-benchmark-summary.json",
+      "status": "not_collected"
+    },
+    {
       "command": "python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev",
       "detail": "recommended, full, and dev marketplace indexes validate",
       "evidence_level": "structural fixture",
@@ -205,7 +217,8 @@
     "Live runtime telemetry sample",
     "Live pass-rate",
     "Token overhead",
-    "Turn overhead"
+    "Turn overhead",
+    "Codex CLI live benchmark"
   ],
   "refresh_commands": [
     "python3 scripts/eval-routing.py",
@@ -215,6 +228,9 @@
     "python3 scripts/validate-skill-efficacy-benchmarks.py",
     "python3 scripts/eval-executor-adapters.py",
     "python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks",
+    "python3 scripts/run-codex-live-benchmarks.py --list",
+    "python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run",
+    "python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run",
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
     "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",
@@ -236,7 +252,7 @@
   "schema_version": 1,
   "status_counts": {
     "fail": 0,
-    "not_collected": 4,
+    "not_collected": 5,
     "partial": 2,
     "pass": 15,
     "unknown": 0

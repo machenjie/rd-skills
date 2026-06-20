@@ -8,7 +8,7 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 - `partial`: 3
 - `fail`: 0
 - `unknown`: 0
-- `not_collected`: 4
+- `not_collected`: 5
 
 ## Evidence Levels
 
@@ -16,6 +16,7 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 | --- | --- | --- |
 | live pass-rate | `not_collected` | Measured real-task success rate. |
 | live runtime telemetry sample | `not_collected` | Sanitized bounded facts from an actual hook runtime execution. |
+| local_codex_cli_live_benchmark | `not_collected` | Opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
 | promoted golden case | `pass` | Human-reviewed case admitted to regression coverage. |
 | runtime telemetry fixture sample | `pass` | Deterministic executor-adapter fixture-derived bounded facts; not live runtime telemetry. |
 | structural fixture | `pass` | Local deterministic structure sample passed; not evidence of live task success. |
@@ -47,6 +48,7 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 - Executor adapter live pass-rate: reports/executor-adapter-eval.json
 - Executor adapter token overhead: reports/executor-adapter-eval.json
 - Executor adapter turn overhead: reports/executor-adapter-eval.json
+- Codex CLI live benchmark: reports/codex-live-benchmark-summary.json
 
 ## Repair Hints
 
@@ -66,6 +68,7 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 - `not_collected` Executor adapter live pass-rate: Collect a real measured run before changing this status from not_collected.
 - `not_collected` Executor adapter token overhead: Collect a real measured run before changing this status from not_collected.
 - `not_collected` Executor adapter turn overhead: Collect a real measured run before changing this status from not_collected.
+- `not_collected` Codex CLI live benchmark: Run and publish an explicit opt-in Codex CLI live benchmark summary before changing this status from not_collected.
 
 ## Refresh Commands
 
@@ -94,6 +97,9 @@ python3 scripts/eval-pressure-behavior.py
 python3 -m unittest discover -s tests
 python3 scripts/validate-codegen-benchmarks.py
 python3 scripts/run-codegen-benchmarks.py --limit 3
+python3 scripts/run-codex-live-benchmarks.py --list
+python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run
+python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run
 python3 scripts/build.py --profile recommended
 python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev

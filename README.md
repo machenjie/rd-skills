@@ -72,7 +72,7 @@ See [docs/USAGE.md](docs/USAGE.md) for the full usage guide, including profile s
 
 ## Professional Evidence
 
-- [docs/BENCHMARKS.md](docs/BENCHMARKS.md): explains routing, professionalism, hook, profile, install, and codegen benchmark evidence.
+- [docs/BENCHMARKS.md](docs/BENCHMARKS.md): explains routing, professionalism, hook, profile, install, codegen, and optional Codex CLI live benchmark evidence.
 - [reports/public-benchmark-summary.md](reports/public-benchmark-summary.md): generated public benchmark summary with known unknowns.
 - [docs/SCORECARD.md](docs/SCORECARD.md): documents conservative scorecard dimensions and status rules.
 - [docs/SCORECARD_DASHBOARD.md](docs/SCORECARD_DASHBOARD.md): generated human-readable scorecard dashboard.
@@ -202,6 +202,9 @@ python3 scripts/eval-pressure-behavior.py
 python3 -m unittest discover -s tests
 python3 scripts/validate-codegen-benchmarks.py
 python3 scripts/run-codegen-benchmarks.py --limit 3
+python3 scripts/run-codex-live-benchmarks.py --list
+python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run
+python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run
 python3 scripts/build.py --profile recommended
 python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
@@ -215,6 +218,10 @@ python3 scripts/validate-marketplace-index.py --profile full
 python3 scripts/validate-marketplace-index.py --profile dev
 python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
 ```
+
+Real local Codex CLI benchmark runs are opt-in. If your usable Codex auth is in
+your current local `~/.codex` login/config, use the current-home mode documented
+in [docs/BENCHMARKS.md](docs/BENCHMARKS.md).
 
 `eval-skill-professionalism.py` writes both the main eval and key foundation coverage matrix;
 `--coverage-matrix` writes only the coverage matrix reports for release checklist compatibility.

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.local/schemas/codex-live-case.schema.json",
+  "title": "Codex live benchmark case",
+  "type": "object",
+  "required": [
+    "id",
+    "category",
+    "codegen_case",
+    "enabled",
+    "variants",
+    "task_prompt",
+    "starter_repo",
+    "grading_benchmark"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+/[a-z0-9-]+$"
+    },
+    "category": {
+      "type": "string"
+    },
+    "codegen_case": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "enum": ["baseline", "changeforge"]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "task_prompt": {
+      "type": "string"
+    },
+    "starter_repo": {
+      "type": "string"
+    },
+    "grading_benchmark": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

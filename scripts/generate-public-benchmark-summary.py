@@ -11,6 +11,7 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any
 
+from codex_live_benchmark_lib import LIVE_EVIDENCE_LEVEL, public_status_from_live
 from validation_utils import EXPECTED_PROFILE_TOP_LEVEL_COUNTS
 
 
@@ -28,6 +29,7 @@ LIVE_RUNTIME_TELEMETRY_DIMENSION = "Live runtime telemetry sample"
 EXECUTOR_LIVE_PASS_RATE_DIMENSION = "Executor adapter live pass-rate"
 EXECUTOR_TOKEN_OVERHEAD_DIMENSION = "Executor adapter token overhead"
 EXECUTOR_TURN_OVERHEAD_DIMENSION = "Executor adapter turn overhead"
+CODEX_LIVE_BENCHMARK_DIMENSION = "Codex CLI live benchmark"
 HOOK_SAFETY_DIMENSION = "Hook safety"
 INSTALLATION_VALIDATION_DIMENSION = "Installation validation"
 SCORECARD_REFRESH_COMMAND = (
@@ -43,6 +45,9 @@ REFRESH_COMMANDS = [
     "python3 scripts/validate-skill-efficacy-benchmarks.py",
     "python3 scripts/eval-executor-adapters.py",
     "python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks",
+    "python3 scripts/run-codex-live-benchmarks.py --list",
+    "python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run",
+    "python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run",
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
     "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",
@@ -274,6 +279,41 @@ def _scorecard_dimension_item(
     )
 
 
+def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
+    """Return public evidence directly from the published Codex live summary."""
+    source = "reports/codex-live-benchmark-summary.json"
+    summary = _read_json(root / source)
+    if not isinstance(summary, dict):
+        return EvidenceItem(
+            CODEX_LIVE_BENCHMARK_DIMENSION,
+            "not_collected",
+            source,
+            "Codex live benchmark summary missing or invalid",
+            "python3 scripts/run-codex-live-benchmarks.py --list",
+            LIVE_EVIDENCE_LEVEL,
+        )
+    status = public_status_from_live(str(summary.get("status", "not_collected")))
+    if summary.get("evidence_level") != LIVE_EVIDENCE_LEVEL:
+        status = "fail"
+    detail = {
+        "evidence_level": summary.get("evidence_level"),
+        "run_id": summary.get("run_id"),
+        "case_count": summary.get("case_count"),
+        "variant_count": summary.get("variant_count"),
+        "pass_rate": summary.get("pass_rate"),
+        "security_pass_rate": summary.get("security_pass_rate"),
+        "limitations": summary.get("limitations"),
+    }
+    return EvidenceItem(
+        CODEX_LIVE_BENCHMARK_DIMENSION,
+        status,
+        source,
+        json.dumps(detail, sort_keys=True),
+        "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json",
+        LIVE_EVIDENCE_LEVEL,
+    )
+
+
 def _additional_status_items(root: Path, scorecard_path: Path | None = None) -> list[EvidenceItem]:
     return [
         _scorecard_dimension_item(
@@ -330,6 +370,7 @@ def _additional_status_items(root: Path, scorecard_path: Path | None = None) -> 
             scorecard_path,
             "turn overhead",
         ),
+        _codex_live_benchmark_item(root),
         _scorecard_dimension_item(root, MARKETPLACE_DIMENSION, MARKETPLACE_DIMENSION, scorecard_path),
     ]
 
@@ -403,6 +444,8 @@ def _known_unknown_name(name: str) -> str:
         EXECUTOR_TOKEN_OVERHEAD_DIMENSION: "Token overhead",
         "turn overhead": "Turn overhead",
         EXECUTOR_TURN_OVERHEAD_DIMENSION: "Turn overhead",
+        "local_codex_cli_live_benchmark": "Codex CLI live benchmark",
+        CODEX_LIVE_BENCHMARK_DIMENSION: "Codex CLI live benchmark",
     }
     return mapping.get(name, name)
 
@@ -488,6 +531,10 @@ def _scorecard_evidence_levels(root: Path, scorecard_path: Path | None) -> dict[
         "turn overhead": {
             "status": "not_collected",
             "meaning": "Measured additional turn cost.",
+        },
+        "local_codex_cli_live_benchmark": {
+            "status": "not_collected",
+            "meaning": "Opt-in local Codex CLI benchmark run with sanitized bounded artifacts.",
         },
     }
 

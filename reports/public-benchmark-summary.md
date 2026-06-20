@@ -14,7 +14,7 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 - `partial`: 2
 - `fail`: 0
 - `unknown`: 0
-- `not_collected`: 4
+- `not_collected`: 5
 
 ## Evidence Levels
 
@@ -22,6 +22,7 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 | --- | --- | --- |
 | live pass-rate | `not_collected` | Measured real-task success rate. |
 | live runtime telemetry sample | `not_collected` | Sanitized bounded facts from an actual hook runtime execution. |
+| local_codex_cli_live_benchmark | `not_collected` | Opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
 | promoted golden case | `pass` | Human-reviewed case admitted to regression coverage. |
 | runtime telemetry fixture sample | `pass` | Deterministic executor-adapter fixture-derived bounded facts; not live runtime telemetry. |
 | structural fixture | `pass` | Local deterministic structure sample passed; not evidence of live task success. |
@@ -52,6 +53,7 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 | Executor adapter live pass-rate | `not_collected` | live pass-rate | reports/professional-scorecard.json | deterministic local fixtures do not measure real-task success rate | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter token overhead | `not_collected` | token overhead | reports/professional-scorecard.json | deterministic local fixture run does not measure token overhead | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter turn overhead | `not_collected` | turn overhead | reports/professional-scorecard.json | deterministic local fixture run does not measure turn overhead | `python3 scripts/eval-executor-adapters.py` |
+| Codex CLI live benchmark | `not_collected` | local_codex_cli_live_benchmark | reports/codex-live-benchmark-summary.json | Codex live benchmark summary missing or invalid | `python3 scripts/run-codex-live-benchmarks.py --list` |
 | Marketplace index validation | `pass` | structural fixture | reports/professional-scorecard.json | recommended, full, and dev marketplace indexes validate | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` |
 
 ## Known Unknowns / Not Collected
@@ -60,6 +62,7 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 - Live pass-rate
 - Token overhead
 - Turn overhead
+- Codex CLI live benchmark
 
 ## Refresh Commands
 
@@ -71,6 +74,9 @@ python3 scripts/eval-professional-benchmarks.py
 python3 scripts/validate-skill-efficacy-benchmarks.py
 python3 scripts/eval-executor-adapters.py
 python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks
+python3 scripts/run-codex-live-benchmarks.py --list
+python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run
+python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run
 python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md

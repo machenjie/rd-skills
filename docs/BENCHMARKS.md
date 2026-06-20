@@ -17,6 +17,7 @@ ChangeForge benchmarks are release evidence, not marketing claims. They are loca
 | Executor adapter structural fixtures | Deterministic adapter fixtures and sanitized telemetry sample under `evals/executor-adapter` and `reports/`. | `python3 scripts/eval-executor-adapters.py` |
 | Activation precision benchmark | Deterministic activation fixtures for stage, skill, capability, reference, language, risk, and overroute precision against the built hook runtime. | `python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks` |
 | Codegen benchmark smoke | Codegen benchmark manifest and limited run. | `python3 scripts/validate-codegen-benchmarks.py` and `python3 scripts/run-codegen-benchmarks.py --limit 3` |
+| Codex CLI live benchmark | Explicit opt-in local Codex CLI runs over selected codegen starter repos, summarized from validated run artifacts. | `python3 scripts/run-codex-live-benchmarks.py --list` and `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
 | Professionalism regression | Baseline-aware regression check. | `python3 scripts/validate-professionalism-regression.py --strict` |
 
 ## Scorecard Generation
@@ -60,6 +61,60 @@ runtime telemetry fixture sample is bounded and sanitized, but it is not live
 runtime telemetry; live runtime telemetry, live pass-rate, token overhead, and
 turn overhead remain `not_collected` unless separately measured or collected.
 
+Codex CLI live benchmarks are optional local evidence. They are disabled by
+default because they may use local credentials, network access, model quota, and
+writable candidate repositories. Dry-run and skipped reports are valid
+diagnostics, but they are not publishable benchmark evidence.
+
+```bash
+python3 scripts/run-codex-live-benchmarks.py --list
+python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run
+python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run
+```
+
+To run a real local smoke benchmark, enable the explicit live gate:
+
+```bash
+CHANGEFORGE_ENABLE_CODEX_LIVE_BENCHMARK=1 \
+python3 scripts/run-codex-live-benchmarks.py \
+  --benchmark security/ssrf-url-allowlist \
+  --variant baseline \
+  --variant changeforge \
+  --runs 1 \
+  --profile recommended \
+  --sandbox workspace-write \
+  --out reports/codex-live-runs/local-$(date +%Y%m%d-%H%M%S)
+```
+
+The `danger-full-access` sandbox also requires
+`CHANGEFORGE_ALLOW_DANGER_FULL_ACCESS=1` or `--allow-danger-full-access`.
+
+The runner uses an isolated `HOME` and `CODEX_HOME` by default. If your usable
+Codex CLI auth and provider configuration live in your current local Codex home,
+reuse that state with an additional explicit gate:
+
+```bash
+CHANGEFORGE_ENABLE_CODEX_LIVE_BENCHMARK=1 \
+CHANGEFORGE_ALLOW_CURRENT_CODEX_HOME=1 \
+python3 scripts/run-codex-live-benchmarks.py \
+  --benchmark security/ssrf-url-allowlist \
+  --variant baseline \
+  --runs 1 \
+  --profile recommended \
+  --sandbox workspace-write \
+  --codex-home-mode current \
+  --out reports/codex-live-runs/local-$(date +%Y%m%d-%H%M%S)
+```
+
+Current Codex home mode may inherit user-level hooks, config, auth, and trust
+state. Use a controlled Codex home before publishing comparative claims.
+Only publish real run summaries after validation:
+
+```bash
+python3 scripts/generate-codex-live-summary.py --run-dir reports/codex-live-runs/<run-id> --publish
+python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json
+```
+
 ## Recommended Evidence Refresh
 
 Before publishing a scorecard, refresh the relevant evidence:
@@ -72,6 +127,9 @@ python3 scripts/eval-professional-benchmarks.py
 python3 scripts/validate-skill-efficacy-benchmarks.py
 python3 scripts/eval-executor-adapters.py
 python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks
+python3 scripts/run-codex-live-benchmarks.py --list
+python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run
+python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run
 python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/eval-professional-agent-samples.py --promoted-only --strict
@@ -112,6 +170,8 @@ Release snapshot artifacts are committed for reader context but are not guarante
 - `reports/activation-precision.md`
 - `reports/activation-precision.json`
 - `reports/runtime-telemetry-sample.json`
+- `reports/codex-live-benchmark-summary.md`
+- `reports/codex-live-benchmark-summary.json`
 
 When updating release snapshots, refresh executor adapter and activation precision evidence, rebuild all three profiles, refresh the scorecard, render the dashboard and README block, then regenerate the public benchmark summary. The public benchmark summary reuses scorecard dimensions for marketplace, activation precision, and executor adapter status so those artifacts do not disagree about generated evidence.
 

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.local/schemas/codex-live-run-manifest.schema.json",
+  "title": "Codex live benchmark run manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_by",
+    "run_id",
+    "status",
+    "dry_run",
+    "live_execution_allowed",
+    "live_execution_effective",
+    "cases",
+    "variants",
+    "runs_per_variant",
+    "sandbox",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer"
+    },
+    "generated_by": {
+      "const": "scripts/run-codex-live-benchmarks.py"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": ["not_collected", "skipped_not_opted_in", "partial", "collected", "failed"]
+    },
+    "dry_run": {
+      "type": "boolean"
+    },
+    "live_execution_allowed": {
+      "type": "boolean"
+    },
+    "live_execution_effective": {
+      "type": "boolean"
+    },
+    "cases": {
+      "type": "array"
+    },
+    "variants": {
+      "type": "array"
+    },
+    "runs_per_variant": {
+      "type": "integer"
+    },
+    "sandbox": {
+      "enum": ["read-only", "workspace-write", "danger-full-access"]
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://changeforge.local/schemas/codex-live-summary.schema.json",
+  "title": "Codex live benchmark summary",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_by",
+    "status",
+    "evidence_level",
+    "run_id",
+    "case_count",
+    "variant_count",
+    "pass_rate",
+    "security_pass_rate",
+    "average_usage",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer"
+    },
+    "generated_by": {
+      "const": "scripts/generate-codex-live-summary.py"
+    },
+    "status": {
+      "enum": ["not_collected", "skipped_not_opted_in", "partial", "collected", "failed"]
+    },
+    "evidence_level": {
+      "const": "local_codex_cli_live_benchmark"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "case_count": {
+      "type": "integer"
+    },
+    "variant_count": {
+      "type": "integer"
+    },
+    "pass_rate": {
+      "type": ["number", "string"]
+    },
+    "security_pass_rate": {
+      "type": ["number", "string"]
+    },
+    "average_usage": {
+      "type": "object"
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    }
+  }
+}

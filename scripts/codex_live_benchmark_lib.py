@@ -1,0 +1,300 @@
+#!/usr/bin/env python3
+"""Shared helpers for opt-in Codex CLI live benchmarks."""
+
+from __future__ import annotations
+
+import json
+import re
+import sys
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+from codegen_benchmark_manifest import EXPECTED_BENCHMARKS
+from validation_utils import ValidationProblem, load_yaml_file
+
+
+ROOT = Path(__file__).resolve().parents[1]
+CASES_PATH = ROOT / "evals" / "codex-live" / "cases.yaml"
+STATUSES = ("not_collected", "skipped_not_opted_in", "partial", "collected", "failed")
+PUBLIC_STATUSES = ("pass", "partial", "fail", "unknown", "not_collected")
+VARIANTS = ("baseline", "changeforge")
+PROFILES = ("recommended", "full", "dev")
+SANDBOXES = ("read-only", "workspace-write", "danger-full-access")
+LIVE_EVIDENCE_LEVEL = "local_codex_cli_live_benchmark"
+FORBIDDEN_SECRET_PATTERNS = (
+    re.compile(r"sk-(?=[A-Za-z0-9_-]{10,})(?=[A-Za-z0-9_-]*[A-Z0-9])[A-Za-z0-9_-]+"),
+    re.compile(r"CODEX_API_KEY\s*="),
+    re.compile(r"OPENAI_API_KEY\s*="),
+    re.compile(r"auth\.json"),
+    re.compile(
+        r"(?i)(api[_-]?key|access[_-]?token|bearer[_-]?token|refresh[_-]?token)\s*[:=]\s*"
+        r"(?=[A-Za-z0-9_./+=-]{20,})(?=[A-Za-z0-9_./+=-]*[A-Z0-9])[A-Za-z0-9_./+=-]+"
+    ),
+)
+
+
+@dataclass(frozen=True)
+class CodexLiveCase:
+    """One validated Codex live benchmark case."""
+
+    id: str
+    category: str
+    codegen_case: str
+    enabled: bool
+    variants: tuple[str, ...]
+    task_prompt: Path
+    starter_repo: Path
+    grading_benchmark: str
+
+
+def utc_stamp() -> str:
+    """Return a filesystem-safe UTC timestamp."""
+    return datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
+
+
+def write_json(path: Path, payload: dict[str, Any]) -> None:
+    """Write stable JSON with parent creation."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def read_json(path: Path) -> Any | None:
+    """Read JSON, returning None when the file is absent."""
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def safe_case_segment(case_id: str) -> str:
+    """Convert a case id into a single safe path segment."""
+    return case_id.replace("/", "__")
+
+
+def relpath(root: Path, path: Path) -> str:
+    """Return a stable relative path when possible."""
+    try:
+        return path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return str(path)
+
+
+def load_case_registry(path: Path = CASES_PATH, root: Path = ROOT) -> list[CodexLiveCase]:
+    """Load and validate the Codex live benchmark registry."""
+    data = load_yaml_file(path)
+    errors = validate_case_registry(data, root)
+    if errors:
+        raise ValidationProblem("; ".join(errors))
+    cases: list[CodexLiveCase] = []
+    for raw in data.get("cases", []):
+        cases.append(
+            CodexLiveCase(
+                id=str(raw["id"]),
+                category=str(raw["category"]),
+                codegen_case=str(raw["codegen_case"]),
+                enabled=bool(raw["enabled"]),
+                variants=tuple(str(variant) for variant in raw["variants"]),
+                task_prompt=(root / str(raw["task_prompt"])).resolve(),
+                starter_repo=(root / str(raw["starter_repo"])).resolve(),
+                grading_benchmark=str(raw["grading_benchmark"]),
+            )
+        )
+    return cases
+
+
+def validate_case_registry(data: Any, root: Path = ROOT) -> list[str]:
+    """Return registry validation errors without raising."""
+    errors: list[str] = []
+    if not isinstance(data, dict):
+        return ["cases.yaml must be a mapping"]
+    if data.get("schema_version") != 1:
+        errors.append("schema_version must be 1")
+    if data.get("kind") != "changeforge.codex_live_benchmark_cases":
+        errors.append("kind must be changeforge.codex_live_benchmark_cases")
+    cases = data.get("cases")
+    if not isinstance(cases, list) or not cases:
+        return [*errors, "cases must be a non-empty list"]
+
+    seen_ids: set[str] = set()
+    for index, raw in enumerate(cases):
+        prefix = f"cases[{index}]"
+        if not isinstance(raw, dict):
+            errors.append(f"{prefix}: must be a mapping")
+            continue
+        required = {
+            "id",
+            "category",
+            "codegen_case",
+            "enabled",
+            "variants",
+            "task_prompt",
+            "starter_repo",
+            "grading_benchmark",
+        }
+        missing = sorted(required - set(raw))
+        if missing:
+            errors.append(f"{prefix}: missing {', '.join(missing)}")
+            continue
+        case_id = str(raw["id"])
+        category = str(raw["category"])
+        codegen_case = str(raw["codegen_case"])
+        if case_id in seen_ids:
+            errors.append(f"{prefix}: duplicate id {case_id}")
+        seen_ids.add(case_id)
+        expected_id = f"{category}/{codegen_case}"
+        if case_id != expected_id:
+            errors.append(f"{prefix}: id must equal {expected_id}")
+        expected_cases = EXPECTED_BENCHMARKS.get(category, ())
+        if codegen_case not in expected_cases:
+            errors.append(f"{prefix}: {category}/{codegen_case} is not in codegen benchmark manifest")
+        if str(raw["grading_benchmark"]) != expected_id:
+            errors.append(f"{prefix}: grading_benchmark must equal {expected_id}")
+        variants = raw.get("variants")
+        if not isinstance(variants, list) or not variants:
+            errors.append(f"{prefix}: variants must be a non-empty list")
+        else:
+            invalid = sorted({str(variant) for variant in variants} - set(VARIANTS))
+            if invalid:
+                errors.append(f"{prefix}: invalid variants {', '.join(invalid)}")
+        if not isinstance(raw.get("enabled"), bool):
+            errors.append(f"{prefix}: enabled must be boolean")
+        for field in ("task_prompt", "starter_repo"):
+            rel = str(raw[field])
+            path = root / rel
+            if _is_external_path(rel):
+                errors.append(f"{prefix}: {field} must be repository-relative without network URLs or parent traversal")
+            elif not path.exists():
+                errors.append(f"{prefix}: {field} does not exist: {rel}")
+    return errors
+
+
+def _is_external_path(value: str) -> bool:
+    path = Path(value)
+    return path.is_absolute() or "://" in value or ".." in path.parts
+
+
+def scan_forbidden_secrets(path: Path) -> list[str]:
+    """Scan text artifacts for forbidden secret patterns."""
+    findings: list[str] = []
+    if not path.exists():
+        return findings
+    paths = [path] if path.is_file() else [item for item in path.rglob("*") if item.is_file()]
+    for item in paths:
+        try:
+            text = item.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        for pattern in FORBIDDEN_SECRET_PATTERNS:
+            if pattern.search(text):
+                findings.append(f"{relpath(ROOT, item)} matches forbidden secret pattern {pattern.pattern}")
+                break
+    return findings
+
+
+def validate_status(status: Any) -> str:
+    """Normalize a live-run status."""
+    value = str(status)
+    return value if value in STATUSES else "failed"
+
+
+def public_status_from_live(status: str) -> str:
+    """Map live benchmark status into scorecard/public status vocabulary."""
+    if status == "collected":
+        return "pass"
+    if status == "partial":
+        return "partial"
+    if status == "failed":
+        return "fail"
+    return "not_collected"
+
+
+def redact_codex_command(command: list[str]) -> list[str]:
+    """Redact command paths that could expose local run directories."""
+    redacted: list[str] = []
+    skip_next = False
+    for index, value in enumerate(command):
+        if skip_next:
+            skip_next = False
+            continue
+        if value == "--output-last-message" and index + 1 < len(command):
+            redacted.extend([value, "<final.md>"])
+            skip_next = True
+            continue
+        redacted.append(value)
+    return redacted
+
+
+def schema_required_fields(schema_name: str) -> tuple[str, ...]:
+    """Return required fields for the local schemas without a jsonschema dependency."""
+    mapping = {
+        "run-manifest": (
+            "schema_version",
+            "generated_by",
+            "run_id",
+            "status",
+            "dry_run",
+            "live_execution_allowed",
+            "live_execution_effective",
+            "cases",
+            "variants",
+            "runs_per_variant",
+            "sandbox",
+            "limitations",
+        ),
+        "case-result": (
+            "schema_version",
+            "generated_by",
+            "case_id",
+            "variant",
+            "run_index",
+            "status",
+            "paths",
+            "grading",
+            "metrics",
+            "limitations",
+        ),
+        "summary": (
+            "schema_version",
+            "generated_by",
+            "status",
+            "evidence_level",
+            "run_id",
+            "case_count",
+            "variant_count",
+            "pass_rate",
+            "security_pass_rate",
+            "average_usage",
+            "limitations",
+        ),
+    }
+    return mapping[schema_name]
+
+
+def validate_required_fields(payload: Any, schema_name: str) -> list[str]:
+    """Validate required fields and common live status constraints."""
+    if not isinstance(payload, dict):
+        return [f"{schema_name}: payload must be an object"]
+    errors = [
+        f"{schema_name}: missing required field {field}"
+        for field in schema_required_fields(schema_name)
+        if field not in payload
+    ]
+    status = payload.get("status")
+    if status is not None and status not in STATUSES:
+        errors.append(f"{schema_name}: invalid status {status}")
+    limitations = payload.get("limitations")
+    if limitations is not None and (not isinstance(limitations, list) or not limitations):
+        errors.append(f"{schema_name}: limitations must be a non-empty list")
+    if schema_name == "summary" and payload.get("evidence_level") != LIVE_EVIDENCE_LEVEL:
+        errors.append(f"{schema_name}: evidence_level must be {LIVE_EVIDENCE_LEVEL}")
+    return errors
+
+
+def print_errors(label: str, errors: list[str]) -> int:
+    """Print validation errors and return an exit status."""
+    if not errors:
+        return 0
+    for error in errors:
+        print(f"{label}: ERROR: {error}", file=sys.stderr)
+    return 1

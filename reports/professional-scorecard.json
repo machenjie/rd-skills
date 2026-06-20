@@ -137,6 +137,14 @@
       "verification_command": "python3 scripts/eval-executor-adapters.py"
     },
     {
+      "detail": "reports/codex-live-benchmark-summary.json missing or invalid",
+      "fix_hint": "Run and publish an explicit opt-in Codex CLI live benchmark summary before changing this status from not_collected.",
+      "name": "Codex CLI live benchmark",
+      "source": "reports/codex-live-benchmark-summary.json",
+      "status": "not_collected",
+      "verification_command": "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json"
+    },
+    {
       "detail": "showcase examples validate",
       "fix_hint": "Repair showcase scenario prompts, expected routes, evidence files, or routing fixture links.",
       "name": "Example coverage",
@@ -194,6 +202,10 @@
       "meaning": "Sanitized bounded facts from an actual hook runtime execution.",
       "status": "not_collected"
     },
+    "local_codex_cli_live_benchmark": {
+      "meaning": "Opt-in local Codex CLI benchmark run with sanitized bounded artifacts.",
+      "status": "not_collected"
+    },
     "promoted golden case": {
       "meaning": "Human-reviewed case admitted to regression coverage.",
       "status": "pass"
@@ -241,7 +253,7 @@
   },
   "status_summary": {
     "fail": 0,
-    "not_collected": 4,
+    "not_collected": 5,
     "partial": 3,
     "pass": 16,
     "unknown": 0
@@ -364,6 +376,21 @@
     },
     {
       "command": "python3 scripts/run-codegen-benchmarks.py --limit 3",
+      "note": "Run command directly; this scorecard does not infer pass/fail from stdout.",
+      "status": "not_collected"
+    },
+    {
+      "command": "python3 scripts/run-codex-live-benchmarks.py --list",
+      "note": "Run command directly; this scorecard does not infer pass/fail from stdout.",
+      "status": "not_collected"
+    },
+    {
+      "command": "python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run",
+      "note": "Run command directly; this scorecard does not infer pass/fail from stdout.",
+      "status": "not_collected"
+    },
+    {
+      "command": "python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run",
       "note": "Run command directly; this scorecard does not infer pass/fail from stdout.",
       "status": "not_collected"
     },

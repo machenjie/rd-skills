@@ -34,3 +34,6 @@ evals/agent-behavior/outputs/*
 # Generated pressure-behavior eval reports (working area)
 evals/pressure/outputs/*
 !evals/pressure/outputs/.gitkeep
+
+# Local Codex CLI live benchmark runs
+reports/codex-live-runs/
