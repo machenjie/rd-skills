@@ -120,7 +120,7 @@ class GeneratePublicBenchmarkSummaryTests(unittest.TestCase):
                                 "name": "Activation precision benchmark",
                                 "status": "pass",
                                 "detail": "all activation metrics pass",
-                                "verification_command": "python3 scripts/eval-activation-precision.py",
+                                "verification_command": "python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks",
                             },
                             {
                                 "name": "Runtime telemetry fixture sample",

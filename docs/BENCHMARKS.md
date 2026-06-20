@@ -15,7 +15,7 @@ ChangeForge benchmarks are release evidence, not marketing claims. They are loca
 | Installation validation | Installer/doctor validation. | `python3 scripts/validate-installation.py` |
 | Skill efficacy structural fixtures | evals/skill-efficacy | `python3 scripts/validate-skill-efficacy-benchmarks.py` |
 | Executor adapter structural fixtures | Deterministic adapter fixtures and sanitized telemetry sample under `evals/executor-adapter` and `reports/`. | `python3 scripts/eval-executor-adapters.py` |
-| Activation precision benchmark | Deterministic activation fixtures for stage, skill, capability, reference, language, risk, and overroute precision. | `python3 scripts/eval-activation-precision.py` |
+| Activation precision benchmark | Deterministic activation fixtures for stage, skill, capability, reference, language, risk, and overroute precision against the built hook runtime. | `python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks` |
 | Codegen benchmark smoke | Codegen benchmark manifest and limited run. | `python3 scripts/validate-codegen-benchmarks.py` and `python3 scripts/run-codegen-benchmarks.py --limit 3` |
 | Professionalism regression | Baseline-aware regression check. | `python3 scripts/validate-professionalism-regression.py --strict` |
 
@@ -71,7 +71,7 @@ python3 scripts/eval-skill-professionalism.py --coverage-matrix
 python3 scripts/eval-professional-benchmarks.py
 python3 scripts/validate-skill-efficacy-benchmarks.py
 python3 scripts/eval-executor-adapters.py
-python3 scripts/eval-activation-precision.py
+python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks
 python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/eval-professional-agent-samples.py --promoted-only --strict

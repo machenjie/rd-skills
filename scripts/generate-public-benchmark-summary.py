@@ -42,7 +42,7 @@ REFRESH_COMMANDS = [
     "python3 scripts/eval-professional-benchmarks.py",
     "python3 scripts/validate-skill-efficacy-benchmarks.py",
     "python3 scripts/eval-executor-adapters.py",
-    "python3 scripts/eval-activation-precision.py",
+    "python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks",
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
     "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",

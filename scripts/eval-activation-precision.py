@@ -4,27 +4,28 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any, Callable, Iterable, Mapping
 
 from validation_utils import load_yaml_file
 
 
 ROOT = Path(__file__).resolve().parents[1]
-HOOK_RUNTIME = ROOT / "src" / "hook-runtime" / "scripts"
-if str(HOOK_RUNTIME) not in sys.path:
-    sys.path.insert(0, str(HOOK_RUNTIME))
-
-from changeforge_action_classifier import classify_event  # noqa: E402
-from changeforge_runtime_route_resolver import build_active_skill_context  # noqa: E402
-
-
+SOURCE_RUNTIME_ROOT = ROOT / "src" / "hook-runtime" / "scripts"
+DEFAULT_BUILT_RUNTIME_ROOT = ROOT / "dist" / "codex" / "project" / ".codex" / "hooks"
 DEFAULT_FIXTURE_DIR = ROOT / "evals" / "activation"
 DEFAULT_REPORT_MD = ROOT / "reports" / "activation-precision.md"
 DEFAULT_REPORT_JSON = ROOT / "reports" / "activation-precision.json"
+RUNTIME_MODULE_PREFIXES = ("changeforge_",)
+RUNTIME_REQUIRED_FILES = (
+    "changeforge_action_classifier.py",
+    "changeforge_runtime_route_resolver.py",
+)
+RUNTIME_ROUTE_INDEX_NAME = "changeforge_runtime_route_index.json"
 REQUIRED_METRICS = (
     "stage_accuracy",
     "skill_precision",
@@ -39,6 +40,20 @@ REQUIRED_METRICS = (
     "risk_surface_fn_rate",
     "overroute_rate",
 )
+SET_FIELDS = (
+    "selected_skills",
+    "selected_capabilities",
+    "required_references",
+    "language_surfaces",
+    "risk_surfaces",
+    "product_surfaces",
+    "selected_domain_extensions",
+)
+STAT_FIELDS = {
+    "selected_skills",
+    "selected_capabilities",
+    "required_references",
+}
 
 
 @dataclass
@@ -65,6 +80,16 @@ class SetStats:
         return 1.0 if denominator == 0 else self.true_positive / denominator
 
 
+@dataclass(frozen=True)
+class RuntimeModules:
+    """Runtime modules loaded from either source authoring files or built hooks."""
+
+    mode: str
+    runtime_root: Path
+    classify_event: Callable[[dict], dict[str, Any]]
+    build_active_skill_context: Callable[..., dict[str, Any]]
+
+
 def _unique_strings(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
@@ -79,6 +104,53 @@ def _unique_strings(value: Any) -> list[str]:
         seen.add(item)
         out.append(item)
     return out
+
+
+def _display_path(path: Path) -> str:
+    try:
+        return path.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        return path.resolve().as_posix()
+
+
+def _runtime_root(mode: str, runtime_root: Path | None = None) -> Path:
+    if runtime_root is not None:
+        return runtime_root
+    if mode == "source":
+        return SOURCE_RUNTIME_ROOT
+    return DEFAULT_BUILT_RUNTIME_ROOT
+
+
+def _clear_runtime_modules() -> None:
+    for module_name in list(sys.modules):
+        if module_name.startswith(RUNTIME_MODULE_PREFIXES):
+            sys.modules.pop(module_name, None)
+
+
+def _load_runtime_modules(mode: str, runtime_root: Path | None = None) -> RuntimeModules:
+    root = _runtime_root(mode, runtime_root).resolve()
+    if mode not in {"source", "built"}:
+        raise ValueError(f"unsupported activation precision mode: {mode}")
+    if not root.is_dir():
+        raise FileNotFoundError(f"{root}: runtime root missing for {mode} mode")
+    missing = [name for name in RUNTIME_REQUIRED_FILES if not (root / name).is_file()]
+    if missing:
+        raise FileNotFoundError(f"{root}: runtime files missing: {', '.join(missing)}")
+    if mode == "built" and not (root / RUNTIME_ROUTE_INDEX_NAME).is_file():
+        raise FileNotFoundError(f"{root / RUNTIME_ROUTE_INDEX_NAME}: built runtime route index missing")
+
+    root_text = str(root)
+    sys.path = [path for path in sys.path if path != root_text]
+    sys.path.insert(0, root_text)
+    _clear_runtime_modules()
+    classifier = importlib.import_module("changeforge_action_classifier")
+    resolver = importlib.import_module("changeforge_runtime_route_resolver")
+    return RuntimeModules(
+        mode=mode,
+        runtime_root=root,
+        classify_event=classifier.classify_event,
+        build_active_skill_context=resolver.build_active_skill_context,
+    )
 
 
 def _case_paths(fixtures_dir: Path) -> list[Path]:
@@ -119,13 +191,13 @@ def _expected(case: Mapping[str, Any]) -> dict[str, Any]:
     return dict(raw_expected) if isinstance(raw_expected, Mapping) else {}
 
 
-def _actual_for_case(case: Mapping[str, Any]) -> dict[str, Any]:
+def _actual_for_case(case: Mapping[str, Any], runtime_modules: RuntimeModules) -> dict[str, Any]:
     event = case.get("event")
     event = dict(event) if isinstance(event, Mapping) else {}
     state = case.get("state")
     state = dict(state) if isinstance(state, Mapping) else {}
-    classification = classify_event(event)
-    context = build_active_skill_context(
+    classification = runtime_modules.classify_event(event)
+    context = runtime_modules.build_active_skill_context(
         runtime=str(case.get("runtime") or "codex"),
         stage=str(classification.get("stage") or ""),
         surfaces=_unique_strings(classification.get("product_surfaces") or []),
@@ -141,6 +213,7 @@ def _actual_for_case(case: Mapping[str, Any]) -> dict[str, Any]:
         "language_surfaces": _unique_strings(context.get("language_surfaces")),
         "risk_surfaces": _unique_strings(context.get("risk_surfaces")),
         "product_surfaces": _unique_strings(context.get("product_surfaces")),
+        "selected_domain_extensions": _unique_strings(context.get("selected_domain_extensions")),
         "classification": classification,
     }
 
@@ -158,12 +231,89 @@ def _rate(numerator: int, denominator: int) -> float:
     return 0.0 if denominator == 0 else round(numerator / denominator, 6)
 
 
-def evaluate_activation_precision(fixtures_dir: Path = DEFAULT_FIXTURE_DIR) -> dict[str, Any]:
+def _empty_summary() -> dict[str, Any]:
+    return {
+        "case_count": 0,
+        "passed": 0,
+        "failed": 0,
+        "stage_accuracy": 0.0,
+        "skill_precision": 0.0,
+        "skill_recall": 0.0,
+        "capability_precision": 0.0,
+        "capability_recall": 0.0,
+        "reference_precision": 0.0,
+        "reference_recall": 0.0,
+        "language_fp_rate": 0.0,
+        "language_fn_rate": 0.0,
+        "risk_surface_fp_rate": 0.0,
+        "risk_surface_fn_rate": 0.0,
+        "overroute_rate": 0.0,
+        "metric_definitions": _metric_definitions(),
+    }
+
+
+def _metric_definitions() -> dict[str, str]:
+    return {
+        "precision_recall": "Set precision/recall aggregate true positives, false positives, and false negatives across exact-set cases.",
+        "language_fp_rate": "Share of cases with at least one unexpected language surface.",
+        "language_fn_rate": "Share of cases with at least one missing expected language surface.",
+        "risk_surface_fp_rate": "Share of cases with at least one unexpected risk surface.",
+        "risk_surface_fn_rate": "Share of cases with at least one missing expected risk surface.",
+        "overroute_rate": "Share of cases with any unexpected exact-set value or any forbidden *_not_contains value.",
+    }
+
+
+def _claim_boundary(mode: str) -> str:
+    if mode == "built":
+        return (
+            "Deterministic activation fixtures validate the built hook runtime resolver and its "
+            "co-located generated route index for stage, skill, capability, reference, language, "
+            "risk, and overroute cases. They are primary local runtime evidence, not live agent "
+            "pass-rate or empirical performance proof."
+        )
+    return (
+        "Deterministic activation fixtures validate source authoring resolver behavior as a smoke "
+        "check. Source mode is not primary runtime evidence because installed hooks load the built "
+        "resolver with a co-located generated route index."
+    )
+
+
+def evaluate_activation_precision(
+    fixtures_dir: Path = DEFAULT_FIXTURE_DIR,
+    *,
+    mode: str = "built",
+    runtime_root: Path | None = None,
+) -> dict[str, Any]:
     """Evaluate activation precision fixtures and return a machine-readable report."""
     fixture_cases, fixture_errors = _load_cases(fixtures_dir)
+    try:
+        runtime_modules = _load_runtime_modules(mode, runtime_root)
+    except Exception as exc:
+        resolved_root = _runtime_root(mode, runtime_root)
+        return {
+            "schema_version": 1,
+            "generated_by": "scripts/eval-activation-precision.py",
+            "mode": mode,
+            "runtime_root": _display_path(resolved_root),
+            "runtime_index": (
+                _display_path(resolved_root / RUNTIME_ROUTE_INDEX_NAME)
+                if mode == "built"
+                else None
+            ),
+            "claim_boundary": _claim_boundary(mode),
+            "status": "fail",
+            "summary": _empty_summary(),
+            "errors": [str(exc), *fixture_errors],
+            "cases": [],
+        }
     skill_stats = SetStats()
     capability_stats = SetStats()
     reference_stats = SetStats()
+    stats_by_field = {
+        "selected_skills": skill_stats,
+        "selected_capabilities": capability_stats,
+        "required_references": reference_stats,
+    }
     total_cases = len(fixture_cases)
     stage_hits = 0
     language_fp_cases = 0
@@ -177,7 +327,7 @@ def evaluate_activation_precision(fixtures_dir: Path = DEFAULT_FIXTURE_DIR) -> d
     for case in fixture_cases:
         case_id = str(case.get("id") or "unnamed-case")
         expected = _expected(case)
-        actual = _actual_for_case(case)
+        actual = _actual_for_case(case, runtime_modules)
         case_errors: list[str] = []
 
         expected_stage = str(expected.get("stage") or "")
@@ -188,30 +338,32 @@ def evaluate_activation_precision(fixtures_dir: Path = DEFAULT_FIXTURE_DIR) -> d
             case_errors.append(f"stage expected {expected_stage!r}, got {actual['stage']!r}")
 
         deltas: dict[str, dict[str, list[str]]] = {}
-        for field, stats in (
-            ("selected_skills", skill_stats),
-            ("selected_capabilities", capability_stats),
-            ("required_references", reference_stats),
-        ):
-            expected_values = _unique_strings(expected.get(field))
+        for field in SET_FIELDS:
+            exact_expected = field in expected
+            expected_values = _unique_strings(expected.get(field)) if exact_expected else []
             actual_values = _unique_strings(actual.get(field))
-            stats.add(expected_values, actual_values)
-            delta = _set_delta(expected_values, actual_values)
+            if exact_expected and field in STAT_FIELDS:
+                stats_by_field[field].add(expected_values, actual_values)
+            delta = _set_delta(expected_values, actual_values) if exact_expected else {"missing": [], "extra": []}
+            contains_missing = sorted(
+                set(_unique_strings(expected.get(f"{field}_contains"))) - set(actual_values)
+            )
+            forbidden_present = sorted(
+                set(_unique_strings(expected.get(f"{field}_not_contains"))) & set(actual_values)
+            )
+            if contains_missing:
+                delta["missing_contains"] = contains_missing
+            if forbidden_present:
+                delta["forbidden"] = forbidden_present
             deltas[field] = delta
             if delta["missing"]:
                 case_errors.append(f"{field} missing: {', '.join(delta['missing'])}")
             if delta["extra"]:
                 case_errors.append(f"{field} extra: {', '.join(delta['extra'])}")
-
-        for field in ("language_surfaces", "risk_surfaces", "product_surfaces"):
-            expected_values = _unique_strings(expected.get(field))
-            actual_values = _unique_strings(actual.get(field))
-            delta = _set_delta(expected_values, actual_values)
-            deltas[field] = delta
-            if delta["missing"]:
-                case_errors.append(f"{field} missing: {', '.join(delta['missing'])}")
-            if delta["extra"]:
-                case_errors.append(f"{field} extra: {', '.join(delta['extra'])}")
+            if contains_missing:
+                case_errors.append(f"{field} required by contains missing: {', '.join(contains_missing)}")
+            if forbidden_present:
+                case_errors.append(f"{field} forbidden by not_contains present: {', '.join(forbidden_present)}")
 
         if deltas["language_surfaces"]["extra"]:
             language_fp_cases += 1
@@ -231,8 +383,9 @@ def evaluate_activation_precision(fixtures_dir: Path = DEFAULT_FIXTURE_DIR) -> d
                 "language_surfaces",
                 "risk_surfaces",
                 "product_surfaces",
+                "selected_domain_extensions",
             )
-        ):
+        ) or any(deltas[field].get("forbidden") for field in SET_FIELDS):
             overroute_cases += 1
 
         if case_errors:
@@ -267,14 +420,7 @@ def evaluate_activation_precision(fixtures_dir: Path = DEFAULT_FIXTURE_DIR) -> d
         "risk_surface_fp_rate": _rate(risk_fp_cases, total_cases),
         "risk_surface_fn_rate": _rate(risk_fn_cases, total_cases),
         "overroute_rate": _rate(overroute_cases, total_cases),
-        "metric_definitions": {
-            "precision_recall": "Set precision/recall aggregate true positives, false positives, and false negatives across all cases.",
-            "language_fp_rate": "Share of cases with at least one unexpected language surface.",
-            "language_fn_rate": "Share of cases with at least one missing expected language surface.",
-            "risk_surface_fp_rate": "Share of cases with at least one unexpected risk surface.",
-            "risk_surface_fn_rate": "Share of cases with at least one missing expected risk surface.",
-            "overroute_rate": "Share of cases with any unexpected skill, capability, reference, product surface, language surface, or risk surface.",
-        },
+        "metric_definitions": _metric_definitions(),
     }
     missing_metrics = [metric for metric in REQUIRED_METRICS if metric not in summary]
     if missing_metrics:
@@ -284,11 +430,14 @@ def evaluate_activation_precision(fixtures_dir: Path = DEFAULT_FIXTURE_DIR) -> d
     return {
         "schema_version": 1,
         "generated_by": "scripts/eval-activation-precision.py",
-        "claim_boundary": (
-            "Deterministic activation fixtures validate route precision/recall for selected stage, "
-            "skill, capability, reference, language, risk, and overroute cases. They are not live "
-            "agent pass-rate or empirical performance proof."
+        "mode": mode,
+        "runtime_root": _display_path(runtime_modules.runtime_root),
+        "runtime_index": (
+            _display_path(runtime_modules.runtime_root / RUNTIME_ROUTE_INDEX_NAME)
+            if mode == "built"
+            else None
         ),
+        "claim_boundary": _claim_boundary(mode),
         "status": status,
         "summary": summary,
         "errors": errors,
@@ -307,6 +456,8 @@ def render_markdown(payload: Mapping[str, Any]) -> str:
         "## Summary",
         "",
         f"- Status: `{payload['status']}`",
+        f"- Mode: `{payload.get('mode', 'unknown')}`",
+        f"- Runtime root: `{payload.get('runtime_root', 'unknown')}`",
         f"- Cases: {summary['case_count']}",
         f"- Passed: {summary['passed']}",
         f"- Failed: {summary['failed']}",
@@ -344,11 +495,21 @@ def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint for writing activation precision reports."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--fixtures-dir", default=str(DEFAULT_FIXTURE_DIR))
+    parser.add_argument("--mode", choices=("built", "source"), default="built")
+    parser.add_argument(
+        "--runtime-root",
+        default=None,
+        help="Runtime hook directory to import; defaults to dist/codex/project/.codex/hooks for built mode.",
+    )
     parser.add_argument("--out", default=str(DEFAULT_REPORT_MD))
     parser.add_argument("--json-out", default=str(DEFAULT_REPORT_JSON))
     args = parser.parse_args(argv)
 
-    payload = evaluate_activation_precision(Path(args.fixtures_dir))
+    payload = evaluate_activation_precision(
+        Path(args.fixtures_dir),
+        mode=args.mode,
+        runtime_root=Path(args.runtime_root) if args.runtime_root else None,
+    )
     out = Path(args.out)
     json_out = Path(args.json_out)
     out.parent.mkdir(parents=True, exist_ok=True)

@@ -22,7 +22,6 @@ cases:
         - language-idiom-enforcement
         - testability-seam-design
         - dependency-wiring-lifecycle
-        - minimal-correct-implementation
         - repository-graph-analysis
         - service-business-logic
         - authentication-authorization
@@ -41,7 +40,6 @@ cases:
         - references/capabilities/85-language-idiom-enforcement.md
         - references/capabilities/107-testability-seam-design.md
         - references/capabilities/108-dependency-wiring-lifecycle.md
-        - references/capabilities/117-minimal-correct-implementation.md
         - references/capabilities/124-repository-graph-analysis.md
         - references/capabilities/38-service-business-logic.md
         - references/capabilities/41-authentication-authorization.md
@@ -67,7 +65,6 @@ cases:
         - module-boundary-design
         - code-clarity-maintainability
         - language-idiom-enforcement
-        - agent-workflow-state-machine
         - page-component-decomposition
         - state-management-design
         - form-validation-design
@@ -83,7 +80,6 @@ cases:
         - references/capabilities/19-module-boundary-design.md
         - references/capabilities/105-code-clarity-maintainability.md
         - references/capabilities/85-language-idiom-enforcement.md
-        - references/capabilities/119-agent-workflow-state-machine.md
         - references/capabilities/31-page-component-decomposition.md
         - references/capabilities/33-state-management-design.md
         - references/capabilities/34-form-validation-design.md
@@ -229,3 +225,226 @@ cases:
         - references/capabilities/85-language-idiom-enforcement.md
         - references/capabilities/55-authentication-security.md
         - references/capabilities/52-threat-modeling.md
+
+  - id: frontend-ui-state-does-not-trigger-agent-workflow
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update src/components/ProfileCard.tsx disabled save button state.
+    expected:
+      stage: implementation-planning
+      product_surfaces_contains: [frontend-product]
+      language_surfaces_contains: [typescript]
+      selected_capabilities_contains:
+        - state-management-design
+      selected_capabilities_not_contains:
+        - agent-workflow-state-machine
+      required_references_not_contains:
+        - references/capabilities/119-agent-workflow-state-machine.md
+
+  - id: docs-api-mention-does-not-trigger-api-implementation
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update docs/API.md to mention the orders API response examples only.
+    expected:
+      stage: documentation-handoff
+      product_surfaces_contains: [documentation-only]
+      product_surfaces_not_contains: [api-contract]
+      selected_skills_not_contains:
+        - data-api-contract-changer
+      selected_capabilities_not_contains:
+        - api-contract-design
+        - dto-schema-design
+
+  - id: business-registry-does-not-trigger-skill-authoring
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update service registry and package registry cache behavior.
+    expected:
+      stage: implementation-planning
+      product_surfaces_not_contains: [skill-authoring]
+      selected_capabilities_not_contains:
+        - skill-authoring-expert
+
+  - id: sql-migration-distinct-from-query
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Add migration SQL in db/migrations/20260620_add_order_status.sql with rollback notes.
+    expected:
+      stage: implementation-planning
+      product_surfaces_contains: [database-migration]
+      product_surfaces_not_contains: [search-analytics]
+      language_surfaces_contains: [sql]
+      selected_capabilities_contains:
+        - data-migration-design
+        - release-rollback
+
+  - id: sql-query-does-not-trigger-migration
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update src/reports/orders_query.sql query for index usage.
+    expected:
+      stage: implementation-planning
+      product_surfaces_not_contains: [database-migration]
+      language_surfaces_contains: [sql]
+      selected_capabilities_not_contains:
+        - data-migration-design
+        - release-rollback
+
+  - id: c-header-routes-cpp-only
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update include/socket_pool.h RAII cleanup boundary.
+    expected:
+      stage: refactoring
+      language_surfaces_contains: [cpp]
+      selected_capabilities_contains:
+        - cpp-professional-usage
+      selected_capabilities_not_contains:
+        - go-professional-usage
+        - rust-professional-usage
+
+  - id: react-ts-frontend-not-node-backend
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update src/components/ProfileCard.ts button state for React form.
+    expected:
+      stage: implementation-planning
+      product_surfaces_contains: [frontend-product]
+      product_surfaces_not_contains: [backend-product]
+      language_surfaces_contains: [typescript]
+      selected_skills_not_contains:
+        - backend-change-builder
+
+  - id: node-ts-backend-not-react-frontend
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update src/server/orderHandler.ts Node service transaction handling.
+    expected:
+      stage: implementation-planning
+      product_surfaces_contains: [backend-product]
+      product_surfaces_not_contains: [frontend-product]
+      language_surfaces_contains: [typescript]
+      selected_skills_not_contains:
+        - frontend-change-builder
+
+  - id: redis-cache-does-not-trigger-queue
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update src/cache/redis_store.py Redis TTL invalidation behavior.
+    expected:
+      stage: implementation-planning
+      product_surfaces_contains: [cache]
+      product_surfaces_not_contains: [message-queue]
+      selected_capabilities_contains:
+        - cache-design
+      selected_capabilities_not_contains:
+        - message-queue-design
+
+  - id: kafka-queue-does-not-trigger-cache
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update src/queue/kafka_consumer.py Kafka DLQ offset handling.
+    expected:
+      stage: implementation-planning
+      product_surfaces_contains: [message-queue]
+      product_surfaces_not_contains: [cache]
+      selected_capabilities_contains:
+        - message-queue-design
+      selected_capabilities_not_contains:
+        - cache-design
+
+  - id: web3-signature-does-not-trigger-webhook
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update Web3 wallet EIP-712 signature nonce handling.
+    expected:
+      stage: implementation-planning
+      product_surfaces_contains: [web3]
+      product_surfaces_not_contains: [webhook]
+      selected_domain_extensions_contains:
+        - web3-product-extension
+      selected_skills_not_contains:
+        - integration-change-builder
+
+  - id: webhook-signature-does-not-trigger-web3
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Review webhook signature verification and replay protection.
+    expected:
+      stage: code-review
+      product_surfaces_contains: [webhook]
+      product_surfaces_not_contains: [web3]
+      selected_domain_extensions_not_contains:
+        - web3-product-extension
+
+  - id: docs-release-words-not-deployment-config
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update docs/RELEASE.md with deploy checklist wording only.
+    expected:
+      stage: documentation-handoff
+      product_surfaces_contains: [documentation-only]
+      product_surfaces_not_contains:
+        - infrastructure-deployment
+        - kubernetes-helm
+      selected_capabilities_not_contains:
+        - agent-tool-permission-sandbox
+
+  - id: deployment-config-triggers-release
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update deploy/chart/values.yaml deployment rollout config.
+    expected:
+      stage: release-delivery
+      product_surfaces_contains:
+        - infrastructure-deployment
+        - kubernetes-helm
+      selected_capabilities_contains:
+        - kubernetes-gateway
+        - agent-tool-permission-sandbox
+
+  - id: refactor-stage-does-not-load-planning-conditional
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Refactor src/services/order_service.py after repository graph analysis.
+    expected:
+      stage: refactoring
+      selected_capabilities_contains:
+        - refactoring
+      selected_capabilities_not_contains:
+        - repository-graph-analysis
+
+  - id: review-stage-uses-review-conditionals-only
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Review src/services/order_service.py validation freshness and repair loop.
+    expected:
+      stage: code-review
+      selected_capabilities_contains:
+        - code-review
+        - plan-execution-consistency
+      selected_capabilities_not_contains:
+        - validation-broker
+
+  - id: test-stage-loads-validation-broker-not-implementation-structure
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Test src/services/order_service.py stale validation without outcome handling.
+    expected:
+      stage: testing
+      product_surfaces_contains: [validation-broker]
+      selected_capabilities_contains:
+        - validation-broker
+      selected_capabilities_not_contains:
+        - implementation-structure-design
+
+  - id: repair-stage-loads-workflow-not-planning-conditionals
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Fix src/services/order_service.py repair without re-review flow.
+    expected:
+      stage: code-review
+      selected_capabilities_contains:
+        - agent-workflow-state-machine
+      selected_capabilities_not_contains:
+        - repository-graph-analysis

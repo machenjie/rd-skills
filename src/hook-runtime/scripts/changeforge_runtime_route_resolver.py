@@ -533,6 +533,22 @@ STAGE_CONDITIONAL_CAPABILITIES = {
 }
 
 CAPABILITY_TRIGGERS: dict[str, tuple[str, ...]] = {
+    "agent-workflow-state-machine": (
+        "agent workflow state machine",
+        "current stage",
+        "next stage",
+        "legal transition",
+        "repair re-review",
+        "validation freshness",
+        "stage manifest",
+    ),
+    "minimal-correct-implementation": (
+        "minimal correct",
+        "smallest correct",
+        "simplest",
+        "avoid overengineering",
+        "delete shrink",
+    ),
     "validation-broker": (
         "validation broker",
         "validation command selection",
@@ -801,7 +817,7 @@ def detect_product_surfaces(paths: list[str], command: str = "", text: str = "")
     if _is_skill_authoring_evidence(paths, evidence):
         return ["skill-authoring"]
 
-    if (_docs_only(paths) or _text_docs_only(evidence)) and not _matches_any(evidence, (r"\bapi\b", r"\bsecurity\b", r"\bmigration\b")):
+    if _docs_only(paths) or _text_docs_only(evidence):
         return ["documentation-only"]
 
     for surface in PRODUCT_SURFACE_ORDER:

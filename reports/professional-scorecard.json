@@ -89,12 +89,12 @@
       "verification_command": "python3 scripts/eval-executor-adapters.py"
     },
     {
-      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/eval-activation-precision.py\", \"summary\": {\"capability_precision\": 1.0, \"capability_recall\": 1.0, \"case_count\": 6, \"failed\": 0, \"language_fn_rate\": 0.0, \"language_fp_rate\": 0.0, \"metric_definitions\": {\"language_fn_rate\": \"Share of cases with at least one missing expected language surface.\", \"language_fp_rate\": \"Share of cases with at least one unexpected language surface.\", \"overroute_rate\": \"Share of cases with any unexpected skill, capability, reference, product surface, language surface, or risk surface.\", \"precision_recall\": \"Set precision/recall aggregate true positives, false positives, and false negatives across all cases.\", \"risk_surface_fn_rate\": \"Share of cases with at least one missing expected risk surface.\", \"risk_surface_fp_rate\": \"Share of cases with at least one unexpected risk surface.\"}, \"overroute_rate\": 0.0, \"passed\": 6, \"reference_precision\": 1.0, \"reference_recall\": 1.0, \"risk_surface_fn_rate\": 0.0, \"risk_surface_fp_rate\": 0.0, \"skill_precision\": 1.0, \"skill_recall\": 1.0, \"stage_accuracy\": 1.0}}",
+      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/eval-activation-precision.py\", \"summary\": {\"capability_precision\": 1.0, \"capability_recall\": 1.0, \"case_count\": 24, \"failed\": 0, \"language_fn_rate\": 0.0, \"language_fp_rate\": 0.0, \"metric_definitions\": {\"language_fn_rate\": \"Share of cases with at least one missing expected language surface.\", \"language_fp_rate\": \"Share of cases with at least one unexpected language surface.\", \"overroute_rate\": \"Share of cases with any unexpected exact-set value or any forbidden *_not_contains value.\", \"precision_recall\": \"Set precision/recall aggregate true positives, false positives, and false negatives across exact-set cases.\", \"risk_surface_fn_rate\": \"Share of cases with at least one missing expected risk surface.\", \"risk_surface_fp_rate\": \"Share of cases with at least one unexpected risk surface.\"}, \"overroute_rate\": 0.0, \"passed\": 24, \"reference_precision\": 1.0, \"reference_recall\": 1.0, \"risk_surface_fn_rate\": 0.0, \"risk_surface_fp_rate\": 0.0, \"skill_precision\": 1.0, \"skill_recall\": 1.0, \"stage_accuracy\": 1.0}}",
       "fix_hint": "Repair stage/skill/capability/reference/language/risk fixture expectations or resolver precision until all activation metrics pass.",
       "name": "Activation precision benchmark",
       "source": "evals/activation and reports/activation-precision.json",
       "status": "pass",
-      "verification_command": "python3 scripts/eval-activation-precision.py"
+      "verification_command": "python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks"
     },
     {
       "detail": "{\"degraded_event_count\": 4, \"event_count\": 20, \"evidence_level\": \"runtime telemetry fixture sample\", \"privacy_redaction_count\": 9, \"runtime\": \"mixed-fixture-runtime-sample\", \"sample_kind\": \"runtime_telemetry_fixture_sample\", \"source\": \"deterministic-fixture-bounded-facts\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
@@ -288,7 +288,7 @@
       "status": "not_collected"
     },
     {
-      "command": "python3 scripts/eval-activation-precision.py",
+      "command": "python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks",
       "note": "Run command directly; this scorecard does not infer pass/fail from stdout.",
       "status": "not_collected"
     },

@@ -96,7 +96,7 @@ VALIDATION_COMMANDS = [
     "python3 scripts/validate-skill-content-size.py",
     "python3 scripts/validate-skill-efficacy-benchmarks.py",
     "python3 scripts/eval-executor-adapters.py",
-    "python3 scripts/eval-activation-precision.py",
+    "python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks",
     "python3 scripts/audit-skill-content.py",
     "python3 scripts/eval-routing.py",
     "python3 scripts/eval-agent-behavior.py",
@@ -450,6 +450,10 @@ def activation_precision_status(root: Path) -> tuple[str, str]:
         return status, detail
     report = _read_json(root / "reports" / "activation-precision.json")
     summary = report.get("summary") if isinstance(report, dict) else {}
+    if report.get("mode") != "built":
+        return "fail", "activation precision report must be generated in built runtime mode"
+    if not report.get("runtime_index"):
+        return "fail", "activation precision report missing built runtime route index path"
     required_metrics = {
         "stage_accuracy",
         "skill_precision",
@@ -757,7 +761,7 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
             "Activation precision benchmark",
             activation_status,
             "evals/activation and reports/activation-precision.json",
-            "python3 scripts/eval-activation-precision.py",
+            "python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks",
             "Repair stage/skill/capability/reference/language/risk fixture expectations or resolver precision until all activation metrics pass.",
             activation_detail,
         )

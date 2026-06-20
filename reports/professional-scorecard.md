@@ -37,7 +37,7 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 | Skill efficacy structural fixtures | `pass` | evals/skill-efficacy and scripts/validate-skill-efficacy-benchmarks.py | `python3 scripts/validate-skill-efficacy-benchmarks.py` |
 | Runtime governance structural fixtures | `pass` | evals/executor-adapters, evals/repository-intelligence, evals/project-memory, evals/validation-broker, evals/trajectory | `python3 scripts/validate-professional-routing-coverage.py` |
 | Executor adapter structural fixtures | `pass` | evals/executor-adapter and reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
-| Activation precision benchmark | `pass` | evals/activation and reports/activation-precision.json | `python3 scripts/eval-activation-precision.py` |
+| Activation precision benchmark | `pass` | evals/activation and reports/activation-precision.json | `python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks` |
 | Runtime telemetry fixture sample | `pass` | reports/runtime-telemetry-sample.json | `python3 scripts/eval-executor-adapters.py` |
 | Live runtime telemetry sample | `not_collected` | reports/live-runtime-telemetry-sample.json | `manual live runtime collection with sanitized bounded facts` |
 | Executor adapter live pass-rate | `not_collected` | reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |

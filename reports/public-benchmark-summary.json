@@ -145,8 +145,8 @@
       "status": "pass"
     },
     {
-      "command": "python3 scripts/eval-activation-precision.py",
-      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/eval-activation-precision.py\", \"summary\": {\"capability_precision\": 1.0, \"capability_recall\": 1.0, \"case_count\": 6, \"failed\": 0, \"language_fn_rate\": 0.0, \"language_fp_rate\": 0.0, \"metric_definitions\": {\"language_fn_rate\": \"Share of cases with at least one missing expected language surface.\", \"language_fp_rate\": \"Share of cases with at least one unexpected language surface.\", \"overroute_rate\": \"Share of cases with any unexpected skill, capability, reference, product surface, language surface, or risk surface.\", \"precision_recall\": \"Set precision/recall aggregate true positives, false positives, and false negatives across all cases.\", \"risk_surface_fn_rate\": \"Share of cases with at least one missing expected risk surface.\", \"risk_surface_fp_rate\": \"Share of cases with at least one unexpected risk surface.\"}, \"overroute_rate\": 0.0, \"passed\": 6, \"reference_precision\": 1.0, \"reference_recall\": 1.0, \"risk_surface_fn_rate\": 0.0, \"risk_surface_fp_rate\": 0.0, \"skill_precision\": 1.0, \"skill_recall\": 1.0, \"stage_accuracy\": 1.0}}",
+      "command": "python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks",
+      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/eval-activation-precision.py\", \"summary\": {\"capability_precision\": 1.0, \"capability_recall\": 1.0, \"case_count\": 24, \"failed\": 0, \"language_fn_rate\": 0.0, \"language_fp_rate\": 0.0, \"metric_definitions\": {\"language_fn_rate\": \"Share of cases with at least one missing expected language surface.\", \"language_fp_rate\": \"Share of cases with at least one unexpected language surface.\", \"overroute_rate\": \"Share of cases with any unexpected exact-set value or any forbidden *_not_contains value.\", \"precision_recall\": \"Set precision/recall aggregate true positives, false positives, and false negatives across exact-set cases.\", \"risk_surface_fn_rate\": \"Share of cases with at least one missing expected risk surface.\", \"risk_surface_fp_rate\": \"Share of cases with at least one unexpected risk surface.\"}, \"overroute_rate\": 0.0, \"passed\": 24, \"reference_precision\": 1.0, \"reference_recall\": 1.0, \"risk_surface_fn_rate\": 0.0, \"risk_surface_fp_rate\": 0.0, \"skill_precision\": 1.0, \"skill_recall\": 1.0, \"stage_accuracy\": 1.0}}",
       "evidence_level": "structural fixture",
       "name": "Activation precision benchmark",
       "source": "reports/professional-scorecard.json",
@@ -214,7 +214,7 @@
     "python3 scripts/eval-professional-benchmarks.py",
     "python3 scripts/validate-skill-efficacy-benchmarks.py",
     "python3 scripts/eval-executor-adapters.py",
-    "python3 scripts/eval-activation-precision.py",
+    "python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks",
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
     "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",

@@ -1010,6 +1010,8 @@ capabilities:
     status: implemented
     used_by: [quality-test-gate, backend-change-builder, frontend-change-builder, integration-change-builder, data-middleware-change-builder, ai-code-review-refactor]
     triggers:
+      - testability seam planning
+      - testability seam
       - testability seam public behavior boundary test seam dependency injection fake stub mock spy characterization test fixture ownership test data builder private helper not exported deterministic clock randomness UUID external IO
     risk_notes: [Poor seams force private-helper tests over-mock internals create flaky tests and make external dependencies uncontrollable]
     expected_outputs: [Testability Seam Plan with public behavior boundary seam map test double decision fixture ownership deterministic controls private-helper non-export test split flaky mitigation and rejected shortcuts]
@@ -1020,6 +1022,8 @@ capabilities:
     status: implemented
     used_by: [backend-change-builder, integration-change-builder, data-middleware-change-builder, reliability-observability-gate, architecture-impact-reviewer, ai-code-review-refactor, quality-test-gate]
     triggers:
+      - dependency wiring lifecycle
+      - dependency wiring lifecycle checks
       - dependency wiring lifecycle composition root constructor injection factory provider service locator lifecycle scope singleton reusable client pool startup validation shutdown cleanup test override circular dependency configuration driven wiring
     risk_notes: [Unclear dependency ownership causes per-operation clients service locators global mutable state circular graphs resource leaks and untestable wiring]
     expected_outputs: [Dependency Wiring Plan with composition root dependency graph lifecycle scope owners shutdown test override cycle check service locator decision client pool lifecycle config binding and residual risk]
@@ -1193,6 +1197,8 @@ capabilities:
     status: implemented
     used_by: [change-forge-router, change-impact-analyzer, architecture-impact-reviewer, task-dag-planner, quality-test-gate, ai-code-review-refactor, change-documentation-gate, agent-execution-discipline]
     triggers:
+      - repository graph analysis
+      - repository graph
       - repo graph symbol graph import graph call graph reference graph test graph ownership graph generated artifact graph context pack source of truth unknown freshness drift
       - repository intelligence graph stale context pack anti context bloat generated dist do not edit affected tests owner graph
     risk_notes: [Repository graph output can become stale or bloated and generated artifacts can be edited instead of their source of truth]

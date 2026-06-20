@@ -29,12 +29,21 @@ def _load_module():
 
 
 class EvalActivationPrecisionTests(unittest.TestCase):
-    def test_default_fixture_passes_with_required_metrics(self) -> None:
+    def test_default_fixture_passes_with_built_runtime_and_required_metrics(self) -> None:
         module = _load_module()
-        payload = module.evaluate_activation_precision(ROOT / "evals" / "activation")
+        payload = module.evaluate_activation_precision(
+            ROOT / "evals" / "activation",
+            mode="built",
+            runtime_root=ROOT / "dist" / "codex" / "project" / ".codex" / "hooks",
+        )
         summary = payload["summary"]
 
         self.assertEqual(payload["status"], "pass")
+        self.assertEqual(payload["mode"], "built")
+        self.assertEqual(
+            payload["runtime_index"],
+            "dist/codex/project/.codex/hooks/changeforge_runtime_route_index.json",
+        )
         for metric in module.REQUIRED_METRICS:
             self.assertIn(metric, summary)
         self.assertEqual(summary["stage_accuracy"], 1.0)
@@ -77,6 +86,33 @@ class EvalActivationPrecisionTests(unittest.TestCase):
         self.assertGreater(payload["summary"]["overroute_rate"], 0.0)
         self.assertTrue(any("extra" in error for error in payload["errors"]))
 
+    def test_not_contains_assertion_fails_when_forbidden_value_is_selected(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture_dir = Path(tmp)
+            (fixture_dir / "cases.yaml").write_text(
+                "---\n"
+                "cases:\n"
+                "  - id: forbidden-sentinel\n"
+                "    event:\n"
+                "      hook_event_name: UserPromptSubmit\n"
+                "      prompt: Update src/components/ProfileCard.tsx disabled save button state.\n"
+                "    expected:\n"
+                "      stage: implementation-planning\n"
+                "      selected_capabilities_not_contains:\n"
+                "        - state-management-design\n",
+                encoding="utf-8",
+            )
+            payload = module.evaluate_activation_precision(
+                fixture_dir,
+                mode="built",
+                runtime_root=ROOT / "dist" / "codex" / "project" / ".codex" / "hooks",
+            )
+
+        self.assertEqual(payload["status"], "fail")
+        self.assertGreater(payload["summary"]["overroute_rate"], 0.0)
+        self.assertTrue(any("forbidden by not_contains present" in error for error in payload["errors"]))
+
     def test_cli_writes_markdown_and_json(self) -> None:
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:
@@ -86,6 +122,10 @@ class EvalActivationPrecisionTests(unittest.TestCase):
                 [
                     "--fixtures-dir",
                     str(ROOT / "evals" / "activation"),
+                    "--mode",
+                    "built",
+                    "--runtime-root",
+                    str(ROOT / "dist" / "codex" / "project" / ".codex" / "hooks"),
                     "--out",
                     str(md_path),
                     "--json-out",
@@ -96,7 +136,10 @@ class EvalActivationPrecisionTests(unittest.TestCase):
             self.assertEqual(result, 0)
             payload = json.loads(json_path.read_text(encoding="utf-8"))
             self.assertEqual(payload["status"], "pass")
-            self.assertIn("# Activation Precision Evaluation", md_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["mode"], "built")
+            markdown = md_path.read_text(encoding="utf-8")
+            self.assertIn("# Activation Precision Evaluation", markdown)
+            self.assertIn("- Mode: `built`", markdown)
 
 
 if __name__ == "__main__":

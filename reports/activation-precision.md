@@ -5,8 +5,10 @@ This generated report uses deterministic route activation fixtures. It measures 
 ## Summary
 
 - Status: `pass`
-- Cases: 6
-- Passed: 6
+- Mode: `built`
+- Runtime root: `dist/codex/project/.codex/hooks`
+- Cases: 24
+- Passed: 24
 - Failed: 0
 
 | Metric | Value |
@@ -34,3 +36,21 @@ This generated report uses deterministic route activation fixtures. It measures 
 | `backend-security-risk` | `pass` | `implementation-planning` | backend-product | python | security |
 | `docs-release-handoff` | `pass` | `documentation-handoff` | documentation-only | none | delivery, documentation |
 | `web3-wallet-no-webhook` | `pass` | `implementation-planning` | web3 | none | none |
+| `frontend-ui-state-does-not-trigger-agent-workflow` | `pass` | `implementation-planning` | frontend-product | typescript | none |
+| `docs-api-mention-does-not-trigger-api-implementation` | `pass` | `documentation-handoff` | documentation-only | none | data-api, documentation |
+| `business-registry-does-not-trigger-skill-authoring` | `pass` | `implementation-planning` | backend-product, cache, sdk-library | none | none |
+| `sql-migration-distinct-from-query` | `pass` | `implementation-planning` | database-migration | sql | data-api, delivery |
+| `sql-query-does-not-trigger-migration` | `pass` | `implementation-planning` | search-analytics | sql | data-api |
+| `c-header-routes-cpp-only` | `pass` | `refactoring` | none | cpp | none |
+| `react-ts-frontend-not-node-backend` | `pass` | `implementation-planning` | frontend-product | typescript | none |
+| `node-ts-backend-not-react-frontend` | `pass` | `implementation-planning` | backend-product | sql, typescript | none |
+| `redis-cache-does-not-trigger-queue` | `pass` | `implementation-planning` | cache | python | none |
+| `kafka-queue-does-not-trigger-cache` | `pass` | `implementation-planning` | message-queue | python | none |
+| `web3-signature-does-not-trigger-webhook` | `pass` | `implementation-planning` | web3 | none | none |
+| `webhook-signature-does-not-trigger-web3` | `pass` | `code-review` | webhook | none | none |
+| `docs-release-words-not-deployment-config` | `pass` | `documentation-handoff` | documentation-only | none | delivery, documentation |
+| `deployment-config-triggers-release` | `pass` | `release-delivery` | infrastructure-deployment, kubernetes-helm | none | delivery |
+| `refactor-stage-does-not-load-planning-conditional` | `pass` | `refactoring` | backend-product | python | none |
+| `review-stage-uses-review-conditionals-only` | `pass` | `code-review` | backend-product, search-analytics | python | none |
+| `test-stage-loads-validation-broker-not-implementation-structure` | `pass` | `testing` | backend-product, validation-broker | python | none |
+| `repair-stage-loads-workflow-not-planning-conditionals` | `pass` | `code-review` | backend-product, execution-trajectory | python | none |
