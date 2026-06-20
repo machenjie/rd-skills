@@ -2388,7 +2388,7 @@
     "status": "pass",
     "suite_failures": [],
     "telemetry_sample": {
-      "detail": "sanitized fixture-derived bounded telemetry sample",
+      "detail": "sanitized fixture-derived bounded telemetry fixture sample",
       "status": "generated"
     },
     "token_overhead": {

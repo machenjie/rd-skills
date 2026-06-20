@@ -18,6 +18,7 @@ from changeforge_common import (
 )
 from changeforge_normalized_event import NormalizedEvent
 from changeforge_runtime_route_resolver import (
+    detect_conditional_capabilities,
     detect_domain_extensions,
     detect_language_surfaces,
     detect_product_surfaces,
@@ -159,6 +160,7 @@ def _classify_event_dict(event: dict) -> dict[str, Any]:
     language_surfaces = detect_language_surfaces(paths, command, text)
     risk_surfaces = detect_risk_surfaces(paths, command, text)
     domain_extensions = detect_domain_extensions(paths, command, text)
+    conditional_capabilities = detect_conditional_capabilities(paths, command, text)
     prompt_signals = _prompt_signals(text)
     return {
         "stage": stage,
@@ -167,6 +169,7 @@ def _classify_event_dict(event: dict) -> dict[str, Any]:
         "language_surfaces": language_surfaces,
         "risk_surfaces": risk_surfaces,
         "domain_extensions": domain_extensions,
+        "conditional_capabilities": conditional_capabilities,
         "prompt_signals": prompt_signals,
         "paths": paths,
         "tool": tool,

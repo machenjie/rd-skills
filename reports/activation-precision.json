@@ -1,0 +1,862 @@
+{
+  "cases": [
+    {
+      "actual": {
+        "language_surfaces": [
+          "python"
+        ],
+        "product_surfaces": [
+          "backend-product"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/118-repository-context-map.md",
+          "references/capabilities/101-implementation-structure-design.md",
+          "references/capabilities/19-module-boundary-design.md",
+          "references/capabilities/105-code-clarity-maintainability.md",
+          "references/capabilities/85-language-idiom-enforcement.md",
+          "references/capabilities/107-testability-seam-design.md",
+          "references/capabilities/108-dependency-wiring-lifecycle.md",
+          "references/capabilities/117-minimal-correct-implementation.md",
+          "references/capabilities/124-repository-graph-analysis.md",
+          "references/capabilities/38-service-business-logic.md",
+          "references/capabilities/41-authentication-authorization.md",
+          "references/capabilities/42-idempotency-retry-design.md",
+          "references/capabilities/44-logging-error-handling.md",
+          "references/capabilities/92-python-professional-usage.md"
+        ],
+        "risk_surfaces": [],
+        "selected_capabilities": [
+          "repository-context-map",
+          "implementation-structure-design",
+          "module-boundary-design",
+          "code-clarity-maintainability",
+          "language-idiom-enforcement",
+          "testability-seam-design",
+          "dependency-wiring-lifecycle",
+          "minimal-correct-implementation",
+          "repository-graph-analysis",
+          "service-business-logic",
+          "authentication-authorization",
+          "idempotency-retry-design",
+          "logging-error-handling",
+          "python-professional-usage"
+        ],
+        "selected_skills": [
+          "backend-change-builder",
+          "ai-code-review-refactor"
+        ],
+        "stage": "implementation-planning"
+      },
+      "classification": {
+        "command_program": "",
+        "conditional_capabilities": [
+          "dependency-wiring-lifecycle",
+          "minimal-correct-implementation",
+          "testability-seam-design",
+          "repository-graph-analysis"
+        ],
+        "domain_extensions": [],
+        "language_surfaces": [
+          "python"
+        ],
+        "paths": [],
+        "product_surfaces": [
+          "backend-product"
+        ],
+        "prompt_signals": [],
+        "risk_surfaces": [],
+        "should_inject": true,
+        "stage": "edit",
+        "surfaces": [
+          "backend-product"
+        ],
+        "tool": ""
+      },
+      "deltas": {
+        "language_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "product_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "required_references": {
+          "extra": [],
+          "missing": []
+        },
+        "risk_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_capabilities": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_skills": {
+          "extra": [],
+          "missing": []
+        }
+      },
+      "errors": [],
+      "expected": {
+        "language_surfaces": [
+          "python"
+        ],
+        "product_surfaces": [
+          "backend-product"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/118-repository-context-map.md",
+          "references/capabilities/101-implementation-structure-design.md",
+          "references/capabilities/19-module-boundary-design.md",
+          "references/capabilities/105-code-clarity-maintainability.md",
+          "references/capabilities/85-language-idiom-enforcement.md",
+          "references/capabilities/107-testability-seam-design.md",
+          "references/capabilities/108-dependency-wiring-lifecycle.md",
+          "references/capabilities/117-minimal-correct-implementation.md",
+          "references/capabilities/124-repository-graph-analysis.md",
+          "references/capabilities/38-service-business-logic.md",
+          "references/capabilities/41-authentication-authorization.md",
+          "references/capabilities/42-idempotency-retry-design.md",
+          "references/capabilities/44-logging-error-handling.md",
+          "references/capabilities/92-python-professional-usage.md"
+        ],
+        "risk_surfaces": [],
+        "selected_capabilities": [
+          "repository-context-map",
+          "implementation-structure-design",
+          "module-boundary-design",
+          "code-clarity-maintainability",
+          "language-idiom-enforcement",
+          "testability-seam-design",
+          "dependency-wiring-lifecycle",
+          "minimal-correct-implementation",
+          "repository-graph-analysis",
+          "service-business-logic",
+          "authentication-authorization",
+          "idempotency-retry-design",
+          "logging-error-handling",
+          "python-professional-usage"
+        ],
+        "selected_skills": [
+          "backend-change-builder",
+          "ai-code-review-refactor"
+        ],
+        "stage": "implementation-planning"
+      },
+      "id": "backend-conditional-planning",
+      "path": "evals/activation/cases.yaml",
+      "status": "pass"
+    },
+    {
+      "actual": {
+        "language_surfaces": [
+          "typescript"
+        ],
+        "product_surfaces": [
+          "frontend-product"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/118-repository-context-map.md",
+          "references/capabilities/101-implementation-structure-design.md",
+          "references/capabilities/19-module-boundary-design.md",
+          "references/capabilities/105-code-clarity-maintainability.md",
+          "references/capabilities/85-language-idiom-enforcement.md",
+          "references/capabilities/119-agent-workflow-state-machine.md",
+          "references/capabilities/31-page-component-decomposition.md",
+          "references/capabilities/33-state-management-design.md",
+          "references/capabilities/34-form-validation-design.md",
+          "references/capabilities/35-frontend-api-integration.md",
+          "references/capabilities/91-typescript-professional-usage.md"
+        ],
+        "risk_surfaces": [],
+        "selected_capabilities": [
+          "repository-context-map",
+          "implementation-structure-design",
+          "module-boundary-design",
+          "code-clarity-maintainability",
+          "language-idiom-enforcement",
+          "agent-workflow-state-machine",
+          "page-component-decomposition",
+          "state-management-design",
+          "form-validation-design",
+          "frontend-api-integration",
+          "typescript-professional-usage"
+        ],
+        "selected_skills": [
+          "frontend-change-builder",
+          "ai-code-review-refactor"
+        ],
+        "stage": "implementation-planning"
+      },
+      "classification": {
+        "command_program": "",
+        "conditional_capabilities": [
+          "agent-workflow-state-machine"
+        ],
+        "domain_extensions": [],
+        "language_surfaces": [
+          "typescript"
+        ],
+        "paths": [],
+        "product_surfaces": [
+          "frontend-product"
+        ],
+        "prompt_signals": [],
+        "risk_surfaces": [],
+        "should_inject": true,
+        "stage": "edit",
+        "surfaces": [
+          "frontend-product"
+        ],
+        "tool": ""
+      },
+      "deltas": {
+        "language_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "product_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "required_references": {
+          "extra": [],
+          "missing": []
+        },
+        "risk_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_capabilities": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_skills": {
+          "extra": [],
+          "missing": []
+        }
+      },
+      "errors": [],
+      "expected": {
+        "language_surfaces": [
+          "typescript"
+        ],
+        "product_surfaces": [
+          "frontend-product"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/118-repository-context-map.md",
+          "references/capabilities/101-implementation-structure-design.md",
+          "references/capabilities/19-module-boundary-design.md",
+          "references/capabilities/105-code-clarity-maintainability.md",
+          "references/capabilities/85-language-idiom-enforcement.md",
+          "references/capabilities/119-agent-workflow-state-machine.md",
+          "references/capabilities/31-page-component-decomposition.md",
+          "references/capabilities/33-state-management-design.md",
+          "references/capabilities/34-form-validation-design.md",
+          "references/capabilities/35-frontend-api-integration.md",
+          "references/capabilities/91-typescript-professional-usage.md"
+        ],
+        "risk_surfaces": [],
+        "selected_capabilities": [
+          "repository-context-map",
+          "implementation-structure-design",
+          "module-boundary-design",
+          "code-clarity-maintainability",
+          "language-idiom-enforcement",
+          "agent-workflow-state-machine",
+          "page-component-decomposition",
+          "state-management-design",
+          "form-validation-design",
+          "frontend-api-integration",
+          "typescript-professional-usage"
+        ],
+        "selected_skills": [
+          "frontend-change-builder",
+          "ai-code-review-refactor"
+        ],
+        "stage": "implementation-planning"
+      },
+      "id": "frontend-tsx-no-backend",
+      "path": "evals/activation/cases.yaml",
+      "status": "pass"
+    },
+    {
+      "actual": {
+        "language_surfaces": [
+          "python"
+        ],
+        "product_surfaces": [
+          "external-integration",
+          "webhook"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/78-code-review.md",
+          "references/capabilities/122-plan-execution-consistency.md",
+          "references/capabilities/101-implementation-structure-design.md",
+          "references/capabilities/105-code-clarity-maintainability.md",
+          "references/capabilities/85-language-idiom-enforcement.md",
+          "references/capabilities/68-degradation-circuit-breaking.md",
+          "references/capabilities/42-idempotency-retry-design.md",
+          "references/capabilities/55-authentication-security.md",
+          "references/capabilities/92-python-professional-usage.md"
+        ],
+        "risk_surfaces": [],
+        "selected_capabilities": [
+          "code-review",
+          "plan-execution-consistency",
+          "implementation-structure-design",
+          "code-clarity-maintainability",
+          "language-idiom-enforcement",
+          "degradation-circuit-breaking",
+          "idempotency-retry-design",
+          "authentication-security",
+          "python-professional-usage"
+        ],
+        "selected_skills": [
+          "ai-code-review-refactor",
+          "quality-test-gate",
+          "integration-change-builder"
+        ],
+        "stage": "code-review"
+      },
+      "classification": {
+        "command_program": "",
+        "conditional_capabilities": [
+          "integration-testing"
+        ],
+        "domain_extensions": [],
+        "language_surfaces": [
+          "python"
+        ],
+        "paths": [],
+        "product_surfaces": [
+          "external-integration",
+          "webhook"
+        ],
+        "prompt_signals": [
+          "review_intent"
+        ],
+        "risk_surfaces": [],
+        "should_inject": true,
+        "stage": "review",
+        "surfaces": [
+          "external-integration",
+          "webhook"
+        ],
+        "tool": ""
+      },
+      "deltas": {
+        "language_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "product_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "required_references": {
+          "extra": [],
+          "missing": []
+        },
+        "risk_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_capabilities": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_skills": {
+          "extra": [],
+          "missing": []
+        }
+      },
+      "errors": [],
+      "expected": {
+        "language_surfaces": [
+          "python"
+        ],
+        "product_surfaces": [
+          "external-integration",
+          "webhook"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/78-code-review.md",
+          "references/capabilities/122-plan-execution-consistency.md",
+          "references/capabilities/101-implementation-structure-design.md",
+          "references/capabilities/105-code-clarity-maintainability.md",
+          "references/capabilities/85-language-idiom-enforcement.md",
+          "references/capabilities/68-degradation-circuit-breaking.md",
+          "references/capabilities/42-idempotency-retry-design.md",
+          "references/capabilities/55-authentication-security.md",
+          "references/capabilities/92-python-professional-usage.md"
+        ],
+        "risk_surfaces": [],
+        "selected_capabilities": [
+          "code-review",
+          "plan-execution-consistency",
+          "implementation-structure-design",
+          "code-clarity-maintainability",
+          "language-idiom-enforcement",
+          "degradation-circuit-breaking",
+          "idempotency-retry-design",
+          "authentication-security",
+          "python-professional-usage"
+        ],
+        "selected_skills": [
+          "ai-code-review-refactor",
+          "quality-test-gate",
+          "integration-change-builder"
+        ],
+        "stage": "code-review"
+      },
+      "id": "webhook-review-no-web3",
+      "path": "evals/activation/cases.yaml",
+      "status": "pass"
+    },
+    {
+      "actual": {
+        "language_surfaces": [
+          "python"
+        ],
+        "product_surfaces": [
+          "backend-product"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/118-repository-context-map.md",
+          "references/capabilities/101-implementation-structure-design.md",
+          "references/capabilities/19-module-boundary-design.md",
+          "references/capabilities/105-code-clarity-maintainability.md",
+          "references/capabilities/85-language-idiom-enforcement.md",
+          "references/capabilities/38-service-business-logic.md",
+          "references/capabilities/41-authentication-authorization.md",
+          "references/capabilities/42-idempotency-retry-design.md",
+          "references/capabilities/44-logging-error-handling.md",
+          "references/capabilities/92-python-professional-usage.md",
+          "references/capabilities/52-threat-modeling.md"
+        ],
+        "risk_surfaces": [
+          "security"
+        ],
+        "selected_capabilities": [
+          "repository-context-map",
+          "implementation-structure-design",
+          "module-boundary-design",
+          "code-clarity-maintainability",
+          "language-idiom-enforcement",
+          "service-business-logic",
+          "authentication-authorization",
+          "idempotency-retry-design",
+          "logging-error-handling",
+          "python-professional-usage",
+          "threat-modeling"
+        ],
+        "selected_skills": [
+          "backend-change-builder",
+          "security-privacy-gate"
+        ],
+        "stage": "implementation-planning"
+      },
+      "classification": {
+        "command_program": "",
+        "conditional_capabilities": [],
+        "domain_extensions": [],
+        "language_surfaces": [
+          "python"
+        ],
+        "paths": [],
+        "product_surfaces": [
+          "backend-product"
+        ],
+        "prompt_signals": [
+          "security_or_permission"
+        ],
+        "risk_surfaces": [
+          "security"
+        ],
+        "should_inject": true,
+        "stage": "edit",
+        "surfaces": [
+          "backend-product"
+        ],
+        "tool": ""
+      },
+      "deltas": {
+        "language_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "product_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "required_references": {
+          "extra": [],
+          "missing": []
+        },
+        "risk_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_capabilities": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_skills": {
+          "extra": [],
+          "missing": []
+        }
+      },
+      "errors": [],
+      "expected": {
+        "language_surfaces": [
+          "python"
+        ],
+        "product_surfaces": [
+          "backend-product"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/118-repository-context-map.md",
+          "references/capabilities/101-implementation-structure-design.md",
+          "references/capabilities/19-module-boundary-design.md",
+          "references/capabilities/105-code-clarity-maintainability.md",
+          "references/capabilities/85-language-idiom-enforcement.md",
+          "references/capabilities/38-service-business-logic.md",
+          "references/capabilities/41-authentication-authorization.md",
+          "references/capabilities/42-idempotency-retry-design.md",
+          "references/capabilities/44-logging-error-handling.md",
+          "references/capabilities/92-python-professional-usage.md",
+          "references/capabilities/52-threat-modeling.md"
+        ],
+        "risk_surfaces": [
+          "security"
+        ],
+        "selected_capabilities": [
+          "repository-context-map",
+          "implementation-structure-design",
+          "module-boundary-design",
+          "code-clarity-maintainability",
+          "language-idiom-enforcement",
+          "service-business-logic",
+          "authentication-authorization",
+          "idempotency-retry-design",
+          "logging-error-handling",
+          "python-professional-usage",
+          "threat-modeling"
+        ],
+        "selected_skills": [
+          "backend-change-builder",
+          "security-privacy-gate"
+        ],
+        "stage": "implementation-planning"
+      },
+      "id": "backend-security-risk",
+      "path": "evals/activation/cases.yaml",
+      "status": "pass"
+    },
+    {
+      "actual": {
+        "language_surfaces": [],
+        "product_surfaces": [
+          "documentation-only"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/119-agent-workflow-state-machine.md",
+          "references/capabilities/122-plan-execution-consistency.md",
+          "references/capabilities/80-documentation-generation.md",
+          "references/capabilities/102-agent-execution-discipline.md"
+        ],
+        "risk_surfaces": [
+          "delivery",
+          "documentation"
+        ],
+        "selected_capabilities": [
+          "agent-workflow-state-machine",
+          "plan-execution-consistency",
+          "documentation-generation",
+          "agent-execution-discipline"
+        ],
+        "selected_skills": [
+          "change-documentation-gate",
+          "change-forge-router",
+          "delivery-release-gate"
+        ],
+        "stage": "documentation-handoff"
+      },
+      "classification": {
+        "command_program": "",
+        "conditional_capabilities": [],
+        "domain_extensions": [],
+        "language_surfaces": [],
+        "paths": [],
+        "product_surfaces": [
+          "documentation-only"
+        ],
+        "prompt_signals": [
+          "release_intent"
+        ],
+        "risk_surfaces": [
+          "delivery",
+          "documentation"
+        ],
+        "should_inject": true,
+        "stage": "edit",
+        "surfaces": [
+          "documentation-only"
+        ],
+        "tool": ""
+      },
+      "deltas": {
+        "language_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "product_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "required_references": {
+          "extra": [],
+          "missing": []
+        },
+        "risk_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_capabilities": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_skills": {
+          "extra": [],
+          "missing": []
+        }
+      },
+      "errors": [],
+      "expected": {
+        "language_surfaces": [],
+        "product_surfaces": [
+          "documentation-only"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/119-agent-workflow-state-machine.md",
+          "references/capabilities/122-plan-execution-consistency.md",
+          "references/capabilities/80-documentation-generation.md",
+          "references/capabilities/102-agent-execution-discipline.md"
+        ],
+        "risk_surfaces": [
+          "delivery",
+          "documentation"
+        ],
+        "selected_capabilities": [
+          "agent-workflow-state-machine",
+          "plan-execution-consistency",
+          "documentation-generation",
+          "agent-execution-discipline"
+        ],
+        "selected_skills": [
+          "change-documentation-gate",
+          "change-forge-router",
+          "delivery-release-gate"
+        ],
+        "stage": "documentation-handoff"
+      },
+      "id": "docs-release-handoff",
+      "path": "evals/activation/cases.yaml",
+      "status": "pass"
+    },
+    {
+      "actual": {
+        "language_surfaces": [],
+        "product_surfaces": [
+          "web3"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/118-repository-context-map.md",
+          "references/capabilities/101-implementation-structure-design.md",
+          "references/capabilities/19-module-boundary-design.md",
+          "references/capabilities/105-code-clarity-maintainability.md",
+          "references/capabilities/85-language-idiom-enforcement.md",
+          "references/capabilities/55-authentication-security.md",
+          "references/capabilities/52-threat-modeling.md"
+        ],
+        "risk_surfaces": [],
+        "selected_capabilities": [
+          "repository-context-map",
+          "implementation-structure-design",
+          "module-boundary-design",
+          "code-clarity-maintainability",
+          "language-idiom-enforcement",
+          "authentication-security",
+          "threat-modeling"
+        ],
+        "selected_skills": [
+          "security-privacy-gate",
+          "quality-test-gate"
+        ],
+        "stage": "implementation-planning"
+      },
+      "classification": {
+        "command_program": "",
+        "conditional_capabilities": [],
+        "domain_extensions": [
+          "web3-product-extension"
+        ],
+        "language_surfaces": [],
+        "paths": [],
+        "product_surfaces": [
+          "web3"
+        ],
+        "prompt_signals": [],
+        "risk_surfaces": [],
+        "should_inject": true,
+        "stage": "edit",
+        "surfaces": [
+          "web3"
+        ],
+        "tool": ""
+      },
+      "deltas": {
+        "language_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "product_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "required_references": {
+          "extra": [],
+          "missing": []
+        },
+        "risk_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_capabilities": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_skills": {
+          "extra": [],
+          "missing": []
+        }
+      },
+      "errors": [],
+      "expected": {
+        "language_surfaces": [],
+        "product_surfaces": [
+          "web3"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/118-repository-context-map.md",
+          "references/capabilities/101-implementation-structure-design.md",
+          "references/capabilities/19-module-boundary-design.md",
+          "references/capabilities/105-code-clarity-maintainability.md",
+          "references/capabilities/85-language-idiom-enforcement.md",
+          "references/capabilities/55-authentication-security.md",
+          "references/capabilities/52-threat-modeling.md"
+        ],
+        "risk_surfaces": [],
+        "selected_capabilities": [
+          "repository-context-map",
+          "implementation-structure-design",
+          "module-boundary-design",
+          "code-clarity-maintainability",
+          "language-idiom-enforcement",
+          "authentication-security",
+          "threat-modeling"
+        ],
+        "selected_skills": [
+          "security-privacy-gate",
+          "quality-test-gate"
+        ],
+        "stage": "implementation-planning"
+      },
+      "id": "web3-wallet-no-webhook",
+      "path": "evals/activation/cases.yaml",
+      "status": "pass"
+    }
+  ],
+  "claim_boundary": "Deterministic activation fixtures validate route precision/recall for selected stage, skill, capability, reference, language, risk, and overroute cases. They are not live agent pass-rate or empirical performance proof.",
+  "errors": [],
+  "generated_by": "scripts/eval-activation-precision.py",
+  "schema_version": 1,
+  "status": "pass",
+  "summary": {
+    "capability_precision": 1.0,
+    "capability_recall": 1.0,
+    "case_count": 6,
+    "failed": 0,
+    "language_fn_rate": 0.0,
+    "language_fp_rate": 0.0,
+    "metric_definitions": {
+      "language_fn_rate": "Share of cases with at least one missing expected language surface.",
+      "language_fp_rate": "Share of cases with at least one unexpected language surface.",
+      "overroute_rate": "Share of cases with any unexpected skill, capability, reference, product surface, language surface, or risk surface.",
+      "precision_recall": "Set precision/recall aggregate true positives, false positives, and false negatives across all cases.",
+      "risk_surface_fn_rate": "Share of cases with at least one missing expected risk surface.",
+      "risk_surface_fp_rate": "Share of cases with at least one unexpected risk surface."
+    },
+    "overroute_rate": 0.0,
+    "passed": 6,
+    "reference_precision": 1.0,
+    "reference_recall": 1.0,
+    "risk_surface_fn_rate": 0.0,
+    "risk_surface_fp_rate": 0.0,
+    "skill_precision": 1.0,
+    "skill_recall": 1.0,
+    "stage_accuracy": 1.0
+  }
+}

@@ -1,0 +1,231 @@
+---
+schema_version: 1
+kind: changeforge.activation_precision_fixture
+cases:
+  - id: backend-conditional-planning
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update src/services/order_service.py implementation with repository graph analysis, dependency wiring lifecycle checks, and testability seam planning.
+    expected:
+      stage: implementation-planning
+      product_surfaces: [backend-product]
+      language_surfaces: [python]
+      risk_surfaces: []
+      selected_skills:
+        - backend-change-builder
+        - ai-code-review-refactor
+      selected_capabilities:
+        - repository-context-map
+        - implementation-structure-design
+        - module-boundary-design
+        - code-clarity-maintainability
+        - language-idiom-enforcement
+        - testability-seam-design
+        - dependency-wiring-lifecycle
+        - minimal-correct-implementation
+        - repository-graph-analysis
+        - service-business-logic
+        - authentication-authorization
+        - idempotency-retry-design
+        - logging-error-handling
+        - python-professional-usage
+      required_references:
+        - references/routing-rules.md
+        - references/skill-registry.md
+        - references/capability-index.md
+        - references/domain-extension-index.md
+        - references/capabilities/118-repository-context-map.md
+        - references/capabilities/101-implementation-structure-design.md
+        - references/capabilities/19-module-boundary-design.md
+        - references/capabilities/105-code-clarity-maintainability.md
+        - references/capabilities/85-language-idiom-enforcement.md
+        - references/capabilities/107-testability-seam-design.md
+        - references/capabilities/108-dependency-wiring-lifecycle.md
+        - references/capabilities/117-minimal-correct-implementation.md
+        - references/capabilities/124-repository-graph-analysis.md
+        - references/capabilities/38-service-business-logic.md
+        - references/capabilities/41-authentication-authorization.md
+        - references/capabilities/42-idempotency-retry-design.md
+        - references/capabilities/44-logging-error-handling.md
+        - references/capabilities/92-python-professional-usage.md
+
+  - id: frontend-tsx-no-backend
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update src/components/ProfileCard.tsx disabled save button state and accessible form states.
+    expected:
+      stage: implementation-planning
+      product_surfaces: [frontend-product]
+      language_surfaces: [typescript]
+      risk_surfaces: []
+      selected_skills:
+        - frontend-change-builder
+        - ai-code-review-refactor
+      selected_capabilities:
+        - repository-context-map
+        - implementation-structure-design
+        - module-boundary-design
+        - code-clarity-maintainability
+        - language-idiom-enforcement
+        - agent-workflow-state-machine
+        - page-component-decomposition
+        - state-management-design
+        - form-validation-design
+        - frontend-api-integration
+        - typescript-professional-usage
+      required_references:
+        - references/routing-rules.md
+        - references/skill-registry.md
+        - references/capability-index.md
+        - references/domain-extension-index.md
+        - references/capabilities/118-repository-context-map.md
+        - references/capabilities/101-implementation-structure-design.md
+        - references/capabilities/19-module-boundary-design.md
+        - references/capabilities/105-code-clarity-maintainability.md
+        - references/capabilities/85-language-idiom-enforcement.md
+        - references/capabilities/119-agent-workflow-state-machine.md
+        - references/capabilities/31-page-component-decomposition.md
+        - references/capabilities/33-state-management-design.md
+        - references/capabilities/34-form-validation-design.md
+        - references/capabilities/35-frontend-api-integration.md
+        - references/capabilities/91-typescript-professional-usage.md
+
+  - id: webhook-review-no-web3
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Review webhook signature verification and replay protection in src/integrations/stripe_webhook.py.
+    expected:
+      stage: code-review
+      product_surfaces: [external-integration, webhook]
+      language_surfaces: [python]
+      risk_surfaces: []
+      selected_skills:
+        - ai-code-review-refactor
+        - quality-test-gate
+        - integration-change-builder
+      selected_capabilities:
+        - code-review
+        - plan-execution-consistency
+        - implementation-structure-design
+        - code-clarity-maintainability
+        - language-idiom-enforcement
+        - degradation-circuit-breaking
+        - idempotency-retry-design
+        - authentication-security
+        - python-professional-usage
+      required_references:
+        - references/routing-rules.md
+        - references/skill-registry.md
+        - references/capability-index.md
+        - references/domain-extension-index.md
+        - references/capabilities/78-code-review.md
+        - references/capabilities/122-plan-execution-consistency.md
+        - references/capabilities/101-implementation-structure-design.md
+        - references/capabilities/105-code-clarity-maintainability.md
+        - references/capabilities/85-language-idiom-enforcement.md
+        - references/capabilities/68-degradation-circuit-breaking.md
+        - references/capabilities/42-idempotency-retry-design.md
+        - references/capabilities/55-authentication-security.md
+        - references/capabilities/92-python-professional-usage.md
+
+  - id: backend-security-risk
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update src/auth/session.py authorization token handling for backend service.
+    expected:
+      stage: implementation-planning
+      product_surfaces: [backend-product]
+      language_surfaces: [python]
+      risk_surfaces: [security]
+      selected_skills:
+        - backend-change-builder
+        - security-privacy-gate
+      selected_capabilities:
+        - repository-context-map
+        - implementation-structure-design
+        - module-boundary-design
+        - code-clarity-maintainability
+        - language-idiom-enforcement
+        - service-business-logic
+        - authentication-authorization
+        - idempotency-retry-design
+        - logging-error-handling
+        - python-professional-usage
+        - threat-modeling
+      required_references:
+        - references/routing-rules.md
+        - references/skill-registry.md
+        - references/capability-index.md
+        - references/domain-extension-index.md
+        - references/capabilities/118-repository-context-map.md
+        - references/capabilities/101-implementation-structure-design.md
+        - references/capabilities/19-module-boundary-design.md
+        - references/capabilities/105-code-clarity-maintainability.md
+        - references/capabilities/85-language-idiom-enforcement.md
+        - references/capabilities/38-service-business-logic.md
+        - references/capabilities/41-authentication-authorization.md
+        - references/capabilities/42-idempotency-retry-design.md
+        - references/capabilities/44-logging-error-handling.md
+        - references/capabilities/92-python-professional-usage.md
+        - references/capabilities/52-threat-modeling.md
+
+  - id: docs-release-handoff
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update docs/RELEASE.md and docs/QUICKSTART.md for release validation evidence.
+    expected:
+      stage: documentation-handoff
+      product_surfaces: [documentation-only]
+      language_surfaces: []
+      risk_surfaces: [delivery, documentation]
+      selected_skills:
+        - change-documentation-gate
+        - change-forge-router
+        - delivery-release-gate
+      selected_capabilities:
+        - agent-workflow-state-machine
+        - plan-execution-consistency
+        - documentation-generation
+        - agent-execution-discipline
+      required_references:
+        - references/routing-rules.md
+        - references/skill-registry.md
+        - references/capability-index.md
+        - references/domain-extension-index.md
+        - references/capabilities/119-agent-workflow-state-machine.md
+        - references/capabilities/122-plan-execution-consistency.md
+        - references/capabilities/80-documentation-generation.md
+        - references/capabilities/102-agent-execution-discipline.md
+
+  - id: web3-wallet-no-webhook
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update Web3 wallet EIP-712 nonce handling for login.
+    expected:
+      stage: implementation-planning
+      product_surfaces: [web3]
+      language_surfaces: []
+      risk_surfaces: []
+      selected_skills:
+        - security-privacy-gate
+        - quality-test-gate
+      selected_capabilities:
+        - repository-context-map
+        - implementation-structure-design
+        - module-boundary-design
+        - code-clarity-maintainability
+        - language-idiom-enforcement
+        - authentication-security
+        - threat-modeling
+      required_references:
+        - references/routing-rules.md
+        - references/skill-registry.md
+        - references/capability-index.md
+        - references/domain-extension-index.md
+        - references/capabilities/118-repository-context-map.md
+        - references/capabilities/101-implementation-structure-design.md
+        - references/capabilities/19-module-boundary-design.md
+        - references/capabilities/105-code-clarity-maintainability.md
+        - references/capabilities/85-language-idiom-enforcement.md
+        - references/capabilities/55-authentication-security.md
+        - references/capabilities/52-threat-modeling.md

@@ -11,7 +11,7 @@ This generated report uses deterministic local fixtures. It is structural eviden
 - Live pass-rate: `not_collected`
 - Token overhead: `not_collected`
 - Turn overhead: `not_collected`
-- Telemetry sample: `generated`
+- Telemetry fixture sample: `generated`
 
 ## Coverage
 

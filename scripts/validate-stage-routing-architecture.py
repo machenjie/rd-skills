@@ -298,6 +298,20 @@ def _check_runtime_resolver_registry_consistency(
             f"{list(expected_product_order)}, found {list(resolver_product_order)}"
         )
 
+    expected_product_signals = {
+        surface: tuple(_string_list(entry.get("signals")))
+        for surface, entry in surfaces.items()
+    }
+    resolver_product_signals = _tuple_dict(
+        getattr(resolver, "PRODUCT_SURFACE_SIGNALS", None)
+    )
+    if resolver_product_signals is None:
+        errors.append(f"{rel}: PRODUCT_SURFACE_SIGNALS must be a mapping")
+    elif resolver_product_signals != expected_product_signals:
+        errors.append(
+            f"{rel}: PRODUCT_SURFACE_SIGNALS must match stage-model product surface signals"
+        )
+
     expected_language_extensions = {
         language: tuple(_string_list(entry.get("file_extensions")))
         for language, entry in languages.items()
@@ -325,6 +339,20 @@ def _check_runtime_resolver_registry_consistency(
     elif resolver_language_capabilities != expected_language_capabilities:
         errors.append(
             f"{rel}: LANGUAGE_CAPABILITIES must match stage-model language capabilities"
+        )
+
+    expected_language_signals = {
+        language: tuple(_string_list(entry.get("signals")))
+        for language, entry in languages.items()
+    }
+    resolver_language_signals = _tuple_dict(
+        getattr(resolver, "LANGUAGE_SURFACE_SIGNALS", None)
+    )
+    if resolver_language_signals is None:
+        errors.append(f"{rel}: LANGUAGE_SURFACE_SIGNALS must be a mapping")
+    elif resolver_language_signals != expected_language_signals:
+        errors.append(
+            f"{rel}: LANGUAGE_SURFACE_SIGNALS must match stage-model language surface signals"
         )
 
     expected_product_owner: dict[str, str] = {}
@@ -385,6 +413,22 @@ def _check_runtime_resolver_registry_consistency(
         errors.append(
             f"{rel}: STAGE_CAPABILITIES must match stage-model stage "
             "default_capabilities"
+        )
+
+    expected_stage_conditionals = {
+        stage: tuple(_string_list(entry.get("conditional_capabilities")))
+        for stage, entry in stages.items()
+        if _string_list(entry.get("conditional_capabilities"))
+    }
+    resolver_stage_conditionals = _tuple_dict(
+        getattr(resolver, "STAGE_CONDITIONAL_CAPABILITIES", None)
+    )
+    if resolver_stage_conditionals is None:
+        errors.append(f"{rel}: STAGE_CONDITIONAL_CAPABILITIES must be a mapping")
+    elif resolver_stage_conditionals != expected_stage_conditionals:
+        errors.append(
+            f"{rel}: STAGE_CONDITIONAL_CAPABILITIES must match stage-model stage "
+            "conditional_capabilities"
         )
 
     resolver_capability_ids = _string_dict(getattr(resolver, "CAPABILITY_IDS", None))

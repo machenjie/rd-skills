@@ -25,7 +25,8 @@ PROFILES = ("recommended", "full", "dev")
 STATUSES = ("pass", "partial", "fail", "unknown", "not_collected")
 EVIDENCE_LEVELS = {
     "structural fixture": "Local deterministic structure sample passed; not evidence of live task success.",
-    "runtime telemetry sample": "Sanitized bounded runtime fact sample; may still require human review.",
+    "runtime telemetry fixture sample": "Deterministic executor-adapter fixture-derived bounded facts; not live runtime telemetry.",
+    "live runtime telemetry sample": "Sanitized bounded facts from an actual hook runtime execution.",
     "promoted golden case": "Human-reviewed case admitted to regression coverage.",
     "live pass-rate": "Measured real-task success rate.",
     "token overhead": "Measured additional token cost.",
@@ -60,6 +61,8 @@ PRODUCTIZATION_ASSETS = (
     "reports/professional-scorecard.json",
     "reports/executor-adapter-eval.md",
     "reports/executor-adapter-eval.json",
+    "reports/activation-precision.md",
+    "reports/activation-precision.json",
     "reports/runtime-telemetry-sample.json",
     "reports/hook-validation.md",
     "reports/hook-validation.json",
@@ -71,6 +74,7 @@ PRODUCTIZATION_ASSETS = (
     "schemas/marketplace-index.schema.json",
     "scripts/generate-professional-scorecard.py",
     "scripts/eval-executor-adapters.py",
+    "scripts/eval-activation-precision.py",
     "scripts/generate-public-benchmark-summary.py",
     "scripts/generate-examples-showcase.py",
     "scripts/generate-marketplace-catalog.py",
@@ -92,6 +96,7 @@ VALIDATION_COMMANDS = [
     "python3 scripts/validate-skill-content-size.py",
     "python3 scripts/validate-skill-efficacy-benchmarks.py",
     "python3 scripts/eval-executor-adapters.py",
+    "python3 scripts/eval-activation-precision.py",
     "python3 scripts/audit-skill-content.py",
     "python3 scripts/eval-routing.py",
     "python3 scripts/eval-agent-behavior.py",
@@ -228,6 +233,10 @@ def validation_report_status(root: Path, rel_path: str) -> tuple[str, str]:
     summary = report.get("summary")
     if not isinstance(summary, dict):
         return "fail", "validation report summary field must be an object"
+    if status == "pass" and errors:
+        return "fail", "status pass but errors is non-empty"
+    if status == "fail" and not errors:
+        return "fail", "status fail but errors is empty; report is inconsistent"
 
     detail = {
         "generated_by": report.get("generated_by"),
@@ -341,7 +350,8 @@ def skill_efficacy_status(root: Path) -> tuple[str, str]:
         "evidence_boundary": "structural/local fixtures only; no empirical before/after agent performance",
         "evidence_levels": {
             "structural fixture": reviewed_count,
-            "runtime telemetry sample": "not_collected",
+            "runtime telemetry fixture sample": "not_collected",
+            "live runtime telemetry sample": "not_collected",
             "promoted golden case": "not_collected",
             "live pass-rate": "not_collected",
             "token overhead": "not_collected",
@@ -395,7 +405,8 @@ def runtime_governance_fixture_status(root: Path) -> tuple[str, str]:
         "evidence_boundary": "structural/local fixtures only; no live empirical pass-rate or runtime overhead evidence",
         "evidence_levels": {
             "structural fixture": sum(row["fixtures"] for row in rows.values()),
-            "runtime telemetry sample": "not_collected",
+            "runtime telemetry fixture sample": "not_collected",
+            "live runtime telemetry sample": "not_collected",
             "promoted golden case": "not_collected",
             "live pass-rate": "not_collected",
             "token overhead": "not_collected",
@@ -432,13 +443,42 @@ def executor_adapter_eval_status(root: Path) -> tuple[str, str]:
     return "pass", json.dumps(detail, sort_keys=True)
 
 
-def runtime_telemetry_sample_status(root: Path) -> tuple[str, str]:
-    """Return status for the sanitized runtime telemetry sample."""
+def activation_precision_status(root: Path) -> tuple[str, str]:
+    """Return status for the activation precision benchmark report."""
+    status, detail = validation_report_status(root, "reports/activation-precision.json")
+    if status != "pass":
+        return status, detail
+    report = _read_json(root / "reports" / "activation-precision.json")
+    summary = report.get("summary") if isinstance(report, dict) else {}
+    required_metrics = {
+        "stage_accuracy",
+        "skill_precision",
+        "skill_recall",
+        "capability_precision",
+        "capability_recall",
+        "reference_precision",
+        "reference_recall",
+        "language_fp_rate",
+        "language_fn_rate",
+        "risk_surface_fp_rate",
+        "risk_surface_fn_rate",
+        "overroute_rate",
+    }
+    missing = sorted(metric for metric in required_metrics if metric not in summary)
+    if missing:
+        return "fail", "missing activation precision metrics: " + ", ".join(missing)
+    return status, detail
+
+
+def runtime_telemetry_fixture_sample_status(root: Path) -> tuple[str, str]:
+    """Return status for the sanitized fixture-derived runtime telemetry sample."""
     sample = _read_json(root / "reports" / "runtime-telemetry-sample.json")
     if not isinstance(sample, dict):
         return "not_collected", "reports/runtime-telemetry-sample.json missing or invalid"
     required = {
         "runtime",
+        "sample_kind",
+        "evidence_level",
         "event_count",
         "normalized_event_kinds",
         "degraded_event_count",
@@ -450,14 +490,60 @@ def runtime_telemetry_sample_status(root: Path) -> tuple[str, str]:
     missing = sorted(field for field in required if field not in sample)
     if missing:
         return "fail", "missing telemetry fields: " + ", ".join(missing)
+    if sample.get("source") != "deterministic-fixture-bounded-facts":
+        return "fail", "fixture sample source must be deterministic-fixture-bounded-facts"
+    if sample.get("sample_kind") != "runtime_telemetry_fixture_sample":
+        return "fail", "fixture sample_kind must be runtime_telemetry_fixture_sample"
+    if sample.get("evidence_level") != "runtime telemetry fixture sample":
+        return "fail", "fixture evidence_level must be runtime telemetry fixture sample"
     detail = {
         "source": sample.get("source", ""),
+        "sample_kind": sample.get("sample_kind", ""),
+        "evidence_level": sample.get("evidence_level", ""),
         "runtime": sample.get("runtime", ""),
         "event_count": sample.get("event_count"),
         "degraded_event_count": sample.get("degraded_event_count"),
         "privacy_redaction_count": sample.get("privacy_redaction_count"),
         "token_overhead": (sample.get("token_overhead") or {}).get("status", "not_collected"),
         "turn_overhead": (sample.get("turn_overhead") or {}).get("status", "not_collected"),
+    }
+    return "pass", json.dumps(detail, sort_keys=True)
+
+
+def runtime_telemetry_sample_status(root: Path) -> tuple[str, str]:
+    """Backward-compatible alias for the fixture-derived telemetry sample status."""
+    return runtime_telemetry_fixture_sample_status(root)
+
+
+def live_runtime_telemetry_sample_status(root: Path) -> tuple[str, str]:
+    """Return status for a live runtime telemetry sample, when separately collected."""
+    sample = _read_json(root / "reports" / "live-runtime-telemetry-sample.json")
+    if not isinstance(sample, dict):
+        return "not_collected", "reports/live-runtime-telemetry-sample.json missing or invalid"
+    required = {
+        "runtime",
+        "sample_kind",
+        "evidence_level",
+        "event_count",
+        "normalized_event_kinds",
+        "privacy_redaction_count",
+    }
+    missing = sorted(field for field in required if field not in sample)
+    if missing:
+        return "fail", "missing live telemetry fields: " + ", ".join(missing)
+    if sample.get("source") == "deterministic-fixture-bounded-facts":
+        return "fail", "live telemetry sample cannot use deterministic fixture source"
+    if sample.get("sample_kind") != "live_runtime_telemetry_sample":
+        return "fail", "live sample_kind must be live_runtime_telemetry_sample"
+    if sample.get("evidence_level") != "live runtime telemetry sample":
+        return "fail", "live evidence_level must be live runtime telemetry sample"
+    detail = {
+        "source": sample.get("source", ""),
+        "sample_kind": sample.get("sample_kind", ""),
+        "evidence_level": sample.get("evidence_level", ""),
+        "runtime": sample.get("runtime", ""),
+        "event_count": sample.get("event_count"),
+        "privacy_redaction_count": sample.get("privacy_redaction_count"),
     }
     return "pass", json.dumps(detail, sort_keys=True)
 
@@ -665,15 +751,38 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
         )
     )
 
-    telemetry_status, telemetry_detail = runtime_telemetry_sample_status(root)
+    activation_status, activation_detail = activation_precision_status(root)
     dimensions.append(
         Dimension(
-            "Runtime telemetry sample",
+            "Activation precision benchmark",
+            activation_status,
+            "evals/activation and reports/activation-precision.json",
+            "python3 scripts/eval-activation-precision.py",
+            "Repair stage/skill/capability/reference/language/risk fixture expectations or resolver precision until all activation metrics pass.",
+            activation_detail,
+        )
+    )
+
+    telemetry_status, telemetry_detail = runtime_telemetry_fixture_sample_status(root)
+    dimensions.append(
+        Dimension(
+            "Runtime telemetry fixture sample",
             telemetry_status,
             "reports/runtime-telemetry-sample.json",
             "python3 scripts/eval-executor-adapters.py",
-            "Generate a sanitized bounded telemetry sample; do not store raw prompts, secrets, env, personal paths, or full command output.",
+            "Generate a sanitized bounded fixture-derived telemetry sample and keep it clearly labeled as non-live evidence.",
             telemetry_detail,
+        )
+    )
+    live_telemetry_status, live_telemetry_detail = live_runtime_telemetry_sample_status(root)
+    dimensions.append(
+        Dimension(
+            "Live runtime telemetry sample",
+            live_telemetry_status,
+            "reports/live-runtime-telemetry-sample.json",
+            "manual live runtime collection with sanitized bounded facts",
+            "Collect a real hook-runtime sample before changing this status from not_collected; do not use executor adapter fixtures for this dimension.",
+            live_telemetry_detail,
         )
     )
 
@@ -837,7 +946,8 @@ def generate_scorecard(root: Path, reports_dir: Path) -> dict[str, Any]:
 
 def _evidence_levels(dimensions: list[Dimension]) -> dict[str, dict[str, str]]:
     promoted_status = _status_for_dimension(dimensions, "Promoted agent samples")
-    runtime_sample_status = _status_for_dimension(dimensions, "Runtime telemetry sample")
+    runtime_fixture_sample_status = _status_for_dimension(dimensions, "Runtime telemetry fixture sample")
+    live_runtime_sample_status = _status_for_dimension(dimensions, "Live runtime telemetry sample")
     live_pass_rate_status = _status_for_dimension(dimensions, "Executor adapter live pass-rate")
     token_overhead_status = _status_for_dimension(dimensions, "Executor adapter token overhead")
     turn_overhead_status = _status_for_dimension(dimensions, "Executor adapter turn overhead")
@@ -846,7 +956,8 @@ def _evidence_levels(dimensions: list[Dimension]) -> dict[str, dict[str, str]]:
             "status": _evidence_level_status(
                 level,
                 promoted_status,
-                runtime_sample_status,
+                runtime_fixture_sample_status,
+                live_runtime_sample_status,
                 live_pass_rate_status,
                 token_overhead_status,
                 turn_overhead_status,
@@ -867,15 +978,18 @@ def _status_for_dimension(dimensions: list[Dimension], name: str) -> str:
 def _evidence_level_status(
     level: str,
     promoted_status: str,
-    runtime_sample_status: str,
+    runtime_fixture_sample_status: str,
+    live_runtime_sample_status: str,
     live_pass_rate_status: str,
     token_overhead_status: str,
     turn_overhead_status: str,
 ) -> str:
     if level == "structural fixture":
         return "pass"
-    if level == "runtime telemetry sample":
-        return runtime_sample_status if runtime_sample_status in STATUSES else "unknown"
+    if level == "runtime telemetry fixture sample":
+        return runtime_fixture_sample_status if runtime_fixture_sample_status in STATUSES else "unknown"
+    if level == "live runtime telemetry sample":
+        return live_runtime_sample_status if live_runtime_sample_status in STATUSES else "not_collected"
     if level == "promoted golden case":
         return promoted_status if promoted_status in STATUSES else "unknown"
     if level == "live pass-rate":

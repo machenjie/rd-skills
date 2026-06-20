@@ -708,6 +708,7 @@ def _runtime_route_index(
     product_owner: dict[str, str] = {}
     domain_extension_by_surface: dict[str, str] = {}
     surface_capabilities: dict[str, list[str]] = {}
+    product_surface_signals: dict[str, list[str]] = {}
     product_surface_order: list[str] = []
     for entry in stage_model.get("product_surfaces", []) or []:
         if not isinstance(entry, dict):
@@ -726,9 +727,11 @@ def _runtime_route_index(
         surface_capabilities[surface_name] = _string_items(
             entry.get("default_capabilities")
         )
+        product_surface_signals[surface_name] = _string_items(entry.get("signals"))
 
     language_file_extensions: dict[str, list[str]] = {}
     language_capabilities: dict[str, str] = {}
+    language_surface_signals: dict[str, list[str]] = {}
     for entry in stage_model.get("language_surfaces", []) or []:
         if not isinstance(entry, dict):
             continue
@@ -742,6 +745,7 @@ def _runtime_route_index(
         capability = entry.get("capability")
         if isinstance(capability, str) and capability.strip():
             language_capabilities[language_name] = capability.strip()
+        language_surface_signals[language_name] = _string_items(entry.get("signals"))
 
     stage_capabilities: dict[str, list[str]] = {}
     stage_conditional_capabilities: dict[str, list[str]] = {}
@@ -766,14 +770,19 @@ def _runtime_route_index(
             "domain-extensions",
         ],
         "product_surface_order": product_surface_order,
+        "product_surface_signals": product_surface_signals,
         "language_file_extensions": language_file_extensions,
         "language_capabilities": language_capabilities,
+        "language_surface_signals": language_surface_signals,
         "product_owner": product_owner,
         "domain_extension_by_surface": domain_extension_by_surface,
         "all_domain_extensions": [item.name for item in domain_extensions],
         "surface_capabilities": surface_capabilities,
         "stage_capabilities": stage_capabilities,
         "stage_conditional_capabilities": stage_conditional_capabilities,
+        "capability_triggers": {
+            capability.name: list(capability.triggers) for capability in capabilities
+        },
         "capability_ids": {
             capability.name: capability.capability_id for capability in capabilities
         },

@@ -219,6 +219,7 @@ def _minimal_stage_model() -> dict[str, object]:
         "product_surfaces": [
             {
                 "surface": "backend-product",
+                "signals": ["backend", "service"],
                 "required_skill": "backend-change-builder",
                 "default_capabilities": ["implementation-structure-design"],
             }
@@ -228,6 +229,7 @@ def _minimal_stage_model() -> dict[str, object]:
                 "language": "python",
                 "capability": "agent-execution-discipline",
                 "file_extensions": [".py"],
+                "signals": ["python", "py"],
             }
         ],
     }
@@ -236,14 +238,17 @@ def _minimal_stage_model() -> dict[str, object]:
 def _minimal_resolver() -> SimpleNamespace:
     return SimpleNamespace(
         PRODUCT_SURFACE_ORDER=("backend-product",),
+        PRODUCT_SURFACE_SIGNALS={"backend-product": ("backend", "service")},
         LANGUAGE_FILE_EXTENSIONS={"python": (".py",)},
         LANGUAGE_CAPABILITIES={"python": "agent-execution-discipline"},
+        LANGUAGE_SURFACE_SIGNALS={"python": ("python", "py")},
         PRODUCT_OWNER={"backend-product": "backend-change-builder"},
         DOMAIN_EXTENSION_BY_SURFACE={},
         SURFACE_CAPABILITIES={
             "backend-product": ("implementation-structure-design",),
         },
         STAGE_CAPABILITIES={"coding": ("implementation-structure-design",)},
+        STAGE_CONDITIONAL_CAPABILITIES={"coding": ("agent-execution-discipline",)},
         CAPABILITY_IDS={
             "implementation-structure-design": "101",
             "agent-execution-discipline": "102",

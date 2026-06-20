@@ -60,6 +60,8 @@ class EvalExecutorAdaptersTests(unittest.TestCase):
         serialized = json.dumps(sample, sort_keys=True)
 
         self.assertEqual(sample["source"], "deterministic-fixture-bounded-facts")
+        self.assertEqual(sample["sample_kind"], "runtime_telemetry_fixture_sample")
+        self.assertEqual(sample["evidence_level"], "runtime telemetry fixture sample")
         self.assertEqual(sample["event_count"], payload["summary"]["case_count"])
         self.assertEqual(sample["token_overhead"]["status"], "not_collected")
         self.assertEqual(sample["turn_overhead"]["status"], "not_collected")

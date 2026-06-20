@@ -9,6 +9,7 @@
   },
   "degraded_event_count": 4,
   "event_count": 20,
+  "evidence_level": "runtime telemetry fixture sample",
   "generated_by": "scripts/eval-executor-adapters.py",
   "normalized_event_kinds": [
     "file_changed",
@@ -30,6 +31,7 @@
     "openhands": 2,
     "roo": 1
   },
+  "sample_kind": "runtime_telemetry_fixture_sample",
   "schema_version": 1,
   "source": "deterministic-fixture-bounded-facts",
   "token_overhead": {

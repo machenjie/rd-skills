@@ -4,19 +4,20 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 
 ## Status Summary
 
-- `pass`: 15
+- `pass`: 16
 - `partial`: 3
 - `fail`: 0
 - `unknown`: 0
-- `not_collected`: 3
+- `not_collected`: 4
 
 ## Evidence Levels
 
 | Evidence | Status | Meaning |
 | --- | --- | --- |
 | live pass-rate | `not_collected` | Measured real-task success rate. |
+| live runtime telemetry sample | `not_collected` | Sanitized bounded facts from an actual hook runtime execution. |
 | promoted golden case | `pass` | Human-reviewed case admitted to regression coverage. |
-| runtime telemetry sample | `pass` | Sanitized bounded runtime fact sample; may still require human review. |
+| runtime telemetry fixture sample | `pass` | Deterministic executor-adapter fixture-derived bounded facts; not live runtime telemetry. |
 | structural fixture | `pass` | Local deterministic structure sample passed; not evidence of live task success. |
 | token overhead | `not_collected` | Measured additional token cost. |
 | turn overhead | `not_collected` | Measured additional turn cost. |
@@ -29,7 +30,9 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 | Open-source readiness | `partial` | config_present=True, selected_license_non_null=False, selected_license_allowed=True, license_file=False, pyproject_license_not_proprietary=False, contribution_licensing_confirmed=False, contribution_licensing_evidence=False, security_contact_confirmed=False, security_contact_evidence=False, dist_release_policy_explicit=True, dist_release_policy_valid=True |
 | Example coverage | `pass` | showcase examples validate |
 | Executor adapter structural fixtures | `pass` | {"case_count": 20, "coverage_targets": ["closure_verdict", "command_risk", "degradation", "event_recognition", "path_normalization", "permission_decision", "privacy_redaction", "tool_category", "validation_freshness_after_edits", "validation_outcome"], "evidence_boundary": "deterministic local fixtures only; no live runtime pass-rate or overhead measurement", "failed": 0, "live_pass_rate": "not_collected", "passed": 20, "pressure_cases": ["absolute_user_path", "claude_post_tool_failure", "codex_destructive_permission_request", "copilot_unsupported_pre_tool", "edit_after_validation", "failed_validation", "full_command_output_field", "large_path_list_cap", "ready_after_rereview", "ready_closure", "repair_without_rereview", "required_unsupported_check_degraded_ready", "review_finding_without_repair", "secret_like_payload_field", "targeted_test_reported_as_full", "unknown_event", "unsupported_runtime_event", "validation_pass_then_file_changed"], "token_overhead": "not_collected", "turn_overhead": "not_collected"} |
-| Runtime telemetry sample | `pass` | {"degraded_event_count": 4, "event_count": 20, "privacy_redaction_count": 9, "runtime": "mixed-fixture-runtime-sample", "source": "deterministic-fixture-bounded-facts", "token_overhead": "not_collected", "turn_overhead": "not_collected"} |
+| Activation precision benchmark | `pass` | {"error_count": 0, "generated_by": "scripts/eval-activation-precision.py", "summary": {"capability_precision": 1.0, "capability_recall": 1.0, "case_count": 6, "failed": 0, "language_fn_rate": 0.0, "language_fp_rate": 0.0, "metric_definitions": {"language_fn_rate": "Share of cases with at least one missing expected language surface.", "language_fp_rate": "Share of cases with at least one unexpected language surface.", "overroute_rate": "Share of cases with any unexpected skill, capability, reference, product surface, language surface, or risk surface.", "precision_recall": "Set precision/recall aggregate true positives, false positives, and false negatives across all cases.", "risk_surface_fn_rate": "Share of cases with at least one missing expected risk surface.", "risk_surface_fp_rate": "Share of cases with at least one unexpected risk surface."}, "overroute_rate": 0.0, "passed": 6, "reference_precision": 1.0, "reference_recall": 1.0, "risk_surface_fn_rate": 0.0, "risk_surface_fp_rate": 0.0, "skill_precision": 1.0, "skill_recall": 1.0, "stage_accuracy": 1.0}} |
+| Runtime telemetry fixture sample | `pass` | {"degraded_event_count": 4, "event_count": 20, "evidence_level": "runtime telemetry fixture sample", "privacy_redaction_count": 9, "runtime": "mixed-fixture-runtime-sample", "sample_kind": "runtime_telemetry_fixture_sample", "source": "deterministic-fixture-bounded-facts", "token_overhead": "not_collected", "turn_overhead": "not_collected"} |
+| Live runtime telemetry sample | `not_collected` | reports/live-runtime-telemetry-sample.json missing or invalid |
 | Marketplace index validation | `pass` | recommended, full, and dev marketplace indexes validate |
 
 ## Profile Counts
@@ -40,6 +43,7 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 
 ## Release-Only Evidence Not Collected
 
+- Live runtime telemetry sample: reports/live-runtime-telemetry-sample.json
 - Executor adapter live pass-rate: reports/executor-adapter-eval.json
 - Executor adapter token overhead: reports/executor-adapter-eval.json
 - Executor adapter turn overhead: reports/executor-adapter-eval.json
@@ -58,6 +62,7 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 
 ### Low
 
+- `not_collected` Live runtime telemetry sample: Collect a real hook-runtime sample before changing this status from not_collected; do not use executor adapter fixtures for this dimension.
 - `not_collected` Executor adapter live pass-rate: Collect a real measured run before changing this status from not_collected.
 - `not_collected` Executor adapter token overhead: Collect a real measured run before changing this status from not_collected.
 - `not_collected` Executor adapter turn overhead: Collect a real measured run before changing this status from not_collected.
@@ -73,6 +78,7 @@ python3 scripts/validate-skill-body-links.py
 python3 scripts/validate-skill-content-size.py
 python3 scripts/validate-skill-efficacy-benchmarks.py
 python3 scripts/eval-executor-adapters.py
+python3 scripts/eval-activation-precision.py
 python3 scripts/audit-skill-content.py
 python3 scripts/eval-routing.py
 python3 scripts/eval-agent-behavior.py

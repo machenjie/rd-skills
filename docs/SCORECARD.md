@@ -40,7 +40,9 @@ python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out
 | Marketplace index validation | Source-derived marketplace exporter and profile validator. | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` | Rebuild profiles and repair schema, visibility, or runtime path mismatches. |
 | Runtime governance structural fixtures | Local structural fixtures for executor adapters, repository intelligence, project memory, validation broker, and trajectory. | `python3 scripts/validate-professional-routing-coverage.py` | Add or repair fixture YAML under `evals/executor-adapters`, `evals/repository-intelligence`, `evals/project-memory`, `evals/validation-broker`, and `evals/trajectory`; do not treat structural fixtures as live empirical pass-rate evidence. |
 | Executor adapter structural fixtures | Deterministic fixture report for runtime adapter normalization, degradation, privacy, validation freshness, and closure behavior. | `python3 scripts/eval-executor-adapters.py` | Repair fixture expectations or adapter normalization until deterministic cases pass; do not treat structural fixtures as live runtime pass-rate evidence. |
-| Runtime telemetry sample | Sanitized bounded sample generated from executor adapter fixture facts. | `python3 scripts/eval-executor-adapters.py` | Regenerate the sample; do not store raw prompts, secrets, environment variables, personal paths, or full command output. |
+| Activation precision benchmark | Deterministic route activation precision/recall report for stage, skill, capability, reference, language, risk, and overroute metrics. | `python3 scripts/eval-activation-precision.py` | Repair fixture expectations or resolver precision until all activation metrics pass. |
+| Runtime telemetry fixture sample | Sanitized bounded sample generated from executor adapter fixture facts. | `python3 scripts/eval-executor-adapters.py` | Regenerate the sample and keep it clearly labeled as fixture-derived evidence. |
+| Live runtime telemetry sample | Sanitized bounded facts from an actual hook runtime execution, when available. | Manual live runtime collection. | Keep `not_collected` until a real hook-runtime sample exists; do not use executor adapter fixtures for this dimension. |
 | Executor adapter live pass-rate | Measured real-task executor adapter success rate, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
 | Executor adapter token overhead | Measured additional token cost, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
 | Executor adapter turn overhead | Measured additional turn cost, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
@@ -63,7 +65,8 @@ Do not replace `unknown` or `not_collected` with `pass` by hand. Run the verific
 | Evidence | Meaning |
 | --- | --- |
 | structural fixture | Local deterministic structure sample passed; this is not live task success evidence. |
-| runtime telemetry sample | Sanitized bounded runtime fact sample; it may still require human review before promotion. |
+| runtime telemetry fixture sample | Deterministic executor-adapter fixture-derived bounded facts; this is not live runtime telemetry. |
+| live runtime telemetry sample | Sanitized bounded facts from an actual hook runtime execution; it may still require human review before promotion. |
 | promoted golden case | Human-reviewed case admitted to regression coverage. |
 | live pass-rate | Measured real-task success rate. |
 | token overhead | Measured additional token cost. |
@@ -74,10 +77,11 @@ Generated telemetry candidates with `generated_from_telemetry: true` and
 measured evidence, promoted golden cases, live pass-rate, token overhead, or turn
 overhead until a maintainer reviews and promotes them.
 
-Executor adapter fixture telemetry can make `runtime telemetry sample` pass when
-the generated sample is bounded and sanitized. It does not make `live pass-rate`,
-`token overhead`, or `turn overhead` pass; those dimensions remain
-`not_collected` until separately measured.
+Executor adapter fixture telemetry can make `runtime telemetry fixture sample`
+pass when the generated sample is bounded, sanitized, and explicitly labeled as
+fixture-derived. It does not make `live runtime telemetry sample`,
+`live pass-rate`, `token overhead`, or `turn overhead` pass; those dimensions
+remain `not_collected` until separately measured or collected.
 
 Open-source readiness is conservative: a root `LICENSE` alone is not enough. Proprietary `pyproject.toml` license metadata fails the dimension once a license file exists. `config/open-source-release.yaml:selected_license` must be non-null, contribution licensing must be owner-confirmed, and GitHub private vulnerability reporting or a private security contact must be owner-confirmed before the dimension can be `pass`.
 

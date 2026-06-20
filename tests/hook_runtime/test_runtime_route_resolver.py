@@ -13,7 +13,11 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from changeforge_action_classifier import classify_event  # noqa: E402
 from changeforge_common import load_state, merge_state, reset_state_for_new_prompt  # noqa: E402
-from changeforge_runtime_route_resolver import CAPABILITY_IDS, build_active_skill_context  # noqa: E402
+from changeforge_runtime_route_resolver import (  # noqa: E402
+    CAPABILITY_IDS,
+    _merge_nonempty_tuple_mapping,
+    build_active_skill_context,
+)
 
 
 def _context_for(event: dict, state: dict | None = None) -> dict:
@@ -316,6 +320,70 @@ class RuntimeRouteResolverTests(unittest.TestCase):
             if isinstance(item, dict) and "skill" in item
         ]
         self.assertIn("backend-change-builder", skipped_skills)
+
+    def test_stage_model_surface_signal_routes_validation_broker(self) -> None:
+        # Protects stage-model product signals from being swallowed by skill-authoring.
+        context = _context_for(
+            {
+                "hook_event_name": "UserPromptSubmit",
+                "prompt": "Fix validation broker stale validation without outcome handling",
+            }
+        )
+        self.assertIn("validation-broker", context["product_surfaces"])
+        self.assertIn("validation-broker", context["selected_capabilities"])
+        self.assertEqual(context["owner_skill"], "quality-test-gate")
+
+    def test_stage_conditional_capabilities_are_selected_from_classifier_signals(self) -> None:
+        # Protects conditional capability activation from becoming generated index data only.
+        context = _context_for(
+            {
+                "hook_event_name": "UserPromptSubmit",
+                "prompt": (
+                    "Update src/services/order_service.py after repository graph analysis, "
+                    "dependency wiring lifecycle checks, and testability seam planning"
+                ),
+            }
+        )
+        self.assertEqual(context["current_stage"], "implementation-planning")
+        self.assertIn("repository-graph-analysis", context["selected_capabilities"])
+        self.assertIn("dependency-wiring-lifecycle", context["selected_capabilities"])
+        self.assertIn("testability-seam-design", context["selected_capabilities"])
+
+    def test_stage_conditional_capabilities_are_filtered_by_current_stage(self) -> None:
+        # Protects against loading conditionals from a different engineering stage.
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product"],
+            event_name="PreToolUse",
+            state={},
+            classification={
+                "stage": "edit",
+                "product_surfaces": ["backend-product"],
+                "language_surfaces": ["python"],
+                "risk_surfaces": [],
+                "conditional_capabilities": [
+                    "repository-graph-analysis",
+                    "validation-broker",
+                ],
+            },
+        )
+        self.assertEqual(context["current_stage"], "implementation-planning")
+        self.assertIn("repository-graph-analysis", context["selected_capabilities"])
+        self.assertNotIn("validation-broker", context["selected_capabilities"])
+
+    def test_empty_generated_capability_triggers_preserve_fallback_triggers(self) -> None:
+        fallback = {"validation-broker": ("stale validation",)}
+        merged = _merge_nonempty_tuple_mapping(
+            {
+                "validation-broker": [],
+                "repository-graph-analysis": ["repository graph analysis"],
+            },
+            fallback,
+        )
+
+        self.assertEqual(merged["validation-broker"], ("stale validation",))
+        self.assertEqual(merged["repository-graph-analysis"], ("repository graph analysis",))
 
     def test_user_prompt_submit_resets_state_unless_follow_up(self) -> None:
         old_cache = os.environ.get("XDG_CACHE_HOME")

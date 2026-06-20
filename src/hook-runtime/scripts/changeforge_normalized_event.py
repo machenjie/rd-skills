@@ -64,6 +64,7 @@ class NormalizedEvent:
     language_surfaces: list[str] = field(default_factory=list)
     risk_surfaces: list[str] = field(default_factory=list)
     domain_extensions: list[str] = field(default_factory=list)
+    conditional_capabilities: list[str] = field(default_factory=list)
     prompt_signals: list[str] = field(default_factory=list)
     should_inject: bool = False
     lifecycle_cadence: str | None = None
@@ -134,6 +135,9 @@ class NormalizedEvent:
             language_surfaces=_unique(_string_list(classification.get("language_surfaces"))),
             risk_surfaces=_unique(_string_list(classification.get("risk_surfaces"))),
             domain_extensions=_unique(_string_list(classification.get("domain_extensions"))),
+            conditional_capabilities=_unique(
+                _string_list(classification.get("conditional_capabilities"))
+            ),
             prompt_signals=_unique(_string_list(classification.get("prompt_signals"))),
             should_inject=bool(classification.get("should_inject")),
             lifecycle_cadence=_optional_text(canonical_data.get("lifecycle_cadence")),
@@ -174,6 +178,7 @@ class NormalizedEvent:
             "language_surfaces": list(self.language_surfaces),
             "risk_surfaces": list(self.risk_surfaces),
             "domain_extensions": list(self.domain_extensions),
+            "conditional_capabilities": list(self.conditional_capabilities),
             "prompt_signals": list(self.prompt_signals),
             "should_inject": self.should_inject,
             "lifecycle_cadence": self.lifecycle_cadence,
@@ -203,6 +208,7 @@ class NormalizedEvent:
             "language_surfaces": list(self.language_surfaces),
             "risk_surfaces": list(self.risk_surfaces),
             "domain_extensions": list(self.domain_extensions),
+            "conditional_capabilities": list(self.conditional_capabilities),
             "prompt_signals": list(self.prompt_signals),
             "paths": list(paths),
             "tool": self.tool_name,

@@ -124,7 +124,9 @@ def render_dashboard(payload: dict[str, Any]) -> str:
         "Open-source readiness",
         "Example coverage",
         "Executor adapter structural fixtures",
-        "Runtime telemetry sample",
+        "Activation precision benchmark",
+        "Runtime telemetry fixture sample",
+        "Live runtime telemetry sample",
         "Marketplace index validation",
     ):
         lines.append(f"| {name} | `{_status(payload, name)}` | {_escape(_detail(payload, name))} |")

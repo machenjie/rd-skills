@@ -117,10 +117,22 @@ class GeneratePublicBenchmarkSummaryTests(unittest.TestCase):
                                 "verification_command": "python3 scripts/eval-executor-adapters.py",
                             },
                             {
-                                "name": "Runtime telemetry sample",
+                                "name": "Activation precision benchmark",
+                                "status": "pass",
+                                "detail": "all activation metrics pass",
+                                "verification_command": "python3 scripts/eval-activation-precision.py",
+                            },
+                            {
+                                "name": "Runtime telemetry fixture sample",
                                 "status": "pass",
                                 "detail": "sanitized sample generated",
                                 "verification_command": "python3 scripts/eval-executor-adapters.py",
+                            },
+                            {
+                                "name": "Live runtime telemetry sample",
+                                "status": "not_collected",
+                                "detail": "not collected",
+                                "verification_command": "manual live runtime collection",
                             },
                             {
                                 "name": "Executor adapter live pass-rate",
@@ -149,8 +161,11 @@ class GeneratePublicBenchmarkSummaryTests(unittest.TestCase):
 
         items = {item["name"]: item for item in payload["items"]}
         self.assertEqual(items["Executor adapter structural fixtures"]["status"], "pass")
-        self.assertEqual(items["Runtime telemetry sample"]["evidence_level"], "runtime telemetry sample")
-        self.assertEqual(items["Runtime telemetry sample"]["status"], "pass")
+        self.assertEqual(items["Activation precision benchmark"]["status"], "pass")
+        self.assertEqual(items["Runtime telemetry fixture sample"]["evidence_level"], "runtime telemetry fixture sample")
+        self.assertEqual(items["Runtime telemetry fixture sample"]["status"], "pass")
+        self.assertEqual(items["Live runtime telemetry sample"]["evidence_level"], "live runtime telemetry sample")
+        self.assertEqual(items["Live runtime telemetry sample"]["status"], "not_collected")
         self.assertEqual(items["Executor adapter live pass-rate"]["status"], "not_collected")
         self.assertEqual(items["Executor adapter live pass-rate"]["evidence_level"], "live pass-rate")
         self.assertEqual(items["Executor adapter token overhead"]["evidence_level"], "token overhead")
@@ -179,7 +194,9 @@ class GeneratePublicBenchmarkSummaryTests(unittest.TestCase):
                             {"name": "Skill efficacy structural fixtures", "status": "pass", "detail": "ok"},
                             {"name": "Runtime governance structural fixtures", "status": "pass", "detail": "ok"},
                             {"name": "Executor adapter structural fixtures", "status": "pass", "detail": "ok"},
-                            {"name": "Runtime telemetry sample", "status": "pass", "detail": "ok"},
+                            {"name": "Activation precision benchmark", "status": "pass", "detail": "ok"},
+                            {"name": "Runtime telemetry fixture sample", "status": "pass", "detail": "ok"},
+                            {"name": "Live runtime telemetry sample", "status": "not_collected", "detail": "not collected"},
                             {
                                 "name": "Executor adapter live pass-rate",
                                 "status": "not_collected",
@@ -199,7 +216,8 @@ class GeneratePublicBenchmarkSummaryTests(unittest.TestCase):
                         ],
                         "evidence_levels": {
                             "structural fixture": {"status": "pass", "meaning": "local fixtures"},
-                            "runtime telemetry sample": {"status": "not_collected", "meaning": "sample missing"},
+                            "runtime telemetry fixture sample": {"status": "pass", "meaning": "fixture sample present"},
+                            "live runtime telemetry sample": {"status": "not_collected", "meaning": "sample missing"},
                             "promoted golden case": {"status": "pass", "meaning": "promoted"},
                             "live pass-rate": {"status": "not_collected", "meaning": "not measured"},
                             "token overhead": {"status": "not_collected", "meaning": "not measured"},
@@ -211,7 +229,8 @@ class GeneratePublicBenchmarkSummaryTests(unittest.TestCase):
             )
             payload = module.generate_summary(root)
 
-        self.assertIn("Runtime telemetry sample", payload["known_unknowns"])
+        self.assertIn("Live runtime telemetry sample", payload["known_unknowns"])
+        self.assertNotIn("Runtime telemetry fixture sample", payload["known_unknowns"])
         self.assertIn("Live pass-rate", payload["known_unknowns"])
         self.assertIn("Token overhead", payload["known_unknowns"])
         self.assertIn("Turn overhead", payload["known_unknowns"])

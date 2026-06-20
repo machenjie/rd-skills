@@ -22,7 +22,9 @@ MARKETPLACE_DIMENSION = "Marketplace index validation"
 SKILL_EFFICACY_DIMENSION = "Skill efficacy structural fixtures"
 RUNTIME_GOVERNANCE_DIMENSION = "Runtime governance structural fixtures"
 EXECUTOR_ADAPTER_DIMENSION = "Executor adapter structural fixtures"
-RUNTIME_TELEMETRY_DIMENSION = "Runtime telemetry sample"
+ACTIVATION_PRECISION_DIMENSION = "Activation precision benchmark"
+RUNTIME_TELEMETRY_FIXTURE_DIMENSION = "Runtime telemetry fixture sample"
+LIVE_RUNTIME_TELEMETRY_DIMENSION = "Live runtime telemetry sample"
 EXECUTOR_LIVE_PASS_RATE_DIMENSION = "Executor adapter live pass-rate"
 EXECUTOR_TOKEN_OVERHEAD_DIMENSION = "Executor adapter token overhead"
 EXECUTOR_TURN_OVERHEAD_DIMENSION = "Executor adapter turn overhead"
@@ -40,6 +42,7 @@ REFRESH_COMMANDS = [
     "python3 scripts/eval-professional-benchmarks.py",
     "python3 scripts/validate-skill-efficacy-benchmarks.py",
     "python3 scripts/eval-executor-adapters.py",
+    "python3 scripts/eval-activation-precision.py",
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
     "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",
@@ -290,12 +293,21 @@ def _additional_status_items(root: Path, scorecard_path: Path | None = None) -> 
         _scorecard_dimension_item(root, SKILL_EFFICACY_DIMENSION, SKILL_EFFICACY_DIMENSION, scorecard_path),
         _scorecard_dimension_item(root, RUNTIME_GOVERNANCE_DIMENSION, RUNTIME_GOVERNANCE_DIMENSION, scorecard_path),
         _scorecard_dimension_item(root, EXECUTOR_ADAPTER_DIMENSION, EXECUTOR_ADAPTER_DIMENSION, scorecard_path),
+        _scorecard_dimension_item(root, ACTIVATION_PRECISION_DIMENSION, ACTIVATION_PRECISION_DIMENSION, scorecard_path),
         _scorecard_dimension_item(
             root,
-            RUNTIME_TELEMETRY_DIMENSION,
-            RUNTIME_TELEMETRY_DIMENSION,
+            RUNTIME_TELEMETRY_FIXTURE_DIMENSION,
+            RUNTIME_TELEMETRY_FIXTURE_DIMENSION,
             scorecard_path,
-            "runtime telemetry sample",
+            "runtime telemetry fixture sample",
+        ),
+        _scorecard_dimension_item(
+            root,
+            LIVE_RUNTIME_TELEMETRY_DIMENSION,
+            LIVE_RUNTIME_TELEMETRY_DIMENSION,
+            scorecard_path,
+            "live runtime telemetry sample",
+            missing_status="not_collected",
         ),
         _scorecard_dimension_item(
             root,
@@ -353,7 +365,7 @@ def generate_summary(
         "evidence_levels": evidence_levels,
         "known_unknowns": known_unknowns,
         "refresh_commands": REFRESH_COMMANDS,
-        "claim_boundary": "Local deterministic evidence only; skill efficacy and executor adapter fixtures are structural/local evidence, not live pass-rate, empirical before/after performance, external popularity, adoption, marketplace availability, or market claim evidence.",
+        "claim_boundary": "Local deterministic evidence only; skill efficacy, activation precision, and executor adapter fixtures are structural/local evidence, not live runtime telemetry, live pass-rate, empirical before/after performance, external popularity, adoption, marketplace availability, or market claim evidence.",
     }
 
 
@@ -381,8 +393,10 @@ def _known_unknowns(
 
 def _known_unknown_name(name: str) -> str:
     mapping = {
-        "runtime telemetry sample": "Runtime telemetry sample",
-        RUNTIME_TELEMETRY_DIMENSION: "Runtime telemetry sample",
+        "runtime telemetry fixture sample": "Runtime telemetry fixture sample",
+        RUNTIME_TELEMETRY_FIXTURE_DIMENSION: "Runtime telemetry fixture sample",
+        "live runtime telemetry sample": "Live runtime telemetry sample",
+        LIVE_RUNTIME_TELEMETRY_DIMENSION: "Live runtime telemetry sample",
         "live pass-rate": "Live pass-rate",
         EXECUTOR_LIVE_PASS_RATE_DIMENSION: "Live pass-rate",
         "token overhead": "Token overhead",
@@ -399,7 +413,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
     lines = [
         "# Public Benchmark Summary",
         "",
-        "This generated summary reports local deterministic ChangeForge evidence. Skill efficacy and executor adapter fixtures are structural/local evidence, not live pass-rate or empirical before/after agent-performance proof. It does not claim external popularity, marketplace availability, or market adoption.",
+        "This generated summary reports local deterministic ChangeForge evidence. Skill efficacy, activation precision, and executor adapter fixtures are structural/local evidence, not live runtime telemetry, live pass-rate, or empirical before/after agent-performance proof. It does not claim external popularity, marketplace availability, or market adoption.",
         "",
         "## Repository",
         "",
@@ -451,9 +465,13 @@ def _scorecard_evidence_levels(root: Path, scorecard_path: Path | None) -> dict[
             "status": "unknown",
             "meaning": "Local deterministic structure sample passed; not evidence of live task success.",
         },
-        "runtime telemetry sample": {
+        "runtime telemetry fixture sample": {
             "status": "not_collected",
-            "meaning": "Sanitized bounded runtime fact sample; may still require human review.",
+            "meaning": "Deterministic executor-adapter fixture-derived bounded facts; not live runtime telemetry.",
+        },
+        "live runtime telemetry sample": {
+            "status": "not_collected",
+            "meaning": "Sanitized bounded facts from an actual hook runtime execution.",
         },
         "promoted golden case": {
             "status": "unknown",

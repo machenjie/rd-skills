@@ -435,11 +435,11 @@ product_surfaces:
     required_skill: frontend-change-builder
     default_capabilities: [page-component-decomposition, state-management-design, form-validation-design, frontend-api-integration]
   - surface: backend-product
-    signals: [backend, service, controller, transaction, job, validation, auth]
+    signals: [backend, service, controller, transaction, background job, auth]
     required_skill: backend-change-builder
     default_capabilities: [service-business-logic, authentication-authorization, idempotency-retry-design, logging-error-handling]
   - surface: api-contract
-    signals: [api, endpoint, dto, schema, response, request, compatibility]
+    signals: [api, endpoint, dto, schema, response, request]
     required_skill: data-api-contract-changer
     default_capabilities: [api-contract-design, dto-schema-design, error-code-design, version-compatibility]
   - surface: data-model
@@ -455,7 +455,7 @@ product_surfaces:
     required_skill: data-middleware-change-builder
     default_capabilities: [cache-design, concurrency-control]
   - surface: message-queue
-    signals: [queue, kafka, consumer, producer, dlq, offset, replay]
+    signals: [queue, kafka, consumer, producer, dlq, offset, dead letter]
     required_skill: data-middleware-change-builder
     default_capabilities: [message-queue-design, idempotency-retry-design]
   - surface: search-analytics
@@ -467,19 +467,19 @@ product_surfaces:
     required_skill: integration-change-builder
     default_capabilities: [degradation-circuit-breaking, idempotency-retry-design]
   - surface: webhook
-    signals: [webhook, signature, replay, idempotency]
+    signals: [webhook, hmac, webhook signature, webhook replay, webhook idempotency, provider event]
     required_skill: integration-change-builder
     default_capabilities: [authentication-security, idempotency-retry-design]
   - surface: infrastructure-deployment
-    signals: [deployment, rollout, container, environment, infrastructure]
+    signals: [deployment, rollout, container, environment, infrastructure, 发布, 部署]
     required_skill: delivery-release-gate
     default_capabilities: [containerization, release-rollback, ci-cd]
   - surface: kubernetes-helm
-    signals: [kubernetes, k8s, helm, ingress, serviceaccount, rbac]
+    signals: [kubernetes, k8s, helm, chart, values.yaml, ingress, serviceaccount, rbac]
     required_skill: delivery-release-gate
     default_capabilities: [kubernetes-gateway, ci-cd, secret-configuration-security]
   - surface: ci-cd
-    signals: [ci, cd, workflow, pipeline, lockfile, dependency]
+    signals: [ci, cd, workflow, pipeline, lockfile]
     required_skill: delivery-release-gate
     default_capabilities: [ci-cd, package-dependency-management]
   - surface: ai-rag-agent
@@ -487,11 +487,11 @@ product_surfaces:
     required_skill: ai-product-extension
     default_capabilities: [threat-modeling, observability, test-strategy]
   - surface: web3
-    signals: [web3, wallet, signature, smart contract, chain, token]
+    signals: [web3, wallet, eip-712, smart contract, blockchain, on-chain]
     required_skill: web3-product-extension
     default_capabilities: [authentication-security, threat-modeling]
   - surface: payment-trading
-    signals: [payment, subscription, billing, invoice, trading, ledger]
+    signals: [payment, subscription, billing, trading, ledger]
     required_skill: payment-trading-extension
     default_capabilities: [idempotency-retry-design, transaction-consistency]
   - surface: low-level-systems
@@ -511,7 +511,7 @@ product_surfaces:
     required_skill: change-documentation-gate
     default_capabilities: [documentation-generation]
   - surface: skill-authoring
-    signals: [skill, capability, registry, routing rule, stage model, executor adapter, repo graph, project memory, validation broker, trajectory]
+    signals: [skill, capability, skill registry, routing rule, stage model, hook runtime]
     required_skill: change-forge-router
     default_capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency]
     conditional_capabilities: [minimal-correct-implementation]

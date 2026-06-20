@@ -122,7 +122,9 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
 
         # Regression: release evidence must keep runtime evidence gaps visible.
         self.assertIn("Executor adapter structural fixtures", dimension_names)
-        self.assertIn("Runtime telemetry sample", dimension_names)
+        self.assertIn("Activation precision benchmark", dimension_names)
+        self.assertIn("Runtime telemetry fixture sample", dimension_names)
+        self.assertIn("Live runtime telemetry sample", dimension_names)
         self.assertIn("Executor adapter live pass-rate", dimension_names)
         self.assertIn("Executor adapter token overhead", dimension_names)
         self.assertIn("Executor adapter turn overhead", dimension_names)
@@ -211,16 +213,19 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
         self.assertEqual(token_status, "not_collected")
         self.assertIn("not measured", token_detail)
 
-    def test_runtime_telemetry_sample_status_requires_bounded_fields(self) -> None:
+    def test_runtime_telemetry_fixture_sample_status_requires_bounded_fields(self) -> None:
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             reports = root / "reports"
             reports.mkdir()
-            missing_status, _missing_detail = module.runtime_telemetry_sample_status(root)
+            missing_status, _missing_detail = module.runtime_telemetry_fixture_sample_status(root)
             (reports / "runtime-telemetry-sample.json").write_text(
                 json.dumps(
                     {
+                        "source": "deterministic-fixture-bounded-facts",
+                        "sample_kind": "runtime_telemetry_fixture_sample",
+                        "evidence_level": "runtime telemetry fixture sample",
                         "runtime": "mixed-fixture-runtime-sample",
                         "event_count": 15,
                         "normalized_event_kinds": ["edit"],
@@ -235,12 +240,40 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            status, detail = module.runtime_telemetry_sample_status(root)
+            status, detail = module.runtime_telemetry_fixture_sample_status(root)
 
         self.assertEqual(missing_status, "not_collected")
         self.assertEqual(status, "pass")
+        self.assertIn('"evidence_level": "runtime telemetry fixture sample"', detail)
         self.assertIn('"privacy_redaction_count": 2', detail)
         self.assertIn('"token_overhead": "not_collected"', detail)
+
+    def test_live_runtime_telemetry_sample_rejects_fixture_source(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            missing_status, _missing_detail = module.live_runtime_telemetry_sample_status(root)
+            (reports / "live-runtime-telemetry-sample.json").write_text(
+                json.dumps(
+                    {
+                        "source": "deterministic-fixture-bounded-facts",
+                        "sample_kind": "live_runtime_telemetry_sample",
+                        "evidence_level": "live runtime telemetry sample",
+                        "runtime": "codex",
+                        "event_count": 1,
+                        "normalized_event_kinds": ["edit"],
+                        "privacy_redaction_count": 0,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            status, detail = module.live_runtime_telemetry_sample_status(root)
+
+        self.assertEqual(missing_status, "not_collected")
+        self.assertEqual(status, "fail")
+        self.assertIn("cannot use deterministic fixture source", detail)
 
     def test_validation_report_status_reads_machine_report(self) -> None:
         module = _load_module()
@@ -288,18 +321,64 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
         self.assertEqual(status, "fail")
         self.assertIn("missing validation report fields", detail)
 
-    def test_evidence_levels_include_runtime_sample_without_live_metric_claims(self) -> None:
+    def test_validation_report_status_fails_on_inconsistent_status_and_errors(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            (reports / "hook-validation.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "generated_by": "scripts/validate-hooks.py",
+                        "status": "pass",
+                        "errors": ["stale manual report"],
+                        "summary": {"error_count": 1},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            pass_status, pass_detail = module.validation_report_status(
+                root,
+                "reports/hook-validation.json",
+            )
+            (reports / "hook-validation.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "generated_by": "scripts/validate-hooks.py",
+                        "status": "fail",
+                        "errors": [],
+                        "summary": {"error_count": 0},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            fail_status, fail_detail = module.validation_report_status(
+                root,
+                "reports/hook-validation.json",
+            )
+
+        self.assertEqual(pass_status, "fail")
+        self.assertIn("errors is non-empty", pass_detail)
+        self.assertEqual(fail_status, "fail")
+        self.assertIn("errors is empty", fail_detail)
+
+    def test_evidence_levels_include_fixture_and_live_runtime_samples(self) -> None:
         module = _load_module()
         dimensions = [
             module.Dimension("Promoted agent samples", "pass", "report", "cmd", "fix", "detail"),
-            module.Dimension("Runtime telemetry sample", "pass", "report", "cmd", "fix", "detail"),
+            module.Dimension("Runtime telemetry fixture sample", "pass", "report", "cmd", "fix", "detail"),
+            module.Dimension("Live runtime telemetry sample", "not_collected", "report", "cmd", "fix", "detail"),
             module.Dimension("Executor adapter live pass-rate", "not_collected", "report", "cmd", "fix", "detail"),
             module.Dimension("Executor adapter token overhead", "not_collected", "report", "cmd", "fix", "detail"),
             module.Dimension("Executor adapter turn overhead", "not_collected", "report", "cmd", "fix", "detail"),
         ]
         levels = module._evidence_levels(dimensions)
 
-        self.assertEqual(levels["runtime telemetry sample"]["status"], "pass")
+        self.assertEqual(levels["runtime telemetry fixture sample"]["status"], "pass")
+        self.assertEqual(levels["live runtime telemetry sample"]["status"], "not_collected")
         self.assertEqual(levels["live pass-rate"]["status"], "not_collected")
         self.assertEqual(levels["token overhead"]["status"], "not_collected")
         self.assertEqual(levels["turn overhead"]["status"], "not_collected")

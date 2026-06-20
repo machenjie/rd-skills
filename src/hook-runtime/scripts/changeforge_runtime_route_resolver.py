@@ -74,40 +74,15 @@ LANGUAGE_CAPABILITIES = {
     "sql": "sql-professional-usage",
 }
 
-LANGUAGE_STRONG_PATTERNS = {
-    "go": (
-        re.compile(r"\bgolang\b", re.I),
-        re.compile(r"\bgo\s+test\b", re.I),
-        re.compile(r"\bgo\s+channel\b", re.I),
-        re.compile(r"\bgoroutine\b", re.I),
-    ),
-    "typescript": (
-        re.compile(r"\btypescript\b", re.I),
-        re.compile(r"\btsx\b", re.I),
-        re.compile(r"\breact\b|\bvue\b|\bsvelte\b", re.I),
-    ),
-    "python": (
-        re.compile(r"\bpython\b", re.I),
-        re.compile(r"\bpytest\b", re.I),
-        re.compile(r"\basyncio\b", re.I),
-    ),
-    "java-jvm": (
-        re.compile(r"\bjava\b|\bjvm\b|\bkotlin\b|\bspring\b", re.I),
-    ),
-    "rust": (
-        re.compile(r"\brust\b|\bcargo\b|\bborrow checker\b|\blifetime\b", re.I),
-    ),
-    "cpp": (
-        re.compile(r"\bc\+\+\b|\bcpp\b|\braii\b|\bundefined behavior\b", re.I),
-        re.compile(r"\bc\s+abi\b|\bnative\s+c\b|\bnative\s+c\+\+\b", re.I),
-        re.compile(r"\babi\b|\bffi\b|\bsanitizer\b", re.I),
-    ),
-    "shell": (
-        re.compile(r"\bshell\b|\bbash\b|\bzsh\b|\bset -euo pipefail\b", re.I),
-    ),
-    "sql": (
-        re.compile(r"\bsql\b|\bpostgres\b|\bmysql\b|\bsqlite\b", re.I),
-    ),
+LANGUAGE_SURFACE_SIGNALS = {
+    "go": ("go", "golang", "goroutine", "context", "channel"),
+    "java-jvm": ("java", "jvm", "spring", "executor", "thread"),
+    "typescript": ("typescript", "ts", "node", "react", "promise"),
+    "python": ("python", "py", "asyncio", "pytest", "type hints"),
+    "rust": ("rust", "borrow", "lifetime", "unsafe", "cargo"),
+    "cpp": ("c++", "cpp", "C ABI", "native C", "native C++", "raii", "abi", "ffi", "sanitizer"),
+    "shell": ("shell", "bash", "sh", "zsh", "cli"),
+    "sql": ("sql", "query", "index", "transaction", "migration"),
 }
 
 PRODUCT_SURFACE_ORDER = (
@@ -216,6 +191,95 @@ PRODUCT_OWNER = {
     "execution-trajectory": "ai-code-review-refactor",
     "sdk-library": "data-api-contract-changer",
     "cli-daemon": "backend-change-builder",
+}
+
+PRODUCT_SURFACE_SIGNALS = {
+    "frontend-product": ("frontend", "component", "route", "form", "browser", "accessibility", "state"),
+    "backend-product": ("backend", "service", "controller", "transaction", "background job", "auth"),
+    "api-contract": ("api", "endpoint", "dto", "schema", "response", "request"),
+    "data-model": ("data model", "table", "column", "entity", "persistence", "database"),
+    "database-migration": ("migration", "backfill", "rollback", "schema change", "irreversible data"),
+    "cache": ("cache", "redis", "ttl", "invalidation", "stampede"),
+    "message-queue": ("queue", "kafka", "consumer", "producer", "dlq", "offset", "dead letter"),
+    "search-analytics": ("search", "analytics", "index", "dashboard", "freshness"),
+    "external-integration": ("third-party", "integration", "provider", "timeout", "retry"),
+    "webhook": ("webhook", "hmac", "webhook signature", "webhook replay", "webhook idempotency", "provider event"),
+    "infrastructure-deployment": (
+        "deployment",
+        "rollout",
+        "container",
+        "environment",
+        "infrastructure",
+        "发布",
+        "部署",
+    ),
+    "kubernetes-helm": (
+        "kubernetes",
+        "k8s",
+        "helm",
+        "chart",
+        "values.yaml",
+        "ingress",
+        "serviceaccount",
+        "rbac",
+    ),
+    "ci-cd": ("ci", "cd", "workflow", "pipeline", "lockfile"),
+    "ai-rag-agent": ("ai", "llm", "rag", "agent", "embedding", "vector", "prompt", "model"),
+    "web3": ("web3", "wallet", "eip-712", "smart contract", "blockchain", "on-chain"),
+    "payment-trading": ("payment", "subscription", "billing", "trading", "ledger"),
+    "low-level-systems": ("kernel", "driver", "ffi", "abi", "syscall", "memory safety"),
+    "sdk-library": ("sdk", "library", "client", "package", "public api"),
+    "cli-daemon": ("cli", "daemon", "command", "stdout", "stderr", "exit code"),
+    "documentation-only": ("documentation", "docs", "readme", "changelog", "runbook"),
+    "skill-authoring": (
+        "skill",
+        "capability",
+        "skill registry",
+        "routing rule",
+        "stage model",
+        "hook runtime",
+    ),
+    "agent-runtime-governance": (
+        "executor adapter",
+        "runtime adapter",
+        "adapter capabilities",
+        "normalized event",
+        "closure contract",
+        "unsupported runtime event",
+    ),
+    "repository-intelligence": (
+        "repo graph",
+        "symbol graph",
+        "import graph",
+        "call graph",
+        "reference graph",
+        "test graph",
+        "context pack",
+        "source of truth unknown",
+    ),
+    "project-memory": (
+        "project memory",
+        "repeat failure",
+        "fragile file",
+        "stale context",
+        "previous fix failed",
+        "latest commit review follow-up",
+    ),
+    "validation-broker": (
+        "validation broker",
+        "validation command selection",
+        "stale validation",
+        "validation without outcome",
+        "affected tests",
+        "changed path validation",
+    ),
+    "execution-trajectory": (
+        "trajectory",
+        "edit before read",
+        "repair without re-review",
+        "stop without residual risk",
+        "skipped engineering stage",
+    ),
 }
 
 DOMAIN_OWNER = {
@@ -379,6 +443,105 @@ STAGE_CAPABILITIES = {
     ),
 }
 
+STAGE_CONDITIONAL_CAPABILITIES = {
+    "architecture-design": (
+        "architecture-enforcement-tooling",
+        "consumer-impact-analysis",
+        "dependency-wiring-lifecycle",
+        "minimal-correct-implementation",
+    ),
+    "implementation-planning": (
+        "testability-seam-design",
+        "dependency-wiring-lifecycle",
+        "algorithm-data-structure-selection",
+        "failure-contract-design",
+        "configuration-runtime-policy",
+        "model-boundary-mapping",
+        "data-side-effect-flow-tracing",
+        "cleanup-deletion-governance",
+        "minimal-correct-implementation",
+        "agent-workflow-state-machine",
+        "repository-graph-analysis",
+        "plan-execution-consistency",
+    ),
+    "coding": (
+        "dependency-wiring-lifecycle",
+        "algorithm-data-structure-selection",
+        "failure-contract-design",
+        "configuration-runtime-policy",
+        "data-side-effect-flow-tracing",
+        "minimal-correct-implementation",
+        "agent-tool-permission-sandbox",
+        "agent-workflow-state-machine",
+        "plan-execution-consistency",
+    ),
+    "bug-fix": (
+        "minimal-correct-implementation",
+        "execution-trajectory-analysis",
+        "project-memory-governance",
+        "plan-execution-consistency",
+        "agent-workflow-state-machine",
+    ),
+    "code-review": ("minimal-correct-implementation", "agent-workflow-state-machine"),
+    "refactoring": (
+        "testability-seam-design",
+        "model-boundary-mapping",
+        "data-side-effect-flow-tracing",
+        "cleanup-deletion-governance",
+        "minimal-correct-implementation",
+    ),
+    "testing": (
+        "unit-testing",
+        "integration-testing",
+        "contract-testing",
+        "e2e-testing",
+        "regression-testing",
+        "testability-seam-design",
+        "algorithm-data-structure-selection",
+        "failure-contract-design",
+        "model-boundary-mapping",
+        "data-side-effect-flow-tracing",
+        "minimal-correct-implementation",
+        "agent-workflow-state-machine",
+        "validation-broker",
+        "repository-graph-analysis",
+    ),
+    "release-delivery": (
+        "configuration-runtime-policy",
+        "agent-tool-permission-sandbox",
+        "plan-execution-consistency",
+        "architecture-enforcement-tooling",
+        "consumer-impact-analysis",
+        "cleanup-deletion-governance",
+        "minimal-correct-implementation",
+    ),
+    "documentation-handoff": (
+        "executor-adapter-protocol",
+        "validation-broker",
+        "execution-trajectory-analysis",
+        "project-memory-governance",
+    ),
+    "skill-authoring": (
+        "minimal-correct-implementation",
+        "agent-workflow-state-machine",
+        "executor-adapter-protocol",
+        "repository-graph-analysis",
+        "project-memory-governance",
+        "validation-broker",
+        "execution-trajectory-analysis",
+    ),
+}
+
+CAPABILITY_TRIGGERS: dict[str, tuple[str, ...]] = {
+    "validation-broker": (
+        "validation broker",
+        "validation command selection",
+        "stale validation",
+        "validation without outcome",
+        "changed path validation",
+    ),
+}
+
 CAPABILITY_IDS = {
     "requirement-clarification": "01",
     "requirement-structuring": "02",
@@ -536,6 +699,24 @@ def _tuple_mapping(value: object, fallback: dict[str, tuple[str, ...]]) -> dict[
     return mapped
 
 
+def _merge_nonempty_tuple_mapping(
+    value: object,
+    fallback: dict[str, tuple[str, ...]],
+) -> dict[str, tuple[str, ...]]:
+    if not isinstance(value, dict):
+        return fallback
+    merged = dict(fallback)
+    for key, items in value.items():
+        if not isinstance(key, str) or not isinstance(items, list):
+            return fallback
+        if not all(isinstance(item, str) and item.strip() for item in items):
+            return fallback
+        cleaned = tuple(item.strip() for item in items)
+        if cleaned:
+            merged[key] = cleaned
+    return merged
+
+
 def _string_mapping(value: object, fallback: dict[str, str]) -> dict[str, str]:
     if not isinstance(value, dict):
         return fallback
@@ -561,13 +742,17 @@ def _apply_runtime_route_index() -> None:
         return
     global LANGUAGE_FILE_EXTENSIONS
     global LANGUAGE_CAPABILITIES
+    global LANGUAGE_SURFACE_SIGNALS
     global PRODUCT_SURFACE_ORDER
+    global PRODUCT_SURFACE_SIGNALS
     global DOMAIN_EXTENSION_BY_SURFACE
     global ALL_DOMAIN_EXTENSIONS
     global PRODUCT_OWNER
     global DOMAIN_OWNER
     global SURFACE_CAPABILITIES
     global STAGE_CAPABILITIES
+    global STAGE_CONDITIONAL_CAPABILITIES
+    global CAPABILITY_TRIGGERS
     global CAPABILITY_IDS
 
     LANGUAGE_FILE_EXTENSIONS = _tuple_mapping(
@@ -575,7 +760,15 @@ def _apply_runtime_route_index() -> None:
         LANGUAGE_FILE_EXTENSIONS,
     )
     LANGUAGE_CAPABILITIES = _string_mapping(index.get("language_capabilities"), LANGUAGE_CAPABILITIES)
+    LANGUAGE_SURFACE_SIGNALS = _tuple_mapping(
+        index.get("language_surface_signals"),
+        LANGUAGE_SURFACE_SIGNALS,
+    )
     PRODUCT_SURFACE_ORDER = _string_tuple(index.get("product_surface_order"), PRODUCT_SURFACE_ORDER)
+    PRODUCT_SURFACE_SIGNALS = _tuple_mapping(
+        index.get("product_surface_signals"),
+        PRODUCT_SURFACE_SIGNALS,
+    )
     DOMAIN_EXTENSION_BY_SURFACE = _string_mapping(
         index.get("domain_extension_by_surface"),
         DOMAIN_EXTENSION_BY_SURFACE,
@@ -585,6 +778,14 @@ def _apply_runtime_route_index() -> None:
     DOMAIN_OWNER = _string_mapping(index.get("domain_owner"), DOMAIN_OWNER)
     SURFACE_CAPABILITIES = _tuple_mapping(index.get("surface_capabilities"), SURFACE_CAPABILITIES)
     STAGE_CAPABILITIES = _tuple_mapping(index.get("stage_capabilities"), STAGE_CAPABILITIES)
+    STAGE_CONDITIONAL_CAPABILITIES = _tuple_mapping(
+        index.get("stage_conditional_capabilities"),
+        STAGE_CONDITIONAL_CAPABILITIES,
+    )
+    CAPABILITY_TRIGGERS = _merge_nonempty_tuple_mapping(
+        index.get("capability_triggers"),
+        CAPABILITY_TRIGGERS,
+    )
     CAPABILITY_IDS = _string_mapping(index.get("capability_ids"), CAPABILITY_IDS)
 
 
@@ -603,46 +804,19 @@ def detect_product_surfaces(paths: list[str], command: str = "", text: str = "")
     if (_docs_only(paths) or _text_docs_only(evidence)) and not _matches_any(evidence, (r"\bapi\b", r"\bsecurity\b", r"\bmigration\b")):
         return ["documentation-only"]
 
-    if _matches_any(evidence, (r"\bcomponents?/", r"\bpages?/", r"\broutes?/", r"\bapp/", r"\breact\b", r"\bvue\b", r"\bsvelte\b")) or any(Path(path).suffix in {".tsx", ".jsx"} for path in paths):
-        surfaces.append("frontend-product")
-    if _matches_any(evidence, (r"\bcontrollers?/", r"\bhandlers?/", r"\bservices?/", r"\busecases?/", r"\bworkers?/", r"\bjobs?/", r"\bvalidators?/", r"\bbackend\b", r"\bserver\b")):
-        surfaces.append("backend-product")
-    if _matches_any(evidence, (r"\bopenapi\b", r"\bgraphql\b", r"\bproto\b", r"\bdto\b", r"\brequest\b", r"\bresponse\b", r"\bcontract\b", r"\bapi\b")):
-        surfaces.append("api-contract")
-    if _matches_any(evidence, (r"\bmigrations?/", r"\bmigration\b", r"\bbackfill\b", r"\bschema change\b")):
-        surfaces.append("database-migration")
-    elif any(Path(path).suffix == ".sql" for path in paths) or _matches_any(evidence, (r"\bentity\b", r"\bpersistence\b", r"\bdatabase\b", r"\btable\b", r"\bcolumn\b")):
-        surfaces.append("data-model")
-    if _matches_any(evidence, (r"\bredis\b", r"\bmemcached\b", r"\bcache\b", r"\bttl\b", r"\binvalidation\b", r"\beviction\b")):
-        surfaces.append("cache")
-    if _matches_any(evidence, (r"\bkafka\b", r"\btopic\b", r"\bconsumer\b", r"\bproducer\b", r"\bdlq\b", r"\boffset\b", r"\breplay\b")):
-        surfaces.append("message-queue")
-    if _matches_any(evidence, (r"\bsearch\b", r"\banalytics\b", r"\bdashboard\b", r"\bwarehouse\b", r"\bfreshness\b", r"\bindex\b")):
-        surfaces.append("search-analytics")
-    if _matches_any(evidence, (r"\bwebhook\b", r"\bsignature\b.*\breplay\b", r"\bidempotency\b.*\bwebhook\b")):
-        surfaces.append("webhook")
-    if _matches_any(evidence, (r"\bthird[- ]party\b", r"\bintegrations?/", r"\bproviders?/", r"\badapters?/", r"\btimeout\b", r"\bretry\b")):
-        surfaces.append("external-integration")
-    if _matches_any(evidence, (r"\bdockerfile\b", r"\bdeployment\b", r"\bdeploy\b", r"\brollout\b", r"\bcontainer\b", r"\bterraform\b", r"\bpulumi\b", r"发布", r"部署")):
-        surfaces.append("infrastructure-deployment")
-    if _matches_any(evidence, (r"\bk8s\b", r"\bkubernetes\b", r"\bhelm\b", r"\bchart\.yaml\b", r"\bvalues\.ya?ml\b", r"\btemplates/", r"\bingress\b", r"\bserviceaccount\b", r"\brbac\b")):
-        surfaces.append("kubernetes-helm")
-    if _matches_any(evidence, (r"\b\.github/workflows/", r"\bworkflow\b", r"\bci\b", r"\bcd\b", r"\bpipeline\b", r"\blockfile\b", r"\bchart\.lock\b")):
-        surfaces.append("ci-cd")
-    if _matches_any(evidence, (r"\bllm\b", r"\brag\b", r"\bembedding\b", r"\bvector\b", r"\bprompt\b", r"\bmodel\b", r"\bagent\b")):
-        surfaces.append("ai-rag-agent")
-    if _matches_any(evidence, (r"\bweb3\b", r"\bwallet\b", r"\bsmart contract\b", r"\bblockchain\b", r"\bon[- ]chain\b", r"\beip-?712\b", r"\bnonce\b", r"\breorg\b", r"\bsolidity\b")):
-        surfaces.append("web3")
-    if _matches_any(evidence, (r"\bpayment\b", r"\bbilling\b", r"\bsubscription\b", r"\binvoice\b", r"\btrading\b", r"\bledger\b", r"\bsettlement\b", r"\bcheckout\b", r"\brefund\b", r"\bchargeback\b")):
-        surfaces.append("payment-trading")
-    if any(Path(path).suffix in LANGUAGE_FILE_EXTENSIONS["cpp"] for path in paths) or _matches_any(evidence, (r"\bkernel\b", r"\bdriver\b", r"\bffi\b", r"\babi\b", r"\bsyscall\b", r"\bmemory safety\b", r"\bnative performance\b", r"\braii\b", r"\bundefined behavior\b")):
-        surfaces.append("low-level-systems")
-    if _matches_any(evidence, (r"\bsdk\b", r"\bgenerated client\b", r"\bpublic client api\b", r"\bpackage\b", r"\bpublic api\b")):
-        surfaces.append("sdk-library")
-    if _matches_any(evidence, (r"\bcli\b", r"\bdaemon\b", r"\bstdout\b", r"\bstderr\b", r"\bexit code\b", r"\bdry[- ]run\b", r"\bsignal\b")):
-        surfaces.append("cli-daemon")
+    for surface in PRODUCT_SURFACE_ORDER:
+        if _signals_match(evidence, PRODUCT_SURFACE_SIGNALS.get(surface, ())):
+            surfaces.append(surface)
 
-    return [surface for surface in PRODUCT_SURFACE_ORDER if surface in set(surfaces)]
+    if any(Path(path).suffix in {".tsx", ".jsx"} for path in paths):
+        surfaces.append("frontend-product")
+    if any(Path(path).suffix == ".sql" for path in paths) and "database-migration" not in surfaces:
+        surfaces.append("data-model")
+
+    ordered = [surface for surface in PRODUCT_SURFACE_ORDER if surface in set(surfaces)]
+    if "database-migration" in ordered:
+        ordered = ["database-migration", *(surface for surface in ordered if surface != "database-migration")]
+    return ordered
 
 
 def detect_language_surfaces(paths: list[str], command: str = "", text: str = "") -> list[str]:
@@ -655,9 +829,25 @@ def detect_language_surfaces(paths: list[str], command: str = "", text: str = ""
         if _text_mentions_extension(evidence, extensions):
             languages.append(language)
             continue
-        if any(pattern.search(evidence) for pattern in LANGUAGE_STRONG_PATTERNS[language]):
+        if _signals_match(evidence, LANGUAGE_SURFACE_SIGNALS.get(language, ())):
             languages.append(language)
     return _unique(languages)
+
+
+def detect_conditional_capabilities(paths: list[str], command: str = "", text: str = "") -> list[str]:
+    """Return conditional capability candidates detected from bounded route evidence."""
+    evidence = _evidence(paths, command, text)
+    conditionals = _unique(
+        capability
+        for capabilities in STAGE_CONDITIONAL_CAPABILITIES.values()
+        for capability in capabilities
+    )
+    detected: list[str] = []
+    for capability in conditionals:
+        signals = CAPABILITY_TRIGGERS.get(capability) or _capability_name_signals(capability)
+        if _signals_match(evidence, signals):
+            detected.append(capability)
+    return _unique(detected)
 
 
 def detect_domain_extensions(paths: list[str], command: str = "", text: str = "") -> list[str]:
@@ -968,11 +1158,23 @@ def _selected_capabilities(
     state: dict[str, Any] | None = None,
     classification: dict[str, Any] | None = None,
 ) -> list[str]:
+    classification = classification or {}
     capabilities: list[str] = []
     if current_stage in STAGE_CAPABILITIES:
         capabilities.extend(STAGE_CAPABILITIES[current_stage])
+    conditional_candidates = set(classification.get("conditional_capabilities") or [])
+    for capability in STAGE_CONDITIONAL_CAPABILITIES.get(current_stage, ()):
+        if capability in conditional_candidates:
+            capabilities.append(capability)
     for surface in product_surfaces:
-        capabilities.extend(SURFACE_CAPABILITIES.get(surface, ()))
+        surface_capabilities = SURFACE_CAPABILITIES.get(surface, ())
+        if surface == "data-model" and "database-migration" in product_surfaces:
+            surface_capabilities = tuple(
+                capability
+                for capability in surface_capabilities
+                if capability != "data-model-design"
+            )
+        capabilities.extend(surface_capabilities)
     for language in language_surfaces:
         capability = LANGUAGE_CAPABILITIES.get(language)
         if capability and current_stage not in {"requirement-intake", "documentation-handoff", "release-delivery", "skill-authoring"}:
@@ -1234,6 +1436,29 @@ def _text_mentions_extension(evidence: str, extensions: tuple[str, ...]) -> bool
     )
 
 
+def _signals_match(evidence: str, signals: Iterable[str]) -> bool:
+    return any(_signal_matches(evidence, signal) for signal in signals)
+
+
+def _signal_matches(evidence: str, signal: str) -> bool:
+    value = str(signal).strip()
+    if not value:
+        return False
+    escaped = re.escape(value.casefold())
+    separator_flexible = escaped.replace(r"\ ", r"[-_/.\s]+")
+    pattern = rf"(?<![a-z0-9]){separator_flexible}s?(?![a-z0-9])"
+    return bool(re.search(pattern, evidence, re.I))
+
+
+def _capability_name_signals(capability: str) -> tuple[str, ...]:
+    parts = [part for part in capability.split("-") if part not in {"design", "analysis"}]
+    signals = [capability.replace("-", " ")]
+    if len(parts) >= 2:
+        signals.append(" ".join(parts[:2]))
+    signals.extend(part for part in parts if len(part) > 4)
+    return tuple(signals)
+
+
 def _has_path_prefix(paths: Iterable[str], prefixes: tuple[str, ...]) -> bool:
     return any(str(path).casefold().startswith(prefix) for path in paths for prefix in prefixes)
 
@@ -1272,6 +1497,7 @@ __all__ = [
     "PRODUCT_SURFACE_ORDER",
     "build_active_skill_context",
     "context_lines",
+    "detect_conditional_capabilities",
     "detect_domain_extensions",
     "detect_language_surfaces",
     "detect_product_surfaces",

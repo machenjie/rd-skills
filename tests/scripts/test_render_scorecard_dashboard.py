@@ -37,9 +37,13 @@ def _payload() -> dict[str, object]:
                 "status": "pass",
                 "meaning": "Local deterministic structure sample passed.",
             },
-            "runtime telemetry sample": {
+            "runtime telemetry fixture sample": {
                 "status": "pass",
-                "meaning": "Sanitized bounded runtime fact sample.",
+                "meaning": "Deterministic fixture-derived runtime fact sample.",
+            },
+            "live runtime telemetry sample": {
+                "status": "not_collected",
+                "meaning": "Live runtime fact sample.",
             },
             "live pass-rate": {
                 "status": "not_collected",
@@ -91,11 +95,25 @@ def _payload() -> dict[str, object]:
                 "fix_hint": "Repair executor adapter fixtures.",
             },
             {
-                "name": "Runtime telemetry sample",
+                "name": "Activation precision benchmark",
+                "status": "pass",
+                "detail": "all activation metrics pass",
+                "source": "reports/activation-precision.json",
+                "fix_hint": "Repair activation benchmark.",
+            },
+            {
+                "name": "Runtime telemetry fixture sample",
                 "status": "pass",
                 "detail": "sanitized sample generated",
                 "source": "reports/runtime-telemetry-sample.json",
                 "fix_hint": "Regenerate telemetry sample.",
+            },
+            {
+                "name": "Live runtime telemetry sample",
+                "status": "not_collected",
+                "detail": "not collected",
+                "source": "reports/live-runtime-telemetry-sample.json",
+                "fix_hint": "Collect live runtime telemetry.",
             },
             {
                 "name": "Installation validation",
@@ -127,7 +145,8 @@ class RenderScorecardDashboardTests(unittest.TestCase):
         module = _load_module()
         rendered = module.render_dashboard(_payload())
         self.assertIn("## Evidence Levels", rendered)
-        self.assertIn("| runtime telemetry sample | `pass` |", rendered)
+        self.assertIn("| runtime telemetry fixture sample | `pass` |", rendered)
+        self.assertIn("| live runtime telemetry sample | `not_collected` |", rendered)
         self.assertIn("| live pass-rate | `not_collected` |", rendered)
         self.assertIn("| token overhead | `not_collected` |", rendered)
         self.assertIn("| turn overhead | `not_collected` |", rendered)
@@ -137,7 +156,9 @@ class RenderScorecardDashboardTests(unittest.TestCase):
         module = _load_module()
         rendered = module.render_dashboard(_payload())
         self.assertIn("| Executor adapter structural fixtures | `pass` | case_count=15 |", rendered)
-        self.assertIn("| Runtime telemetry sample | `pass` | sanitized sample generated |", rendered)
+        self.assertIn("| Activation precision benchmark | `pass` | all activation metrics pass |", rendered)
+        self.assertIn("| Runtime telemetry fixture sample | `pass` | sanitized sample generated |", rendered)
+        self.assertIn("| Live runtime telemetry sample | `not_collected` | not collected |", rendered)
 
     def test_open_source_partial_is_visible(self) -> None:
         module = _load_module()

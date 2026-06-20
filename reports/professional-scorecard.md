@@ -4,18 +4,19 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 
 ## Summary
 
-- `pass`: 15
+- `pass`: 16
 - `partial`: 3
 - `fail`: 0
 - `unknown`: 0
-- `not_collected`: 3
+- `not_collected`: 4
 
 ## Evidence Levels
 
 | Evidence | Status | Meaning |
 | --- | --- | --- |
 | structural fixture | `pass` | Local deterministic structure sample passed; not evidence of live task success. |
-| runtime telemetry sample | `pass` | Sanitized bounded runtime fact sample; may still require human review. |
+| runtime telemetry fixture sample | `pass` | Deterministic executor-adapter fixture-derived bounded facts; not live runtime telemetry. |
+| live runtime telemetry sample | `not_collected` | Sanitized bounded facts from an actual hook runtime execution. |
 | promoted golden case | `pass` | Human-reviewed case admitted to regression coverage. |
 | live pass-rate | `not_collected` | Measured real-task success rate. |
 | token overhead | `not_collected` | Measured additional token cost. |
@@ -36,7 +37,9 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 | Skill efficacy structural fixtures | `pass` | evals/skill-efficacy and scripts/validate-skill-efficacy-benchmarks.py | `python3 scripts/validate-skill-efficacy-benchmarks.py` |
 | Runtime governance structural fixtures | `pass` | evals/executor-adapters, evals/repository-intelligence, evals/project-memory, evals/validation-broker, evals/trajectory | `python3 scripts/validate-professional-routing-coverage.py` |
 | Executor adapter structural fixtures | `pass` | evals/executor-adapter and reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
-| Runtime telemetry sample | `pass` | reports/runtime-telemetry-sample.json | `python3 scripts/eval-executor-adapters.py` |
+| Activation precision benchmark | `pass` | evals/activation and reports/activation-precision.json | `python3 scripts/eval-activation-precision.py` |
+| Runtime telemetry fixture sample | `pass` | reports/runtime-telemetry-sample.json | `python3 scripts/eval-executor-adapters.py` |
+| Live runtime telemetry sample | `not_collected` | reports/live-runtime-telemetry-sample.json | `manual live runtime collection with sanitized bounded facts` |
 | Executor adapter live pass-rate | `not_collected` | reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter token overhead | `not_collected` | reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter turn overhead | `not_collected` | reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
@@ -57,6 +60,7 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 
 - Professional skill coverage: Repair weak professional skill sections without keyword stuffing.
 - Foundation capability coverage: Improve selected capability evidence contracts and references.
+- Live runtime telemetry sample: Collect a real hook-runtime sample before changing this status from not_collected; do not use executor adapter fixtures for this dimension.
 - Executor adapter live pass-rate: Collect a real measured run before changing this status from not_collected.
 - Executor adapter token overhead: Collect a real measured run before changing this status from not_collected.
 - Executor adapter turn overhead: Collect a real measured run before changing this status from not_collected.

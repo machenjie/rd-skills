@@ -366,7 +366,7 @@ def evaluate_suite(fixtures_dir: Path = DEFAULT_FIXTURE_DIR) -> dict[str, Any]:
         },
         "telemetry_sample": {
             "status": "generated" if cases else "not_collected",
-            "detail": "sanitized fixture-derived bounded telemetry sample",
+            "detail": "sanitized fixture-derived bounded telemetry fixture sample",
         },
     }
     return {
@@ -407,6 +407,8 @@ def telemetry_sample_from_eval(payload: Mapping[str, Any]) -> dict[str, Any]:
         "schema_version": 1,
         "generated_by": "scripts/eval-executor-adapters.py",
         "source": "deterministic-fixture-bounded-facts",
+        "sample_kind": "runtime_telemetry_fixture_sample",
+        "evidence_level": "runtime telemetry fixture sample",
         "runtime": "mixed-fixture-runtime-sample",
         "runtime_counts": dict(sorted(runtime_counts.items())),
         "event_count": len(cases),
@@ -451,7 +453,7 @@ def render_markdown(payload: Mapping[str, Any]) -> str:
         f"- Live pass-rate: `{summary['live_pass_rate']['status']}`",
         f"- Token overhead: `{summary['token_overhead']['status']}`",
         f"- Turn overhead: `{summary['turn_overhead']['status']}`",
-        f"- Telemetry sample: `{summary['telemetry_sample']['status']}`",
+        f"- Telemetry fixture sample: `{summary['telemetry_sample']['status']}`",
         "",
         "## Coverage",
         "",
@@ -513,7 +515,7 @@ def main(argv: list[str] | None = None) -> int:
     json_out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     telemetry_out.write_text(json.dumps(telemetry, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"wrote executor adapter eval to {out} and {json_out}")
-    print(f"wrote runtime telemetry sample to {telemetry_out}")
+    print(f"wrote runtime telemetry fixture sample to {telemetry_out}")
     return 0 if payload["status"] == "pass" else 1
 
 

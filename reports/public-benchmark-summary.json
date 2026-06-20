@@ -1,16 +1,20 @@
 {
-  "claim_boundary": "Local deterministic evidence only; skill efficacy and executor adapter fixtures are structural/local evidence, not live pass-rate, empirical before/after performance, external popularity, adoption, marketplace availability, or market claim evidence.",
+  "claim_boundary": "Local deterministic evidence only; skill efficacy, activation precision, and executor adapter fixtures are structural/local evidence, not live runtime telemetry, live pass-rate, empirical before/after performance, external popularity, adoption, marketplace availability, or market claim evidence.",
   "evidence_levels": {
     "live pass-rate": {
       "meaning": "Measured real-task success rate.",
+      "status": "not_collected"
+    },
+    "live runtime telemetry sample": {
+      "meaning": "Sanitized bounded facts from an actual hook runtime execution.",
       "status": "not_collected"
     },
     "promoted golden case": {
       "meaning": "Human-reviewed case admitted to regression coverage.",
       "status": "pass"
     },
-    "runtime telemetry sample": {
-      "meaning": "Sanitized bounded runtime fact sample; may still require human review.",
+    "runtime telemetry fixture sample": {
+      "meaning": "Deterministic executor-adapter fixture-derived bounded facts; not live runtime telemetry.",
       "status": "pass"
     },
     "structural fixture": {
@@ -118,7 +122,7 @@
     },
     {
       "command": "python3 scripts/validate-skill-efficacy-benchmarks.py",
-      "detail": "{\"candidate_fixtures_ignored\": 0, \"evidence_boundary\": \"structural/local fixtures only; no empirical before/after agent performance\", \"evidence_levels\": {\"live pass-rate\": \"not_collected\", \"promoted golden case\": \"not_collected\", \"runtime telemetry sample\": \"not_collected\", \"structural fixture\": 3, \"token overhead\": \"not_collected\", \"turn overhead\": \"not_collected\"}, \"fixtures\": 3, \"live_pass_rate\": \"not_collected\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\", \"verdicts\": {\"structural_pass\": 3}}",
+      "detail": "{\"candidate_fixtures_ignored\": 0, \"evidence_boundary\": \"structural/local fixtures only; no empirical before/after agent performance\", \"evidence_levels\": {\"live pass-rate\": \"not_collected\", \"live runtime telemetry sample\": \"not_collected\", \"promoted golden case\": \"not_collected\", \"runtime telemetry fixture sample\": \"not_collected\", \"structural fixture\": 3, \"token overhead\": \"not_collected\", \"turn overhead\": \"not_collected\"}, \"fixtures\": 3, \"live_pass_rate\": \"not_collected\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\", \"verdicts\": {\"structural_pass\": 3}}",
       "evidence_level": "structural fixture",
       "name": "Skill efficacy structural fixtures",
       "source": "reports/professional-scorecard.json",
@@ -126,7 +130,7 @@
     },
     {
       "command": "python3 scripts/validate-professional-routing-coverage.py",
-      "detail": "{\"candidate_fixtures_ignored\": 0, \"evidence_boundary\": \"structural/local fixtures only; no live empirical pass-rate or runtime overhead evidence\", \"evidence_levels\": {\"live pass-rate\": \"not_collected\", \"promoted golden case\": \"not_collected\", \"runtime telemetry sample\": \"not_collected\", \"structural fixture\": 15, \"token overhead\": \"not_collected\", \"turn overhead\": \"not_collected\"}, \"suites\": {\"executor-adapters\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"executor-adapter-protocol\", \"required_capability_hits\": 3}, \"project-memory\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"project-memory-governance\", \"required_capability_hits\": 3}, \"repository-intelligence\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"repository-graph-analysis\", \"required_capability_hits\": 3}, \"trajectory\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"execution-trajectory-analysis\", \"required_capability_hits\": 3}, \"validation-broker\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"validation-broker\", \"required_capability_hits\": 3}}, \"total_fixtures\": 15}",
+      "detail": "{\"candidate_fixtures_ignored\": 0, \"evidence_boundary\": \"structural/local fixtures only; no live empirical pass-rate or runtime overhead evidence\", \"evidence_levels\": {\"live pass-rate\": \"not_collected\", \"live runtime telemetry sample\": \"not_collected\", \"promoted golden case\": \"not_collected\", \"runtime telemetry fixture sample\": \"not_collected\", \"structural fixture\": 15, \"token overhead\": \"not_collected\", \"turn overhead\": \"not_collected\"}, \"suites\": {\"executor-adapters\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"executor-adapter-protocol\", \"required_capability_hits\": 3}, \"project-memory\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"project-memory-governance\", \"required_capability_hits\": 3}, \"repository-intelligence\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"repository-graph-analysis\", \"required_capability_hits\": 3}, \"trajectory\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"execution-trajectory-analysis\", \"required_capability_hits\": 3}, \"validation-broker\": {\"candidate_fixtures_ignored\": 0, \"fixtures\": 3, \"required_capability\": \"validation-broker\", \"required_capability_hits\": 3}}, \"total_fixtures\": 15}",
       "evidence_level": "structural fixture",
       "name": "Runtime governance structural fixtures",
       "source": "reports/professional-scorecard.json",
@@ -141,12 +145,28 @@
       "status": "pass"
     },
     {
-      "command": "python3 scripts/eval-executor-adapters.py",
-      "detail": "{\"degraded_event_count\": 4, \"event_count\": 20, \"privacy_redaction_count\": 9, \"runtime\": \"mixed-fixture-runtime-sample\", \"source\": \"deterministic-fixture-bounded-facts\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
-      "evidence_level": "runtime telemetry sample",
-      "name": "Runtime telemetry sample",
+      "command": "python3 scripts/eval-activation-precision.py",
+      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/eval-activation-precision.py\", \"summary\": {\"capability_precision\": 1.0, \"capability_recall\": 1.0, \"case_count\": 6, \"failed\": 0, \"language_fn_rate\": 0.0, \"language_fp_rate\": 0.0, \"metric_definitions\": {\"language_fn_rate\": \"Share of cases with at least one missing expected language surface.\", \"language_fp_rate\": \"Share of cases with at least one unexpected language surface.\", \"overroute_rate\": \"Share of cases with any unexpected skill, capability, reference, product surface, language surface, or risk surface.\", \"precision_recall\": \"Set precision/recall aggregate true positives, false positives, and false negatives across all cases.\", \"risk_surface_fn_rate\": \"Share of cases with at least one missing expected risk surface.\", \"risk_surface_fp_rate\": \"Share of cases with at least one unexpected risk surface.\"}, \"overroute_rate\": 0.0, \"passed\": 6, \"reference_precision\": 1.0, \"reference_recall\": 1.0, \"risk_surface_fn_rate\": 0.0, \"risk_surface_fp_rate\": 0.0, \"skill_precision\": 1.0, \"skill_recall\": 1.0, \"stage_accuracy\": 1.0}}",
+      "evidence_level": "structural fixture",
+      "name": "Activation precision benchmark",
       "source": "reports/professional-scorecard.json",
       "status": "pass"
+    },
+    {
+      "command": "python3 scripts/eval-executor-adapters.py",
+      "detail": "{\"degraded_event_count\": 4, \"event_count\": 20, \"evidence_level\": \"runtime telemetry fixture sample\", \"privacy_redaction_count\": 9, \"runtime\": \"mixed-fixture-runtime-sample\", \"sample_kind\": \"runtime_telemetry_fixture_sample\", \"source\": \"deterministic-fixture-bounded-facts\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
+      "evidence_level": "runtime telemetry fixture sample",
+      "name": "Runtime telemetry fixture sample",
+      "source": "reports/professional-scorecard.json",
+      "status": "pass"
+    },
+    {
+      "command": "manual live runtime collection with sanitized bounded facts",
+      "detail": "reports/live-runtime-telemetry-sample.json missing or invalid",
+      "evidence_level": "live runtime telemetry sample",
+      "name": "Live runtime telemetry sample",
+      "source": "reports/professional-scorecard.json",
+      "status": "not_collected"
     },
     {
       "command": "python3 scripts/eval-executor-adapters.py",
@@ -182,6 +202,7 @@
     }
   ],
   "known_unknowns": [
+    "Live runtime telemetry sample",
     "Live pass-rate",
     "Token overhead",
     "Turn overhead"
@@ -193,6 +214,7 @@
     "python3 scripts/eval-professional-benchmarks.py",
     "python3 scripts/validate-skill-efficacy-benchmarks.py",
     "python3 scripts/eval-executor-adapters.py",
+    "python3 scripts/eval-activation-precision.py",
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
     "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",
@@ -214,9 +236,9 @@
   "schema_version": 1,
   "status_counts": {
     "fail": 0,
-    "not_collected": 3,
+    "not_collected": 4,
     "partial": 2,
-    "pass": 14,
+    "pass": 15,
     "unknown": 0
   }
 }

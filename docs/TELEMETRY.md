@@ -234,16 +234,17 @@ the same proof strength. Reports must keep these levels distinct:
 | Evidence | Meaning |
 | --- | --- |
 | `structural fixture` | Local deterministic fixture or schema sample passed. This proves shape and policy wiring only. |
-| `runtime telemetry sample` | Actual runtime fact sample was observed. It may still require human review. |
+| `runtime telemetry fixture sample` | Deterministic executor-adapter fixture-derived bounded facts. This proves sample shape only, not live runtime behavior. |
+| `live runtime telemetry sample` | Actual hook runtime fact sample was observed. It may still require human review. |
 | `promoted golden case` | A human-reviewed case was admitted to regression coverage. |
 | `live pass-rate` | Measured real-task success rate. If not collected, render `not_collected`. |
 | `token overhead` | Measured additional token cost. If not collected, render `not_collected`. |
 | `turn overhead` | Measured additional turn cost. If not collected, render `not_collected`. |
 
 Generated candidates are never measured evidence until a maintainer reviews and
-promotes them. Missing live pass-rate, token overhead, or turn overhead data must
-remain `not_collected`; it must not be inferred from structural fixtures,
-runtime telemetry, or local validator success.
+promotes them. Missing live runtime telemetry, live pass-rate, token overhead,
+or turn overhead data must remain `not_collected`; it must not be inferred from
+structural fixtures, fixture telemetry, or local validator success.
 
 ### Completion-Evidence Detection Family
 
