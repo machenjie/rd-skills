@@ -4,11 +4,11 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 
 ## Summary
 
-- `pass`: 13
+- `pass`: 15
 - `partial`: 3
 - `fail`: 0
 - `unknown`: 0
-- `not_collected`: 5
+- `not_collected`: 3
 
 ## Evidence Levels
 
@@ -44,8 +44,8 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 | Productization assets | `pass` | docs/productization assets, schemas, and scripts | `python3 scripts/validate-productization-assets.py` |
 | Marketplace index validation | `pass` | scripts/validate-marketplace-index.py | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` |
 | Open-source readiness | `partial` | config/open-source-release.yaml, docs/LICENSE_DECISION.md, docs/OPEN_SOURCE_READINESS.md, pyproject.toml, CONTRIBUTING.md, SECURITY.md, LICENSE | `python3 scripts/validate-open-source-readiness.py` |
-| Hook safety | `not_collected` | scripts/validate-hooks.py does not emit a machine-readable report | `python3 scripts/validate-hooks.py` |
-| Installation validation | `not_collected` | scripts/validate-installation.py does not emit a machine-readable report | `python3 scripts/validate-installation.py` |
+| Hook safety | `pass` | reports/hook-validation.json | `python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md` |
+| Installation validation | `pass` | reports/installation-validation.json | `python3 scripts/validate-installation.py --json-out reports/installation-validation.json --out reports/installation-validation.md` |
 
 ## Profile Counts
 
@@ -61,5 +61,3 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 - Executor adapter token overhead: Collect a real measured run before changing this status from not_collected.
 - Executor adapter turn overhead: Collect a real measured run before changing this status from not_collected.
 - Open-source readiness: Owner must select an OSI license, update package metadata, confirm contribution licensing, and configure private vulnerability reporting before open-source publication.
-- Hook safety: Run hook validation and inspect hook runtime changes; hooks must remain advisory and fail-open unless explicitly stricter.
-- Installation validation: Run installation validation after rebuilding all profiles.

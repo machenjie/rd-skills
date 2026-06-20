@@ -115,6 +115,18 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
             self.assertIn("not_collected", payload["status_summary"])
             self.assertIn("# Professional Scorecard", md_path.read_text(encoding="utf-8"))
 
+    def test_generated_scorecard_contains_runtime_evidence_dimensions(self) -> None:
+        module = _load_module()
+        payload = module.generate_scorecard(ROOT, ROOT / "reports")
+        dimension_names = {dimension["name"] for dimension in payload["dimensions"]}
+
+        # Regression: release evidence must keep runtime evidence gaps visible.
+        self.assertIn("Executor adapter structural fixtures", dimension_names)
+        self.assertIn("Runtime telemetry sample", dimension_names)
+        self.assertIn("Executor adapter live pass-rate", dimension_names)
+        self.assertIn("Executor adapter token overhead", dimension_names)
+        self.assertIn("Executor adapter turn overhead", dimension_names)
+
     def test_strict_profile_builds_rejects_unknown_manifest_dimension(self) -> None:
         module = _load_module()
         payload = {
@@ -229,6 +241,52 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
         self.assertEqual(status, "pass")
         self.assertIn('"privacy_redaction_count": 2', detail)
         self.assertIn('"token_overhead": "not_collected"', detail)
+
+    def test_validation_report_status_reads_machine_report(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            missing_status, _missing_detail = module.validation_report_status(
+                root,
+                "reports/hook-validation.json",
+            )
+            (reports / "hook-validation.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "generated_by": "scripts/validate-hooks.py",
+                        "status": "pass",
+                        "errors": [],
+                        "summary": {"error_count": 0},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            status, detail = module.validation_report_status(root, "reports/hook-validation.json")
+
+        self.assertEqual(missing_status, "not_collected")
+        self.assertEqual(status, "pass")
+        self.assertIn('"error_count": 0', detail)
+
+    def test_validation_report_status_fails_on_missing_fields(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            (reports / "installation-validation.json").write_text(
+                json.dumps({"status": "pass"}),
+                encoding="utf-8",
+            )
+            status, detail = module.validation_report_status(
+                root,
+                "reports/installation-validation.json",
+            )
+
+        self.assertEqual(status, "fail")
+        self.assertIn("missing validation report fields", detail)
 
     def test_evidence_levels_include_runtime_sample_without_live_metric_claims(self) -> None:
         module = _load_module()

@@ -157,6 +157,67 @@ class GeneratePublicBenchmarkSummaryTests(unittest.TestCase):
         self.assertEqual(items["Executor adapter turn overhead"]["evidence_level"], "turn overhead")
         self.assertEqual(items["Installation validation"]["evidence_level"], "structural fixture")
 
+    def test_known_unknowns_include_evidence_level_statuses(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "[project]\nname = \"sample\"\nversion = \"0.1.0\"\n",
+                encoding="utf-8",
+            )
+            (root / "reports").mkdir()
+            (root / "reports" / "professional-scorecard.json").write_text(
+                json.dumps(
+                    {
+                        "dimensions": [
+                            {"name": "Hook safety", "status": "pass", "detail": "ok"},
+                            {
+                                "name": "Installation validation",
+                                "status": "not_collected",
+                                "detail": "report missing",
+                            },
+                            {"name": "Skill efficacy structural fixtures", "status": "pass", "detail": "ok"},
+                            {"name": "Runtime governance structural fixtures", "status": "pass", "detail": "ok"},
+                            {"name": "Executor adapter structural fixtures", "status": "pass", "detail": "ok"},
+                            {"name": "Runtime telemetry sample", "status": "pass", "detail": "ok"},
+                            {
+                                "name": "Executor adapter live pass-rate",
+                                "status": "not_collected",
+                                "detail": "not measured",
+                            },
+                            {
+                                "name": "Executor adapter token overhead",
+                                "status": "not_collected",
+                                "detail": "not measured",
+                            },
+                            {
+                                "name": "Executor adapter turn overhead",
+                                "status": "not_collected",
+                                "detail": "not measured",
+                            },
+                            {"name": "Marketplace index validation", "status": "pass", "detail": "ok"},
+                        ],
+                        "evidence_levels": {
+                            "structural fixture": {"status": "pass", "meaning": "local fixtures"},
+                            "runtime telemetry sample": {"status": "not_collected", "meaning": "sample missing"},
+                            "promoted golden case": {"status": "pass", "meaning": "promoted"},
+                            "live pass-rate": {"status": "not_collected", "meaning": "not measured"},
+                            "token overhead": {"status": "not_collected", "meaning": "not measured"},
+                            "turn overhead": {"status": "not_collected", "meaning": "not measured"},
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            payload = module.generate_summary(root)
+
+        self.assertIn("Runtime telemetry sample", payload["known_unknowns"])
+        self.assertIn("Live pass-rate", payload["known_unknowns"])
+        self.assertIn("Token overhead", payload["known_unknowns"])
+        self.assertIn("Turn overhead", payload["known_unknowns"])
+        self.assertIn("Installation validation", payload["known_unknowns"])
+        self.assertNotIn("Executor adapter live pass-rate", payload["known_unknowns"])
+
     def test_cli_scorecard_argument_controls_scorecard_source(self) -> None:
         module = _load_module()
         with tempfile.TemporaryDirectory() as tmp:

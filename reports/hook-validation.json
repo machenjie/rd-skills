@@ -1,0 +1,15 @@
+{
+  "errors": [],
+  "generated_by": "scripts/validate-hooks.py",
+  "schema_version": 1,
+  "status": "pass",
+  "summary": {
+    "claude_templates": 2,
+    "codex_templates": 2,
+    "copilot_templates": 2,
+    "error_count": 0,
+    "hook_runtime_root": "src/hook-runtime",
+    "required_hook_scripts": 29,
+    "required_hook_scripts_present": true
+  }
+}

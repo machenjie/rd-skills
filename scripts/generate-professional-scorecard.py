@@ -61,6 +61,10 @@ PRODUCTIZATION_ASSETS = (
     "reports/executor-adapter-eval.md",
     "reports/executor-adapter-eval.json",
     "reports/runtime-telemetry-sample.json",
+    "reports/hook-validation.md",
+    "reports/hook-validation.json",
+    "reports/installation-validation.md",
+    "reports/installation-validation.json",
     "reports/public-benchmark-summary.md",
     "reports/public-benchmark-summary.json",
     "config/open-source-release.yaml",
@@ -98,7 +102,7 @@ VALIDATION_COMMANDS = [
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
     "python3 scripts/validate-stage-routing-architecture.py",
-    "python3 scripts/validate-hooks.py",
+    "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",
     "python3 scripts/eval-pressure-behavior.py",
     "python3 -m unittest discover -s tests",
     "python3 scripts/validate-codegen-benchmarks.py",
@@ -107,7 +111,7 @@ VALIDATION_COMMANDS = [
     "python3 scripts/build.py --profile full",
     "python3 scripts/build.py --profile dev",
     "python3 scripts/validate-runtime-reference-links.py",
-    "python3 scripts/validate-installation.py",
+    "python3 scripts/validate-installation.py --json-out reports/installation-validation.json --out reports/installation-validation.md",
     "python3 scripts/validate-marketplace-index.py --profile recommended",
     "python3 scripts/validate-marketplace-index.py --profile full",
     "python3 scripts/validate-marketplace-index.py --profile dev",
@@ -202,6 +206,35 @@ def productization_assets_status(root: Path) -> tuple[str, str]:
     if missing:
         return "fail", "missing: " + ", ".join(missing)
     return "pass", "required productization assets present"
+
+
+def validation_report_status(root: Path, rel_path: str) -> tuple[str, str]:
+    """Return status/detail for machine-readable validation reports."""
+    report = _read_json(root / rel_path)
+    if not isinstance(report, dict):
+        return "not_collected", f"{rel_path} missing or invalid"
+
+    required = {"schema_version", "generated_by", "status", "errors", "summary"}
+    missing = sorted(field for field in required if field not in report)
+    if missing:
+        return "fail", "missing validation report fields: " + ", ".join(missing)
+
+    status = str(report.get("status"))
+    if status not in {"pass", "fail", "partial"}:
+        return "fail", f"invalid validation report status: {status}"
+    errors = report.get("errors")
+    if not isinstance(errors, list):
+        return "fail", "validation report errors field must be a list"
+    summary = report.get("summary")
+    if not isinstance(summary, dict):
+        return "fail", "validation report summary field must be an object"
+
+    detail = {
+        "generated_by": report.get("generated_by"),
+        "error_count": len(errors),
+        "summary": summary,
+    }
+    return status, json.dumps(detail, sort_keys=True)
 
 
 def _load_validate_examples():
@@ -709,24 +742,29 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
         )
     )
 
+    hook_status, hook_detail = validation_report_status(root, "reports/hook-validation.json")
     dimensions.append(
         Dimension(
             "Hook safety",
-            "not_collected",
-            "scripts/validate-hooks.py does not emit a machine-readable report",
-            "python3 scripts/validate-hooks.py",
+            hook_status,
+            "reports/hook-validation.json",
+            "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",
             "Run hook validation and inspect hook runtime changes; hooks must remain advisory and fail-open unless explicitly stricter.",
-            "not collected by scorecard generator",
+            hook_detail,
         )
+    )
+    installation_status, installation_detail = validation_report_status(
+        root,
+        "reports/installation-validation.json",
     )
     dimensions.append(
         Dimension(
             "Installation validation",
-            "not_collected",
-            "scripts/validate-installation.py does not emit a machine-readable report",
-            "python3 scripts/validate-installation.py",
+            installation_status,
+            "reports/installation-validation.json",
+            "python3 scripts/validate-installation.py --json-out reports/installation-validation.json --out reports/installation-validation.md",
             "Run installation validation after rebuilding all profiles.",
-            "not collected by scorecard generator",
+            installation_detail,
         )
     )
 

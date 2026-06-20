@@ -26,6 +26,8 @@ RUNTIME_TELEMETRY_DIMENSION = "Runtime telemetry sample"
 EXECUTOR_LIVE_PASS_RATE_DIMENSION = "Executor adapter live pass-rate"
 EXECUTOR_TOKEN_OVERHEAD_DIMENSION = "Executor adapter token overhead"
 EXECUTOR_TURN_OVERHEAD_DIMENSION = "Executor adapter turn overhead"
+HOOK_SAFETY_DIMENSION = "Hook safety"
+INSTALLATION_VALIDATION_DIMENSION = "Installation validation"
 SCORECARD_REFRESH_COMMAND = (
     "python3 scripts/generate-professional-scorecard.py "
     "--out reports/professional-scorecard.md "
@@ -40,11 +42,12 @@ REFRESH_COMMANDS = [
     "python3 scripts/eval-executor-adapters.py",
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
+    "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",
     "python3 scripts/build.py --profile recommended",
     "python3 scripts/build.py --profile full",
     "python3 scripts/build.py --profile dev",
     "python3 scripts/validate-runtime-reference-links.py",
-    "python3 scripts/validate-installation.py",
+    "python3 scripts/validate-installation.py --json-out reports/installation-validation.json --out reports/installation-validation.md",
     "python3 scripts/validate-marketplace-index.py --profile recommended",
     "python3 scripts/validate-marketplace-index.py --profile full",
     "python3 scripts/validate-marketplace-index.py --profile dev",
@@ -220,6 +223,7 @@ def _scorecard_dimension_item(
     public_name: str,
     scorecard_path: Path | None = None,
     evidence_level: str = "structural fixture",
+    missing_status: str = "unknown",
 ) -> EvidenceItem:
     """Return one public evidence item from the generated professional scorecard."""
     path, source = _scorecard_path_and_source(root, scorecard_path)
@@ -227,7 +231,7 @@ def _scorecard_dimension_item(
     if not isinstance(scorecard, dict):
         return EvidenceItem(
             public_name,
-            "unknown",
+            missing_status,
             source,
             "scorecard report missing or invalid",
             SCORECARD_REFRESH_COMMAND,
@@ -237,7 +241,7 @@ def _scorecard_dimension_item(
     if not isinstance(dimensions, list):
         return EvidenceItem(
             public_name,
-            "unknown",
+            missing_status,
             source,
             "scorecard dimensions missing or invalid",
             SCORECARD_REFRESH_COMMAND,
@@ -260,7 +264,7 @@ def _scorecard_dimension_item(
 
     return EvidenceItem(
         public_name,
-        "unknown",
+        missing_status,
         source,
         f"{dimension_name} dimension missing",
         SCORECARD_REFRESH_COMMAND,
@@ -269,12 +273,19 @@ def _scorecard_dimension_item(
 
 def _additional_status_items(root: Path, scorecard_path: Path | None = None) -> list[EvidenceItem]:
     return [
-        EvidenceItem(
-            "Installation validation",
-            "not_collected",
-            "scripts/validate-installation.py",
-            "validator does not emit a committed machine-readable report",
-            "python3 scripts/validate-installation.py",
+        _scorecard_dimension_item(
+            root,
+            HOOK_SAFETY_DIMENSION,
+            HOOK_SAFETY_DIMENSION,
+            scorecard_path,
+            missing_status="not_collected",
+        ),
+        _scorecard_dimension_item(
+            root,
+            INSTALLATION_VALIDATION_DIMENSION,
+            INSTALLATION_VALIDATION_DIMENSION,
+            scorecard_path,
+            missing_status="not_collected",
         ),
         _scorecard_dimension_item(root, SKILL_EFFICACY_DIMENSION, SKILL_EFFICACY_DIMENSION, scorecard_path),
         _scorecard_dimension_item(root, RUNTIME_GOVERNANCE_DIMENSION, RUNTIME_GOVERNANCE_DIMENSION, scorecard_path),
@@ -327,11 +338,8 @@ def generate_summary(
     status_counts = {status: 0 for status in STATUS_ORDER}
     for item in items:
         status_counts[item.status] += 1
-    known_unknowns = [
-        item.name
-        for item in items
-        if item.status in {"unknown", "not_collected"}
-    ]
+    evidence_levels = _scorecard_evidence_levels(root, scorecard_path)
+    known_unknowns = _known_unknowns(items, evidence_levels)
     return {
         "schema_version": 1,
         "generated_by": "scripts/generate-public-benchmark-summary.py",
@@ -342,11 +350,47 @@ def generate_summary(
         },
         "status_counts": status_counts,
         "items": [asdict(item) for item in items],
-        "evidence_levels": _scorecard_evidence_levels(root, scorecard_path),
+        "evidence_levels": evidence_levels,
         "known_unknowns": known_unknowns,
         "refresh_commands": REFRESH_COMMANDS,
         "claim_boundary": "Local deterministic evidence only; skill efficacy and executor adapter fixtures are structural/local evidence, not live pass-rate, empirical before/after performance, external popularity, adoption, marketplace availability, or market claim evidence.",
     }
+
+
+def _known_unknowns(
+    items: list[EvidenceItem],
+    evidence_levels: dict[str, dict[str, str]],
+) -> list[str]:
+    """Return de-duplicated unknown/not-collected item and evidence-level names."""
+    names: list[str] = []
+    for item in items:
+        if item.status in {"unknown", "not_collected"}:
+            names.append(_known_unknown_name(item.name))
+    for level, detail in evidence_levels.items():
+        if detail.get("status") in {"unknown", "not_collected"}:
+            names.append(_known_unknown_name(level))
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for name in names:
+        if name in seen:
+            continue
+        seen.add(name)
+        deduped.append(name)
+    return deduped
+
+
+def _known_unknown_name(name: str) -> str:
+    mapping = {
+        "runtime telemetry sample": "Runtime telemetry sample",
+        RUNTIME_TELEMETRY_DIMENSION: "Runtime telemetry sample",
+        "live pass-rate": "Live pass-rate",
+        EXECUTOR_LIVE_PASS_RATE_DIMENSION: "Live pass-rate",
+        "token overhead": "Token overhead",
+        EXECUTOR_TOKEN_OVERHEAD_DIMENSION: "Token overhead",
+        "turn overhead": "Turn overhead",
+        EXECUTOR_TURN_OVERHEAD_DIMENSION: "Turn overhead",
+    }
+    return mapping.get(name, name)
 
 
 def render_markdown(payload: dict[str, Any]) -> str:

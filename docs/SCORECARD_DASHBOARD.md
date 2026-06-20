@@ -4,11 +4,11 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 
 ## Status Summary
 
-- `pass`: 13
+- `pass`: 15
 - `partial`: 3
 - `fail`: 0
 - `unknown`: 0
-- `not_collected`: 5
+- `not_collected`: 3
 
 ## Evidence Levels
 
@@ -28,8 +28,8 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 | Profile build reproducibility | `pass` | {"dev": {"detail": "dev top-level count is 153", "manifest": "dist/universal/skills/dev/.changeforge-build-manifest.json", "status": "pass"}, "full": {"detail": "full top-level count is 26", "manifest": "dist/universal/skills/full/.changeforge-build-manifest.json", "status": "pass"}, "recommended": {"detail": "recommended top-level count is 19", "manifest": "dist/universal/skills/recommended/.changeforge-build-manifest.json", "status": "pass"}} |
 | Open-source readiness | `partial` | config_present=True, selected_license_non_null=False, selected_license_allowed=True, license_file=False, pyproject_license_not_proprietary=False, contribution_licensing_confirmed=False, contribution_licensing_evidence=False, security_contact_confirmed=False, security_contact_evidence=False, dist_release_policy_explicit=True, dist_release_policy_valid=True |
 | Example coverage | `pass` | showcase examples validate |
-| Executor adapter structural fixtures | `pass` | {"case_count": 15, "coverage_targets": ["closure_verdict", "command_risk", "degradation", "event_recognition", "path_normalization", "permission_decision", "privacy_redaction", "tool_category", "validation_freshness_after_edits", "validation_outcome"], "evidence_boundary": "deterministic local fixtures only; no live runtime pass-rate or overhead measurement", "failed": 0, "live_pass_rate": "not_collected", "passed": 15, "pressure_cases": ["absolute_user_path", "claude_post_tool_failure", "codex_destructive_permission_request", "copilot_unsupported_pre_tool", "edit_after_validation", "failed_validation", "full_command_output_field", "large_path_list_cap", "repair_without_rereview", "review_finding_without_repair", "secret_like_payload_field", "unknown_event", "unsupported_runtime_event"], "token_overhead": "not_collected", "turn_overhead": "not_collected"} |
-| Runtime telemetry sample | `pass` | {"degraded_event_count": 4, "event_count": 15, "privacy_redaction_count": 9, "runtime": "mixed-fixture-runtime-sample", "source": "deterministic-fixture-bounded-facts", "token_overhead": "not_collected", "turn_overhead": "not_collected"} |
+| Executor adapter structural fixtures | `pass` | {"case_count": 20, "coverage_targets": ["closure_verdict", "command_risk", "degradation", "event_recognition", "path_normalization", "permission_decision", "privacy_redaction", "tool_category", "validation_freshness_after_edits", "validation_outcome"], "evidence_boundary": "deterministic local fixtures only; no live runtime pass-rate or overhead measurement", "failed": 0, "live_pass_rate": "not_collected", "passed": 20, "pressure_cases": ["absolute_user_path", "claude_post_tool_failure", "codex_destructive_permission_request", "copilot_unsupported_pre_tool", "edit_after_validation", "failed_validation", "full_command_output_field", "large_path_list_cap", "ready_after_rereview", "ready_closure", "repair_without_rereview", "required_unsupported_check_degraded_ready", "review_finding_without_repair", "secret_like_payload_field", "targeted_test_reported_as_full", "unknown_event", "unsupported_runtime_event", "validation_pass_then_file_changed"], "token_overhead": "not_collected", "turn_overhead": "not_collected"} |
+| Runtime telemetry sample | `pass` | {"degraded_event_count": 4, "event_count": 20, "privacy_redaction_count": 9, "runtime": "mixed-fixture-runtime-sample", "source": "deterministic-fixture-bounded-facts", "token_overhead": "not_collected", "turn_overhead": "not_collected"} |
 | Marketplace index validation | `pass` | recommended, full, and dev marketplace indexes validate |
 
 ## Profile Counts
@@ -43,8 +43,6 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 - Executor adapter live pass-rate: reports/executor-adapter-eval.json
 - Executor adapter token overhead: reports/executor-adapter-eval.json
 - Executor adapter turn overhead: reports/executor-adapter-eval.json
-- Hook safety: scripts/validate-hooks.py does not emit a machine-readable report
-- Installation validation: scripts/validate-installation.py does not emit a machine-readable report
 
 ## Repair Hints
 
@@ -63,8 +61,6 @@ This generated dashboard makes conservative scorecard results easier to scan. Mi
 - `not_collected` Executor adapter live pass-rate: Collect a real measured run before changing this status from not_collected.
 - `not_collected` Executor adapter token overhead: Collect a real measured run before changing this status from not_collected.
 - `not_collected` Executor adapter turn overhead: Collect a real measured run before changing this status from not_collected.
-- `not_collected` Hook safety: Run hook validation and inspect hook runtime changes; hooks must remain advisory and fail-open unless explicitly stricter.
-- `not_collected` Installation validation: Run installation validation after rebuilding all profiles.
 
 ## Refresh Commands
 
@@ -87,7 +83,7 @@ python3 scripts/validate-professionalism-regression.py
 python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/validate-stage-routing-architecture.py
-python3 scripts/validate-hooks.py
+python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md
 python3 scripts/eval-pressure-behavior.py
 python3 -m unittest discover -s tests
 python3 scripts/validate-codegen-benchmarks.py
@@ -96,7 +92,7 @@ python3 scripts/build.py --profile recommended
 python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
 python3 scripts/validate-runtime-reference-links.py
-python3 scripts/validate-installation.py
+python3 scripts/validate-installation.py --json-out reports/installation-validation.json --out reports/installation-validation.md
 python3 scripts/validate-marketplace-index.py --profile recommended
 python3 scripts/validate-marketplace-index.py --profile full
 python3 scripts/validate-marketplace-index.py --profile dev

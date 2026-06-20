@@ -10,11 +10,11 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 
 ## Status Counts
 
-- `pass`: 12
+- `pass`: 14
 - `partial`: 2
 - `fail`: 0
 - `unknown`: 0
-- `not_collected`: 4
+- `not_collected`: 3
 
 ## Evidence Levels
 
@@ -40,11 +40,12 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 | Profile build: recommended | `pass` | structural fixture | dist/universal/skills/recommended/.changeforge-build-manifest.json | top_level=19, expected=19 | `python3 scripts/build.py --profile recommended` |
 | Profile build: full | `pass` | structural fixture | dist/universal/skills/full/.changeforge-build-manifest.json | top_level=26, expected=26 | `python3 scripts/build.py --profile full` |
 | Profile build: dev | `pass` | structural fixture | dist/universal/skills/dev/.changeforge-build-manifest.json | top_level=153, expected=153 | `python3 scripts/build.py --profile dev` |
-| Installation validation | `not_collected` | structural fixture | scripts/validate-installation.py | validator does not emit a committed machine-readable report | `python3 scripts/validate-installation.py` |
+| Hook safety | `pass` | structural fixture | reports/professional-scorecard.json | {"error_count": 0, "generated_by": "scripts/validate-hooks.py", "summary": {"claude_templates": 2, "codex_templates": 2, "copilot_templates": 2, "error_count": 0, "hook_runtime_root": "src/hook-runtime", "required_hook_scripts": 29, "required_hook_scripts_present": true}} | `python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md` |
+| Installation validation | `pass` | structural fixture | reports/professional-scorecard.json | {"error_count": 0, "generated_by": "scripts/validate-installation.py", "summary": {"built_skill_directories": 1980, "dist_exists": true, "error_count": 0, "required_hook_runtime_files": 396, "runtime_roots": 10, "zip_count": 198}} | `python3 scripts/validate-installation.py --json-out reports/installation-validation.json --out reports/installation-validation.md` |
 | Skill efficacy structural fixtures | `pass` | structural fixture | reports/professional-scorecard.json | {"candidate_fixtures_ignored": 0, "evidence_boundary": "structural/local fixtures only; no empirical before/after agent performance", "evidence_levels": {"live pass-rate": "not_collected", "promoted golden case": "not_collected", "runtime telemetry sample": "not_collected", "structural fixture": 3, "token overhead": "not_collected", "turn overhead": "not_collected"}, "fixtures": 3, "live_pass_rate": "not_collected", "token_overhead": "not_collected", "turn_overhead": "not_collected", "verdicts": {"structural_pass": 3}} | `python3 scripts/validate-skill-efficacy-benchmarks.py` |
 | Runtime governance structural fixtures | `pass` | structural fixture | reports/professional-scorecard.json | {"candidate_fixtures_ignored": 0, "evidence_boundary": "structural/local fixtures only; no live empirical pass-rate or runtime overhead evidence", "evidence_levels": {"live pass-rate": "not_collected", "promoted golden case": "not_collected", "runtime telemetry sample": "not_collected", "structural fixture": 15, "token overhead": "not_collected", "turn overhead": "not_collected"}, "suites": {"executor-adapters": {"candidate_fixtures_ignored": 0, "fixtures": 3, "required_capability": "executor-adapter-protocol", "required_capability_hits": 3}, "project-memory": {"candidate_fixtures_ignored": 0, "fixtures": 3, "required_capability": "project-memory-governance", "required_capability_hits": 3}, "repository-intelligence": {"candidate_fixtures_ignored": 0, "fixtures": 3, "required_capability": "repository-graph-analysis", "required_capability_hits": 3}, "trajectory": {"candidate_fixtures_ignored": 0, "fixtures": 3, "required_capability": "execution-trajectory-analysis", "required_capability_hits": 3}, "validation-broker": {"candidate_fixtures_ignored": 0, "fixtures": 3, "required_capability": "validation-broker", "required_capability_hits": 3}}, "total_fixtures": 15} | `python3 scripts/validate-professional-routing-coverage.py` |
-| Executor adapter structural fixtures | `pass` | structural fixture | reports/professional-scorecard.json | {"case_count": 15, "coverage_targets": ["closure_verdict", "command_risk", "degradation", "event_recognition", "path_normalization", "permission_decision", "privacy_redaction", "tool_category", "validation_freshness_after_edits", "validation_outcome"], "evidence_boundary": "deterministic local fixtures only; no live runtime pass-rate or overhead measurement", "failed": 0, "live_pass_rate": "not_collected", "passed": 15, "pressure_cases": ["absolute_user_path", "claude_post_tool_failure", "codex_destructive_permission_request", "copilot_unsupported_pre_tool", "edit_after_validation", "failed_validation", "full_command_output_field", "large_path_list_cap", "repair_without_rereview", "review_finding_without_repair", "secret_like_payload_field", "unknown_event", "unsupported_runtime_event"], "token_overhead": "not_collected", "turn_overhead": "not_collected"} | `python3 scripts/eval-executor-adapters.py` |
-| Runtime telemetry sample | `pass` | runtime telemetry sample | reports/professional-scorecard.json | {"degraded_event_count": 4, "event_count": 15, "privacy_redaction_count": 9, "runtime": "mixed-fixture-runtime-sample", "source": "deterministic-fixture-bounded-facts", "token_overhead": "not_collected", "turn_overhead": "not_collected"} | `python3 scripts/eval-executor-adapters.py` |
+| Executor adapter structural fixtures | `pass` | structural fixture | reports/professional-scorecard.json | {"case_count": 20, "coverage_targets": ["closure_verdict", "command_risk", "degradation", "event_recognition", "path_normalization", "permission_decision", "privacy_redaction", "tool_category", "validation_freshness_after_edits", "validation_outcome"], "evidence_boundary": "deterministic local fixtures only; no live runtime pass-rate or overhead measurement", "failed": 0, "live_pass_rate": "not_collected", "passed": 20, "pressure_cases": ["absolute_user_path", "claude_post_tool_failure", "codex_destructive_permission_request", "copilot_unsupported_pre_tool", "edit_after_validation", "failed_validation", "full_command_output_field", "large_path_list_cap", "ready_after_rereview", "ready_closure", "repair_without_rereview", "required_unsupported_check_degraded_ready", "review_finding_without_repair", "secret_like_payload_field", "targeted_test_reported_as_full", "unknown_event", "unsupported_runtime_event", "validation_pass_then_file_changed"], "token_overhead": "not_collected", "turn_overhead": "not_collected"} | `python3 scripts/eval-executor-adapters.py` |
+| Runtime telemetry sample | `pass` | runtime telemetry sample | reports/professional-scorecard.json | {"degraded_event_count": 4, "event_count": 20, "privacy_redaction_count": 9, "runtime": "mixed-fixture-runtime-sample", "source": "deterministic-fixture-bounded-facts", "token_overhead": "not_collected", "turn_overhead": "not_collected"} | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter live pass-rate | `not_collected` | live pass-rate | reports/professional-scorecard.json | deterministic local fixtures do not measure real-task success rate | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter token overhead | `not_collected` | token overhead | reports/professional-scorecard.json | deterministic local fixture run does not measure token overhead | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter turn overhead | `not_collected` | turn overhead | reports/professional-scorecard.json | deterministic local fixture run does not measure turn overhead | `python3 scripts/eval-executor-adapters.py` |
@@ -52,10 +53,9 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 
 ## Known Unknowns / Not Collected
 
-- Installation validation
-- Executor adapter live pass-rate
-- Executor adapter token overhead
-- Executor adapter turn overhead
+- Live pass-rate
+- Token overhead
+- Turn overhead
 
 ## Refresh Commands
 
@@ -68,11 +68,12 @@ python3 scripts/validate-skill-efficacy-benchmarks.py
 python3 scripts/eval-executor-adapters.py
 python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-professional-routing-coverage.py
+python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md
 python3 scripts/build.py --profile recommended
 python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
 python3 scripts/validate-runtime-reference-links.py
-python3 scripts/validate-installation.py
+python3 scripts/validate-installation.py --json-out reports/installation-validation.json --out reports/installation-validation.md
 python3 scripts/validate-marketplace-index.py --profile recommended
 python3 scripts/validate-marketplace-index.py --profile full
 python3 scripts/validate-marketplace-index.py --profile dev

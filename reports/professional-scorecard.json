@@ -81,7 +81,7 @@
       "verification_command": "python3 scripts/validate-professional-routing-coverage.py"
     },
     {
-      "detail": "{\"case_count\": 15, \"coverage_targets\": [\"closure_verdict\", \"command_risk\", \"degradation\", \"event_recognition\", \"path_normalization\", \"permission_decision\", \"privacy_redaction\", \"tool_category\", \"validation_freshness_after_edits\", \"validation_outcome\"], \"evidence_boundary\": \"deterministic local fixtures only; no live runtime pass-rate or overhead measurement\", \"failed\": 0, \"live_pass_rate\": \"not_collected\", \"passed\": 15, \"pressure_cases\": [\"absolute_user_path\", \"claude_post_tool_failure\", \"codex_destructive_permission_request\", \"copilot_unsupported_pre_tool\", \"edit_after_validation\", \"failed_validation\", \"full_command_output_field\", \"large_path_list_cap\", \"repair_without_rereview\", \"review_finding_without_repair\", \"secret_like_payload_field\", \"unknown_event\", \"unsupported_runtime_event\"], \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
+      "detail": "{\"case_count\": 20, \"coverage_targets\": [\"closure_verdict\", \"command_risk\", \"degradation\", \"event_recognition\", \"path_normalization\", \"permission_decision\", \"privacy_redaction\", \"tool_category\", \"validation_freshness_after_edits\", \"validation_outcome\"], \"evidence_boundary\": \"deterministic local fixtures only; no live runtime pass-rate or overhead measurement\", \"failed\": 0, \"live_pass_rate\": \"not_collected\", \"passed\": 20, \"pressure_cases\": [\"absolute_user_path\", \"claude_post_tool_failure\", \"codex_destructive_permission_request\", \"copilot_unsupported_pre_tool\", \"edit_after_validation\", \"failed_validation\", \"full_command_output_field\", \"large_path_list_cap\", \"ready_after_rereview\", \"ready_closure\", \"repair_without_rereview\", \"required_unsupported_check_degraded_ready\", \"review_finding_without_repair\", \"secret_like_payload_field\", \"targeted_test_reported_as_full\", \"unknown_event\", \"unsupported_runtime_event\", \"validation_pass_then_file_changed\"], \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
       "fix_hint": "Repair executor adapter fixture expectations or adapter normalization until deterministic cases pass.",
       "name": "Executor adapter structural fixtures",
       "source": "evals/executor-adapter and reports/executor-adapter-eval.json",
@@ -89,7 +89,7 @@
       "verification_command": "python3 scripts/eval-executor-adapters.py"
     },
     {
-      "detail": "{\"degraded_event_count\": 4, \"event_count\": 15, \"privacy_redaction_count\": 9, \"runtime\": \"mixed-fixture-runtime-sample\", \"source\": \"deterministic-fixture-bounded-facts\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
+      "detail": "{\"degraded_event_count\": 4, \"event_count\": 20, \"privacy_redaction_count\": 9, \"runtime\": \"mixed-fixture-runtime-sample\", \"source\": \"deterministic-fixture-bounded-facts\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
       "fix_hint": "Generate a sanitized bounded telemetry sample; do not store raw prompts, secrets, env, personal paths, or full command output.",
       "name": "Runtime telemetry sample",
       "source": "reports/runtime-telemetry-sample.json",
@@ -153,20 +153,20 @@
       "verification_command": "python3 scripts/validate-open-source-readiness.py"
     },
     {
-      "detail": "not collected by scorecard generator",
+      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/validate-hooks.py\", \"summary\": {\"claude_templates\": 2, \"codex_templates\": 2, \"copilot_templates\": 2, \"error_count\": 0, \"hook_runtime_root\": \"src/hook-runtime\", \"required_hook_scripts\": 29, \"required_hook_scripts_present\": true}}",
       "fix_hint": "Run hook validation and inspect hook runtime changes; hooks must remain advisory and fail-open unless explicitly stricter.",
       "name": "Hook safety",
-      "source": "scripts/validate-hooks.py does not emit a machine-readable report",
-      "status": "not_collected",
-      "verification_command": "python3 scripts/validate-hooks.py"
+      "source": "reports/hook-validation.json",
+      "status": "pass",
+      "verification_command": "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md"
     },
     {
-      "detail": "not collected by scorecard generator",
+      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/validate-installation.py\", \"summary\": {\"built_skill_directories\": 1980, \"dist_exists\": true, \"error_count\": 0, \"required_hook_runtime_files\": 396, \"runtime_roots\": 10, \"zip_count\": 198}}",
       "fix_hint": "Run installation validation after rebuilding all profiles.",
       "name": "Installation validation",
-      "source": "scripts/validate-installation.py does not emit a machine-readable report",
-      "status": "not_collected",
-      "verification_command": "python3 scripts/validate-installation.py"
+      "source": "reports/installation-validation.json",
+      "status": "pass",
+      "verification_command": "python3 scripts/validate-installation.py --json-out reports/installation-validation.json --out reports/installation-validation.md"
     }
   ],
   "evidence_levels": {
@@ -221,9 +221,9 @@
   },
   "status_summary": {
     "fail": 0,
-    "not_collected": 5,
+    "not_collected": 3,
     "partial": 3,
-    "pass": 13,
+    "pass": 15,
     "unknown": 0
   },
   "validation_commands": [
@@ -318,7 +318,7 @@
       "status": "not_collected"
     },
     {
-      "command": "python3 scripts/validate-hooks.py",
+      "command": "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",
       "note": "Run command directly; this scorecard does not infer pass/fail from stdout.",
       "status": "not_collected"
     },
@@ -363,7 +363,7 @@
       "status": "not_collected"
     },
     {
-      "command": "python3 scripts/validate-installation.py",
+      "command": "python3 scripts/validate-installation.py --json-out reports/installation-validation.json --out reports/installation-validation.md",
       "note": "Run command directly; this scorecard does not infer pass/fail from stdout.",
       "status": "not_collected"
     },

@@ -101,12 +101,20 @@
       "status": "pass"
     },
     {
-      "command": "python3 scripts/validate-installation.py",
-      "detail": "validator does not emit a committed machine-readable report",
+      "command": "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",
+      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/validate-hooks.py\", \"summary\": {\"claude_templates\": 2, \"codex_templates\": 2, \"copilot_templates\": 2, \"error_count\": 0, \"hook_runtime_root\": \"src/hook-runtime\", \"required_hook_scripts\": 29, \"required_hook_scripts_present\": true}}",
+      "evidence_level": "structural fixture",
+      "name": "Hook safety",
+      "source": "reports/professional-scorecard.json",
+      "status": "pass"
+    },
+    {
+      "command": "python3 scripts/validate-installation.py --json-out reports/installation-validation.json --out reports/installation-validation.md",
+      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/validate-installation.py\", \"summary\": {\"built_skill_directories\": 1980, \"dist_exists\": true, \"error_count\": 0, \"required_hook_runtime_files\": 396, \"runtime_roots\": 10, \"zip_count\": 198}}",
       "evidence_level": "structural fixture",
       "name": "Installation validation",
-      "source": "scripts/validate-installation.py",
-      "status": "not_collected"
+      "source": "reports/professional-scorecard.json",
+      "status": "pass"
     },
     {
       "command": "python3 scripts/validate-skill-efficacy-benchmarks.py",
@@ -126,7 +134,7 @@
     },
     {
       "command": "python3 scripts/eval-executor-adapters.py",
-      "detail": "{\"case_count\": 15, \"coverage_targets\": [\"closure_verdict\", \"command_risk\", \"degradation\", \"event_recognition\", \"path_normalization\", \"permission_decision\", \"privacy_redaction\", \"tool_category\", \"validation_freshness_after_edits\", \"validation_outcome\"], \"evidence_boundary\": \"deterministic local fixtures only; no live runtime pass-rate or overhead measurement\", \"failed\": 0, \"live_pass_rate\": \"not_collected\", \"passed\": 15, \"pressure_cases\": [\"absolute_user_path\", \"claude_post_tool_failure\", \"codex_destructive_permission_request\", \"copilot_unsupported_pre_tool\", \"edit_after_validation\", \"failed_validation\", \"full_command_output_field\", \"large_path_list_cap\", \"repair_without_rereview\", \"review_finding_without_repair\", \"secret_like_payload_field\", \"unknown_event\", \"unsupported_runtime_event\"], \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
+      "detail": "{\"case_count\": 20, \"coverage_targets\": [\"closure_verdict\", \"command_risk\", \"degradation\", \"event_recognition\", \"path_normalization\", \"permission_decision\", \"privacy_redaction\", \"tool_category\", \"validation_freshness_after_edits\", \"validation_outcome\"], \"evidence_boundary\": \"deterministic local fixtures only; no live runtime pass-rate or overhead measurement\", \"failed\": 0, \"live_pass_rate\": \"not_collected\", \"passed\": 20, \"pressure_cases\": [\"absolute_user_path\", \"claude_post_tool_failure\", \"codex_destructive_permission_request\", \"copilot_unsupported_pre_tool\", \"edit_after_validation\", \"failed_validation\", \"full_command_output_field\", \"large_path_list_cap\", \"ready_after_rereview\", \"ready_closure\", \"repair_without_rereview\", \"required_unsupported_check_degraded_ready\", \"review_finding_without_repair\", \"secret_like_payload_field\", \"targeted_test_reported_as_full\", \"unknown_event\", \"unsupported_runtime_event\", \"validation_pass_then_file_changed\"], \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
       "evidence_level": "structural fixture",
       "name": "Executor adapter structural fixtures",
       "source": "reports/professional-scorecard.json",
@@ -134,7 +142,7 @@
     },
     {
       "command": "python3 scripts/eval-executor-adapters.py",
-      "detail": "{\"degraded_event_count\": 4, \"event_count\": 15, \"privacy_redaction_count\": 9, \"runtime\": \"mixed-fixture-runtime-sample\", \"source\": \"deterministic-fixture-bounded-facts\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
+      "detail": "{\"degraded_event_count\": 4, \"event_count\": 20, \"privacy_redaction_count\": 9, \"runtime\": \"mixed-fixture-runtime-sample\", \"source\": \"deterministic-fixture-bounded-facts\", \"token_overhead\": \"not_collected\", \"turn_overhead\": \"not_collected\"}",
       "evidence_level": "runtime telemetry sample",
       "name": "Runtime telemetry sample",
       "source": "reports/professional-scorecard.json",
@@ -174,10 +182,9 @@
     }
   ],
   "known_unknowns": [
-    "Installation validation",
-    "Executor adapter live pass-rate",
-    "Executor adapter token overhead",
-    "Executor adapter turn overhead"
+    "Live pass-rate",
+    "Token overhead",
+    "Turn overhead"
   ],
   "refresh_commands": [
     "python3 scripts/eval-routing.py",
@@ -188,11 +195,12 @@
     "python3 scripts/eval-executor-adapters.py",
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
+    "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",
     "python3 scripts/build.py --profile recommended",
     "python3 scripts/build.py --profile full",
     "python3 scripts/build.py --profile dev",
     "python3 scripts/validate-runtime-reference-links.py",
-    "python3 scripts/validate-installation.py",
+    "python3 scripts/validate-installation.py --json-out reports/installation-validation.json --out reports/installation-validation.md",
     "python3 scripts/validate-marketplace-index.py --profile recommended",
     "python3 scripts/validate-marketplace-index.py --profile full",
     "python3 scripts/validate-marketplace-index.py --profile dev",
@@ -206,9 +214,9 @@
   "schema_version": 1,
   "status_counts": {
     "fail": 0,
-    "not_collected": 4,
+    "not_collected": 3,
     "partial": 2,
-    "pass": 12,
+    "pass": 14,
     "unknown": 0
   }
 }
