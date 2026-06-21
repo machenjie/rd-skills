@@ -523,6 +523,15 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp)
             (run_dir / "diff.patch").write_text('ROOT="${CHANGEFORGE_CODEGEN_ROOT:-/tmp/root}"\n', encoding="utf-8")
+            (run_dir / "final.md").write_text(
+                "\n".join(
+                    [
+                        '`CHANGEFORGE_CODEGEN_CANDIDATE_DIR="$PWD" python3 test_helper.py` passed.',
+                        "`CHANGEFORGE_CODEGEN_EVALUATE=1 bash ../test-suite/run.sh` could not run.",
+                    ]
+                ),
+                encoding="utf-8",
+            )
             result = helper.detect_baseline_contamination(run_dir)
         self.assertFalse(result["contaminated"])
 
@@ -1006,8 +1015,17 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             out_dir = Path(tmp) / "grading"
             candidate.mkdir()
             result = grader.grade_candidate("devex/minimal-correct-implementation-ladder", candidate, out_dir)
+            redacted = grader._redact_output(
+                f"{candidate}/file.py {Path(tmp)}/other.py /private/var/folders/sample /tmp/sample",
+                root=Path(tmp),
+                candidate_dir=candidate,
+            )
         self.assertEqual(result["grading_status"], "not_collected")
         self.assertEqual(result["candidate_dir"], "<candidate>")
+        self.assertNotIn(str(candidate), redacted)
+        self.assertNotIn(str(Path(tmp)), redacted)
+        self.assertNotIn("/private/var/", redacted)
+        self.assertNotIn("/tmp/", redacted)
 
     def test_case_registry_requires_assertions_for_publishable_cases(self) -> None:
         helper = _load_script("codex_live_helper_bad_registry", "scripts/codex_live_benchmark_lib.py")

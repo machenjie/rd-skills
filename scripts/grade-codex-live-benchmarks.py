@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from codex_live_benchmark_lib import ROOT, case_assertion_files, write_json
+from codex_live_benchmark_lib import ROOT, case_assertion_files, redact_report_text, write_json
 
 
 def _case_dir(benchmark: str, root: Path) -> Path:
@@ -34,7 +34,7 @@ def _redact_output(text: str, *, root: Path, candidate_dir: Path) -> str:
     redacted = re.sub(r"/Users/[^\s\"'<>]+", "<local-path>", redacted)
     redacted = re.sub(r"/home/[^\s\"'<>]+", "<local-path>", redacted)
     redacted = re.sub(r"[A-Za-z]:\\Users\\[^\s\"'<>]+", "<local-path>", redacted)
-    return redacted
+    return redact_report_text(redacted)
 
 
 def _grading_path(out_dir: Path, path: Path) -> str:

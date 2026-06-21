@@ -1,4 +1,0 @@
-2026-06-21T10:04:28.931060Z  WARN codex_analytics::client: failed to send events request: error sending request for url (https://chatgpt.com/backend-api/codex/analytics-events/events)
-2026-06-21T10:05:01.610704Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/zsh -lc 'rm -rf __pycache__ tests/__pycache__ && git status --short'`: CreateProcess { message: "Rejected(\"`/bin/zsh -lc 'rm -rf __pycache__ tests/__pycache__ && git status --short'` rejected: blocked by policy\")" }
-2026-06-21T10:05:11.082923Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/zsh -lc 'rm -rf __pycache__ tests/__pycache__'`: CreateProcess { message: "Rejected(\"`/bin/zsh -lc 'rm -rf __pycache__ tests/__pycache__'` rejected: blocked by policy\")" }
-2026-06-21T10:06:19.648769Z  WARN codex_analytics::client: failed to send events request: error sending request for url (https://chatgpt.com/backend-api/codex/analytics-events/events)

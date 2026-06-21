@@ -89,7 +89,7 @@ FORBIDDEN_ABSOLUTE_USER_PATH_PATTERNS = (
     re.compile(r"[A-Za-z]:\\Users\\[^\s\"'<>]+"),
 )
 RAW_ARTIFACT_FILENAMES = frozenset({"events.jsonl"})
-CODEGEN_HARNESS_ENV_PATTERN = re.compile(r"(?i)\bCHANGEFORGE_CODEGEN_(ROOT|CASE_DIR|SMOKE)\b")
+CODEGEN_HARNESS_ENV_PATTERN = re.compile(r"(?i)\bCHANGEFORGE_CODEGEN_[A-Z0-9_]+\b")
 
 
 @dataclass(frozen=True)

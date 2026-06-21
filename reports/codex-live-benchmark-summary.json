@@ -1,34 +1,212 @@
 {
-  "assertion_case_count": 1,
+  "assertion_case_count": 5,
   "auth_policy": "borrow-current",
-  "benchmark_eligible_result_count": 2,
-  "benchmark_mode": "clean-paired",
-  "benchmark_passed_result_count": 1,
-  "case_count": 1,
+  "benchmark_eligible_result_count": 45,
+  "benchmark_mode": "ablation",
+  "benchmark_passed_result_count": 5,
+  "case_count": 6,
   "cases": [
-    "security/ssrf-url-allowlist"
+    "backend/service-method-vs-new-helper",
+    "devex/helper-reuse-search",
+    "devex/minimal-correct-implementation-ladder",
+    "reliability/redis-cache-stampede-protection",
+    "security/ssrf-url-allowlist",
+    "structure/object-method-encapsulation-placement"
   ],
   "cases_summary": {
+    "backend/service-method-vs-new-helper": {
+      "grading_mode": "assertion",
+      "variants": {
+        "baseline_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 0,
+          "failure_categories": {
+            "setup_failed": 3
+          },
+          "pass_rate": 0.0,
+          "runs": 3
+        },
+        "skills_only_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 0,
+          "failure_categories": {
+            "setup_failed": 3
+          },
+          "pass_rate": 0.0,
+          "runs": 3
+        },
+        "skills_with_hooks_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 0,
+          "failure_categories": {
+            "setup_failed": 3
+          },
+          "pass_rate": 0.0,
+          "runs": 3
+        }
+      }
+    },
+    "devex/helper-reuse-search": {
+      "grading_mode": "assertion",
+      "variants": {
+        "baseline_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 0,
+          "failure_categories": {
+            "setup_failed": 3
+          },
+          "pass_rate": 0.0,
+          "runs": 3
+        },
+        "skills_only_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 0,
+          "failure_categories": {
+            "setup_failed": 3
+          },
+          "pass_rate": 0.0,
+          "runs": 3
+        },
+        "skills_with_hooks_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 0,
+          "failure_categories": {
+            "setup_failed": 3
+          },
+          "pass_rate": 0.0,
+          "runs": 3
+        }
+      }
+    },
+    "devex/minimal-correct-implementation-ladder": {
+      "grading_mode": "telemetry_only",
+      "variants": {
+        "baseline_clean": {
+          "benchmark_eligible_result_count": 0,
+          "benchmark_passed_result_count": 0,
+          "failure_categories": {
+            "telemetry_only": 3
+          },
+          "pass_rate": "not_collected",
+          "runs": 3
+        },
+        "skills_only_clean": {
+          "benchmark_eligible_result_count": 0,
+          "benchmark_passed_result_count": 0,
+          "failure_categories": {
+            "telemetry_only": 3
+          },
+          "pass_rate": "not_collected",
+          "runs": 3
+        },
+        "skills_with_hooks_clean": {
+          "benchmark_eligible_result_count": 0,
+          "benchmark_passed_result_count": 0,
+          "failure_categories": {
+            "telemetry_only": 3
+          },
+          "pass_rate": "not_collected",
+          "runs": 3
+        }
+      }
+    },
+    "reliability/redis-cache-stampede-protection": {
+      "grading_mode": "assertion",
+      "variants": {
+        "baseline_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 0,
+          "failure_categories": {
+            "setup_failed": 3
+          },
+          "pass_rate": 0.0,
+          "runs": 3
+        },
+        "skills_only_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 0,
+          "failure_categories": {
+            "setup_failed": 3
+          },
+          "pass_rate": 0.0,
+          "runs": 3
+        },
+        "skills_with_hooks_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 0,
+          "failure_categories": {
+            "setup_failed": 3
+          },
+          "pass_rate": 0.0,
+          "runs": 3
+        }
+      }
+    },
     "security/ssrf-url-allowlist": {
       "grading_mode": "assertion",
       "variants": {
         "baseline_clean": {
-          "benchmark_eligible_result_count": 1,
-          "benchmark_passed_result_count": 0,
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 2,
           "failure_categories": {
+            "none": 2,
             "setup_failed": 1
           },
-          "pass_rate": 0.0,
-          "runs": 1
+          "pass_rate": 0.6667,
+          "runs": 3
         },
-        "skills_with_hooks_clean": {
-          "benchmark_eligible_result_count": 1,
+        "skills_only_clean": {
+          "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 1,
           "failure_categories": {
-            "none": 1
+            "none": 1,
+            "setup_failed": 2
           },
-          "pass_rate": 1.0,
-          "runs": 1
+          "pass_rate": 0.3333,
+          "runs": 3
+        },
+        "skills_with_hooks_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 1,
+          "failure_categories": {
+            "none": 1,
+            "setup_failed": 2
+          },
+          "pass_rate": 0.3333,
+          "runs": 3
+        }
+      }
+    },
+    "structure/object-method-encapsulation-placement": {
+      "grading_mode": "assertion",
+      "variants": {
+        "baseline_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 1,
+          "failure_categories": {
+            "none": 1,
+            "setup_failed": 2
+          },
+          "pass_rate": 0.3333,
+          "runs": 3
+        },
+        "skills_only_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 0,
+          "failure_categories": {
+            "setup_failed": 3
+          },
+          "pass_rate": 0.0,
+          "runs": 3
+        },
+        "skills_with_hooks_clean": {
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 0,
+          "failure_categories": {
+            "setup_failed": 3
+          },
+          "pass_rate": 0.0,
+          "runs": 3
         }
       }
     }
@@ -39,28 +217,46 @@
   "current_home_full_result_count": 0,
   "current_home_result_count": 0,
   "delta": {
+    "skills_only_clean_vs_baseline_clean": {
+      "command_execution_count_delta": 7.78,
+      "file_change_count_delta": -0.11,
+      "input_tokens_delta_pct": 1.3255,
+      "output_tokens_delta_pct": 0.047,
+      "pass_rate_delta": -0.1333,
+      "reasoning_output_tokens_delta_pct": 0.0992,
+      "security_pass_rate_delta": -0.1333
+    },
     "skills_with_hooks_clean_vs_baseline_clean": {
-      "command_execution_count_delta": 32.0,
-      "file_change_count_delta": -6.0,
-      "input_tokens_delta_pct": 1.864,
-      "output_tokens_delta_pct": 0.2455,
-      "pass_rate_delta": 1.0,
-      "reasoning_output_tokens_delta_pct": 0.8179,
-      "security_pass_rate_delta": 1.0
+      "command_execution_count_delta": 2.89,
+      "file_change_count_delta": -1.34,
+      "input_tokens_delta_pct": 1.1382,
+      "output_tokens_delta_pct": -0.0412,
+      "pass_rate_delta": -0.1333,
+      "reasoning_output_tokens_delta_pct": -0.0122,
+      "security_pass_rate_delta": -0.1333
+    },
+    "skills_with_hooks_clean_vs_skills_only_clean": {
+      "command_execution_count_delta": -4.89,
+      "file_change_count_delta": -1.23,
+      "input_tokens_delta_pct": -0.0805,
+      "output_tokens_delta_pct": -0.0843,
+      "pass_rate_delta": 0.0,
+      "reasoning_output_tokens_delta_pct": -0.1014,
+      "security_pass_rate_delta": 0.0
     }
   },
   "evidence_level": "local_codex_cli_live_benchmark",
-  "evidence_scope": "smoke",
+  "evidence_scope": "multi_case_ablation_3_run",
   "evidence_scope_detail": {
-    "observed_assertion_case_count": 1,
-    "observed_benchmark_mode": "clean-paired",
-    "observed_min_runs_per_required_variant": 0,
+    "observed_assertion_case_count": 5,
+    "observed_benchmark_mode": "ablation",
+    "observed_min_runs_per_required_variant": 3,
     "observed_variant_case_counts": {
-      "baseline_clean": 1,
-      "skills_only_clean": 0,
-      "skills_with_hooks_clean": 1
+      "baseline_clean": 5,
+      "skills_only_clean": 5,
+      "skills_with_hooks_clean": 5
     },
-    "reason": "strict clean-paired evidence is smoke-scale until ablation covers the required cases and runs",
+    "reason": "ablation evidence includes the required assertion-backed case count and repeated runs",
     "required_assertion_case_count": 5,
     "required_benchmark_mode": "ablation",
     "required_runs_per_variant": 3,
@@ -69,11 +265,12 @@
       "skills_only_clean",
       "skills_with_hooks_clean"
     ],
-    "strong_claim_ready": false
+    "strong_claim_ready": true
   },
   "failure_categories": {
-    "none": 1,
-    "setup_failed": 1
+    "none": 5,
+    "setup_failed": 40,
+    "telemetry_only": 9
   },
   "generated_by": "scripts/generate-codex-live-summary.py",
   "ignore_rules": true,
@@ -84,190 +281,288 @@
     "Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately.",
     "Strict comparative claims may borrow Codex authentication only; user skills, hooks, config, and rules are not loaded.",
     "Baseline contamination blocks publishing, and pass rates include assertion-backed eligible results only.",
-    "Current strict live evidence is a smoke sample only: it supports only the listed case and variants, not a broad rd-skills pass-rate improvement claim. Stronger claims require at least 3-5 assertion-backed cases with 3 runs per variant."
+    "Current strict live evidence covers ablation across at least 5 assertion-backed cases and 3 runs per required variant, but remains local Codex CLI evidence."
   ],
   "not_collected_grading_count": 0,
   "plugins_disabled": true,
   "publishable_for_strict_benchmark": true,
-  "result_count": 2,
+  "result_count": 54,
   "run_dir": "<run-dir>",
-  "run_id": "clean-auth-borrowed-20260621-175817",
+  "run_id": "ablation-auth-borrowed-20260621-213019",
   "schema_version": 2,
   "status": "collected",
   "strict_benchmark_eligible": true,
   "telemetry": {
-    "event_count": 239,
+    "event_count": 5107,
     "parse_error_count": 0
   },
-  "telemetry_only_case_count": 0,
-  "telemetry_only_result_count": 0,
+  "telemetry_only_case_count": 1,
+  "telemetry_only_result_count": 9,
   "user_config_loaded": false,
   "user_rules_loaded": false,
   "user_skills_visible": false,
   "variants": {
     "baseline_clean": {
       "artifact_status_counts": {
-        "collected": 1
+        "collected": 18
       },
-      "average_command_execution_count": 70.0,
-      "average_event_count": 111.0,
-      "average_file_change_count": 14.0,
+      "average_command_execution_count": 66.0,
+      "average_event_count": 92.28,
+      "average_file_change_count": 5.78,
       "average_metrics": {
-        "command_execution_count": 70.0,
-        "error_count": 4.0,
-        "event_count": 111.0,
-        "file_change_count": 14.0,
+        "command_execution_count": 66.0,
+        "error_count": 4.83,
+        "event_count": 92.28,
+        "file_change_count": 5.78,
         "plan_update_count": 0.0
       },
       "average_usage": {
-        "cached_input_tokens": 483712.0,
-        "input_tokens": 564266.0,
-        "output_tokens": 10952.0,
-        "reasoning_output_tokens": 1949.0
+        "cached_input_tokens": 361294.22,
+        "input_tokens": 418332.78,
+        "output_tokens": 9534.5,
+        "reasoning_output_tokens": 1503.28
       },
-      "benchmark_eligible_result_count": 1,
-      "benchmark_passed_result_count": 0,
-      "case_count": 1,
+      "benchmark_eligible_result_count": 15,
+      "benchmark_passed_result_count": 3,
+      "case_count": 6,
       "contaminated_result_count": 0,
       "delta_vs_baseline_clean": {},
       "failure_categories": {
-        "setup_failed": 1
+        "none": 3,
+        "setup_failed": 12,
+        "telemetry_only": 3
       },
       "grading_status_counts": {
-        "failed": 1
+        "failed": 12,
+        "passed": 3,
+        "telemetry_only": 3
       },
       "max_metrics": {
-        "command_execution_count": 70,
-        "error_count": 4,
-        "event_count": 111,
+        "command_execution_count": 102,
+        "error_count": 8,
+        "event_count": 137,
         "file_change_count": 14,
         "plan_update_count": 0
       },
       "max_usage": {
-        "cached_input_tokens": 483712,
-        "input_tokens": 564266,
-        "output_tokens": 10952,
-        "reasoning_output_tokens": 1949
+        "cached_input_tokens": 750592,
+        "input_tokens": 846083,
+        "output_tokens": 16694,
+        "reasoning_output_tokens": 2836
+      },
+      "median_metrics": {
+        "command_execution_count": 58.0,
+        "error_count": 5.0,
+        "event_count": 84.0,
+        "file_change_count": 6.0,
+        "plan_update_count": 0.0
+      },
+      "median_usage": {
+        "cached_input_tokens": 326656.0,
+        "input_tokens": 367045.5,
+        "output_tokens": 10117.5,
+        "reasoning_output_tokens": 1357.0
+      },
+      "min_metrics": {
+        "command_execution_count": 36,
+        "error_count": 1,
+        "event_count": 55,
+        "file_change_count": 2,
+        "plan_update_count": 0
+      },
+      "min_usage": {
+        "cached_input_tokens": 165760,
+        "input_tokens": 206738,
+        "output_tokens": 4542,
+        "reasoning_output_tokens": 803
+      },
+      "not_collected_grading_count": 0,
+      "pass_rate": 0.2,
+      "pass_rate_ci_note": "descriptive only; small sample",
+      "result_count": 18,
+      "run_count": 3,
+      "security_pass_rate": 0.2,
+      "telemetry_only_result_count": 3
+    },
+    "skills_only_clean": {
+      "artifact_status_counts": {
+        "collected": 18
+      },
+      "average_command_execution_count": 73.78,
+      "average_event_count": 99.5,
+      "average_file_change_count": 5.67,
+      "average_metrics": {
+        "command_execution_count": 73.78,
+        "error_count": 4.56,
+        "event_count": 99.5,
+        "file_change_count": 5.67,
+        "plan_update_count": 0.0
+      },
+      "average_usage": {
+        "cached_input_tokens": 882574.22,
+        "input_tokens": 972824.94,
+        "output_tokens": 9982.72,
+        "reasoning_output_tokens": 1652.44
+      },
+      "benchmark_eligible_result_count": 15,
+      "benchmark_passed_result_count": 1,
+      "case_count": 6,
+      "contaminated_result_count": 0,
+      "delta_vs_baseline_clean": {
+        "command_execution_count_delta": 7.78,
+        "file_change_count_delta": -0.11,
+        "input_tokens_delta_pct": 1.3255,
+        "output_tokens_delta_pct": 0.047,
+        "pass_rate_delta": -0.1333,
+        "reasoning_output_tokens_delta_pct": 0.0992,
+        "security_pass_rate_delta": -0.1333
+      },
+      "failure_categories": {
+        "none": 1,
+        "setup_failed": 14,
+        "telemetry_only": 3
+      },
+      "grading_status_counts": {
+        "failed": 14,
+        "passed": 1,
+        "telemetry_only": 3
+      },
+      "max_metrics": {
+        "command_execution_count": 108,
+        "error_count": 12,
+        "event_count": 149,
+        "file_change_count": 14,
+        "plan_update_count": 0
+      },
+      "max_usage": {
+        "cached_input_tokens": 1748480,
+        "input_tokens": 1846722,
+        "output_tokens": 17351,
+        "reasoning_output_tokens": 2585
       },
       "median_metrics": {
         "command_execution_count": 70.0,
         "error_count": 4.0,
-        "event_count": 111.0,
-        "file_change_count": 14.0,
+        "event_count": 96.5,
+        "file_change_count": 5.0,
         "plan_update_count": 0.0
       },
       "median_usage": {
-        "cached_input_tokens": 483712.0,
-        "input_tokens": 564266.0,
-        "output_tokens": 10952.0,
-        "reasoning_output_tokens": 1949.0
+        "cached_input_tokens": 827584.0,
+        "input_tokens": 952899.0,
+        "output_tokens": 9266.5,
+        "reasoning_output_tokens": 1554.0
       },
       "min_metrics": {
-        "command_execution_count": 70,
-        "error_count": 4,
-        "event_count": 111,
-        "file_change_count": 14,
+        "command_execution_count": 46,
+        "error_count": 1,
+        "event_count": 64,
+        "file_change_count": 2,
         "plan_update_count": 0
       },
       "min_usage": {
-        "cached_input_tokens": 483712,
-        "input_tokens": 564266,
-        "output_tokens": 10952,
-        "reasoning_output_tokens": 1949
+        "cached_input_tokens": 290176,
+        "input_tokens": 341040,
+        "output_tokens": 5500,
+        "reasoning_output_tokens": 760
       },
       "not_collected_grading_count": 0,
-      "pass_rate": 0.0,
+      "pass_rate": 0.0667,
       "pass_rate_ci_note": "descriptive only; small sample",
-      "result_count": 1,
-      "run_count": 1,
-      "security_pass_rate": 0.0,
-      "telemetry_only_result_count": 0
+      "result_count": 18,
+      "run_count": 3,
+      "security_pass_rate": 0.0667,
+      "telemetry_only_result_count": 3
     },
     "skills_with_hooks_clean": {
       "artifact_status_counts": {
-        "collected": 1
+        "collected": 18
       },
-      "average_command_execution_count": 102.0,
-      "average_event_count": 128.0,
-      "average_file_change_count": 8.0,
+      "average_command_execution_count": 68.89,
+      "average_event_count": 91.94,
+      "average_file_change_count": 4.44,
       "average_metrics": {
-        "command_execution_count": 102.0,
-        "error_count": 5.0,
-        "event_count": 128.0,
-        "file_change_count": 8.0,
+        "command_execution_count": 68.89,
+        "error_count": 3.78,
+        "event_count": 91.94,
+        "file_change_count": 4.44,
         "plan_update_count": 0.0
       },
       "average_usage": {
-        "cached_input_tokens": 1524864.0,
-        "input_tokens": 1616056.0,
-        "output_tokens": 13641.0,
-        "reasoning_output_tokens": 3543.0
+        "cached_input_tokens": 801621.33,
+        "input_tokens": 894470.44,
+        "output_tokens": 9141.44,
+        "reasoning_output_tokens": 1484.89
       },
-      "benchmark_eligible_result_count": 1,
+      "benchmark_eligible_result_count": 15,
       "benchmark_passed_result_count": 1,
-      "case_count": 1,
+      "case_count": 6,
       "contaminated_result_count": 0,
       "delta_vs_baseline_clean": {
-        "command_execution_count_delta": 32.0,
-        "file_change_count_delta": -6.0,
-        "input_tokens_delta_pct": 1.864,
-        "output_tokens_delta_pct": 0.2455,
-        "pass_rate_delta": 1.0,
-        "reasoning_output_tokens_delta_pct": 0.8179,
-        "security_pass_rate_delta": 1.0
+        "command_execution_count_delta": 2.89,
+        "file_change_count_delta": -1.34,
+        "input_tokens_delta_pct": 1.1382,
+        "output_tokens_delta_pct": -0.0412,
+        "pass_rate_delta": -0.1333,
+        "reasoning_output_tokens_delta_pct": -0.0122,
+        "security_pass_rate_delta": -0.1333
       },
       "failure_categories": {
-        "none": 1
+        "none": 1,
+        "setup_failed": 14,
+        "telemetry_only": 3
       },
       "grading_status_counts": {
-        "passed": 1
+        "failed": 14,
+        "passed": 1,
+        "telemetry_only": 3
       },
       "max_metrics": {
-        "command_execution_count": 102,
-        "error_count": 5,
-        "event_count": 128,
-        "file_change_count": 8,
+        "command_execution_count": 90,
+        "error_count": 9,
+        "event_count": 126,
+        "file_change_count": 10,
         "plan_update_count": 0
       },
       "max_usage": {
-        "cached_input_tokens": 1524864,
-        "input_tokens": 1616056,
-        "output_tokens": 13641,
-        "reasoning_output_tokens": 3543
+        "cached_input_tokens": 1253376,
+        "input_tokens": 1407481,
+        "output_tokens": 13930,
+        "reasoning_output_tokens": 2450
       },
       "median_metrics": {
-        "command_execution_count": 102.0,
-        "error_count": 5.0,
-        "event_count": 128.0,
-        "file_change_count": 8.0,
+        "command_execution_count": 67.0,
+        "error_count": 3.5,
+        "event_count": 93.0,
+        "file_change_count": 4.0,
         "plan_update_count": 0.0
       },
       "median_usage": {
-        "cached_input_tokens": 1524864.0,
-        "input_tokens": 1616056.0,
-        "output_tokens": 13641.0,
-        "reasoning_output_tokens": 3543.0
+        "cached_input_tokens": 810880.0,
+        "input_tokens": 891559.0,
+        "output_tokens": 8379.5,
+        "reasoning_output_tokens": 1328.5
       },
       "min_metrics": {
-        "command_execution_count": 102,
-        "error_count": 5,
-        "event_count": 128,
-        "file_change_count": 8,
+        "command_execution_count": 44,
+        "error_count": 1,
+        "event_count": 60,
+        "file_change_count": 2,
         "plan_update_count": 0
       },
       "min_usage": {
-        "cached_input_tokens": 1524864,
-        "input_tokens": 1616056,
-        "output_tokens": 13641,
-        "reasoning_output_tokens": 3543
+        "cached_input_tokens": 330880,
+        "input_tokens": 415655,
+        "output_tokens": 5098,
+        "reasoning_output_tokens": 869
       },
       "not_collected_grading_count": 0,
-      "pass_rate": 1.0,
+      "pass_rate": 0.0667,
       "pass_rate_ci_note": "descriptive only; small sample",
-      "result_count": 1,
-      "run_count": 1,
-      "security_pass_rate": 1.0,
-      "telemetry_only_result_count": 0
+      "result_count": 18,
+      "run_count": 3,
+      "security_pass_rate": 0.0667,
+      "telemetry_only_result_count": 3
     }
   }
 }
