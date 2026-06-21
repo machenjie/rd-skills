@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from codex_live_benchmark_lib import (
+    CODEX_LIVE_EVIDENCE_SCOPES,
     CURRENT_HOME_SMOKE_EVIDENCE_LEVEL,
     FAILURE_CATEGORIES,
     LIVE_EVIDENCE_LEVEL,
@@ -112,6 +113,16 @@ def validate_summary(summary_path: Path, *, publishable: bool = True) -> list[st
     errors.extend(scan_forbidden_absolute_user_paths(summary_path))
     if summary.get("evidence_level") not in {LIVE_EVIDENCE_LEVEL, CURRENT_HOME_SMOKE_EVIDENCE_LEVEL}:
         errors.append(f"summary evidence_level must be {LIVE_EVIDENCE_LEVEL} or {CURRENT_HOME_SMOKE_EVIDENCE_LEVEL}")
+    evidence_scope = summary.get("evidence_scope")
+    if evidence_scope not in CODEX_LIVE_EVIDENCE_SCOPES:
+        errors.append(f"summary evidence_scope must be one of {', '.join(CODEX_LIVE_EVIDENCE_SCOPES)}")
+    detail = summary.get("evidence_scope_detail")
+    if not isinstance(detail, dict):
+        errors.append("summary evidence_scope_detail must be an object")
+    elif evidence_scope == "multi_case_ablation_3_run" and detail.get("strong_claim_ready") is not True:
+        errors.append("summary evidence_scope multi_case_ablation_3_run requires strong_claim_ready=true")
+    elif evidence_scope == "smoke" and detail.get("strong_claim_ready") is True:
+        errors.append("summary evidence_scope smoke conflicts with strong_claim_ready=true")
     if publishable:
         errors.extend(_strict_summary_errors(summary))
     if "limitations" not in summary or not summary.get("limitations"):

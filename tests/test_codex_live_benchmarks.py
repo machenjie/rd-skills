@@ -72,12 +72,35 @@ def _variant_payload(**overrides: object) -> dict[str, object]:
     return payload
 
 
+def _scope_detail(**overrides: object) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "strong_claim_ready": False,
+        "required_benchmark_mode": "ablation",
+        "required_assertion_case_count": 5,
+        "required_runs_per_variant": 3,
+        "required_variants": ["baseline_clean", "skills_only_clean", "skills_with_hooks_clean"],
+        "observed_benchmark_mode": "clean-paired",
+        "observed_assertion_case_count": 1,
+        "observed_variant_case_counts": {
+            "baseline_clean": 1,
+            "skills_only_clean": 0,
+            "skills_with_hooks_clean": 1,
+        },
+        "observed_min_runs_per_required_variant": 0,
+        "reason": "strict clean-paired evidence is smoke-scale until ablation covers the required cases and runs",
+    }
+    payload.update(overrides)
+    return payload
+
+
 def _strict_summary_payload(**overrides: object) -> dict[str, object]:
     payload: dict[str, object] = {
         "schema_version": 2,
         "generated_by": "scripts/generate-codex-live-summary.py",
         "status": "collected",
         "evidence_level": "local_codex_cli_live_benchmark",
+        "evidence_scope": "smoke",
+        "evidence_scope_detail": _scope_detail(),
         "benchmark_mode": "clean-paired",
         "codex_home_policy": "auth_borrowed_clean",
         "auth_policy": "borrow-current",
@@ -639,6 +662,8 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(summary["assertion_case_count"], 1)
         self.assertEqual(summary["telemetry_only_case_count"], 1)
         self.assertIn("skills_with_hooks_clean_vs_baseline_clean", summary["delta"])
+        self.assertEqual(summary["evidence_scope"], "smoke")
+        self.assertFalse(summary["evidence_scope_detail"]["strong_claim_ready"])
         self.assertTrue(any("smoke sample only" in item for item in summary["limitations"]))
 
     def test_summary_aggregates_ablation_runs_usage_cases_and_failure_categories(self) -> None:
@@ -712,10 +737,78 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertIn("skills_only_clean_vs_baseline_clean", summary["delta"])
         self.assertIn("skills_with_hooks_clean_vs_skills_only_clean", summary["delta"])
         self.assertIn("skills_with_hooks_clean_vs_baseline_clean", summary["delta"])
+        self.assertEqual(summary["evidence_scope"], "smoke")
+        self.assertFalse(summary["evidence_scope_detail"]["strong_claim_ready"])
         self.assertEqual(
             summary["cases_summary"]["security/ssrf-url-allowlist"]["variants"]["baseline_clean"]["pass_rate"],
             0.3333,
         )
+
+    def test_summary_marks_strong_scope_only_for_five_case_three_run_ablation(self) -> None:
+        summary_module = _load_script(
+            "generate_codex_live_summary_strong_scope",
+            "scripts/generate-codex-live-summary.py",
+        )
+        cases = [
+            "devex/helper-reuse-search",
+            "structure/object-method-encapsulation-placement",
+            "backend/service-method-vs-new-helper",
+            "reliability/redis-cache-stampede-protection",
+            "security/ssrf-url-allowlist",
+        ]
+        variants = ["baseline_clean", "skills_only_clean", "skills_with_hooks_clean"]
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            (run_dir / "run-manifest.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 2,
+                        "generated_by": "scripts/run-codex-live-benchmarks.py",
+                        "run_id": "local-ablation",
+                        "status": "collected",
+                        "benchmark_mode": "ablation",
+                        "dry_run": False,
+                        "live_execution_allowed": True,
+                        "live_execution_effective": True,
+                        "cases": cases,
+                        "variants": variants,
+                        "runs_per_variant": 3,
+                        "sandbox": "workspace-write",
+                        "auth_policy": "borrow-current",
+                        "codex_environment_policy": "auth_borrowed_clean",
+                        "limitations": ["local"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            # This synthetic matrix exercises scope classification only; it is not live Codex evidence.
+            for case_id in cases:
+                for variant in variants:
+                    for run_index in range(1, 4):
+                        result_dir = (
+                            run_dir
+                            / "cases"
+                            / case_id.replace("/", "__")
+                            / variant
+                            / f"run-{run_index:02d}"
+                        )
+                        result_dir.mkdir(parents=True)
+                        (result_dir / "result.json").write_text(
+                            json.dumps(
+                                _result_payload(
+                                    case_id=case_id,
+                                    variant=variant,
+                                    run_index=run_index,
+                                )
+                            ),
+                            encoding="utf-8",
+                        )
+            summary = summary_module.generate_summary(run_dir)
+
+        self.assertEqual(summary["evidence_scope"], "multi_case_ablation_3_run")
+        self.assertTrue(summary["evidence_scope_detail"]["strong_claim_ready"])
+        self.assertEqual(summary["evidence_scope_detail"]["observed_assertion_case_count"], 5)
+        self.assertEqual(summary["evidence_scope_detail"]["observed_min_runs_per_required_variant"], 3)
 
     def test_failure_category_priority_is_stable(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_failure_category", "scripts/run-codex-live-benchmarks.py")

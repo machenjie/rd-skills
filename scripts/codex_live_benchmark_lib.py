@@ -49,6 +49,9 @@ CODEX_ENVIRONMENT_POLICIES = ("isolated_api_key", "auth_borrowed_clean", "curren
 STRICT_CODEX_ENVIRONMENT_POLICIES = ("isolated_api_key", "auth_borrowed_clean")
 LIVE_EVIDENCE_LEVEL = "local_codex_cli_live_benchmark"
 CURRENT_HOME_SMOKE_EVIDENCE_LEVEL = "current_home_integration_smoke"
+CODEX_LIVE_EVIDENCE_SCOPES = ("smoke", "multi_case_ablation_3_run", "current_home_smoke")
+STRONG_CODEX_LIVE_ASSERTION_CASE_MIN = 5
+STRONG_CODEX_LIVE_RUNS_PER_VARIANT_MIN = 3
 BASELINE_CONTAMINATION_SIGNALS = (
     "ChangeForge",
     "rd-skills",
@@ -434,6 +437,8 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "generated_by",
             "status",
             "evidence_level",
+            "evidence_scope",
+            "evidence_scope_detail",
             "benchmark_mode",
             "codex_home_policy",
             "auth_policy",

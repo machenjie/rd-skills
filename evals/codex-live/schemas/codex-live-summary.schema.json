@@ -8,6 +8,8 @@
     "generated_by",
     "status",
     "evidence_level",
+    "evidence_scope",
+    "evidence_scope_detail",
     "benchmark_mode",
     "codex_home_policy",
     "auth_policy",
@@ -50,6 +52,64 @@
     },
     "evidence_level": {
       "enum": ["local_codex_cli_live_benchmark", "current_home_integration_smoke"]
+    },
+    "evidence_scope": {
+      "enum": ["smoke", "multi_case_ablation_3_run", "current_home_smoke"]
+    },
+    "evidence_scope_detail": {
+      "type": "object",
+      "required": [
+        "strong_claim_ready",
+        "required_benchmark_mode",
+        "required_assertion_case_count",
+        "required_runs_per_variant",
+        "required_variants",
+        "observed_benchmark_mode",
+        "observed_assertion_case_count",
+        "observed_variant_case_counts",
+        "observed_min_runs_per_required_variant",
+        "reason"
+      ],
+      "properties": {
+        "strong_claim_ready": {
+          "type": "boolean"
+        },
+        "required_benchmark_mode": {
+          "const": "ablation"
+        },
+        "required_assertion_case_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "required_runs_per_variant": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "required_variants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "observed_benchmark_mode": {
+          "enum": ["clean-paired", "ablation", "current-home-smoke"]
+        },
+        "observed_assertion_case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observed_variant_case_counts": {
+          "type": "object"
+        },
+        "observed_min_runs_per_required_variant": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
     },
     "benchmark_mode": {
       "enum": ["clean-paired", "ablation", "current-home-smoke"]

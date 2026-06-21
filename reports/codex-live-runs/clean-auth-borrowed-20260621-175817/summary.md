@@ -2,6 +2,9 @@
 
 - Status: `collected`
 - Evidence level: `local_codex_cli_live_benchmark`
+- Evidence scope: `smoke`
+- Strong claim ready: `False`
+- Evidence scope reason: strict clean-paired evidence is smoke-scale until ablation covers the required cases and runs
 - Benchmark mode: `clean-paired`
 - Auth policy: `borrow-current`
 - Environment policy: `auth_borrowed_clean`

@@ -50,6 +50,27 @@
     }
   },
   "evidence_level": "local_codex_cli_live_benchmark",
+  "evidence_scope": "smoke",
+  "evidence_scope_detail": {
+    "observed_assertion_case_count": 1,
+    "observed_benchmark_mode": "clean-paired",
+    "observed_min_runs_per_required_variant": 0,
+    "observed_variant_case_counts": {
+      "baseline_clean": 1,
+      "skills_only_clean": 0,
+      "skills_with_hooks_clean": 1
+    },
+    "reason": "strict clean-paired evidence is smoke-scale until ablation covers the required cases and runs",
+    "required_assertion_case_count": 5,
+    "required_benchmark_mode": "ablation",
+    "required_runs_per_variant": 3,
+    "required_variants": [
+      "baseline_clean",
+      "skills_only_clean",
+      "skills_with_hooks_clean"
+    ],
+    "strong_claim_ready": false
+  },
   "failure_categories": {
     "none": 1,
     "setup_failed": 1

@@ -14,6 +14,8 @@ from codex_live_benchmark_lib import (
     LIVE_EVIDENCE_LEVEL,
     MODE_DEFAULT_VARIANTS,
     ROOT,
+    STRONG_CODEX_LIVE_ASSERTION_CASE_MIN,
+    STRONG_CODEX_LIVE_RUNS_PER_VARIANT_MIN,
     STRICT_AUTH_POLICIES,
     STRICT_BENCHMARK_MODES,
     STRICT_CODEX_ENVIRONMENT_POLICIES,
@@ -49,6 +51,7 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
     deltas = _variant_deltas(variants)
     for variant in variants:
         variants[variant]["delta_vs_baseline_clean"] = deltas.get(f"{variant}_vs_baseline_clean", {})
+    cases_summary = _cases_summary(real_results)
 
     cases = sorted({str(result.get("case_id")) for result in real_results if result.get("case_id")})
     if not cases and isinstance(manifest.get("cases"), list):
@@ -72,11 +75,19 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
     evidence_level = (
         CURRENT_HOME_SMOKE_EVIDENCE_LEVEL if benchmark_mode == "current-home-smoke" else LIVE_EVIDENCE_LEVEL
     )
+    evidence_scope_detail = _evidence_scope_detail(
+        benchmark_mode,
+        variants=variants,
+        cases_summary=cases_summary,
+    )
+    evidence_scope = _evidence_scope(benchmark_mode, evidence_scope_detail)
     summary = {
         "schema_version": 2,
         "generated_by": "scripts/generate-codex-live-summary.py",
         "status": status,
         "evidence_level": evidence_level,
+        "evidence_scope": evidence_scope,
+        "evidence_scope_detail": evidence_scope_detail,
         "benchmark_mode": benchmark_mode,
         "codex_home_policy": _codex_home_policy(manifest, real_results, benchmark_mode),
         "auth_policy": auth_policy,
@@ -114,7 +125,7 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         "variants": variants,
         "delta": deltas,
         "cases": cases,
-        "cases_summary": _cases_summary(real_results),
+        "cases_summary": cases_summary,
         "telemetry": {
             "event_count": sum(int((result.get("metrics") or {}).get("event_count", 0) or 0) for result in real_results),
             "parse_error_count": sum(len((result.get("metrics") or {}).get("parse_errors", [])) for result in real_results),
@@ -123,6 +134,7 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
             benchmark_mode,
             assertion_case_count=len(assertion_cases),
             variants=variants,
+            evidence_scope=evidence_scope,
         ),
     }
     return summary
@@ -261,6 +273,73 @@ def _rate(numerator: int, denominator: int) -> float | str:
     if denominator == 0:
         return "not_collected"
     return round(numerator / denominator, 4)
+
+
+def _evidence_scope(benchmark_mode: str, detail: dict[str, Any]) -> str:
+    if benchmark_mode == "current-home-smoke":
+        return "current_home_smoke"
+    if detail.get("strong_claim_ready") is True:
+        return "multi_case_ablation_3_run"
+    return "smoke"
+
+
+def _evidence_scope_detail(
+    benchmark_mode: str,
+    *,
+    variants: dict[str, dict[str, Any]],
+    cases_summary: dict[str, Any],
+) -> dict[str, Any]:
+    required_variants = list(MODE_DEFAULT_VARIANTS["ablation"])
+    assertion_cases = {
+        case_id: case_summary
+        for case_id, case_summary in cases_summary.items()
+        if isinstance(case_summary, dict) and case_summary.get("grading_mode") == "assertion"
+    }
+    per_variant_case_counts: dict[str, int] = {}
+    per_variant_min_runs: dict[str, int] = {}
+    for variant in required_variants:
+        runs: list[int] = []
+        for case_summary in assertion_cases.values():
+            variant_payload = (case_summary.get("variants") or {}).get(variant)
+            if isinstance(variant_payload, dict):
+                runs.append(int(variant_payload.get("runs", 0) or 0))
+        per_variant_case_counts[variant] = len(runs)
+        per_variant_min_runs[variant] = min(runs) if runs else 0
+
+    observed_min_runs = min(per_variant_min_runs.values()) if per_variant_min_runs else 0
+    strong_claim_ready = bool(
+        benchmark_mode == "ablation"
+        and len(assertion_cases) >= STRONG_CODEX_LIVE_ASSERTION_CASE_MIN
+        and all(
+            per_variant_case_counts.get(variant, 0) >= STRONG_CODEX_LIVE_ASSERTION_CASE_MIN
+            for variant in required_variants
+        )
+        and observed_min_runs >= STRONG_CODEX_LIVE_RUNS_PER_VARIANT_MIN
+    )
+    if benchmark_mode == "current-home-smoke":
+        reason = "current-home-smoke mode is not strict comparative evidence"
+    elif strong_claim_ready:
+        reason = "ablation evidence includes the required assertion-backed case count and repeated runs"
+    elif benchmark_mode != "ablation":
+        reason = "strict clean-paired evidence is smoke-scale until ablation covers the required cases and runs"
+    elif len(assertion_cases) < STRONG_CODEX_LIVE_ASSERTION_CASE_MIN:
+        reason = "ablation evidence has too few assertion-backed cases for the stronger claim"
+    elif observed_min_runs < STRONG_CODEX_LIVE_RUNS_PER_VARIANT_MIN:
+        reason = "ablation evidence has too few runs per required variant for the stronger claim"
+    else:
+        reason = "ablation evidence is missing one or more required variant/case combinations"
+    return {
+        "strong_claim_ready": strong_claim_ready,
+        "required_benchmark_mode": "ablation",
+        "required_assertion_case_count": STRONG_CODEX_LIVE_ASSERTION_CASE_MIN,
+        "required_runs_per_variant": STRONG_CODEX_LIVE_RUNS_PER_VARIANT_MIN,
+        "required_variants": required_variants,
+        "observed_benchmark_mode": benchmark_mode,
+        "observed_assertion_case_count": len(assertion_cases),
+        "observed_variant_case_counts": per_variant_case_counts,
+        "observed_min_runs_per_required_variant": observed_min_runs,
+        "reason": reason,
+    }
 
 
 def _variant_deltas(variants: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -408,7 +487,13 @@ def _codex_home_policy(manifest: dict[str, Any], results: list[dict[str, Any]], 
     return "mixed_or_unknown"
 
 
-def _limitations(benchmark_mode: str, *, assertion_case_count: int, variants: dict[str, dict[str, Any]]) -> list[str]:
+def _limitations(
+    benchmark_mode: str,
+    *,
+    assertion_case_count: int,
+    variants: dict[str, dict[str, Any]],
+    evidence_scope: str,
+) -> list[str]:
     base = [
         "Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.",
         "Parsed telemetry excludes raw command bodies and assistant/user message content.",
@@ -428,14 +513,10 @@ def _limitations(benchmark_mode: str, *, assertion_case_count: int, variants: di
             for payload in variants.values()
             if isinstance(payload, dict)
         ]
-        run_counts = [
-            int(payload.get("run_count", 0) or 0)
-            for payload in variants.values()
-            if isinstance(payload, dict)
-        ]
-        if assertion_case_count >= 3 and run_counts and min(run_counts) >= 3:
+        if evidence_scope == "multi_case_ablation_3_run":
             base.append(
-                "Current strict live evidence covers multiple assertion-backed cases and repeated runs, "
+                "Current strict live evidence covers ablation across at least 5 assertion-backed cases and 3 runs "
+                "per required variant, "
                 "but remains local Codex CLI evidence."
             )
         elif assertion_case_count < 3 or not eligible_counts or min(eligible_counts) < 3:
@@ -459,6 +540,9 @@ def render_markdown(summary: dict[str, Any]) -> str:
         "",
         f"- Status: `{summary['status']}`",
         f"- Evidence level: `{summary['evidence_level']}`",
+        f"- Evidence scope: `{summary['evidence_scope']}`",
+        f"- Strong claim ready: `{summary['evidence_scope_detail']['strong_claim_ready']}`",
+        f"- Evidence scope reason: {summary['evidence_scope_detail']['reason']}",
         f"- Benchmark mode: `{summary['benchmark_mode']}`",
         f"- Auth policy: `{summary['auth_policy']}`",
         f"- Environment policy: `{summary['codex_environment_policy']}`",

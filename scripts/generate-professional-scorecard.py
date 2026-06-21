@@ -624,6 +624,8 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
         scorecard_status = "not_collected"
     detail = {
         "evidence_level": summary.get("evidence_level"),
+        "evidence_scope": summary.get("evidence_scope"),
+        "evidence_scope_detail": summary.get("evidence_scope_detail"),
         "benchmark_mode": summary.get("benchmark_mode"),
         "auth_policy": summary.get("auth_policy"),
         "codex_environment_policy": summary.get("codex_environment_policy"),
