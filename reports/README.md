@@ -6,6 +6,10 @@ Codex CLI live benchmark run directories under `reports/codex-live-runs/`
 are committed report evidence. The report tree intentionally excludes
 per-run isolated Codex homes and embedded candidate Git directories, because
 those are runtime state rather than benchmark evidence.
+Raw Codex event streams (`events.jsonl`) are also local debug artifacts only.
+Committed run evidence uses `events.metrics.json` and `events.redacted.jsonl`,
+which omit raw commands, command output, local absolute paths, and message
+bodies.
 
 Regenerate professional scorecards with:
 

@@ -45,3 +45,4 @@
 - Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately.
 - Strict comparative claims may borrow Codex authentication only; user skills, hooks, config, and rules are not loaded.
 - Baseline contamination blocks publishing, and pass rates include assertion-backed eligible results only.
+- Current strict live evidence is a smoke sample only: it supports only the listed case and variants, not a broad rd-skills pass-rate improvement claim. Stronger claims require at least 3-5 assertion-backed cases with 3 runs per variant.

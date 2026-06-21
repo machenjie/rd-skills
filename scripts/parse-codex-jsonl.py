@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,7 @@ USAGE_KEYS = {
     "reasoning_output_tokens": "reasoning_output_tokens",
     "reasoning_tokens": "reasoning_output_tokens",
 }
+SAFE_LABEL_RE = re.compile(r"^[A-Za-z0-9_.:-]{1,80}$")
 
 
 def parse_events(path: Path, *, max_parse_errors: int = 50) -> dict[str, Any]:
@@ -65,6 +67,76 @@ def parse_events(path: Path, *, max_parse_errors: int = 50) -> dict[str, Any]:
     return metrics
 
 
+def write_redacted_events(path: Path, out_path: Path, *, max_parse_errors: int = 50) -> None:
+    """Write a bounded event JSONL stream without raw commands, paths, or messages."""
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    rows = _redacted_event_rows(path, max_parse_errors=max_parse_errors)
+    out_path.write_text(
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+
+
+def _redacted_event_rows(path: Path, *, max_parse_errors: int = 50) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    if not path.exists():
+        return [{"line": 0, "event_type": "parse_error", "error": "events file missing"}]
+
+    for line_number, raw_line in enumerate(path.read_text(encoding="utf-8", errors="ignore").splitlines(), start=1):
+        if not raw_line.strip():
+            continue
+        try:
+            event = json.loads(raw_line)
+        except json.JSONDecodeError as exc:
+            if len([row for row in rows if row.get("event_type") == "parse_error"]) < max_parse_errors:
+                rows.append({"line": line_number, "event_type": "parse_error", "error": exc.msg})
+            continue
+        rows.append(_redacted_event_row(event, line_number))
+    return rows
+
+
+def _redacted_event_row(event: Any, line_number: int) -> dict[str, Any]:
+    searchable = _safe_search_text(event)
+    usage = {
+        "input_tokens": 0,
+        "cached_input_tokens": 0,
+        "output_tokens": 0,
+        "reasoning_output_tokens": 0,
+    }
+    _sum_usage(event, usage)
+    row: dict[str, Any] = {
+        "line": line_number,
+        "event_type": _safe_label(_event_name(event) or "unknown"),
+    }
+    for key in ("status", "role"):
+        value = _first_safe_string(event, key)
+        if value:
+            row[key] = value
+    tags: list[str] = []
+    if "turn.started" in searchable or "turn_started" in searchable:
+        tags.append("turn_started")
+    if "turn.completed" in searchable or "turn_completed" in searchable:
+        tags.append("turn_completed")
+    if "turn.failed" in searchable or "turn_failed" in searchable:
+        tags.append("turn_failed")
+    if "exec" in searchable or "command" in searchable or "tool_call" in searchable:
+        tags.append("command_execution")
+    if "apply_patch" in searchable or "file_change" in searchable or "patch" in searchable:
+        tags.append("file_change")
+    if "update_plan" in searchable or "plan_update" in searchable:
+        tags.append("plan_update")
+    if "assistant" in searchable or "agent_message" in searchable:
+        tags.append("agent_message")
+    if "error" in searchable or "failed" in searchable:
+        tags.append("error")
+    if tags:
+        row["tags"] = sorted(dict.fromkeys(tags))
+    compact_usage = {key: value for key, value in usage.items() if value}
+    if compact_usage:
+        row["usage"] = compact_usage
+    return row
+
+
 def _event_name(event: Any) -> str:
     if not isinstance(event, dict):
         return ""
@@ -73,6 +145,28 @@ def _event_name(event: Any) -> str:
         if isinstance(value, str):
             return value.lower()
     return ""
+
+
+def _safe_label(value: str) -> str:
+    return value if SAFE_LABEL_RE.fullmatch(value) else "<redacted>"
+
+
+def _first_safe_string(value: Any, target_key: str) -> str | None:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key == target_key and isinstance(child, str):
+                return _safe_label(child.lower())
+            if not isinstance(child, str):
+                nested = _first_safe_string(child, target_key)
+                if nested:
+                    return nested
+    elif isinstance(value, list):
+        for child in value:
+            if not isinstance(child, str):
+                nested = _first_safe_string(child, target_key)
+                if nested:
+                    return nested
+    return None
 
 
 def _count_event(event: Any, metrics: dict[str, Any]) -> None:
@@ -105,7 +199,7 @@ def _safe_search_text(value: Any) -> str:
         for key, child in value.items():
             parts.append(str(key).lower())
             if key in {"type", "event", "kind", "name", "role", "status"} and isinstance(child, str):
-                parts.append(child.lower())
+                parts.append(_safe_label(child.lower()))
             elif not isinstance(child, str):
                 parts.append(_safe_search_text(child))
     elif isinstance(value, list):
@@ -132,6 +226,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--events", required=True, type=Path)
     parser.add_argument("--out", type=Path)
+    parser.add_argument("--redacted-out", type=Path)
     args = parser.parse_args(argv)
 
     metrics = parse_events(args.events)
@@ -139,6 +234,8 @@ def main(argv: list[str] | None = None) -> int:
         write_json(args.out, metrics)
     else:
         print(json.dumps(metrics, indent=2, sort_keys=True))
+    if args.redacted_out:
+        write_redacted_events(args.events, args.redacted_out)
     return 0
 
 

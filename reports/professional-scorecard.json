@@ -137,11 +137,11 @@
       "verification_command": "python3 scripts/eval-executor-adapters.py"
     },
     {
-      "detail": "reports/codex-live-benchmark-summary.json missing or invalid",
+      "detail": "{\"auth_policy\": \"borrow-current\", \"benchmark_eligible_result_count\": 2, \"benchmark_mode\": \"clean-paired\", \"case_count\": 1, \"codex_environment_policy\": \"auth_borrowed_clean\", \"delta\": {\"skills_with_hooks_clean_vs_baseline_clean\": {\"command_execution_count_delta\": 32.0, \"file_change_count_delta\": -6.0, \"input_tokens_delta_pct\": 1.864, \"output_tokens_delta_pct\": 0.2455, \"pass_rate_delta\": 1.0, \"reasoning_output_tokens_delta_pct\": 0.8179, \"security_pass_rate_delta\": 1.0}}, \"evidence_level\": \"local_codex_cli_live_benchmark\", \"limitations\": [\"Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.\", \"Parsed telemetry excludes raw command bodies and assistant/user message content.\", \"Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately.\", \"Strict comparative claims may borrow Codex authentication only; user skills, hooks, config, and rules are not loaded.\", \"Baseline contamination blocks publishing, and pass rates include assertion-backed eligible results only.\", \"Current strict live evidence is a smoke sample only: it supports only the listed case and variants, not a broad rd-skills pass-rate improvement claim. Stronger claims require at least 3-5 assertion-backed cases with 3 runs per variant.\"], \"result_count\": 2, \"run_id\": \"clean-auth-borrowed-20260621-175817\", \"strict_benchmark_eligible\": true, \"variants\": {\"baseline_clean\": {\"benchmark_eligible_result_count\": 1, \"pass_rate\": 0.0, \"security_pass_rate\": 0.0}, \"skills_with_hooks_clean\": {\"benchmark_eligible_result_count\": 1, \"pass_rate\": 1.0, \"security_pass_rate\": 1.0}}}",
       "fix_hint": "Run and publish an explicit opt-in Codex CLI live benchmark summary before changing this status from not_collected.",
       "name": "Codex CLI live benchmark",
       "source": "reports/codex-live-benchmark-summary.json",
-      "status": "not_collected",
+      "status": "pass",
       "verification_command": "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json"
     },
     {
@@ -204,7 +204,7 @@
     },
     "local_codex_cli_live_benchmark": {
       "meaning": "Opt-in local Codex CLI benchmark run with sanitized bounded artifacts.",
-      "status": "not_collected"
+      "status": "pass"
     },
     "promoted golden case": {
       "meaning": "Human-reviewed case admitted to regression coverage.",
@@ -253,9 +253,9 @@
   },
   "status_summary": {
     "fail": 0,
-    "not_collected": 5,
+    "not_collected": 4,
     "partial": 3,
-    "pass": 16,
+    "pass": 17,
     "unknown": 0
   },
   "validation_commands": [
@@ -385,12 +385,12 @@
       "status": "not_collected"
     },
     {
-      "command": "python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run",
+      "command": "python3 scripts/run-codex-live-benchmarks.py --benchmark-mode clean-paired --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-borrow-auth-dry-run",
       "note": "Run command directly; this scorecard does not infer pass/fail from stdout.",
       "status": "not_collected"
     },
     {
-      "command": "python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run",
+      "command": "python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-borrow-auth-dry-run",
       "note": "Run command directly; this scorecard does not infer pass/fail from stdout.",
       "status": "not_collected"
     },

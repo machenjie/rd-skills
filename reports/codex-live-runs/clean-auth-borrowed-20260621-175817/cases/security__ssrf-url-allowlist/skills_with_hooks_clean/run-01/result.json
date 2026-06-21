@@ -81,7 +81,9 @@
   },
   "paths": {
     "diff": "<run-dir>/diff.patch",
-    "events": "<run-dir>/events.jsonl",
+    "events": "<run-dir>/events.redacted.jsonl",
+    "events_metrics": "<run-dir>/events.metrics.json",
+    "events_redacted": "<run-dir>/events.redacted.jsonl",
     "final": "<run-dir>/final.md",
     "git_status": "<run-dir>/git-status.txt",
     "grading": "<run-dir>/grading/grading-result.json",

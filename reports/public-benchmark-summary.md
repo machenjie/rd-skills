@@ -10,11 +10,11 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 
 ## Status Counts
 
-- `pass`: 15
+- `pass`: 16
 - `partial`: 2
 - `fail`: 0
 - `unknown`: 0
-- `not_collected`: 5
+- `not_collected`: 4
 
 ## Evidence Levels
 
@@ -22,7 +22,7 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 | --- | --- | --- |
 | live pass-rate | `not_collected` | Measured real-task success rate. |
 | live runtime telemetry sample | `not_collected` | Sanitized bounded facts from an actual hook runtime execution. |
-| local_codex_cli_live_benchmark | `not_collected` | Opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
+| local_codex_cli_live_benchmark | `pass` | Opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
 | promoted golden case | `pass` | Human-reviewed case admitted to regression coverage. |
 | runtime telemetry fixture sample | `pass` | Deterministic executor-adapter fixture-derived bounded facts; not live runtime telemetry. |
 | structural fixture | `pass` | Local deterministic structure sample passed; not evidence of live task success. |
@@ -53,7 +53,7 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 | Executor adapter live pass-rate | `not_collected` | live pass-rate | reports/professional-scorecard.json | deterministic local fixtures do not measure real-task success rate | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter token overhead | `not_collected` | token overhead | reports/professional-scorecard.json | deterministic local fixture run does not measure token overhead | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter turn overhead | `not_collected` | turn overhead | reports/professional-scorecard.json | deterministic local fixture run does not measure turn overhead | `python3 scripts/eval-executor-adapters.py` |
-| Codex CLI live benchmark | `not_collected` | local_codex_cli_live_benchmark | reports/codex-live-benchmark-summary.json | Codex live benchmark summary missing or invalid | `python3 scripts/run-codex-live-benchmarks.py --list` |
+| Codex CLI live benchmark | `pass` | local_codex_cli_live_benchmark | reports/codex-live-benchmark-summary.json | {"auth_policy": "borrow-current", "benchmark_eligible_result_count": 2, "benchmark_mode": "clean-paired", "case_count": 1, "codex_environment_policy": "auth_borrowed_clean", "delta": {"skills_with_hooks_clean_vs_baseline_clean": {"command_execution_count_delta": 32.0, "file_change_count_delta": -6.0, "input_tokens_delta_pct": 1.864, "output_tokens_delta_pct": 0.2455, "pass_rate_delta": 1.0, "reasoning_output_tokens_delta_pct": 0.8179, "security_pass_rate_delta": 1.0}}, "evidence_level": "local_codex_cli_live_benchmark", "limitations": ["Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.", "Parsed telemetry excludes raw command bodies and assistant/user message content.", "Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately.", "Strict comparative claims may borrow Codex authentication only; user skills, hooks, config, and rules are not loaded.", "Baseline contamination blocks publishing, and pass rates include assertion-backed eligible results only.", "Current strict live evidence is a smoke sample only: it supports only the listed case and variants, not a broad rd-skills pass-rate improvement claim. Stronger claims require at least 3-5 assertion-backed cases with 3 runs per variant."], "result_count": 2, "run_id": "clean-auth-borrowed-20260621-175817", "strict_benchmark_eligible": true, "strict_errors": [], "variants": {"baseline_clean": {"benchmark_eligible_result_count": 1, "pass_rate": 0.0, "security_pass_rate": 0.0}, "skills_with_hooks_clean": {"benchmark_eligible_result_count": 1, "pass_rate": 1.0, "security_pass_rate": 1.0}}} | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
 | Marketplace index validation | `pass` | structural fixture | reports/professional-scorecard.json | recommended, full, and dev marketplace indexes validate | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` |
 
 ## Known Unknowns / Not Collected
@@ -62,7 +62,6 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 - Live pass-rate
 - Token overhead
 - Turn overhead
-- Codex CLI live benchmark
 
 ## Refresh Commands
 
@@ -75,8 +74,8 @@ python3 scripts/validate-skill-efficacy-benchmarks.py
 python3 scripts/eval-executor-adapters.py
 python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks
 python3 scripts/run-codex-live-benchmarks.py --list
-python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run
-python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run
+python3 scripts/run-codex-live-benchmarks.py --benchmark-mode clean-paired --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-borrow-auth-dry-run
+python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-borrow-auth-dry-run
 python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md

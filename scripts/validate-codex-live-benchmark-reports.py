@@ -28,7 +28,8 @@ from codex_live_benchmark_lib import (
 REAL_RESULT_REQUIRED_FILES = (
     "prompt.md",
     "codex-command.redacted.json",
-    "events.jsonl",
+    "events.redacted.jsonl",
+    "events.metrics.json",
     "final.md",
     "diff.patch",
     "git-status.txt",

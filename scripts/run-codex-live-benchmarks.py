@@ -363,10 +363,26 @@ def _run_one_case(
     _init_git(candidate_dir)
     prompt = _render_prompt(case, variant)
     (run_dir / "prompt.md").write_text(prompt, encoding="utf-8")
-
+    events_path = run_dir / "events.jsonl"
+    events_redacted_path = run_dir / "events.redacted.jsonl"
+    stderr_path = run_dir / "codex-stderr.log"
+    final_path = run_dir / "final.md"
+    artifact_status = "failed"
+    codex_returncode: int | None = None
+    failure: str | None = None
+    failure_stage: str | None = None
+    env: dict[str, str] = {}
+    environment: dict[str, Any] = {}
+    stage = "build_codex_environment"
     try:
         env, environment = build_codex_environment(args, case, variant, run_dir)
+        command = codex_command(args, final_path)
+        write_json(
+            run_dir / "codex-command.redacted.json",
+            _command_metadata(args, command, environment),
+        )
         if variant in {"skills_only_clean", "skills_with_hooks_clean"}:
+            stage = "install_changeforge"
             _install_changeforge(
                 args,
                 candidate_dir,
@@ -375,45 +391,34 @@ def _run_one_case(
                 with_hooks=variant == "skills_with_hooks_clean",
             )
 
-        events_path = run_dir / "events.jsonl"
-        stderr_path = run_dir / "codex-stderr.log"
-        final_path = run_dir / "final.md"
-        command = codex_command(args, final_path)
-        write_json(
-            run_dir / "codex-command.redacted.json",
-            _command_metadata(args, command, environment),
+        stage = "codex_exec"
+        completed = run_codex_exec(
+            command,
+            prompt=prompt,
+            cwd=candidate_dir,
+            events_path=events_path,
+            stderr_path=stderr_path,
+            args=args,
+            env=env,
         )
-
-        artifact_status = "failed"
-        codex_returncode: int | None = None
-        failure: str | None = None
-        try:
-            completed = run_codex_exec(
-                command,
-                prompt=prompt,
-                cwd=candidate_dir,
-                events_path=events_path,
-                stderr_path=stderr_path,
-                args=args,
-                env=env,
-            )
-            codex_returncode = completed.returncode
-            artifact_status = "collected" if completed.returncode == 0 else "failed"
-            if not final_path.exists():
-                final_path.touch()
-        except Exception as exc:  # live run should preserve artifacts for diagnosis
-            failure = f"{type(exc).__name__}: {exc}"
-            artifact_status = "partial"
-            events_path.touch()
-            stderr_path.write_text(f"{failure}\n", encoding="utf-8")
+        codex_returncode = completed.returncode
+        artifact_status = "collected" if completed.returncode == 0 else "failed"
+        if not final_path.exists():
             final_path.touch()
+    except Exception as exc:  # live run should preserve artifacts for diagnosis
+        failure = f"{type(exc).__name__}: {exc}"
+        failure_stage = stage
+        artifact_status = "partial"
+        events_path.touch()
+        stderr_path.write_text(f"{failure}\n", encoding="utf-8")
+        final_path.touch()
+    finally:
         _redact_text_artifact(stderr_path)
         _redact_text_artifact(final_path)
-    finally:
-        _cleanup_borrowed_codex_home(locals().get("env", {}))
+        _cleanup_borrowed_codex_home(env)
 
     _write_git_artifacts(candidate_dir, run_dir)
-    metrics = _parse_events(events_path, run_dir / "events.metrics.json")
+    metrics = _parse_events(events_path, run_dir / "events.metrics.json", events_redacted_path)
     grading = _grade(case, candidate_dir, grading_dir)
     contamination = _contamination_for_variant(variant, run_dir)
     grading_status = _grading_status(case, grading, contamination, variant)
@@ -450,9 +455,12 @@ def _run_one_case(
         "environment": environment,
         "codex_returncode": codex_returncode,
         "failure": failure,
+        "failure_stage": failure_stage,
         "paths": {
             "prompt": _artifact_path(run_dir, run_dir / "prompt.md"),
-            "events": _artifact_path(run_dir, events_path),
+            "events": _artifact_path(run_dir, events_redacted_path),
+            "events_redacted": _artifact_path(run_dir, events_redacted_path),
+            "events_metrics": _artifact_path(run_dir, run_dir / "events.metrics.json"),
             "final": _artifact_path(run_dir, final_path),
             "diff": _artifact_path(run_dir, run_dir / "diff.patch"),
             "git_status": _artifact_path(run_dir, run_dir / "git-status.txt"),
@@ -759,7 +767,7 @@ def _redact_text_artifact(path: Path) -> None:
         path.write_text(redact_report_text(path.read_text(encoding="utf-8", errors="ignore")), encoding="utf-8")
 
 
-def _parse_events(events_path: Path, out_path: Path) -> dict[str, Any]:
+def _parse_events(events_path: Path, out_path: Path, redacted_path: Path) -> dict[str, Any]:
     completed = subprocess.run(
         [
             sys.executable,
@@ -768,6 +776,8 @@ def _parse_events(events_path: Path, out_path: Path) -> dict[str, Any]:
             str(events_path),
             "--out",
             str(out_path),
+            "--redacted-out",
+            str(redacted_path),
         ],
         cwd=ROOT,
         text=True,
@@ -826,7 +836,13 @@ def _generate_summary(out_dir: Path, *, publish: bool, publish_current_home_smok
         command.append("--publish")
     if publish_current_home_smoke:
         command.append("--publish-current-home-smoke")
-    subprocess.run(command, cwd=ROOT, text=True, capture_output=True, shell=False, check=False)
+    completed = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, shell=False, check=False)
+    if completed.returncode != 0:
+        output = redact_report_text((completed.stderr or completed.stdout or "").strip())
+        if len(output) > 1200:
+            output = output[:1200] + "...<truncated>"
+        action = "publish" if publish or publish_current_home_smoke else "generate"
+        raise RuntimeError(f"generate-codex-live-summary.py failed during {action}: {output or 'no output'}")
 
 
 def main(argv: list[str] | None = None) -> int:

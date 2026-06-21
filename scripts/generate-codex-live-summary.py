@@ -116,7 +116,11 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
             "event_count": sum(int((result.get("metrics") or {}).get("event_count", 0) or 0) for result in real_results),
             "parse_error_count": sum(len((result.get("metrics") or {}).get("parse_errors", [])) for result in real_results),
         },
-        "limitations": _limitations(benchmark_mode),
+        "limitations": _limitations(
+            benchmark_mode,
+            assertion_case_count=len(assertion_cases),
+            variants=variants,
+        ),
     }
     return summary
 
@@ -324,7 +328,7 @@ def _codex_home_policy(manifest: dict[str, Any], results: list[dict[str, Any]], 
     return "mixed_or_unknown"
 
 
-def _limitations(benchmark_mode: str) -> list[str]:
+def _limitations(benchmark_mode: str, *, assertion_case_count: int, variants: dict[str, dict[str, Any]]) -> list[str]:
     base = [
         "Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.",
         "Parsed telemetry excludes raw command bodies and assistant/user message content.",
@@ -339,6 +343,17 @@ def _limitations(benchmark_mode: str) -> list[str]:
             "Strict comparative claims may borrow Codex authentication only; user skills, hooks, config, and rules are not loaded."
         )
         base.append("Baseline contamination blocks publishing, and pass rates include assertion-backed eligible results only.")
+        eligible_counts = [
+            int(payload.get("benchmark_eligible_result_count", 0) or 0)
+            for payload in variants.values()
+            if isinstance(payload, dict)
+        ]
+        if assertion_case_count < 3 or not eligible_counts or min(eligible_counts) < 3:
+            base.append(
+                "Current strict live evidence is a smoke sample only: it supports only the listed case and variants, "
+                "not a broad rd-skills pass-rate improvement claim. Stronger claims require at least 3-5 "
+                "assertion-backed cases with 3 runs per variant."
+            )
     return base
 
 

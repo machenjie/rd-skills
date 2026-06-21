@@ -379,6 +379,76 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             install_command = subprocess_run.call_args_list[-1].args[0]
             self.assertIn("--with-hooks", install_command)
 
+    def test_install_failure_writes_partial_result(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_install_partial", "scripts/run-codex-live-benchmarks.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            starter = root / "starter"
+            starter.mkdir()
+            (starter / "README.md").write_text("starter\n", encoding="utf-8")
+            task = root / "task.md"
+            task.write_text("Do the task.\n", encoding="utf-8")
+            out_dir = root / "out"
+            args = SimpleNamespace(
+                profile="recommended",
+                benchmark_mode="clean-paired",
+                auth_policy="borrow-current",
+                sandbox="workspace-write",
+                model=None,
+                codex_bin="codex",
+                keep_workdirs=True,
+            )
+            case = SimpleNamespace(
+                id="security/ssrf-url-allowlist",
+                starter_repo=starter,
+                task_prompt=task,
+                grading_benchmark="security/ssrf-url-allowlist",
+                grading_mode="assertion",
+                publishable_for_strict=True,
+            )
+            with patch.object(runner, "build_codex_environment", return_value=({}, _environment_payload())):
+                with patch.object(runner, "_install_changeforge", side_effect=RuntimeError("install failed")):
+                    with patch.object(
+                        runner,
+                        "_grade",
+                        return_value={
+                            "all_passed": False,
+                            "grading_status": "not_collected",
+                            "security_checks_passed": False,
+                        },
+                    ):
+                        result = runner._run_one_case(
+                            args,
+                            out_dir,
+                            case,
+                            "skills_with_hooks_clean",
+                            1,
+                            set(),
+                        )
+            result_path = (
+                out_dir
+                / "cases"
+                / "security__ssrf-url-allowlist"
+                / "skills_with_hooks_clean"
+                / "run-01"
+                / "result.json"
+            )
+            persisted = json.loads(result_path.read_text(encoding="utf-8"))
+        self.assertEqual(result["artifact_status"], "partial")
+        self.assertEqual(result["failure_stage"], "install_changeforge")
+        self.assertFalse(result["benchmark_eligible"])
+        self.assertFalse(result["benchmark_passed"])
+        self.assertEqual(persisted["artifact_status"], "partial")
+        self.assertEqual(persisted["failure_stage"], "install_changeforge")
+
+    def test_generate_summary_failure_raises_for_publish(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_publish_failure", "scripts/run-codex-live-benchmarks.py")
+        completed = subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr="publish failed")
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(runner.subprocess, "run", return_value=completed):
+                with self.assertRaisesRegex(RuntimeError, "publish failed"):
+                    runner._generate_summary(Path(tmp), publish=True, publish_current_home_smoke=False)
+
     def test_baseline_contamination_detector_finds_changeforge_route(self) -> None:
         helper = _load_script("codex_live_helper_contamination", "scripts/codex_live_benchmark_lib.py")
         with tempfile.TemporaryDirectory() as tmp:
@@ -493,6 +563,7 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(summary["assertion_case_count"], 1)
         self.assertEqual(summary["telemetry_only_case_count"], 1)
         self.assertIn("skills_with_hooks_clean_vs_baseline_clean", summary["delta"])
+        self.assertTrue(any("smoke sample only" in item for item in summary["limitations"]))
 
     def test_validator_rejects_secret_patterns_and_absolute_paths_but_not_raw_events(self) -> None:
         validator = _load_script("validate_codex_live_reports_secret", "scripts/validate-codex-live-benchmark-reports.py")
@@ -523,12 +594,14 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             leak_dir = run_dir / "cases" / "devex__helper-reuse-search" / "baseline_clean" / "run-01"
             leak_dir.mkdir(parents=True)
             (leak_dir / "events.jsonl").write_text('{"path": "/Users/raw/events-only"}\n', encoding="utf-8")
+            (leak_dir / "events.redacted.jsonl").write_text('{"path": "/Users/raw/redacted"}\n', encoding="utf-8")
             fake_secret = "CODEX" + "_API" + "_KEY=" + "sk-" + "ThisShouldFail123"
             (leak_dir / "result.json").write_text(fake_secret, encoding="utf-8")
             (leak_dir / "final.md").write_text("/Users/raw/final", encoding="utf-8")
             errors = validator.validate_run_dir(run_dir)
         self.assertTrue(any("forbidden secret pattern" in error for error in errors))
         self.assertTrue(any("absolute path" in error for error in errors))
+        self.assertTrue(any("events.redacted.jsonl" in error for error in errors))
         self.assertFalse(any("events-only" in error for error in errors))
 
     def test_generated_summary_and_result_do_not_store_host_paths_or_auth_json(self) -> None:
@@ -601,6 +674,34 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(metrics["usage"]["input_tokens"], 10)
         self.assertNotIn("SHOULD_NOT_LEAK", json.dumps(metrics))
         self.assertEqual(len(metrics["parse_errors"]), 1)
+
+    def test_parser_writes_bounded_redacted_events_without_raw_payloads(self) -> None:
+        parser = _load_script("parse_codex_jsonl_redacted", "scripts/parse-codex-jsonl.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            events = Path(tmp) / "events.jsonl"
+            redacted = Path(tmp) / "events.redacted.jsonl"
+            events.write_text(
+                json.dumps(
+                    {
+                        "type": "item.completed",
+                        "item": {
+                            "type": "command_execution",
+                            "status": "completed",
+                            "command": "/bin/zsh -lc 'cat /Users/raw/secret.txt'",
+                            "aggregated_output": "SHOULD_NOT_LEAK /Users/raw/project",
+                            "usage": {"input_tokens": 10, "output_tokens": 5},
+                        },
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            parser.write_redacted_events(events, redacted)
+            text = redacted.read_text(encoding="utf-8")
+        self.assertIn("command_execution", text)
+        self.assertIn("input_tokens", text)
+        self.assertNotIn("SHOULD_NOT_LEAK", text)
+        self.assertNotIn("/Users/raw", text)
 
     def test_grader_marks_cases_without_assertions_not_collected_and_redacts_paths(self) -> None:
         grader = _load_script("grade_codex_live_redaction", "scripts/grade-codex-live-benchmarks.py")

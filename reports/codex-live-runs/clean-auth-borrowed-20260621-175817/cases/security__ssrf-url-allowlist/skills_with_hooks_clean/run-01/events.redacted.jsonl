@@ -1,0 +1,128 @@
+{"event_type": "thread.started", "line": 1}
+{"event_type": "turn.started", "line": 2, "tags": ["turn_started"]}
+{"event_type": "item.completed", "line": 3, "tags": ["agent_message"]}
+{"event_type": "item.started", "line": 4, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 5, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 6, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 7, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 8, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 9, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 10, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 11, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 12, "tags": ["agent_message"]}
+{"event_type": "item.started", "line": 13, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 14, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 15, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 16, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 17, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 18, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 19, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 20, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 21, "tags": ["agent_message"]}
+{"event_type": "item.started", "line": 22, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 23, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 24, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 25, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 26, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 27, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 28, "tags": ["agent_message"]}
+{"event_type": "item.started", "line": 29, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 30, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 31, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 32, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 33, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 34, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 35, "tags": ["agent_message"]}
+{"event_type": "item.started", "line": 36, "status": "in_progress", "tags": ["file_change"]}
+{"event_type": "item.completed", "line": 37, "status": "completed", "tags": ["file_change"]}
+{"event_type": "item.completed", "line": 38, "tags": ["agent_message"]}
+{"event_type": "item.started", "line": 39, "status": "in_progress", "tags": ["file_change"]}
+{"event_type": "item.completed", "line": 40, "status": "completed", "tags": ["file_change"]}
+{"event_type": "item.completed", "line": 41, "tags": ["agent_message"]}
+{"event_type": "item.started", "line": 42, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 43, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 44, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 45, "status": "failed", "tags": ["command_execution", "error"]}
+{"event_type": "item.completed", "line": 46, "tags": ["agent_message"]}
+{"event_type": "item.started", "line": 47, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 48, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 49, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 50, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 51, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 52, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 53, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 54, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 55, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 56, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 57, "tags": ["agent_message"]}
+{"event_type": "item.started", "line": 58, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 59, "status": "failed", "tags": ["command_execution", "error"]}
+{"event_type": "item.started", "line": 60, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 61, "status": "failed", "tags": ["command_execution", "error"]}
+{"event_type": "item.completed", "line": 62, "tags": ["agent_message"]}
+{"event_type": "item.started", "line": 63, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 64, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 65, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 66, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 67, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 68, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 69, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 70, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 71, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 72, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 73, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 74, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 75, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 76, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 77, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 78, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 79, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 80, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 81, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 82, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 83, "tags": ["agent_message"]}
+{"event_type": "item.started", "line": 84, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 85, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 86, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 87, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 88, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 89, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 90, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 91, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 92, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 93, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 94, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 95, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 96, "tags": ["agent_message"]}
+{"event_type": "item.started", "line": 97, "status": "in_progress", "tags": ["file_change"]}
+{"event_type": "item.completed", "line": 98, "status": "completed", "tags": ["file_change"]}
+{"event_type": "item.started", "line": 99, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 100, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 101, "status": "failed", "tags": ["command_execution", "error"]}
+{"event_type": "item.completed", "line": 102, "status": "failed", "tags": ["command_execution", "error"]}
+{"event_type": "item.started", "line": 103, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 104, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 105, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 106, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 107, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 108, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 109, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 110, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 111, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 112, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 113, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 114, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 115, "tags": ["agent_message"]}
+{"event_type": "item.started", "line": 116, "status": "in_progress", "tags": ["file_change"]}
+{"event_type": "item.completed", "line": 117, "status": "completed", "tags": ["file_change"]}
+{"event_type": "item.started", "line": 118, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 119, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 120, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 121, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 122, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 123, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.started", "line": 124, "status": "in_progress", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 125, "status": "completed", "tags": ["command_execution"]}
+{"event_type": "item.completed", "line": 126, "tags": ["agent_message"]}
+{"event_type": "item.completed", "line": 127, "tags": ["agent_message"]}
+{"event_type": "turn.completed", "line": 128, "tags": ["turn_completed"], "usage": {"cached_input_tokens": 1524864, "input_tokens": 1616056, "output_tokens": 13641, "reasoning_output_tokens": 3543}}
