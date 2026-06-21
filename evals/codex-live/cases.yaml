@@ -16,8 +16,8 @@ cases:
     task_prompt: evals/codegen/devex/helper-reuse-search/prompt.md
     starter_repo: evals/codegen/devex/helper-reuse-search/starter-repo
     grading_benchmark: devex/helper-reuse-search
-    grading_mode: telemetry_only
-    publishable_for_strict: false
+    grading_mode: assertion
+    publishable_for_strict: true
   - id: devex/minimal-correct-implementation-ladder
     category: devex
     codegen_case: minimal-correct-implementation-ladder
@@ -44,8 +44,8 @@ cases:
     task_prompt: evals/codegen/structure/object-method-encapsulation-placement/prompt.md
     starter_repo: evals/codegen/structure/object-method-encapsulation-placement/starter-repo
     grading_benchmark: structure/object-method-encapsulation-placement
-    grading_mode: telemetry_only
-    publishable_for_strict: false
+    grading_mode: assertion
+    publishable_for_strict: true
   - id: backend/service-method-vs-new-helper
     category: backend
     codegen_case: service-method-vs-new-helper
@@ -58,8 +58,22 @@ cases:
     task_prompt: evals/codegen/backend/service-method-vs-new-helper/prompt.md
     starter_repo: evals/codegen/backend/service-method-vs-new-helper/starter-repo
     grading_benchmark: backend/service-method-vs-new-helper
-    grading_mode: telemetry_only
-    publishable_for_strict: false
+    grading_mode: assertion
+    publishable_for_strict: true
+  - id: reliability/redis-cache-stampede-protection
+    category: reliability
+    codegen_case: redis-cache-stampede-protection
+    enabled: true
+    variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
+    task_prompt: evals/codegen/reliability/redis-cache-stampede-protection/prompt.md
+    starter_repo: evals/codegen/reliability/redis-cache-stampede-protection/starter-repo
+    grading_benchmark: reliability/redis-cache-stampede-protection
+    grading_mode: assertion
+    publishable_for_strict: true
   - id: security/ssrf-url-allowlist
     category: security
     codegen_case: ssrf-url-allowlist

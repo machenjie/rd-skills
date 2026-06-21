@@ -11,6 +11,12 @@ Committed run evidence uses `events.metrics.json` and `events.redacted.jsonl`,
 which omit raw commands, command output, local absolute paths, and message
 bodies.
 
+Codex live benchmark summaries use failure-category buckets, per-case/per-variant
+pass rates, ablation deltas, and mean/median/min/max usage and metric counts.
+Strict public comparison summaries must come from clean `borrow-current` or
+`isolated-api-key` runs; current-home smoke summaries are kept separate and do
+not feed public A/B claims.
+
 Regenerate professional scorecards with:
 
 ```bash

@@ -96,8 +96,8 @@ python3 -m unittest discover -s tests
 python3 scripts/validate-codegen-benchmarks.py
 python3 scripts/run-codegen-benchmarks.py --limit 3
 python3 scripts/run-codex-live-benchmarks.py --list
-python3 scripts/run-codex-live-benchmarks.py --benchmark-mode clean-paired --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-borrow-auth-dry-run
-python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-borrow-auth-dry-run
+python3 scripts/run-codex-live-benchmarks.py --benchmark-mode ablation --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-ablation-dry-run
+python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-ablation-dry-run
 python3 scripts/build.py --profile recommended
 python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev

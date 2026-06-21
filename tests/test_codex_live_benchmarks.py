@@ -27,30 +27,42 @@ def _load_script(name: str, relative: str):
 
 
 def _variant_payload(**overrides: object) -> dict[str, object]:
+    usage = {
+        "input_tokens": 10,
+        "cached_input_tokens": 0,
+        "output_tokens": 5,
+        "reasoning_output_tokens": 0,
+    }
+    metrics = {
+        "event_count": 1,
+        "command_execution_count": 1,
+        "file_change_count": 1,
+        "plan_update_count": 0,
+        "error_count": 0,
+    }
     payload: dict[str, object] = {
+        "run_count": 1,
+        "case_count": 1,
         "result_count": 1,
         "artifact_status_counts": {"collected": 1},
         "grading_status_counts": {"passed": 1},
+        "failure_categories": {"none": 1},
         "benchmark_eligible_result_count": 1,
         "benchmark_passed_result_count": 1,
         "pass_rate": 1.0,
+        "pass_rate_ci_note": "descriptive only; small sample",
         "security_pass_rate": 1.0,
         "telemetry_only_result_count": 0,
         "not_collected_grading_count": 0,
         "contaminated_result_count": 0,
-        "average_usage": {
-            "input_tokens": 10,
-            "cached_input_tokens": 0,
-            "output_tokens": 5,
-            "reasoning_output_tokens": 0,
-        },
-        "average_metrics": {
-            "event_count": 1,
-            "command_execution_count": 1,
-            "file_change_count": 1,
-            "plan_update_count": 0,
-            "error_count": 0,
-        },
+        "average_usage": usage,
+        "median_usage": usage,
+        "min_usage": usage,
+        "max_usage": usage,
+        "average_metrics": metrics,
+        "median_metrics": metrics,
+        "min_metrics": metrics,
+        "max_metrics": metrics,
         "average_event_count": 1,
         "average_file_change_count": 1,
         "average_command_execution_count": 1,
@@ -83,6 +95,7 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
         "not_collected_grading_count": 0,
         "telemetry_only_result_count": 0,
         "contaminated_result_count": 0,
+        "failure_categories": {"none": 2},
         "current_home_result_count": 0,
         "current_home_full_result_count": 0,
         "user_skills_visible": False,
@@ -107,6 +120,27 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
             }
         },
         "cases": ["security/ssrf-url-allowlist"],
+        "cases_summary": {
+            "security/ssrf-url-allowlist": {
+                "grading_mode": "assertion",
+                "variants": {
+                    "baseline_clean": {
+                        "runs": 1,
+                        "benchmark_eligible_result_count": 1,
+                        "benchmark_passed_result_count": 1,
+                        "pass_rate": 1.0,
+                        "failure_categories": {"none": 1},
+                    },
+                    "skills_with_hooks_clean": {
+                        "runs": 1,
+                        "benchmark_eligible_result_count": 1,
+                        "benchmark_passed_result_count": 1,
+                        "pass_rate": 1.0,
+                        "failure_categories": {"none": 1},
+                    },
+                },
+            }
+        },
         "telemetry": {"event_count": 2, "parse_error_count": 0},
         "limitations": ["strict local evidence"],
     }
@@ -151,6 +185,7 @@ def _result_payload(**overrides: object) -> dict[str, object]:
         "publishable_for_strict": True,
         "benchmark_eligible": True,
         "benchmark_passed": True,
+        "failure_category": "none",
         "contamination": {"contaminated": False, "signals": [], "files": []},
         "environment": _environment_payload(),
         "codex_returncode": 0,
@@ -438,8 +473,10 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(result["failure_stage"], "install_changeforge")
         self.assertFalse(result["benchmark_eligible"])
         self.assertFalse(result["benchmark_passed"])
+        self.assertEqual(result["failure_category"], "install_failed")
         self.assertEqual(persisted["artifact_status"], "partial")
         self.assertEqual(persisted["failure_stage"], "install_changeforge")
+        self.assertEqual(persisted["failure_category"], "install_failed")
 
     def test_generate_summary_failure_raises_for_publish(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_publish_failure", "scripts/run-codex-live-benchmarks.py")
@@ -510,6 +547,45 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             errors = validator.validate_summary(path, publishable=True)
         self.assertTrue(any("strict summary" in error or "evidence_level" in error for error in errors))
 
+    def test_validator_rejects_ablation_summary_without_required_deltas(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_reports_ablation_delta",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        payload = _strict_summary_payload(
+            benchmark_mode="ablation",
+            result_count=3,
+            benchmark_eligible_result_count=3,
+            benchmark_passed_result_count=3,
+            failure_categories={"none": 3},
+            variants={
+                "baseline_clean": _variant_payload(),
+                "skills_only_clean": _variant_payload(),
+                "skills_with_hooks_clean": _variant_payload(),
+            },
+            delta={
+                "skills_only_clean_vs_baseline_clean": {"pass_rate_delta": 0.0},
+                "skills_with_hooks_clean_vs_baseline_clean": {"pass_rate_delta": 0.0},
+            },
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "summary.json"
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            errors = validator.validate_summary(path, publishable=True)
+        self.assertTrue(any("delta.skills_with_hooks_clean_vs_skills_only_clean" in error for error in errors))
+
+    def test_validator_rejects_invalid_failure_category_buckets(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_reports_failure_category",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        payload = _strict_summary_payload(failure_categories={"mystery_failure": 1})
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "summary.json"
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            errors = validator.validate_summary(path, publishable=True)
+        self.assertTrue(any("invalid failure category mystery_failure" in error for error in errors))
+
     def test_summary_counts_assertion_cases_only_for_pass_rate_and_groups_delta(self) -> None:
         summary_module = _load_script("generate_codex_live_summary_rates", "scripts/generate-codex-live-summary.py")
         with tempfile.TemporaryDirectory() as tmp:
@@ -564,6 +640,133 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(summary["telemetry_only_case_count"], 1)
         self.assertIn("skills_with_hooks_clean_vs_baseline_clean", summary["delta"])
         self.assertTrue(any("smoke sample only" in item for item in summary["limitations"]))
+
+    def test_summary_aggregates_ablation_runs_usage_cases_and_failure_categories(self) -> None:
+        summary_module = _load_script("generate_codex_live_summary_ablation_stats", "scripts/generate-codex-live-summary.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            (run_dir / "run-manifest.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 2,
+                        "generated_by": "scripts/run-codex-live-benchmarks.py",
+                        "run_id": "local-ablation",
+                        "status": "collected",
+                        "benchmark_mode": "ablation",
+                        "dry_run": False,
+                        "live_execution_allowed": True,
+                        "live_execution_effective": True,
+                        "cases": ["security/ssrf-url-allowlist"],
+                        "variants": ["baseline_clean", "skills_only_clean", "skills_with_hooks_clean"],
+                        "runs_per_variant": 3,
+                        "sandbox": "workspace-write",
+                        "auth_policy": "borrow-current",
+                        "codex_environment_policy": "auth_borrowed_clean",
+                        "limitations": ["local"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            for variant, passed_runs in (
+                ("baseline_clean", {3}),
+                ("skills_only_clean", {1, 2, 3}),
+                ("skills_with_hooks_clean", {1, 2, 3}),
+            ):
+                for run_index in range(1, 4):
+                    result_dir = (
+                        run_dir
+                        / "cases"
+                        / "security__ssrf-url-allowlist"
+                        / variant
+                        / f"run-{run_index:02d}"
+                    )
+                    result_dir.mkdir(parents=True)
+                    passed = run_index in passed_runs
+                    failure_category = "none" if passed else "test_suite_failed"
+                    result = _result_payload(
+                        variant=variant,
+                        run_index=run_index,
+                        grading_status="passed" if passed else "failed",
+                        benchmark_passed=passed,
+                        failure_category=failure_category,
+                        grading={
+                            "all_passed": passed,
+                            "setup_passed": True,
+                            "test_suite_passed": passed,
+                            "security_checks_passed": True,
+                        },
+                    )
+                    result["metrics"]["usage"]["input_tokens"] = run_index * 10
+                    result["metrics"]["command_execution_count"] = run_index
+                    (result_dir / "result.json").write_text(json.dumps(result), encoding="utf-8")
+            summary = summary_module.generate_summary(run_dir)
+        baseline = summary["variants"]["baseline_clean"]
+        self.assertEqual(baseline["run_count"], 3)
+        self.assertEqual(baseline["case_count"], 1)
+        self.assertEqual(baseline["pass_rate"], 0.3333)
+        self.assertEqual(baseline["failure_categories"], {"test_suite_failed": 2, "none": 1})
+        self.assertEqual(baseline["average_usage"]["input_tokens"], 20.0)
+        self.assertEqual(baseline["median_usage"]["input_tokens"], 20.0)
+        self.assertEqual(baseline["min_usage"]["input_tokens"], 10)
+        self.assertEqual(baseline["max_usage"]["input_tokens"], 30)
+        self.assertIn("skills_only_clean_vs_baseline_clean", summary["delta"])
+        self.assertIn("skills_with_hooks_clean_vs_skills_only_clean", summary["delta"])
+        self.assertIn("skills_with_hooks_clean_vs_baseline_clean", summary["delta"])
+        self.assertEqual(
+            summary["cases_summary"]["security/ssrf-url-allowlist"]["variants"]["baseline_clean"]["pass_rate"],
+            0.3333,
+        )
+
+    def test_failure_category_priority_is_stable(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_failure_category", "scripts/run-codex-live-benchmarks.py")
+        self.assertEqual(
+            runner._failure_category(
+                artifact_status="partial",
+                failure_stage="install_changeforge",
+                codex_returncode=None,
+                contamination={"contaminated": False},
+                grading_status="not_collected",
+                grading={},
+                benchmark_passed=False,
+            ),
+            "install_failed",
+        )
+        self.assertEqual(
+            runner._failure_category(
+                artifact_status="failed",
+                failure_stage=None,
+                codex_returncode=1,
+                contamination={"contaminated": False},
+                grading_status="failed",
+                grading={},
+                benchmark_passed=False,
+            ),
+            "codex_exec_failed",
+        )
+        self.assertEqual(
+            runner._failure_category(
+                artifact_status="collected",
+                failure_stage=None,
+                codex_returncode=0,
+                contamination={"contaminated": True},
+                grading_status="failed",
+                grading={"test_suite_passed": False},
+                benchmark_passed=False,
+            ),
+            "contaminated",
+        )
+        self.assertEqual(
+            runner._failure_category(
+                artifact_status="collected",
+                failure_stage=None,
+                codex_returncode=0,
+                contamination={"contaminated": False},
+                grading_status="failed",
+                grading={"setup_passed": True, "test_suite_passed": False},
+                benchmark_passed=False,
+            ),
+            "test_suite_failed",
+        )
 
     def test_validator_rejects_secret_patterns_and_absolute_paths_but_not_raw_events(self) -> None:
         validator = _load_script("validate_codex_live_reports_secret", "scripts/validate-codex-live-benchmark-reports.py")
@@ -709,7 +912,7 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             candidate = Path(tmp) / "candidate"
             out_dir = Path(tmp) / "grading"
             candidate.mkdir()
-            result = grader.grade_candidate("devex/helper-reuse-search", candidate, out_dir)
+            result = grader.grade_candidate("devex/minimal-correct-implementation-ladder", candidate, out_dir)
         self.assertEqual(result["grading_status"], "not_collected")
         self.assertEqual(result["candidate_dir"], "<candidate>")
 
@@ -720,14 +923,14 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             "kind": "changeforge.codex_live_benchmark_cases",
             "cases": [
                 {
-                    "id": "devex/helper-reuse-search",
+                    "id": "devex/minimal-correct-implementation-ladder",
                     "category": "devex",
-                    "codegen_case": "helper-reuse-search",
+                    "codegen_case": "minimal-correct-implementation-ladder",
                     "enabled": True,
                     "variants": ["baseline_clean"],
-                    "task_prompt": "evals/codegen/devex/helper-reuse-search/prompt.md",
-                    "starter_repo": "evals/codegen/devex/helper-reuse-search/starter-repo",
-                    "grading_benchmark": "devex/helper-reuse-search",
+                    "task_prompt": "evals/codegen/devex/minimal-correct-implementation-ladder/prompt.md",
+                    "starter_repo": "evals/codegen/devex/minimal-correct-implementation-ladder/starter-repo",
+                    "grading_benchmark": "devex/minimal-correct-implementation-ladder",
                     "grading_mode": "assertion",
                     "publishable_for_strict": True,
                 }
@@ -735,6 +938,63 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         }
         errors = helper.validate_case_registry(data, ROOT)
         self.assertTrue(any("requires real pytest assertion files" in error for error in errors))
+
+    def test_case_registry_has_five_publishable_assertion_backed_cases(self) -> None:
+        helper = _load_script("codex_live_helper_registry_coverage", "scripts/codex_live_benchmark_lib.py")
+        cases = helper.load_case_registry()
+        publishable = [
+            case
+            for case in cases
+            if case.enabled and case.publishable_for_strict and case.grading_mode == "assertion"
+        ]
+        self.assertGreaterEqual(len(publishable), 5)
+        self.assertIn(
+            "reliability/redis-cache-stampede-protection",
+            {case.id for case in publishable},
+        )
+        self.assertTrue(
+            all(helper.case_assertion_files(case.category, case.codegen_case) for case in publishable)
+        )
+        telemetry_only = [case for case in cases if case.grading_mode == "telemetry_only"]
+        self.assertTrue(telemetry_only)
+        self.assertTrue(all(not case.publishable_for_strict for case in telemetry_only))
+
+    def test_codegen_candidate_mode_executes_real_assertion_files(self) -> None:
+        runner = _load_script("run_codegen_benchmark_assertions", "scripts/run-codegen-benchmarks.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            case_dir = root / "case"
+            starter = case_dir / "starter-repo"
+            test_suite = case_dir / "test-suite"
+            security_checks = case_dir / "security-checks"
+            tests_dir = test_suite / "tests"
+            candidate = root / "candidate"
+            for path in (starter, test_suite, security_checks, tests_dir, candidate):
+                path.mkdir(parents=True, exist_ok=True)
+            for script in (
+                starter / "setup.sh",
+                candidate / "setup.sh",
+                test_suite / "run.sh",
+                security_checks / "run.sh",
+            ):
+                script.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            (candidate / "sentinel.txt").write_text("ok", encoding="utf-8")
+            (tests_dir / "test_candidate.py").write_text(
+                "\n".join(
+                    [
+                        "import os",
+                        "from pathlib import Path",
+                        "candidate = Path(os.environ['CHANGEFORGE_CODEGEN_CANDIDATE_DIR'])",
+                        "assert (candidate / 'sentinel.txt').read_text(encoding='utf-8') == 'ok'",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(runner._run_case("sample", "assertion-case", case_dir, candidate), [])
+            (candidate / "sentinel.txt").write_text("bad", encoding="utf-8")
+            errors = runner._run_case("sample", "assertion-case", case_dir, candidate)
+        self.assertTrue(any("assertion" in error and "test_candidate.py" in error for error in errors))
 
     def test_scorecard_and_public_summary_accept_strict_auth_borrowed_summary(self) -> None:
         scorecard = _load_script("generate_professional_scorecard_codex_live", "scripts/generate-professional-scorecard.py")
@@ -771,6 +1031,45 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             item = public._codex_live_benchmark_item(root)
         self.assertEqual(item.status, "fail")
         self.assertIn("current-home-full", item.detail)
+
+    def test_scorecard_and_public_summary_reject_ablation_missing_delta(self) -> None:
+        scorecard = _load_script(
+            "generate_professional_scorecard_codex_live_ablation_delta",
+            "scripts/generate-professional-scorecard.py",
+        )
+        public = _load_script(
+            "generate_public_summary_codex_live_ablation_delta",
+            "scripts/generate-public-benchmark-summary.py",
+        )
+        payload = _strict_summary_payload(
+            benchmark_mode="ablation",
+            result_count=3,
+            benchmark_eligible_result_count=3,
+            benchmark_passed_result_count=3,
+            failure_categories={"none": 3},
+            variants={
+                "baseline_clean": _variant_payload(),
+                "skills_only_clean": _variant_payload(),
+                "skills_with_hooks_clean": _variant_payload(),
+            },
+            delta={
+                "skills_only_clean_vs_baseline_clean": {"pass_rate_delta": 0.0},
+                "skills_with_hooks_clean_vs_baseline_clean": {"pass_rate_delta": 0.0},
+            },
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "reports").mkdir()
+            (root / "reports" / "codex-live-benchmark-summary.json").write_text(
+                json.dumps(payload),
+                encoding="utf-8",
+            )
+            status, detail = scorecard.codex_live_benchmark_status(root)
+            item = public._codex_live_benchmark_item(root)
+        self.assertEqual(status, "fail")
+        self.assertIn("delta.skills_with_hooks_clean_vs_skills_only_clean", detail)
+        self.assertEqual(item.status, "fail")
+        self.assertIn("ablation delta skills_with_hooks_clean_vs_skills_only_clean", item.detail)
 
 
 if __name__ == "__main__":

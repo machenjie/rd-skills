@@ -36,13 +36,13 @@ claims.
 ```bash
 python3 scripts/run-codex-live-benchmarks.py --list
 python3 scripts/run-codex-live-benchmarks.py \
-  --benchmark-mode clean-paired \
+  --benchmark-mode ablation \
   --auth-policy borrow-current \
   --benchmark security/ssrf-url-allowlist \
   --dry-run \
-  --out /tmp/changeforge-codex-live-borrow-auth-dry-run
+  --out /tmp/changeforge-codex-live-ablation-dry-run
 python3 scripts/validate-codex-live-benchmark-reports.py \
-  --run-dir /tmp/changeforge-codex-live-borrow-auth-dry-run
+  --run-dir /tmp/changeforge-codex-live-ablation-dry-run
 ```
 
 ## Clean Auth-Borrowed Strict A/B
@@ -88,10 +88,9 @@ API-key metadata.
 ```bash
 CHANGEFORGE_ENABLE_CODEX_LIVE_BENCHMARK=1 \
 python3 scripts/run-codex-live-benchmarks.py \
-  --benchmark security/ssrf-url-allowlist \
   --benchmark-mode ablation \
   --auth-policy borrow-current \
-  --runs 1 \
+  --runs 3 \
   --profile recommended \
   --sandbox workspace-write \
   --out reports/codex-live-runs/ablation-auth-borrowed-$(date +%Y%m%d-%H%M%S) \
@@ -99,7 +98,11 @@ python3 scripts/run-codex-live-benchmarks.py \
 ```
 
 This mode runs `baseline_clean`, `skills_only_clean`, and
-`skills_with_hooks_clean` with the same clean auth-borrowing policy.
+`skills_with_hooks_clean` with the same clean auth-borrowing policy. Without a
+`--benchmark` filter it runs all publishable assertion-backed cases, currently
+covering `security`, `backend`, `devex`, `structure`, and `reliability`.
+Repeated-run evidence should use at least 3 runs per variant. Single-case
+ablation runs are useful pipeline smoke evidence, not broad pass-rate claims.
 
 ## Current-Home Smoke Example
 
@@ -127,6 +130,13 @@ contamination, when current-home-full results are present, when user
 skills/config/rules are visible, or when pass rates are not backed by real
 assertion checks. Dry-run, skipped, telemetry-only, and current-home smoke
 reports cannot satisfy strict scorecard/public benchmark claims.
+
+Strict published summaries include failure-category buckets, ablation deltas,
+mean/median/min/max usage and metric counts, and per-case/per-variant pass
+rates. Ablation summaries must include all three comparisons:
+`skills_only_clean_vs_baseline_clean`,
+`skills_with_hooks_clean_vs_skills_only_clean`, and
+`skills_with_hooks_clean_vs_baseline_clean`.
 
 Artifacts deliberately store bounded metadata:
 

@@ -46,7 +46,7 @@ python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out
 | Executor adapter live pass-rate | Measured real-task executor adapter success rate, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
 | Executor adapter token overhead | Measured additional token cost, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
 | Executor adapter turn overhead | Measured additional turn cost, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
-| Codex CLI live benchmark | Published `reports/codex-live-benchmark-summary.json` from an explicit opt-in strict Codex CLI run using `auth-policy=borrow-current` or `isolated-api-key`. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` | Keep `not_collected` until a real validated strict run is published; dry-run, skipped, telemetry-only, contaminated-baseline, user-skill/config/rule-visible, and current-home smoke reports cannot satisfy this dimension. |
+| Codex CLI live benchmark | Published `reports/codex-live-benchmark-summary.json` from an explicit opt-in strict Codex CLI run using `auth-policy=borrow-current` or `isolated-api-key`. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` | Keep `not_collected` until a real validated strict run is published; dry-run, skipped, telemetry-only, contaminated-baseline, user-skill/config/rule-visible, missing assertion, missing ablation-delta, and current-home smoke reports cannot satisfy this dimension. |
 | Open-source readiness | `config/open-source-release.yaml`, [LICENSE_DECISION.md](LICENSE_DECISION.md), [OPEN_SOURCE_READINESS.md](OPEN_SOURCE_READINESS.md), `pyproject.toml`, `CONTRIBUTING.md`, `SECURITY.md`, and root `LICENSE`. | `python3 scripts/validate-open-source-readiness.py` | Owner chooses license, adds exact license text, updates package metadata, confirms contribution licensing, and confirms private vulnerability reporting or private security contact before open-source publication. |
 | Example coverage | `examples/` scenario structure. | `python3 scripts/validate-examples.py` | Add prompt, route, and evidence files for each scenario. |
 | Productization assets | Productization docs, schema, and generation/validation scripts. | `python3 scripts/validate-productization-assets.py` | Restore required productization assets. |
@@ -94,7 +94,13 @@ skills/hooks/config/rules, pass `--ignore-user-config` and `--ignore-rules`,
 use `clean-paired` or `ablation` mode, contain no current-home-full results,
 contain no contaminated baseline artifacts, and include assertion-backed
 eligible results for every comparable variant before it can change the
-dimension from `not_collected`.
+dimension from `not_collected`. Ablation summaries must include
+`skills_only_clean_vs_baseline_clean`,
+`skills_with_hooks_clean_vs_skills_only_clean`, and
+`skills_with_hooks_clean_vs_baseline_clean` deltas. The summary also carries
+failure-category buckets, mean/median/min/max usage and metric counts, and
+per-case/per-variant pass rates so the public scorecard does not flatten the
+evidence into a single headline pass rate.
 
 Open-source readiness is conservative: a root `LICENSE` alone is not enough. Proprietary `pyproject.toml` license metadata fails the dimension once a license file exists. `config/open-source-release.yaml:selected_license` must be non-null, contribution licensing must be owner-confirmed, and GitHub private vulnerability reporting or a private security contact must be owner-confirmed before the dimension can be `pass`.
 

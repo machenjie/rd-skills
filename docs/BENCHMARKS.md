@@ -68,15 +68,15 @@ diagnostics, but they are not publishable benchmark evidence.
 
 ```bash
 python3 scripts/run-codex-live-benchmarks.py --list
-python3 scripts/run-codex-live-benchmarks.py --benchmark-mode clean-paired --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-borrow-auth-dry-run
-python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-borrow-auth-dry-run
+python3 scripts/run-codex-live-benchmarks.py --benchmark-mode ablation --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-ablation-dry-run
+python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-ablation-dry-run
 ```
 
-To run the recommended strict clean A/B benchmark, enable the explicit live
-gate and borrow Codex authentication only. This uses temp `HOME`, hides
-user-level skills/hooks/config/rules, passes `--ignore-user-config` and
-`--ignore-rules`, runs `baseline_clean` against `skills_with_hooks_clean`, and
-is publishable only when baseline contamination is absent:
+To run a strict clean A/B smoke benchmark, enable the explicit live gate and
+borrow Codex authentication only. This uses temp `HOME`, hides user-level
+skills/hooks/config/rules, passes `--ignore-user-config` and `--ignore-rules`,
+runs `baseline_clean` against `skills_with_hooks_clean`, and is publishable
+only when baseline contamination is absent:
 
 ```bash
 CHANGEFORGE_ENABLE_CODEX_LIVE_BENCHMARK=1 \
@@ -90,6 +90,9 @@ python3 scripts/run-codex-live-benchmarks.py \
   --out reports/codex-live-runs/clean-auth-borrowed-$(date +%Y%m%d-%H%M%S) \
   --publish-summary
 ```
+
+This single-case command is useful for validating the pipeline, not for broad
+rd-skills improvement claims.
 
 For a fully isolated strict A/B run, provide an API key only to the subprocess
 environment and keep both `HOME` and `CODEX_HOME` temporary:
@@ -107,21 +110,31 @@ python3 scripts/run-codex-live-benchmarks.py \
   --publish-summary
 ```
 
-To run the hook ablation, use the same clean auth-borrowing policy with
-`baseline_clean`, `skills_only_clean`, and `skills_with_hooks_clean`:
+To run the stronger hook ablation, use the same clean auth-borrowing policy with
+`baseline_clean`, `skills_only_clean`, and `skills_with_hooks_clean`. Omit
+`--benchmark` to run all publishable assertion-backed live cases; use
+`--runs 3` or higher when making repeated-run local evidence claims:
 
 ```bash
 CHANGEFORGE_ENABLE_CODEX_LIVE_BENCHMARK=1 \
 python3 scripts/run-codex-live-benchmarks.py \
-  --benchmark security/ssrf-url-allowlist \
   --benchmark-mode ablation \
   --auth-policy borrow-current \
-  --runs 1 \
+  --runs 3 \
   --profile recommended \
   --sandbox workspace-write \
   --out reports/codex-live-runs/ablation-auth-borrowed-$(date +%Y%m%d-%H%M%S) \
   --publish-summary
 ```
+
+Publishable assertion-backed live cases currently cover `security`,
+`backend`, `devex`, `structure`, and `reliability`. Telemetry-only cases are
+listed in run outputs but do not contribute to pass-rate evidence.
+
+Codex live summaries aggregate per-variant pass rates, security pass rates,
+failure categories, mean/median/min/max usage and metric counts, ablation
+deltas, and per-case/per-variant pass rates. Pass-rate confidence text remains
+descriptive because these are local small-sample runs.
 
 The `danger-full-access` sandbox also requires
 `CHANGEFORGE_ALLOW_DANGER_FULL_ACCESS=1` or `--allow-danger-full-access`.
@@ -148,8 +161,11 @@ Only strict summaries with `auth-policy=borrow-current` or `isolated-api-key`
 can be published as comparative evidence. The published strict summary is
 blocked when user skills/config/rules are visible, `--ignore-user-config` or
 `--ignore-rules` is absent, baseline artifacts contain ChangeForge/user-level
-contamination, current-home-full results are present, or a variant has no
-assertion-backed eligible result:
+contamination, current-home-full results are present, a variant has no
+assertion-backed eligible result, or an ablation summary omits any of
+`skills_only_clean_vs_baseline_clean`,
+`skills_with_hooks_clean_vs_skills_only_clean`, or
+`skills_with_hooks_clean_vs_baseline_clean`:
 
 ```bash
 python3 scripts/generate-codex-live-summary.py --run-dir reports/codex-live-runs/<run-id> --publish
@@ -169,8 +185,8 @@ python3 scripts/validate-skill-efficacy-benchmarks.py
 python3 scripts/eval-executor-adapters.py
 python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks
 python3 scripts/run-codex-live-benchmarks.py --list
-python3 scripts/run-codex-live-benchmarks.py --benchmark-mode clean-paired --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-borrow-auth-dry-run
-python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-borrow-auth-dry-run
+python3 scripts/run-codex-live-benchmarks.py --benchmark-mode ablation --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-ablation-dry-run
+python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-ablation-dry-run
 python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/eval-professional-agent-samples.py --promoted-only --strict

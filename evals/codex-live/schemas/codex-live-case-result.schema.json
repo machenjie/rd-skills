@@ -20,6 +20,7 @@
     "publishable_for_strict",
     "benchmark_eligible",
     "benchmark_passed",
+    "failure_category",
     "contamination",
     "environment",
     "paths",
@@ -75,6 +76,19 @@
     },
     "benchmark_passed": {
       "type": "boolean"
+    },
+    "failure_category": {
+      "enum": [
+        "none",
+        "codex_exec_failed",
+        "install_failed",
+        "setup_failed",
+        "test_suite_failed",
+        "security_checks_failed",
+        "contaminated",
+        "grading_not_collected",
+        "telemetry_only"
+      ]
     },
     "contamination": {
       "type": "object",

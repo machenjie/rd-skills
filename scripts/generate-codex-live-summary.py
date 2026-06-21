@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from statistics import median
 from typing import Any
 
 from codex_live_benchmark_lib import (
@@ -106,12 +107,14 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         "contaminated_result_count": sum(
             1 for result in real_results if (result.get("contamination") or {}).get("contaminated") is True
         ),
+        "failure_categories": _counts(real_results, "failure_category"),
         "current_home_result_count": sum(1 for result in real_results if result.get("codex_home_mode") == "current"),
         "current_home_full_result_count": current_home_full_result_count,
         **environment_flags,
         "variants": variants,
         "delta": deltas,
         "cases": cases,
+        "cases_summary": _cases_summary(real_results),
         "telemetry": {
             "event_count": sum(int((result.get("metrics") or {}).get("event_count", 0) or 0) for result in real_results),
             "parse_error_count": sum(len((result.get("metrics") or {}).get("parse_errors", [])) for result in real_results),
@@ -159,12 +162,16 @@ def _variant_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
         result for result in security_eligible if (result.get("grading") or {}).get("security_checks_passed") is True
     ]
     return {
+        "run_count": len({int(result.get("run_index", 0) or 0) for result in results if result.get("run_index")}),
+        "case_count": len({str(result.get("case_id")) for result in results if result.get("case_id")}),
         "result_count": len(results),
         "artifact_status_counts": _counts(results, "artifact_status"),
         "grading_status_counts": _counts(results, "grading_status"),
+        "failure_categories": _counts(results, "failure_category"),
         "benchmark_eligible_result_count": len(eligible),
         "benchmark_passed_result_count": len(passed),
         "pass_rate": _rate(len(passed), len(eligible)),
+        "pass_rate_ci_note": "descriptive only; small sample",
         "security_pass_rate": _rate(len(security_passed), len(security_eligible)),
         "telemetry_only_result_count": sum(1 for result in results if result.get("grading_status") == "telemetry_only"),
         "not_collected_grading_count": sum(1 for result in results if result.get("grading_status") == "not_collected"),
@@ -172,7 +179,13 @@ def _variant_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
             1 for result in results if (result.get("contamination") or {}).get("contaminated") is True
         ),
         "average_usage": _average_usage(results),
+        "median_usage": _median_usage(results),
+        "min_usage": _min_usage(results),
+        "max_usage": _max_usage(results),
         "average_metrics": _average_metrics(results),
+        "median_metrics": _median_metrics(results),
+        "min_metrics": _min_metrics(results),
+        "max_metrics": _max_metrics(results),
         "average_event_count": _average_metrics(results)["event_count"],
         "average_file_change_count": _average_metrics(results)["file_change_count"],
         "average_command_execution_count": _average_metrics(results)["command_execution_count"],
@@ -181,33 +194,67 @@ def _variant_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
 
 def _counts(results: list[dict[str, Any]], key: str) -> dict[str, int]:
     counts: dict[str, int] = {}
+    missing_value = "grading_not_collected" if key == "failure_category" else "not_collected"
     for result in results:
-        value = str(result.get(key) or "not_collected")
+        value = str(result.get(key) or missing_value)
         counts[value] = counts.get(value, 0) + 1
     return counts
 
 
 def _average_usage(results: list[dict[str, Any]]) -> dict[str, float]:
-    totals = {key: 0 for key in USAGE_KEYS}
-    for result in results:
-        usage = ((result.get("metrics") or {}).get("usage") or {})
-        for key in USAGE_KEYS:
-            totals[key] += int(usage.get(key, 0) or 0)
-    return _average(totals, len(results))
+    return _numeric_summary(results, USAGE_KEYS, source="usage", operation="average")
+
+
+def _median_usage(results: list[dict[str, Any]]) -> dict[str, float]:
+    return _numeric_summary(results, USAGE_KEYS, source="usage", operation="median")
+
+
+def _min_usage(results: list[dict[str, Any]]) -> dict[str, float]:
+    return _numeric_summary(results, USAGE_KEYS, source="usage", operation="min")
+
+
+def _max_usage(results: list[dict[str, Any]]) -> dict[str, float]:
+    return _numeric_summary(results, USAGE_KEYS, source="usage", operation="max")
 
 
 def _average_metrics(results: list[dict[str, Any]]) -> dict[str, float]:
-    totals = {key: 0 for key in METRIC_KEYS}
+    return _numeric_summary(results, METRIC_KEYS, source="metrics", operation="average")
+
+
+def _median_metrics(results: list[dict[str, Any]]) -> dict[str, float]:
+    return _numeric_summary(results, METRIC_KEYS, source="metrics", operation="median")
+
+
+def _min_metrics(results: list[dict[str, Any]]) -> dict[str, float]:
+    return _numeric_summary(results, METRIC_KEYS, source="metrics", operation="min")
+
+
+def _max_metrics(results: list[dict[str, Any]]) -> dict[str, float]:
+    return _numeric_summary(results, METRIC_KEYS, source="metrics", operation="max")
+
+
+def _numeric_summary(
+    results: list[dict[str, Any]],
+    keys: tuple[str, ...],
+    *,
+    source: str,
+    operation: str,
+) -> dict[str, float]:
+    values = {key: [] for key in keys}
     for result in results:
         metrics = result.get("metrics") or {}
-        for key in METRIC_KEYS:
-            totals[key] += int(metrics.get(key, 0) or 0)
-    return _average(totals, len(results))
-
-
-def _average(totals: dict[str, int], count: int) -> dict[str, float]:
-    divisor = max(count, 1)
-    return {key: round(value / divisor, 2) for key, value in totals.items()}
+        source_payload = (metrics.get("usage") or {}) if source == "usage" else metrics
+        for key in keys:
+            values[key].append(int(source_payload.get(key, 0) or 0))
+    if operation == "average":
+        return {key: round(sum(series) / max(len(series), 1), 2) for key, series in values.items()}
+    if operation == "median":
+        return {key: round(float(median(series)), 2) if series else 0.0 for key, series in values.items()}
+    if operation == "min":
+        return {key: min(series) if series else 0 for key, series in values.items()}
+    if operation == "max":
+        return {key: max(series) if series else 0 for key, series in values.items()}
+    raise ValueError(f"unknown summary operation {operation!r}")
 
 
 def _rate(numerator: int, denominator: int) -> float | str:
@@ -217,12 +264,21 @@ def _rate(numerator: int, denominator: int) -> float | str:
 
 
 def _variant_deltas(variants: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    baseline = variants.get("baseline_clean")
     deltas: dict[str, dict[str, Any]] = {}
+    pairs = (
+        ("skills_only_clean", "baseline_clean"),
+        ("skills_with_hooks_clean", "skills_only_clean"),
+        ("skills_with_hooks_clean", "baseline_clean"),
+    )
+    for variant, baseline in pairs:
+        if variant in variants and baseline in variants:
+            deltas[f"{variant}_vs_{baseline}"] = _delta_from_baseline(variants[baseline], variants[variant])
     for variant, summary in variants.items():
-        if variant == "baseline_clean" or not baseline:
+        if variant == "baseline_clean" or f"{variant}_vs_baseline_clean" in deltas:
             continue
-        deltas[f"{variant}_vs_baseline_clean"] = _delta_from_baseline(baseline, summary)
+        baseline = variants.get("baseline_clean")
+        if baseline:
+            deltas[f"{variant}_vs_baseline_clean"] = _delta_from_baseline(baseline, summary)
     return deltas
 
 
@@ -253,10 +309,34 @@ def _numeric_delta(value: Any, baseline: Any) -> float | str:
     return round(float(value) - float(baseline), 4)
 
 
-def _pct_delta(value: float, baseline: float) -> float | str:
+def _pct_delta(value: float, baseline: float) -> float | None:
     if baseline == 0:
         return None
     return round((value - baseline) / baseline, 4)
+
+
+def _cases_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
+    summary: dict[str, Any] = {}
+    for case_id in sorted({str(result.get("case_id")) for result in results if result.get("case_id")}):
+        case_results = [result for result in results if result.get("case_id") == case_id]
+        variants: dict[str, Any] = {}
+        for variant in sorted({str(result.get("variant")) for result in case_results if result.get("variant")}):
+            variant_results = _results_for_variant(case_results, variant)
+            eligible = [result for result in variant_results if result.get("benchmark_eligible") is True]
+            passed = [result for result in eligible if result.get("benchmark_passed") is True]
+            variants[variant] = {
+                "runs": len(variant_results),
+                "benchmark_eligible_result_count": len(eligible),
+                "benchmark_passed_result_count": len(passed),
+                "pass_rate": _rate(len(passed), len(eligible)),
+                "failure_categories": _counts(variant_results, "failure_category"),
+            }
+        grading_modes = {str(result.get("grading_mode")) for result in case_results if result.get("grading_mode")}
+        summary[case_id] = {
+            "grading_mode": next(iter(grading_modes)) if len(grading_modes) == 1 else "mixed",
+            "variants": variants,
+        }
+    return summary
 
 
 def _common_value(
@@ -348,11 +428,26 @@ def _limitations(benchmark_mode: str, *, assertion_case_count: int, variants: di
             for payload in variants.values()
             if isinstance(payload, dict)
         ]
-        if assertion_case_count < 3 or not eligible_counts or min(eligible_counts) < 3:
+        run_counts = [
+            int(payload.get("run_count", 0) or 0)
+            for payload in variants.values()
+            if isinstance(payload, dict)
+        ]
+        if assertion_case_count >= 3 and run_counts and min(run_counts) >= 3:
+            base.append(
+                "Current strict live evidence covers multiple assertion-backed cases and repeated runs, "
+                "but remains local Codex CLI evidence."
+            )
+        elif assertion_case_count < 3 or not eligible_counts or min(eligible_counts) < 3:
             base.append(
                 "Current strict live evidence is a smoke sample only: it supports only the listed case and variants, "
                 "not a broad rd-skills pass-rate improvement claim. Stronger claims require at least 3-5 "
                 "assertion-backed cases with 3 runs per variant."
+            )
+        else:
+            base.append(
+                "Current strict live evidence covers multiple assertion-backed cases, but repeated-run evidence is "
+                "still limited; keep small-sample limitations until each variant has at least 3 runs."
             )
     return base
 
@@ -385,16 +480,26 @@ def render_markdown(summary: dict[str, Any]) -> str:
                 f"### {variant}",
                 "",
                 f"- Results: `{variant_summary['result_count']}`",
+                f"- Runs: `{variant_summary['run_count']}`",
+                f"- Cases: `{variant_summary['case_count']}`",
                 f"- Eligible results: `{variant_summary['benchmark_eligible_result_count']}`",
                 f"- Pass rate: `{variant_summary['pass_rate']}`",
                 f"- Security pass rate: `{variant_summary['security_pass_rate']}`",
                 f"- Average input tokens: `{variant_summary['average_usage']['input_tokens']}`",
+                f"- Median input tokens: `{variant_summary['median_usage']['input_tokens']}`",
                 f"- Average output tokens: `{variant_summary['average_usage']['output_tokens']}`",
                 f"- Average command executions: `{variant_summary['average_metrics']['command_execution_count']}`",
                 f"- Average file changes: `{variant_summary['average_metrics']['file_change_count']}`",
                 "",
             ]
         )
+    if summary.get("cases_summary"):
+        lines.extend(["## Cases", ""])
+        for case_id, case_summary in summary["cases_summary"].items():
+            lines.extend([f"### {case_id}", "", f"- Grading mode: `{case_summary['grading_mode']}`"])
+            for variant, payload in case_summary["variants"].items():
+                lines.append(f"- {variant}: runs `{payload['runs']}`, pass rate `{payload['pass_rate']}`")
+            lines.append("")
     lines.extend(["## Limitations", "", *[f"- {item}" for item in summary["limitations"]], ""])
     return "\n".join(lines)
 
@@ -447,6 +552,16 @@ def strict_publish_errors(summary: dict[str, Any]) -> list[str]:
         variant_summary = variants.get(variant) or {}
         if int(variant_summary.get("benchmark_eligible_result_count", 0) or 0) <= 0:
             errors.append(f"strict benchmark publication requires eligible assertion results for {variant}")
+    if benchmark_mode == "ablation":
+        delta = summary.get("delta") or {}
+        required_delta = (
+            "skills_only_clean_vs_baseline_clean",
+            "skills_with_hooks_clean_vs_skills_only_clean",
+            "skills_with_hooks_clean_vs_baseline_clean",
+        )
+        for key in required_delta:
+            if key not in delta:
+                errors.append(f"ablation summary requires delta.{key}")
     return errors
 
 

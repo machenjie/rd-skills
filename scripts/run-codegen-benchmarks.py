@@ -107,6 +107,48 @@ def _real_assertion_files(case_dir: Path) -> list[Path]:
     return sorted(files)
 
 
+def _run_assertion_files(
+    category: str,
+    case_id: str,
+    case_dir: Path,
+    candidate_dir: Path,
+) -> list[str]:
+    """Execute real assertion files against a generated candidate."""
+    errors: list[str] = []
+    assertion_files = _real_assertion_files(case_dir)
+    env = os.environ.copy()
+    env["CHANGEFORGE_CODEGEN_CANDIDATE_DIR"] = str(candidate_dir)
+    python_path = str(candidate_dir)
+    if env.get("PYTHONPATH"):
+        python_path = python_path + os.pathsep + env["PYTHONPATH"]
+    env["PYTHONPATH"] = python_path
+    for assertion_file in assertion_files:
+        completed = subprocess.run(
+            [sys.executable, str(assertion_file.resolve())],
+            cwd=candidate_dir,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+        )
+        if completed.returncode != 0:
+            output = completed.stdout.rstrip()
+            errors.append(
+                f"{category}/{case_id}: assertion {_display_path(assertion_file)} "
+                f"exited {completed.returncode}\n{output}"
+            )
+    return errors
+
+
+def _display_path(path: Path) -> str:
+    """Return a repository-relative path when possible, otherwise a local path."""
+    try:
+        return relpath(ROOT, path)
+    except ValueError:
+        return str(path)
+
+
 def _bash_script_path(path: Path) -> str:
     resolved = path.resolve()
     if os.name == "nt":
@@ -190,6 +232,8 @@ def _run_case(
         ok, output = _run_script(label, script, implementation_dir, env_overrides)
         if not ok:
             errors.append(f"{category}/{case_id}: {output.rstrip()}")
+    if candidate_dir:
+        errors.extend(_run_assertion_files(category, case_id, case_dir, implementation_dir))
     return errors
 
 

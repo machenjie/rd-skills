@@ -28,6 +28,7 @@
     "user_skills_visible": false
   },
   "failure": null,
+  "failure_category": "setup_failed",
   "generated_by": "scripts/run-codex-live-benchmarks.py",
   "grading": {
     "all_passed": false,

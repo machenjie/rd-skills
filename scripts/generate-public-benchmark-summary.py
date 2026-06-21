@@ -53,8 +53,8 @@ REFRESH_COMMANDS = [
     "python3 scripts/eval-executor-adapters.py",
     "python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks",
     "python3 scripts/run-codex-live-benchmarks.py --list",
-    "python3 scripts/run-codex-live-benchmarks.py --benchmark-mode clean-paired --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-borrow-auth-dry-run",
-    "python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-borrow-auth-dry-run",
+    "python3 scripts/run-codex-live-benchmarks.py --benchmark-mode ablation --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-ablation-dry-run",
+    "python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-ablation-dry-run",
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
     "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",
@@ -311,19 +311,27 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
         "strict_benchmark_eligible": summary.get("strict_benchmark_eligible"),
         "run_id": summary.get("run_id"),
         "case_count": summary.get("case_count"),
+        "assertion_case_count": summary.get("assertion_case_count"),
         "result_count": summary.get("result_count"),
         "benchmark_eligible_result_count": summary.get("benchmark_eligible_result_count"),
+        "benchmark_passed_result_count": summary.get("benchmark_passed_result_count"),
+        "failure_categories": summary.get("failure_categories"),
         "variants": {
             variant: {
+                "run_count": payload.get("run_count"),
+                "case_count": payload.get("case_count"),
                 "pass_rate": payload.get("pass_rate"),
                 "security_pass_rate": payload.get("security_pass_rate"),
                 "benchmark_eligible_result_count": payload.get("benchmark_eligible_result_count"),
+                "benchmark_passed_result_count": payload.get("benchmark_passed_result_count"),
+                "failure_categories": payload.get("failure_categories"),
             }
             for variant, payload in (summary.get("variants") or {}).items()
             if isinstance(payload, dict)
         },
         "delta": summary.get("delta"),
         "strict_errors": strict_errors,
+        "cases_summary": summary.get("cases_summary"),
         "limitations": summary.get("limitations"),
     }
     return EvidenceItem(
@@ -361,15 +369,30 @@ def _codex_live_strict_summary_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("user rules must not be loaded")
     if summary.get("ignore_user_config") is not True or summary.get("ignore_rules") is not True:
         errors.append("--ignore-user-config and --ignore-rules are required")
+    if summary.get("plugins_disabled") is not True:
+        errors.append("--disable plugins is required")
     if int(summary.get("contaminated_result_count", 0) or 0) != 0:
         errors.append("contaminated results are not public benchmark evidence")
     if int(summary.get("benchmark_eligible_result_count", 0) or 0) <= 0:
         errors.append("assertion-backed eligible results are required")
+    if not isinstance(summary.get("failure_categories"), dict):
+        errors.append("failure_categories are required")
+    if not isinstance(summary.get("cases_summary"), dict):
+        errors.append("cases_summary is required")
     variants = summary.get("variants") or {}
     for variant in MODE_DEFAULT_VARIANTS.get(str(benchmark_mode), ()):
         payload = variants.get(variant)
         if not isinstance(payload, dict) or int(payload.get("benchmark_eligible_result_count", 0) or 0) <= 0:
             errors.append(f"eligible assertion results are required for {variant}")
+    if benchmark_mode == "ablation":
+        delta = summary.get("delta") or {}
+        for key in (
+            "skills_only_clean_vs_baseline_clean",
+            "skills_with_hooks_clean_vs_skills_only_clean",
+            "skills_with_hooks_clean_vs_baseline_clean",
+        ):
+            if key not in delta:
+                errors.append(f"ablation delta {key} is required")
     return errors
 
 

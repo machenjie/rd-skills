@@ -20,6 +20,17 @@ CASES_PATH = ROOT / "evals" / "codex-live" / "cases.yaml"
 STATUSES = ("not_collected", "skipped_not_opted_in", "partial", "collected", "failed")
 ARTIFACT_STATUSES = ("collected", "partial", "failed")
 GRADING_STATUSES = ("passed", "failed", "not_collected", "telemetry_only", "contaminated")
+FAILURE_CATEGORIES = (
+    "none",
+    "codex_exec_failed",
+    "install_failed",
+    "setup_failed",
+    "test_suite_failed",
+    "security_checks_failed",
+    "contaminated",
+    "grading_not_collected",
+    "telemetry_only",
+)
 PUBLIC_STATUSES = ("pass", "partial", "fail", "unknown", "not_collected")
 VARIANTS = ("baseline_clean", "skills_only_clean", "skills_with_hooks_clean", "current_home_smoke")
 STRICT_BENCHMARK_MODES = ("clean-paired", "ablation")
@@ -410,6 +421,7 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "publishable_for_strict",
             "benchmark_eligible",
             "benchmark_passed",
+            "failure_category",
             "contamination",
             "environment",
             "paths",
@@ -433,9 +445,12 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "telemetry_only_case_count",
             "result_count",
             "benchmark_eligible_result_count",
+            "benchmark_passed_result_count",
             "not_collected_grading_count",
             "telemetry_only_result_count",
             "contaminated_result_count",
+            "failure_categories",
+            "current_home_result_count",
             "current_home_full_result_count",
             "user_skills_visible",
             "user_config_loaded",
@@ -445,6 +460,8 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "plugins_disabled",
             "variants",
             "delta",
+            "cases",
+            "cases_summary",
             "limitations",
         ),
     }
@@ -470,6 +487,9 @@ def validate_required_fields(payload: Any, schema_name: str) -> list[str]:
         grading_status = payload.get("grading_status")
         if grading_status is not None and grading_status not in GRADING_STATUSES:
             errors.append(f"{schema_name}: invalid grading_status {grading_status}")
+        failure_category = payload.get("failure_category")
+        if failure_category is not None and failure_category not in FAILURE_CATEGORIES:
+            errors.append(f"{schema_name}: invalid failure_category {failure_category}")
     limitations = payload.get("limitations")
     if limitations is not None and (not isinstance(limitations, list) or not limitations):
         errors.append(f"{schema_name}: limitations must be a non-empty list")

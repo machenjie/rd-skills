@@ -19,9 +19,12 @@
     "telemetry_only_case_count",
     "result_count",
     "benchmark_eligible_result_count",
+    "benchmark_passed_result_count",
     "not_collected_grading_count",
     "telemetry_only_result_count",
     "contaminated_result_count",
+    "failure_categories",
+    "current_home_result_count",
     "current_home_full_result_count",
     "user_skills_visible",
     "user_config_loaded",
@@ -31,6 +34,8 @@
     "plugins_disabled",
     "variants",
     "delta",
+    "cases",
+    "cases_summary",
     "limitations"
   ],
   "properties": {
@@ -79,6 +84,9 @@
     "benchmark_eligible_result_count": {
       "type": "integer"
     },
+    "benchmark_passed_result_count": {
+      "type": "integer"
+    },
     "not_collected_grading_count": {
       "type": "integer"
     },
@@ -86,6 +94,12 @@
       "type": "integer"
     },
     "contaminated_result_count": {
+      "type": "integer"
+    },
+    "failure_categories": {
+      "type": "object"
+    },
+    "current_home_result_count": {
       "type": "integer"
     },
     "current_home_full_result_count": {
@@ -113,6 +127,15 @@
       "type": "object"
     },
     "delta": {
+      "type": "object"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cases_summary": {
       "type": "object"
     },
     "limitations": {

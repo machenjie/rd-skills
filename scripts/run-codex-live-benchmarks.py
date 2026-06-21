@@ -424,6 +424,15 @@ def _run_one_case(
     grading_status = _grading_status(case, grading, contamination, variant)
     benchmark_eligible = _benchmark_eligible(args, case, artifact_status, grading_status, contamination, environment)
     benchmark_passed = benchmark_eligible and grading_status == "passed"
+    failure_category = _failure_category(
+        artifact_status=artifact_status,
+        failure_stage=failure_stage,
+        codex_returncode=codex_returncode,
+        contamination=contamination,
+        grading_status=grading_status,
+        grading=grading,
+        benchmark_passed=benchmark_passed,
+    )
     auth_policy = resolve_auth_policy(args)
     environment_policy = codex_environment_policy(auth_policy)
 
@@ -451,6 +460,7 @@ def _run_one_case(
         "publishable_for_strict": case.publishable_for_strict,
         "benchmark_eligible": benchmark_eligible,
         "benchmark_passed": benchmark_passed,
+        "failure_category": failure_category,
         "contamination": contamination,
         "environment": environment,
         "codex_returncode": codex_returncode,
@@ -509,6 +519,40 @@ def _grading_status(
     if grading.get("returncode") == 0:
         return "failed"
     return "not_collected"
+
+
+def _failure_category(
+    *,
+    artifact_status: str,
+    failure_stage: str | None,
+    codex_returncode: int | None,
+    contamination: dict[str, Any],
+    grading_status: str,
+    grading: dict[str, Any],
+    benchmark_passed: bool,
+) -> str:
+    """Classify the first material failure for summary aggregation."""
+    if artifact_status == "partial" and failure_stage == "install_changeforge":
+        return "install_failed"
+    if (artifact_status == "partial" and failure_stage == "codex_exec") or (
+        artifact_status == "failed" and codex_returncode not in {0, None}
+    ):
+        return "codex_exec_failed"
+    if contamination.get("contaminated"):
+        return "contaminated"
+    if grading_status == "telemetry_only":
+        return "telemetry_only"
+    if grading_status == "not_collected":
+        return "grading_not_collected"
+    if grading.get("setup_passed") is False:
+        return "setup_failed"
+    if grading.get("test_suite_passed") is False:
+        return "test_suite_failed"
+    if grading.get("security_checks_passed") is False:
+        return "security_checks_failed"
+    if benchmark_passed:
+        return "none"
+    return "grading_not_collected"
 
 
 def _benchmark_eligible(

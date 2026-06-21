@@ -10,6 +10,7 @@ from typing import Any
 
 from codex_live_benchmark_lib import (
     CURRENT_HOME_SMOKE_EVIDENCE_LEVEL,
+    FAILURE_CATEGORIES,
     LIVE_EVIDENCE_LEVEL,
     MODE_DEFAULT_VARIANTS,
     ROOT,
@@ -116,6 +117,7 @@ def validate_summary(summary_path: Path, *, publishable: bool = True) -> list[st
     if "limitations" not in summary or not summary.get("limitations"):
         errors.append("summary limitations are required")
     errors.extend(_variant_rate_errors(summary))
+    errors.extend(_summary_structure_errors(summary))
     return errors
 
 
@@ -159,6 +161,7 @@ def _strict_summary_errors(summary: dict[str, Any]) -> list[str]:
         variants = {}
     if not isinstance(delta, dict):
         errors.append("strict summary requires delta object")
+        delta = {}
     for variant in MODE_DEFAULT_VARIANTS.get(str(benchmark_mode), ()):
         variant_summary = variants.get(variant) if isinstance(variants, dict) else None
         if not isinstance(variant_summary, dict):
@@ -166,6 +169,14 @@ def _strict_summary_errors(summary: dict[str, Any]) -> list[str]:
             continue
         if int(variant_summary.get("benchmark_eligible_result_count", 0) or 0) <= 0:
             errors.append(f"strict summary requires eligible assertion results for {variant}")
+    if benchmark_mode == "ablation":
+        for key in (
+            "skills_only_clean_vs_baseline_clean",
+            "skills_with_hooks_clean_vs_skills_only_clean",
+            "skills_with_hooks_clean_vs_baseline_clean",
+        ):
+            if key not in delta:
+                errors.append(f"strict ablation summary requires delta.{key}")
     return errors
 
 
@@ -235,6 +246,89 @@ def _variant_rate_errors(summary: dict[str, Any]) -> list[str]:
             errors.append(f"variant {variant}: pass_rate must be not_collected when no eligible results exist")
         if eligible > 0 and not isinstance(pass_rate, int | float):
             errors.append(f"variant {variant}: pass_rate must be numeric when eligible results exist")
+    return errors
+
+
+def _summary_structure_errors(summary: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    errors.extend(_failure_category_errors("summary.failure_categories", summary.get("failure_categories")))
+    variants = summary.get("variants")
+    if not isinstance(variants, dict):
+        errors.append("summary variants must be an object")
+    else:
+        for variant, payload in variants.items():
+            if not isinstance(payload, dict):
+                errors.append(f"variant {variant}: summary must be an object")
+                continue
+            for field in (
+                "run_count",
+                "case_count",
+                "result_count",
+                "benchmark_eligible_result_count",
+                "benchmark_passed_result_count",
+                "telemetry_only_result_count",
+                "not_collected_grading_count",
+                "contaminated_result_count",
+            ):
+                if not isinstance(payload.get(field), int):
+                    errors.append(f"variant {variant}: {field} must be an integer")
+            for field in (
+                "average_usage",
+                "median_usage",
+                "min_usage",
+                "max_usage",
+                "average_metrics",
+                "median_metrics",
+                "min_metrics",
+                "max_metrics",
+            ):
+                if not isinstance(payload.get(field), dict):
+                    errors.append(f"variant {variant}: {field} must be an object")
+            if not isinstance(payload.get("pass_rate_ci_note"), str):
+                errors.append(f"variant {variant}: pass_rate_ci_note must be a string")
+            errors.extend(_failure_category_errors(f"variant {variant}.failure_categories", payload.get("failure_categories")))
+    cases_summary = summary.get("cases_summary")
+    if not isinstance(cases_summary, dict):
+        errors.append("summary cases_summary must be an object")
+    else:
+        for case_id, case_payload in cases_summary.items():
+            if not isinstance(case_payload, dict):
+                errors.append(f"case {case_id}: summary must be an object")
+                continue
+            if case_payload.get("grading_mode") not in {"assertion", "telemetry_only", "mixed"}:
+                errors.append(f"case {case_id}: grading_mode must be assertion, telemetry_only, or mixed")
+            case_variants = case_payload.get("variants")
+            if not isinstance(case_variants, dict):
+                errors.append(f"case {case_id}: variants must be an object")
+                continue
+            for variant, variant_payload in case_variants.items():
+                if not isinstance(variant_payload, dict):
+                    errors.append(f"case {case_id} variant {variant}: summary must be an object")
+                    continue
+                for field in ("runs", "benchmark_eligible_result_count", "benchmark_passed_result_count"):
+                    if not isinstance(variant_payload.get(field), int):
+                        errors.append(f"case {case_id} variant {variant}: {field} must be an integer")
+                pass_rate = variant_payload.get("pass_rate")
+                if not (isinstance(pass_rate, int | float) or pass_rate == "not_collected"):
+                    errors.append(f"case {case_id} variant {variant}: pass_rate must be numeric or not_collected")
+                errors.extend(
+                    _failure_category_errors(
+                        f"case {case_id} variant {variant}.failure_categories",
+                        variant_payload.get("failure_categories"),
+                    )
+                )
+    return errors
+
+
+def _failure_category_errors(label: str, payload: Any) -> list[str]:
+    if not isinstance(payload, dict):
+        return [f"{label} must be an object"]
+    errors: list[str] = []
+    for category, count in payload.items():
+        if category not in FAILURE_CATEGORIES:
+            errors.append(f"{label}: invalid failure category {category}")
+        if not isinstance(count, int) or count < 0:
+            errors.append(f"{label}: count for {category} must be a non-negative integer")
     return errors
 
 

@@ -19,10 +19,13 @@
 ### baseline_clean
 
 - Results: `1`
+- Runs: `1`
+- Cases: `1`
 - Eligible results: `1`
 - Pass rate: `0.0`
 - Security pass rate: `0.0`
 - Average input tokens: `564266.0`
+- Median input tokens: `564266.0`
 - Average output tokens: `10952.0`
 - Average command executions: `70.0`
 - Average file changes: `14.0`
@@ -30,13 +33,24 @@
 ### skills_with_hooks_clean
 
 - Results: `1`
+- Runs: `1`
+- Cases: `1`
 - Eligible results: `1`
 - Pass rate: `1.0`
 - Security pass rate: `1.0`
 - Average input tokens: `1616056.0`
+- Median input tokens: `1616056.0`
 - Average output tokens: `13641.0`
 - Average command executions: `102.0`
 - Average file changes: `8.0`
+
+## Cases
+
+### security/ssrf-url-allowlist
+
+- Grading mode: `assertion`
+- baseline_clean: runs `1`, pass rate `0.0`
+- skills_with_hooks_clean: runs `1`, pass rate `1.0`
 
 ## Limitations
 

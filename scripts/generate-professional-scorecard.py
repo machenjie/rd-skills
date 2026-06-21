@@ -121,8 +121,8 @@ VALIDATION_COMMANDS = [
     "python3 scripts/validate-codegen-benchmarks.py",
     "python3 scripts/run-codegen-benchmarks.py --limit 3",
     "python3 scripts/run-codex-live-benchmarks.py --list",
-    "python3 scripts/run-codex-live-benchmarks.py --benchmark-mode clean-paired --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-borrow-auth-dry-run",
-    "python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-borrow-auth-dry-run",
+    "python3 scripts/run-codex-live-benchmarks.py --benchmark-mode ablation --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-ablation-dry-run",
+    "python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-ablation-dry-run",
     "python3 scripts/build.py --profile recommended",
     "python3 scripts/build.py --profile full",
     "python3 scripts/build.py --profile dev",
@@ -593,13 +593,18 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
         "strict_benchmark_eligible",
         "run_id",
         "case_count",
+        "assertion_case_count",
         "result_count",
         "benchmark_eligible_result_count",
+        "benchmark_passed_result_count",
         "telemetry_only_result_count",
         "contaminated_result_count",
+        "failure_categories",
+        "current_home_result_count",
         "current_home_full_result_count",
         "variants",
         "delta",
+        "cases_summary",
         "limitations",
     }
     missing = sorted(field for field in required if field not in summary)
@@ -625,18 +630,26 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
         "strict_benchmark_eligible": summary.get("strict_benchmark_eligible"),
         "run_id": summary.get("run_id"),
         "case_count": summary.get("case_count"),
+        "assertion_case_count": summary.get("assertion_case_count"),
         "result_count": summary.get("result_count"),
         "benchmark_eligible_result_count": summary.get("benchmark_eligible_result_count"),
+        "benchmark_passed_result_count": summary.get("benchmark_passed_result_count"),
+        "failure_categories": summary.get("failure_categories"),
         "variants": {
             variant: {
+                "run_count": payload.get("run_count"),
+                "case_count": payload.get("case_count"),
                 "pass_rate": payload.get("pass_rate"),
                 "security_pass_rate": payload.get("security_pass_rate"),
                 "benchmark_eligible_result_count": payload.get("benchmark_eligible_result_count"),
+                "benchmark_passed_result_count": payload.get("benchmark_passed_result_count"),
+                "failure_categories": payload.get("failure_categories"),
             }
             for variant, payload in (summary.get("variants") or {}).items()
             if isinstance(payload, dict)
         },
         "delta": summary.get("delta"),
+        "cases_summary": summary.get("cases_summary"),
         "limitations": summary.get("limitations"),
     }
     return scorecard_status, json.dumps(detail, sort_keys=True)
@@ -667,15 +680,30 @@ def _codex_live_strict_summary_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("Codex live summary requires user_rules_loaded=false")
     if summary.get("ignore_user_config") is not True or summary.get("ignore_rules") is not True:
         errors.append("Codex live summary requires --ignore-user-config and --ignore-rules")
+    if summary.get("plugins_disabled") is not True:
+        errors.append("Codex live summary requires --disable plugins")
     if int(summary.get("contaminated_result_count", 0) or 0) != 0:
         errors.append("Codex live summary must not include contaminated results")
     if int(summary.get("benchmark_eligible_result_count", 0) or 0) <= 0:
         errors.append("Codex live summary requires assertion-backed eligible results")
+    if not isinstance(summary.get("failure_categories"), dict):
+        errors.append("Codex live summary requires failure_categories")
+    if not isinstance(summary.get("cases_summary"), dict):
+        errors.append("Codex live summary requires cases_summary")
     variants = summary.get("variants") or {}
     for variant in MODE_DEFAULT_VARIANTS.get(str(benchmark_mode), ()):
         payload = variants.get(variant)
         if not isinstance(payload, dict) or int(payload.get("benchmark_eligible_result_count", 0) or 0) <= 0:
             errors.append(f"Codex live summary requires eligible assertion results for {variant}")
+    if benchmark_mode == "ablation":
+        delta = summary.get("delta") or {}
+        for key in (
+            "skills_only_clean_vs_baseline_clean",
+            "skills_with_hooks_clean_vs_skills_only_clean",
+            "skills_with_hooks_clean_vs_baseline_clean",
+        ):
+            if key not in delta:
+                errors.append(f"Codex live ablation summary requires delta.{key}")
     return errors
 
 
