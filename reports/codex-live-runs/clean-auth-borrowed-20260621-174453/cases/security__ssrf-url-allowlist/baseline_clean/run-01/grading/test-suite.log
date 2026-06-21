@@ -1,0 +1,9 @@
+command: <python> scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>
+returncode: 0
+
+stdout:
+run-codegen-benchmarks: evaluated 1 benchmark(s).
+
+
+stderr:
+

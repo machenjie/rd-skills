@@ -1,0 +1,41 @@
+{
+  "args": [
+    "exec",
+    "--json",
+    "--sandbox",
+    "workspace-write",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--disable",
+    "plugins",
+    "--output-last-message",
+    "<final.md>",
+    "-"
+  ],
+  "auth_policy": "borrow-current",
+  "codex_environment_policy": "auth_borrowed_clean",
+  "codex_home_mode": "isolated",
+  "command": [
+    "codex",
+    "exec",
+    "--json",
+    "--sandbox",
+    "workspace-write",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--disable",
+    "plugins",
+    "--output-last-message",
+    "<final.md>",
+    "-"
+  ],
+  "cwd": "<candidate>",
+  "env": {
+    "CODEX_API_KEY": "<unset>",
+    "CODEX_HOME": "<borrowed-current-auth>",
+    "HOME": "<temp>",
+    "OPENAI_API_KEY": "<unset>"
+  },
+  "program": "codex",
+  "schema_version": 2
+}

@@ -68,47 +68,88 @@ diagnostics, but they are not publishable benchmark evidence.
 
 ```bash
 python3 scripts/run-codex-live-benchmarks.py --list
-python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run
-python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run
+python3 scripts/run-codex-live-benchmarks.py --benchmark-mode clean-paired --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-borrow-auth-dry-run
+python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-borrow-auth-dry-run
 ```
 
-To run a real local smoke benchmark, enable the explicit live gate:
+To run the recommended strict clean A/B benchmark, enable the explicit live
+gate and borrow Codex authentication only. This uses temp `HOME`, hides
+user-level skills/hooks/config/rules, passes `--ignore-user-config` and
+`--ignore-rules`, runs `baseline_clean` against `skills_with_hooks_clean`, and
+is publishable only when baseline contamination is absent:
 
 ```bash
 CHANGEFORGE_ENABLE_CODEX_LIVE_BENCHMARK=1 \
 python3 scripts/run-codex-live-benchmarks.py \
   --benchmark security/ssrf-url-allowlist \
-  --variant baseline \
-  --variant changeforge \
+  --benchmark-mode clean-paired \
+  --auth-policy borrow-current \
   --runs 1 \
   --profile recommended \
   --sandbox workspace-write \
-  --out reports/codex-live-runs/local-$(date +%Y%m%d-%H%M%S)
+  --out reports/codex-live-runs/clean-auth-borrowed-$(date +%Y%m%d-%H%M%S) \
+  --publish-summary
+```
+
+For a fully isolated strict A/B run, provide an API key only to the subprocess
+environment and keep both `HOME` and `CODEX_HOME` temporary:
+
+```bash
+CHANGEFORGE_ENABLE_CODEX_LIVE_BENCHMARK=1 CODEX_API_KEY=... \
+python3 scripts/run-codex-live-benchmarks.py \
+  --benchmark security/ssrf-url-allowlist \
+  --benchmark-mode clean-paired \
+  --auth-policy isolated-api-key \
+  --runs 1 \
+  --profile recommended \
+  --sandbox workspace-write \
+  --out reports/codex-live-runs/clean-isolated-api-key-$(date +%Y%m%d-%H%M%S) \
+  --publish-summary
+```
+
+To run the hook ablation, use the same clean auth-borrowing policy with
+`baseline_clean`, `skills_only_clean`, and `skills_with_hooks_clean`:
+
+```bash
+CHANGEFORGE_ENABLE_CODEX_LIVE_BENCHMARK=1 \
+python3 scripts/run-codex-live-benchmarks.py \
+  --benchmark security/ssrf-url-allowlist \
+  --benchmark-mode ablation \
+  --auth-policy borrow-current \
+  --runs 1 \
+  --profile recommended \
+  --sandbox workspace-write \
+  --out reports/codex-live-runs/ablation-auth-borrowed-$(date +%Y%m%d-%H%M%S) \
+  --publish-summary
 ```
 
 The `danger-full-access` sandbox also requires
 `CHANGEFORGE_ALLOW_DANGER_FULL_ACCESS=1` or `--allow-danger-full-access`.
 
-The runner uses an isolated `HOME` and `CODEX_HOME` by default. If your usable
-Codex CLI auth and provider configuration live in your current local Codex home,
-reuse that state with an additional explicit gate:
+To verify the user's real installed Codex environment, run a separate
+current-home smoke check. Current-home smoke may inherit user-level skills,
+hooks, config, rules, auth, and trust state. It is not a baseline comparison and
+is published only to `reports/codex-current-home-smoke-summary.*`:
 
 ```bash
 CHANGEFORGE_ENABLE_CODEX_LIVE_BENCHMARK=1 \
 CHANGEFORGE_ALLOW_CURRENT_CODEX_HOME=1 \
 python3 scripts/run-codex-live-benchmarks.py \
   --benchmark security/ssrf-url-allowlist \
-  --variant baseline \
+  --benchmark-mode current-home-smoke \
+  --auth-policy current-home-full \
   --runs 1 \
-  --profile recommended \
   --sandbox workspace-write \
-  --codex-home-mode current \
-  --out reports/codex-live-runs/local-$(date +%Y%m%d-%H%M%S)
+  --out reports/codex-live-runs/current-home-smoke-$(date +%Y%m%d-%H%M%S) \
+  --publish-current-home-smoke \
 ```
 
-Current Codex home mode may inherit user-level hooks, config, auth, and trust
-state. Use a controlled Codex home before publishing comparative claims.
-Only publish real run summaries after validation:
+Only strict summaries with `auth-policy=borrow-current` or `isolated-api-key`
+can be published as comparative evidence. The published strict summary is
+blocked when user skills/config/rules are visible, `--ignore-user-config` or
+`--ignore-rules` is absent, baseline artifacts contain ChangeForge/user-level
+contamination, current-home-full results are present, or a variant has no
+assertion-backed eligible result:
 
 ```bash
 python3 scripts/generate-codex-live-summary.py --run-dir reports/codex-live-runs/<run-id> --publish
@@ -128,8 +169,8 @@ python3 scripts/validate-skill-efficacy-benchmarks.py
 python3 scripts/eval-executor-adapters.py
 python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks
 python3 scripts/run-codex-live-benchmarks.py --list
-python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run
-python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run
+python3 scripts/run-codex-live-benchmarks.py --benchmark-mode clean-paired --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-borrow-auth-dry-run
+python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-borrow-auth-dry-run
 python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/eval-professional-agent-samples.py --promoted-only --strict
@@ -172,6 +213,8 @@ Release snapshot artifacts are committed for reader context but are not guarante
 - `reports/runtime-telemetry-sample.json`
 - `reports/codex-live-benchmark-summary.md`
 - `reports/codex-live-benchmark-summary.json`
+- `reports/codex-current-home-smoke-summary.md`
+- `reports/codex-current-home-smoke-summary.json`
 
 When updating release snapshots, refresh executor adapter and activation precision evidence, rebuild all three profiles, refresh the scorecard, render the dashboard and README block, then regenerate the public benchmark summary. The public benchmark summary reuses scorecard dimensions for marketplace, activation precision, and executor adapter status so those artifacts do not disagree about generated evidence.
 

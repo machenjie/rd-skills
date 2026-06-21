@@ -8,12 +8,29 @@
     "generated_by",
     "status",
     "evidence_level",
+    "benchmark_mode",
+    "codex_home_policy",
+    "auth_policy",
+    "codex_environment_policy",
+    "strict_benchmark_eligible",
     "run_id",
     "case_count",
-    "variant_count",
-    "pass_rate",
-    "security_pass_rate",
-    "average_usage",
+    "assertion_case_count",
+    "telemetry_only_case_count",
+    "result_count",
+    "benchmark_eligible_result_count",
+    "not_collected_grading_count",
+    "telemetry_only_result_count",
+    "contaminated_result_count",
+    "current_home_full_result_count",
+    "user_skills_visible",
+    "user_config_loaded",
+    "user_rules_loaded",
+    "ignore_user_config",
+    "ignore_rules",
+    "plugins_disabled",
+    "variants",
+    "delta",
     "limitations"
   ],
   "properties": {
@@ -27,7 +44,22 @@
       "enum": ["not_collected", "skipped_not_opted_in", "partial", "collected", "failed"]
     },
     "evidence_level": {
-      "const": "local_codex_cli_live_benchmark"
+      "enum": ["local_codex_cli_live_benchmark", "current_home_integration_smoke"]
+    },
+    "benchmark_mode": {
+      "enum": ["clean-paired", "ablation", "current-home-smoke"]
+    },
+    "codex_home_policy": {
+      "enum": ["isolated_only", "auth_borrowed_clean", "current_home_smoke_only", "mixed_or_unknown"]
+    },
+    "auth_policy": {
+      "enum": ["isolated-api-key", "borrow-current", "current-home-full", "mixed"]
+    },
+    "codex_environment_policy": {
+      "enum": ["isolated_api_key", "auth_borrowed_clean", "current_home_full", "mixed"]
+    },
+    "strict_benchmark_eligible": {
+      "type": "boolean"
     },
     "run_id": {
       "type": "string"
@@ -35,16 +67,52 @@
     "case_count": {
       "type": "integer"
     },
-    "variant_count": {
+    "assertion_case_count": {
       "type": "integer"
     },
-    "pass_rate": {
-      "type": ["number", "string"]
+    "telemetry_only_case_count": {
+      "type": "integer"
     },
-    "security_pass_rate": {
-      "type": ["number", "string"]
+    "result_count": {
+      "type": "integer"
     },
-    "average_usage": {
+    "benchmark_eligible_result_count": {
+      "type": "integer"
+    },
+    "not_collected_grading_count": {
+      "type": "integer"
+    },
+    "telemetry_only_result_count": {
+      "type": "integer"
+    },
+    "contaminated_result_count": {
+      "type": "integer"
+    },
+    "current_home_full_result_count": {
+      "type": "integer"
+    },
+    "user_skills_visible": {
+      "type": "boolean"
+    },
+    "user_config_loaded": {
+      "type": "boolean"
+    },
+    "user_rules_loaded": {
+      "type": "boolean"
+    },
+    "ignore_user_config": {
+      "type": "boolean"
+    },
+    "ignore_rules": {
+      "type": "boolean"
+    },
+    "plugins_disabled": {
+      "type": "boolean"
+    },
+    "variants": {
+      "type": "object"
+    },
+    "delta": {
       "type": "object"
     },
     "limitations": {

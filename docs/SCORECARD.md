@@ -46,7 +46,7 @@ python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out
 | Executor adapter live pass-rate | Measured real-task executor adapter success rate, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
 | Executor adapter token overhead | Measured additional token cost, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
 | Executor adapter turn overhead | Measured additional turn cost, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
-| Codex CLI live benchmark | Published `reports/codex-live-benchmark-summary.json` from an explicit opt-in local Codex CLI run. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` | Keep `not_collected` until a real validated live run is published; dry-run and skipped reports cannot satisfy this dimension. |
+| Codex CLI live benchmark | Published `reports/codex-live-benchmark-summary.json` from an explicit opt-in strict Codex CLI run using `auth-policy=borrow-current` or `isolated-api-key`. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` | Keep `not_collected` until a real validated strict run is published; dry-run, skipped, telemetry-only, contaminated-baseline, user-skill/config/rule-visible, and current-home smoke reports cannot satisfy this dimension. |
 | Open-source readiness | `config/open-source-release.yaml`, [LICENSE_DECISION.md](LICENSE_DECISION.md), [OPEN_SOURCE_READINESS.md](OPEN_SOURCE_READINESS.md), `pyproject.toml`, `CONTRIBUTING.md`, `SECURITY.md`, and root `LICENSE`. | `python3 scripts/validate-open-source-readiness.py` | Owner chooses license, adds exact license text, updates package metadata, confirms contribution licensing, and confirms private vulnerability reporting or private security contact before open-source publication. |
 | Example coverage | `examples/` scenario structure. | `python3 scripts/validate-examples.py` | Add prompt, route, and evidence files for each scenario. |
 | Productization assets | Productization docs, schema, and generation/validation scripts. | `python3 scripts/validate-productization-assets.py` | Restore required productization assets. |
@@ -86,9 +86,14 @@ fixture-derived. It does not make `live runtime telemetry sample`,
 remain `not_collected` until separately measured or collected.
 
 Codex CLI live benchmark evidence is separate from executor adapter telemetry.
-The scorecard and public summary only read `reports/codex-live-benchmark-summary.json`;
-they never run Codex. A summary must come from a real opt-in run and pass
-`validate-codex-live-benchmark-reports.py --summary` before it can change the
+The scorecard and public summary only read the strict
+`reports/codex-live-benchmark-summary.json`; they never run Codex and they do
+not read `reports/codex-current-home-smoke-summary.json`. A strict summary may
+borrow Codex authentication, but it must use temp `HOME`, hide user
+skills/hooks/config/rules, pass `--ignore-user-config` and `--ignore-rules`,
+use `clean-paired` or `ablation` mode, contain no current-home-full results,
+contain no contaminated baseline artifacts, and include assertion-backed
+eligible results for every comparable variant before it can change the
 dimension from `not_collected`.
 
 Open-source readiness is conservative: a root `LICENSE` alone is not enough. Proprietary `pyproject.toml` license metadata fails the dimension once a license file exists. `config/open-source-release.yaml:selected_license` must be non-null, contribution licensing must be owner-confirmed, and GitHub private vulnerability reporting or a private security contact must be owner-confirmed before the dimension can be `pass`.

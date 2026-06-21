@@ -18,11 +18,44 @@ from validation_utils import ValidationProblem, load_yaml_file
 ROOT = Path(__file__).resolve().parents[1]
 CASES_PATH = ROOT / "evals" / "codex-live" / "cases.yaml"
 STATUSES = ("not_collected", "skipped_not_opted_in", "partial", "collected", "failed")
+ARTIFACT_STATUSES = ("collected", "partial", "failed")
+GRADING_STATUSES = ("passed", "failed", "not_collected", "telemetry_only", "contaminated")
 PUBLIC_STATUSES = ("pass", "partial", "fail", "unknown", "not_collected")
-VARIANTS = ("baseline", "changeforge")
+VARIANTS = ("baseline_clean", "skills_only_clean", "skills_with_hooks_clean", "current_home_smoke")
+STRICT_BENCHMARK_MODES = ("clean-paired", "ablation")
+BENCHMARK_MODES = (*STRICT_BENCHMARK_MODES, "current-home-smoke")
+MODE_DEFAULT_VARIANTS = {
+    "clean-paired": ("baseline_clean", "skills_with_hooks_clean"),
+    "ablation": ("baseline_clean", "skills_only_clean", "skills_with_hooks_clean"),
+    "current-home-smoke": ("current_home_smoke",),
+}
+GRADING_MODES = ("assertion", "telemetry_only")
 PROFILES = ("recommended", "full", "dev")
 SANDBOXES = ("read-only", "workspace-write", "danger-full-access")
+AUTH_POLICIES = ("isolated-api-key", "borrow-current", "current-home-full")
+STRICT_AUTH_POLICIES = ("isolated-api-key", "borrow-current")
+CODEX_ENVIRONMENT_POLICIES = ("isolated_api_key", "auth_borrowed_clean", "current_home_full")
+STRICT_CODEX_ENVIRONMENT_POLICIES = ("isolated_api_key", "auth_borrowed_clean")
 LIVE_EVIDENCE_LEVEL = "local_codex_cli_live_benchmark"
+CURRENT_HOME_SMOKE_EVIDENCE_LEVEL = "current_home_integration_smoke"
+BASELINE_CONTAMINATION_SIGNALS = (
+    "ChangeForge",
+    "rd-skills",
+    "changeforge_route",
+    "changeforge_stage_route",
+    "changeforge_implementation_preflight",
+    "selected_skills",
+    "selected_capabilities",
+    "required_quality_gates",
+    "implementation_preflight",
+    ".agent",
+    ".agents",
+    ".changeforge",
+    "hook-runtime",
+    "professional injection",
+    "professional-injection",
+    "change-forge-router",
+)
 FORBIDDEN_SECRET_PATTERNS = (
     re.compile(r"sk-(?=[A-Za-z0-9_-]{10,})(?=[A-Za-z0-9_-]*[A-Z0-9])[A-Za-z0-9_-]+"),
     re.compile(r"CODEX_API_KEY\s*="),
@@ -33,6 +66,16 @@ FORBIDDEN_SECRET_PATTERNS = (
         r"(?=[A-Za-z0-9_./+=-]{20,})(?=[A-Za-z0-9_./+=-]*[A-Z0-9])[A-Za-z0-9_./+=-]+"
     ),
 )
+FORBIDDEN_ABSOLUTE_USER_PATH_PATTERNS = (
+    re.compile(r"/Users/[^\s\"'<>]+"),
+    re.compile(r"/home/[^\s\"'<>]+"),
+    re.compile(r"/private/var/[^\s\"'<>]+"),
+    re.compile(r"/var/folders/[^\s\"'<>]+"),
+    re.compile(r"/tmp/[^\s\"'<>]+"),
+    re.compile(r"[A-Za-z]:\\Users\\[^\s\"'<>]+"),
+)
+RAW_ARTIFACT_FILENAMES = frozenset({"events.jsonl"})
+CODEGEN_HARNESS_ENV_PATTERN = re.compile(r"(?i)\bCHANGEFORGE_CODEGEN_(ROOT|CASE_DIR|SMOKE)\b")
 
 
 @dataclass(frozen=True)
@@ -47,6 +90,8 @@ class CodexLiveCase:
     task_prompt: Path
     starter_repo: Path
     grading_benchmark: str
+    grading_mode: str
+    publishable_for_strict: bool
 
 
 def utc_stamp() -> str:
@@ -98,6 +143,8 @@ def load_case_registry(path: Path = CASES_PATH, root: Path = ROOT) -> list[Codex
                 task_prompt=(root / str(raw["task_prompt"])).resolve(),
                 starter_repo=(root / str(raw["starter_repo"])).resolve(),
                 grading_benchmark=str(raw["grading_benchmark"]),
+                grading_mode=str(raw["grading_mode"]),
+                publishable_for_strict=bool(raw["publishable_for_strict"]),
             )
         )
     return cases
@@ -131,6 +178,8 @@ def validate_case_registry(data: Any, root: Path = ROOT) -> list[str]:
             "task_prompt",
             "starter_repo",
             "grading_benchmark",
+            "grading_mode",
+            "publishable_for_strict",
         }
         missing = sorted(required - set(raw))
         if missing:
@@ -150,6 +199,17 @@ def validate_case_registry(data: Any, root: Path = ROOT) -> list[str]:
             errors.append(f"{prefix}: {category}/{codegen_case} is not in codegen benchmark manifest")
         if str(raw["grading_benchmark"]) != expected_id:
             errors.append(f"{prefix}: grading_benchmark must equal {expected_id}")
+        grading_mode = str(raw.get("grading_mode"))
+        if grading_mode not in GRADING_MODES:
+            errors.append(f"{prefix}: grading_mode must be one of {', '.join(GRADING_MODES)}")
+        has_real_assertions = bool(case_assertion_files(category, codegen_case, root))
+        if grading_mode == "assertion" and not has_real_assertions:
+            errors.append(f"{prefix}: grading_mode assertion requires real pytest assertion files")
+        publishable = raw.get("publishable_for_strict")
+        if not isinstance(publishable, bool):
+            errors.append(f"{prefix}: publishable_for_strict must be boolean")
+        elif publishable and grading_mode != "assertion":
+            errors.append(f"{prefix}: publishable_for_strict requires grading_mode assertion")
         variants = raw.get("variants")
         if not isinstance(variants, list) or not variants:
             errors.append(f"{prefix}: variants must be a non-empty list")
@@ -174,13 +234,42 @@ def _is_external_path(value: str) -> bool:
     return path.is_absolute() or "://" in value or ".." in path.parts
 
 
-def scan_forbidden_secrets(path: Path) -> list[str]:
+def case_assertion_files(category: str, case_name: str, root: Path = ROOT) -> tuple[Path, ...]:
+    """Return real pytest assertion files for a codegen benchmark case."""
+    case_root = root / "evals" / "codegen" / category / case_name
+    test_roots = (
+        case_root / "test-suite" / "tests",
+        case_root / "security-checks" / "security_tests",
+    )
+    assertion_files: list[Path] = []
+    for test_root in test_roots:
+        if not test_root.exists():
+            continue
+        for test_file in sorted(test_root.glob("test_*.py")):
+            try:
+                text = test_file.read_text(encoding="utf-8", errors="ignore")
+            except OSError:
+                continue
+            if "assert " in text or "self.assert" in text or "pytest.raises" in text or "raise AssertionError" in text:
+                assertion_files.append(test_file)
+    return tuple(assertion_files)
+
+
+def _scan_text_artifacts(path: Path, *, include_raw: bool = False) -> list[Path]:
+    if not path.exists():
+        return []
+    paths = [path] if path.is_file() else [item for item in path.rglob("*") if item.is_file()]
+    if include_raw:
+        return paths
+    return [item for item in paths if item.name not in RAW_ARTIFACT_FILENAMES]
+
+
+def scan_forbidden_secrets(path: Path, *, include_raw: bool = False) -> list[str]:
     """Scan text artifacts for forbidden secret patterns."""
     findings: list[str] = []
     if not path.exists():
         return findings
-    paths = [path] if path.is_file() else [item for item in path.rglob("*") if item.is_file()]
-    for item in paths:
+    for item in _scan_text_artifacts(path, include_raw=include_raw):
         try:
             text = item.read_text(encoding="utf-8", errors="ignore")
         except OSError:
@@ -190,6 +279,62 @@ def scan_forbidden_secrets(path: Path) -> list[str]:
                 findings.append(f"{relpath(ROOT, item)} matches forbidden secret pattern {pattern.pattern}")
                 break
     return findings
+
+
+def scan_forbidden_absolute_user_paths(path: Path, *, include_raw: bool = False) -> list[str]:
+    """Scan report artifacts for local user absolute path leakage."""
+    findings: list[str] = []
+    for item in _scan_text_artifacts(path, include_raw=include_raw):
+        try:
+            text = item.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        for pattern in FORBIDDEN_ABSOLUTE_USER_PATH_PATTERNS:
+            if pattern.search(text):
+                findings.append(f"{relpath(ROOT, item)} exposes local absolute path pattern {pattern.pattern}")
+                break
+    return findings
+
+
+def redact_report_text(text: str) -> str:
+    """Redact local absolute user paths before persisting report text artifacts."""
+    redacted = text
+    for pattern in FORBIDDEN_ABSOLUTE_USER_PATH_PATTERNS:
+        redacted = pattern.sub("<local-path>", redacted)
+    return redacted
+
+
+def detect_baseline_contamination(run_dir: Path) -> dict[str, Any]:
+    """Detect ChangeForge/user-level state leakage in a baseline artifact directory."""
+    candidate_files = (
+        "final.md",
+        "diff.patch",
+        "git-status.txt",
+        "codex-command.redacted.json",
+        "prompt.md",
+        "events.metrics.json",
+    )
+    signals: set[str] = set()
+    files: set[str] = set()
+    for filename in candidate_files:
+        path = run_dir / filename
+        if not path.exists() or not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        text = CODEGEN_HARNESS_ENV_PATTERN.sub("", text)
+        lowered = text.lower()
+        for signal in BASELINE_CONTAMINATION_SIGNALS:
+            if signal.lower() in lowered:
+                signals.add(signal)
+                files.add(filename)
+    return {
+        "contaminated": bool(signals),
+        "signals": sorted(signals),
+        "files": sorted(files),
+    }
 
 
 def validate_status(status: Any) -> str:
@@ -221,6 +366,9 @@ def redact_codex_command(command: list[str]) -> list[str]:
             redacted.extend([value, "<final.md>"])
             skip_next = True
             continue
+        if value.startswith("/Users/") or value.startswith("/home/"):
+            redacted.append("<local-path>")
+            continue
         redacted.append(value)
     return redacted
 
@@ -233,6 +381,7 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "generated_by",
             "run_id",
             "status",
+            "benchmark_mode",
             "dry_run",
             "live_execution_allowed",
             "live_execution_effective",
@@ -240,6 +389,8 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "variants",
             "runs_per_variant",
             "sandbox",
+            "auth_policy",
+            "codex_environment_policy",
             "limitations",
         ),
         "case-result": (
@@ -249,6 +400,18 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "variant",
             "run_index",
             "status",
+            "artifact_status",
+            "grading_status",
+            "benchmark_mode",
+            "codex_home_mode",
+            "auth_policy",
+            "codex_environment_policy",
+            "grading_mode",
+            "publishable_for_strict",
+            "benchmark_eligible",
+            "benchmark_passed",
+            "contamination",
+            "environment",
             "paths",
             "grading",
             "metrics",
@@ -259,12 +422,29 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "generated_by",
             "status",
             "evidence_level",
+            "benchmark_mode",
+            "codex_home_policy",
+            "auth_policy",
+            "codex_environment_policy",
+            "strict_benchmark_eligible",
             "run_id",
             "case_count",
-            "variant_count",
-            "pass_rate",
-            "security_pass_rate",
-            "average_usage",
+            "assertion_case_count",
+            "telemetry_only_case_count",
+            "result_count",
+            "benchmark_eligible_result_count",
+            "not_collected_grading_count",
+            "telemetry_only_result_count",
+            "contaminated_result_count",
+            "current_home_full_result_count",
+            "user_skills_visible",
+            "user_config_loaded",
+            "user_rules_loaded",
+            "ignore_user_config",
+            "ignore_rules",
+            "plugins_disabled",
+            "variants",
+            "delta",
             "limitations",
         ),
     }
@@ -283,11 +463,23 @@ def validate_required_fields(payload: Any, schema_name: str) -> list[str]:
     status = payload.get("status")
     if status is not None and status not in STATUSES:
         errors.append(f"{schema_name}: invalid status {status}")
+    if schema_name == "case-result":
+        artifact_status = payload.get("artifact_status")
+        if artifact_status is not None and artifact_status not in ARTIFACT_STATUSES:
+            errors.append(f"{schema_name}: invalid artifact_status {artifact_status}")
+        grading_status = payload.get("grading_status")
+        if grading_status is not None and grading_status not in GRADING_STATUSES:
+            errors.append(f"{schema_name}: invalid grading_status {grading_status}")
     limitations = payload.get("limitations")
     if limitations is not None and (not isinstance(limitations, list) or not limitations):
         errors.append(f"{schema_name}: limitations must be a non-empty list")
-    if schema_name == "summary" and payload.get("evidence_level") != LIVE_EVIDENCE_LEVEL:
-        errors.append(f"{schema_name}: evidence_level must be {LIVE_EVIDENCE_LEVEL}")
+    if schema_name == "summary" and payload.get("evidence_level") not in (
+        LIVE_EVIDENCE_LEVEL,
+        CURRENT_HOME_SMOKE_EVIDENCE_LEVEL,
+    ):
+        errors.append(
+            f"{schema_name}: evidence_level must be {LIVE_EVIDENCE_LEVEL} or {CURRENT_HOME_SMOKE_EVIDENCE_LEVEL}"
+        )
     return errors
 
 

@@ -11,7 +11,14 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any
 
-from codex_live_benchmark_lib import LIVE_EVIDENCE_LEVEL, public_status_from_live
+from codex_live_benchmark_lib import (
+    LIVE_EVIDENCE_LEVEL,
+    MODE_DEFAULT_VARIANTS,
+    STRICT_AUTH_POLICIES,
+    STRICT_BENCHMARK_MODES,
+    STRICT_CODEX_ENVIRONMENT_POLICIES,
+    public_status_from_live,
+)
 from validation_utils import EXPECTED_PROFILE_TOP_LEVEL_COUNTS
 
 
@@ -46,8 +53,8 @@ REFRESH_COMMANDS = [
     "python3 scripts/eval-executor-adapters.py",
     "python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks",
     "python3 scripts/run-codex-live-benchmarks.py --list",
-    "python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run",
-    "python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run",
+    "python3 scripts/run-codex-live-benchmarks.py --benchmark-mode clean-paired --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-borrow-auth-dry-run",
+    "python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-borrow-auth-dry-run",
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
     "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",
@@ -293,15 +300,30 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
             LIVE_EVIDENCE_LEVEL,
         )
     status = public_status_from_live(str(summary.get("status", "not_collected")))
-    if summary.get("evidence_level") != LIVE_EVIDENCE_LEVEL:
+    strict_errors = _codex_live_strict_summary_errors(summary)
+    if strict_errors:
         status = "fail"
     detail = {
         "evidence_level": summary.get("evidence_level"),
+        "benchmark_mode": summary.get("benchmark_mode"),
+        "auth_policy": summary.get("auth_policy"),
+        "codex_environment_policy": summary.get("codex_environment_policy"),
+        "strict_benchmark_eligible": summary.get("strict_benchmark_eligible"),
         "run_id": summary.get("run_id"),
         "case_count": summary.get("case_count"),
-        "variant_count": summary.get("variant_count"),
-        "pass_rate": summary.get("pass_rate"),
-        "security_pass_rate": summary.get("security_pass_rate"),
+        "result_count": summary.get("result_count"),
+        "benchmark_eligible_result_count": summary.get("benchmark_eligible_result_count"),
+        "variants": {
+            variant: {
+                "pass_rate": payload.get("pass_rate"),
+                "security_pass_rate": payload.get("security_pass_rate"),
+                "benchmark_eligible_result_count": payload.get("benchmark_eligible_result_count"),
+            }
+            for variant, payload in (summary.get("variants") or {}).items()
+            if isinstance(payload, dict)
+        },
+        "delta": summary.get("delta"),
+        "strict_errors": strict_errors,
         "limitations": summary.get("limitations"),
     }
     return EvidenceItem(
@@ -312,6 +334,43 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
         "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json",
         LIVE_EVIDENCE_LEVEL,
     )
+
+
+def _codex_live_strict_summary_errors(summary: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    benchmark_mode = summary.get("benchmark_mode")
+    if summary.get("evidence_level") != LIVE_EVIDENCE_LEVEL:
+        errors.append(f"evidence_level must be {LIVE_EVIDENCE_LEVEL}")
+    if benchmark_mode not in STRICT_BENCHMARK_MODES:
+        errors.append("benchmark_mode must be clean-paired or ablation")
+    if summary.get("auth_policy") not in STRICT_AUTH_POLICIES:
+        errors.append("auth_policy must be borrow-current or isolated-api-key")
+    if summary.get("codex_environment_policy") not in STRICT_CODEX_ENVIRONMENT_POLICIES:
+        errors.append("codex_environment_policy must be auth_borrowed_clean or isolated_api_key")
+    if summary.get("strict_benchmark_eligible") is not True:
+        errors.append("strict_benchmark_eligible must be true")
+    if int(summary.get("current_home_result_count", 0) or 0) != 0 or int(
+        summary.get("current_home_full_result_count", 0) or 0
+    ) != 0:
+        errors.append("current-home-full results are not public benchmark evidence")
+    if summary.get("user_skills_visible") is not False:
+        errors.append("user skills must not be visible")
+    if summary.get("user_config_loaded") is not False:
+        errors.append("user config must not be loaded")
+    if summary.get("user_rules_loaded") is not False:
+        errors.append("user rules must not be loaded")
+    if summary.get("ignore_user_config") is not True or summary.get("ignore_rules") is not True:
+        errors.append("--ignore-user-config and --ignore-rules are required")
+    if int(summary.get("contaminated_result_count", 0) or 0) != 0:
+        errors.append("contaminated results are not public benchmark evidence")
+    if int(summary.get("benchmark_eligible_result_count", 0) or 0) <= 0:
+        errors.append("assertion-backed eligible results are required")
+    variants = summary.get("variants") or {}
+    for variant in MODE_DEFAULT_VARIANTS.get(str(benchmark_mode), ()):
+        payload = variants.get(variant)
+        if not isinstance(payload, dict) or int(payload.get("benchmark_eligible_result_count", 0) or 0) <= 0:
+            errors.append(f"eligible assertion results are required for {variant}")
+    return errors
 
 
 def _additional_status_items(root: Path, scorecard_path: Path | None = None) -> list[EvidenceItem]:
@@ -406,7 +465,7 @@ def generate_summary(
         "evidence_levels": evidence_levels,
         "known_unknowns": known_unknowns,
         "refresh_commands": REFRESH_COMMANDS,
-        "claim_boundary": "Local deterministic evidence only; skill efficacy, activation precision, and executor adapter fixtures are structural/local evidence, not live runtime telemetry, live pass-rate, empirical before/after performance, external popularity, adoption, marketplace availability, or market claim evidence.",
+        "claim_boundary": "Local deterministic evidence only; strict Codex live A/B claims may borrow Codex authentication, but must not borrow user skills, hooks, config, or rules. Current-home smoke evidence is not a baseline comparison. Skill efficacy, activation precision, and executor adapter fixtures are structural/local evidence, not live runtime telemetry, empirical before/after performance, external popularity, adoption, marketplace availability, or market claim evidence.",
     }
 
 

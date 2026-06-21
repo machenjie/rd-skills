@@ -1,0 +1,179 @@
+diff --git a/app.py b/app.py
+index 4c0136b..4b98acb 100644
+--- a/app.py
++++ b/app.py
+@@ -6,10 +6,25 @@ The public contract is intentionally small: generated solutions should keep
+ 
+ from __future__ import annotations
+ 
++import ipaddress
+ from dataclasses import dataclass, field
+ from html.parser import HTMLParser
+ from typing import Callable, Iterable
+-from urllib.parse import urljoin, urlparse
++from urllib.parse import urljoin, urlparse, urlunparse
++
++
++ALLOWED_PREVIEW_HOSTS = frozenset({"preview.example.com"})
++DEFAULT_HTTPS_PORT = 443
++FETCH_TIMEOUT_SECONDS = 2.0
++FETCH_MAX_BYTES = 65536
++METADATA_SERVICE_ADDRESSES = frozenset(
++    {
++        ipaddress.ip_address("169.254.169.254"),
++        ipaddress.ip_address("169.254.170.2"),
++        ipaddress.ip_address("100.100.100.200"),
++    }
++)
++REDIRECT_STATUS_CODES = {301, 302, 303, 307, 308}
+ 
+ 
+ @dataclass
+@@ -77,14 +92,74 @@ def _deny(reason: str, url: str, logger: object | None) -> PreviewResult:
+     return PreviewResult(
+         ok=False,
+         status_code=400,
+-        error=f"denied preview URL {url}",
++        error="denied preview URL",
+         reason=reason,
+     )
+ 
+ 
+-def _host_is_allowed(host: str | None) -> bool:
+-    # Known benchmark gap: prefix matching accepts attacker-controlled hosts.
+-    return bool(host and host.startswith("preview.example.com"))
++def _canonical_host(host: str | None) -> str | None:
++    if host is None:
++        return None
++    host = host.rstrip(".").casefold()
++    if not host:
++        return None
++    try:
++        return host.encode("idna").decode("ascii")
++    except UnicodeError:
++        return None
++
++
++def _safe_ip_address(address: str) -> bool:
++    try:
++        parsed = ipaddress.ip_address(address)
++    except ValueError:
++        return False
++    return parsed.is_global and parsed not in METADATA_SERVICE_ADDRESSES
++
++
++def _normalized_url(url: str, host: str, port: int) -> str:
++    parsed = urlparse(url)
++    netloc = host if port == DEFAULT_HTTPS_PORT else f"{host}:{port}"
++    return urlunparse(
++        (
++            "https",
++            netloc,
++            parsed.path or "/",
++            parsed.params,
++            parsed.query,
++            "",
++        )
++    )
++
++
++def _validate_fetch_url(
++    url: str,
++    *,
++    resolver: Callable[..., Iterable[str]],
++    allowed_hosts: frozenset[str] = ALLOWED_PREVIEW_HOSTS,
++) -> tuple[str | None, str]:
++    try:
++        parsed = urlparse(url)
++        port = parsed.port or DEFAULT_HTTPS_PORT
++    except ValueError:
++        return None, "parse_error"
++
++    host = _canonical_host(parsed.hostname)
++    if parsed.scheme.casefold() != "https" or host not in allowed_hosts:
++        return None, "host_not_allowed"
++    if port != DEFAULT_HTTPS_PORT:
++        return None, "port_not_allowed"
++
++    try:
++        addresses = tuple(resolver(host))
++    except Exception:
++        return None, "dns_resolution_failed"
++    if not addresses:
++        return None, "dns_resolution_failed"
++    if not all(_safe_ip_address(address) for address in addresses):
++        return None, "network_not_allowed"
++
++    return _normalized_url(url, host, port), ""
+ 
+ 
+ def fetch_preview(
+@@ -94,18 +169,38 @@ def fetch_preview(
+     resolver: Callable[..., Iterable[str]] = default_resolver,
+     logger: object | None = None,
+     max_redirects: int = 3,
++    allowed_hosts: Iterable[str] = ALLOWED_PREVIEW_HOSTS,
+ ) -> PreviewResult:
+-    parsed = urlparse(url)
+-    if parsed.scheme != "https" or not _host_is_allowed(parsed.hostname):
+-        return _deny("host_not_allowed", url, logger)
++    canonical_allowed_hosts = frozenset(
++        host
++        for host in (_canonical_host(allowed_host) for allowed_host in allowed_hosts)
++        if host is not None
++    )
+ 
+     current_url = url
+     for _attempt in range(max_redirects + 1):
+-        response = http_get(current_url, timeout_seconds=2.0, max_bytes=65536)
++        safe_url, reason = _validate_fetch_url(
++            current_url,
++            resolver=resolver,
++            allowed_hosts=canonical_allowed_hosts,
++        )
++        if safe_url is None:
++            return _deny(reason, current_url, logger)
++
++        try:
++            response = http_get(
++                safe_url,
++                timeout_seconds=FETCH_TIMEOUT_SECONDS,
++                max_bytes=FETCH_MAX_BYTES,
++            )
++        except TimeoutError:
++            return _deny("fetch_timeout", safe_url, logger)
++        except Exception:
++            return _deny("fetch_failed", safe_url, logger)
++
+         location = response.headers.get("Location") or response.headers.get("location")
+-        if response.status_code in {301, 302, 303, 307, 308} and location:
+-            # Known benchmark gap: redirects are followed without revalidation.
+-            current_url = urljoin(current_url, location)
++        if response.status_code in REDIRECT_STATUS_CODES and location:
++            current_url = urljoin(safe_url, location)
+             continue
+         return PreviewResult(
+             ok=True,
+diff --git a/setup.sh b/setup.sh
+index cdd6164..f312a1d 100644
+--- a/setup.sh
++++ b/setup.sh
+@@ -1,5 +1,17 @@
+ #!/usr/bin/env bash
+ set -euo pipefail
+ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+-ROOT_DIR="${CHANGEFORGE_CODEGEN_ROOT:-$(cd "$SCRIPT_DIR/../../../../.." && pwd)}"
++if [[ -n "${CHANGEFORGE_CODEGEN_ROOT:-}" ]]; then
++  ROOT_DIR="$CHANGEFORGE_CODEGEN_ROOT"
++else
++  ROOT_DIR="$SCRIPT_DIR"
++  while [[ "$ROOT_DIR" != "/" && ! -f "$ROOT_DIR/scripts/codegen_benchmark_harness.py" ]]; do
++    ROOT_DIR="$(dirname "$ROOT_DIR")"
++  done
++fi
++
++if [[ ! -f "$ROOT_DIR/scripts/codegen_benchmark_harness.py" ]]; then
++  echo "setup: could not locate scripts/codegen_benchmark_harness.py" >&2
++  exit 2
++fi
+ python3 "$ROOT_DIR/scripts/codegen_benchmark_harness.py" setup "$SCRIPT_DIR"

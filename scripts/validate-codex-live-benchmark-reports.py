@@ -9,11 +9,17 @@ from pathlib import Path
 from typing import Any
 
 from codex_live_benchmark_lib import (
+    CURRENT_HOME_SMOKE_EVIDENCE_LEVEL,
     LIVE_EVIDENCE_LEVEL,
+    MODE_DEFAULT_VARIANTS,
     ROOT,
+    STRICT_AUTH_POLICIES,
+    STRICT_BENCHMARK_MODES,
+    STRICT_CODEX_ENVIRONMENT_POLICIES,
     load_case_registry,
     print_errors,
     read_json,
+    scan_forbidden_absolute_user_paths,
     scan_forbidden_secrets,
     validate_required_fields,
 )
@@ -44,25 +50,51 @@ def validate_run_dir(run_dir: Path) -> list[str]:
         return [f"{manifest_path} missing or invalid"]
     errors.extend(validate_required_fields(manifest, "run-manifest"))
     errors.extend(scan_forbidden_secrets(manifest_path))
+    errors.extend(scan_forbidden_absolute_user_paths(manifest_path))
     cases_dir = run_dir / "cases"
     if cases_dir.exists():
         errors.extend(scan_forbidden_secrets(cases_dir))
+        errors.extend(scan_forbidden_absolute_user_paths(cases_dir))
 
     result_paths = sorted(run_dir.glob("cases/*/*/run-*/result.json"))
     live_effective = bool(manifest.get("live_execution_effective"))
     if live_effective and not result_paths:
         errors.append("live run manifest has no result.json files")
+    if live_effective:
+        for summary_file in ("summary.json", "summary.md"):
+            if not (run_dir / summary_file).exists():
+                errors.append(f"live run manifest is missing {summary_file}")
+    if (run_dir / "summary.json").exists():
+        errors.extend(f"summary.json: {error}" for error in validate_summary(run_dir / "summary.json", publishable=False))
     for result_path in result_paths:
-        result = read_json(result_path)
+        try:
+            result = read_json(result_path)
+        except Exception as exc:
+            errors.append(f"{result_path}: invalid JSON: {exc}")
+            continue
         if not isinstance(result, dict):
             errors.append(f"{result_path}: invalid JSON")
             continue
         errors.extend(f"{result_path}: {error}" for error in validate_required_fields(result, "case-result"))
-        if result.get("status") in {"collected", "failed", "partial"}:
+        if int(result.get("schema_version", 0) or 0) < 2:
+            errors.append(f"{result_path}: schema_version must be at least 2")
+        if result.get("artifact_status", result.get("status")) in {"collected", "failed", "partial"}:
             case_dir = result_path.parent
             for rel_file in REAL_RESULT_REQUIRED_FILES:
                 if not (case_dir / rel_file).exists():
                     errors.append(f"{case_dir}: missing required result artifact {rel_file}")
+            command_payload = read_json(case_dir / "codex-command.redacted.json")
+            if not isinstance(command_payload, dict):
+                errors.append(f"{case_dir}: codex-command.redacted.json must be JSON object")
+            else:
+                errors.extend(f"{case_dir}: {error}" for error in _command_metadata_errors(command_payload))
+        if result.get("grading_mode") == "telemetry_only" and result.get("benchmark_eligible") is True:
+            errors.append(f"{result_path}: telemetry-only result cannot be benchmark_eligible")
+        if result.get("benchmark_mode") == "current-home-smoke" and result.get("benchmark_eligible") is True:
+            errors.append(f"{result_path}: current-home smoke result cannot be benchmark_eligible")
+        if result.get("auth_policy") == "current-home-full" and result.get("benchmark_eligible") is True:
+            errors.append(f"{result_path}: current-home-full result cannot be benchmark_eligible")
+        errors.extend(f"{result_path}: {error}" for error in _result_environment_errors(result))
     return errors
 
 
@@ -72,13 +104,136 @@ def validate_summary(summary_path: Path, *, publishable: bool = True) -> list[st
     if not isinstance(summary, dict):
         return [f"{summary_path} missing or invalid"]
     errors = validate_required_fields(summary, "summary")
+    if int(summary.get("schema_version", 0) or 0) < 2:
+        errors.append("summary schema_version must be at least 2")
     errors.extend(scan_forbidden_secrets(summary_path))
-    if summary.get("evidence_level") != LIVE_EVIDENCE_LEVEL:
-        errors.append(f"summary evidence_level must be {LIVE_EVIDENCE_LEVEL}")
-    if publishable and summary.get("status") in {"not_collected", "skipped_not_opted_in"}:
-        errors.append("dry-run, skipped, or not-collected summaries cannot be published")
+    errors.extend(scan_forbidden_absolute_user_paths(summary_path))
+    if summary.get("evidence_level") not in {LIVE_EVIDENCE_LEVEL, CURRENT_HOME_SMOKE_EVIDENCE_LEVEL}:
+        errors.append(f"summary evidence_level must be {LIVE_EVIDENCE_LEVEL} or {CURRENT_HOME_SMOKE_EVIDENCE_LEVEL}")
+    if publishable:
+        errors.extend(_strict_summary_errors(summary))
     if "limitations" not in summary or not summary.get("limitations"):
         errors.append("summary limitations are required")
+    errors.extend(_variant_rate_errors(summary))
+    return errors
+
+
+def _strict_summary_errors(summary: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    benchmark_mode = summary.get("benchmark_mode")
+    if summary.get("status") in {"not_collected", "skipped_not_opted_in"}:
+        errors.append("dry-run, skipped, or not-collected summaries cannot be published")
+    if benchmark_mode not in STRICT_BENCHMARK_MODES:
+        errors.append("strict summary must use clean-paired or ablation benchmark_mode")
+    if summary.get("evidence_level") != LIVE_EVIDENCE_LEVEL:
+        errors.append(f"strict summary evidence_level must be {LIVE_EVIDENCE_LEVEL}")
+    if summary.get("auth_policy") not in STRICT_AUTH_POLICIES:
+        errors.append("strict summary auth_policy must be borrow-current or isolated-api-key")
+    if summary.get("codex_environment_policy") not in STRICT_CODEX_ENVIRONMENT_POLICIES:
+        errors.append("strict summary codex_environment_policy must be auth_borrowed_clean or isolated_api_key")
+    if summary.get("strict_benchmark_eligible") is not True:
+        errors.append("strict summary requires strict_benchmark_eligible=true")
+    if int(summary.get("current_home_result_count", 0) or 0) != 0 or int(
+        summary.get("current_home_full_result_count", 0) or 0
+    ) != 0:
+        errors.append("strict summary must not include current-home-full results")
+    if summary.get("user_skills_visible") is not False:
+        errors.append("strict summary requires user_skills_visible=false")
+    if summary.get("user_config_loaded") is not False:
+        errors.append("strict summary requires user_config_loaded=false")
+    if summary.get("user_rules_loaded") is not False:
+        errors.append("strict summary requires user_rules_loaded=false")
+    if summary.get("ignore_user_config") is not True or summary.get("ignore_rules") is not True:
+        errors.append("strict summary requires --ignore-user-config and --ignore-rules")
+    if summary.get("plugins_disabled") is not True:
+        errors.append("strict summary requires --disable plugins")
+    if int(summary.get("contaminated_result_count", 0) or 0) != 0:
+        errors.append("strict summary must not include contaminated results")
+    if int(summary.get("benchmark_eligible_result_count", 0) or 0) <= 0:
+        errors.append("strict summary requires assertion-backed eligible results")
+    variants = summary.get("variants")
+    delta = summary.get("delta")
+    if not isinstance(variants, dict) or not variants:
+        errors.append("strict summary requires grouped variants")
+        variants = {}
+    if not isinstance(delta, dict):
+        errors.append("strict summary requires delta object")
+    for variant in MODE_DEFAULT_VARIANTS.get(str(benchmark_mode), ()):
+        variant_summary = variants.get(variant) if isinstance(variants, dict) else None
+        if not isinstance(variant_summary, dict):
+            errors.append(f"strict summary missing variant {variant}")
+            continue
+        if int(variant_summary.get("benchmark_eligible_result_count", 0) or 0) <= 0:
+            errors.append(f"strict summary requires eligible assertion results for {variant}")
+    return errors
+
+
+def _command_metadata_errors(command_payload: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    if int(command_payload.get("schema_version", 0) or 0) < 2:
+        errors.append("codex-command.redacted.json schema_version must be at least 2")
+    for field in ("program", "args", "cwd", "auth_policy", "codex_environment_policy", "env"):
+        if field not in command_payload:
+            errors.append(f"codex-command.redacted.json missing {field}")
+    env = command_payload.get("env")
+    if isinstance(env, dict):
+        for key, value in env.items():
+            if isinstance(value, str) and ("/Users/" in value or "/home/" in value or "auth.json" in value):
+                errors.append(f"codex-command.redacted.json env {key} is not redacted")
+    else:
+        errors.append("codex-command.redacted.json env must be an object")
+    if command_payload.get("auth_policy") in STRICT_AUTH_POLICIES:
+        command = command_payload.get("command")
+        if not isinstance(command, list):
+            command = [command_payload.get("program"), *(command_payload.get("args") or [])]
+        if "--disable" not in command or "plugins" not in command:
+            errors.append("strict codex command must include --disable plugins")
+    return errors
+
+
+def _result_environment_errors(result: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    environment = result.get("environment")
+    if not isinstance(environment, dict):
+        return ["environment must be an object"]
+    auth_policy = result.get("auth_policy")
+    if result.get("benchmark_mode") in STRICT_BENCHMARK_MODES and auth_policy in STRICT_AUTH_POLICIES:
+        if environment.get("home") != "<temp>":
+            errors.append("strict result HOME metadata must be <temp>")
+        if environment.get("codex_home") not in {"<temp>", "<borrowed-current-auth>"}:
+            errors.append("strict result CODEX_HOME metadata must be redacted")
+        for flag in ("user_skills_visible", "user_config_loaded", "user_rules_loaded"):
+            if environment.get(flag) is not False:
+                errors.append(f"strict result requires {flag}=false")
+        if environment.get("ignore_user_config") is not True or environment.get("ignore_rules") is not True:
+            errors.append("strict result requires ignore_user_config=true and ignore_rules=true")
+        if environment.get("plugins_disabled") is not True:
+            errors.append("strict result requires plugins_disabled=true")
+        if environment.get("auth_json_copied") is not False:
+            errors.append("strict result must not copy auth.json")
+    if auth_policy == "current-home-full":
+        if result.get("codex_environment_policy") != "current_home_full":
+            errors.append("current-home-full result must use current_home_full environment policy")
+        if environment.get("strict_benchmark_eligible") is not False:
+            errors.append("current-home-full environment must not be strict eligible")
+    return errors
+
+
+def _variant_rate_errors(summary: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    variants = summary.get("variants")
+    if not isinstance(variants, dict):
+        return errors
+    for variant, variant_summary in variants.items():
+        if not isinstance(variant_summary, dict):
+            errors.append(f"variant {variant}: summary must be an object")
+            continue
+        eligible = int(variant_summary.get("benchmark_eligible_result_count", 0) or 0)
+        pass_rate = variant_summary.get("pass_rate")
+        if eligible == 0 and pass_rate != "not_collected":
+            errors.append(f"variant {variant}: pass_rate must be not_collected when no eligible results exist")
+        if eligible > 0 and not isinstance(pass_rate, int | float):
+            errors.append(f"variant {variant}: pass_rate must be numeric when eligible results exist")
     return errors
 
 

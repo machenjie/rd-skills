@@ -1,1 +1,0 @@
-backend/service-method-vs-new-helper: candidate grading not collected because this codegen case does not provide real assertion files under test-suite/tests or security-checks/security_tests.

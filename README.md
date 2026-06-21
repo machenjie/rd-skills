@@ -203,8 +203,8 @@ python3 -m unittest discover -s tests
 python3 scripts/validate-codegen-benchmarks.py
 python3 scripts/run-codegen-benchmarks.py --limit 3
 python3 scripts/run-codex-live-benchmarks.py --list
-python3 scripts/run-codex-live-benchmarks.py --benchmark devex/helper-reuse-search --dry-run --out /tmp/changeforge-codex-live-dry-run
-python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-dry-run
+python3 scripts/run-codex-live-benchmarks.py --benchmark-mode clean-paired --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-borrow-auth-dry-run
+python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-borrow-auth-dry-run
 python3 scripts/build.py --profile recommended
 python3 scripts/build.py --profile full
 python3 scripts/build.py --profile dev
@@ -219,9 +219,12 @@ python3 scripts/validate-marketplace-index.py --profile dev
 python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
 ```
 
-Real local Codex CLI benchmark runs are opt-in. If your usable Codex auth is in
-your current local `~/.codex` login/config, use the current-home mode documented
-in [docs/BENCHMARKS.md](docs/BENCHMARKS.md).
+Real local Codex CLI benchmark runs are opt-in. Strict comparative summaries
+may borrow current Codex authentication, but must use temp `HOME`, hide
+user-level skills/hooks/config/rules, pass `--ignore-user-config` and
+`--ignore-rules`, and block publishing on baseline contamination. Current-home
+full mode is documented as a separate smoke check in
+[docs/BENCHMARKS.md](docs/BENCHMARKS.md) and does not feed public A/B claims.
 
 `eval-skill-professionalism.py` writes both the main eval and key foundation coverage matrix;
 `--coverage-matrix` writes only the coverage matrix reports for release checklist compatibility.

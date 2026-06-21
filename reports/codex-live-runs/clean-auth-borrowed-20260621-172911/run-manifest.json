@@ -1,0 +1,30 @@
+{
+  "auth_policy": "borrow-current",
+  "benchmark_mode": "clean-paired",
+  "cases": [
+    "security/ssrf-url-allowlist"
+  ],
+  "codex_environment_policy": "auth_borrowed_clean",
+  "codex_home_mode": "isolated",
+  "dry_run": false,
+  "generated_by": "scripts/run-codex-live-benchmarks.py",
+  "limitations": [
+    "Runs use local Codex CLI behavior and local account/model availability.",
+    "Candidate grading is delegated to deterministic codegen benchmark checks when real assertions exist.",
+    "Telemetry metrics are bounded counts parsed from JSONL and exclude raw messages and command bodies.",
+    "Strict comparative claims may borrow Codex authentication, but user skills, hooks, config, and rules are not loaded."
+  ],
+  "live_execution_allowed": true,
+  "live_execution_effective": true,
+  "profile": "recommended",
+  "result_count": 2,
+  "run_id": "clean-auth-borrowed-20260621-172911",
+  "runs_per_variant": 1,
+  "sandbox": "workspace-write",
+  "schema_version": 2,
+  "status": "collected",
+  "variants": [
+    "baseline_clean",
+    "skills_with_hooks_clean"
+  ]
+}

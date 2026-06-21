@@ -1,9 +1,0 @@
-command: /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/mcjxy/Projects/github/rd-skills/scripts/run-codegen-benchmarks.py --benchmark devex/helper-reuse-search --candidate-dir reports/codex-live-runs/local-20260620-195905/cases/devex__helper-reuse-search/baseline/run-01/candidate
-returncode: 1
-
-stdout:
-
-
-stderr:
-run-codegen-benchmarks: ERROR: devex/helper-reuse-search: candidate evaluation requires real assertion files under test-suite/tests or security-checks/security_tests
-

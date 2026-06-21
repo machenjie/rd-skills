@@ -1,0 +1,131 @@
+{
+  "assertion_case_count": 1,
+  "auth_policy": "borrow-current",
+  "benchmark_eligible_result_count": 1,
+  "benchmark_mode": "clean-paired",
+  "benchmark_passed_result_count": 1,
+  "case_count": 1,
+  "cases": [
+    "security/ssrf-url-allowlist"
+  ],
+  "codex_environment_policy": "auth_borrowed_clean",
+  "codex_home_policy": "auth_borrowed_clean",
+  "contaminated_result_count": 1,
+  "current_home_full_result_count": 0,
+  "current_home_result_count": 0,
+  "delta": {
+    "skills_with_hooks_clean_vs_baseline_clean": {
+      "command_execution_count_delta": -16.0,
+      "file_change_count_delta": 0.0,
+      "input_tokens_delta_pct": 0.3777,
+      "output_tokens_delta_pct": -0.1756,
+      "pass_rate_delta": "not_collected",
+      "reasoning_output_tokens_delta_pct": 0.3238,
+      "security_pass_rate_delta": "not_collected"
+    }
+  },
+  "evidence_level": "local_codex_cli_live_benchmark",
+  "generated_by": "scripts/generate-codex-live-summary.py",
+  "ignore_rules": true,
+  "ignore_user_config": true,
+  "limitations": [
+    "Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.",
+    "Parsed telemetry excludes raw command bodies and assistant/user message content.",
+    "Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately.",
+    "Strict comparative claims may borrow Codex authentication only; user skills, hooks, config, and rules are not loaded.",
+    "Baseline contamination blocks publishing, and pass rates include assertion-backed eligible results only."
+  ],
+  "not_collected_grading_count": 0,
+  "publishable_for_strict_benchmark": true,
+  "result_count": 2,
+  "run_dir": "<run-dir>",
+  "run_id": "clean-auth-borrowed-20260621-172911",
+  "schema_version": 2,
+  "status": "collected",
+  "strict_benchmark_eligible": true,
+  "telemetry": {
+    "event_count": 205,
+    "parse_error_count": 0
+  },
+  "telemetry_only_case_count": 0,
+  "telemetry_only_result_count": 0,
+  "user_config_loaded": false,
+  "user_rules_loaded": false,
+  "user_skills_visible": false,
+  "variants": {
+    "baseline_clean": {
+      "artifact_status_counts": {
+        "collected": 1
+      },
+      "average_command_execution_count": 84.0,
+      "average_event_count": 114.0,
+      "average_file_change_count": 6.0,
+      "average_metrics": {
+        "command_execution_count": 84.0,
+        "error_count": 6.0,
+        "event_count": 114.0,
+        "file_change_count": 6.0,
+        "plan_update_count": 0.0
+      },
+      "average_usage": {
+        "cached_input_tokens": 560768.0,
+        "input_tokens": 675059.0,
+        "output_tokens": 12616.0,
+        "reasoning_output_tokens": 2029.0
+      },
+      "benchmark_eligible_result_count": 0,
+      "benchmark_passed_result_count": 0,
+      "contaminated_result_count": 1,
+      "delta_vs_baseline_clean": {},
+      "grading_status_counts": {
+        "contaminated": 1
+      },
+      "not_collected_grading_count": 0,
+      "pass_rate": "not_collected",
+      "result_count": 1,
+      "security_pass_rate": "not_collected",
+      "telemetry_only_result_count": 0
+    },
+    "skills_with_hooks_clean": {
+      "artifact_status_counts": {
+        "collected": 1
+      },
+      "average_command_execution_count": 68.0,
+      "average_event_count": 91.0,
+      "average_file_change_count": 6.0,
+      "average_metrics": {
+        "command_execution_count": 68.0,
+        "error_count": 4.0,
+        "event_count": 91.0,
+        "file_change_count": 6.0,
+        "plan_update_count": 0.0
+      },
+      "average_usage": {
+        "cached_input_tokens": 824192.0,
+        "input_tokens": 929999.0,
+        "output_tokens": 10400.0,
+        "reasoning_output_tokens": 2686.0
+      },
+      "benchmark_eligible_result_count": 1,
+      "benchmark_passed_result_count": 1,
+      "contaminated_result_count": 0,
+      "delta_vs_baseline_clean": {
+        "command_execution_count_delta": -16.0,
+        "file_change_count_delta": 0.0,
+        "input_tokens_delta_pct": 0.3777,
+        "output_tokens_delta_pct": -0.1756,
+        "pass_rate_delta": "not_collected",
+        "reasoning_output_tokens_delta_pct": 0.3238,
+        "security_pass_rate_delta": "not_collected"
+      },
+      "grading_status_counts": {
+        "passed": 1
+      },
+      "not_collected_grading_count": 0,
+      "pass_rate": 1.0,
+      "result_count": 1,
+      "security_pass_rate": 1.0,
+      "telemetry_only_result_count": 0
+    }
+  }
+}

@@ -11,7 +11,9 @@
     "variants",
     "task_prompt",
     "starter_repo",
-    "grading_benchmark"
+    "grading_benchmark",
+    "grading_mode",
+    "publishable_for_strict"
   ],
   "properties": {
     "id": {
@@ -30,7 +32,7 @@
     "variants": {
       "type": "array",
       "items": {
-        "enum": ["baseline", "changeforge"]
+        "enum": ["baseline_clean", "skills_only_clean", "skills_with_hooks_clean", "current_home_smoke"]
       },
       "minItems": 1,
       "uniqueItems": true
@@ -43,6 +45,12 @@
     },
     "grading_benchmark": {
       "type": "string"
+    },
+    "grading_mode": {
+      "enum": ["assertion", "telemetry_only"]
+    },
+    "publishable_for_strict": {
+      "type": "boolean"
     }
   },
   "additionalProperties": false

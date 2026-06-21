@@ -10,6 +10,18 @@
     "variant",
     "run_index",
     "status",
+    "artifact_status",
+    "grading_status",
+    "benchmark_mode",
+    "codex_home_mode",
+    "auth_policy",
+    "codex_environment_policy",
+    "grading_mode",
+    "publishable_for_strict",
+    "benchmark_eligible",
+    "benchmark_passed",
+    "contamination",
+    "environment",
     "paths",
     "grading",
     "metrics",
@@ -26,13 +38,62 @@
       "type": "string"
     },
     "variant": {
-      "enum": ["baseline", "changeforge"]
+      "enum": ["baseline_clean", "skills_only_clean", "skills_with_hooks_clean", "current_home_smoke"]
     },
     "run_index": {
       "type": "integer"
     },
     "status": {
       "enum": ["not_collected", "skipped_not_opted_in", "partial", "collected", "failed"]
+    },
+    "artifact_status": {
+      "enum": ["collected", "partial", "failed"]
+    },
+    "grading_status": {
+      "enum": ["passed", "failed", "not_collected", "telemetry_only", "contaminated"]
+    },
+    "benchmark_mode": {
+      "enum": ["clean-paired", "ablation", "current-home-smoke"]
+    },
+    "codex_home_mode": {
+      "enum": ["isolated", "current"]
+    },
+    "auth_policy": {
+      "enum": ["isolated-api-key", "borrow-current", "current-home-full"]
+    },
+    "codex_environment_policy": {
+      "enum": ["isolated_api_key", "auth_borrowed_clean", "current_home_full"]
+    },
+    "grading_mode": {
+      "enum": ["assertion", "telemetry_only"]
+    },
+    "publishable_for_strict": {
+      "type": "boolean"
+    },
+    "benchmark_eligible": {
+      "type": "boolean"
+    },
+    "benchmark_passed": {
+      "type": "boolean"
+    },
+    "contamination": {
+      "type": "object",
+      "required": ["contaminated", "signals", "files"]
+    },
+    "environment": {
+      "type": "object",
+      "required": [
+        "home",
+        "codex_home",
+        "user_home_visible",
+        "user_skills_visible",
+        "user_config_loaded",
+        "user_rules_loaded",
+        "current_auth_borrowed",
+        "ignore_user_config",
+        "ignore_rules",
+        "plugins_disabled"
+      ]
     },
     "paths": {
       "type": "object"

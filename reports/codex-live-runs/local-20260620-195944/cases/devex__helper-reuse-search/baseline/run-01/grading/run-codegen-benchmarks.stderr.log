@@ -1,1 +1,0 @@
-run-codegen-benchmarks: ERROR: devex/helper-reuse-search: candidate evaluation requires real assertion files under test-suite/tests or security-checks/security_tests

@@ -8,6 +8,7 @@
     "generated_by",
     "run_id",
     "status",
+    "benchmark_mode",
     "dry_run",
     "live_execution_allowed",
     "live_execution_effective",
@@ -15,6 +16,8 @@
     "variants",
     "runs_per_variant",
     "sandbox",
+    "auth_policy",
+    "codex_environment_policy",
     "limitations"
   ],
   "properties": {
@@ -29,6 +32,9 @@
     },
     "status": {
       "enum": ["not_collected", "skipped_not_opted_in", "partial", "collected", "failed"]
+    },
+    "benchmark_mode": {
+      "enum": ["clean-paired", "ablation", "current-home-smoke"]
     },
     "dry_run": {
       "type": "boolean"
@@ -50,6 +56,12 @@
     },
     "sandbox": {
       "enum": ["read-only", "workspace-write", "danger-full-access"]
+    },
+    "auth_policy": {
+      "enum": ["isolated-api-key", "borrow-current", "current-home-full"]
+    },
+    "codex_environment_policy": {
+      "enum": ["isolated_api_key", "auth_borrowed_clean", "current_home_full"]
     },
     "limitations": {
       "type": "array",

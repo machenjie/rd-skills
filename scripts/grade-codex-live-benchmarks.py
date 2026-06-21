@@ -4,12 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import re
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 
-from codex_live_benchmark_lib import ROOT, relpath, write_json
+from codex_live_benchmark_lib import ROOT, case_assertion_files, write_json
 
 
 def _case_dir(benchmark: str, root: Path) -> Path:
@@ -18,11 +19,31 @@ def _case_dir(benchmark: str, root: Path) -> Path:
 
 
 def _real_assertion_files(case_dir: Path) -> list[Path]:
-    files: list[Path] = []
-    for root in (case_dir / "test-suite" / "tests", case_dir / "security-checks" / "security_tests"):
-        if root.is_dir():
-            files.extend(path for path in root.rglob("test_*.py") if path.is_file())
-    return sorted(files)
+    category = case_dir.parent.name
+    case_name = case_dir.name
+    return list(case_assertion_files(category, case_name, case_dir.parents[3]))
+
+
+def _redact_output(text: str, *, root: Path, candidate_dir: Path) -> str:
+    """Remove host-specific paths from persisted grading logs."""
+    redacted = text
+    for candidate_label in {str(candidate_dir), str(candidate_dir.resolve())}:
+        redacted = redacted.replace(candidate_label, "<candidate>")
+    for root_label in {str(root), str(root.resolve())}:
+        redacted = redacted.replace(root_label, "<repo>")
+    redacted = re.sub(r"/Users/[^\s\"'<>]+", "<local-path>", redacted)
+    redacted = re.sub(r"/home/[^\s\"'<>]+", "<local-path>", redacted)
+    redacted = re.sub(r"[A-Za-z]:\\Users\\[^\s\"'<>]+", "<local-path>", redacted)
+    return redacted
+
+
+def _grading_path(out_dir: Path, path: Path) -> str:
+    """Return a grading-directory-relative artifact label."""
+    try:
+        rel = path.resolve().relative_to(out_dir.resolve()).as_posix()
+    except ValueError:
+        return "<grading>"
+    return f"<grading>/{rel}"
 
 
 def grade_candidate(
@@ -55,37 +76,48 @@ def grade_candidate(
     )
     stdout_path = out_dir / "run-codegen-benchmarks.stdout.log"
     stderr_path = out_dir / "run-codegen-benchmarks.stderr.log"
-    stdout_path.write_text(completed.stdout, encoding="utf-8")
-    stderr_path.write_text(completed.stderr, encoding="utf-8")
+    stdout_text = _redact_output(completed.stdout, root=root, candidate_dir=candidate_dir)
+    stderr_text = _redact_output(completed.stderr, root=root, candidate_dir=candidate_dir)
+    stdout_path.write_text(stdout_text, encoding="utf-8")
+    stderr_path.write_text(stderr_text, encoding="utf-8")
 
+    redacted_command = [
+        "<python>",
+        "scripts/run-codegen-benchmarks.py",
+        "--benchmark",
+        benchmark,
+        "--candidate-dir",
+        "<candidate>",
+    ]
     combined = (
-        f"command: {' '.join(command)}\n"
+        f"command: {' '.join(redacted_command)}\n"
         f"returncode: {completed.returncode}\n\n"
         "stdout:\n"
-        f"{completed.stdout}\n\n"
+        f"{stdout_text}\n\n"
         "stderr:\n"
-        f"{completed.stderr}\n"
+        f"{stderr_text}\n"
     )
     for log_name in ("setup.log", "test-suite.log", "security-checks.log"):
         (out_dir / log_name).write_text(combined, encoding="utf-8")
 
     all_passed = completed.returncode == 0
     result: dict[str, Any] = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_by": "scripts/grade-codex-live-benchmarks.py",
         "benchmark": benchmark,
-        "candidate_dir": str(candidate_dir),
+        "candidate_dir": "<candidate>",
         "returncode": completed.returncode,
+        "grading_status": "passed" if all_passed else "failed",
         "all_passed": all_passed,
         "setup_passed": all_passed,
         "test_suite_passed": all_passed,
         "security_checks_passed": all_passed,
         "logs": {
-            "stdout": relpath(root, stdout_path),
-            "stderr": relpath(root, stderr_path),
-            "setup": relpath(root, out_dir / "setup.log"),
-            "test_suite": relpath(root, out_dir / "test-suite.log"),
-            "security_checks": relpath(root, out_dir / "security-checks.log"),
+            "stdout": _grading_path(out_dir, stdout_path),
+            "stderr": _grading_path(out_dir, stderr_path),
+            "setup": _grading_path(out_dir, out_dir / "setup.log"),
+            "test_suite": _grading_path(out_dir, out_dir / "test-suite.log"),
+            "security_checks": _grading_path(out_dir, out_dir / "security-checks.log"),
         },
     }
     write_json(out_dir / "grading-result.json", result)
@@ -112,10 +144,10 @@ def _write_not_collected_grading(
     ):
         (out_dir / log_name).write_text(message, encoding="utf-8")
     result: dict[str, Any] = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_by": "scripts/grade-codex-live-benchmarks.py",
         "benchmark": benchmark,
-        "candidate_dir": str(candidate_dir),
+        "candidate_dir": "<candidate>",
         "returncode": None,
         "grading_status": "not_collected",
         "all_passed": False,
@@ -123,11 +155,11 @@ def _write_not_collected_grading(
         "test_suite_passed": False,
         "security_checks_passed": False,
         "logs": {
-            "stdout": relpath(root, out_dir / "run-codegen-benchmarks.stdout.log"),
-            "stderr": relpath(root, out_dir / "run-codegen-benchmarks.stderr.log"),
-            "setup": relpath(root, out_dir / "setup.log"),
-            "test_suite": relpath(root, out_dir / "test-suite.log"),
-            "security_checks": relpath(root, out_dir / "security-checks.log"),
+            "stdout": _grading_path(out_dir, out_dir / "run-codegen-benchmarks.stdout.log"),
+            "stderr": _grading_path(out_dir, out_dir / "run-codegen-benchmarks.stderr.log"),
+            "setup": _grading_path(out_dir, out_dir / "setup.log"),
+            "test_suite": _grading_path(out_dir, out_dir / "test-suite.log"),
+            "security_checks": _grading_path(out_dir, out_dir / "security-checks.log"),
         },
     }
     write_json(out_dir / "grading-result.json", result)

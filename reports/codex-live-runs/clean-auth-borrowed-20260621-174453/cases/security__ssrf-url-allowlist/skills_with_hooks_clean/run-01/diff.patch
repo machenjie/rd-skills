@@ -1,0 +1,142 @@
+diff --git a/app.py b/app.py
+index 4c0136b..a26ce71 100644
+--- a/app.py
++++ b/app.py
+@@ -8,9 +8,16 @@ from __future__ import annotations
+ 
+ from dataclasses import dataclass, field
+ from html.parser import HTMLParser
++import ipaddress
+ from typing import Callable, Iterable
+ from urllib.parse import urljoin, urlparse
+ 
++ALLOWED_HTTPS_HOSTS = frozenset({"preview.example.com"})
++HTTPS_PORT = 443
++FETCH_TIMEOUT_SECONDS = 2.0
++MAX_RESPONSE_BYTES = 65536
++REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
++
+ 
+ @dataclass
+ class HTTPResponse:
+@@ -71,20 +78,72 @@ def default_resolver(host: str) -> Iterable[str]:
+     return []
+ 
+ 
+-def _deny(reason: str, url: str, logger: object | None) -> PreviewResult:
++def _deny(reason: str, logger: object | None) -> PreviewResult:
+     if logger is not None and hasattr(logger, "warning"):
+-        logger.warning("preview denied reason=%s url=%s", reason, url)
++        logger.warning("preview denied reason=%s", reason)
+     return PreviewResult(
+         ok=False,
+         status_code=400,
+-        error=f"denied preview URL {url}",
++        error="denied preview URL",
+         reason=reason,
+     )
+ 
+ 
+-def _host_is_allowed(host: str | None) -> bool:
+-    # Known benchmark gap: prefix matching accepts attacker-controlled hosts.
+-    return bool(host and host.startswith("preview.example.com"))
++def _canonical_host(host: str | None) -> str | None:
++    if not host:
++        return None
++    try:
++        return host.rstrip(".").encode("idna").decode("ascii").casefold()
++    except UnicodeError:
++        return None
++
++
++def _is_public_address(address: str) -> bool:
++    try:
++        ip = ipaddress.ip_address(address)
++    except ValueError:
++        return False
++    return not (
++        ip.is_loopback
++        or ip.is_link_local
++        or ip.is_private
++        or ip.is_multicast
++        or ip.is_reserved
++        or ip.is_unspecified
++    )
++
++
++def _validate_fetch_url(
++    raw_url: str,
++    resolver: Callable[..., Iterable[str]],
++) -> tuple[bool, str, str | None]:
++    try:
++        parsed = urlparse(raw_url)
++        host = _canonical_host(parsed.hostname)
++    except Exception:
++        return False, "invalid_url", None
++    if parsed.scheme.casefold() != "https" or host not in ALLOWED_HTTPS_HOSTS:
++        return False, "host_not_allowed", None
++    if parsed.username or parsed.password:
++        return False, "userinfo_not_allowed", None
++    try:
++        port = parsed.port
++    except ValueError:
++        return False, "invalid_url", None
++    if port not in (None, HTTPS_PORT):
++        return False, "port_not_allowed", None
++
++    try:
++        addresses = tuple(resolver(host))
++    except Exception:
++        return False, "dns_resolution_failed", None
++    if not addresses:
++        return False, "dns_resolution_failed", None
++    if any(not _is_public_address(address) for address in addresses):
++        return False, "private_network_denied", None
++
++    normalized = parsed._replace(scheme="https", netloc=host).geturl()
++    return True, "allowed", normalized
+ 
+ 
+ def fetch_preview(
+@@ -95,22 +154,31 @@ def fetch_preview(
+     logger: object | None = None,
+     max_redirects: int = 3,
+ ) -> PreviewResult:
+-    parsed = urlparse(url)
+-    if parsed.scheme != "https" or not _host_is_allowed(parsed.hostname):
+-        return _deny("host_not_allowed", url, logger)
+-
+     current_url = url
+     for _attempt in range(max_redirects + 1):
+-        response = http_get(current_url, timeout_seconds=2.0, max_bytes=65536)
++        allowed, reason, normalized_url = _validate_fetch_url(current_url, resolver)
++        if not allowed or normalized_url is None:
++            return _deny(reason, logger)
++
++        try:
++            response = http_get(
++                normalized_url,
++                timeout_seconds=FETCH_TIMEOUT_SECONDS,
++                max_bytes=MAX_RESPONSE_BYTES,
++            )
++        except TimeoutError:
++            return _deny("fetch_timeout", logger)
++        except Exception:
++            return _deny("fetch_failed", logger)
++
+         location = response.headers.get("Location") or response.headers.get("location")
+-        if response.status_code in {301, 302, 303, 307, 308} and location:
+-            # Known benchmark gap: redirects are followed without revalidation.
+-            current_url = urljoin(current_url, location)
++        if response.status_code in REDIRECT_STATUSES and location:
++            current_url = urljoin(normalized_url, location)
+             continue
+         return PreviewResult(
+             ok=True,
+             status_code=response.status_code,
+-            title=_extract_title(response.text),
++            title=_extract_title(response.text[:MAX_RESPONSE_BYTES]),
+         )
+ 
+-    return _deny("too_many_redirects", current_url, logger)
++    return _deny("too_many_redirects", logger)

@@ -8,18 +8,25 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
 from codex_live_benchmark_lib import (
+    AUTH_POLICIES,
+    BENCHMARK_MODES,
+    MODE_DEFAULT_VARIANTS,
     PROFILES,
     ROOT,
     SANDBOXES,
+    STRICT_AUTH_POLICIES,
+    STRICT_BENCHMARK_MODES,
     VARIANTS,
     CodexLiveCase,
+    detect_baseline_contamination,
     load_case_registry,
     redact_codex_command,
-    relpath,
+    redact_report_text,
     safe_case_segment,
     utc_stamp,
     write_json,
@@ -31,9 +38,10 @@ REFUSAL_MESSAGE = (
     "CHANGEFORGE_ENABLE_CODEX_LIVE_BENCHMARK=1 or --allow-live-codex"
 )
 CURRENT_CODEX_HOME_REFUSAL_MESSAGE = (
-    "current Codex home mode requires "
+    "auth-policy current-home-full requires "
     "CHANGEFORGE_ALLOW_CURRENT_CODEX_HOME=1 or --allow-current-codex-home"
 )
+INTERNAL_BORROWED_CODEX_HOME_ENV = "CHANGEFORGE_CODEX_LIVE_INTERNAL_BORROWED_CODEX_HOME"
 
 
 def live_execution_allowed(args: argparse.Namespace, env: dict[str, str]) -> bool:
@@ -51,10 +59,48 @@ def current_codex_home_allowed(args: argparse.Namespace, env: dict[str, str]) ->
     return args.allow_current_codex_home or env.get("CHANGEFORGE_ALLOW_CURRENT_CODEX_HOME") == "1"
 
 
+def resolve_auth_policy(args: argparse.Namespace) -> str:
+    """Resolve explicit or compatibility auth policy defaults."""
+    explicit = getattr(args, "auth_policy", None)
+    if explicit:
+        return str(explicit)
+    codex_home_mode = getattr(args, "codex_home_mode", None)
+    if codex_home_mode == "current":
+        return "current-home-full"
+    if codex_home_mode == "isolated":
+        return "isolated-api-key"
+    if getattr(args, "benchmark_mode", "clean-paired") == "current-home-smoke":
+        return "current-home-full"
+    return "borrow-current"
+
+
+def codex_environment_policy(auth_policy: str) -> str:
+    """Map CLI auth policy onto result/summary environment policy."""
+    return {
+        "isolated-api-key": "isolated_api_key",
+        "borrow-current": "auth_borrowed_clean",
+        "current-home-full": "current_home_full",
+    }[auth_policy]
+
+
+def legacy_codex_home_mode(auth_policy: str) -> str:
+    """Return the pre-v2 compatibility label for older consumers."""
+    return "current" if auth_policy == "current-home-full" else "isolated"
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--benchmark", action="append", default=[])
     parser.add_argument("--category", action="append", default=[])
+    parser.add_argument("--benchmark-mode", choices=BENCHMARK_MODES, default="clean-paired")
+    parser.add_argument(
+        "--auth-policy",
+        choices=AUTH_POLICIES,
+        help=(
+            "Authentication/environment policy. Strict modes default to borrow-current; "
+            "current-home-smoke defaults to current-home-full."
+        ),
+    )
     parser.add_argument("--variant", action="append", choices=VARIANTS)
     parser.add_argument("--runs", type=int, default=1)
     parser.add_argument("--profile", choices=PROFILES, default="recommended")
@@ -68,12 +114,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--codex-home-mode",
         choices=("isolated", "current"),
-        default="isolated",
-        help="Use an isolated Codex home by default, or inherit the caller's current Codex home/config.",
+        help=(
+            "Deprecated compatibility option. Prefer --auth-policy isolated-api-key, "
+            "borrow-current, or current-home-full."
+        ),
     )
     parser.add_argument("--allow-current-codex-home", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--publish-summary", action="store_true")
+    parser.add_argument("--publish-current-home-smoke", action="store_true")
     parser.add_argument("--keep-workdirs", action="store_true")
     parser.add_argument("--timeout-seconds", type=int, default=3600)
     parser.add_argument("--list", action="store_true")
@@ -98,13 +147,45 @@ def select_cases(
 
 
 def selected_variants(args: argparse.Namespace) -> list[str]:
-    """Return requested variants with baseline/changeforge as the default pair."""
-    variants = args.variant or ["baseline", "changeforge"]
+    """Return requested variants with the mode-specific default set."""
+    variants = args.variant or list(MODE_DEFAULT_VARIANTS[args.benchmark_mode])
     deduped: list[str] = []
     for variant in variants:
         if variant not in deduped:
             deduped.append(variant)
     return deduped
+
+
+def validate_mode_args(args: argparse.Namespace, variants: list[str]) -> list[str]:
+    """Validate benchmark mode, Codex home policy, variants, and publish switches."""
+    errors: list[str] = []
+    auth_policy = resolve_auth_policy(args)
+    if auth_policy not in AUTH_POLICIES:
+        errors.append(f"--auth-policy must be one of {', '.join(AUTH_POLICIES)}")
+        return errors
+    codex_home_mode = getattr(args, "codex_home_mode", None)
+    if codex_home_mode == "current" and auth_policy != "current-home-full":
+        errors.append("--codex-home-mode current is only compatible with --auth-policy current-home-full")
+    if codex_home_mode == "isolated" and auth_policy == "current-home-full":
+        errors.append("--auth-policy current-home-full is not compatible with --codex-home-mode isolated")
+    if args.benchmark_mode in STRICT_BENCHMARK_MODES:
+        if auth_policy not in STRICT_AUTH_POLICIES:
+            errors.append("--auth-policy current-home-full is only allowed with --benchmark-mode current-home-smoke")
+        if "current_home_smoke" in variants:
+            errors.append("current_home_smoke is not a strict comparative benchmark variant")
+        if args.publish_current_home_smoke:
+            errors.append("--publish-current-home-smoke requires --benchmark-mode current-home-smoke")
+    else:
+        if auth_policy != "current-home-full":
+            errors.append("--benchmark-mode current-home-smoke requires --auth-policy current-home-full")
+        invalid = sorted(set(variants) - {"current_home_smoke"})
+        if invalid:
+            errors.append("current-home-smoke mode only supports current_home_smoke")
+        if args.publish_summary:
+            errors.append("--publish-summary is only for strict benchmark summaries")
+    if args.publish_summary and auth_policy not in STRICT_AUTH_POLICIES:
+        errors.append("--publish-summary requires --auth-policy borrow-current or isolated-api-key")
+    return errors
 
 
 def write_skipped_manifest(
@@ -120,15 +201,18 @@ def write_skipped_manifest(
         "Codex CLI was not invoked.",
         "Dry-run and non-opted-in reports are not publishable benchmark evidence.",
     ]
-    if args.codex_home_mode == "current":
-        limitations.append(_current_codex_home_limitation())
+    if getattr(args, "codex_home_mode", None) == "current":
+        limitations.append(_current_home_full_limitation())
+    auth_policy = resolve_auth_policy(args)
+    environment_policy = codex_environment_policy(auth_policy)
     write_json(
         out_dir / "run-manifest.json",
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "generated_by": "scripts/run-codex-live-benchmarks.py",
             "run_id": out_dir.name,
             "status": "skipped_not_opted_in",
+            "benchmark_mode": args.benchmark_mode,
             "dry_run": bool(args.dry_run),
             "live_execution_allowed": allowed,
             "live_execution_effective": False,
@@ -137,8 +221,11 @@ def write_skipped_manifest(
             "runs_per_variant": args.runs,
             "profile": args.profile,
             "sandbox": args.sandbox,
-            "codex_home_mode": args.codex_home_mode,
+            "codex_home_mode": legacy_codex_home_mode(auth_policy),
+            "auth_policy": auth_policy,
+            "codex_environment_policy": environment_policy,
             "codex_invocations": [],
+            "result_count": 0,
             "limitations": limitations,
         },
     )
@@ -146,15 +233,22 @@ def write_skipped_manifest(
 
 def codex_command(args: argparse.Namespace, final_path: Path) -> list[str]:
     """Build the Codex exec command used for live runs."""
+    auth_policy = resolve_auth_policy(args)
     command = [
         args.codex_bin,
         "exec",
         "--json",
         "--sandbox",
         args.sandbox,
-        "--output-last-message",
-        str(final_path),
     ]
+    if auth_policy in STRICT_AUTH_POLICIES:
+        command.extend(["--ignore-user-config", "--ignore-rules", "--disable", "plugins"])
+    command.extend(
+        [
+            "--output-last-message",
+            str(final_path),
+        ]
+    )
     if args.model:
         command.extend(["--model", args.model])
     command.append("-")
@@ -174,6 +268,7 @@ def run_codex_exec(
     """Run Codex after checking the live opt-in gate immediately beforehand."""
     if args.dry_run or not live_execution_allowed(args, env):
         raise RuntimeError(REFUSAL_MESSAGE)
+    process_env = _subprocess_env(env)
     with events_path.open("w", encoding="utf-8") as events_file, stderr_path.open("w", encoding="utf-8") as stderr_file:
         return subprocess.run(
             command,
@@ -182,7 +277,7 @@ def run_codex_exec(
             stdout=events_file,
             stderr=stderr_file,
             text=True,
-            env=env,
+            env=process_env,
             timeout=args.timeout_seconds,
             shell=False,
             check=False,
@@ -202,24 +297,33 @@ def run_live(args: argparse.Namespace, out_dir: Path, cases: list[CodexLiveCase]
 
     if not results:
         status = "failed"
-    elif any(result["status"] == "failed" for result in results):
-        status = "partial" if any(result["status"] == "collected" for result in results) else "failed"
+    elif any(result["artifact_status"] == "failed" for result in results):
+        status = "partial" if any(result["artifact_status"] == "collected" for result in results) else "failed"
+    elif any(result["artifact_status"] == "partial" for result in results):
+        status = "partial"
     else:
         status = "collected"
 
     limitations = [
         "Runs use local Codex CLI behavior and local account/model availability.",
-        "Candidate grading is delegated to deterministic codegen benchmark checks.",
+        "Candidate grading is delegated to deterministic codegen benchmark checks when real assertions exist.",
         "Telemetry metrics are bounded counts parsed from JSONL and exclude raw messages and command bodies.",
     ]
-    if args.codex_home_mode == "current":
-        limitations.append(_current_codex_home_limitation())
+    auth_policy = resolve_auth_policy(args)
+    environment_policy = codex_environment_policy(auth_policy)
+    if args.benchmark_mode in STRICT_BENCHMARK_MODES:
+        limitations.append(
+            "Strict comparative claims may borrow Codex authentication, but user skills, hooks, config, and rules are not loaded."
+        )
+    if auth_policy == "current-home-full":
+        limitations.append(_current_home_full_limitation())
 
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_by": "scripts/run-codex-live-benchmarks.py",
         "run_id": out_dir.name,
         "status": status,
+        "benchmark_mode": args.benchmark_mode,
         "dry_run": False,
         "live_execution_allowed": True,
         "live_execution_effective": True,
@@ -228,12 +332,18 @@ def run_live(args: argparse.Namespace, out_dir: Path, cases: list[CodexLiveCase]
         "runs_per_variant": args.runs,
         "profile": args.profile,
         "sandbox": args.sandbox,
-        "codex_home_mode": args.codex_home_mode,
+        "codex_home_mode": legacy_codex_home_mode(auth_policy),
+        "auth_policy": auth_policy,
+        "codex_environment_policy": environment_policy,
         "result_count": len(results),
         "limitations": limitations,
     }
     write_json(out_dir / "run-manifest.json", manifest)
-    _generate_summary(out_dir, publish=args.publish_summary)
+    _generate_summary(
+        out_dir,
+        publish=args.publish_summary,
+        publish_current_home_smoke=args.publish_current_home_smoke,
+    )
     return manifest
 
 
@@ -254,78 +364,99 @@ def _run_one_case(
     prompt = _render_prompt(case, variant)
     (run_dir / "prompt.md").write_text(prompt, encoding="utf-8")
 
-    env, env_metadata = _codex_env(args, out_dir, case, variant, run_index)
-    if variant == "changeforge":
-        _install_changeforge(args, candidate_dir, env, built_profiles)
-
-    events_path = run_dir / "events.jsonl"
-    stderr_path = run_dir / "codex-stderr.log"
-    final_path = run_dir / "final.md"
-    command = codex_command(args, final_path)
-    write_json(
-        run_dir / "codex-command.redacted.json",
-        {
-            "schema_version": 1,
-            "command": redact_codex_command(command),
-            "cwd": "<candidate>",
-            "codex_home_mode": args.codex_home_mode,
-            "env": env_metadata,
-        },
-    )
-
-    status = "failed"
-    codex_returncode: int | None = None
-    failure: str | None = None
     try:
-        completed = run_codex_exec(
-            command,
-            prompt=prompt,
-            cwd=candidate_dir,
-            events_path=events_path,
-            stderr_path=stderr_path,
-            args=args,
-            env=env,
+        env, environment = build_codex_environment(args, case, variant, run_dir)
+        if variant in {"skills_only_clean", "skills_with_hooks_clean"}:
+            _install_changeforge(
+                args,
+                candidate_dir,
+                env,
+                built_profiles,
+                with_hooks=variant == "skills_with_hooks_clean",
+            )
+
+        events_path = run_dir / "events.jsonl"
+        stderr_path = run_dir / "codex-stderr.log"
+        final_path = run_dir / "final.md"
+        command = codex_command(args, final_path)
+        write_json(
+            run_dir / "codex-command.redacted.json",
+            _command_metadata(args, command, environment),
         )
-        codex_returncode = completed.returncode
-        status = "collected" if completed.returncode == 0 else "failed"
-        if not final_path.exists():
+
+        artifact_status = "failed"
+        codex_returncode: int | None = None
+        failure: str | None = None
+        try:
+            completed = run_codex_exec(
+                command,
+                prompt=prompt,
+                cwd=candidate_dir,
+                events_path=events_path,
+                stderr_path=stderr_path,
+                args=args,
+                env=env,
+            )
+            codex_returncode = completed.returncode
+            artifact_status = "collected" if completed.returncode == 0 else "failed"
+            if not final_path.exists():
+                final_path.touch()
+        except Exception as exc:  # live run should preserve artifacts for diagnosis
+            failure = f"{type(exc).__name__}: {exc}"
+            artifact_status = "partial"
+            events_path.touch()
+            stderr_path.write_text(f"{failure}\n", encoding="utf-8")
             final_path.touch()
-    except Exception as exc:  # live run should preserve artifacts for diagnosis
-        failure = f"{type(exc).__name__}: {exc}"
-        events_path.touch()
-        stderr_path.write_text(f"{failure}\n", encoding="utf-8")
-        final_path.touch()
+        _redact_text_artifact(stderr_path)
+        _redact_text_artifact(final_path)
+    finally:
+        _cleanup_borrowed_codex_home(locals().get("env", {}))
 
     _write_git_artifacts(candidate_dir, run_dir)
     metrics = _parse_events(events_path, run_dir / "events.metrics.json")
     grading = _grade(case, candidate_dir, grading_dir)
-    if not grading.get("all_passed"):
-        status = "failed" if status == "failed" else "collected"
+    contamination = _contamination_for_variant(variant, run_dir)
+    grading_status = _grading_status(case, grading, contamination, variant)
+    benchmark_eligible = _benchmark_eligible(args, case, artifact_status, grading_status, contamination, environment)
+    benchmark_passed = benchmark_eligible and grading_status == "passed"
+    auth_policy = resolve_auth_policy(args)
+    environment_policy = codex_environment_policy(auth_policy)
 
     limitations = [
         "Result reflects one local Codex CLI run for this variant.",
         "Raw Codex messages and command bodies are not persisted in parsed metrics.",
     ]
-    if args.codex_home_mode == "current":
-        limitations.append(_current_codex_home_limitation())
+    if auth_policy == "current-home-full":
+        limitations.append(_current_home_full_limitation())
 
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_by": "scripts/run-codex-live-benchmarks.py",
         "case_id": case.id,
         "variant": variant,
         "run_index": run_index,
-        "status": status,
-        "codex_home_mode": args.codex_home_mode,
+        "status": artifact_status,
+        "artifact_status": artifact_status,
+        "grading_status": grading_status,
+        "benchmark_mode": args.benchmark_mode,
+        "codex_home_mode": legacy_codex_home_mode(auth_policy),
+        "auth_policy": auth_policy,
+        "codex_environment_policy": environment_policy,
+        "grading_mode": case.grading_mode,
+        "publishable_for_strict": case.publishable_for_strict,
+        "benchmark_eligible": benchmark_eligible,
+        "benchmark_passed": benchmark_passed,
+        "contamination": contamination,
+        "environment": environment,
         "codex_returncode": codex_returncode,
         "failure": failure,
         "paths": {
-            "prompt": relpath(ROOT, run_dir / "prompt.md"),
-            "events": relpath(ROOT, events_path),
-            "final": relpath(ROOT, final_path),
-            "diff": relpath(ROOT, run_dir / "diff.patch"),
-            "git_status": relpath(ROOT, run_dir / "git-status.txt"),
-            "grading": relpath(ROOT, grading_dir / "grading-result.json"),
+            "prompt": _artifact_path(run_dir, run_dir / "prompt.md"),
+            "events": _artifact_path(run_dir, events_path),
+            "final": _artifact_path(run_dir, final_path),
+            "diff": _artifact_path(run_dir, run_dir / "diff.patch"),
+            "git_status": _artifact_path(run_dir, run_dir / "git-status.txt"),
+            "grading": _artifact_path(run_dir, grading_dir / "grading-result.json"),
         },
         "grading": grading,
         "metrics": metrics,
@@ -335,6 +466,68 @@ def _run_one_case(
     if not args.keep_workdirs:
         shutil.rmtree(candidate_dir, ignore_errors=True)
     return result
+
+
+def _artifact_path(run_dir: Path, path: Path) -> str:
+    """Return a run-local artifact label without exposing host absolute paths."""
+    try:
+        rel = path.resolve().relative_to(run_dir.resolve()).as_posix()
+    except ValueError:
+        return "<artifact>"
+    return f"<run-dir>/{rel}"
+
+
+def _contamination_for_variant(variant: str, run_dir: Path) -> dict[str, Any]:
+    if variant in {"baseline_clean", "current_home_smoke"}:
+        return detect_baseline_contamination(run_dir)
+    return {"contaminated": False, "signals": [], "files": []}
+
+
+def _grading_status(
+    case: CodexLiveCase,
+    grading: dict[str, Any],
+    contamination: dict[str, Any],
+    variant: str,
+) -> str:
+    if case.grading_mode == "telemetry_only":
+        return "telemetry_only"
+    if variant == "baseline_clean" and contamination.get("contaminated"):
+        return "contaminated"
+    explicit = grading.get("grading_status")
+    if explicit in {"passed", "failed", "not_collected"}:
+        return str(explicit)
+    if grading.get("all_passed") is True:
+        return "passed"
+    if grading.get("returncode") == 0:
+        return "failed"
+    return "not_collected"
+
+
+def _benchmark_eligible(
+    args: argparse.Namespace,
+    case: CodexLiveCase,
+    artifact_status: str,
+    grading_status: str,
+    contamination: dict[str, Any],
+    environment: dict[str, Any],
+) -> bool:
+    if args.benchmark_mode not in STRICT_BENCHMARK_MODES or resolve_auth_policy(args) not in STRICT_AUTH_POLICIES:
+        return False
+    if (
+        environment.get("user_skills_visible") is not False
+        or environment.get("user_config_loaded") is not False
+        or environment.get("user_rules_loaded") is not False
+        or environment.get("ignore_user_config") is not True
+        or environment.get("ignore_rules") is not True
+    ):
+        return False
+    return bool(
+        artifact_status == "collected"
+        and case.grading_mode == "assertion"
+        and case.publishable_for_strict
+        and grading_status in {"passed", "failed"}
+        and not contamination.get("contaminated")
+    )
 
 
 def _copy_starter(source: Path, destination: Path) -> None:
@@ -356,66 +549,143 @@ def _init_git(candidate_dir: Path) -> None:
 
 
 def _render_prompt(case: CodexLiveCase, variant: str) -> str:
-    system = (ROOT / "evals" / "codex-live" / "prompts" / f"{variant}-system.md").read_text(encoding="utf-8")
+    prompt_variant = "baseline" if variant == "baseline_clean" else "changeforge"
+    system = (ROOT / "evals" / "codex-live" / "prompts" / f"{prompt_variant}-system.md").read_text(encoding="utf-8")
     wrapper = (ROOT / "evals" / "codex-live" / "prompts" / "task-wrapper.md").read_text(encoding="utf-8")
     task = case.task_prompt.read_text(encoding="utf-8")
     return system + "\n\n" + wrapper.replace("{{TASK_PROMPT}}", task)
 
 
-def _isolated_env(out_dir: Path, case: CodexLiveCase, variant: str, run_index: int) -> dict[str, str]:
-    env = os.environ.copy()
-    home = out_dir / "_isolated-home" / safe_case_segment(case.id) / variant / f"run-{run_index:02d}"
-    codex_home = home / ".codex"
-    home.mkdir(parents=True, exist_ok=True)
-    codex_home.mkdir(parents=True, exist_ok=True)
-    env["HOME"] = str(home)
-    env["CODEX_HOME"] = str(codex_home)
-    return env
-
-
-def _codex_env(
+def build_codex_environment(
     args: argparse.Namespace,
-    out_dir: Path,
     case: CodexLiveCase,
     variant: str,
-    run_index: int,
-) -> tuple[dict[str, str], dict[str, str]]:
-    if args.codex_home_mode == "current":
-        env = os.environ.copy()
-        return env, _codex_env_metadata("current", env)
+    run_dir: Path,
+) -> tuple[dict[str, str], dict[str, Any]]:
+    """Build the subprocess environment and redacted result metadata."""
+    del case, variant  # Reserved for future per-case policy without widening the public helper.
+    auth_policy = resolve_auth_policy(args)
+    caller_env = os.environ.copy()
+    env = caller_env.copy()
+    if auth_policy == "current-home-full":
+        return env, _environment_metadata(
+            auth_policy,
+            home_label="<current-home-redacted>",
+            codex_home_label="<current-home-redacted>",
+            user_visible=True,
+        )
 
-    env = _isolated_env(out_dir, case, variant, run_index)
-    return env, _codex_env_metadata("isolated", env)
+    home = run_dir / "_home"
+    home.mkdir(parents=True, exist_ok=True)
+    env["HOME"] = str(home)
+    if auth_policy == "isolated-api-key":
+        codex_home = run_dir / "_codex-home"
+        codex_home.mkdir(parents=True, exist_ok=True)
+        env["CODEX_HOME"] = str(codex_home)
+        return env, _environment_metadata(
+            auth_policy,
+            home_label="<temp>",
+            codex_home_label="<temp>",
+            user_visible=False,
+        )
+
+    current_codex_home = _current_codex_home_source(caller_env)
+    borrowed_codex_home = _prepare_borrowed_auth_codex_home(current_codex_home)
+    env["CODEX_HOME"] = str(borrowed_codex_home)
+    env[INTERNAL_BORROWED_CODEX_HOME_ENV] = str(borrowed_codex_home)
+    return env, _environment_metadata(
+        auth_policy,
+        home_label="<temp>",
+        codex_home_label="<borrowed-current-auth>",
+        user_visible=False,
+    )
 
 
-def _codex_env_metadata(mode: str, env: dict[str, str]) -> dict[str, str]:
-    metadata = {
-        "HOME": "<isolated>" if mode == "isolated" else _inherited_home_label(env, "HOME"),
-        "CODEX_HOME": "<isolated>" if mode == "isolated" else _inherited_codex_home_label(env),
-        "CODEX_API_KEY": "<inherited-redacted>" if env.get("CODEX_API_KEY") else "<unset>",
-        "OPENAI_API_KEY": "<inherited-redacted>" if env.get("OPENAI_API_KEY") else "<unset>",
-    }
-    if mode == "current":
-        metadata["local_config_warning"] = "current mode may inherit user-level Codex config, auth, hooks, and trust state"
-    return metadata
-
-
-def _inherited_home_label(env: dict[str, str], key: str) -> str:
-    return "<inherited-redacted>" if env.get(key) else "<unset>"
-
-
-def _inherited_codex_home_label(env: dict[str, str]) -> str:
+def _current_codex_home_source(env: dict[str, str]) -> str:
     if env.get("CODEX_HOME"):
-        return "<inherited-redacted>"
-    if env.get("HOME"):
-        return "<default-under-inherited-home-redacted>"
-    return "<unset>"
+        return str(Path(env["CODEX_HOME"]).expanduser())
+    home = env.get("HOME")
+    if home:
+        return str(Path(home).expanduser() / ".codex")
+    return str(Path.home() / ".codex")
 
 
-def _current_codex_home_limitation() -> str:
+def _prepare_borrowed_auth_codex_home(current_codex_home: str) -> Path:
+    """Create a temp CODEX_HOME that references only current auth, not user capabilities."""
+    borrowed_home = Path(tempfile.mkdtemp(prefix="codex-live-borrowed-auth-"))
+    auth_source = Path(current_codex_home).expanduser() / "auth.json"
+    if auth_source.exists():
+        try:
+            (borrowed_home / "auth.json").symlink_to(auth_source)
+        except OSError:
+            pass
+    return borrowed_home
+
+
+def _subprocess_env(env: dict[str, str]) -> dict[str, str]:
+    """Return env for child processes without runner-internal cleanup metadata."""
+    return {key: value for key, value in env.items() if key != INTERNAL_BORROWED_CODEX_HOME_ENV}
+
+
+def _cleanup_borrowed_codex_home(env: dict[str, str]) -> None:
+    path = env.get(INTERNAL_BORROWED_CODEX_HOME_ENV)
+    if path:
+        shutil.rmtree(path, ignore_errors=True)
+
+
+def _environment_metadata(
+    auth_policy: str,
+    *,
+    home_label: str,
+    codex_home_label: str,
+    user_visible: bool,
+) -> dict[str, Any]:
+    strict = auth_policy in STRICT_AUTH_POLICIES
+    return {
+        "home": home_label,
+        "codex_home": codex_home_label,
+        "user_home_visible": user_visible,
+        "user_skills_visible": user_visible,
+        "user_config_loaded": user_visible,
+        "user_rules_loaded": user_visible,
+        "current_auth_borrowed": auth_policy in {"borrow-current", "current-home-full"},
+        "ignore_user_config": strict,
+        "ignore_rules": strict,
+        "plugins_disabled": strict,
+        "auth_json_copied": False,
+        "strict_benchmark_eligible": strict and not user_visible,
+    }
+
+
+def _command_metadata(args: argparse.Namespace, command: list[str], environment: dict[str, Any]) -> dict[str, Any]:
+    redacted = redact_codex_command(command)
+    auth_policy = resolve_auth_policy(args)
+    return {
+        "schema_version": 2,
+        "program": redacted[0] if redacted else "codex",
+        "args": redacted[1:],
+        "command": redacted,
+        "cwd": "<candidate>",
+        "auth_policy": auth_policy,
+        "codex_environment_policy": codex_environment_policy(auth_policy),
+        "codex_home_mode": legacy_codex_home_mode(auth_policy),
+        "env": {
+            "HOME": environment.get("home", "<redacted>"),
+            "CODEX_HOME": environment.get("codex_home", "<redacted>"),
+            "CODEX_API_KEY": _secret_env_label("CODEX_API_KEY"),
+            "OPENAI_API_KEY": _secret_env_label("OPENAI_API_KEY"),
+        },
+    }
+
+
+def _secret_env_label(name: str) -> str:
+    return "<redacted-if-present>" if os.environ.get(name) else "<unset>"
+
+
+def _current_home_full_limitation() -> str:
     return (
-        "Current Codex home mode may inherit user-level Codex config, auth, hooks, and trust state; "
-        "use a controlled Codex home before publishing comparative claims."
+        "Current-home-full mode may inherit user-level Codex config, auth, hooks, rules, skills, and trust state; "
+        "it is smoke evidence only and cannot support strict comparative claims."
     )
 
 
@@ -424,34 +694,38 @@ def _install_changeforge(
     candidate_dir: Path,
     env: dict[str, str],
     built_profiles: set[str],
+    *,
+    with_hooks: bool,
 ) -> None:
     if args.profile not in built_profiles:
         subprocess.run(
             [sys.executable, str(ROOT / "scripts" / "build.py"), "--profile", args.profile],
             cwd=ROOT,
-            env=env,
+            env=_subprocess_env(env),
             text=True,
             capture_output=True,
             shell=False,
             check=True,
         )
         built_profiles.add(args.profile)
+    command = [
+        sys.executable,
+        str(ROOT / "installers" / "install.py"),
+        "--agent",
+        "codex",
+        "--scope",
+        "project",
+        "--target",
+        str(candidate_dir),
+        "--profile",
+        args.profile,
+    ]
+    if with_hooks:
+        command.append("--with-hooks")
     subprocess.run(
-        [
-            sys.executable,
-            str(ROOT / "installers" / "install.py"),
-            "--agent",
-            "codex",
-            "--scope",
-            "project",
-            "--target",
-            str(candidate_dir),
-            "--profile",
-            args.profile,
-            "--with-universal-bootstrap",
-        ],
+        command,
         cwd=ROOT,
-        env=env,
+        env=_subprocess_env(env),
         text=True,
         capture_output=True,
         shell=False,
@@ -476,8 +750,13 @@ def _write_git_artifacts(candidate_dir: Path, run_dir: Path) -> None:
         shell=False,
         check=False,
     )
-    (run_dir / "diff.patch").write_text(diff.stdout, encoding="utf-8")
-    (run_dir / "git-status.txt").write_text(status.stdout, encoding="utf-8")
+    (run_dir / "diff.patch").write_text(redact_report_text(diff.stdout), encoding="utf-8")
+    (run_dir / "git-status.txt").write_text(redact_report_text(status.stdout), encoding="utf-8")
+
+
+def _redact_text_artifact(path: Path) -> None:
+    if path.exists() and path.is_file():
+        path.write_text(redact_report_text(path.read_text(encoding="utf-8", errors="ignore")), encoding="utf-8")
 
 
 def _parse_events(events_path: Path, out_path: Path) -> dict[str, Any]:
@@ -536,7 +815,7 @@ def _grade(case: CodexLiveCase, candidate_dir: Path, grading_dir: Path) -> dict[
     }
 
 
-def _generate_summary(out_dir: Path, *, publish: bool) -> None:
+def _generate_summary(out_dir: Path, *, publish: bool, publish_current_home_smoke: bool) -> None:
     command = [
         sys.executable,
         str(ROOT / "scripts" / "generate-codex-live-summary.py"),
@@ -545,6 +824,8 @@ def _generate_summary(out_dir: Path, *, publish: bool) -> None:
     ]
     if publish:
         command.append("--publish")
+    if publish_current_home_smoke:
+        command.append("--publish-current-home-smoke")
     subprocess.run(command, cwd=ROOT, text=True, capture_output=True, shell=False, check=False)
 
 
@@ -580,6 +861,11 @@ def main(argv: list[str] | None = None) -> int:
     if not selected:
         print("run-codex-live-benchmarks: ERROR: no cases selected", file=sys.stderr)
         return 1
+    mode_errors = validate_mode_args(args, variants)
+    if mode_errors:
+        for error in mode_errors:
+            print(f"run-codex-live-benchmarks: ERROR: {error}", file=sys.stderr)
+        return 2
 
     allowed = live_execution_allowed(args, os.environ)
     out_dir = (args.out or ROOT / "reports" / "codex-live-runs" / f"local-{utc_stamp()}").resolve()
@@ -587,7 +873,7 @@ def main(argv: list[str] | None = None) -> int:
         write_skipped_manifest(out_dir, args=args, cases=selected, variants=variants, allowed=allowed)
         print(f"run-codex-live-benchmarks: wrote skipped manifest to {out_dir / 'run-manifest.json'}")
         return 0
-    if args.codex_home_mode == "current" and not current_codex_home_allowed(args, os.environ):
+    if resolve_auth_policy(args) == "current-home-full" and not current_codex_home_allowed(args, os.environ):
         print(
             f"run-codex-live-benchmarks: ERROR: {CURRENT_CODEX_HOME_REFUSAL_MESSAGE}",
             file=sys.stderr,

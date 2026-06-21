@@ -1,2 +1,0 @@
-WARNING: proceeding, even though we could not create PATH aliases: CODEX_HOME points to "reports/codex-live-runs/local-20260620-195905/_isolated-home/devex__helper-reuse-search/baseline/run-01/.codex", but that path does not exist
-Error finding codex home: CODEX_HOME points to "reports/codex-live-runs/local-20260620-195905/_isolated-home/devex__helper-reuse-search/baseline/run-01/.codex", but that path does not exist

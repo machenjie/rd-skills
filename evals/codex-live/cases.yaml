@@ -9,48 +9,68 @@ cases:
     codegen_case: helper-reuse-search
     enabled: true
     variants:
-      - baseline
-      - changeforge
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
     task_prompt: evals/codegen/devex/helper-reuse-search/prompt.md
     starter_repo: evals/codegen/devex/helper-reuse-search/starter-repo
     grading_benchmark: devex/helper-reuse-search
+    grading_mode: telemetry_only
+    publishable_for_strict: false
   - id: devex/minimal-correct-implementation-ladder
     category: devex
     codegen_case: minimal-correct-implementation-ladder
     enabled: true
     variants:
-      - baseline
-      - changeforge
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
     task_prompt: evals/codegen/devex/minimal-correct-implementation-ladder/prompt.md
     starter_repo: evals/codegen/devex/minimal-correct-implementation-ladder/starter-repo
     grading_benchmark: devex/minimal-correct-implementation-ladder
+    grading_mode: telemetry_only
+    publishable_for_strict: false
   - id: structure/object-method-encapsulation-placement
     category: structure
     codegen_case: object-method-encapsulation-placement
     enabled: true
     variants:
-      - baseline
-      - changeforge
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
     task_prompt: evals/codegen/structure/object-method-encapsulation-placement/prompt.md
     starter_repo: evals/codegen/structure/object-method-encapsulation-placement/starter-repo
     grading_benchmark: structure/object-method-encapsulation-placement
+    grading_mode: telemetry_only
+    publishable_for_strict: false
   - id: backend/service-method-vs-new-helper
     category: backend
     codegen_case: service-method-vs-new-helper
     enabled: true
     variants:
-      - baseline
-      - changeforge
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
     task_prompt: evals/codegen/backend/service-method-vs-new-helper/prompt.md
     starter_repo: evals/codegen/backend/service-method-vs-new-helper/starter-repo
     grading_benchmark: backend/service-method-vs-new-helper
+    grading_mode: telemetry_only
+    publishable_for_strict: false
   - id: security/ssrf-url-allowlist
     category: security
     codegen_case: ssrf-url-allowlist
     enabled: true
     variants:
-      - baseline
-      - changeforge
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
     task_prompt: evals/codegen/security/ssrf-url-allowlist/prompt.md
     starter_repo: evals/codegen/security/ssrf-url-allowlist/starter-repo
     grading_benchmark: security/ssrf-url-allowlist
+    grading_mode: assertion
+    publishable_for_strict: true
