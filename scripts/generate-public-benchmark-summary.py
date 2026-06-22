@@ -305,6 +305,7 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
         status = "fail"
     detail = {
         "evidence_status": status,
+        "effect_note": "evidence_status pass reports collection quality only; effect_verdict reports measured impact",
         "evidence_level": summary.get("evidence_level"),
         "evidence_scope": summary.get("evidence_scope"),
         "evidence_scope_detail": summary.get("evidence_scope_detail"),
@@ -325,6 +326,8 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
         "dominant_failure_category": summary.get("dominant_failure_category"),
         "setup_failure_reasons": summary.get("setup_failure_reasons"),
         "dominant_setup_failure_reason": summary.get("dominant_setup_failure_reason"),
+        "setup_failure_subreasons": summary.get("setup_failure_subreasons"),
+        "dominant_setup_failure_subreason": summary.get("dominant_setup_failure_subreason"),
         "unknown_setup_failure_rate": summary.get("unknown_setup_failure_rate"),
         "variants": {
             variant: {
@@ -337,6 +340,8 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
                 "failure_categories": payload.get("failure_categories"),
                 "setup_failure_reasons": payload.get("setup_failure_reasons"),
                 "dominant_setup_failure_reason": payload.get("dominant_setup_failure_reason"),
+                "setup_failure_subreasons": payload.get("setup_failure_subreasons"),
+                "dominant_setup_failure_subreason": payload.get("dominant_setup_failure_subreason"),
                 "unknown_setup_failure_rate": payload.get("unknown_setup_failure_rate"),
             }
             for variant, payload in (summary.get("variants") or {}).items()
@@ -415,6 +420,19 @@ def _codex_live_strict_summary_errors(summary: dict[str, Any]) -> list[str]:
         "unknown",
     }:
         errors.append("dominant_setup_failure_reason is required")
+    if summary.get("dominant_setup_failure_subreason") not in {
+        "none",
+        "candidate_modified_setup",
+        "starter_fragile_path",
+        "missing_env_root",
+        "wrong_cwd",
+        "missing_harness",
+        "classifier_uncertain",
+        "unknown",
+    }:
+        errors.append("dominant_setup_failure_subreason is required")
+    if not isinstance(summary.get("setup_failure_subreasons"), dict):
+        errors.append("setup_failure_subreasons are required")
     unknown_rate = summary.get("unknown_setup_failure_rate")
     if not isinstance(unknown_rate, int | float) or not 0 <= float(unknown_rate) <= 1:
         errors.append("unknown_setup_failure_rate is required")

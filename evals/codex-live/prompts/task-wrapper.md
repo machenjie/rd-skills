@@ -13,8 +13,12 @@ final answer that includes:
 Preserve `setup.sh` and benchmark harness entrypoints. Do not delete or rewrite
 `setup.sh` unless the task explicitly requires it. If `setup.sh` must change,
 keep it runnable from the candidate root and compatible with
-`CHANGEFORGE_CODEGEN_ROOT`. Do not add external network dependencies. Do not
-write into `HOME` or `CODEX_HOME`. Before the final response, run or reason
-through setup and report the exact validation commands and results.
+`CHANGEFORGE_CODEGEN_ROOT`. Do not rely on fixed-depth parent traversal to find
+the repository root. Do not add external network dependencies. Do not add package
+dependencies unless the task explicitly requires them; prefer the standard
+library and existing files. If a dependency is unavoidable, document why and keep
+setup deterministic. Do not write into `HOME` or `CODEX_HOME`. Before the final
+response, run or reason through setup and report the exact validation commands
+and results.
 
 {{TASK_PROMPT}}

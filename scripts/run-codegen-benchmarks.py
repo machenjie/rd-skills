@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import shutil
@@ -168,7 +169,7 @@ def _run_script(
     script: Path,
     cwd: Path,
     env_overrides: dict[str, str],
-) -> tuple[bool, str]:
+) -> tuple[bool, str, int]:
     env = os.environ.copy()
     env.update(env_overrides)
     completed = subprocess.run(
@@ -181,8 +182,24 @@ def _run_script(
         check=False,
     )
     if completed.returncode == 0:
-        return True, completed.stdout
-    return False, f"{label} exited {completed.returncode}\n{completed.stdout}"
+        return True, completed.stdout, completed.returncode
+    return False, f"{label} exited {completed.returncode}\n{completed.stdout}", completed.returncode
+
+
+def _write_stage_artifact(stage_log_dir: Path | None, stage: str, text: str) -> None:
+    if stage_log_dir is None:
+        return
+    stage_log_dir.mkdir(parents=True, exist_ok=True)
+    (stage_log_dir / f"{stage}.log").write_text(text, encoding="utf-8")
+
+
+def _required_candidate_file_errors(starter_dir: Path, candidate_dir: Path) -> list[str]:
+    errors: list[str] = []
+    for rel in ("README.md",):
+        starter_file = starter_dir / rel
+        if starter_file.is_file() and not (candidate_dir / rel).is_file():
+            errors.append(f"candidate lacks required starter file {rel}")
+    return errors
 
 
 def _run_case(
@@ -190,9 +207,24 @@ def _run_case(
     case_id: str,
     case_dir: Path,
     candidate_dir: Path | None,
+    stage_log_dir: Path | None = None,
 ) -> list[str]:
+    stage_records: list[dict[str, object]] = []
+
+    def record(stage: str, passed: bool, output: str, returncode: int | None = None) -> None:
+        stage_records.append(
+            {
+                "case": f"{category}/{case_id}",
+                "stage": stage,
+                "passed": passed,
+                "returncode": returncode,
+            }
+        )
+        _write_stage_artifact(stage_log_dir, stage, output)
+
     errors = _validate_scripts(case_dir)
     if errors:
+        record("setup", False, "\n".join(errors))
         return errors
 
     starter_dir = case_dir / "starter-repo"
@@ -206,12 +238,40 @@ def _run_case(
         implementation_dir / "setup.sh" if candidate_dir else starter_dir / "setup.sh"
     )
     if not setup_script.is_file():
-        return [f"{category}/{case_id}: {setup_script} is missing"]
+        message = (
+            f"{category}/{case_id}: candidate/setup.sh missing"
+            if candidate_dir
+            else f"{category}/{case_id}: starter-repo/setup.sh is missing"
+        )
+        record("setup", False, message)
+        if stage_log_dir is not None:
+            (stage_log_dir / "stage-results.json").write_text(
+                json.dumps(stage_records, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+        return [message]
     if candidate_dir and not _real_assertion_files(case_dir):
-        return [
+        message = (
             f"{category}/{case_id}: candidate evaluation requires real assertion "
             "files under test-suite/tests or security-checks/security_tests"
-        ]
+        )
+        record("assertion-files", False, message)
+        if stage_log_dir is not None:
+            (stage_log_dir / "stage-results.json").write_text(
+                json.dumps(stage_records, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+        return [message]
+    if candidate_dir:
+        required_file_errors = _required_candidate_file_errors(starter_dir, implementation_dir)
+        if required_file_errors:
+            record("setup", False, "\n".join(required_file_errors))
+            if stage_log_dir is not None:
+                (stage_log_dir / "stage-results.json").write_text(
+                    json.dumps(stage_records, indent=2, sort_keys=True) + "\n",
+                    encoding="utf-8",
+                )
+            return [f"{category}/{case_id}: {error}" for error in required_file_errors]
 
     steps = (
         ("setup", setup_script),
@@ -225,15 +285,24 @@ def _run_case(
     }
     if candidate_dir:
         env_overrides["CHANGEFORGE_CODEGEN_EVALUATE"] = "1"
+        env_overrides["CHANGEFORGE_CODEGEN_CANDIDATE_DIR"] = str(implementation_dir)
     else:
         env_overrides["CHANGEFORGE_CODEGEN_SMOKE"] = "1"
 
     for label, script in steps:
-        ok, output = _run_script(label, script, implementation_dir, env_overrides)
+        ok, output, returncode = _run_script(label, script, implementation_dir, env_overrides)
+        record(label, ok, output, returncode)
         if not ok:
             errors.append(f"{category}/{case_id}: {output.rstrip()}")
     if candidate_dir:
-        errors.extend(_run_assertion_files(category, case_id, case_dir, implementation_dir))
+        assertion_errors = _run_assertion_files(category, case_id, case_dir, implementation_dir)
+        record("assertion-files", not assertion_errors, "\n".join(assertion_errors))
+        errors.extend(assertion_errors)
+    if stage_log_dir is not None:
+        (stage_log_dir / "stage-results.json").write_text(
+            json.dumps(stage_records, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
     return errors
 
 
@@ -293,6 +362,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Evaluate selected benchmarks against <root>/<category>/<benchmark> directories.",
     )
     parser.add_argument("--list", action="store_true", help="List selected benchmarks and exit.")
+    parser.add_argument(
+        "--stage-log-dir",
+        type=Path,
+        help="Write machine-readable per-stage logs for one selected benchmark.",
+    )
     args = parser.parse_args(argv)
 
     cases = _select_cases(args)
@@ -310,8 +384,17 @@ def main(argv: list[str] | None = None) -> int:
 
     errors: list[str] = []
     for category, case_id, case_dir in cases:
+        stage_log_dir = None
+        if args.stage_log_dir:
+            stage_log_dir = args.stage_log_dir / f"{category}__{case_id}"
         errors.extend(
-            _run_case(category, case_id, case_dir, candidates.get((category, case_id)))
+            _run_case(
+                category,
+                case_id,
+                case_dir,
+                candidates.get((category, case_id)),
+                stage_log_dir=stage_log_dir,
+            )
         )
 
     if errors:

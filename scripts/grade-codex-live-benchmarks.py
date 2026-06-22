@@ -4,7 +4,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -14,6 +17,13 @@ from codex_live_benchmark_lib import ROOT, case_assertion_files, redact_report_t
 
 
 EXCERPT_MAX_CHARS = 1200
+SETUP_CONTRACT_FIELDS = (
+    "candidate_setup_exists",
+    "candidate_setup_hash_changed",
+    "candidate_setup_mentions_changeforge_codegen_root",
+    "candidate_setup_uses_fixed_parent_traversal",
+    "candidate_setup_invokes_codegen_harness",
+)
 
 
 def _case_dir(benchmark: str, root: Path) -> Path:
@@ -115,6 +125,24 @@ def _stage_failures(text: str, *, returncode: int) -> dict[str, bool]:
     }
 
 
+def _stage_failures_from_records(records: list[dict[str, Any]], text: str, *, returncode: int) -> dict[str, bool]:
+    failures = _stage_failures(text, returncode=returncode)
+    stage_map = {
+        "setup": "setup",
+        "test-suite": "test_suite",
+        "security-checks": "security_checks",
+    }
+    for record in records:
+        stage = stage_map.get(str(record.get("stage")))
+        if not stage:
+            continue
+        if record.get("passed") is False:
+            failures[stage] = True
+        elif record.get("passed") is True and not failures.get(stage):
+            failures[stage] = False
+    return failures
+
+
 def _first_failure_stage(stages: dict[str, bool], *, all_passed: bool) -> str:
     if all_passed:
         return "none"
@@ -128,7 +156,12 @@ def _setup_failure_reason(text: str, *, failed: bool) -> str:
     if not failed:
         return "none"
     lowered = text.casefold()
-    if "setup.sh is missing" in lowered or "setup.sh: no such file" in lowered or "starter-repo/setup.sh: missing" in lowered:
+    if (
+        "setup.sh is missing" in lowered
+        or "candidate/setup.sh missing" in lowered
+        or "setup.sh: no such file" in lowered
+        or "starter-repo/setup.sh: missing" in lowered
+    ):
         return "setup_script_missing"
     if "candidate lacks required starter file" in lowered or (
         "missing starter readme" in lowered or "starter readme" in lowered and "missing" in lowered
@@ -145,15 +178,116 @@ def _setup_failure_reason(text: str, *, failed: bool) -> str:
         and ("no such file" in lowered or "can't open file" in lowered or "not found" in lowered)
     ):
         return "missing_harness"
-    if re.search(r"(?i)(pip install|npm install|module not found|modulenotfounderror|importerror|dependency)", text):
+    if re.search(
+        r"(?i)(ModuleNotFoundError:\s*No module named|ImportError:\s*(cannot import|No module named)|"
+        r"No module named ['\"][^'\"]+['\"]|package install failed|dependency install failed)",
+        text,
+    ):
         return "dependency_install_failed"
     if re.search(r"(?i)(syntaxerror|compileall|py_compile|python compile)", text):
         return "python_compile_failed"
-    if "permission denied" in lowered:
+    if re.search(
+        r"(?im)(^(?:bash|sh): [^\n]*permission denied|"
+        r"PermissionError:\s*\[Errno 13\][^\n]*permission denied|"
+        r"OSError:\s*\[Errno 13\][^\n]*permission denied|errno 13[^\n]*permission denied)",
+        text,
+    ):
         return "permission_denied"
-    if "command not found" in lowered or "bad interpreter" in lowered:
+    if re.search(r"(?im)(^[^\n:]+: command not found|bad interpreter:)", text):
         return "shell_error"
     return "unknown"
+
+
+def _file_hash(path: Path) -> str | None:
+    if not path.is_file():
+        return None
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(65536), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _setup_contract(benchmark: str, candidate_dir: Path, *, root: Path) -> dict[str, bool]:
+    case_dir = _case_dir(benchmark, root)
+    starter_setup = case_dir / "starter-repo" / "setup.sh"
+    candidate_setup = candidate_dir / "setup.sh"
+    exists = candidate_setup.is_file()
+    text = candidate_setup.read_text(encoding="utf-8", errors="ignore") if exists else ""
+    starter_hash = _file_hash(starter_setup)
+    candidate_hash = _file_hash(candidate_setup)
+    return {
+        "candidate_setup_exists": exists,
+        "candidate_setup_hash_changed": bool(exists and starter_hash and candidate_hash and starter_hash != candidate_hash),
+        "candidate_setup_mentions_changeforge_codegen_root": "CHANGEFORGE_CODEGEN_ROOT" in text,
+        "candidate_setup_uses_fixed_parent_traversal": bool(
+            re.search(r"(\.\./){2,}|(\.\.\\){2,}|parents\[[1-9]", text)
+        ),
+        "candidate_setup_invokes_codegen_harness": "codegen_benchmark_harness.py" in text,
+    }
+
+
+def _setup_failure_subreason(
+    text: str,
+    *,
+    failed: bool,
+    setup_failure_reason: str,
+    setup_contract: dict[str, bool],
+) -> str:
+    if not failed:
+        return "none"
+    lowered = text.casefold()
+    if "changeforge_codegen_root is unset" in lowered or (
+        "changeforge_codegen_root" in lowered and "unset" in lowered
+    ):
+        return "missing_env_root"
+    if setup_failure_reason == "missing_harness":
+        return "missing_harness"
+    if setup_failure_reason != "setup_script_modified_bad_path":
+        return "unknown"
+    if "expected starter-repo cwd" in lowered or "wrong cwd" in lowered:
+        return "wrong_cwd"
+    if setup_contract.get("candidate_setup_hash_changed") and setup_contract.get(
+        "candidate_setup_uses_fixed_parent_traversal"
+    ):
+        return "candidate_modified_setup"
+    if setup_contract.get("candidate_setup_uses_fixed_parent_traversal") or "../../.." in lowered or "..\\..\\.." in lowered:
+        return "starter_fragile_path"
+    return "classifier_uncertain"
+
+
+def _load_stage_records(path: Path) -> list[dict[str, Any]]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    if not isinstance(payload, list):
+        return []
+    return [item for item in payload if isinstance(item, dict)]
+
+
+def _redacted_stage_log(
+    raw_stage_dir: Path,
+    stage: str,
+    *,
+    fallback: str,
+    root: Path,
+    candidate_dir: Path,
+) -> str:
+    path = raw_stage_dir / f"{stage}.log"
+    if path.is_file():
+        raw = path.read_text(encoding="utf-8", errors="replace")
+    else:
+        raw = fallback
+    return _redact_output(raw, root=root, candidate_dir=candidate_dir)
+
+
+def _single_stage_dir(raw_stage_dir: Path) -> Path:
+    """Return the one per-case stage directory written by the runner."""
+    if not raw_stage_dir.is_dir():
+        return raw_stage_dir
+    candidates = sorted(path for path in raw_stage_dir.iterdir() if path.is_dir())
+    return candidates[0] if candidates else raw_stage_dir
 
 
 def _test_suite_failure_reason(text: str, *, failed: bool) -> str:
@@ -217,6 +351,10 @@ def grade_candidate(
         "--candidate-dir",
         str(candidate_dir),
     ]
+    raw_stage_dir = out_dir / "_raw-stage-logs"
+    if raw_stage_dir.exists():
+        shutil.rmtree(raw_stage_dir)
+    command.extend(["--stage-log-dir", str(raw_stage_dir)])
     completed = subprocess.run(
         command,
         cwd=root,
@@ -255,16 +393,48 @@ def grade_candidate(
         "stderr:\n"
         f"{stderr_text}\n"
     )
-    for log_name in ("setup.log", "test-suite.log", "security-checks.log"):
-        (out_dir / log_name).write_text(combined, encoding="utf-8")
+    stage_record_dir = _single_stage_dir(raw_stage_dir)
+    stage_records = _load_stage_records(stage_record_dir / "stage-results.json")
+    setup_log = _redacted_stage_log(
+        _single_stage_dir(raw_stage_dir),
+        "setup",
+        fallback=combined,
+        root=root,
+        candidate_dir=candidate_dir,
+    )
+    test_suite_log = _redacted_stage_log(
+        _single_stage_dir(raw_stage_dir),
+        "test-suite",
+        fallback=combined,
+        root=root,
+        candidate_dir=candidate_dir,
+    )
+    security_log = _redacted_stage_log(
+        _single_stage_dir(raw_stage_dir),
+        "security-checks",
+        fallback=combined,
+        root=root,
+        candidate_dir=candidate_dir,
+    )
+    (out_dir / "setup.log").write_text(setup_log, encoding="utf-8")
+    (out_dir / "test-suite.log").write_text(test_suite_log, encoding="utf-8")
+    (out_dir / "security-checks.log").write_text(security_log, encoding="utf-8")
 
     all_passed = completed.returncode == 0
-    stages = _stage_failures(raw_combined, returncode=completed.returncode)
+    stages = _stage_failures_from_records(stage_records, raw_combined, returncode=completed.returncode)
     first_failure_stage = _first_failure_stage(stages, all_passed=all_passed)
     first_failure_excerpt = "" if all_passed else _first_failure_excerpt(combined)
     setup_passed = all_passed or not stages["setup"]
     test_suite_passed = all_passed or not stages["test_suite"]
     security_checks_passed = all_passed or not stages["security_checks"]
+    setup_contract = _setup_contract(benchmark, candidate_dir, root=root)
+    setup_failure_reason = _setup_failure_reason(raw_combined, failed=not setup_passed)
+    setup_failure_subreason = _setup_failure_subreason(
+        raw_combined,
+        failed=not setup_passed,
+        setup_failure_reason=setup_failure_reason,
+        setup_contract=setup_contract,
+    )
     result: dict[str, Any] = {
         "schema_version": 2,
         "generated_by": "scripts/grade-codex-live-benchmarks.py",
@@ -276,20 +446,20 @@ def grade_candidate(
         "setup_passed": setup_passed,
         "test_suite_passed": test_suite_passed,
         "security_checks_passed": security_checks_passed,
-        "setup_failure_reason": _setup_failure_reason(raw_combined, failed=not setup_passed),
+        "setup_failure_reason": setup_failure_reason,
+        "setup_failure_subreason": setup_failure_subreason,
+        "setup_contract": setup_contract,
         "test_suite_failure_reason": _test_suite_failure_reason(raw_combined, failed=not test_suite_passed),
         "security_failure_reason": _security_failure_reason(raw_combined, failed=not security_checks_passed),
         "first_failure_stage": first_failure_stage,
         "first_failure_excerpt": first_failure_excerpt,
-        "setup_log_excerpt": ""
-        if setup_passed
-        else _stage_excerpt(combined, "setup", fallback=first_failure_excerpt),
+        "setup_log_excerpt": "" if setup_passed else _excerpt(setup_log),
         "test_suite_log_excerpt": ""
         if test_suite_passed
-        else _stage_excerpt(combined, "test_suite", fallback=first_failure_excerpt),
+        else _stage_excerpt(test_suite_log, "test_suite", fallback=first_failure_excerpt),
         "security_log_excerpt": ""
         if security_checks_passed
-        else _stage_excerpt(combined, "security_checks", fallback=first_failure_excerpt),
+        else _stage_excerpt(security_log, "security_checks", fallback=first_failure_excerpt),
         "logs": {
             "stdout": _grading_path(out_dir, stdout_path),
             "stderr": _grading_path(out_dir, stderr_path),
@@ -298,6 +468,7 @@ def grade_candidate(
             "security_checks": _grading_path(out_dir, out_dir / "security-checks.log"),
         },
     }
+    shutil.rmtree(raw_stage_dir, ignore_errors=True)
     write_json(out_dir / "grading-result.json", result)
     return result
 
@@ -333,6 +504,8 @@ def _write_not_collected_grading(
         "test_suite_passed": False,
         "security_checks_passed": False,
         "setup_failure_reason": "none",
+        "setup_failure_subreason": "none",
+        "setup_contract": {field: False for field in SETUP_CONTRACT_FIELDS},
         "test_suite_failure_reason": "none",
         "security_failure_reason": "none",
         "first_failure_stage": "assertion_files",

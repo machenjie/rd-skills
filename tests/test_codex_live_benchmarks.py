@@ -49,6 +49,8 @@ def _variant_payload(**overrides: object) -> dict[str, object]:
         "failure_categories": {"none": 1},
         "setup_failure_reasons": {"none": 1},
         "dominant_setup_failure_reason": "none",
+        "setup_failure_subreasons": {"none": 1},
+        "dominant_setup_failure_subreason": "none",
         "unknown_setup_failure_rate": 0.0,
         "test_suite_failure_reasons": {"none": 1},
         "security_failure_reasons": {"none": 1},
@@ -119,6 +121,8 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
             },
             "reason": "missing required ablation variants, repeated runs, or eligible assertion-backed results",
             "dominant_setup_failure_reason": "none",
+            "dominant_setup_failure_subreason": "none",
+            "setup_failure_subreasons": {"none": 1},
             "unknown_setup_failure_rate": 0.0,
         },
         "benchmark_mode": "clean-paired",
@@ -142,6 +146,8 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
         "dominant_failure_category": "none",
         "setup_failure_reasons": {"none": 2},
         "dominant_setup_failure_reason": "none",
+        "setup_failure_subreasons": {"none": 2},
+        "dominant_setup_failure_subreason": "none",
         "unknown_setup_failure_rate": 0.0,
         "test_suite_failure_reasons": {"none": 2},
         "security_failure_reasons": {"none": 2},
@@ -174,6 +180,8 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
                 "grading_mode": "assertion",
                 "setup_failure_reasons": {"none": 2},
                 "dominant_setup_failure_reason": "none",
+                "setup_failure_subreasons": {"none": 2},
+                "dominant_setup_failure_subreason": "none",
                 "unknown_setup_failure_rate": 0.0,
                 "variants": {
                     "baseline_clean": {
@@ -184,6 +192,8 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
                         "failure_categories": {"none": 1},
                         "setup_failure_reasons": {"none": 1},
                         "dominant_setup_failure_reason": "none",
+                        "setup_failure_subreasons": {"none": 1},
+                        "dominant_setup_failure_subreason": "none",
                         "unknown_setup_failure_rate": 0.0,
                         "test_suite_failure_reasons": {"none": 1},
                         "security_failure_reasons": {"none": 1},
@@ -196,6 +206,8 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
                         "failure_categories": {"none": 1},
                         "setup_failure_reasons": {"none": 1},
                         "dominant_setup_failure_reason": "none",
+                        "setup_failure_subreasons": {"none": 1},
+                        "dominant_setup_failure_subreason": "none",
                         "unknown_setup_failure_rate": 0.0,
                         "test_suite_failure_reasons": {"none": 1},
                         "security_failure_reasons": {"none": 1},
@@ -230,6 +242,13 @@ def _environment_payload(**overrides: object) -> dict[str, object]:
 
 
 def _result_payload(**overrides: object) -> dict[str, object]:
+    setup_contract = {
+        "candidate_setup_exists": True,
+        "candidate_setup_hash_changed": False,
+        "candidate_setup_mentions_changeforge_codegen_root": True,
+        "candidate_setup_uses_fixed_parent_traversal": False,
+        "candidate_setup_invokes_codegen_harness": True,
+    }
     payload: dict[str, object] = {
         "schema_version": 2,
         "generated_by": "scripts/run-codex-live-benchmarks.py",
@@ -249,6 +268,8 @@ def _result_payload(**overrides: object) -> dict[str, object]:
         "benchmark_passed": True,
         "failure_category": "none",
         "setup_failure_reason": "none",
+        "setup_failure_subreason": "none",
+        "setup_contract": setup_contract,
         "test_suite_failure_reason": "none",
         "security_failure_reason": "none",
         "first_failure_stage": "none",
@@ -949,12 +970,15 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(summary["effect_status"], "regression")
         self.assertEqual(summary["failure_categories"], {"none": 5, "setup_failed": 40})
         self.assertEqual(summary["setup_failure_reasons"], {"none": 5, "unknown": 40})
+        self.assertEqual(summary["setup_failure_subreasons"], {"none": 5, "unknown": 40})
         self.assertEqual(summary["dominant_failure_category"], "setup_failed")
         self.assertEqual(summary["dominant_setup_failure_reason"], "unknown")
+        self.assertEqual(summary["dominant_setup_failure_subreason"], "unknown")
         self.assertEqual(summary["unknown_setup_failure_rate"], 1.0)
         self.assertTrue(any("Setup failure diagnostics remain incomplete" in item for item in summary["limitations"]))
         self.assertEqual(summary["effect_summary"]["dominant_failure_category"], "setup_failed")
         self.assertEqual(summary["effect_summary"]["dominant_setup_failure_reason"], "unknown")
+        self.assertEqual(summary["effect_summary"]["dominant_setup_failure_subreason"], "unknown")
 
     def test_summary_classifies_historical_setup_logs_when_reason_was_unknown(self) -> None:
         summary_module = _load_script(
@@ -1008,7 +1032,9 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             )
             summary = summary_module.generate_summary(run_dir)
         self.assertEqual(summary["setup_failure_reasons"], {"setup_script_modified_bad_path": 1})
+        self.assertEqual(summary["setup_failure_subreasons"], {"starter_fragile_path": 1})
         self.assertEqual(summary["dominant_setup_failure_reason"], "setup_script_modified_bad_path")
+        self.assertEqual(summary["dominant_setup_failure_subreason"], "starter_fragile_path")
         self.assertEqual(summary["unknown_setup_failure_rate"], 0.0)
 
     def test_failure_category_priority_is_stable(self) -> None:
@@ -1244,6 +1270,18 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertTrue(result["security_checks_passed"])
         self.assertEqual(result["first_failure_stage"], "setup")
         self.assertEqual(result["setup_failure_reason"], "missing_harness")
+        self.assertEqual(result["setup_failure_subreason"], "missing_harness")
+        self.assertEqual(
+            set(result["setup_contract"]),
+            {
+                "candidate_setup_exists",
+                "candidate_setup_hash_changed",
+                "candidate_setup_mentions_changeforge_codegen_root",
+                "candidate_setup_uses_fixed_parent_traversal",
+                "candidate_setup_invokes_codegen_harness",
+            },
+        )
+        self.assertFalse(result["setup_contract"]["candidate_setup_exists"])
         self.assertEqual(result["test_suite_failure_reason"], "assertion_failed")
         encoded = json.dumps(result)
         self.assertNotIn("/Users/", encoded)
@@ -1257,7 +1295,7 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         grader = _load_script("grade_codex_live_setup_reason_classifier", "scripts/grade-codex-live-benchmarks.py")
         examples = {
             "missing_harness": "codegen_benchmark_harness.py: No such file",
-            "setup_script_missing": "setup.sh is missing",
+            "setup_script_missing": "candidate/setup.sh missing",
             "setup_script_modified_bad_path": (
                 "python3: can't open file '<candidate>/../../../../../scripts/codegen_benchmark_harness.py': "
                 "No such file"
@@ -1273,6 +1311,51 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             with self.subTest(expected=expected):
                 self.assertEqual(grader._setup_failure_reason(text, failed=True), expected)
         self.assertEqual(grader._setup_failure_reason("setup exited 1", failed=False), "none")
+        self.assertEqual(
+            grader._setup_failure_reason("AssertionError: external network dependency is not allowed", failed=True),
+            "unknown",
+        )
+        self.assertEqual(
+            grader._setup_failure_reason("Policy text mentions permission denied behavior", failed=True),
+            "unknown",
+        )
+
+        fixed_path_contract = {
+            "candidate_setup_exists": True,
+            "candidate_setup_hash_changed": False,
+            "candidate_setup_mentions_changeforge_codegen_root": False,
+            "candidate_setup_uses_fixed_parent_traversal": True,
+            "candidate_setup_invokes_codegen_harness": True,
+        }
+        modified_contract = dict(fixed_path_contract)
+        modified_contract["candidate_setup_hash_changed"] = True
+        self.assertEqual(
+            grader._setup_failure_subreason(
+                "../../../../../scripts/codegen_benchmark_harness.py: No such file",
+                failed=True,
+                setup_failure_reason="setup_script_modified_bad_path",
+                setup_contract=fixed_path_contract,
+            ),
+            "starter_fragile_path",
+        )
+        self.assertEqual(
+            grader._setup_failure_subreason(
+                "../../../../../scripts/codegen_benchmark_harness.py: No such file",
+                failed=True,
+                setup_failure_reason="setup_script_modified_bad_path",
+                setup_contract=modified_contract,
+            ),
+            "candidate_modified_setup",
+        )
+        self.assertEqual(
+            grader._setup_failure_subreason(
+                "CHANGEFORGE_CODEGEN_ROOT is unset",
+                failed=True,
+                setup_failure_reason="setup_script_modified_bad_path",
+                setup_contract=fixed_path_contract,
+            ),
+            "missing_env_root",
+        )
 
     def test_grading_result_validator_checks_diagnostic_fields(self) -> None:
         validator = _load_script(
@@ -1281,6 +1364,8 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         )
         payload = {
             "setup_failure_reason": "missing_harness",
+            "setup_failure_subreason": "missing_harness",
+            "setup_contract": {"candidate_setup_exists": "yes"},
             "test_suite_failure_reason": "none",
             "security_failure_reason": "none",
             "first_failure_stage": "setup",
@@ -1293,6 +1378,7 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertTrue(any("unredacted marker /Users/" in error for error in errors))
         self.assertTrue(any("unredacted marker CODEX_API_KEY" in error for error in errors))
         self.assertTrue(any("bounded to 1200" in error for error in errors))
+        self.assertTrue(any("setup_contract.candidate_setup_exists must be boolean" in error for error in errors))
 
     def test_positive_effect_is_rejected_when_unknown_setup_dominates(self) -> None:
         summary_module = _load_script(
@@ -1387,6 +1473,97 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             (candidate / "sentinel.txt").write_text("bad", encoding="utf-8")
             errors = runner._run_case("sample", "assertion-case", case_dir, candidate)
         self.assertTrue(any("assertion" in error and "test_candidate.py" in error for error in errors))
+
+    def test_codegen_candidate_setup_uses_exported_root_and_candidate_dir(self) -> None:
+        runner = _load_script("run_codegen_benchmark_candidate_env", "scripts/run-codegen-benchmarks.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            case_dir = root / "case"
+            starter = case_dir / "starter-repo"
+            test_suite = case_dir / "test-suite"
+            security_checks = case_dir / "security-checks"
+            tests_dir = test_suite / "tests"
+            candidate = root / "candidate"
+            for path in (starter, test_suite, security_checks, tests_dir, candidate):
+                path.mkdir(parents=True, exist_ok=True)
+            (starter / "setup.sh").write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            (candidate / "setup.sh").write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env bash",
+                        "set -euo pipefail",
+                        'test -n "${CHANGEFORGE_CODEGEN_ROOT:-}"',
+                        'test -f "$CHANGEFORGE_CODEGEN_ROOT/scripts/codegen_benchmark_harness.py"',
+                        'python3 - <<\'PY\'',
+                        "import os",
+                        "from pathlib import Path",
+                        "assert Path.cwd().resolve() == Path(os.environ['CHANGEFORGE_CODEGEN_CANDIDATE_DIR']).resolve()",
+                        "PY",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (test_suite / "run.sh").write_text(
+                "#!/usr/bin/env bash\nset -euo pipefail\ntest -n \"${CHANGEFORGE_CODEGEN_CANDIDATE_DIR:-}\"\n",
+                encoding="utf-8",
+            )
+            (security_checks / "run.sh").write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            (tests_dir / "test_candidate.py").write_text("assert True\n", encoding="utf-8")
+            errors = runner._run_case("sample", "candidate-env", case_dir, candidate)
+        self.assertEqual(errors, [])
+
+    def test_codegen_candidate_mode_classifies_setup_contract_failures(self) -> None:
+        runner = _load_script("run_codegen_benchmark_candidate_contract", "scripts/run-codegen-benchmarks.py")
+        grader = _load_script("grade_codex_live_candidate_contract", "scripts/grade-codex-live-benchmarks.py")
+
+        def make_case(root: Path) -> tuple[Path, Path]:
+            case_dir = root / "case"
+            starter = case_dir / "starter-repo"
+            test_suite = case_dir / "test-suite"
+            security_checks = case_dir / "security-checks"
+            tests_dir = test_suite / "tests"
+            candidate = root / "candidate"
+            for path in (starter, test_suite, security_checks, tests_dir, candidate):
+                path.mkdir(parents=True, exist_ok=True)
+            (starter / "setup.sh").write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            (starter / "README.md").write_text("starter contract\n", encoding="utf-8")
+            (candidate / "README.md").write_text("candidate contract\n", encoding="utf-8")
+            (test_suite / "run.sh").write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            (security_checks / "run.sh").write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            (tests_dir / "test_candidate.py").write_text("assert True\n", encoding="utf-8")
+            return case_dir, candidate
+
+        with tempfile.TemporaryDirectory() as tmp:
+            case_dir, candidate = make_case(Path(tmp))
+            (candidate / "setup.sh").write_text(
+                "#!/usr/bin/env bash\npython3 ../../../../../scripts/codegen_benchmark_harness.py setup \"$PWD\"\n",
+                encoding="utf-8",
+            )
+            errors = runner._run_case("sample", "bad-fixed-path", case_dir, candidate)
+        fixed_path_output = "\n".join(errors)
+        self.assertIn("../../../../../scripts/codegen_benchmark_harness.py", fixed_path_output)
+        self.assertEqual(
+            grader._setup_failure_reason(fixed_path_output, failed=True),
+            "setup_script_modified_bad_path",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            case_dir, candidate = make_case(Path(tmp))
+            errors = runner._run_case("sample", "missing-setup", case_dir, candidate)
+        self.assertTrue(any("candidate/setup.sh missing" in error for error in errors))
+        self.assertEqual(grader._setup_failure_reason("\n".join(errors), failed=True), "setup_script_missing")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            case_dir, candidate = make_case(Path(tmp))
+            (candidate / "setup.sh").write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            (candidate / "README.md").unlink()
+            errors = runner._run_case("sample", "removed-required-file", case_dir, candidate)
+        self.assertTrue(any("candidate lacks required starter file README.md" in error for error in errors))
+        self.assertEqual(
+            grader._setup_failure_reason("\n".join(errors), failed=True),
+            "candidate_removed_required_file",
+        )
 
     def test_scorecard_and_public_summary_accept_strict_auth_borrowed_summary(self) -> None:
         scorecard = _load_script("generate_professional_scorecard_codex_live", "scripts/generate-professional-scorecard.py")

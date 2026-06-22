@@ -12,7 +12,9 @@ support.
 6. Preserve setup and test harness scripts unless the task explicitly requires a
    change. Keep setup runnable from the candidate root, compatible with
    environment-provided roots, and free of external network or HOME/CODEX_HOME
-   writes.
+   writes. Do not rely on fixed-depth parent traversal to locate the repository
+   root. Do not add package dependencies unless the task explicitly requires
+   them; prefer the standard library and existing local files.
 7. Do not satisfy professional evidence by prose only; back reuse, placement,
    security, and reliability claims with code or tests unless documentation-only.
 8. For read/review/repair/test/release work, state the action stage and closure

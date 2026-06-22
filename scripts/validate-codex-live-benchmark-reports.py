@@ -19,7 +19,9 @@ from codex_live_benchmark_lib import (
     MODE_DEFAULT_VARIANTS,
     ROOT,
     SECURITY_FAILURE_REASONS,
+    SETUP_CONTRACT_FIELDS,
     SETUP_FAILURE_REASONS,
+    SETUP_FAILURE_SUBREASONS,
     STRICT_AUTH_POLICIES,
     STRICT_BENCHMARK_MODES,
     STRICT_CODEX_ENVIRONMENT_POLICIES,
@@ -179,6 +181,8 @@ def _strict_summary_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("strict summary requires assertion-backed eligible results")
     if summary.get("effect_verdict") == "positive" and summary.get("dominant_setup_failure_reason") == "unknown":
         errors.append("strict summary cannot claim positive effect while unknown setup failures dominate")
+    if summary.get("dominant_setup_failure_subreason") not in SETUP_FAILURE_SUBREASONS:
+        errors.append("dominant_setup_failure_subreason is required")
     variants = summary.get("variants")
     delta = summary.get("delta")
     if not isinstance(variants, dict) or not variants:
@@ -290,6 +294,13 @@ def _summary_structure_errors(summary: dict[str, Any]) -> list[str]:
     )
     errors.extend(
         _reason_bucket_errors(
+            "summary.setup_failure_subreasons",
+            summary.get("setup_failure_subreasons"),
+            SETUP_FAILURE_SUBREASONS,
+        )
+    )
+    errors.extend(
+        _reason_bucket_errors(
             "summary.test_suite_failure_reasons",
             summary.get("test_suite_failure_reasons"),
             TEST_SUITE_FAILURE_REASONS,
@@ -355,6 +366,13 @@ def _summary_structure_errors(summary: dict[str, Any]) -> list[str]:
             )
             errors.extend(
                 _reason_bucket_errors(
+                    f"variant {variant}.setup_failure_subreasons",
+                    payload.get("setup_failure_subreasons"),
+                    SETUP_FAILURE_SUBREASONS,
+                )
+            )
+            errors.extend(
+                _reason_bucket_errors(
                     f"variant {variant}.test_suite_failure_reasons",
                     payload.get("test_suite_failure_reasons"),
                     TEST_SUITE_FAILURE_REASONS,
@@ -385,6 +403,13 @@ def _summary_structure_errors(summary: dict[str, Any]) -> list[str]:
                     SETUP_FAILURE_REASONS,
                 )
             )
+            errors.extend(
+                _reason_bucket_errors(
+                    f"case {case_id}.setup_failure_subreasons",
+                    case_payload.get("setup_failure_subreasons"),
+                    SETUP_FAILURE_SUBREASONS,
+                )
+            )
             case_variants = case_payload.get("variants")
             if not isinstance(case_variants, dict):
                 errors.append(f"case {case_id}: variants must be an object")
@@ -412,6 +437,13 @@ def _summary_structure_errors(summary: dict[str, Any]) -> list[str]:
                         SETUP_FAILURE_REASONS,
                     )
                 )
+                errors.extend(
+                    _reason_bucket_errors(
+                        f"case {case_id} variant {variant}.setup_failure_subreasons",
+                        variant_payload.get("setup_failure_subreasons"),
+                        SETUP_FAILURE_SUBREASONS,
+                    )
+                )
                 errors.extend(_setup_diagnostic_summary_errors(f"case {case_id} variant {variant}", variant_payload))
                 errors.extend(
                     _reason_bucket_errors(
@@ -434,6 +466,8 @@ def _grading_result_errors(payload: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     required = (
         "setup_failure_reason",
+        "setup_failure_subreason",
+        "setup_contract",
         "test_suite_failure_reason",
         "security_failure_reason",
         "first_failure_stage",
@@ -447,6 +481,7 @@ def _grading_result_errors(payload: dict[str, Any]) -> list[str]:
             errors.append(f"grading-result missing {field}")
     reason_sets = {
         "setup_failure_reason": SETUP_FAILURE_REASONS,
+        "setup_failure_subreason": SETUP_FAILURE_SUBREASONS,
         "test_suite_failure_reason": TEST_SUITE_FAILURE_REASONS,
         "security_failure_reason": SECURITY_FAILURE_REASONS,
     }
@@ -457,6 +492,7 @@ def _grading_result_errors(payload: dict[str, Any]) -> list[str]:
     first_failure_stage = payload.get("first_failure_stage")
     if first_failure_stage is not None and first_failure_stage not in FIRST_FAILURE_STAGES:
         errors.append(f"grading-result invalid first_failure_stage {first_failure_stage}")
+    errors.extend(_setup_contract_errors("grading-result", payload.get("setup_contract")))
     errors.extend(_diagnostic_field_errors("grading-result", payload))
     return errors
 
@@ -489,9 +525,24 @@ def _setup_diagnostic_summary_errors(label: str, payload: dict[str, Any]) -> lis
     dominant = payload.get("dominant_setup_failure_reason")
     if dominant is not None and dominant not in SETUP_FAILURE_REASONS:
         errors.append(f"{label}: dominant_setup_failure_reason is invalid")
+    subreason = payload.get("dominant_setup_failure_subreason")
+    if subreason is None:
+        errors.append(f"{label}: dominant_setup_failure_subreason is required")
+    elif subreason not in SETUP_FAILURE_SUBREASONS:
+        errors.append(f"{label}: dominant_setup_failure_subreason is invalid")
     rate = payload.get("unknown_setup_failure_rate")
     if rate is not None and not (isinstance(rate, int | float) and 0 <= float(rate) <= 1):
         errors.append(f"{label}: unknown_setup_failure_rate must be numeric between 0 and 1")
+    return errors
+
+
+def _setup_contract_errors(label: str, payload: Any) -> list[str]:
+    if not isinstance(payload, dict):
+        return [f"{label}: setup_contract must be an object"]
+    errors: list[str] = []
+    for field in SETUP_CONTRACT_FIELDS:
+        if not isinstance(payload.get(field), bool):
+            errors.append(f"{label}: setup_contract.{field} must be boolean")
     return errors
 
 

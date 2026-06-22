@@ -21,6 +21,16 @@
     "benchmark_eligible",
     "benchmark_passed",
     "failure_category",
+    "setup_failure_reason",
+    "setup_failure_subreason",
+    "setup_contract",
+    "test_suite_failure_reason",
+    "security_failure_reason",
+    "first_failure_stage",
+    "first_failure_excerpt",
+    "setup_log_excerpt",
+    "test_suite_log_excerpt",
+    "security_log_excerpt",
     "contamination",
     "environment",
     "paths",
@@ -89,6 +99,67 @@
         "grading_not_collected",
         "telemetry_only"
       ]
+    },
+    "setup_failure_reason": {
+      "enum": [
+        "none",
+        "missing_harness",
+        "setup_script_missing",
+        "setup_script_modified_bad_path",
+        "dependency_install_failed",
+        "python_compile_failed",
+        "candidate_removed_required_file",
+        "permission_denied",
+        "shell_error",
+        "unknown"
+      ]
+    },
+    "setup_failure_subreason": {
+      "enum": [
+        "none",
+        "candidate_modified_setup",
+        "starter_fragile_path",
+        "missing_env_root",
+        "wrong_cwd",
+        "missing_harness",
+        "classifier_uncertain",
+        "unknown"
+      ]
+    },
+    "setup_contract": {
+      "type": "object",
+      "required": [
+        "candidate_setup_exists",
+        "candidate_setup_hash_changed",
+        "candidate_setup_mentions_changeforge_codegen_root",
+        "candidate_setup_uses_fixed_parent_traversal",
+        "candidate_setup_invokes_codegen_harness"
+      ]
+    },
+    "test_suite_failure_reason": {
+      "enum": ["none", "assertion_failed", "missing_test_script", "python_import_failed", "python_compile_failed", "behavior_failed", "unknown"]
+    },
+    "security_failure_reason": {
+      "enum": ["none", "assertion_failed", "missing_security_script", "sensitive_log_leak", "unsafe_network_policy", "unknown"]
+    },
+    "first_failure_stage": {
+      "enum": ["setup", "test_suite", "security_checks", "assertion_files", "none"]
+    },
+    "first_failure_excerpt": {
+      "type": "string",
+      "maxLength": 1200
+    },
+    "setup_log_excerpt": {
+      "type": "string",
+      "maxLength": 1200
+    },
+    "test_suite_log_excerpt": {
+      "type": "string",
+      "maxLength": 1200
+    },
+    "security_log_excerpt": {
+      "type": "string",
+      "maxLength": 1200
     },
     "contamination": {
       "type": "object",

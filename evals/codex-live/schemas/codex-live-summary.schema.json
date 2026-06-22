@@ -31,6 +31,10 @@
     "contaminated_result_count",
     "failure_categories",
     "setup_failure_reasons",
+    "dominant_setup_failure_reason",
+    "setup_failure_subreasons",
+    "dominant_setup_failure_subreason",
+    "unknown_setup_failure_rate",
     "test_suite_failure_reasons",
     "security_failure_reasons",
     "current_home_result_count",
@@ -180,6 +184,40 @@
     },
     "setup_failure_reasons": {
       "type": "object"
+    },
+    "dominant_setup_failure_reason": {
+      "enum": [
+        "none",
+        "missing_harness",
+        "setup_script_missing",
+        "setup_script_modified_bad_path",
+        "dependency_install_failed",
+        "python_compile_failed",
+        "candidate_removed_required_file",
+        "permission_denied",
+        "shell_error",
+        "unknown"
+      ]
+    },
+    "setup_failure_subreasons": {
+      "type": "object"
+    },
+    "dominant_setup_failure_subreason": {
+      "enum": [
+        "none",
+        "candidate_modified_setup",
+        "starter_fragile_path",
+        "missing_env_root",
+        "wrong_cwd",
+        "missing_harness",
+        "classifier_uncertain",
+        "unknown"
+      ]
+    },
+    "unknown_setup_failure_rate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
     },
     "test_suite_failure_reasons": {
       "type": "object"

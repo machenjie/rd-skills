@@ -43,6 +43,23 @@ SETUP_FAILURE_REASONS = (
     "shell_error",
     "unknown",
 )
+SETUP_FAILURE_SUBREASONS = (
+    "none",
+    "candidate_modified_setup",
+    "starter_fragile_path",
+    "missing_env_root",
+    "wrong_cwd",
+    "missing_harness",
+    "classifier_uncertain",
+    "unknown",
+)
+SETUP_CONTRACT_FIELDS = (
+    "candidate_setup_exists",
+    "candidate_setup_hash_changed",
+    "candidate_setup_mentions_changeforge_codegen_root",
+    "candidate_setup_uses_fixed_parent_traversal",
+    "candidate_setup_invokes_codegen_harness",
+)
 TEST_SUITE_FAILURE_REASONS = (
     "none",
     "assertion_failed",
@@ -458,6 +475,8 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "benchmark_passed",
             "failure_category",
             "setup_failure_reason",
+            "setup_failure_subreason",
+            "setup_contract",
             "test_suite_failure_reason",
             "security_failure_reason",
             "first_failure_stage",
@@ -502,6 +521,8 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "dominant_failure_category",
             "setup_failure_reasons",
             "dominant_setup_failure_reason",
+            "setup_failure_subreasons",
+            "dominant_setup_failure_subreason",
             "unknown_setup_failure_rate",
             "test_suite_failure_reasons",
             "security_failure_reasons",
@@ -547,6 +568,7 @@ def validate_required_fields(payload: Any, schema_name: str) -> list[str]:
             errors.append(f"{schema_name}: invalid failure_category {failure_category}")
         reason_sets = {
             "setup_failure_reason": SETUP_FAILURE_REASONS,
+            "setup_failure_subreason": SETUP_FAILURE_SUBREASONS,
             "test_suite_failure_reason": TEST_SUITE_FAILURE_REASONS,
             "security_failure_reason": SECURITY_FAILURE_REASONS,
         }
@@ -557,6 +579,13 @@ def validate_required_fields(payload: Any, schema_name: str) -> list[str]:
         first_failure_stage = payload.get("first_failure_stage")
         if first_failure_stage is not None and first_failure_stage not in FIRST_FAILURE_STAGES:
             errors.append(f"{schema_name}: invalid first_failure_stage {first_failure_stage}")
+        setup_contract = payload.get("setup_contract")
+        if not isinstance(setup_contract, dict):
+            errors.append(f"{schema_name}: setup_contract must be an object")
+        else:
+            for field in SETUP_CONTRACT_FIELDS:
+                if not isinstance(setup_contract.get(field), bool):
+                    errors.append(f"{schema_name}: setup_contract.{field} must be boolean")
         for field in (
             "first_failure_excerpt",
             "setup_log_excerpt",

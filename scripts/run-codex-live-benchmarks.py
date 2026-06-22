@@ -467,6 +467,8 @@ def _run_one_case(
         "failure": failure,
         "failure_stage": failure_stage,
         "setup_failure_reason": grading.get("setup_failure_reason", "none"),
+        "setup_failure_subreason": grading.get("setup_failure_subreason", "none"),
+        "setup_contract": grading.get("setup_contract", {}),
         "test_suite_failure_reason": grading.get("test_suite_failure_reason", "none"),
         "security_failure_reason": grading.get("security_failure_reason", "none"),
         "first_failure_stage": grading.get("first_failure_stage", "none"),

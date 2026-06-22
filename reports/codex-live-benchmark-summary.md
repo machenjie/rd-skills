@@ -11,7 +11,8 @@
 - Effect reason: skills_with_hooks_clean pass rate is below baseline_clean
 - Dominant failure category: `setup_failed`
 - Dominant setup failure reason: `setup_script_modified_bad_path`
-- Unknown setup failure rate: `0.175`
+- Dominant setup failure subreason: `starter_fragile_path`
+- Unknown setup failure rate: `0.325`
 - Benchmark mode: `ablation`
 - Auth policy: `borrow-current`
 - Environment policy: `auth_borrowed_clean`
@@ -35,6 +36,7 @@
 - Pass rate: `0.2`
 - Security pass rate: `0.2`
 - Dominant setup failure reason: `setup_script_modified_bad_path`
+- Dominant setup failure subreason: `starter_fragile_path`
 - Unknown setup failure rate: `0.25`
 - Average input tokens: `418332.78`
 - Median input tokens: `367045.5`
@@ -51,7 +53,8 @@
 - Pass rate: `0.0667`
 - Security pass rate: `0.0667`
 - Dominant setup failure reason: `setup_script_modified_bad_path`
-- Unknown setup failure rate: `0.1429`
+- Dominant setup failure subreason: `starter_fragile_path`
+- Unknown setup failure rate: `0.3571`
 - Average input tokens: `972824.94`
 - Median input tokens: `952899.0`
 - Average output tokens: `9982.72`
@@ -67,7 +70,8 @@
 - Pass rate: `0.0667`
 - Security pass rate: `0.0667`
 - Dominant setup failure reason: `setup_script_modified_bad_path`
-- Unknown setup failure rate: `0.1429`
+- Dominant setup failure subreason: `starter_fragile_path`
+- Unknown setup failure rate: `0.3571`
 - Average input tokens: `894470.44`
 - Median input tokens: `891559.0`
 - Average output tokens: `9141.44`
@@ -126,3 +130,4 @@
 - Strict comparative claims may borrow Codex authentication only; user skills, hooks, config, and rules are not loaded.
 - Baseline contamination blocks publishing, and pass rates include assertion-backed eligible results only.
 - Current strict live evidence covers ablation across at least 5 assertion-backed cases and 3 runs per required variant, but remains local Codex CLI evidence.
+- Setup failure diagnostics remain incomplete.
