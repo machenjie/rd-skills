@@ -14,6 +14,7 @@ from codex_live_benchmark_lib import (
     LIVE_EVIDENCE_LEVEL,
     MODE_DEFAULT_VARIANTS,
     ROOT,
+    SETUP_FAILURE_REASONS,
     STRONG_CODEX_LIVE_ASSERTION_CASE_MIN,
     STRONG_CODEX_LIVE_RUNS_PER_VARIANT_MIN,
     STRICT_AUTH_POLICIES,
@@ -34,11 +35,13 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
     manifest = read_json(run_dir / "run-manifest.json")
     if not isinstance(manifest, dict):
         manifest = {}
-    results = [
-        payload
-        for payload in (read_json(path) for path in sorted(run_dir.glob("cases/*/*/run-*/result.json")))
-        if isinstance(payload, dict)
-    ]
+    results = []
+    for path in sorted(run_dir.glob("cases/*/*/run-*/result.json")):
+        payload = read_json(path)
+        if isinstance(payload, dict):
+            payload = dict(payload)
+            payload["_result_dir"] = path.parent
+            results.append(payload)
     real_results = [
         result
         for result in results
@@ -82,11 +85,16 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
     )
     evidence_scope = _evidence_scope(benchmark_mode, evidence_scope_detail)
     failure_categories = _counts(real_results, "failure_category")
+    dominant_failure_category, _dominant_failure_count = _dominant_bucket(failure_categories)
+    setup_failure_reasons = _reason_counts(real_results, "setup_failure_reason", "setup_failed")
+    dominant_setup_failure_reason = _dominant_reason(setup_failure_reasons)
+    unknown_setup_failure_rate = _unknown_setup_failure_rate(setup_failure_reasons)
     effect = _effect_evaluation(
         benchmark_mode,
         variants=variants,
         cases_summary=cases_summary,
         failure_categories=failure_categories,
+        setup_failure_reasons=setup_failure_reasons,
         evidence_scope_detail=evidence_scope_detail,
     )
     summary = {
@@ -131,7 +139,10 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
             1 for result in real_results if (result.get("contamination") or {}).get("contaminated") is True
         ),
         "failure_categories": failure_categories,
-        "setup_failure_reasons": _reason_counts(real_results, "setup_failure_reason", "setup_failed"),
+        "dominant_failure_category": dominant_failure_category,
+        "setup_failure_reasons": setup_failure_reasons,
+        "dominant_setup_failure_reason": dominant_setup_failure_reason,
+        "unknown_setup_failure_rate": unknown_setup_failure_rate,
         "test_suite_failure_reasons": _reason_counts(real_results, "test_suite_failure_reason", "test_suite_failed"),
         "security_failure_reasons": _reason_counts(
             real_results,
@@ -154,6 +165,7 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
             assertion_case_count=len(assertion_cases),
             variants=variants,
             evidence_scope=evidence_scope,
+            unknown_setup_failure_rate=unknown_setup_failure_rate,
         ),
     }
     return summary
@@ -192,6 +204,7 @@ def _variant_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
     security_passed = [
         result for result in security_eligible if (result.get("grading") or {}).get("security_checks_passed") is True
     ]
+    setup_failure_reasons = _reason_counts(results, "setup_failure_reason", "setup_failed")
     return {
         "run_count": len({int(result.get("run_index", 0) or 0) for result in results if result.get("run_index")}),
         "case_count": len({str(result.get("case_id")) for result in results if result.get("case_id")}),
@@ -199,7 +212,9 @@ def _variant_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
         "artifact_status_counts": _counts(results, "artifact_status"),
         "grading_status_counts": _counts(results, "grading_status"),
         "failure_categories": _counts(results, "failure_category"),
-        "setup_failure_reasons": _reason_counts(results, "setup_failure_reason", "setup_failed"),
+        "setup_failure_reasons": setup_failure_reasons,
+        "dominant_setup_failure_reason": _dominant_reason(setup_failure_reasons),
+        "unknown_setup_failure_rate": _unknown_setup_failure_rate(setup_failure_reasons),
         "test_suite_failure_reasons": _reason_counts(results, "test_suite_failure_reason", "test_suite_failed"),
         "security_failure_reasons": _reason_counts(results, "security_failure_reason", "security_checks_failed"),
         "benchmark_eligible_result_count": len(eligible),
@@ -238,15 +253,95 @@ def _counts(results: list[dict[str, Any]], key: str) -> dict[str, int]:
 def _reason_counts(results: list[dict[str, Any]], key: str, matching_failure_category: str) -> dict[str, int]:
     counts: dict[str, int] = {}
     for result in results:
-        value = result.get(key)
-        grading = result.get("grading")
-        if not value and isinstance(grading, dict):
-            value = grading.get(key)
-        if not value and result.get("failure_category") == matching_failure_category:
-            value = "unknown"
-        reason = str(value or "none")
+        reason = _reason_for_result(result, key, matching_failure_category)
         counts[reason] = counts.get(reason, 0) + 1
     return counts
+
+
+def _reason_for_result(result: dict[str, Any], key: str, matching_failure_category: str) -> str:
+    value = result.get(key)
+    grading = result.get("grading")
+    if not value and isinstance(grading, dict):
+        value = grading.get(key)
+    if (
+        key == "setup_failure_reason"
+        and result.get("failure_category") == matching_failure_category
+        and (not value or value == "unknown")
+    ):
+        value = _setup_reason_from_artifacts(result)
+    if not value and result.get("failure_category") == matching_failure_category:
+        value = "unknown"
+    return str(value or "none")
+
+
+def _setup_reason_from_artifacts(result: dict[str, Any]) -> str:
+    result_dir = result.get("_result_dir")
+    if not isinstance(result_dir, Path):
+        return "unknown"
+    chunks: list[str] = []
+    for rel_path in (
+        "grading/grading-result.json",
+        "grading/setup.log",
+        "grading/run-codegen-benchmarks.stdout.log",
+        "grading/run-codegen-benchmarks.stderr.log",
+    ):
+        path = result_dir / rel_path
+        if not path.is_file():
+            continue
+        try:
+            chunks.append(path.read_text(encoding="utf-8", errors="replace"))
+        except OSError:
+            continue
+    if not chunks:
+        return "unknown"
+    return _classify_setup_reason_from_text("\n".join(chunks))
+
+
+def _classify_setup_reason_from_text(text: str) -> str:
+    lowered = text.casefold()
+    if "setup.sh is missing" in lowered or "setup.sh: no such file" in lowered or "starter-repo/setup.sh: missing" in lowered:
+        return "setup_script_missing"
+    if "candidate lacks required starter file" in lowered or (
+        "missing starter readme" in lowered or "starter readme" in lowered and "missing" in lowered
+    ):
+        return "candidate_removed_required_file"
+    if "changeforge_codegen_root" in lowered or (
+        "codegen_benchmark_harness.py" in lowered
+        and ("../../.." in lowered or "..\\..\\.." in lowered)
+        and ("no such file" in lowered or "can't open file" in lowered or "not found" in lowered)
+    ):
+        return "setup_script_modified_bad_path"
+    if (
+        "codegen_benchmark_harness.py" in lowered
+        and ("no such file" in lowered or "can't open file" in lowered or "not found" in lowered)
+    ):
+        return "missing_harness"
+    if any(token in lowered for token in ("modulenotfounderror", "importerror", "module not found", "dependency")):
+        return "dependency_install_failed"
+    if any(token in lowered for token in ("syntaxerror", "compileall", "py_compile", "python compile")):
+        return "python_compile_failed"
+    if "permission denied" in lowered:
+        return "permission_denied"
+    if "command not found" in lowered or "bad interpreter" in lowered:
+        return "shell_error"
+    return "unknown"
+
+
+def _dominant_reason(reasons: dict[str, int]) -> str:
+    buckets = {reason: count for reason, count in reasons.items() if reason != "none" and count > 0}
+    if not buckets:
+        buckets = {reason: count for reason, count in reasons.items() if count > 0}
+    if not buckets:
+        return "none"
+    reason, _count = max(buckets.items(), key=lambda item: (item[1], item[0]))
+    return reason if reason in SETUP_FAILURE_REASONS else "unknown"
+
+
+def _unknown_setup_failure_rate(reasons: dict[str, int]) -> float:
+    denominator = sum(count for reason, count in reasons.items() if reason != "none")
+    if denominator <= 0:
+        return 0.0
+    return round(int(reasons.get("unknown", 0) or 0) / denominator, 4)
 
 
 def _average_usage(results: list[dict[str, Any]]) -> dict[str, float]:
@@ -394,6 +489,7 @@ def _effect_evaluation(
     variants: dict[str, dict[str, Any]],
     cases_summary: dict[str, Any],
     failure_categories: dict[str, int],
+    setup_failure_reasons: dict[str, int],
     evidence_scope_detail: dict[str, Any],
 ) -> dict[str, Any]:
     required_variants = list(MODE_DEFAULT_VARIANTS["ablation"])
@@ -413,6 +509,8 @@ def _effect_evaluation(
     }
     setup_rates = {variant: _rate(setup_counts[variant], result_counts[variant]) for variant in required_variants}
     dominant_failure_category, dominant_failure_count = _dominant_bucket(failure_categories)
+    dominant_setup_failure_reason = _dominant_reason(setup_failure_reasons)
+    unknown_setup_failure_rate = _unknown_setup_failure_rate(setup_failure_reasons)
     improved_cases = _case_improvements(cases_summary)
     summary = {
         "required_variants": required_variants,
@@ -431,6 +529,8 @@ def _effect_evaluation(
         ),
         "dominant_failure_category": dominant_failure_category,
         "dominant_failure_count": dominant_failure_count,
+        "dominant_setup_failure_reason": dominant_setup_failure_reason,
+        "unknown_setup_failure_rate": unknown_setup_failure_rate,
         "setup_failed_result_count": int(failure_categories.get("setup_failed", 0) or 0),
         "setup_failed_by_variant": setup_counts,
         "setup_failed_rate_by_variant": setup_rates,
@@ -466,6 +566,9 @@ def _effect_evaluation(
     if setup_dominates and skills_do_not_reduce_setup:
         summary["reason"] = "setup_failed is dominant and skill variants do not reduce setup failures"
         return {"verdict": "negative", "status": "regression", "summary": summary}
+    if dominant_setup_failure_reason == "unknown" and int(setup_failure_reasons.get("unknown", 0) or 0) > 0:
+        summary["reason"] = "setup failure diagnostics remain dominated by unknown"
+        return {"verdict": "mixed", "status": "mixed", "summary": summary}
     if hooks_rate > baseline_rate and hooks_rate >= skills_only_rate and not setup_dominates:
         summary["reason"] = "skills_with_hooks_clean improves over baseline_clean and is not below skills_only_clean"
         return {"verdict": "positive", "status": "improved", "summary": summary}
@@ -560,17 +663,20 @@ def _cases_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
             variant_results = _results_for_variant(case_results, variant)
             eligible = [result for result in variant_results if result.get("benchmark_eligible") is True]
             passed = [result for result in eligible if result.get("benchmark_passed") is True]
+            setup_failure_reasons = _reason_counts(
+                variant_results,
+                "setup_failure_reason",
+                "setup_failed",
+            )
             variants[variant] = {
                 "runs": len(variant_results),
                 "benchmark_eligible_result_count": len(eligible),
                 "benchmark_passed_result_count": len(passed),
                 "pass_rate": _rate(len(passed), len(eligible)),
                 "failure_categories": _counts(variant_results, "failure_category"),
-                "setup_failure_reasons": _reason_counts(
-                    variant_results,
-                    "setup_failure_reason",
-                    "setup_failed",
-                ),
+                "setup_failure_reasons": setup_failure_reasons,
+                "dominant_setup_failure_reason": _dominant_reason(setup_failure_reasons),
+                "unknown_setup_failure_rate": _unknown_setup_failure_rate(setup_failure_reasons),
                 "test_suite_failure_reasons": _reason_counts(
                     variant_results,
                     "test_suite_failure_reason",
@@ -583,8 +689,12 @@ def _cases_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
                 ),
             }
         grading_modes = {str(result.get("grading_mode")) for result in case_results if result.get("grading_mode")}
+        case_setup_failure_reasons = _reason_counts(case_results, "setup_failure_reason", "setup_failed")
         summary[case_id] = {
             "grading_mode": next(iter(grading_modes)) if len(grading_modes) == 1 else "mixed",
+            "setup_failure_reasons": case_setup_failure_reasons,
+            "dominant_setup_failure_reason": _dominant_reason(case_setup_failure_reasons),
+            "unknown_setup_failure_rate": _unknown_setup_failure_rate(case_setup_failure_reasons),
             "variants": variants,
         }
     return summary
@@ -665,6 +775,7 @@ def _limitations(
     assertion_case_count: int,
     variants: dict[str, dict[str, Any]],
     evidence_scope: str,
+    unknown_setup_failure_rate: float,
 ) -> list[str]:
     base = [
         "Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.",
@@ -702,6 +813,8 @@ def _limitations(
                 "Current strict live evidence covers multiple assertion-backed cases, but repeated-run evidence is "
                 "still limited; keep small-sample limitations until each variant has at least 3 runs."
             )
+    if unknown_setup_failure_rate > 0.2:
+        base.append("Setup failure diagnostics remain incomplete.")
     return base
 
 
@@ -719,6 +832,9 @@ def render_markdown(summary: dict[str, Any]) -> str:
         f"- Effect verdict: `{summary['effect_verdict']}`",
         f"- Effect status: `{summary['effect_status']}`",
         f"- Effect reason: {summary['effect_summary']['reason']}",
+        f"- Dominant failure category: `{summary['effect_summary'].get('dominant_failure_category')}`",
+        f"- Dominant setup failure reason: `{summary['dominant_setup_failure_reason']}`",
+        f"- Unknown setup failure rate: `{summary['unknown_setup_failure_rate']}`",
         f"- Benchmark mode: `{summary['benchmark_mode']}`",
         f"- Auth policy: `{summary['auth_policy']}`",
         f"- Environment policy: `{summary['codex_environment_policy']}`",
@@ -745,6 +861,8 @@ def render_markdown(summary: dict[str, Any]) -> str:
                 f"- Eligible results: `{variant_summary['benchmark_eligible_result_count']}`",
                 f"- Pass rate: `{variant_summary['pass_rate']}`",
                 f"- Security pass rate: `{variant_summary['security_pass_rate']}`",
+                f"- Dominant setup failure reason: `{variant_summary['dominant_setup_failure_reason']}`",
+                f"- Unknown setup failure rate: `{variant_summary['unknown_setup_failure_rate']}`",
                 f"- Average input tokens: `{variant_summary['average_usage']['input_tokens']}`",
                 f"- Median input tokens: `{variant_summary['median_usage']['input_tokens']}`",
                 f"- Average output tokens: `{variant_summary['average_usage']['output_tokens']}`",
@@ -807,6 +925,8 @@ def strict_publish_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("strict benchmark publication cannot include contaminated results")
     if int(summary.get("benchmark_eligible_result_count", 0) or 0) <= 0:
         errors.append("strict benchmark publication requires assertion-backed eligible results")
+    if summary.get("effect_verdict") == "positive" and summary.get("dominant_setup_failure_reason") == "unknown":
+        errors.append("strict benchmark publication cannot claim positive effect while unknown setup failures dominate")
     variants = summary.get("variants") or {}
     for variant in MODE_DEFAULT_VARIANTS.get(str(benchmark_mode), ()):
         variant_summary = variants.get(variant) or {}

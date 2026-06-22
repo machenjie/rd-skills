@@ -10,6 +10,15 @@ an action hook needs a compact reminder.
   not need a route manifest and must not create closure state.
 - Select an owner professional skill and a different reviewer skill.
 - Read only the selected capability references needed for the current risk.
+- Before editing code, identify setup/test entrypoints, public API, reuse
+  candidates, and the owning object/module.
+- Preserve setup and test harness scripts unless the task explicitly requires a
+  change. Keep setup runnable from the candidate root, compatible with
+  environment-provided roots, and free of external network or HOME/CODEX_HOME
+  writes.
+- Do not satisfy professional evidence by prose only. Back reuse, placement,
+  security, and reliability claims with code or tests unless the task is
+  documentation-only.
 - Do not store prompt text, secrets, environment variables, or full command
   output in hook state or telemetry.
 - Do not mark a route manifest as present unless a handoff manifest was parsed.

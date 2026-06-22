@@ -322,7 +322,10 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
         "benchmark_eligible_result_count": summary.get("benchmark_eligible_result_count"),
         "benchmark_passed_result_count": summary.get("benchmark_passed_result_count"),
         "failure_categories": summary.get("failure_categories"),
+        "dominant_failure_category": summary.get("dominant_failure_category"),
         "setup_failure_reasons": summary.get("setup_failure_reasons"),
+        "dominant_setup_failure_reason": summary.get("dominant_setup_failure_reason"),
+        "unknown_setup_failure_rate": summary.get("unknown_setup_failure_rate"),
         "variants": {
             variant: {
                 "run_count": payload.get("run_count"),
@@ -333,6 +336,8 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
                 "benchmark_passed_result_count": payload.get("benchmark_passed_result_count"),
                 "failure_categories": payload.get("failure_categories"),
                 "setup_failure_reasons": payload.get("setup_failure_reasons"),
+                "dominant_setup_failure_reason": payload.get("dominant_setup_failure_reason"),
+                "unknown_setup_failure_rate": payload.get("unknown_setup_failure_rate"),
             }
             for variant, payload in (summary.get("variants") or {}).items()
             if isinstance(payload, dict)
@@ -385,12 +390,42 @@ def _codex_live_strict_summary_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("assertion-backed eligible results are required")
     if not isinstance(summary.get("failure_categories"), dict):
         errors.append("failure_categories are required")
+    if summary.get("dominant_failure_category") not in {
+        "none",
+        "codex_exec_failed",
+        "install_failed",
+        "setup_failed",
+        "test_suite_failed",
+        "security_checks_failed",
+        "contaminated",
+        "grading_not_collected",
+        "telemetry_only",
+    }:
+        errors.append("dominant_failure_category is required")
+    if summary.get("dominant_setup_failure_reason") not in {
+        "none",
+        "missing_harness",
+        "setup_script_missing",
+        "setup_script_modified_bad_path",
+        "dependency_install_failed",
+        "python_compile_failed",
+        "candidate_removed_required_file",
+        "permission_denied",
+        "shell_error",
+        "unknown",
+    }:
+        errors.append("dominant_setup_failure_reason is required")
+    unknown_rate = summary.get("unknown_setup_failure_rate")
+    if not isinstance(unknown_rate, int | float) or not 0 <= float(unknown_rate) <= 1:
+        errors.append("unknown_setup_failure_rate is required")
     if summary.get("effect_verdict") not in {"inconclusive", "positive", "mixed", "neutral", "negative"}:
         errors.append("effect_verdict is required")
     if summary.get("effect_status") not in {"inconclusive", "improved", "mixed", "neutral", "regression"}:
         errors.append("effect_status is required")
     if not isinstance(summary.get("effect_summary"), dict):
         errors.append("effect_summary is required")
+    if summary.get("effect_verdict") == "positive" and summary.get("dominant_setup_failure_reason") == "unknown":
+        errors.append("positive effect cannot be claimed while unknown setup failures dominate")
     if not isinstance(summary.get("cases_summary"), dict):
         errors.append("cases_summary is required")
     variants = summary.get("variants") or {}

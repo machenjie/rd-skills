@@ -48,6 +48,8 @@ def _variant_payload(**overrides: object) -> dict[str, object]:
         "grading_status_counts": {"passed": 1},
         "failure_categories": {"none": 1},
         "setup_failure_reasons": {"none": 1},
+        "dominant_setup_failure_reason": "none",
+        "unknown_setup_failure_rate": 0.0,
         "test_suite_failure_reasons": {"none": 1},
         "security_failure_reasons": {"none": 1},
         "benchmark_eligible_result_count": 1,
@@ -116,6 +118,8 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
                 "skills_with_hooks_clean": 1,
             },
             "reason": "missing required ablation variants, repeated runs, or eligible assertion-backed results",
+            "dominant_setup_failure_reason": "none",
+            "unknown_setup_failure_rate": 0.0,
         },
         "benchmark_mode": "clean-paired",
         "codex_home_policy": "auth_borrowed_clean",
@@ -135,7 +139,10 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
         "telemetry_only_result_count": 0,
         "contaminated_result_count": 0,
         "failure_categories": {"none": 2},
+        "dominant_failure_category": "none",
         "setup_failure_reasons": {"none": 2},
+        "dominant_setup_failure_reason": "none",
+        "unknown_setup_failure_rate": 0.0,
         "test_suite_failure_reasons": {"none": 2},
         "security_failure_reasons": {"none": 2},
         "current_home_result_count": 0,
@@ -165,6 +172,9 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
         "cases_summary": {
             "security/ssrf-url-allowlist": {
                 "grading_mode": "assertion",
+                "setup_failure_reasons": {"none": 2},
+                "dominant_setup_failure_reason": "none",
+                "unknown_setup_failure_rate": 0.0,
                 "variants": {
                     "baseline_clean": {
                         "runs": 1,
@@ -173,6 +183,8 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
                         "pass_rate": 1.0,
                         "failure_categories": {"none": 1},
                         "setup_failure_reasons": {"none": 1},
+                        "dominant_setup_failure_reason": "none",
+                        "unknown_setup_failure_rate": 0.0,
                         "test_suite_failure_reasons": {"none": 1},
                         "security_failure_reasons": {"none": 1},
                     },
@@ -183,6 +195,8 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
                         "pass_rate": 1.0,
                         "failure_categories": {"none": 1},
                         "setup_failure_reasons": {"none": 1},
+                        "dominant_setup_failure_reason": "none",
+                        "unknown_setup_failure_rate": 0.0,
                         "test_suite_failure_reasons": {"none": 1},
                         "security_failure_reasons": {"none": 1},
                     },
@@ -237,6 +251,7 @@ def _result_payload(**overrides: object) -> dict[str, object]:
         "setup_failure_reason": "none",
         "test_suite_failure_reason": "none",
         "security_failure_reason": "none",
+        "first_failure_stage": "none",
         "first_failure_excerpt": "",
         "setup_log_excerpt": "",
         "test_suite_log_excerpt": "",
@@ -934,7 +949,67 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(summary["effect_status"], "regression")
         self.assertEqual(summary["failure_categories"], {"none": 5, "setup_failed": 40})
         self.assertEqual(summary["setup_failure_reasons"], {"none": 5, "unknown": 40})
+        self.assertEqual(summary["dominant_failure_category"], "setup_failed")
+        self.assertEqual(summary["dominant_setup_failure_reason"], "unknown")
+        self.assertEqual(summary["unknown_setup_failure_rate"], 1.0)
+        self.assertTrue(any("Setup failure diagnostics remain incomplete" in item for item in summary["limitations"]))
         self.assertEqual(summary["effect_summary"]["dominant_failure_category"], "setup_failed")
+        self.assertEqual(summary["effect_summary"]["dominant_setup_failure_reason"], "unknown")
+
+    def test_summary_classifies_historical_setup_logs_when_reason_was_unknown(self) -> None:
+        summary_module = _load_script(
+            "generate_codex_live_summary_setup_log_fallback",
+            "scripts/generate-codex-live-summary.py",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            (run_dir / "run-manifest.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 2,
+                        "generated_by": "scripts/run-codex-live-benchmarks.py",
+                        "run_id": "local-ablation",
+                        "status": "collected",
+                        "benchmark_mode": "ablation",
+                        "dry_run": False,
+                        "live_execution_allowed": True,
+                        "live_execution_effective": True,
+                        "cases": ["backend/service-method-vs-new-helper"],
+                        "variants": ["baseline_clean"],
+                        "runs_per_variant": 1,
+                        "sandbox": "workspace-write",
+                        "auth_policy": "borrow-current",
+                        "codex_environment_policy": "auth_borrowed_clean",
+                        "limitations": ["local"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            result_dir = run_dir / "cases" / "backend__service-method-vs-new-helper" / "baseline_clean" / "run-01"
+            grading_dir = result_dir / "grading"
+            grading_dir.mkdir(parents=True)
+            (result_dir / "result.json").write_text(
+                json.dumps(
+                    _result_payload(
+                        case_id="backend/service-method-vs-new-helper",
+                        grading_status="failed",
+                        benchmark_passed=False,
+                        failure_category="setup_failed",
+                        setup_failure_reason="unknown",
+                        grading={"all_passed": False, "setup_passed": False},
+                    )
+                ),
+                encoding="utf-8",
+            )
+            (grading_dir / "setup.log").write_text(
+                "python3: can't open file '<candidate>/../../../../../scripts/codegen_benchmark_harness.py': "
+                "No such file\n",
+                encoding="utf-8",
+            )
+            summary = summary_module.generate_summary(run_dir)
+        self.assertEqual(summary["setup_failure_reasons"], {"setup_script_modified_bad_path": 1})
+        self.assertEqual(summary["dominant_setup_failure_reason"], "setup_script_modified_bad_path")
+        self.assertEqual(summary["unknown_setup_failure_rate"], 0.0)
 
     def test_failure_category_priority_is_stable(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_failure_category", "scripts/run-codex-live-benchmarks.py")
@@ -1167,13 +1242,71 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertFalse(result["setup_passed"])
         self.assertFalse(result["test_suite_passed"])
         self.assertTrue(result["security_checks_passed"])
-        self.assertEqual(result["setup_failure_reason"], "harness_path_unresolved")
+        self.assertEqual(result["first_failure_stage"], "setup")
+        self.assertEqual(result["setup_failure_reason"], "missing_harness")
         self.assertEqual(result["test_suite_failure_reason"], "assertion_failed")
         encoded = json.dumps(result)
         self.assertNotIn("/Users/", encoded)
         self.assertNotIn("auth.json", encoded)
+        self.assertNotIn("CODEX_API_KEY", encoded)
+        self.assertNotIn("OPENAI_API_KEY", encoded)
         self.assertNotIn("sk-ThisShouldBeRedacted", encoded)
-        self.assertLessEqual(len(result["first_failure_excerpt"]), 1220)
+        self.assertLessEqual(len(result["first_failure_excerpt"]), 1200)
+
+    def test_setup_failure_reason_classifier_covers_common_causes(self) -> None:
+        grader = _load_script("grade_codex_live_setup_reason_classifier", "scripts/grade-codex-live-benchmarks.py")
+        examples = {
+            "missing_harness": "codegen_benchmark_harness.py: No such file",
+            "setup_script_missing": "setup.sh is missing",
+            "setup_script_modified_bad_path": (
+                "python3: can't open file '<candidate>/../../../../../scripts/codegen_benchmark_harness.py': "
+                "No such file"
+            ),
+            "dependency_install_failed": "ModuleNotFoundError: No module named 'requests'",
+            "python_compile_failed": "py_compile failed with SyntaxError",
+            "candidate_removed_required_file": "candidate lacks required starter file README.md",
+            "permission_denied": "bash: setup.sh: Permission denied",
+            "shell_error": "bad interpreter: No such file or command not found",
+            "unknown": "setup exited 1 with no recognizable diagnostic",
+        }
+        for expected, text in examples.items():
+            with self.subTest(expected=expected):
+                self.assertEqual(grader._setup_failure_reason(text, failed=True), expected)
+        self.assertEqual(grader._setup_failure_reason("setup exited 1", failed=False), "none")
+
+    def test_grading_result_validator_checks_diagnostic_fields(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_reports_grading_result_fields",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        payload = {
+            "setup_failure_reason": "missing_harness",
+            "test_suite_failure_reason": "none",
+            "security_failure_reason": "none",
+            "first_failure_stage": "setup",
+            "first_failure_excerpt": "/Users/raw CODEX_API_KEY=sk-SecretShouldFail12345",
+            "setup_log_excerpt": "x" * 1201,
+            "test_suite_log_excerpt": "",
+            "security_log_excerpt": "",
+        }
+        errors = validator._grading_result_errors(payload)
+        self.assertTrue(any("unredacted marker /Users/" in error for error in errors))
+        self.assertTrue(any("unredacted marker CODEX_API_KEY" in error for error in errors))
+        self.assertTrue(any("bounded to 1200" in error for error in errors))
+
+    def test_positive_effect_is_rejected_when_unknown_setup_dominates(self) -> None:
+        summary_module = _load_script(
+            "generate_codex_live_summary_unknown_positive_claim",
+            "scripts/generate-codex-live-summary.py",
+        )
+        payload = _strict_summary_payload(
+            effect_verdict="positive",
+            effect_status="improved",
+            dominant_setup_failure_reason="unknown",
+            unknown_setup_failure_rate=1.0,
+        )
+        errors = summary_module.strict_publish_errors(payload)
+        self.assertTrue(any("unknown setup failures dominate" in error for error in errors))
 
     def test_case_registry_requires_assertions_for_publishable_cases(self) -> None:
         helper = _load_script("codex_live_helper_bad_registry", "scripts/codex_live_benchmark_lib.py")

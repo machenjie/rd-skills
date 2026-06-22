@@ -15,11 +15,17 @@
   ],
   "cases_summary": {
     "backend/service-method-vs-new-helper": {
+      "dominant_setup_failure_reason": "setup_script_modified_bad_path",
       "grading_mode": "assertion",
+      "setup_failure_reasons": {
+        "setup_script_modified_bad_path": 9
+      },
+      "unknown_setup_failure_rate": 0.0,
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 0,
+          "dominant_setup_failure_reason": "setup_script_modified_bad_path",
           "failure_categories": {
             "setup_failed": 3
           },
@@ -29,15 +35,17 @@
             "none": 3
           },
           "setup_failure_reasons": {
-            "unknown": 3
+            "setup_script_modified_bad_path": 3
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 0,
+          "dominant_setup_failure_reason": "setup_script_modified_bad_path",
           "failure_categories": {
             "setup_failed": 3
           },
@@ -47,15 +55,17 @@
             "none": 3
           },
           "setup_failure_reasons": {
-            "unknown": 3
+            "setup_script_modified_bad_path": 3
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 0,
+          "dominant_setup_failure_reason": "setup_script_modified_bad_path",
           "failure_categories": {
             "setup_failed": 3
           },
@@ -65,20 +75,27 @@
             "none": 3
           },
           "setup_failure_reasons": {
-            "unknown": 3
+            "setup_script_modified_bad_path": 3
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 0.0
         }
       }
     },
     "devex/helper-reuse-search": {
+      "dominant_setup_failure_reason": "setup_script_modified_bad_path",
       "grading_mode": "assertion",
+      "setup_failure_reasons": {
+        "setup_script_modified_bad_path": 9
+      },
+      "unknown_setup_failure_rate": 0.0,
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 0,
+          "dominant_setup_failure_reason": "setup_script_modified_bad_path",
           "failure_categories": {
             "setup_failed": 3
           },
@@ -88,15 +105,17 @@
             "none": 3
           },
           "setup_failure_reasons": {
-            "unknown": 3
+            "setup_script_modified_bad_path": 3
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 0,
+          "dominant_setup_failure_reason": "setup_script_modified_bad_path",
           "failure_categories": {
             "setup_failed": 3
           },
@@ -106,15 +125,17 @@
             "none": 3
           },
           "setup_failure_reasons": {
-            "unknown": 3
+            "setup_script_modified_bad_path": 3
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 0,
+          "dominant_setup_failure_reason": "setup_script_modified_bad_path",
           "failure_categories": {
             "setup_failed": 3
           },
@@ -124,20 +145,27 @@
             "none": 3
           },
           "setup_failure_reasons": {
-            "unknown": 3
+            "setup_script_modified_bad_path": 3
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 0.0
         }
       }
     },
     "devex/minimal-correct-implementation-ladder": {
+      "dominant_setup_failure_reason": "none",
       "grading_mode": "telemetry_only",
+      "setup_failure_reasons": {
+        "none": 9
+      },
+      "unknown_setup_failure_rate": 0.0,
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 0,
           "benchmark_passed_result_count": 0,
+          "dominant_setup_failure_reason": "none",
           "failure_categories": {
             "telemetry_only": 3
           },
@@ -151,11 +179,13 @@
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 0,
           "benchmark_passed_result_count": 0,
+          "dominant_setup_failure_reason": "none",
           "failure_categories": {
             "telemetry_only": 3
           },
@@ -169,11 +199,13 @@
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 0,
           "benchmark_passed_result_count": 0,
+          "dominant_setup_failure_reason": "none",
           "failure_categories": {
             "telemetry_only": 3
           },
@@ -187,16 +219,23 @@
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 0.0
         }
       }
     },
     "reliability/redis-cache-stampede-protection": {
+      "dominant_setup_failure_reason": "setup_script_modified_bad_path",
       "grading_mode": "assertion",
+      "setup_failure_reasons": {
+        "setup_script_modified_bad_path": 9
+      },
+      "unknown_setup_failure_rate": 0.0,
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 0,
+          "dominant_setup_failure_reason": "setup_script_modified_bad_path",
           "failure_categories": {
             "setup_failed": 3
           },
@@ -206,15 +245,17 @@
             "none": 3
           },
           "setup_failure_reasons": {
-            "unknown": 3
+            "setup_script_modified_bad_path": 3
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 0,
+          "dominant_setup_failure_reason": "setup_script_modified_bad_path",
           "failure_categories": {
             "setup_failed": 3
           },
@@ -224,15 +265,17 @@
             "none": 3
           },
           "setup_failure_reasons": {
-            "unknown": 3
+            "setup_script_modified_bad_path": 3
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 0,
+          "dominant_setup_failure_reason": "setup_script_modified_bad_path",
           "failure_categories": {
             "setup_failed": 3
           },
@@ -242,20 +285,28 @@
             "none": 3
           },
           "setup_failure_reasons": {
-            "unknown": 3
+            "setup_script_modified_bad_path": 3
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 0.0
         }
       }
     },
     "security/ssrf-url-allowlist": {
+      "dominant_setup_failure_reason": "unknown",
       "grading_mode": "assertion",
+      "setup_failure_reasons": {
+        "none": 4,
+        "unknown": 5
+      },
+      "unknown_setup_failure_rate": 1.0,
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 2,
+          "dominant_setup_failure_reason": "unknown",
           "failure_categories": {
             "none": 2,
             "setup_failed": 1
@@ -271,11 +322,13 @@
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 1.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 1,
+          "dominant_setup_failure_reason": "unknown",
           "failure_categories": {
             "none": 1,
             "setup_failed": 2
@@ -291,11 +344,13 @@
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 1.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 1,
+          "dominant_setup_failure_reason": "unknown",
           "failure_categories": {
             "none": 1,
             "setup_failed": 2
@@ -311,16 +366,25 @@
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 1.0
         }
       }
     },
     "structure/object-method-encapsulation-placement": {
+      "dominant_setup_failure_reason": "dependency_install_failed",
       "grading_mode": "assertion",
+      "setup_failure_reasons": {
+        "dependency_install_failed": 6,
+        "none": 1,
+        "unknown": 2
+      },
+      "unknown_setup_failure_rate": 0.25,
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 1,
+          "dominant_setup_failure_reason": "unknown",
           "failure_categories": {
             "none": 1,
             "setup_failed": 2
@@ -336,11 +400,13 @@
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 1.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 0,
+          "dominant_setup_failure_reason": "dependency_install_failed",
           "failure_categories": {
             "setup_failed": 3
           },
@@ -350,15 +416,17 @@
             "none": 3
           },
           "setup_failure_reasons": {
-            "unknown": 3
+            "dependency_install_failed": 3
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
           "benchmark_passed_result_count": 0,
+          "dominant_setup_failure_reason": "dependency_install_failed",
           "failure_categories": {
             "setup_failed": 3
           },
@@ -368,11 +436,12 @@
             "none": 3
           },
           "setup_failure_reasons": {
-            "unknown": 3
+            "dependency_install_failed": 3
           },
           "test_suite_failure_reasons": {
             "none": 3
-          }
+          },
+          "unknown_setup_failure_rate": 0.0
         }
       }
     }
@@ -411,12 +480,15 @@
       "security_pass_rate_delta": 0.0
     }
   },
+  "dominant_failure_category": "setup_failed",
+  "dominant_setup_failure_reason": "setup_script_modified_bad_path",
   "effect_status": "regression",
   "effect_summary": {
     "baseline_clean_pass_rate": 0.2,
     "case_improvements": [],
     "dominant_failure_category": "setup_failed",
     "dominant_failure_count": 40,
+    "dominant_setup_failure_reason": "setup_script_modified_bad_path",
     "eligible_result_counts": {
       "baseline_clean": 15,
       "skills_only_clean": 15,
@@ -443,7 +515,8 @@
     "skills_only_clean_pass_rate": 0.0667,
     "skills_with_hooks_clean_pass_rate": 0.0667,
     "skills_with_hooks_vs_baseline_pass_rate_delta": -0.1333,
-    "skills_with_hooks_vs_skills_only_pass_rate_delta": 0.0
+    "skills_with_hooks_vs_skills_only_pass_rate_delta": 0.0,
+    "unknown_setup_failure_rate": 0.175
   },
   "effect_verdict": "negative",
   "evidence_level": "local_codex_cli_live_benchmark",
@@ -496,8 +569,10 @@
     "none": 54
   },
   "setup_failure_reasons": {
+    "dependency_install_failed": 6,
     "none": 14,
-    "unknown": 40
+    "setup_script_modified_bad_path": 27,
+    "unknown": 7
   },
   "status": "collected",
   "strict_benchmark_eligible": true,
@@ -510,6 +585,7 @@
   "test_suite_failure_reasons": {
     "none": 54
   },
+  "unknown_setup_failure_rate": 0.175,
   "user_config_loaded": false,
   "user_rules_loaded": false,
   "user_skills_visible": false,
@@ -539,6 +615,7 @@
       "case_count": 6,
       "contaminated_result_count": 0,
       "delta_vs_baseline_clean": {},
+      "dominant_setup_failure_reason": "setup_script_modified_bad_path",
       "failure_categories": {
         "none": 3,
         "setup_failed": 12,
@@ -599,12 +676,14 @@
       "security_pass_rate": 0.2,
       "setup_failure_reasons": {
         "none": 6,
-        "unknown": 12
+        "setup_script_modified_bad_path": 9,
+        "unknown": 3
       },
       "telemetry_only_result_count": 3,
       "test_suite_failure_reasons": {
         "none": 18
-      }
+      },
+      "unknown_setup_failure_rate": 0.25
     },
     "skills_only_clean": {
       "artifact_status_counts": {
@@ -639,6 +718,7 @@
         "reasoning_output_tokens_delta_pct": 0.0992,
         "security_pass_rate_delta": -0.1333
       },
+      "dominant_setup_failure_reason": "setup_script_modified_bad_path",
       "failure_categories": {
         "none": 1,
         "setup_failed": 14,
@@ -698,13 +778,16 @@
       },
       "security_pass_rate": 0.0667,
       "setup_failure_reasons": {
+        "dependency_install_failed": 3,
         "none": 4,
-        "unknown": 14
+        "setup_script_modified_bad_path": 9,
+        "unknown": 2
       },
       "telemetry_only_result_count": 3,
       "test_suite_failure_reasons": {
         "none": 18
-      }
+      },
+      "unknown_setup_failure_rate": 0.1429
     },
     "skills_with_hooks_clean": {
       "artifact_status_counts": {
@@ -739,6 +822,7 @@
         "reasoning_output_tokens_delta_pct": -0.0122,
         "security_pass_rate_delta": -0.1333
       },
+      "dominant_setup_failure_reason": "setup_script_modified_bad_path",
       "failure_categories": {
         "none": 1,
         "setup_failed": 14,
@@ -798,13 +882,16 @@
       },
       "security_pass_rate": 0.0667,
       "setup_failure_reasons": {
+        "dependency_install_failed": 3,
         "none": 4,
-        "unknown": 14
+        "setup_script_modified_bad_path": 9,
+        "unknown": 2
       },
       "telemetry_only_result_count": 3,
       "test_suite_failure_reasons": {
         "none": 18
-      }
+      },
+      "unknown_setup_failure_rate": 0.1429
     }
   }
 }

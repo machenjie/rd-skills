@@ -604,7 +604,10 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
         "telemetry_only_result_count",
         "contaminated_result_count",
         "failure_categories",
+        "dominant_failure_category",
         "setup_failure_reasons",
+        "dominant_setup_failure_reason",
+        "unknown_setup_failure_rate",
         "current_home_result_count",
         "current_home_full_result_count",
         "variants",
@@ -646,7 +649,10 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
         "benchmark_eligible_result_count": summary.get("benchmark_eligible_result_count"),
         "benchmark_passed_result_count": summary.get("benchmark_passed_result_count"),
         "failure_categories": summary.get("failure_categories"),
+        "dominant_failure_category": summary.get("dominant_failure_category"),
         "setup_failure_reasons": summary.get("setup_failure_reasons"),
+        "dominant_setup_failure_reason": summary.get("dominant_setup_failure_reason"),
+        "unknown_setup_failure_rate": summary.get("unknown_setup_failure_rate"),
         "variants": {
             variant: {
                 "run_count": payload.get("run_count"),
@@ -657,6 +663,8 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
                 "benchmark_passed_result_count": payload.get("benchmark_passed_result_count"),
                 "failure_categories": payload.get("failure_categories"),
                 "setup_failure_reasons": payload.get("setup_failure_reasons"),
+                "dominant_setup_failure_reason": payload.get("dominant_setup_failure_reason"),
+                "unknown_setup_failure_rate": payload.get("unknown_setup_failure_rate"),
             }
             for variant, payload in (summary.get("variants") or {}).items()
             if isinstance(payload, dict)
@@ -701,12 +709,42 @@ def _codex_live_strict_summary_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("Codex live summary requires assertion-backed eligible results")
     if not isinstance(summary.get("failure_categories"), dict):
         errors.append("Codex live summary requires failure_categories")
+    if summary.get("dominant_failure_category") not in {
+        "none",
+        "codex_exec_failed",
+        "install_failed",
+        "setup_failed",
+        "test_suite_failed",
+        "security_checks_failed",
+        "contaminated",
+        "grading_not_collected",
+        "telemetry_only",
+    }:
+        errors.append("Codex live summary requires dominant_failure_category")
+    if summary.get("dominant_setup_failure_reason") not in {
+        "none",
+        "missing_harness",
+        "setup_script_missing",
+        "setup_script_modified_bad_path",
+        "dependency_install_failed",
+        "python_compile_failed",
+        "candidate_removed_required_file",
+        "permission_denied",
+        "shell_error",
+        "unknown",
+    }:
+        errors.append("Codex live summary requires dominant_setup_failure_reason")
+    unknown_rate = summary.get("unknown_setup_failure_rate")
+    if not isinstance(unknown_rate, int | float) or not 0 <= float(unknown_rate) <= 1:
+        errors.append("Codex live summary requires unknown_setup_failure_rate")
     if summary.get("effect_verdict") not in {"inconclusive", "positive", "mixed", "neutral", "negative"}:
         errors.append("Codex live summary requires effect_verdict")
     if summary.get("effect_status") not in {"inconclusive", "improved", "mixed", "neutral", "regression"}:
         errors.append("Codex live summary requires effect_status")
     if not isinstance(summary.get("effect_summary"), dict):
         errors.append("Codex live summary requires effect_summary")
+    if summary.get("effect_verdict") == "positive" and summary.get("dominant_setup_failure_reason") == "unknown":
+        errors.append("Codex live summary cannot claim positive effect while unknown setup failures dominate")
     if not isinstance(summary.get("cases_summary"), dict):
         errors.append("Codex live summary requires cases_summary")
     variants = summary.get("variants") or {}

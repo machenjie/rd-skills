@@ -33,27 +33,34 @@ FAILURE_CATEGORIES = (
 )
 SETUP_FAILURE_REASONS = (
     "none",
-    "unknown",
+    "missing_harness",
     "setup_script_missing",
-    "harness_path_unresolved",
+    "setup_script_modified_bad_path",
     "dependency_install_failed",
     "python_compile_failed",
-    "setup_script_failed",
+    "candidate_removed_required_file",
+    "permission_denied",
+    "shell_error",
+    "unknown",
 )
 TEST_SUITE_FAILURE_REASONS = (
     "none",
-    "unknown",
     "assertion_failed",
-    "harness_contract_failed",
-    "test_runner_failed",
+    "missing_test_script",
+    "python_import_failed",
+    "python_compile_failed",
+    "behavior_failed",
+    "unknown",
 )
 SECURITY_FAILURE_REASONS = (
     "none",
-    "unknown",
     "assertion_failed",
-    "harness_contract_failed",
-    "security_runner_failed",
+    "missing_security_script",
+    "sensitive_log_leak",
+    "unsafe_network_policy",
+    "unknown",
 )
+FIRST_FAILURE_STAGES = ("setup", "test_suite", "security_checks", "assertion_files", "none")
 EFFECT_VERDICTS = ("inconclusive", "positive", "mixed", "neutral", "negative")
 EFFECT_STATUSES = ("inconclusive", "improved", "mixed", "neutral", "regression")
 PUBLIC_STATUSES = ("pass", "partial", "fail", "unknown", "not_collected")
@@ -453,6 +460,7 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "setup_failure_reason",
             "test_suite_failure_reason",
             "security_failure_reason",
+            "first_failure_stage",
             "first_failure_excerpt",
             "setup_log_excerpt",
             "test_suite_log_excerpt",
@@ -491,7 +499,10 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "telemetry_only_result_count",
             "contaminated_result_count",
             "failure_categories",
+            "dominant_failure_category",
             "setup_failure_reasons",
+            "dominant_setup_failure_reason",
+            "unknown_setup_failure_rate",
             "test_suite_failure_reasons",
             "security_failure_reasons",
             "current_home_result_count",
@@ -543,6 +554,9 @@ def validate_required_fields(payload: Any, schema_name: str) -> list[str]:
             value = payload.get(field)
             if value is not None and value not in allowed:
                 errors.append(f"{schema_name}: invalid {field} {value}")
+        first_failure_stage = payload.get("first_failure_stage")
+        if first_failure_stage is not None and first_failure_stage not in FIRST_FAILURE_STAGES:
+            errors.append(f"{schema_name}: invalid first_failure_stage {first_failure_stage}")
         for field in (
             "first_failure_excerpt",
             "setup_log_excerpt",
@@ -552,8 +566,8 @@ def validate_required_fields(payload: Any, schema_name: str) -> list[str]:
             value = payload.get(field)
             if value is not None and not isinstance(value, str):
                 errors.append(f"{schema_name}: {field} must be a string")
-            elif isinstance(value, str) and len(value) > 1220:
-                errors.append(f"{schema_name}: {field} must be bounded to about 1200 characters")
+            elif isinstance(value, str) and len(value) > 1200:
+                errors.append(f"{schema_name}: {field} must be bounded to 1200 characters")
     if schema_name == "summary":
         verdict = payload.get("effect_verdict")
         if verdict is not None and verdict not in EFFECT_VERDICTS:

@@ -47,6 +47,7 @@ def _redact_output(text: str, *, root: Path, candidate_dir: Path) -> str:
         r"\1=<redacted>",
         redacted,
     )
+    redacted = re.sub(r"(?i)\b(CODEX_API_KEY|OPENAI_API_KEY)\b", "<redacted-api-key-name>", redacted)
     redacted = re.sub(r"sk-(?=[A-Za-z0-9_-]{10,})[A-Za-z0-9_-]+", "<redacted-token>", redacted)
     return redact_report_text(redacted)
 
@@ -56,7 +57,8 @@ def _excerpt(text: str) -> str:
     stripped = text.strip()
     if len(stripped) <= EXCERPT_MAX_CHARS:
         return stripped
-    return stripped[:EXCERPT_MAX_CHARS] + "...<truncated>"
+    suffix = "...<truncated>"
+    return stripped[: EXCERPT_MAX_CHARS - len(suffix)] + suffix
 
 
 def _first_failure_excerpt(text: str) -> str:
@@ -113,42 +115,77 @@ def _stage_failures(text: str, *, returncode: int) -> dict[str, bool]:
     }
 
 
+def _first_failure_stage(stages: dict[str, bool], *, all_passed: bool) -> str:
+    if all_passed:
+        return "none"
+    for stage in ("setup", "test_suite", "security_checks"):
+        if stages.get(stage):
+            return stage
+    return "assertion_files"
+
+
 def _setup_failure_reason(text: str, *, failed: bool) -> str:
     if not failed:
         return "none"
     lowered = text.casefold()
-    if "setup.sh is missing" in lowered or "starter-repo/setup.sh: missing" in lowered:
+    if "setup.sh is missing" in lowered or "setup.sh: no such file" in lowered or "starter-repo/setup.sh: missing" in lowered:
         return "setup_script_missing"
+    if "candidate lacks required starter file" in lowered or (
+        "missing starter readme" in lowered or "starter readme" in lowered and "missing" in lowered
+    ):
+        return "candidate_removed_required_file"
+    if "changeforge_codegen_root" in lowered or (
+        "codegen_benchmark_harness.py" in lowered
+        and ("../../.." in lowered or "..\\..\\.." in lowered)
+        and ("no such file" in lowered or "can't open file" in lowered or "not found" in lowered)
+    ):
+        return "setup_script_modified_bad_path"
     if (
         "codegen_benchmark_harness.py" in lowered
         and ("no such file" in lowered or "can't open file" in lowered or "not found" in lowered)
-    ) or ("can't open file" in lowered and "no such file" in lowered):
-        return "harness_path_unresolved"
-    if re.search(r"(?i)(pip install|npm install|module not found|modulenotfounderror|dependency)", text):
+    ):
+        return "missing_harness"
+    if re.search(r"(?i)(pip install|npm install|module not found|modulenotfounderror|importerror|dependency)", text):
         return "dependency_install_failed"
     if re.search(r"(?i)(syntaxerror|compileall|py_compile|python compile)", text):
         return "python_compile_failed"
-    return "setup_script_failed"
+    if "permission denied" in lowered:
+        return "permission_denied"
+    if "command not found" in lowered or "bad interpreter" in lowered:
+        return "shell_error"
+    return "unknown"
 
 
 def _test_suite_failure_reason(text: str, *, failed: bool) -> str:
     if not failed:
         return "none"
+    lowered = text.casefold()
+    if "test-suite/run.sh: missing" in lowered or "missing_test_script" in lowered:
+        return "missing_test_script"
+    if re.search(r"(?i)(modulenotfounderror|importerror)", text):
+        return "python_import_failed"
+    if re.search(r"(?i)(syntaxerror|compileall|py_compile|python compile)", text):
+        return "python_compile_failed"
     if re.search(r"(?i)assertion .*(test-suite|test_.*\.py) .*exited", text):
         return "assertion_failed"
-    if "expected starter-repo cwd" in text or "codegen-benchmark-harness: ERROR:" in text:
-        return "harness_contract_failed"
-    return "test_runner_failed"
+    if "expected starter-repo cwd" in text or "codegen-benchmark-harness: ERROR:" in text or "test-suite exited" in lowered:
+        return "behavior_failed"
+    return "unknown"
 
 
 def _security_failure_reason(text: str, *, failed: bool) -> str:
     if not failed:
         return "none"
+    lowered = text.casefold()
+    if "security-checks/run.sh: missing" in lowered or "missing_security_script" in lowered:
+        return "missing_security_script"
+    if re.search(r"(?i)(sensitive.*log|secret-token|token=|credential|query values)", text):
+        return "sensitive_log_leak"
+    if re.search(r"(?i)(ssrf|metadata|private address|loopback|link local|unsafe network|redirect.*revalidat)", text):
+        return "unsafe_network_policy"
     if re.search(r"(?i)assertion .*security-checks.*exited", text):
         return "assertion_failed"
-    if "expected starter-repo cwd" in text or "codegen-benchmark-harness: ERROR:" in text:
-        return "harness_contract_failed"
-    return "security_runner_failed"
+    return "unknown"
 
 
 def _grading_path(out_dir: Path, path: Path) -> str:
@@ -203,6 +240,13 @@ def grade_candidate(
         "--candidate-dir",
         "<candidate>",
     ]
+    raw_combined = (
+        f"returncode: {completed.returncode}\n\n"
+        "stdout:\n"
+        f"{completed.stdout}\n\n"
+        "stderr:\n"
+        f"{completed.stderr}\n"
+    )
     combined = (
         f"command: {' '.join(redacted_command)}\n"
         f"returncode: {completed.returncode}\n\n"
@@ -215,7 +259,8 @@ def grade_candidate(
         (out_dir / log_name).write_text(combined, encoding="utf-8")
 
     all_passed = completed.returncode == 0
-    stages = _stage_failures(combined, returncode=completed.returncode)
+    stages = _stage_failures(raw_combined, returncode=completed.returncode)
+    first_failure_stage = _first_failure_stage(stages, all_passed=all_passed)
     first_failure_excerpt = "" if all_passed else _first_failure_excerpt(combined)
     setup_passed = all_passed or not stages["setup"]
     test_suite_passed = all_passed or not stages["test_suite"]
@@ -231,9 +276,10 @@ def grade_candidate(
         "setup_passed": setup_passed,
         "test_suite_passed": test_suite_passed,
         "security_checks_passed": security_checks_passed,
-        "setup_failure_reason": _setup_failure_reason(combined, failed=not setup_passed),
-        "test_suite_failure_reason": _test_suite_failure_reason(combined, failed=not test_suite_passed),
-        "security_failure_reason": _security_failure_reason(combined, failed=not security_checks_passed),
+        "setup_failure_reason": _setup_failure_reason(raw_combined, failed=not setup_passed),
+        "test_suite_failure_reason": _test_suite_failure_reason(raw_combined, failed=not test_suite_passed),
+        "security_failure_reason": _security_failure_reason(raw_combined, failed=not security_checks_passed),
+        "first_failure_stage": first_failure_stage,
         "first_failure_excerpt": first_failure_excerpt,
         "setup_log_excerpt": ""
         if setup_passed
@@ -289,6 +335,7 @@ def _write_not_collected_grading(
         "setup_failure_reason": "none",
         "test_suite_failure_reason": "none",
         "security_failure_reason": "none",
+        "first_failure_stage": "assertion_files",
         "first_failure_excerpt": _excerpt(message),
         "setup_log_excerpt": "",
         "test_suite_log_excerpt": "",
