@@ -47,6 +47,9 @@ def _variant_payload(**overrides: object) -> dict[str, object]:
         "artifact_status_counts": {"collected": 1},
         "grading_status_counts": {"passed": 1},
         "failure_categories": {"none": 1},
+        "setup_failure_reasons": {"none": 1},
+        "test_suite_failure_reasons": {"none": 1},
+        "security_failure_reasons": {"none": 1},
         "benchmark_eligible_result_count": 1,
         "benchmark_passed_result_count": 1,
         "pass_rate": 1.0,
@@ -74,7 +77,7 @@ def _variant_payload(**overrides: object) -> dict[str, object]:
 
 def _scope_detail(**overrides: object) -> dict[str, object]:
     payload: dict[str, object] = {
-        "strong_claim_ready": False,
+        "evidence_scope_ready": False,
         "required_benchmark_mode": "ablation",
         "required_assertion_case_count": 5,
         "required_runs_per_variant": 3,
@@ -101,6 +104,19 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
         "evidence_level": "local_codex_cli_live_benchmark",
         "evidence_scope": "smoke",
         "evidence_scope_detail": _scope_detail(),
+        "evidence_status": "pass",
+        "effect_verdict": "inconclusive",
+        "effect_status": "inconclusive",
+        "effect_summary": {
+            "required_variants": ["baseline_clean", "skills_only_clean", "skills_with_hooks_clean"],
+            "missing_variants": ["skills_only_clean"],
+            "eligible_result_counts": {
+                "baseline_clean": 1,
+                "skills_only_clean": 0,
+                "skills_with_hooks_clean": 1,
+            },
+            "reason": "missing required ablation variants, repeated runs, or eligible assertion-backed results",
+        },
         "benchmark_mode": "clean-paired",
         "codex_home_policy": "auth_borrowed_clean",
         "auth_policy": "borrow-current",
@@ -119,6 +135,9 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
         "telemetry_only_result_count": 0,
         "contaminated_result_count": 0,
         "failure_categories": {"none": 2},
+        "setup_failure_reasons": {"none": 2},
+        "test_suite_failure_reasons": {"none": 2},
+        "security_failure_reasons": {"none": 2},
         "current_home_result_count": 0,
         "current_home_full_result_count": 0,
         "user_skills_visible": False,
@@ -153,6 +172,9 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
                         "benchmark_passed_result_count": 1,
                         "pass_rate": 1.0,
                         "failure_categories": {"none": 1},
+                        "setup_failure_reasons": {"none": 1},
+                        "test_suite_failure_reasons": {"none": 1},
+                        "security_failure_reasons": {"none": 1},
                     },
                     "skills_with_hooks_clean": {
                         "runs": 1,
@@ -160,6 +182,9 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
                         "benchmark_passed_result_count": 1,
                         "pass_rate": 1.0,
                         "failure_categories": {"none": 1},
+                        "setup_failure_reasons": {"none": 1},
+                        "test_suite_failure_reasons": {"none": 1},
+                        "security_failure_reasons": {"none": 1},
                     },
                 },
             }
@@ -209,12 +234,24 @@ def _result_payload(**overrides: object) -> dict[str, object]:
         "benchmark_eligible": True,
         "benchmark_passed": True,
         "failure_category": "none",
+        "setup_failure_reason": "none",
+        "test_suite_failure_reason": "none",
+        "security_failure_reason": "none",
+        "first_failure_excerpt": "",
+        "setup_log_excerpt": "",
+        "test_suite_log_excerpt": "",
+        "security_log_excerpt": "",
         "contamination": {"contaminated": False, "signals": [], "files": []},
         "environment": _environment_payload(),
         "codex_returncode": 0,
         "failure": None,
         "paths": {"final": "<run-dir>/final.md"},
-        "grading": {"all_passed": True, "security_checks_passed": True},
+        "grading": {
+            "all_passed": True,
+            "setup_passed": True,
+            "test_suite_passed": True,
+            "security_checks_passed": True,
+        },
         "metrics": {
             "event_count": 1,
             "command_execution_count": 1,
@@ -672,7 +709,7 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(summary["telemetry_only_case_count"], 1)
         self.assertIn("skills_with_hooks_clean_vs_baseline_clean", summary["delta"])
         self.assertEqual(summary["evidence_scope"], "smoke")
-        self.assertFalse(summary["evidence_scope_detail"]["strong_claim_ready"])
+        self.assertFalse(summary["evidence_scope_detail"]["evidence_scope_ready"])
         self.assertTrue(any("smoke sample only" in item for item in summary["limitations"]))
 
     def test_summary_aggregates_ablation_runs_usage_cases_and_failure_categories(self) -> None:
@@ -747,7 +784,7 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertIn("skills_with_hooks_clean_vs_skills_only_clean", summary["delta"])
         self.assertIn("skills_with_hooks_clean_vs_baseline_clean", summary["delta"])
         self.assertEqual(summary["evidence_scope"], "smoke")
-        self.assertFalse(summary["evidence_scope_detail"]["strong_claim_ready"])
+        self.assertFalse(summary["evidence_scope_detail"]["evidence_scope_ready"])
         self.assertEqual(
             summary["cases_summary"]["security/ssrf-url-allowlist"]["variants"]["baseline_clean"]["pass_rate"],
             0.3333,
@@ -815,9 +852,89 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             summary = summary_module.generate_summary(run_dir)
 
         self.assertEqual(summary["evidence_scope"], "multi_case_ablation_3_run")
-        self.assertTrue(summary["evidence_scope_detail"]["strong_claim_ready"])
+        self.assertTrue(summary["evidence_scope_detail"]["evidence_scope_ready"])
         self.assertEqual(summary["evidence_scope_detail"]["observed_assertion_case_count"], 5)
         self.assertEqual(summary["evidence_scope_detail"]["observed_min_runs_per_required_variant"], 3)
+
+    def test_summary_marks_negative_effect_when_setup_failures_dominate(self) -> None:
+        summary_module = _load_script(
+            "generate_codex_live_summary_effect_regression",
+            "scripts/generate-codex-live-summary.py",
+        )
+        cases = [
+            "devex/helper-reuse-search",
+            "structure/object-method-encapsulation-placement",
+            "backend/service-method-vs-new-helper",
+            "reliability/redis-cache-stampede-protection",
+            "security/ssrf-url-allowlist",
+        ]
+        variants = ["baseline_clean", "skills_only_clean", "skills_with_hooks_clean"]
+        pass_budget = {"baseline_clean": 3, "skills_only_clean": 1, "skills_with_hooks_clean": 1}
+        seen_by_variant = {variant: 0 for variant in variants}
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            (run_dir / "run-manifest.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 2,
+                        "generated_by": "scripts/run-codex-live-benchmarks.py",
+                        "run_id": "local-ablation",
+                        "status": "collected",
+                        "benchmark_mode": "ablation",
+                        "dry_run": False,
+                        "live_execution_allowed": True,
+                        "live_execution_effective": True,
+                        "cases": cases,
+                        "variants": variants,
+                        "runs_per_variant": 3,
+                        "sandbox": "workspace-write",
+                        "auth_policy": "borrow-current",
+                        "codex_environment_policy": "auth_borrowed_clean",
+                        "limitations": ["local"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            for case_id in cases:
+                for variant in variants:
+                    for run_index in range(1, 4):
+                        seen_by_variant[variant] += 1
+                        passed = seen_by_variant[variant] <= pass_budget[variant]
+                        result_dir = (
+                            run_dir
+                            / "cases"
+                            / case_id.replace("/", "__")
+                            / variant
+                            / f"run-{run_index:02d}"
+                        )
+                        result_dir.mkdir(parents=True)
+                        (result_dir / "result.json").write_text(
+                            json.dumps(
+                                _result_payload(
+                                    case_id=case_id,
+                                    variant=variant,
+                                    run_index=run_index,
+                                    grading_status="passed" if passed else "failed",
+                                    benchmark_passed=passed,
+                                    failure_category="none" if passed else "setup_failed",
+                                    setup_failure_reason="none" if passed else "unknown",
+                                    grading={
+                                        "all_passed": passed,
+                                        "setup_passed": passed,
+                                        "test_suite_passed": True,
+                                        "security_checks_passed": True,
+                                    },
+                                )
+                            ),
+                            encoding="utf-8",
+                        )
+            summary = summary_module.generate_summary(run_dir)
+        self.assertEqual(summary["evidence_scope"], "multi_case_ablation_3_run")
+        self.assertEqual(summary["effect_verdict"], "negative")
+        self.assertEqual(summary["effect_status"], "regression")
+        self.assertEqual(summary["failure_categories"], {"none": 5, "setup_failed": 40})
+        self.assertEqual(summary["setup_failure_reasons"], {"none": 5, "unknown": 40})
+        self.assertEqual(summary["effect_summary"]["dominant_failure_category"], "setup_failed")
 
     def test_failure_category_priority_is_stable(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_failure_category", "scripts/run-codex-live-benchmarks.py")
@@ -1027,6 +1144,37 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertNotIn("/private/var/", redacted)
         self.assertNotIn("/tmp/", redacted)
 
+    def test_grader_classifies_stage_failures_and_redacts_excerpts(self) -> None:
+        grader = _load_script("grade_codex_live_stage_diagnostics", "scripts/grade-codex-live-benchmarks.py")
+        completed = subprocess.CompletedProcess(
+            args=[],
+            returncode=1,
+            stdout="/Users/raw-home/.codex/auth.json CODEX_API_KEY=sk-ThisShouldBeRedacted12345\n",
+            stderr=(
+                "run-codegen-benchmarks: ERROR: security/ssrf-url-allowlist: setup exited 1\n"
+                "python3: can't open file '/Users/raw/repo/scripts/codegen_benchmark_harness.py': No such file\n"
+                "run-codegen-benchmarks: ERROR: security/ssrf-url-allowlist: assertion "
+                "evals/codegen/security/ssrf-url-allowlist/test-suite/tests/test_behavior.py exited 1\n"
+                "AssertionError: token=sk-AlsoRedacted12345\n"
+            ),
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp) / "candidate"
+            out_dir = Path(tmp) / "grading"
+            candidate.mkdir()
+            with patch.object(grader.subprocess, "run", return_value=completed):
+                result = grader.grade_candidate("security/ssrf-url-allowlist", candidate, out_dir)
+        self.assertFalse(result["setup_passed"])
+        self.assertFalse(result["test_suite_passed"])
+        self.assertTrue(result["security_checks_passed"])
+        self.assertEqual(result["setup_failure_reason"], "harness_path_unresolved")
+        self.assertEqual(result["test_suite_failure_reason"], "assertion_failed")
+        encoded = json.dumps(result)
+        self.assertNotIn("/Users/", encoded)
+        self.assertNotIn("auth.json", encoded)
+        self.assertNotIn("sk-ThisShouldBeRedacted", encoded)
+        self.assertLessEqual(len(result["first_failure_excerpt"]), 1220)
+
     def test_case_registry_requires_assertions_for_publishable_cases(self) -> None:
         helper = _load_script("codex_live_helper_bad_registry", "scripts/codex_live_benchmark_lib.py")
         data = {
@@ -1121,7 +1269,10 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             item = public._codex_live_benchmark_item(root)
         self.assertEqual(status, "pass")
         self.assertIn("auth_borrowed_clean", detail)
+        self.assertIn('"evidence_status": "pass"', detail)
+        self.assertIn('"effect_status": "inconclusive"', detail)
         self.assertEqual(item.status, "pass")
+        self.assertIn('"effect_verdict": "inconclusive"', item.detail)
         self.assertEqual(item.evidence_level, "local_codex_cli_live_benchmark")
 
     def test_public_summary_rejects_current_home_smoke_as_strict_file(self) -> None:

@@ -587,9 +587,13 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
         "generated_by",
         "status",
         "evidence_level",
+        "evidence_status",
         "benchmark_mode",
         "auth_policy",
         "codex_environment_policy",
+        "effect_verdict",
+        "effect_status",
+        "effect_summary",
         "strict_benchmark_eligible",
         "run_id",
         "case_count",
@@ -600,6 +604,7 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
         "telemetry_only_result_count",
         "contaminated_result_count",
         "failure_categories",
+        "setup_failure_reasons",
         "current_home_result_count",
         "current_home_full_result_count",
         "variants",
@@ -623,9 +628,13 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
     else:
         scorecard_status = "not_collected"
     detail = {
+        "evidence_status": scorecard_status,
         "evidence_level": summary.get("evidence_level"),
         "evidence_scope": summary.get("evidence_scope"),
         "evidence_scope_detail": summary.get("evidence_scope_detail"),
+        "effect_verdict": summary.get("effect_verdict"),
+        "effect_status": summary.get("effect_status"),
+        "effect_summary": summary.get("effect_summary"),
         "benchmark_mode": summary.get("benchmark_mode"),
         "auth_policy": summary.get("auth_policy"),
         "codex_environment_policy": summary.get("codex_environment_policy"),
@@ -637,6 +646,7 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
         "benchmark_eligible_result_count": summary.get("benchmark_eligible_result_count"),
         "benchmark_passed_result_count": summary.get("benchmark_passed_result_count"),
         "failure_categories": summary.get("failure_categories"),
+        "setup_failure_reasons": summary.get("setup_failure_reasons"),
         "variants": {
             variant: {
                 "run_count": payload.get("run_count"),
@@ -646,6 +656,7 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
                 "benchmark_eligible_result_count": payload.get("benchmark_eligible_result_count"),
                 "benchmark_passed_result_count": payload.get("benchmark_passed_result_count"),
                 "failure_categories": payload.get("failure_categories"),
+                "setup_failure_reasons": payload.get("setup_failure_reasons"),
             }
             for variant, payload in (summary.get("variants") or {}).items()
             if isinstance(payload, dict)
@@ -690,6 +701,12 @@ def _codex_live_strict_summary_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("Codex live summary requires assertion-backed eligible results")
     if not isinstance(summary.get("failure_categories"), dict):
         errors.append("Codex live summary requires failure_categories")
+    if summary.get("effect_verdict") not in {"inconclusive", "positive", "mixed", "neutral", "negative"}:
+        errors.append("Codex live summary requires effect_verdict")
+    if summary.get("effect_status") not in {"inconclusive", "improved", "mixed", "neutral", "regression"}:
+        errors.append("Codex live summary requires effect_status")
+    if not isinstance(summary.get("effect_summary"), dict):
+        errors.append("Codex live summary requires effect_summary")
     if not isinstance(summary.get("cases_summary"), dict):
         errors.append("Codex live summary requires cases_summary")
     variants = summary.get("variants") or {}

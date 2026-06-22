@@ -27,6 +27,15 @@ class ServiceMethodPlacementAssertions(unittest.TestCase):
         self.assertIn("OrderPolicy", joined)
         self.assertRegex(joined, r"canCancelBeforeDeadline|cancellation deadline|cancel.*deadline")
 
+    def test_order_service_exposes_public_cancel_order_method(self) -> None:
+        joined = "\n".join(text for _, text in candidate_texts())
+
+        self.assertRegex(
+            joined,
+            r"(?s)(class\s+OrderService\b|export\s+class\s+OrderService\b).{0,2500}"
+            r"(?:public\s+)?(?:async\s+)?cancelOrder\s*\(",
+        )
+
     def test_no_order_business_rule_is_added_to_shared_utils(self) -> None:
         for rel, text in candidate_texts():
             normalized = rel.as_posix().casefold()

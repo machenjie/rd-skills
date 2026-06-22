@@ -81,6 +81,14 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         cases_summary=cases_summary,
     )
     evidence_scope = _evidence_scope(benchmark_mode, evidence_scope_detail)
+    failure_categories = _counts(real_results, "failure_category")
+    effect = _effect_evaluation(
+        benchmark_mode,
+        variants=variants,
+        cases_summary=cases_summary,
+        failure_categories=failure_categories,
+        evidence_scope_detail=evidence_scope_detail,
+    )
     summary = {
         "schema_version": 2,
         "generated_by": "scripts/generate-codex-live-summary.py",
@@ -88,6 +96,10 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         "evidence_level": evidence_level,
         "evidence_scope": evidence_scope,
         "evidence_scope_detail": evidence_scope_detail,
+        "evidence_status": _evidence_status(status),
+        "effect_verdict": effect["verdict"],
+        "effect_status": effect["status"],
+        "effect_summary": effect["summary"],
         "benchmark_mode": benchmark_mode,
         "codex_home_policy": _codex_home_policy(manifest, real_results, benchmark_mode),
         "auth_policy": auth_policy,
@@ -118,7 +130,14 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         "contaminated_result_count": sum(
             1 for result in real_results if (result.get("contamination") or {}).get("contaminated") is True
         ),
-        "failure_categories": _counts(real_results, "failure_category"),
+        "failure_categories": failure_categories,
+        "setup_failure_reasons": _reason_counts(real_results, "setup_failure_reason", "setup_failed"),
+        "test_suite_failure_reasons": _reason_counts(real_results, "test_suite_failure_reason", "test_suite_failed"),
+        "security_failure_reasons": _reason_counts(
+            real_results,
+            "security_failure_reason",
+            "security_checks_failed",
+        ),
         "current_home_result_count": sum(1 for result in real_results if result.get("codex_home_mode") == "current"),
         "current_home_full_result_count": current_home_full_result_count,
         **environment_flags,
@@ -180,6 +199,9 @@ def _variant_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
         "artifact_status_counts": _counts(results, "artifact_status"),
         "grading_status_counts": _counts(results, "grading_status"),
         "failure_categories": _counts(results, "failure_category"),
+        "setup_failure_reasons": _reason_counts(results, "setup_failure_reason", "setup_failed"),
+        "test_suite_failure_reasons": _reason_counts(results, "test_suite_failure_reason", "test_suite_failed"),
+        "security_failure_reasons": _reason_counts(results, "security_failure_reason", "security_checks_failed"),
         "benchmark_eligible_result_count": len(eligible),
         "benchmark_passed_result_count": len(passed),
         "pass_rate": _rate(len(passed), len(eligible)),
@@ -210,6 +232,20 @@ def _counts(results: list[dict[str, Any]], key: str) -> dict[str, int]:
     for result in results:
         value = str(result.get(key) or missing_value)
         counts[value] = counts.get(value, 0) + 1
+    return counts
+
+
+def _reason_counts(results: list[dict[str, Any]], key: str, matching_failure_category: str) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for result in results:
+        value = result.get(key)
+        grading = result.get("grading")
+        if not value and isinstance(grading, dict):
+            value = grading.get(key)
+        if not value and result.get("failure_category") == matching_failure_category:
+            value = "unknown"
+        reason = str(value or "none")
+        counts[reason] = counts.get(reason, 0) + 1
     return counts
 
 
@@ -278,7 +314,7 @@ def _rate(numerator: int, denominator: int) -> float | str:
 def _evidence_scope(benchmark_mode: str, detail: dict[str, Any]) -> str:
     if benchmark_mode == "current-home-smoke":
         return "current_home_smoke"
-    if detail.get("strong_claim_ready") is True:
+    if detail.get("evidence_scope_ready") is True:
         return "multi_case_ablation_3_run"
     return "smoke"
 
@@ -307,7 +343,7 @@ def _evidence_scope_detail(
         per_variant_min_runs[variant] = min(runs) if runs else 0
 
     observed_min_runs = min(per_variant_min_runs.values()) if per_variant_min_runs else 0
-    strong_claim_ready = bool(
+    evidence_scope_ready = bool(
         benchmark_mode == "ablation"
         and len(assertion_cases) >= STRONG_CODEX_LIVE_ASSERTION_CASE_MIN
         and all(
@@ -318,7 +354,7 @@ def _evidence_scope_detail(
     )
     if benchmark_mode == "current-home-smoke":
         reason = "current-home-smoke mode is not strict comparative evidence"
-    elif strong_claim_ready:
+    elif evidence_scope_ready:
         reason = "ablation evidence includes the required assertion-backed case count and repeated runs"
     elif benchmark_mode != "ablation":
         reason = "strict clean-paired evidence is smoke-scale until ablation covers the required cases and runs"
@@ -329,7 +365,7 @@ def _evidence_scope_detail(
     else:
         reason = "ablation evidence is missing one or more required variant/case combinations"
     return {
-        "strong_claim_ready": strong_claim_ready,
+        "evidence_scope_ready": evidence_scope_ready,
         "required_benchmark_mode": "ablation",
         "required_assertion_case_count": STRONG_CODEX_LIVE_ASSERTION_CASE_MIN,
         "required_runs_per_variant": STRONG_CODEX_LIVE_RUNS_PER_VARIANT_MIN,
@@ -340,6 +376,127 @@ def _evidence_scope_detail(
         "observed_min_runs_per_required_variant": observed_min_runs,
         "reason": reason,
     }
+
+
+def _evidence_status(status: str) -> str:
+    if status == "collected":
+        return "pass"
+    if status == "partial":
+        return "partial"
+    if status == "failed":
+        return "fail"
+    return "not_collected"
+
+
+def _effect_evaluation(
+    benchmark_mode: str,
+    *,
+    variants: dict[str, dict[str, Any]],
+    cases_summary: dict[str, Any],
+    failure_categories: dict[str, int],
+    evidence_scope_detail: dict[str, Any],
+) -> dict[str, Any]:
+    required_variants = list(MODE_DEFAULT_VARIANTS["ablation"])
+    missing_variants = [variant for variant in required_variants if variant not in variants]
+    eligible_counts = {
+        variant: int((variants.get(variant) or {}).get("benchmark_eligible_result_count", 0) or 0)
+        for variant in required_variants
+    }
+    rates = {variant: (variants.get(variant) or {}).get("pass_rate") for variant in required_variants}
+    setup_counts = {
+        variant: int(((variants.get(variant) or {}).get("failure_categories") or {}).get("setup_failed", 0) or 0)
+        for variant in required_variants
+    }
+    result_counts = {
+        variant: int((variants.get(variant) or {}).get("result_count", 0) or 0)
+        for variant in required_variants
+    }
+    setup_rates = {variant: _rate(setup_counts[variant], result_counts[variant]) for variant in required_variants}
+    dominant_failure_category, dominant_failure_count = _dominant_bucket(failure_categories)
+    improved_cases = _case_improvements(cases_summary)
+    summary = {
+        "required_variants": required_variants,
+        "missing_variants": missing_variants,
+        "eligible_result_counts": eligible_counts,
+        "baseline_clean_pass_rate": rates.get("baseline_clean"),
+        "skills_only_clean_pass_rate": rates.get("skills_only_clean"),
+        "skills_with_hooks_clean_pass_rate": rates.get("skills_with_hooks_clean"),
+        "skills_with_hooks_vs_baseline_pass_rate_delta": _numeric_delta(
+            rates.get("skills_with_hooks_clean"),
+            rates.get("baseline_clean"),
+        ),
+        "skills_with_hooks_vs_skills_only_pass_rate_delta": _numeric_delta(
+            rates.get("skills_with_hooks_clean"),
+            rates.get("skills_only_clean"),
+        ),
+        "dominant_failure_category": dominant_failure_category,
+        "dominant_failure_count": dominant_failure_count,
+        "setup_failed_result_count": int(failure_categories.get("setup_failed", 0) or 0),
+        "setup_failed_by_variant": setup_counts,
+        "setup_failed_rate_by_variant": setup_rates,
+        "case_improvements": improved_cases,
+        "reason": "",
+    }
+
+    if (
+        benchmark_mode != "ablation"
+        or evidence_scope_detail.get("evidence_scope_ready") is not True
+        or missing_variants
+        or any(count <= 0 for count in eligible_counts.values())
+        or not all(isinstance(rates.get(variant), int | float) for variant in required_variants)
+    ):
+        summary["reason"] = "missing required ablation variants, repeated runs, or eligible assertion-backed results"
+        return {"verdict": "inconclusive", "status": "inconclusive", "summary": summary}
+
+    baseline_rate = float(rates["baseline_clean"])
+    skills_only_rate = float(rates["skills_only_clean"])
+    hooks_rate = float(rates["skills_with_hooks_clean"])
+    setup_dominates = dominant_failure_category == "setup_failed" and dominant_failure_count > 0
+    skills_do_not_reduce_setup = (
+        isinstance(setup_rates["baseline_clean"], int | float)
+        and isinstance(setup_rates["skills_only_clean"], int | float)
+        and isinstance(setup_rates["skills_with_hooks_clean"], int | float)
+        and setup_rates["skills_only_clean"] >= setup_rates["baseline_clean"]
+        and setup_rates["skills_with_hooks_clean"] >= setup_rates["baseline_clean"]
+    )
+
+    if hooks_rate < baseline_rate:
+        summary["reason"] = "skills_with_hooks_clean pass rate is below baseline_clean"
+        return {"verdict": "negative", "status": "regression", "summary": summary}
+    if setup_dominates and skills_do_not_reduce_setup:
+        summary["reason"] = "setup_failed is dominant and skill variants do not reduce setup failures"
+        return {"verdict": "negative", "status": "regression", "summary": summary}
+    if hooks_rate > baseline_rate and hooks_rate >= skills_only_rate and not setup_dominates:
+        summary["reason"] = "skills_with_hooks_clean improves over baseline_clean and is not below skills_only_clean"
+        return {"verdict": "positive", "status": "improved", "summary": summary}
+    if hooks_rate == baseline_rate:
+        summary["reason"] = "skills_with_hooks_clean matches baseline_clean at summary precision"
+        return {"verdict": "neutral", "status": "neutral", "summary": summary}
+    if improved_cases or setup_dominates:
+        summary["reason"] = "some case-level movement exists, but the aggregate effect is not clearly positive"
+        return {"verdict": "mixed", "status": "mixed", "summary": summary}
+    summary["reason"] = "aggregate effect is not clearly positive"
+    return {"verdict": "mixed", "status": "mixed", "summary": summary}
+
+
+def _dominant_bucket(counts: dict[str, int]) -> tuple[str | None, int]:
+    if not counts:
+        return None, 0
+    category, count = max(counts.items(), key=lambda item: (item[1], item[0]))
+    return category, int(count)
+
+
+def _case_improvements(cases_summary: dict[str, Any]) -> list[str]:
+    improved: list[str] = []
+    for case_id, case_payload in cases_summary.items():
+        if not isinstance(case_payload, dict):
+            continue
+        variants = case_payload.get("variants") or {}
+        baseline_rate = (variants.get("baseline_clean") or {}).get("pass_rate")
+        hooks_rate = (variants.get("skills_with_hooks_clean") or {}).get("pass_rate")
+        if isinstance(baseline_rate, int | float) and isinstance(hooks_rate, int | float) and hooks_rate > baseline_rate:
+            improved.append(str(case_id))
+    return improved
 
 
 def _variant_deltas(variants: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -409,6 +566,21 @@ def _cases_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
                 "benchmark_passed_result_count": len(passed),
                 "pass_rate": _rate(len(passed), len(eligible)),
                 "failure_categories": _counts(variant_results, "failure_category"),
+                "setup_failure_reasons": _reason_counts(
+                    variant_results,
+                    "setup_failure_reason",
+                    "setup_failed",
+                ),
+                "test_suite_failure_reasons": _reason_counts(
+                    variant_results,
+                    "test_suite_failure_reason",
+                    "test_suite_failed",
+                ),
+                "security_failure_reasons": _reason_counts(
+                    variant_results,
+                    "security_failure_reason",
+                    "security_checks_failed",
+                ),
             }
         grading_modes = {str(result.get("grading_mode")) for result in case_results if result.get("grading_mode")}
         summary[case_id] = {
@@ -541,8 +713,12 @@ def render_markdown(summary: dict[str, Any]) -> str:
         f"- Status: `{summary['status']}`",
         f"- Evidence level: `{summary['evidence_level']}`",
         f"- Evidence scope: `{summary['evidence_scope']}`",
-        f"- Strong claim ready: `{summary['evidence_scope_detail']['strong_claim_ready']}`",
+        f"- Evidence scope ready: `{summary['evidence_scope_detail']['evidence_scope_ready']}`",
         f"- Evidence scope reason: {summary['evidence_scope_detail']['reason']}",
+        f"- Evidence status: `{summary['evidence_status']}`",
+        f"- Effect verdict: `{summary['effect_verdict']}`",
+        f"- Effect status: `{summary['effect_status']}`",
+        f"- Effect reason: {summary['effect_summary']['reason']}",
         f"- Benchmark mode: `{summary['benchmark_mode']}`",
         f"- Auth policy: `{summary['auth_policy']}`",
         f"- Environment policy: `{summary['codex_environment_policy']}`",

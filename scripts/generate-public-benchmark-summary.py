@@ -304,9 +304,13 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
     if strict_errors:
         status = "fail"
     detail = {
+        "evidence_status": status,
         "evidence_level": summary.get("evidence_level"),
         "evidence_scope": summary.get("evidence_scope"),
         "evidence_scope_detail": summary.get("evidence_scope_detail"),
+        "effect_verdict": summary.get("effect_verdict"),
+        "effect_status": summary.get("effect_status"),
+        "effect_summary": summary.get("effect_summary"),
         "benchmark_mode": summary.get("benchmark_mode"),
         "auth_policy": summary.get("auth_policy"),
         "codex_environment_policy": summary.get("codex_environment_policy"),
@@ -318,6 +322,7 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
         "benchmark_eligible_result_count": summary.get("benchmark_eligible_result_count"),
         "benchmark_passed_result_count": summary.get("benchmark_passed_result_count"),
         "failure_categories": summary.get("failure_categories"),
+        "setup_failure_reasons": summary.get("setup_failure_reasons"),
         "variants": {
             variant: {
                 "run_count": payload.get("run_count"),
@@ -327,6 +332,7 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
                 "benchmark_eligible_result_count": payload.get("benchmark_eligible_result_count"),
                 "benchmark_passed_result_count": payload.get("benchmark_passed_result_count"),
                 "failure_categories": payload.get("failure_categories"),
+                "setup_failure_reasons": payload.get("setup_failure_reasons"),
             }
             for variant, payload in (summary.get("variants") or {}).items()
             if isinstance(payload, dict)
@@ -379,6 +385,12 @@ def _codex_live_strict_summary_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("assertion-backed eligible results are required")
     if not isinstance(summary.get("failure_categories"), dict):
         errors.append("failure_categories are required")
+    if summary.get("effect_verdict") not in {"inconclusive", "positive", "mixed", "neutral", "negative"}:
+        errors.append("effect_verdict is required")
+    if summary.get("effect_status") not in {"inconclusive", "improved", "mixed", "neutral", "regression"}:
+        errors.append("effect_status is required")
+    if not isinstance(summary.get("effect_summary"), dict):
+        errors.append("effect_summary is required")
     if not isinstance(summary.get("cases_summary"), dict):
         errors.append("cases_summary is required")
     variants = summary.get("variants") or {}

@@ -3,8 +3,12 @@
 - Status: `collected`
 - Evidence level: `local_codex_cli_live_benchmark`
 - Evidence scope: `multi_case_ablation_3_run`
-- Strong claim ready: `True`
+- Evidence scope ready: `True`
 - Evidence scope reason: ablation evidence includes the required assertion-backed case count and repeated runs
+- Evidence status: `pass`
+- Effect verdict: `negative`
+- Effect status: `regression`
+- Effect reason: skills_with_hooks_clean pass rate is below baseline_clean
 - Benchmark mode: `ablation`
 - Auth policy: `borrow-current`
 - Environment policy: `auth_borrowed_clean`

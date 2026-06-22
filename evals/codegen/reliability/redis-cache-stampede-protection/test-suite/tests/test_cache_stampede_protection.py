@@ -25,6 +25,7 @@ class CacheStampedeProtectionAssertions(unittest.TestCase):
         self.assertRegex(joined, r"(?i)single.?flight|lock|mutex|lease")
         self.assertRegex(joined, r"(?i)jitter")
         self.assertRegex(joined, r"(?i)timeout|expires|ttl")
+        self.assertRegex(joined, r"(?i)bounded|clamp|min.?ttl|max.?ttl|ttl.*range")
 
     def test_cache_key_preserves_correctness_dimensions(self) -> None:
         joined = "\n".join(text for _, text in candidate_texts())
@@ -49,6 +50,15 @@ class CacheStampedeProtectionAssertions(unittest.TestCase):
         self.assertRegex(joined, r"(?i)redis.*down|redis.*unavailable|outage|degrad")
         self.assertRegex(test_text, r"(?i)redis.*down|redis.*unavailable|outage|fallback")
         self.assertNotRegex(joined, r"(?i)socket\.create_connection|requests\.|http://|https://")
+
+    def test_fake_cache_and_backend_verify_single_flight_behavior(self) -> None:
+        test_text = "\n".join(
+            text for rel, text in candidate_texts() if "test" in rel.name.casefold() or "/tests/" in rel.as_posix()
+        )
+
+        self.assertRegex(test_text, r"(?i)fake.*cache|in.?memory.*cache|stub.*cache")
+        self.assertRegex(test_text, r"(?i)fake.*backend|fake.*database|source.?of.?truth|backend.*calls")
+        self.assertRegex(test_text, r"(?i)single.?flight|lock|concurrent|parallel|only one")
 
 
 if __name__ == "__main__":

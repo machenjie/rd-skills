@@ -43,9 +43,20 @@ class HelperReuseSearchAssertions(unittest.TestCase):
         )
 
         self.assertRegex(test_text, r"(?i)display.?name|display name")
+        self.assertRegex(test_text, r"(?i)\bnormal\b|standard|active")
         self.assertRegex(test_text, r"(?i)missing.?customer|unknown.?customer|no customer")
         self.assertRegex(test_text, r"(?i)archived")
         self.assertNotRegex(test_text, r"(?i)formatOrderDisplayName\(")
+
+    def test_order_display_helper_is_not_duplicated(self) -> None:
+        joined = "\n".join(text for _, text in candidate_texts())
+        helper_defs = re.findall(
+            r"(?i)(?:function\s+formatOrderDisplayName|const\s+formatOrderDisplayName\s*=|"
+            r"def\s+format_order_display_name|def\s+formatOrderDisplayName)",
+            joined,
+        )
+
+        self.assertLessEqual(len(helper_defs), 1)
 
     def test_execution_evidence_and_structure_plan_are_recorded(self) -> None:
         joined = "\n".join(text for _, text in candidate_texts())

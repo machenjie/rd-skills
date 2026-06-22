@@ -10,6 +10,10 @@
     "evidence_level",
     "evidence_scope",
     "evidence_scope_detail",
+    "evidence_status",
+    "effect_verdict",
+    "effect_status",
+    "effect_summary",
     "benchmark_mode",
     "codex_home_policy",
     "auth_policy",
@@ -26,6 +30,9 @@
     "telemetry_only_result_count",
     "contaminated_result_count",
     "failure_categories",
+    "setup_failure_reasons",
+    "test_suite_failure_reasons",
+    "security_failure_reasons",
     "current_home_result_count",
     "current_home_full_result_count",
     "user_skills_visible",
@@ -59,7 +66,7 @@
     "evidence_scope_detail": {
       "type": "object",
       "required": [
-        "strong_claim_ready",
+        "evidence_scope_ready",
         "required_benchmark_mode",
         "required_assertion_case_count",
         "required_runs_per_variant",
@@ -71,7 +78,7 @@
         "reason"
       ],
       "properties": {
-        "strong_claim_ready": {
+        "evidence_scope_ready": {
           "type": "boolean"
         },
         "required_benchmark_mode": {
@@ -113,6 +120,18 @@
     },
     "benchmark_mode": {
       "enum": ["clean-paired", "ablation", "current-home-smoke"]
+    },
+    "evidence_status": {
+      "enum": ["pass", "partial", "fail", "not_collected"]
+    },
+    "effect_verdict": {
+      "enum": ["inconclusive", "positive", "mixed", "neutral", "negative"]
+    },
+    "effect_status": {
+      "enum": ["inconclusive", "improved", "mixed", "neutral", "regression"]
+    },
+    "effect_summary": {
+      "type": "object"
     },
     "codex_home_policy": {
       "enum": ["isolated_only", "auth_borrowed_clean", "current_home_smoke_only", "mixed_or_unknown"]
@@ -157,6 +176,15 @@
       "type": "integer"
     },
     "failure_categories": {
+      "type": "object"
+    },
+    "setup_failure_reasons": {
+      "type": "object"
+    },
+    "test_suite_failure_reasons": {
+      "type": "object"
+    },
+    "security_failure_reasons": {
       "type": "object"
     },
     "current_home_result_count": {

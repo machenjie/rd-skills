@@ -25,6 +25,7 @@ class ObjectMethodPlacementAssertions(unittest.TestCase):
         self.assertRegex(joined, r"(?i)Object-Method Encapsulation Decision|object candidates")
         self.assertRegex(joined, r"(?i)value object|domain object")
         self.assertRegex(joined, r"(?i)rejected alternatives|rejected object|module-local")
+        self.assertRegex(joined, r"(?i)pure decision|side.?effect.?free|no side effects")
 
     def test_no_helper_bag_or_anemic_object_is_introduced(self) -> None:
         joined = "\n".join(text for _, text in candidate_texts())
@@ -43,6 +44,11 @@ class ObjectMethodPlacementAssertions(unittest.TestCase):
                 r"(?i)payment provider|PaymentAdapter|refund_payment|chargeback|requests\.",
                 f"{rel} hides payment provider side effects inside a domain/value object",
             )
+
+    def test_payment_side_effect_is_delegated_to_adapter_boundary(self) -> None:
+        joined = "\n".join(text for _, text in candidate_texts())
+
+        self.assertRegex(joined, r"(?i)payment adapter|PaymentAdapter|refund adapter|payment provider")
 
     def test_public_behavior_tests_cover_decision_and_adapter_paths(self) -> None:
         test_text = "\n".join(

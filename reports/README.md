@@ -13,6 +13,8 @@ bodies.
 
 Codex live benchmark summaries use failure-category buckets, per-case/per-variant
 pass rates, ablation deltas, and mean/median/min/max usage and metric counts.
+They also separate evidence status from effect verdicts and aggregate diagnostic
+failure reasons such as setup failures when available.
 Strict public comparison summaries must come from clean `borrow-current` or
 `isolated-api-key` runs; current-home smoke summaries are kept separate and do
 not feed public A/B claims.

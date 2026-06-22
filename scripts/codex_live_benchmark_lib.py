@@ -31,6 +31,31 @@ FAILURE_CATEGORIES = (
     "grading_not_collected",
     "telemetry_only",
 )
+SETUP_FAILURE_REASONS = (
+    "none",
+    "unknown",
+    "setup_script_missing",
+    "harness_path_unresolved",
+    "dependency_install_failed",
+    "python_compile_failed",
+    "setup_script_failed",
+)
+TEST_SUITE_FAILURE_REASONS = (
+    "none",
+    "unknown",
+    "assertion_failed",
+    "harness_contract_failed",
+    "test_runner_failed",
+)
+SECURITY_FAILURE_REASONS = (
+    "none",
+    "unknown",
+    "assertion_failed",
+    "harness_contract_failed",
+    "security_runner_failed",
+)
+EFFECT_VERDICTS = ("inconclusive", "positive", "mixed", "neutral", "negative")
+EFFECT_STATUSES = ("inconclusive", "improved", "mixed", "neutral", "regression")
 PUBLIC_STATUSES = ("pass", "partial", "fail", "unknown", "not_collected")
 VARIANTS = ("baseline_clean", "skills_only_clean", "skills_with_hooks_clean", "current_home_smoke")
 STRICT_BENCHMARK_MODES = ("clean-paired", "ablation")
@@ -425,6 +450,13 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "benchmark_eligible",
             "benchmark_passed",
             "failure_category",
+            "setup_failure_reason",
+            "test_suite_failure_reason",
+            "security_failure_reason",
+            "first_failure_excerpt",
+            "setup_log_excerpt",
+            "test_suite_log_excerpt",
+            "security_log_excerpt",
             "contamination",
             "environment",
             "paths",
@@ -439,6 +471,10 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "evidence_level",
             "evidence_scope",
             "evidence_scope_detail",
+            "evidence_status",
+            "effect_verdict",
+            "effect_status",
+            "effect_summary",
             "benchmark_mode",
             "codex_home_policy",
             "auth_policy",
@@ -455,6 +491,9 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "telemetry_only_result_count",
             "contaminated_result_count",
             "failure_categories",
+            "setup_failure_reasons",
+            "test_suite_failure_reasons",
+            "security_failure_reasons",
             "current_home_result_count",
             "current_home_full_result_count",
             "user_skills_visible",
@@ -495,6 +534,33 @@ def validate_required_fields(payload: Any, schema_name: str) -> list[str]:
         failure_category = payload.get("failure_category")
         if failure_category is not None and failure_category not in FAILURE_CATEGORIES:
             errors.append(f"{schema_name}: invalid failure_category {failure_category}")
+        reason_sets = {
+            "setup_failure_reason": SETUP_FAILURE_REASONS,
+            "test_suite_failure_reason": TEST_SUITE_FAILURE_REASONS,
+            "security_failure_reason": SECURITY_FAILURE_REASONS,
+        }
+        for field, allowed in reason_sets.items():
+            value = payload.get(field)
+            if value is not None and value not in allowed:
+                errors.append(f"{schema_name}: invalid {field} {value}")
+        for field in (
+            "first_failure_excerpt",
+            "setup_log_excerpt",
+            "test_suite_log_excerpt",
+            "security_log_excerpt",
+        ):
+            value = payload.get(field)
+            if value is not None and not isinstance(value, str):
+                errors.append(f"{schema_name}: {field} must be a string")
+            elif isinstance(value, str) and len(value) > 1220:
+                errors.append(f"{schema_name}: {field} must be bounded to about 1200 characters")
+    if schema_name == "summary":
+        verdict = payload.get("effect_verdict")
+        if verdict is not None and verdict not in EFFECT_VERDICTS:
+            errors.append(f"{schema_name}: invalid effect_verdict {verdict}")
+        effect_status = payload.get("effect_status")
+        if effect_status is not None and effect_status not in EFFECT_STATUSES:
+            errors.append(f"{schema_name}: invalid effect_status {effect_status}")
     limitations = payload.get("limitations")
     if limitations is not None and (not isinstance(limitations, list) or not limitations):
         errors.append(f"{schema_name}: limitations must be a non-empty list")

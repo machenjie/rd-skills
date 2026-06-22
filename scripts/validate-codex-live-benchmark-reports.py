@@ -11,13 +11,18 @@ from typing import Any
 from codex_live_benchmark_lib import (
     CODEX_LIVE_EVIDENCE_SCOPES,
     CURRENT_HOME_SMOKE_EVIDENCE_LEVEL,
+    EFFECT_STATUSES,
+    EFFECT_VERDICTS,
     FAILURE_CATEGORIES,
     LIVE_EVIDENCE_LEVEL,
     MODE_DEFAULT_VARIANTS,
     ROOT,
+    SECURITY_FAILURE_REASONS,
+    SETUP_FAILURE_REASONS,
     STRICT_AUTH_POLICIES,
     STRICT_BENCHMARK_MODES,
     STRICT_CODEX_ENVIRONMENT_POLICIES,
+    TEST_SUITE_FAILURE_REASONS,
     load_case_registry,
     print_errors,
     read_json,
@@ -119,10 +124,10 @@ def validate_summary(summary_path: Path, *, publishable: bool = True) -> list[st
     detail = summary.get("evidence_scope_detail")
     if not isinstance(detail, dict):
         errors.append("summary evidence_scope_detail must be an object")
-    elif evidence_scope == "multi_case_ablation_3_run" and detail.get("strong_claim_ready") is not True:
-        errors.append("summary evidence_scope multi_case_ablation_3_run requires strong_claim_ready=true")
-    elif evidence_scope == "smoke" and detail.get("strong_claim_ready") is True:
-        errors.append("summary evidence_scope smoke conflicts with strong_claim_ready=true")
+    elif evidence_scope == "multi_case_ablation_3_run" and detail.get("evidence_scope_ready") is not True:
+        errors.append("summary evidence_scope multi_case_ablation_3_run requires evidence_scope_ready=true")
+    elif evidence_scope == "smoke" and detail.get("evidence_scope_ready") is True:
+        errors.append("summary evidence_scope smoke conflicts with evidence_scope_ready=true")
     if publishable:
         errors.extend(_strict_summary_errors(summary))
     if "limitations" not in summary or not summary.get("limitations"):
@@ -263,6 +268,33 @@ def _variant_rate_errors(summary: dict[str, Any]) -> list[str]:
 def _summary_structure_errors(summary: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     errors.extend(_failure_category_errors("summary.failure_categories", summary.get("failure_categories")))
+    errors.extend(
+        _reason_bucket_errors(
+            "summary.setup_failure_reasons",
+            summary.get("setup_failure_reasons"),
+            SETUP_FAILURE_REASONS,
+        )
+    )
+    errors.extend(
+        _reason_bucket_errors(
+            "summary.test_suite_failure_reasons",
+            summary.get("test_suite_failure_reasons"),
+            TEST_SUITE_FAILURE_REASONS,
+        )
+    )
+    errors.extend(
+        _reason_bucket_errors(
+            "summary.security_failure_reasons",
+            summary.get("security_failure_reasons"),
+            SECURITY_FAILURE_REASONS,
+        )
+    )
+    if summary.get("effect_verdict") not in EFFECT_VERDICTS:
+        errors.append("summary effect_verdict is invalid")
+    if summary.get("effect_status") not in EFFECT_STATUSES:
+        errors.append("summary effect_status is invalid")
+    if not isinstance(summary.get("effect_summary"), dict):
+        errors.append("summary effect_summary must be an object")
     variants = summary.get("variants")
     if not isinstance(variants, dict):
         errors.append("summary variants must be an object")
@@ -298,6 +330,13 @@ def _summary_structure_errors(summary: dict[str, Any]) -> list[str]:
             if not isinstance(payload.get("pass_rate_ci_note"), str):
                 errors.append(f"variant {variant}: pass_rate_ci_note must be a string")
             errors.extend(_failure_category_errors(f"variant {variant}.failure_categories", payload.get("failure_categories")))
+            errors.extend(
+                _reason_bucket_errors(
+                    f"variant {variant}.setup_failure_reasons",
+                    payload.get("setup_failure_reasons"),
+                    SETUP_FAILURE_REASONS,
+                )
+            )
     cases_summary = summary.get("cases_summary")
     if not isinstance(cases_summary, dict):
         errors.append("summary cases_summary must be an object")
@@ -328,6 +367,13 @@ def _summary_structure_errors(summary: dict[str, Any]) -> list[str]:
                         variant_payload.get("failure_categories"),
                     )
                 )
+                errors.extend(
+                    _reason_bucket_errors(
+                        f"case {case_id} variant {variant}.setup_failure_reasons",
+                        variant_payload.get("setup_failure_reasons"),
+                        SETUP_FAILURE_REASONS,
+                    )
+                )
     return errors
 
 
@@ -340,6 +386,18 @@ def _failure_category_errors(label: str, payload: Any) -> list[str]:
             errors.append(f"{label}: invalid failure category {category}")
         if not isinstance(count, int) or count < 0:
             errors.append(f"{label}: count for {category} must be a non-negative integer")
+    return errors
+
+
+def _reason_bucket_errors(label: str, payload: Any, allowed: tuple[str, ...]) -> list[str]:
+    if not isinstance(payload, dict):
+        return [f"{label} must be an object"]
+    errors: list[str] = []
+    for reason, count in payload.items():
+        if reason not in allowed:
+            errors.append(f"{label}: invalid reason {reason}")
+        if not isinstance(count, int) or count < 0:
+            errors.append(f"{label}: count for {reason} must be a non-negative integer")
     return errors
 
 

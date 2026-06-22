@@ -10,4 +10,10 @@ final answer that includes:
 - reuse or placement evidence when relevant;
 - residual risk.
 
+Preserve the starter repository harness contract. Do not delete `setup.sh`. Do
+not rewrite `setup.sh` unless the task explicitly requires it. If you modify
+`setup.sh`, keep it runnable from the candidate root and compatible with
+`CHANGEFORGE_CODEGEN_ROOT`. Do not add external network dependencies. Keep
+validation deterministic.
+
 {{TASK_PROMPT}}
