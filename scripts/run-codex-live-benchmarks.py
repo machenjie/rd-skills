@@ -422,6 +422,7 @@ def _run_one_case(
         _cleanup_borrowed_codex_home(env)
 
     _write_git_artifacts(candidate_dir, run_dir)
+    _remove_changeforge_support_artifacts_for_grading(candidate_dir)
     metrics = _parse_events(events_path, run_dir / "events.metrics.json", events_redacted_path)
     grading = _grade(case, candidate_dir, grading_dir)
     contamination = _contamination_for_variant(variant, run_dir)
@@ -842,6 +843,12 @@ def _write_git_artifacts(candidate_dir: Path, run_dir: Path) -> None:
     )
     (run_dir / "diff.patch").write_text(redact_report_text(diff.stdout), encoding="utf-8")
     (run_dir / "git-status.txt").write_text(redact_report_text(status.stdout), encoding="utf-8")
+
+
+def _remove_changeforge_support_artifacts_for_grading(candidate_dir: Path) -> None:
+    """Keep installed ChangeForge hook support files out of candidate grading scans."""
+    for support_dir in (".agents", ".codex"):
+        shutil.rmtree(candidate_dir / support_dir, ignore_errors=True)
 
 
 def _redact_text_artifact(path: Path) -> None:

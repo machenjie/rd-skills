@@ -511,6 +511,8 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertNotIn("ChangeForge", baseline)
         self.assertNotIn("rd-skills", baseline)
         self.assertIn("ChangeForge", skills)
+        self.assertIn("Object-Method Encapsulation Decision", skills)
+        self.assertIn("no side effects", skills)
 
     def test_installer_variants_split_skills_only_and_hooks(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_install_flags", "scripts/run-codex-live-benchmarks.py")
@@ -528,6 +530,27 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
                 runner._install_changeforge(args, candidate, {}, {"recommended"}, with_hooks=True)
             install_command = subprocess_run.call_args_list[-1].args[0]
             self.assertIn("--with-hooks", install_command)
+
+    def test_grading_removes_installed_changeforge_hook_support_artifacts(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_grading_isolation", "scripts/run-codex-live-benchmarks.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp) / "candidate"
+            hook_dir = candidate / ".codex" / "hooks"
+            hook_dir.mkdir(parents=True)
+            (hook_dir / "changeforge_professional_injector.py").write_text(
+                "raw hook runtime support\n",
+                encoding="utf-8",
+            )
+            skill_dir = candidate / ".agents" / "skills" / "change-forge-router"
+            skill_dir.mkdir(parents=True)
+            (skill_dir / "SKILL.md").write_text("installed skill support\n", encoding="utf-8")
+            (candidate / "README.md").write_text("candidate solution\n", encoding="utf-8")
+
+            runner._remove_changeforge_support_artifacts_for_grading(candidate)
+
+            self.assertFalse((candidate / ".codex").exists())
+            self.assertFalse((candidate / ".agents").exists())
+            self.assertEqual((candidate / "README.md").read_text(encoding="utf-8"), "candidate solution\n")
 
     def test_strict_variant_metadata_records_current_repository_project_install(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_strict_metadata", "scripts/run-codex-live-benchmarks.py")

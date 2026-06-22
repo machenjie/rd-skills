@@ -1,7 +1,7 @@
 {
   "average_score": 41.66,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-22T01:54:31.523447+00:00",
+  "generated_at": "2026-06-22T15:40:07.655697+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -229,7 +229,7 @@
       "warnings": []
     },
     {
-      "body_lines": 229,
+      "body_lines": 230,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -404,7 +404,7 @@
       "warnings": []
     },
     {
-      "body_lines": 276,
+      "body_lines": 277,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -841,7 +841,7 @@
       "warnings": []
     },
     {
-      "body_lines": 225,
+      "body_lines": 227,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -1930,7 +1930,7 @@
       "warnings": []
     },
     {
-      "body_lines": 244,
+      "body_lines": 245,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -2005,7 +2005,7 @@
       "warnings": []
     },
     {
-      "body_lines": 163,
+      "body_lines": 164,
       "dimensions": {
         "anti_bloat_control": 4,
         "boundary_clarity": 5,

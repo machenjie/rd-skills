@@ -33,6 +33,7 @@ Do not use this capability to **make cache the source of truth**, to mask a slow
 - **Authorization decisions, entitlement, pricing, inventory, balance** carry tight TTL or explicit invalidation; no implicit "a few minutes won't matter".
 - **Cache failure mode is graceful degradation**: source still serves; do not fail closed because Redis is down. Apply backpressure to protect source.
 - **Observability** mandatory: hit rate, miss rate, stale-serve count, eviction count, refresh failure count, key-cardinality, hot-key concentration, source-load impact, cache memory pressure. Alert on hit-rate cliff and miss storm.
+- **Stampede controls need executable local proof**: tests should use deterministic fake/in-memory cache and a clearly named FakeBackend or source-of-truth seam to drive concurrent same-key workers, prove only one refresh happens with an assertion such as `backend.calls == 1`, prove Redis-down fallback/backpressure behavior, and avoid live Redis, network clients, URL literals, or new package dependencies unless the task explicitly requires them.
 - **Serialization format and value schema are versioned** in the key prefix; rolling deploys with mixed versions must not mix shapes (otherwise readers crash on unexpected fields).
 - **No secrets, tokens, or PII in cache logs/keys**; key may contain hashed identifiers.
 
@@ -121,6 +122,7 @@ Cache correctness is defined by **what staleness is acceptable, for how long, un
 - **Single-flight is per scope.** In-process single-flight does not protect across pods. Cluster-wide protection needs distributed lease / lock or origin-side rate limit.
 - **Probabilistic early recomputation (XFetch)** refreshes a fraction of requests *before* TTL with probability rising near expiry → eliminates synchronized expiry without coordinator.
 - **Hot-key detection.** Sample top-N by request rate; large gap between #1 and #10 means split or replicate the hot key (e.g., shard `key#0..N`, client picks shard).
+- **Stampede test seam.** A reviewable cache implementation exposes or injects the cache client, lock/lease clock, and source loader through the public cache boundary so tests can use a fake cache plus FakeBackend/source-of-truth, fixed time, and concurrent workers to assert single-flight behavior, backend call count of one, TTL jitter bounds, lock timeout fallback, Redis unavailable fallback, and hot/miss/fallback/contention metrics without private-helper imports.
 - **Permission cache TTL** must be ≤ permission propagation SLA. Cached PDP decisions need invalidation on grant change (event-driven), not just TTL.
 - **HTTP cache correctness.** `Cache-Control: private` for per-user; `s-maxage` for shared; `Vary` on the *minimum* set of headers that affect representation; never `Vary: User-Agent` unless content actually depends on UA. `no-store` for sensitive responses.
 - **Cache deception.** Attacker requests `/profile/foo.css` — origin serves `/profile`, edge caches under `.css` (treated as static) → next user gets victim's profile. Defense: normalize path, deny dot-extension on dynamic routes, set `Cache-Control: private` defensively.

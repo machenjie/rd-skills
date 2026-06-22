@@ -224,6 +224,8 @@ MAX_TELEMETRY_VALUE_LEN = 300
 MAX_STATE_ITEMS = 50
 MAX_STATE_VALUE_LEN = 300
 MAX_COMMAND_PROGRAM_LEN = 40
+MAX_HOOK_OUTPUT_CHARS = 6000
+HOOK_OUTPUT_TRUNCATION_NOTICE = "\n...[ChangeForge hook output truncated]"
 ENV_ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 PATH_KEYS = {
     "file",
@@ -499,11 +501,21 @@ def save_state(repo: Path, state: dict) -> None:
         print(f"ChangeForge Hook Runtime warning: unable to save hook state: {exc}", file=sys.stderr)
 
 
+def bounded_hook_text(message: object, *, limit: int = MAX_HOOK_OUTPUT_CHARS) -> str:
+    """Return bounded hook stdout text for runtime additionalContext payloads."""
+    text = str(message or "").strip()
+    if len(text) <= limit:
+        return text
+    if limit <= len(HOOK_OUTPUT_TRUNCATION_NOTICE):
+        return text[:limit]
+    return text[: limit - len(HOOK_OUTPUT_TRUNCATION_NOTICE)].rstrip() + HOOK_OUTPUT_TRUNCATION_NOTICE
+
+
 def emit_warning(runtime: str, hook_event_name: str, message: str) -> None:
     """Emit runtime-compatible additional context for post-tool warnings."""
     if runtime not in KNOWN_RUNTIMES:
         return
-    text = message.strip()
+    text = bounded_hook_text(message)
     if not text:
         return
     if runtime == "copilot":
@@ -520,7 +532,7 @@ def emit_stop_reminder(runtime: str, message: str, *, continue_turn: bool) -> No
     """Emit Stop-compatible output."""
     if runtime not in KNOWN_RUNTIMES:
         return
-    text = message.strip()
+    text = bounded_hook_text(message)
     if not text:
         return
     if runtime == "copilot":
@@ -553,7 +565,7 @@ def emit_session_context(runtime: str, message: str, event_name: str = "SessionS
     """
     if runtime not in KNOWN_RUNTIMES:
         return
-    text = message.strip()
+    text = bounded_hook_text(message)
     if not text:
         return
     if runtime == "copilot":
@@ -577,7 +589,7 @@ def emit_subagent_stop_reminder(runtime: str, message: str) -> None:
     """
     if runtime not in KNOWN_RUNTIMES:
         return
-    text = message.strip()
+    text = bounded_hook_text(message)
     if not text:
         return
     if runtime == "copilot":
@@ -589,16 +601,17 @@ def emit_block(runtime: str, hook_event_name: str, reason: str) -> None:
     """Only used when hook mode is block."""
     if runtime not in KNOWN_RUNTIMES:
         return
-    print(json.dumps({"decision": "block", "reason": reason.strip()}, sort_keys=True))
+    print(json.dumps({"decision": "block", "reason": bounded_hook_text(reason)}, sort_keys=True))
 
 
 def _emit_hook_specific_context(hook_event_name: str, text: str) -> None:
+    bounded_text = bounded_hook_text(text)
     print(
         json.dumps(
             {
                 "hookSpecificOutput": {
                     "hookEventName": hook_event_name,
-                    "additionalContext": text,
+                    "additionalContext": bounded_text,
                 }
             },
             sort_keys=True,

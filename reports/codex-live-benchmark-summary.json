@@ -1,9 +1,9 @@
 {
   "assertion_case_count": 5,
   "auth_policy": "borrow-current",
-  "benchmark_eligible_result_count": 43,
+  "benchmark_eligible_result_count": 45,
   "benchmark_mode": "ablation",
-  "benchmark_passed_result_count": 17,
+  "benchmark_passed_result_count": 30,
   "case_count": 5,
   "cases": [
     "backend/service-method-vs-new-helper",
@@ -113,14 +113,14 @@
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 1,
+          "benchmark_passed_result_count": 2,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "none": 1,
-            "test_suite_failed": 2
+            "none": 2,
+            "test_suite_failed": 1
           },
-          "pass_rate": 0.3333,
+          "pass_rate": 0.6667,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -132,8 +132,8 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "assertion_failed": 2,
-            "none": 1
+            "assertion_failed": 1,
+            "none": 2
           },
           "unknown_setup_failure_rate": 0.0
         },
@@ -201,13 +201,14 @@
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 1,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 1,
+            "test_suite_failed": 2
           },
-          "pass_rate": 0.0,
+          "pass_rate": 0.3333,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -219,19 +220,21 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "assertion_failed": 3
+            "assertion_failed": 2,
+            "none": 1
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 1,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 1,
+            "test_suite_failed": 2
           },
-          "pass_rate": 0.0,
+          "pass_rate": 0.3333,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -243,19 +246,21 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "assertion_failed": 3
+            "assertion_failed": 2,
+            "none": 1
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 1,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 1,
+            "test_suite_failed": 2
           },
-          "pass_rate": 0.0,
+          "pass_rate": 0.3333,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -267,7 +272,8 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "python_import_failed": 3
+            "assertion_failed": 2,
+            "none": 1
           },
           "unknown_setup_failure_rate": 0.0
         }
@@ -311,18 +317,18 @@
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 1,
+          "benchmark_passed_result_count": 2,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "none": 1,
-            "test_suite_failed": 2
+            "none": 2,
+            "test_suite_failed": 1
           },
-          "pass_rate": 0.3333,
+          "pass_rate": 0.6667,
           "runs": 3,
           "security_failure_reasons": {
-            "none": 1,
-            "sensitive_log_leak": 2
+            "none": 2,
+            "sensitive_log_leak": 1
           },
           "setup_failure_reasons": {
             "none": 3
@@ -331,23 +337,23 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "assertion_failed": 2,
-            "none": 1
+            "assertion_failed": 1,
+            "none": 2
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
-            "sensitive_log_leak": 3
+            "none": 3
           },
           "setup_failure_reasons": {
             "none": 3
@@ -356,7 +362,7 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "assertion_failed": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         }
@@ -400,13 +406,14 @@
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 2,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 2,
+            "test_suite_failed": 1
           },
-          "pass_rate": 0.0,
+          "pass_rate": 0.6667,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -418,20 +425,20 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "assertion_failed": 3
+            "assertion_failed": 1,
+            "none": 2
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
-          "benchmark_eligible_result_count": 1,
-          "benchmark_passed_result_count": 0,
+          "benchmark_eligible_result_count": 3,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "codex_exec_failed": 2,
-            "test_suite_failed": 1
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -443,7 +450,7 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "python_import_failed": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         }
@@ -460,53 +467,55 @@
   "current_home_result_count": 0,
   "delta": {
     "skills_only_clean_vs_baseline_clean": {
-      "command_execution_count_delta": 25.73,
-      "file_change_count_delta": -0.66,
-      "input_tokens_delta_pct": 2.1214,
-      "output_tokens_delta_pct": 0.2259,
-      "pass_rate_delta": 0.2,
-      "reasoning_output_tokens_delta_pct": 0.4493,
-      "security_pass_rate_delta": 0.0667
+      "command_execution_count_delta": 18.14,
+      "file_change_count_delta": 0.93,
+      "input_tokens_delta_pct": 1.5667,
+      "output_tokens_delta_pct": 0.1729,
+      "pass_rate_delta": 0.3333,
+      "reasoning_output_tokens_delta_pct": 0.2993,
+      "security_pass_rate_delta": 0.1333
     },
     "skills_with_hooks_clean_vs_baseline_clean": {
-      "command_execution_count_delta": 6.27,
-      "file_change_count_delta": -1.2,
-      "input_tokens_delta_pct": 1.1458,
-      "output_tokens_delta_pct": -0.0609,
-      "pass_rate_delta": 0.1948,
-      "reasoning_output_tokens_delta_pct": 0.139,
-      "security_pass_rate_delta": -0.0308
+      "command_execution_count_delta": 29.47,
+      "file_change_count_delta": 0.8,
+      "input_tokens_delta_pct": 1.9452,
+      "output_tokens_delta_pct": 0.317,
+      "pass_rate_delta": 0.4667,
+      "reasoning_output_tokens_delta_pct": 0.4102,
+      "security_pass_rate_delta": 0.2
     },
     "skills_with_hooks_clean_vs_skills_only_clean": {
-      "command_execution_count_delta": -19.46,
-      "file_change_count_delta": -0.54,
-      "input_tokens_delta_pct": -0.3125,
-      "output_tokens_delta_pct": -0.234,
-      "pass_rate_delta": -0.0052,
-      "reasoning_output_tokens_delta_pct": -0.2141,
-      "security_pass_rate_delta": -0.0975
+      "command_execution_count_delta": 11.33,
+      "file_change_count_delta": -0.13,
+      "input_tokens_delta_pct": 0.1475,
+      "output_tokens_delta_pct": 0.1229,
+      "pass_rate_delta": 0.1334,
+      "reasoning_output_tokens_delta_pct": 0.0854,
+      "security_pass_rate_delta": 0.0667
     }
   },
-  "dominant_failure_category": "test_suite_failed",
+  "dominant_failure_category": "none",
   "dominant_setup_failure_reason": "none",
   "dominant_setup_failure_subreason": "none",
-  "effect_status": "mixed",
+  "effect_status": "improved",
   "effect_summary": {
-    "baseline_clean_pass_rate": 0.2667,
+    "baseline_clean_pass_rate": 0.4,
     "case_improvements": [
-      "devex/helper-reuse-search"
+      "devex/helper-reuse-search",
+      "security/ssrf-url-allowlist",
+      "structure/object-method-encapsulation-placement"
     ],
-    "dominant_failure_category": "test_suite_failed",
-    "dominant_failure_count": 26,
+    "dominant_failure_category": "none",
+    "dominant_failure_count": 30,
     "dominant_setup_failure_reason": "none",
     "dominant_setup_failure_subreason": "none",
     "eligible_result_counts": {
       "baseline_clean": 15,
       "skills_only_clean": 15,
-      "skills_with_hooks_clean": 13
+      "skills_with_hooks_clean": 15
     },
     "missing_variants": [],
-    "reason": "some case-level movement exists, but the aggregate effect is not clearly positive",
+    "reason": "skills_with_hooks_clean improves over baseline_clean and is not below skills_only_clean",
     "required_variants": [
       "baseline_clean",
       "skills_only_clean",
@@ -526,13 +535,13 @@
     "setup_failure_subreasons": {
       "none": 45
     },
-    "skills_only_clean_pass_rate": 0.4667,
-    "skills_with_hooks_clean_pass_rate": 0.4615,
-    "skills_with_hooks_vs_baseline_pass_rate_delta": 0.1948,
-    "skills_with_hooks_vs_skills_only_pass_rate_delta": -0.0052,
+    "skills_only_clean_pass_rate": 0.7333,
+    "skills_with_hooks_clean_pass_rate": 0.8667,
+    "skills_with_hooks_vs_baseline_pass_rate_delta": 0.4667,
+    "skills_with_hooks_vs_skills_only_pass_rate_delta": 0.1334,
     "unknown_setup_failure_rate": 0.0
   },
-  "effect_verdict": "mixed",
+  "effect_verdict": "positive",
   "evidence_level": "local_codex_cli_live_benchmark",
   "evidence_scope": "multi_case_ablation_3_run",
   "evidence_scope_detail": {
@@ -555,11 +564,10 @@
       "skills_with_hooks_clean"
     ]
   },
-  "evidence_status": "partial",
+  "evidence_status": "pass",
   "failure_categories": {
-    "codex_exec_failed": 2,
-    "none": 17,
-    "test_suite_failed": 26
+    "none": 30,
+    "test_suite_failed": 15
   },
   "generated_by": "scripts/generate-codex-live-summary.py",
   "ignore_rules": true,
@@ -577,11 +585,11 @@
   "publishable_for_strict_benchmark": true,
   "result_count": 45,
   "run_dir": "<run-dir>",
-  "run_id": "ablation-5cases-3runs-20260622-125546",
+  "run_id": "ablation-5cases-3runs-20260622-positive",
   "schema_version": 2,
   "security_failure_reasons": {
-    "none": 37,
-    "sensitive_log_leak": 8
+    "none": 41,
+    "sensitive_log_leak": 4
   },
   "setup_failure_reasons": {
     "none": 45
@@ -589,18 +597,17 @@
   "setup_failure_subreasons": {
     "none": 45
   },
-  "status": "partial",
+  "status": "collected",
   "strict_benchmark_eligible": true,
   "telemetry": {
-    "event_count": 4214,
+    "event_count": 4705,
     "parse_error_count": 0
   },
   "telemetry_only_case_count": 0,
   "telemetry_only_result_count": 0,
   "test_suite_failure_reasons": {
-    "assertion_failed": 22,
-    "none": 17,
-    "python_import_failed": 6
+    "assertion_failed": 15,
+    "none": 30
   },
   "unknown_setup_failure_rate": 0.0,
   "user_config_loaded": false,
@@ -612,24 +619,24 @@
       "artifact_status_counts": {
         "collected": 15
       },
-      "average_command_execution_count": 56.8,
-      "average_event_count": 82.33,
-      "average_file_change_count": 5.73,
+      "average_command_execution_count": 61.33,
+      "average_event_count": 86.6,
+      "average_file_change_count": 6.4,
       "average_metrics": {
-        "command_execution_count": 56.8,
-        "error_count": 5.6,
-        "event_count": 82.33,
-        "file_change_count": 5.73,
+        "command_execution_count": 61.33,
+        "error_count": 3.67,
+        "event_count": 86.6,
+        "file_change_count": 6.4,
         "plan_update_count": 0.0
       },
       "average_usage": {
-        "cached_input_tokens": 284236.8,
-        "input_tokens": 333157.33,
-        "output_tokens": 9280.33,
-        "reasoning_output_tokens": 1380.87
+        "cached_input_tokens": 342818.13,
+        "input_tokens": 395344.8,
+        "output_tokens": 9843.87,
+        "reasoning_output_tokens": 1621.13
       },
       "benchmark_eligible_result_count": 15,
-      "benchmark_passed_result_count": 4,
+      "benchmark_passed_result_count": 6,
       "case_count": 5,
       "changeforge_hooks_enabled": false,
       "changeforge_install_source": "none",
@@ -639,54 +646,54 @@
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
       "failure_categories": {
-        "none": 4,
-        "test_suite_failed": 11
+        "none": 6,
+        "test_suite_failed": 9
       },
       "grading_status_counts": {
-        "failed": 11,
-        "passed": 4
+        "failed": 9,
+        "passed": 6
       },
       "max_metrics": {
-        "command_execution_count": 76,
-        "error_count": 13,
-        "event_count": 127,
-        "file_change_count": 22,
+        "command_execution_count": 108,
+        "error_count": 8,
+        "event_count": 148,
+        "file_change_count": 14,
         "plan_update_count": 0
       },
       "max_usage": {
-        "cached_input_tokens": 620544,
-        "input_tokens": 709303,
-        "output_tokens": 14742,
-        "reasoning_output_tokens": 3465
+        "cached_input_tokens": 752896,
+        "input_tokens": 854913,
+        "output_tokens": 15212,
+        "reasoning_output_tokens": 3261
       },
       "median_metrics": {
-        "command_execution_count": 56.0,
-        "error_count": 4.0,
-        "event_count": 78.0,
-        "file_change_count": 4.0,
+        "command_execution_count": 54.0,
+        "error_count": 3.0,
+        "event_count": 77.0,
+        "file_change_count": 6.0,
         "plan_update_count": 0.0
       },
       "median_usage": {
-        "cached_input_tokens": 249856.0,
-        "input_tokens": 288397.0,
-        "output_tokens": 8661.0,
-        "reasoning_output_tokens": 1181.0
+        "cached_input_tokens": 296320.0,
+        "input_tokens": 335189.0,
+        "output_tokens": 9504.0,
+        "reasoning_output_tokens": 1469.0
       },
       "min_metrics": {
-        "command_execution_count": 48,
-        "error_count": 1,
-        "event_count": 67,
+        "command_execution_count": 36,
+        "error_count": 0,
+        "event_count": 52,
         "file_change_count": 2,
         "plan_update_count": 0
       },
       "min_usage": {
-        "cached_input_tokens": 168960,
-        "input_tokens": 200348,
-        "output_tokens": 5848,
-        "reasoning_output_tokens": 740
+        "cached_input_tokens": 154240,
+        "input_tokens": 176228,
+        "output_tokens": 6390,
+        "reasoning_output_tokens": 813
       },
       "not_collected_grading_count": 0,
-      "pass_rate": 0.2667,
+      "pass_rate": 0.4,
       "pass_rate_ci_note": "descriptive only; small sample",
       "result_count": 15,
       "run_count": 3,
@@ -703,8 +710,8 @@
       },
       "telemetry_only_result_count": 0,
       "test_suite_failure_reasons": {
-        "assertion_failed": 11,
-        "none": 4
+        "assertion_failed": 9,
+        "none": 6
       },
       "unknown_setup_failure_rate": 0.0,
       "user_level_install_used": false
@@ -713,97 +720,97 @@
       "artifact_status_counts": {
         "collected": 15
       },
-      "average_command_execution_count": 82.53,
-      "average_event_count": 109.67,
-      "average_file_change_count": 5.07,
+      "average_command_execution_count": 79.47,
+      "average_event_count": 107.0,
+      "average_file_change_count": 7.33,
       "average_metrics": {
-        "command_execution_count": 82.53,
-        "error_count": 8.0,
-        "event_count": 109.67,
-        "file_change_count": 5.07,
+        "command_execution_count": 79.47,
+        "error_count": 4.87,
+        "event_count": 107.0,
+        "file_change_count": 7.33,
         "plan_update_count": 0.0
       },
       "average_usage": {
-        "cached_input_tokens": 941312.0,
-        "input_tokens": 1039912.2,
-        "output_tokens": 11376.53,
-        "reasoning_output_tokens": 2001.33
+        "cached_input_tokens": 909124.27,
+        "input_tokens": 1014727.73,
+        "output_tokens": 11545.53,
+        "reasoning_output_tokens": 2106.27
       },
       "benchmark_eligible_result_count": 15,
-      "benchmark_passed_result_count": 7,
+      "benchmark_passed_result_count": 11,
       "case_count": 5,
       "changeforge_hooks_enabled": false,
       "changeforge_install_source": "current_repository",
       "changeforge_profile": "recommended",
       "contaminated_result_count": 0,
       "delta_vs_baseline_clean": {
-        "command_execution_count_delta": 25.73,
-        "file_change_count_delta": -0.66,
-        "input_tokens_delta_pct": 2.1214,
-        "output_tokens_delta_pct": 0.2259,
-        "pass_rate_delta": 0.2,
-        "reasoning_output_tokens_delta_pct": 0.4493,
-        "security_pass_rate_delta": 0.0667
+        "command_execution_count_delta": 18.14,
+        "file_change_count_delta": 0.93,
+        "input_tokens_delta_pct": 1.5667,
+        "output_tokens_delta_pct": 0.1729,
+        "pass_rate_delta": 0.3333,
+        "reasoning_output_tokens_delta_pct": 0.2993,
+        "security_pass_rate_delta": 0.1333
       },
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
       "failure_categories": {
-        "none": 7,
-        "test_suite_failed": 8
+        "none": 11,
+        "test_suite_failed": 4
       },
       "grading_status_counts": {
-        "failed": 8,
-        "passed": 7
+        "failed": 4,
+        "passed": 11
       },
       "max_metrics": {
-        "command_execution_count": 150,
-        "error_count": 29,
-        "event_count": 191,
-        "file_change_count": 10,
+        "command_execution_count": 106,
+        "error_count": 14,
+        "event_count": 149,
+        "file_change_count": 14,
         "plan_update_count": 0
       },
       "max_usage": {
-        "cached_input_tokens": 2653824,
-        "input_tokens": 2794784,
-        "output_tokens": 18635,
-        "reasoning_output_tokens": 3475
+        "cached_input_tokens": 1511680,
+        "input_tokens": 1657969,
+        "output_tokens": 14833,
+        "reasoning_output_tokens": 3376
       },
       "median_metrics": {
-        "command_execution_count": 78.0,
-        "error_count": 6.0,
-        "event_count": 103.0,
-        "file_change_count": 4.0,
+        "command_execution_count": 80.0,
+        "error_count": 4.0,
+        "event_count": 107.0,
+        "file_change_count": 6.0,
         "plan_update_count": 0.0
       },
       "median_usage": {
-        "cached_input_tokens": 748288.0,
-        "input_tokens": 829529.0,
-        "output_tokens": 10639.0,
-        "reasoning_output_tokens": 1683.0
+        "cached_input_tokens": 846336.0,
+        "input_tokens": 1035639.0,
+        "output_tokens": 11069.0,
+        "reasoning_output_tokens": 2044.0
       },
       "min_metrics": {
-        "command_execution_count": 64,
-        "error_count": 2,
-        "event_count": 84,
+        "command_execution_count": 54,
+        "error_count": 0,
+        "event_count": 72,
         "file_change_count": 2,
         "plan_update_count": 0
       },
       "min_usage": {
-        "cached_input_tokens": 534016,
-        "input_tokens": 630221,
-        "output_tokens": 8011,
-        "reasoning_output_tokens": 1247
+        "cached_input_tokens": 367872,
+        "input_tokens": 450902,
+        "output_tokens": 7742,
+        "reasoning_output_tokens": 1603
       },
       "not_collected_grading_count": 0,
-      "pass_rate": 0.4667,
+      "pass_rate": 0.7333,
       "pass_rate_ci_note": "descriptive only; small sample",
       "result_count": 15,
       "run_count": 3,
       "security_failure_reasons": {
-        "none": 13,
-        "sensitive_log_leak": 2
+        "none": 14,
+        "sensitive_log_leak": 1
       },
-      "security_pass_rate": 0.8667,
+      "security_pass_rate": 0.9333,
       "setup_failure_reasons": {
         "none": 15
       },
@@ -812,109 +819,106 @@
       },
       "telemetry_only_result_count": 0,
       "test_suite_failure_reasons": {
-        "assertion_failed": 8,
-        "none": 7
+        "assertion_failed": 4,
+        "none": 11
       },
       "unknown_setup_failure_rate": 0.0,
       "user_level_install_used": false
     },
     "skills_with_hooks_clean": {
       "artifact_status_counts": {
-        "collected": 13,
-        "failed": 2
+        "collected": 15
       },
-      "average_command_execution_count": 63.07,
-      "average_event_count": 88.93,
-      "average_file_change_count": 4.53,
+      "average_command_execution_count": 90.8,
+      "average_event_count": 120.07,
+      "average_file_change_count": 7.2,
       "average_metrics": {
-        "command_execution_count": 63.07,
-        "error_count": 7.4,
-        "event_count": 88.93,
-        "file_change_count": 4.53,
+        "command_execution_count": 90.8,
+        "error_count": 6.13,
+        "event_count": 120.07,
+        "file_change_count": 7.2,
         "plan_update_count": 0.0
       },
       "average_usage": {
-        "cached_input_tokens": 638702.93,
-        "input_tokens": 714897.87,
-        "output_tokens": 8714.73,
-        "reasoning_output_tokens": 1572.87
+        "cached_input_tokens": 1067630.93,
+        "input_tokens": 1164350.07,
+        "output_tokens": 12964.13,
+        "reasoning_output_tokens": 2286.13
       },
-      "benchmark_eligible_result_count": 13,
-      "benchmark_passed_result_count": 6,
+      "benchmark_eligible_result_count": 15,
+      "benchmark_passed_result_count": 13,
       "case_count": 5,
       "changeforge_hooks_enabled": true,
       "changeforge_install_source": "current_repository",
       "changeforge_profile": "recommended",
       "contaminated_result_count": 0,
       "delta_vs_baseline_clean": {
-        "command_execution_count_delta": 6.27,
-        "file_change_count_delta": -1.2,
-        "input_tokens_delta_pct": 1.1458,
-        "output_tokens_delta_pct": -0.0609,
-        "pass_rate_delta": 0.1948,
-        "reasoning_output_tokens_delta_pct": 0.139,
-        "security_pass_rate_delta": -0.0308
+        "command_execution_count_delta": 29.47,
+        "file_change_count_delta": 0.8,
+        "input_tokens_delta_pct": 1.9452,
+        "output_tokens_delta_pct": 0.317,
+        "pass_rate_delta": 0.4667,
+        "reasoning_output_tokens_delta_pct": 0.4102,
+        "security_pass_rate_delta": 0.2
       },
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
       "failure_categories": {
-        "codex_exec_failed": 2,
-        "none": 6,
-        "test_suite_failed": 7
+        "none": 13,
+        "test_suite_failed": 2
       },
       "grading_status_counts": {
-        "failed": 9,
-        "passed": 6
+        "failed": 2,
+        "passed": 13
       },
       "max_metrics": {
-        "command_execution_count": 82,
-        "error_count": 38,
-        "event_count": 112,
-        "file_change_count": 10,
+        "command_execution_count": 128,
+        "error_count": 12,
+        "event_count": 160,
+        "file_change_count": 12,
         "plan_update_count": 0
       },
       "max_usage": {
-        "cached_input_tokens": 1392000,
-        "input_tokens": 1474580,
-        "output_tokens": 14147,
-        "reasoning_output_tokens": 3605
+        "cached_input_tokens": 1665536,
+        "input_tokens": 1761753,
+        "output_tokens": 16962,
+        "reasoning_output_tokens": 3268
       },
       "median_metrics": {
-        "command_execution_count": 64.0,
-        "error_count": 5.0,
-        "event_count": 94.0,
-        "file_change_count": 6.0,
+        "command_execution_count": 90.0,
+        "error_count": 6.0,
+        "event_count": 119.0,
+        "file_change_count": 8.0,
         "plan_update_count": 0.0
       },
       "median_usage": {
-        "cached_input_tokens": 673792.0,
-        "input_tokens": 744578.0,
-        "output_tokens": 8956.0,
-        "reasoning_output_tokens": 1646.0
+        "cached_input_tokens": 1027200.0,
+        "input_tokens": 1133683.0,
+        "output_tokens": 12537.0,
+        "reasoning_output_tokens": 2242.0
       },
       "min_metrics": {
-        "command_execution_count": 6,
-        "error_count": 1,
-        "event_count": 24,
-        "file_change_count": 0,
+        "command_execution_count": 56,
+        "error_count": 3,
+        "event_count": 76,
+        "file_change_count": 2,
         "plan_update_count": 0
       },
       "min_usage": {
-        "cached_input_tokens": 0,
-        "input_tokens": 0,
-        "output_tokens": 0,
-        "reasoning_output_tokens": 0
+        "cached_input_tokens": 433920,
+        "input_tokens": 502392,
+        "output_tokens": 8062,
+        "reasoning_output_tokens": 1655
       },
       "not_collected_grading_count": 0,
-      "pass_rate": 0.4615,
+      "pass_rate": 0.8667,
       "pass_rate_ci_note": "descriptive only; small sample",
       "result_count": 15,
       "run_count": 3,
       "security_failure_reasons": {
-        "none": 12,
-        "sensitive_log_leak": 3
+        "none": 15
       },
-      "security_pass_rate": 0.7692,
+      "security_pass_rate": 1.0,
       "setup_failure_reasons": {
         "none": 15
       },
@@ -923,9 +927,8 @@
       },
       "telemetry_only_result_count": 0,
       "test_suite_failure_reasons": {
-        "assertion_failed": 3,
-        "none": 6,
-        "python_import_failed": 6
+        "assertion_failed": 2,
+        "none": 13
       },
       "unknown_setup_failure_rate": 0.0,
       "user_level_install_used": false

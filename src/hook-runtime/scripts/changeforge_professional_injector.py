@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from changeforge_action_classifier import classify_event
@@ -19,6 +20,7 @@ from changeforge_common import (
     session_id_from_event,
     write_telemetry_event,
 )
+from changeforge_hook_policy import run_gate_with_policy
 from changeforge_runtime_adapters import adapter_for
 from changeforge_skill_index import build_active_skill_context, context_lines
 
@@ -30,6 +32,15 @@ DEFAULT_CONTRACT_FILE = "changeforge_professional_contract.md"
 
 
 def main() -> int:
+    return run_gate_with_policy(
+        "professional_injector",
+        _main,
+        fail_closed=_write_degraded_telemetry,
+        fail_open=_write_degraded_telemetry,
+    )
+
+
+def _main() -> int:
     event = read_event()
     if not event:
         return 0
@@ -96,6 +107,29 @@ def main() -> int:
     if mode != "monitor":
         adapter_for(runtime).emit_context(hook_event, message)
     return 0
+
+
+def _write_degraded_telemetry(exc: Exception) -> None:
+    """Record bounded degraded-hook telemetry without blocking the agent turn."""
+    try:
+        repo = repo_root(os.getcwd())
+        write_telemetry_event(
+            repo,
+            runtime=detect_runtime({}),
+            hook_name="professional_injector",
+            event_name="unknown",
+            mode=hook_mode(),
+            cwd=os.getcwd(),
+            risk_surfaces=["hook-runtime-degraded"],
+            suggested_capabilities=["agent-tool-permission-sandbox"],
+            suggested_gates=["security-privacy-gate"],
+            hook_findings={"degraded": [type(exc).__name__[:120]]},
+            turn_stage="hook-degraded",
+            owner_skill="change-forge-router",
+            reviewer_skill="security-privacy-gate",
+        )
+    except Exception:
+        return
 
 
 def _contract_text(runtime: str) -> str:

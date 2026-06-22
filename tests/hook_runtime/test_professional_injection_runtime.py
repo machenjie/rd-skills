@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -18,6 +19,19 @@ def load_common():
     spec = importlib.util.spec_from_file_location(
         "changeforge_common_for_professional_runtime_test",
         SCRIPT_DIR / "changeforge_common.py",
+    )
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_injector():
+    if str(SCRIPT_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPT_DIR))
+    spec = importlib.util.spec_from_file_location(
+        "changeforge_professional_injector_for_runtime_test",
+        SCRIPT_DIR / "changeforge_professional_injector.py",
     )
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
@@ -54,6 +68,11 @@ def load_state(cwd: Path, cache: Path) -> dict:
             os.environ["XDG_CACHE_HOME"] = previous_cache
 
 
+def additional_context(stdout: str) -> str:
+    payload = json.loads(stdout)
+    return payload["hookSpecificOutput"]["additionalContext"]
+
+
 class ProfessionalInjectionRuntimeTests(unittest.TestCase):
     def test_professional_injector_records_prompt_free_active_context(self) -> None:
         event = {
@@ -87,6 +106,119 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
         self.assertEqual(state["owner_skill"], "security-privacy-gate")
         self.assertNotIn("auth token handling", json.dumps(state))
         self.assertIn("security_or_permission", state["prompt_signals"])
+
+    def test_professional_injector_fail_opens_when_internal_context_builder_raises(self) -> None:
+        injector = load_injector()
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            old_cwd = os.getcwd()
+            old_cache = os.environ.get("XDG_CACHE_HOME")
+            os.chdir(cwd_s)
+            os.environ["XDG_CACHE_HOME"] = cache_s
+            try:
+                with patch.object(injector, "_main", side_effect=RuntimeError("boom")):
+                    result = injector.main()
+            finally:
+                os.chdir(old_cwd)
+                if old_cache is None:
+                    os.environ.pop("XDG_CACHE_HOME", None)
+                else:
+                    os.environ["XDG_CACHE_HOME"] = old_cache
+
+        self.assertEqual(result, 0)
+
+    def test_codex_professional_injection_output_is_bounded(self) -> None:
+        long_prompt = "implement " + ("redis cache stampede protection " * 400)
+        event = {"hook_event_name": "UserPromptSubmit", "prompt": long_prompt}
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            result = run_hook(
+                "changeforge_professional_injector.py",
+                event,
+                Path(cwd_s),
+                Path(cache_s),
+                CHANGEFORGE_AGENT="codex",
+            )
+
+        self.assertEqual(result.returncode, 0)
+        context = additional_context(result.stdout)
+        self.assertLessEqual(len(context), 6000)
+
+    def test_security_focus_guidance_covers_ssrf_redirect_and_redaction(self) -> None:
+        event = {
+            "hook_event_name": "UserPromptSubmit",
+            "prompt": (
+                "Implement server-side URL fetch validation with allowlist, redirect "
+                "revalidation, private metadata address denial, and token redaction."
+            ),
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            result = run_hook(
+                "changeforge_professional_injector.py",
+                event,
+                Path(cwd_s),
+                Path(cache_s),
+                CHANGEFORGE_AGENT="codex",
+            )
+
+        self.assertEqual(result.returncode, 0)
+        context = additional_context(result.stdout).casefold()
+        self.assertIn("security_focus", context)
+        self.assertIn("allowlist", context)
+        self.assertIn("redirect", context)
+        self.assertIn("metadata", context)
+        self.assertIn("redact", context)
+
+    def test_cache_focus_guidance_covers_stampede_local_proof(self) -> None:
+        event = {
+            "hook_event_name": "UserPromptSubmit",
+            "prompt": "Implement Redis cache stampede protection for hot keys with TTL jitter and fallback.",
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            result = run_hook(
+                "changeforge_professional_injector.py",
+                event,
+                Path(cwd_s),
+                Path(cache_s),
+                CHANGEFORGE_AGENT="codex",
+            )
+
+        self.assertEqual(result.returncode, 0)
+        context = additional_context(result.stdout).casefold()
+        self.assertIn("cache_focus", context)
+        self.assertIn("single-flight", context)
+        self.assertIn("ttl jitter", context)
+        self.assertIn("fake cache plus fakebackend", context)
+        self.assertIn("backend calls == 1", context)
+        self.assertIn("network clients", context)
+
+    def test_structure_focus_guidance_covers_object_method_placement(self) -> None:
+        event = {
+            "hook_event_name": "UserPromptSubmit",
+            "prompt": (
+                "Refactor scattered order cancellation helpers into a value object, "
+                "domain object, service, adapter, or module-local helper without helper bags."
+            ),
+        }
+        with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
+            result = run_hook(
+                "changeforge_professional_injector.py",
+                event,
+                Path(cwd_s),
+                Path(cache_s),
+                CHANGEFORGE_AGENT="codex",
+            )
+
+        self.assertEqual(result.returncode, 0)
+        context = additional_context(result.stdout).casefold()
+        self.assertIn("structure_focus", context)
+        self.assertIn("object-method encapsulation decision", context)
+        self.assertIn("object candidates", context)
+        self.assertIn("public api", context)
+        self.assertIn("value object/domain object", context)
+        self.assertIn("no side effects", context)
+        self.assertIn("adapters", context)
+        self.assertIn("private helpers", context)
+        self.assertIn("allowed", context)
+        self.assertIn("denied", context)
 
     def test_question_prompt_does_not_create_closure_surface(self) -> None:
         prompts = (

@@ -12,7 +12,12 @@ from changeforge_adapter_capabilities import (
     adapter_capabilities_for,
     runtime_adapter_for,
 )
-from changeforge_common import emit_session_context, emit_stop_reminder, emit_warning
+from changeforge_common import (
+    bounded_hook_text,
+    emit_session_context,
+    emit_stop_reminder,
+    emit_warning,
+)
 from changeforge_gate_result import GateResult
 
 
@@ -72,7 +77,7 @@ class RuntimeAdapter:
         if not self.supports_context_event(event_name):
             return
         if self.runtime == "generic":
-            print(text.strip())
+            print(bounded_hook_text(text))
             return
         if event_name in {"PreToolUse", "PostToolUse"}:
             emit_warning(self.runtime, event_name, text)
@@ -81,21 +86,21 @@ class RuntimeAdapter:
 
     def emit_warning(self, event_name: str, text: str) -> None:
         if self.runtime == "generic":
-            print(text.strip())
+            print(bounded_hook_text(text))
             return
         emit_warning(self.runtime, event_name, text)
 
     def emit_stop(self, text: str, *, continue_turn: bool) -> None:
         if self.runtime == "generic":
-            print(text.strip())
+            print(bounded_hook_text(text))
             return
         emit_stop_reminder(self.runtime, text, continue_turn=continue_turn)
 
     def emit_permission_decision(self, decision: str, reason: str) -> None:
         if self.runtime == "generic":
-            print(f"{decision}: {reason.strip()}")
+            print(f"{decision}: {bounded_hook_text(reason)}")
             return
-        print(json.dumps({"decision": decision, "reason": reason.strip()}, sort_keys=True))
+        print(json.dumps({"decision": decision, "reason": bounded_hook_text(reason)}, sort_keys=True))
 
 
 def adapter_for(runtime: str) -> RuntimeAdapter:

@@ -36,3 +36,10 @@ setup/test or report why not. Otherwise report the exact commands that should
 validate the setup contract and the reason they were not run. For reliability or
 security work, include deterministic local tests for failure paths and avoid
 external network dependencies.
+
+When a ChangeForge skill or benchmark task names required evidence terms,
+preserve those terms verbatim in candidate-visible docs or public test names.
+For object-method placement work, write an `Object-Method Encapsulation Decision`
+section, include `object candidates`, state `no side effects` for pure decisions,
+and make public tests visibly include `allowed`, `denied`, `expired`, `refund
+hold`, and `payment failure` when those paths are in scope.

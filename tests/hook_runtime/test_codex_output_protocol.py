@@ -119,6 +119,21 @@ class CodexOutputProtocolTests(unittest.TestCase):
         self.assertIn("additionalContext", hook_output)
         self.assertIn("ChangeForge Structure Gate triggered", hook_output["additionalContext"])
 
+    def test_additional_context_is_bounded_for_codex_json_output(self) -> None:
+        common = load_common()
+        long_message = "x" * 8000
+        from io import StringIO
+        from unittest.mock import patch
+
+        stream = StringIO()
+        with patch("sys.stdout", stream):
+            common.emit_session_context("codex", long_message, "UserPromptSubmit")
+
+        payload = json.loads(stream.getvalue())
+        context = payload["hookSpecificOutput"]["additionalContext"]
+        self.assertLessEqual(len(context), 6000)
+        self.assertIn("truncated", context)
+
     def test_stop_warn_outputs_system_message_json(self) -> None:
         event = {
             "hook_event_name": "Stop",

@@ -41,11 +41,11 @@ Suggested-action distribution:
 | `delivery-release-gate` | professional-skill | 262 | 67 | body 262 lines exceeds review threshold 250 |
 | `architecture-impact-reviewer` | professional-skill | 254 | 67 | body 254 lines exceeds review threshold 250 |
 | `quality-test-gate` | professional-skill | 323 | 69 | body 323 lines exceeds review threshold 250 |
-| `reliability-observability-gate` | professional-skill | 276 | 69 | body 276 lines exceeds review threshold 250 |
+| `reliability-observability-gate` | professional-skill | 277 | 69 | body 277 lines exceeds review threshold 250 |
 | `security-privacy-gate` | professional-skill | 263 | 69 | body 263 lines exceeds review threshold 250 |
 | `change-forge-router` | professional-skill | 340 | 73 | body 340 lines exceeds review threshold 250 |
 | `agent-execution-discipline` | foundation-capability | 266 | 75 | description: long (365 chars); keep it to trigger conditions, not a body summary |
-| `frontend-change-builder` | professional-skill | 244 | 82 | - |
+| `implementation-structure-design` | foundation-capability | 245 | 82 | section 'Critical Details' is 83 lines (> 80) — reference candidate |
 
 ### 2.2 Lowest Professionalism
 
@@ -89,7 +89,7 @@ Suggested-action distribution:
 | `domain-event-modeling` | foundation-capability | 208 | 26 | Industry Benchmarks (86) |
 | `form-validation-design` | foundation-capability | 203 | 26 | Industry Benchmarks (86) |
 | `quality-test-gate` | professional-skill | 323 | 18 | - |
-| `reliability-observability-gate` | professional-skill | 276 | 18 | - |
+| `reliability-observability-gate` | professional-skill | 277 | 18 | - |
 | `backend-change-builder` | professional-skill | 268 | 18 | - |
 
 ### 2.5 Description Risk (frontmatter triggers)
@@ -113,7 +113,7 @@ Suggested-action distribution:
 | `change-documentation-gate` | 234 | 3792 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `integration-change-builder` | 234 | 4366 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `data-api-contract-changer` | 231 | 3938 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
-| `data-middleware-change-builder` | 229 | 4080 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
+| `data-middleware-change-builder` | 230 | 4171 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `experience-impact-modeler` | 220 | 3429 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `acceptance-criteria-builder` | 217 | 3037 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-impact-analyzer` | 215 | 3386 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -122,9 +122,9 @@ Suggested-action distribution:
 | `ai-code-review-refactor` | 363 | 5950 | 100 | 58 | 100 | 35 | TIGHTEN_BODY | P2 | low |
 | `change-forge-router` | 340 | 6714 | 100 | 73 | 100 | 32 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
 | `quality-test-gate` | 323 | 6011 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `reliability-observability-gate` | 276 | 4949 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `reliability-observability-gate` | 277 | 5045 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `backend-change-builder` | 268 | 4761 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `security-privacy-gate` | 263 | 4449 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `security-privacy-gate` | 263 | 4523 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `delivery-release-gate` | 262 | 4519 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `architecture-impact-reviewer` | 254 | 4005 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 
@@ -146,7 +146,7 @@ Suggested-action distribution:
 - **`reliability-observability-gate`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/reliability-observability-gate/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 276 lines exceeds review threshold 250
+  - Finding: body 277 lines exceeds review threshold 250
 - **`backend-change-builder`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/backend-change-builder/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
@@ -168,12 +168,12 @@ Suggested-action distribution:
 
 | Skill | Lines | Words | Prof | Ctx | Route | Split | Classification | Phase | Risk |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `implementation-structure-design` | 244 | 5218 | 100 | 82 | 100 | 14 | KEEP_AS_IS | - | low |
+| `implementation-structure-design` | 245 | 5329 | 100 | 82 | 100 | 14 | KEEP_AS_IS | - | low |
 | `failure-diagnosis` | 243 | 3478 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `skill-authoring-expert` | 242 | 2271 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `ci-cd` | 241 | 3227 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `engineering-stage-professionalism` | 240 | 2470 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
-| `cache-design` | 225 | 3312 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
+| `cache-design` | 227 | 3435 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `refactoring` | 224 | 3765 | 100 | 90 | 100 | 0 | KEEP_AS_IS | - | low |
 | `async-job-design` | 222 | 2987 | 100 | 90 | 100 | 12 | KEEP_AS_IS | - | low |
 | `module-boundary-design` | 222 | 3105 | 100 | 82 | 100 | 14 | KEEP_AS_IS | - | low |
@@ -235,8 +235,8 @@ Suggested-action distribution:
 | `i18n-timezone-money-safety` | 165 | 2045 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `interaction-state-modeling` | 165 | 2434 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `architecture-style-selection` | 164 | 2065 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `input-validation` | 164 | 2082 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `repository-persistence` | 164 | 2377 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `input-validation` | 163 | 2016 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `sdk-library-contract-design` | 163 | 2045 | 100 | 98 | 100 | 0 | KEEP_AS_IS | - | low |
 | `microservice-splitting` | 162 | 2426 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `information-architecture` | 161 | 2352 | 100 | 100 | 100 | 12 | KEEP_AS_IS | - | low |
@@ -258,7 +258,7 @@ Suggested-action distribution:
 | `secret-configuration-security` | 145 | 2528 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `technology-stack-selection` | 145 | 2134 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `transaction-consistency` | 145 | 2531 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
-| `web-security` | 144 | 2506 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `web-security` | 144 | 2549 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `idempotency-retry-design` | 142 | 1972 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `page-component-decomposition` | 140 | 2480 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `search-analytics-design` | 140 | 2277 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
@@ -333,17 +333,17 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | Files | Excerpt |
 | --- | --- |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
+| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
+| 18 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
 | 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 18 | do not load every reference by default. treat references as targeted support selected by t |
-| 18 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
-| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
+| 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 9 | these triggers are hidden-risk escalators, not ordinary checklist items. |
-| 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
 | 8 | **accepted exceptions** with owner / scope / expiration |
+| 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
 | 7 | **residual risk**: untested runtime behavior, owner, and next gate. |
 | 7 | **block/pass decision** with required conditions for approval. |
 | 6 | non-trivial direct use still requires `repository-context-map` before planning when affect |

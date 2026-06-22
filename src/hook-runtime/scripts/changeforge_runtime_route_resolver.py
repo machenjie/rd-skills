@@ -1040,7 +1040,40 @@ def context_lines(context: dict[str, Any]) -> list[str]:
         ]
         if rendered:
             lines.append(f"- skipped_routes: {'; '.join(rendered)}")
+    lines.extend(_professional_focus_lines(context))
     return lines
+
+
+def _professional_focus_lines(context: dict[str, Any]) -> list[str]:
+    """Return concise, route-derived implementation guidance for common risks."""
+    capabilities = set(_as_list(context.get("selected_capabilities")))
+    product_surfaces = set(_as_list(context.get("product_surfaces")))
+    risk_surfaces = set(_as_list(context.get("risk_surfaces")))
+    current_stage = str(context.get("current_stage") or context.get("stage") or "")
+
+    lines: list[str] = []
+    if "security" in risk_surfaces or {"input-validation", "web-security"} & capabilities:
+        lines.append(
+            "- security_focus: for server-side URL fetches, canonicalize scheme/host/port/resolved addresses before fetch, enforce exact allowlist, reject loopback/private/link-local/metadata targets, revalidate every redirect, and redact userinfo/query/fragment plus token/key/secret values from errors and logs."
+        )
+    if "cache" in product_surfaces or "cache-design" in capabilities:
+        lines.append(
+            "- cache_focus: implement executable local proof for per-key single-flight or short lease, bounded lock timeout, TTL jitter/range, tenant+permission+variant cache key, Redis-down fallback/backpressure, hot/miss/fallback/contention metrics, and deterministic fake cache plus FakeBackend/source-of-truth concurrent tests that assert backend calls == 1; keep local proofs free of network clients, URLs, and live Redis."
+        )
+    if (
+        "implementation-structure-design" in capabilities
+        or current_stage in {"implementation-planning", "refactoring", "code-review"}
+    ):
+        lines.append(
+            "- structure_focus: keep public API importable and test through it; add a candidate-visible `Object-Method Encapsulation Decision` section with object candidates, value object/domain object ownership, rejected alternatives or module-local helpers, and the exact phrase `no side effects` for pure decisions; keep payment/network/cache/queue/clock side effects in services/adapters, keep private helpers private, and make public test names/text visibly include the exact words allowed, denied, expired, refund hold, and payment failure."
+        )
+    return lines
+
+
+def _as_list(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value if isinstance(item, str)]
 
 
 def _canonical_stage(action_stage: str, product_surfaces: list[str], state: dict[str, Any]) -> str:

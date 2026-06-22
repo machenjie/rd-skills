@@ -574,7 +574,7 @@
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 23,
-      "bullet_count": 136,
+      "bullet_count": 137,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 82,
@@ -585,10 +585,10 @@
       "has_shared_optimality": false,
       "heading_count": 21,
       "kind": "professional-skill",
-      "largest_section_lines": 30,
+      "largest_section_lines": 31,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 229,
+      "line_count": 230,
       "name": "data-middleware-change-builder",
       "optimality_section_length": 0,
       "output_contract_length": 25,
@@ -605,7 +605,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4080
+      "word_count": 4171
     },
     {
       "anti_example_section_length": 10,
@@ -830,7 +830,7 @@
     {
       "anti_example_section_length": 10,
       "benchmark_section_length": 21,
-      "bullet_count": 169,
+      "bullet_count": 170,
       "classification": "TIGHTEN_BODY",
       "code_block_count": 1,
       "context_efficiency_score": 69,
@@ -838,7 +838,7 @@
       "description_findings": [],
       "description_length": 276,
       "findings": [
-        "body 276 lines exceeds review threshold 250"
+        "body 277 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 24,
@@ -846,7 +846,7 @@
       "largest_section_lines": 31,
       "largest_section_title": "Cost And Capacity Guardrails",
       "largest_table_rows": 7,
-      "line_count": 276,
+      "line_count": 277,
       "name": "reliability-observability-gate",
       "optimality_section_length": 5,
       "output_contract_length": 29,
@@ -863,7 +863,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4949
+      "word_count": 5045
     },
     {
       "anti_example_section_length": 11,
@@ -901,7 +901,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4449
+      "word_count": 4523
     },
     {
       "anti_example_section_length": 10,
@@ -1480,11 +1480,11 @@
     {
       "anti_example_section_length": 15,
       "benchmark_section_length": 58,
-      "bullet_count": 105,
+      "bullet_count": 107,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 90,
-      "critical_details_length": 25,
+      "critical_details_length": 26,
       "description_findings": [],
       "description_length": 154,
       "findings": [
@@ -1497,7 +1497,7 @@
       "largest_section_lines": 58,
       "largest_section_title": "Industry Benchmarks",
       "largest_table_rows": 11,
-      "line_count": 225,
+      "line_count": 227,
       "name": "cache-design",
       "optimality_section_length": 0,
       "output_contract_length": 26,
@@ -1514,7 +1514,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 3,
       "used_by_count": 2,
-      "word_count": 3312
+      "word_count": 3435
     },
     {
       "anti_example_section_length": 13,
@@ -3121,7 +3121,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 4,
-      "bullet_count": 85,
+      "bullet_count": 86,
       "classification": "KEEP_AS_IS",
       "code_block_count": 0,
       "context_efficiency_score": 82,
@@ -3137,7 +3137,7 @@
       "largest_section_lines": 83,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 0,
-      "line_count": 244,
+      "line_count": 245,
       "name": "implementation-structure-design",
       "optimality_section_length": 0,
       "output_contract_length": 19,
@@ -3159,7 +3159,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 0,
       "used_by_count": 7,
-      "word_count": 5218
+      "word_count": 5329
     },
     {
       "anti_example_section_length": 13,
@@ -3240,7 +3240,7 @@
     {
       "anti_example_section_length": 12,
       "benchmark_section_length": 60,
-      "bullet_count": 50,
+      "bullet_count": 51,
       "classification": "KEEP_AS_IS",
       "code_block_count": 1,
       "context_efficiency_score": 100,
@@ -3256,7 +3256,7 @@
       "largest_section_lines": 60,
       "largest_section_title": "Industry Benchmarks",
       "largest_table_rows": 8,
-      "line_count": 163,
+      "line_count": 164,
       "name": "input-validation",
       "optimality_section_length": 0,
       "output_contract_length": 16,
@@ -3273,7 +3273,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
       "used_by_count": 3,
-      "word_count": 2016
+      "word_count": 2082
     },
     {
       "anti_example_section_length": 12,
@@ -5805,7 +5805,7 @@
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
       "used_by_count": 3,
-      "word_count": 2506
+      "word_count": 2549
     },
     {
       "anti_example_section_length": 10,
