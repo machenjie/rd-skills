@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -26,7 +29,8 @@ def _load_script(name: str, relative: str):
     return module
 
 
-def _variant_payload(**overrides: object) -> dict[str, object]:
+def _variant_payload(*, variant: str = "baseline_clean", **overrides: object) -> dict[str, object]:
+    project_install = variant in {"skills_only_clean", "skills_with_hooks_clean"}
     usage = {
         "input_tokens": 10,
         "cached_input_tokens": 0,
@@ -44,6 +48,10 @@ def _variant_payload(**overrides: object) -> dict[str, object]:
         "run_count": 1,
         "case_count": 1,
         "result_count": 1,
+        "changeforge_install_source": "current_repository" if project_install else "none",
+        "changeforge_profile": "recommended" if project_install else "none",
+        "changeforge_hooks_enabled": variant == "skills_with_hooks_clean",
+        "user_level_install_used": False,
         "artifact_status_counts": {"collected": 1},
         "grading_status_counts": {"passed": 1},
         "failure_categories": {"none": 1},
@@ -129,6 +137,10 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
         "codex_home_policy": "auth_borrowed_clean",
         "auth_policy": "borrow-current",
         "codex_environment_policy": "auth_borrowed_clean",
+        "changeforge_install_source": "current_repository",
+        "changeforge_profile": "recommended",
+        "changeforge_hooks_enabled": True,
+        "user_level_install_used": False,
         "strict_benchmark_eligible": True,
         "publishable_for_strict_benchmark": True,
         "run_id": "local-test",
@@ -162,6 +174,7 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
         "variants": {
             "baseline_clean": _variant_payload(),
             "skills_with_hooks_clean": _variant_payload(
+                variant="skills_with_hooks_clean",
                 delta_vs_baseline_clean={
                     "pass_rate_delta": 0.0,
                     "security_pass_rate_delta": 0.0,
@@ -242,6 +255,8 @@ def _environment_payload(**overrides: object) -> dict[str, object]:
 
 
 def _result_payload(**overrides: object) -> dict[str, object]:
+    variant = str(overrides.get("variant", "baseline_clean"))
+    project_install = variant in {"skills_only_clean", "skills_with_hooks_clean"}
     setup_contract = {
         "candidate_setup_exists": True,
         "candidate_setup_hash_changed": False,
@@ -253,7 +268,7 @@ def _result_payload(**overrides: object) -> dict[str, object]:
         "schema_version": 2,
         "generated_by": "scripts/run-codex-live-benchmarks.py",
         "case_id": "security/ssrf-url-allowlist",
-        "variant": "baseline_clean",
+        "variant": variant,
         "run_index": 1,
         "status": "collected",
         "artifact_status": "collected",
@@ -262,6 +277,10 @@ def _result_payload(**overrides: object) -> dict[str, object]:
         "codex_home_mode": "isolated",
         "auth_policy": "borrow-current",
         "codex_environment_policy": "auth_borrowed_clean",
+        "changeforge_install_source": "current_repository" if project_install else "none",
+        "changeforge_profile": "recommended" if project_install else "none",
+        "changeforge_hooks_enabled": variant == "skills_with_hooks_clean",
+        "user_level_install_used": False,
         "grading_mode": "assertion",
         "publishable_for_strict": True,
         "benchmark_eligible": True,
@@ -510,6 +529,37 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             install_command = subprocess_run.call_args_list[-1].args[0]
             self.assertIn("--with-hooks", install_command)
 
+    def test_strict_variant_metadata_records_current_repository_project_install(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_strict_metadata", "scripts/run-codex-live-benchmarks.py")
+        args = SimpleNamespace(profile="recommended", auth_policy="borrow-current", benchmark_mode="ablation")
+        self.assertEqual(
+            runner._result_changeforge_metadata(args, "baseline_clean"),
+            {
+                "changeforge_install_source": "none",
+                "changeforge_profile": "none",
+                "changeforge_hooks_enabled": False,
+                "user_level_install_used": False,
+            },
+        )
+        self.assertEqual(
+            runner._result_changeforge_metadata(args, "skills_only_clean"),
+            {
+                "changeforge_install_source": "current_repository",
+                "changeforge_profile": "recommended",
+                "changeforge_hooks_enabled": False,
+                "user_level_install_used": False,
+            },
+        )
+        self.assertEqual(
+            runner._result_changeforge_metadata(args, "skills_with_hooks_clean"),
+            {
+                "changeforge_install_source": "current_repository",
+                "changeforge_profile": "recommended",
+                "changeforge_hooks_enabled": True,
+                "user_level_install_used": False,
+            },
+        )
+
     def test_install_failure_writes_partial_result(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_install_partial", "scripts/run-codex-live-benchmarks.py")
         with tempfile.TemporaryDirectory() as tmp:
@@ -652,6 +702,20 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             errors = validator.validate_summary(path, publishable=True)
         self.assertTrue(any("strict summary" in error or "evidence_level" in error for error in errors))
 
+    def test_strict_validator_rejects_user_level_install_metadata(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_reports_strict_metadata",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        result_errors = validator._result_environment_errors(
+            _result_payload(user_level_install_used=True)
+        )
+        summary_errors = validator._strict_summary_errors(
+            _strict_summary_payload(user_level_install_used=True)
+        )
+        self.assertTrue(any("user_level_install_used=false" in error for error in result_errors))
+        self.assertTrue(any("user_level_install_used=false" in error for error in summary_errors))
+
     def test_validator_rejects_ablation_summary_without_required_deltas(self) -> None:
         validator = _load_script(
             "validate_codex_live_reports_ablation_delta",
@@ -665,8 +729,8 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             failure_categories={"none": 3},
             variants={
                 "baseline_clean": _variant_payload(),
-                "skills_only_clean": _variant_payload(),
-                "skills_with_hooks_clean": _variant_payload(),
+                "skills_only_clean": _variant_payload(variant="skills_only_clean"),
+                "skills_with_hooks_clean": _variant_payload(variant="skills_with_hooks_clean"),
             },
             delta={
                 "skills_only_clean_vs_baseline_clean": {"pass_rate_delta": 0.0},
@@ -745,6 +809,16 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(summary["telemetry_only_case_count"], 1)
         self.assertIn("skills_with_hooks_clean_vs_baseline_clean", summary["delta"])
         self.assertEqual(summary["evidence_scope"], "smoke")
+        self.assertEqual(summary["changeforge_install_source"], "current_repository")
+        self.assertEqual(summary["changeforge_profile"], "recommended")
+        self.assertTrue(summary["changeforge_hooks_enabled"])
+        self.assertFalse(summary["user_level_install_used"])
+        self.assertEqual(summary["variants"]["baseline_clean"]["changeforge_install_source"], "none")
+        self.assertEqual(
+            summary["variants"]["skills_with_hooks_clean"]["changeforge_install_source"],
+            "current_repository",
+        )
+        self.assertTrue(summary["variants"]["skills_with_hooks_clean"]["changeforge_hooks_enabled"])
         self.assertFalse(summary["evidence_scope_detail"]["evidence_scope_ready"])
         self.assertTrue(any("smoke sample only" in item for item in summary["limitations"]))
 
@@ -1295,6 +1369,7 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         grader = _load_script("grade_codex_live_setup_reason_classifier", "scripts/grade-codex-live-benchmarks.py")
         examples = {
             "missing_harness": "codegen_benchmark_harness.py: No such file",
+            "missing_env_root": "could not locate scripts/codegen_benchmark_harness.py; set CHANGEFORGE_CODEGEN_ROOT",
             "setup_script_missing": "candidate/setup.sh missing",
             "setup_script_modified_bad_path": (
                 "python3: can't open file '<candidate>/../../../../../scripts/codegen_benchmark_harness.py': "
@@ -1351,11 +1426,36 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             grader._setup_failure_subreason(
                 "CHANGEFORGE_CODEGEN_ROOT is unset",
                 failed=True,
-                setup_failure_reason="setup_script_modified_bad_path",
+                setup_failure_reason="missing_env_root",
                 setup_contract=fixed_path_contract,
             ),
             "missing_env_root",
         )
+
+    def test_grader_does_not_classify_robust_setup_fallback_as_fragile_path(self) -> None:
+        grader = _load_script("grade_codex_live_robust_setup_fallback", "scripts/grade-codex-live-benchmarks.py")
+        helper = _load_script("codex_live_helper_robust_setup_fallback", "scripts/codex_live_benchmark_lib.py")
+        case = next(
+            case
+            for case in helper.load_case_registry()
+            if case.enabled and case.publishable_for_strict and case.grading_mode == "assertion"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp) / "candidate"
+            shutil.copytree(case.starter_repo, candidate)
+            contract = grader._setup_contract(case.grading_benchmark, candidate, root=ROOT)
+        text = "could not locate scripts/codegen_benchmark_harness.py; set CHANGEFORGE_CODEGEN_ROOT"
+        reason = grader._setup_failure_reason(text, failed=True)
+        subreason = grader._setup_failure_subreason(
+            text,
+            failed=True,
+            setup_failure_reason=reason,
+            setup_contract=contract,
+        )
+        self.assertIn(reason, {"missing_env_root", "missing_harness"})
+        self.assertIn(subreason, {"missing_env_root", "missing_harness"})
+        self.assertNotEqual(reason, "setup_script_modified_bad_path")
+        self.assertNotEqual(subreason, "starter_fragile_path")
 
     def test_grading_result_validator_checks_diagnostic_fields(self) -> None:
         validator = _load_script(
@@ -1436,6 +1536,195 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         telemetry_only = [case for case in cases if case.grading_mode == "telemetry_only"]
         self.assertTrue(telemetry_only)
         self.assertTrue(all(not case.publishable_for_strict for case in telemetry_only))
+
+    def test_publishable_starter_setup_runs_from_candidate_root_with_exported_root(self) -> None:
+        helper = _load_script("codex_live_helper_candidate_setup_contract", "scripts/codex_live_benchmark_lib.py")
+        grader = _load_script("grade_codex_live_candidate_setup_contract", "scripts/grade-codex-live-benchmarks.py")
+        cases = [
+            case
+            for case in helper.load_case_registry()
+            if case.enabled and case.publishable_for_strict and case.grading_mode == "assertion"
+        ]
+        self.assertGreaterEqual(len(cases), 5)
+        for case in cases:
+            with self.subTest(case=case.id):
+                with tempfile.TemporaryDirectory() as tmp:
+                    candidate = Path(tmp) / "candidate"
+                    shutil.copytree(case.starter_repo, candidate)
+                    env = os.environ.copy()
+                    env["CHANGEFORGE_CODEGEN_ROOT"] = str(ROOT)
+                    completed = subprocess.run(
+                        ["bash", str(candidate / "setup.sh")],
+                        cwd=candidate,
+                        env=env,
+                        text=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        check=False,
+                    )
+                self.assertEqual(completed.returncode, 0, completed.stdout)
+                self.assertEqual(grader._setup_failure_reason(completed.stdout, failed=False), "none")
+                self.assertNotIn("setup_script_modified_bad_path", completed.stdout)
+
+    def test_publishable_starter_setup_no_env_fallback_is_not_fragile_path(self) -> None:
+        helper = _load_script("codex_live_helper_candidate_setup_no_env", "scripts/codex_live_benchmark_lib.py")
+        grader = _load_script("grade_codex_live_candidate_setup_no_env", "scripts/grade-codex-live-benchmarks.py")
+        cases = [
+            case
+            for case in helper.load_case_registry()
+            if case.enabled and case.publishable_for_strict and case.grading_mode == "assertion"
+        ]
+        for case in cases:
+            with self.subTest(case=case.id):
+                with tempfile.TemporaryDirectory() as tmp:
+                    candidate = Path(tmp) / "candidate"
+                    shutil.copytree(case.starter_repo, candidate)
+                    env = os.environ.copy()
+                    env.pop("CHANGEFORGE_CODEGEN_ROOT", None)
+                    completed = subprocess.run(
+                        ["bash", str(candidate / "setup.sh")],
+                        cwd=candidate,
+                        env=env,
+                        text=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        check=False,
+                    )
+                    contract = grader._setup_contract(case.grading_benchmark, candidate, root=ROOT)
+                self.assertNotEqual(completed.returncode, 0, completed.stdout)
+                self.assertIn(
+                    "could not locate scripts/codegen_benchmark_harness.py; set CHANGEFORGE_CODEGEN_ROOT",
+                    completed.stdout,
+                )
+                reason = grader._setup_failure_reason(completed.stdout, failed=True)
+                subreason = grader._setup_failure_subreason(
+                    completed.stdout,
+                    failed=True,
+                    setup_failure_reason=reason,
+                    setup_contract=contract,
+                )
+                self.assertIn(reason, {"missing_env_root", "missing_harness"})
+                self.assertIn(subreason, {"missing_env_root", "missing_harness"})
+                self.assertNotEqual(subreason, "starter_fragile_path")
+
+    def test_publishable_starter_setup_contract_has_no_fixed_depth_lookup(self) -> None:
+        helper = _load_script("codex_live_helper_setup_contract_scan", "scripts/codex_live_benchmark_lib.py")
+        fixed_depth = re.compile(r"(\.\./){2,}|(\.\.\\){2,}|parents\[[1-9]")
+        cases = [
+            case
+            for case in helper.load_case_registry()
+            if case.enabled and case.publishable_for_strict and case.grading_mode == "assertion"
+        ]
+        for case in cases:
+            with self.subTest(case=case.id):
+                text = (case.starter_repo / "setup.sh").read_text(encoding="utf-8")
+                self.assertIn("CHANGEFORGE_CODEGEN_ROOT", text)
+                self.assertIn("codegen_benchmark_harness.py", text)
+                self.assertFalse(fixed_depth.search(text))
+                self.assertTrue(".parents" in text or "find_codegen_root" in text)
+
+    def test_codegen_candidate_mode_cli_exports_root_candidate_and_stage_records(self) -> None:
+        runner = _load_script("run_codegen_benchmark_candidate_cli_env", "scripts/run-codegen-benchmarks.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            codegen_dir = root / "evals" / "codegen"
+            case_dir = codegen_dir / "sample" / "candidate-env"
+            starter = case_dir / "starter-repo"
+            test_suite = case_dir / "test-suite"
+            security_checks = case_dir / "security-checks"
+            tests_dir = test_suite / "tests"
+            candidate = root / "candidate"
+            for path in (starter, test_suite, security_checks, tests_dir, candidate):
+                path.mkdir(parents=True, exist_ok=True)
+            (starter / "README.md").write_text("starter\n", encoding="utf-8")
+            (candidate / "README.md").write_text("candidate\n", encoding="utf-8")
+            (starter / "setup.sh").write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            (candidate / "setup.sh").write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env bash",
+                        "set -euo pipefail",
+                        "python3 - <<'PY'",
+                        "import json, os",
+                        "from pathlib import Path",
+                        "root = Path(os.environ['CHANGEFORGE_CODEGEN_ROOT'])",
+                        "candidate = Path(os.environ['CHANGEFORGE_CODEGEN_CANDIDATE_DIR'])",
+                        "payload = {",
+                        "    'root': str(root),",
+                        "    'candidate': str(candidate),",
+                        "    'cwd': str(Path.cwd()),",
+                        "    'harness_exists': (root / 'scripts' / 'codegen_benchmark_harness.py').is_file(),",
+                        "}",
+                        "(candidate / 'setup-observed.json').write_text(json.dumps(payload), encoding='utf-8')",
+                        "assert payload['harness_exists']",
+                        "assert Path.cwd().resolve() == candidate.resolve()",
+                        "PY",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (test_suite / "README.md").write_text(
+                "# Test Suite\n\n## Expected Commands\n\n- `bash test-suite/run.sh`\n",
+                encoding="utf-8",
+            )
+            (test_suite / "run.sh").write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env bash",
+                        "# expected-command: bash test-suite/run.sh",
+                        "set -euo pipefail",
+                        'test -n "${CHANGEFORGE_CODEGEN_ROOT:-}"',
+                        'test -n "${CHANGEFORGE_CODEGEN_CANDIDATE_DIR:-}"',
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (security_checks / "run.sh").write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            (tests_dir / "test_candidate.py").write_text(
+                "\n".join(
+                    [
+                        "import json, os",
+                        "from pathlib import Path",
+                        "candidate = Path(os.environ['CHANGEFORGE_CODEGEN_CANDIDATE_DIR'])",
+                        "payload = {'candidate': str(candidate), 'cwd': str(Path.cwd())}",
+                        "(candidate / 'assertion-observed.json').write_text(json.dumps(payload), encoding='utf-8')",
+                        "assert Path.cwd().resolve() == candidate.resolve()",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            stage_dir = root / "stages"
+            with patch.object(runner, "CODEGEN_DIR", codegen_dir):
+                with patch.object(runner, "EXPECTED_BENCHMARKS", {"sample": ["candidate-env"]}):
+                    result = runner.main(
+                        [
+                            "--benchmark",
+                            "sample/candidate-env",
+                            "--candidate-dir",
+                            str(candidate),
+                            "--stage-log-dir",
+                            str(stage_dir),
+                        ]
+                    )
+            setup_observed = json.loads((candidate / "setup-observed.json").read_text(encoding="utf-8"))
+            assertion_observed = json.loads((candidate / "assertion-observed.json").read_text(encoding="utf-8"))
+            records = json.loads(
+                (stage_dir / "sample__candidate-env" / "stage-results.json").read_text(encoding="utf-8")
+            )
+        self.assertEqual(result, 0)
+        self.assertEqual(Path(setup_observed["root"]), ROOT)
+        self.assertEqual(Path(setup_observed["candidate"]).resolve(), candidate.resolve())
+        self.assertEqual(Path(setup_observed["cwd"]).resolve(), candidate.resolve())
+        self.assertEqual(Path(assertion_observed["candidate"]).resolve(), candidate.resolve())
+        self.assertEqual(Path(assertion_observed["cwd"]).resolve(), candidate.resolve())
+        self.assertEqual(
+            [record["stage"] for record in records],
+            ["setup", "test-suite", "security-checks", "assertion-files"],
+        )
+        self.assertTrue(all(record["passed"] is True for record in records))
 
     def test_codegen_candidate_mode_executes_real_assertion_files(self) -> None:
         runner = _load_script("run_codegen_benchmark_assertions", "scripts/run-codegen-benchmarks.py")
@@ -1621,8 +1910,8 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             failure_categories={"none": 3},
             variants={
                 "baseline_clean": _variant_payload(),
-                "skills_only_clean": _variant_payload(),
-                "skills_with_hooks_clean": _variant_payload(),
+                "skills_only_clean": _variant_payload(variant="skills_only_clean"),
+                "skills_with_hooks_clean": _variant_payload(variant="skills_with_hooks_clean"),
             },
             delta={
                 "skills_only_clean_vs_baseline_clean": {"pass_rate_delta": 0.0},

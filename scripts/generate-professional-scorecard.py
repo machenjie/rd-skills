@@ -729,6 +729,7 @@ def _codex_live_strict_summary_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("Codex live summary requires dominant_failure_category")
     if summary.get("dominant_setup_failure_reason") not in {
         "none",
+        "missing_env_root",
         "missing_harness",
         "setup_script_missing",
         "setup_script_modified_bad_path",

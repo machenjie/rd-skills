@@ -205,6 +205,7 @@ def write_skipped_manifest(
         limitations.append(_current_home_full_limitation())
     auth_policy = resolve_auth_policy(args)
     environment_policy = codex_environment_policy(auth_policy)
+    changeforge_metadata = _manifest_changeforge_metadata(args, variants)
     write_json(
         out_dir / "run-manifest.json",
         {
@@ -224,6 +225,7 @@ def write_skipped_manifest(
             "codex_home_mode": legacy_codex_home_mode(auth_policy),
             "auth_policy": auth_policy,
             "codex_environment_policy": environment_policy,
+            **changeforge_metadata,
             "codex_invocations": [],
             "result_count": 0,
             "limitations": limitations,
@@ -311,6 +313,7 @@ def run_live(args: argparse.Namespace, out_dir: Path, cases: list[CodexLiveCase]
     ]
     auth_policy = resolve_auth_policy(args)
     environment_policy = codex_environment_policy(auth_policy)
+    changeforge_metadata = _manifest_changeforge_metadata(args, variants)
     if args.benchmark_mode in STRICT_BENCHMARK_MODES:
         limitations.append(
             "Strict comparative claims may borrow Codex authentication, but user skills, hooks, config, and rules are not loaded."
@@ -335,6 +338,7 @@ def run_live(args: argparse.Namespace, out_dir: Path, cases: list[CodexLiveCase]
         "codex_home_mode": legacy_codex_home_mode(auth_policy),
         "auth_policy": auth_policy,
         "codex_environment_policy": environment_policy,
+        **changeforge_metadata,
         "result_count": len(results),
         "limitations": limitations,
     }
@@ -435,6 +439,7 @@ def _run_one_case(
     )
     auth_policy = resolve_auth_policy(args)
     environment_policy = codex_environment_policy(auth_policy)
+    changeforge_metadata = _result_changeforge_metadata(args, variant)
 
     limitations = [
         "Result reflects one local Codex CLI run for this variant.",
@@ -456,6 +461,7 @@ def _run_one_case(
         "codex_home_mode": legacy_codex_home_mode(auth_policy),
         "auth_policy": auth_policy,
         "codex_environment_policy": environment_policy,
+        **changeforge_metadata,
         "grading_mode": case.grading_mode,
         "publishable_for_strict": case.publishable_for_strict,
         "benchmark_eligible": benchmark_eligible,
@@ -503,6 +509,28 @@ def _artifact_path(run_dir: Path, path: Path) -> str:
     except ValueError:
         return "<artifact>"
     return f"<run-dir>/{rel}"
+
+
+def _result_changeforge_metadata(args: argparse.Namespace, variant: str) -> dict[str, Any]:
+    """Return strict-benchmark provenance for one variant."""
+    project_install = variant in {"skills_only_clean", "skills_with_hooks_clean"}
+    return {
+        "changeforge_install_source": "current_repository" if project_install else "none",
+        "changeforge_profile": args.profile if project_install else "none",
+        "changeforge_hooks_enabled": variant == "skills_with_hooks_clean",
+        "user_level_install_used": resolve_auth_policy(args) == "current-home-full",
+    }
+
+
+def _manifest_changeforge_metadata(args: argparse.Namespace, variants: list[str]) -> dict[str, Any]:
+    """Return aggregate ChangeForge provenance for a run manifest."""
+    project_install = any(variant in {"skills_only_clean", "skills_with_hooks_clean"} for variant in variants)
+    return {
+        "changeforge_install_source": "current_repository" if project_install else "none",
+        "changeforge_profile": args.profile if project_install else "none",
+        "changeforge_hooks_enabled": "skills_with_hooks_clean" in variants,
+        "user_level_install_used": resolve_auth_policy(args) == "current-home-full",
+    }
 
 
 def _contamination_for_variant(variant: str, run_dir: Path) -> dict[str, Any]:

@@ -18,7 +18,7 @@ for start in starts:
         if (cur / "scripts" / "codegen_benchmark_harness.py").is_file():
             print(cur)
             raise SystemExit(0)
-raise SystemExit("could not locate codegen_benchmark_harness.py")
+raise SystemExit("could not locate scripts/codegen_benchmark_harness.py; set CHANGEFORGE_CODEGEN_ROOT")
 PYROOT
 )"
 fi

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 from typing import Any, Iterable
@@ -50,6 +51,7 @@ ROUTE_HINT_FIELDS = (
     "domain_extensions",
     "quality_gates",
 )
+FIXED_DEPTH_ROOT_LOOKUP_RE = re.compile(r"(\.\./){2,}|(\.\.\\){2,}|parents\[[1-9]")
 
 REQUIRED_MARKDOWN_HEADINGS: dict[str, tuple[str, ...]] = {
     "prompt.md": (
@@ -326,6 +328,24 @@ def _validate_case(
 
     for directory_name in REQUIRED_CHILD_DIRS:
         _validate_directory_readme(case_dir, directory_name, errors)
+    _validate_starter_setup_contract(case_dir, errors)
+
+
+def _validate_starter_setup_contract(case_dir: Path, errors: list[str]) -> None:
+    setup_path = case_dir / "starter-repo" / "setup.sh"
+    rel = relpath(ROOT, setup_path)
+    if not setup_path.is_file():
+        errors.append(f"{rel}: missing required setup script")
+        return
+    text = setup_path.read_text(encoding="utf-8", errors="replace")
+    if "CHANGEFORGE_CODEGEN_ROOT" not in text:
+        errors.append(f"{rel}: setup script must honor CHANGEFORGE_CODEGEN_ROOT")
+    if "codegen_benchmark_harness.py" not in text:
+        errors.append(f"{rel}: setup script must invoke codegen_benchmark_harness.py")
+    if FIXED_DEPTH_ROOT_LOOKUP_RE.search(text):
+        errors.append(f"{rel}: setup script must not use fixed-depth parent traversal")
+    if ".parents" not in text and "find_codegen_root" not in text:
+        errors.append(f"{rel}: setup script must use a parent walk or shared root-location helper")
 
 
 def main() -> int:

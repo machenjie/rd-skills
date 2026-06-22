@@ -175,6 +175,10 @@ def _strict_summary_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("strict summary requires --ignore-user-config and --ignore-rules")
     if summary.get("plugins_disabled") is not True:
         errors.append("strict summary requires --disable plugins")
+    if summary.get("user_level_install_used") is not False:
+        errors.append("strict summary requires user_level_install_used=false")
+    if summary.get("changeforge_install_source") != "current_repository":
+        errors.append("strict summary requires changeforge_install_source=current_repository")
     if int(summary.get("contaminated_result_count", 0) or 0) != 0:
         errors.append("strict summary must not include contaminated results")
     if int(summary.get("benchmark_eligible_result_count", 0) or 0) <= 0:
@@ -198,6 +202,20 @@ def _strict_summary_errors(summary: dict[str, Any]) -> list[str]:
             continue
         if int(variant_summary.get("benchmark_eligible_result_count", 0) or 0) <= 0:
             errors.append(f"strict summary requires eligible assertion results for {variant}")
+        if variant == "baseline_clean" and variant_summary.get("changeforge_install_source") != "none":
+            errors.append("strict summary baseline_clean must not install ChangeForge")
+        if variant == "skills_only_clean":
+            if variant_summary.get("changeforge_install_source") != "current_repository":
+                errors.append("strict summary skills_only_clean must use current_repository install source")
+            if variant_summary.get("changeforge_hooks_enabled") is not False:
+                errors.append("strict summary skills_only_clean must not enable ChangeForge hooks")
+        if variant == "skills_with_hooks_clean":
+            if variant_summary.get("changeforge_install_source") != "current_repository":
+                errors.append("strict summary skills_with_hooks_clean must use current_repository install source")
+            if variant_summary.get("changeforge_hooks_enabled") is not True:
+                errors.append("strict summary skills_with_hooks_clean must enable project-level hooks")
+        if variant_summary.get("user_level_install_used") is not False:
+            errors.append(f"strict summary {variant} requires user_level_install_used=false")
     if benchmark_mode == "ablation":
         for key in (
             "skills_only_clean_vs_baseline_clean",
@@ -252,6 +270,21 @@ def _result_environment_errors(result: dict[str, Any]) -> list[str]:
             errors.append("strict result requires plugins_disabled=true")
         if environment.get("auth_json_copied") is not False:
             errors.append("strict result must not copy auth.json")
+        if result.get("user_level_install_used") is not False:
+            errors.append("strict result requires user_level_install_used=false")
+        variant = result.get("variant")
+        if variant == "baseline_clean" and result.get("changeforge_install_source") != "none":
+            errors.append("strict baseline_clean result must not install ChangeForge")
+        if variant == "skills_only_clean":
+            if result.get("changeforge_install_source") != "current_repository":
+                errors.append("strict skills_only_clean result must use current_repository install source")
+            if result.get("changeforge_hooks_enabled") is not False:
+                errors.append("strict skills_only_clean result must not enable ChangeForge hooks")
+        if variant == "skills_with_hooks_clean":
+            if result.get("changeforge_install_source") != "current_repository":
+                errors.append("strict skills_with_hooks_clean result must use current_repository install source")
+            if result.get("changeforge_hooks_enabled") is not True:
+                errors.append("strict skills_with_hooks_clean result must enable project-level hooks")
     if auth_policy == "current-home-full":
         if result.get("codex_environment_policy") != "current_home_full":
             errors.append("current-home-full result must use current_home_full environment policy")

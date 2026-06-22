@@ -70,6 +70,7 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
     auth_policy = _common_value(manifest, real_results, "auth_policy", "borrow-current")
     environment_policy = _common_value(manifest, real_results, "codex_environment_policy", "auth_borrowed_clean")
     environment_flags = _environment_flags(real_results)
+    changeforge_metadata = _changeforge_summary_metadata(manifest, real_results)
     current_home_full_result_count = sum(
         1
         for result in real_results
@@ -117,11 +118,13 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         "codex_home_policy": _codex_home_policy(manifest, real_results, benchmark_mode),
         "auth_policy": auth_policy,
         "codex_environment_policy": environment_policy,
+        **changeforge_metadata,
         "strict_benchmark_eligible": _strict_benchmark_eligible(
             benchmark_mode,
             auth_policy,
             environment_policy,
             environment_flags,
+            changeforge_metadata,
             current_home_full_result_count,
             real_results,
         ),
@@ -213,10 +216,12 @@ def _variant_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
     ]
     setup_failure_reasons = _reason_counts(results, "setup_failure_reason", "setup_failed")
     setup_failure_subreasons = _setup_subreason_counts(results)
+    changeforge_metadata = _changeforge_variant_metadata(results)
     return {
         "run_count": len({int(result.get("run_index", 0) or 0) for result in results if result.get("run_index")}),
         "case_count": len({str(result.get("case_id")) for result in results if result.get("case_id")}),
         "result_count": len(results),
+        **changeforge_metadata,
         "artifact_status_counts": _counts(results, "artifact_status"),
         "grading_status_counts": _counts(results, "grading_status"),
         "failure_categories": _counts(results, "failure_category"),
@@ -343,7 +348,7 @@ def _setup_subreason_from_artifacts(result: dict[str, Any], setup_reason: str) -
         if path.is_file():
             chunks.append(path.read_text(encoding="utf-8", errors="replace"))
     text = "\n".join(chunks).casefold()
-    if "changeforge_codegen_root is unset" in text or ("changeforge_codegen_root" in text and "unset" in text):
+    if setup_reason == "missing_env_root":
         return "missing_env_root"
     if setup_reason == "missing_harness":
         return "missing_harness"
@@ -358,6 +363,21 @@ def _setup_subreason_from_artifacts(result: dict[str, Any], setup_reason: str) -
 
 def _classify_setup_reason_from_text(text: str) -> str:
     lowered = text.casefold()
+    fixed_parent_harness_missing = (
+        "codegen_benchmark_harness.py" in lowered
+        and ("../../.." in lowered or "..\\..\\.." in lowered)
+        and ("no such file" in lowered or "can't open file" in lowered or "not found" in lowered)
+    )
+    missing_env_root = (
+        "changeforge_codegen_root is unset" in lowered
+        or "changeforge_codegen_root is empty" in lowered
+        or "set changeforge_codegen_root" in lowered
+        or ("changeforge_codegen_root" in lowered and ("unset" in lowered or "empty" in lowered or "not set" in lowered))
+    )
+    harness_missing = (
+        "codegen_benchmark_harness.py" in lowered
+        and ("no such file" in lowered or "can't open file" in lowered or "not found" in lowered)
+    )
     if (
         "setup.sh is missing" in lowered
         or "candidate/setup.sh missing" in lowered
@@ -369,16 +389,11 @@ def _classify_setup_reason_from_text(text: str) -> str:
         "missing starter readme" in lowered or "starter readme" in lowered and "missing" in lowered
     ):
         return "candidate_removed_required_file"
-    if "changeforge_codegen_root" in lowered or (
-        "codegen_benchmark_harness.py" in lowered
-        and ("../../.." in lowered or "..\\..\\.." in lowered)
-        and ("no such file" in lowered or "can't open file" in lowered or "not found" in lowered)
-    ):
+    if fixed_parent_harness_missing:
         return "setup_script_modified_bad_path"
-    if (
-        "codegen_benchmark_harness.py" in lowered
-        and ("no such file" in lowered or "can't open file" in lowered or "not found" in lowered)
-    ):
+    if missing_env_root:
+        return "missing_env_root"
+    if harness_missing:
         return "missing_harness"
     if re.search(
         r"(?i)(ModuleNotFoundError:\s*No module named|ImportError:\s*(cannot import|No module named)|"
@@ -809,6 +824,62 @@ def _common_value(
     return "mixed"
 
 
+def _changeforge_summary_metadata(manifest: dict[str, Any], results: list[dict[str, Any]]) -> dict[str, Any]:
+    """Aggregate strict benchmark provenance without treating baseline no-install as mixed."""
+    install_sources = {
+        str(result.get("changeforge_install_source"))
+        for result in results
+        if result.get("changeforge_install_source") and result.get("changeforge_install_source") != "none"
+    }
+    if not install_sources and manifest.get("changeforge_install_source"):
+        manifest_source = str(manifest["changeforge_install_source"])
+        if manifest_source != "none":
+            install_sources.add(manifest_source)
+    profiles = {
+        str(result.get("changeforge_profile"))
+        for result in results
+        if result.get("changeforge_profile") and result.get("changeforge_profile") != "none"
+    }
+    if not profiles and manifest.get("changeforge_profile"):
+        manifest_profile = str(manifest["changeforge_profile"])
+        if manifest_profile != "none":
+            profiles.add(manifest_profile)
+    return {
+        "changeforge_install_source": _single_or_mixed(install_sources, fallback="none"),
+        "changeforge_profile": _single_or_mixed(profiles, fallback="none"),
+        "changeforge_hooks_enabled": any(
+            result.get("changeforge_hooks_enabled") is True for result in results
+        )
+        or manifest.get("changeforge_hooks_enabled") is True,
+        "user_level_install_used": any(result.get("user_level_install_used") is True for result in results)
+        or manifest.get("user_level_install_used") is True,
+    }
+
+
+def _changeforge_variant_metadata(results: list[dict[str, Any]]) -> dict[str, Any]:
+    """Return exact provenance for one variant summary."""
+    install_sources = {
+        str(result.get("changeforge_install_source"))
+        for result in results
+        if result.get("changeforge_install_source")
+    }
+    profiles = {str(result.get("changeforge_profile")) for result in results if result.get("changeforge_profile")}
+    return {
+        "changeforge_install_source": _single_or_mixed(install_sources, fallback="none"),
+        "changeforge_profile": _single_or_mixed(profiles, fallback="none"),
+        "changeforge_hooks_enabled": any(result.get("changeforge_hooks_enabled") is True for result in results),
+        "user_level_install_used": any(result.get("user_level_install_used") is True for result in results),
+    }
+
+
+def _single_or_mixed(values: set[str], *, fallback: str) -> str:
+    if not values:
+        return fallback
+    if len(values) == 1:
+        return next(iter(values))
+    return "mixed"
+
+
 def _environment_flags(results: list[dict[str, Any]]) -> dict[str, bool]:
     environments = [result.get("environment") for result in results if isinstance(result.get("environment"), dict)]
     return {
@@ -826,6 +897,7 @@ def _strict_benchmark_eligible(
     auth_policy: str,
     environment_policy: str,
     environment_flags: dict[str, bool],
+    changeforge_metadata: dict[str, Any],
     current_home_full_result_count: int,
     results: list[dict[str, Any]],
 ) -> bool:
@@ -840,6 +912,7 @@ def _strict_benchmark_eligible(
         and environment_flags.get("ignore_user_config") is True
         and environment_flags.get("ignore_rules") is True
         and environment_flags.get("plugins_disabled") is True
+        and changeforge_metadata.get("user_level_install_used") is False
         and any(result.get("benchmark_eligible") is True for result in results)
     )
 
@@ -932,6 +1005,10 @@ def render_markdown(summary: dict[str, Any]) -> str:
         f"- Benchmark mode: `{summary['benchmark_mode']}`",
         f"- Auth policy: `{summary['auth_policy']}`",
         f"- Environment policy: `{summary['codex_environment_policy']}`",
+        f"- ChangeForge install source: `{summary['changeforge_install_source']}`",
+        f"- ChangeForge profile: `{summary['changeforge_profile']}`",
+        f"- ChangeForge hooks enabled: `{summary['changeforge_hooks_enabled']}`",
+        f"- User-level install used: `{summary['user_level_install_used']}`",
         f"- Strict benchmark eligible: `{summary['strict_benchmark_eligible']}`",
         f"- Run id: `{summary['run_id']}`",
         f"- Assertion-backed cases: `{summary['assertion_case_count']}`",
@@ -1016,6 +1093,10 @@ def strict_publish_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("strict benchmark publication requires --ignore-user-config and --ignore-rules")
     if summary.get("plugins_disabled") is not True:
         errors.append("strict benchmark publication requires --disable plugins")
+    if summary.get("user_level_install_used") is not False:
+        errors.append("strict benchmark publication requires user_level_install_used=false")
+    if summary.get("changeforge_install_source") != "current_repository":
+        errors.append("strict benchmark publication requires current_repository ChangeForge install source")
     if int(summary.get("contaminated_result_count", 0) or 0) != 0:
         errors.append("strict benchmark publication cannot include contaminated results")
     if int(summary.get("benchmark_eligible_result_count", 0) or 0) <= 0:
@@ -1027,6 +1108,20 @@ def strict_publish_errors(summary: dict[str, Any]) -> list[str]:
         variant_summary = variants.get(variant) or {}
         if int(variant_summary.get("benchmark_eligible_result_count", 0) or 0) <= 0:
             errors.append(f"strict benchmark publication requires eligible assertion results for {variant}")
+        if variant == "baseline_clean" and variant_summary.get("changeforge_install_source") != "none":
+            errors.append("baseline_clean must not install ChangeForge")
+        if variant == "skills_only_clean":
+            if variant_summary.get("changeforge_install_source") != "current_repository":
+                errors.append("skills_only_clean must install ChangeForge from current_repository")
+            if variant_summary.get("changeforge_hooks_enabled") is not False:
+                errors.append("skills_only_clean must not enable ChangeForge hooks")
+        if variant == "skills_with_hooks_clean":
+            if variant_summary.get("changeforge_install_source") != "current_repository":
+                errors.append("skills_with_hooks_clean must install ChangeForge from current_repository")
+            if variant_summary.get("changeforge_hooks_enabled") is not True:
+                errors.append("skills_with_hooks_clean must enable project-level ChangeForge hooks")
+        if variant_summary.get("user_level_install_used") is not False:
+            errors.append(f"{variant} must not use user-level install state")
     if benchmark_mode == "ablation":
         delta = summary.get("delta") or {}
         required_delta = (

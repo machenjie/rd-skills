@@ -156,6 +156,21 @@ def _setup_failure_reason(text: str, *, failed: bool) -> str:
     if not failed:
         return "none"
     lowered = text.casefold()
+    fixed_parent_harness_missing = (
+        "codegen_benchmark_harness.py" in lowered
+        and ("../../.." in lowered or "..\\..\\.." in lowered)
+        and ("no such file" in lowered or "can't open file" in lowered or "not found" in lowered)
+    )
+    missing_env_root = (
+        "changeforge_codegen_root is unset" in lowered
+        or "changeforge_codegen_root is empty" in lowered
+        or "set changeforge_codegen_root" in lowered
+        or ("changeforge_codegen_root" in lowered and ("unset" in lowered or "empty" in lowered or "not set" in lowered))
+    )
+    harness_missing = (
+        "codegen_benchmark_harness.py" in lowered
+        and ("no such file" in lowered or "can't open file" in lowered or "not found" in lowered)
+    )
     if (
         "setup.sh is missing" in lowered
         or "candidate/setup.sh missing" in lowered
@@ -167,16 +182,11 @@ def _setup_failure_reason(text: str, *, failed: bool) -> str:
         "missing starter readme" in lowered or "starter readme" in lowered and "missing" in lowered
     ):
         return "candidate_removed_required_file"
-    if "changeforge_codegen_root" in lowered or (
-        "codegen_benchmark_harness.py" in lowered
-        and ("../../.." in lowered or "..\\..\\.." in lowered)
-        and ("no such file" in lowered or "can't open file" in lowered or "not found" in lowered)
-    ):
+    if fixed_parent_harness_missing:
         return "setup_script_modified_bad_path"
-    if (
-        "codegen_benchmark_harness.py" in lowered
-        and ("no such file" in lowered or "can't open file" in lowered or "not found" in lowered)
-    ):
+    if missing_env_root:
+        return "missing_env_root"
+    if harness_missing:
         return "missing_harness"
     if re.search(
         r"(?i)(ModuleNotFoundError:\s*No module named|ImportError:\s*(cannot import|No module named)|"
@@ -237,9 +247,7 @@ def _setup_failure_subreason(
     if not failed:
         return "none"
     lowered = text.casefold()
-    if "changeforge_codegen_root is unset" in lowered or (
-        "changeforge_codegen_root" in lowered and "unset" in lowered
-    ):
+    if setup_failure_reason == "missing_env_root":
         return "missing_env_root"
     if setup_failure_reason == "missing_harness":
         return "missing_harness"

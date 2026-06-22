@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 import tomllib
 from dataclasses import dataclass, asdict
@@ -352,6 +353,12 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
         "cases_summary": summary.get("cases_summary"),
         "limitations": summary.get("limitations"),
     }
+    comparison = _codex_live_previous_comparison(
+        previous=_read_previous_committed_json(root, source),
+        current=summary,
+    )
+    if comparison:
+        detail["previous_current_comparison"] = comparison
     return EvidenceItem(
         CODEX_LIVE_BENCHMARK_DIMENSION,
         status,
@@ -360,6 +367,102 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
         "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json",
         LIVE_EVIDENCE_LEVEL,
     )
+
+
+def _read_previous_committed_json(root: Path, source: str) -> dict[str, Any] | None:
+    """Return the committed copy of a report when this workspace has a newer one."""
+    try:
+        completed = subprocess.run(
+            ["git", "show", f"HEAD:{source}"],
+            cwd=root,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+    except OSError:
+        return None
+    if completed.returncode != 0 or not completed.stdout.strip():
+        return None
+    try:
+        parsed = json.loads(completed.stdout)
+    except json.JSONDecodeError:
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _codex_live_previous_comparison(
+    *,
+    previous: dict[str, Any] | None,
+    current: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Build a bounded before/after payload for a replaced live benchmark summary."""
+    if not isinstance(previous, dict):
+        return None
+    previous_run_id = previous.get("run_id")
+    current_run_id = current.get("run_id")
+    if not previous_run_id or not current_run_id or previous_run_id == current_run_id:
+        return None
+    return {
+        "previous_run_id": previous_run_id,
+        "current_run_id": current_run_id,
+        "setup_script_modified_bad_path": {
+            "before": _count_nested(previous, "setup_failure_reasons", "setup_script_modified_bad_path"),
+            "after": _count_nested(current, "setup_failure_reasons", "setup_script_modified_bad_path"),
+        },
+        "starter_fragile_path": {
+            "before": _count_nested(previous, "setup_failure_subreasons", "starter_fragile_path"),
+            "after": _count_nested(current, "setup_failure_subreasons", "starter_fragile_path"),
+        },
+        "unknown_setup_failure_rate": {
+            "before": previous.get("unknown_setup_failure_rate"),
+            "after": current.get("unknown_setup_failure_rate"),
+        },
+        "skills_with_hooks_vs_baseline": {
+            "before": _variant_pass_rate_comparison(previous),
+            "after": _variant_pass_rate_comparison(current),
+        },
+        "setup_failed_by_variant": {
+            "before": _setup_failed_by_variant(previous),
+            "after": _setup_failed_by_variant(current),
+        },
+    }
+
+
+def _count_nested(payload: dict[str, Any], field: str, key: str) -> int:
+    values = payload.get(field)
+    if not isinstance(values, dict):
+        return 0
+    value = values.get(key, 0)
+    return int(value) if isinstance(value, int) else 0
+
+
+def _variant_pass_rate_comparison(summary: dict[str, Any]) -> dict[str, Any]:
+    variants = summary.get("variants") if isinstance(summary.get("variants"), dict) else {}
+    baseline = variants.get("baseline_clean") if isinstance(variants, dict) else None
+    hooks = variants.get("skills_with_hooks_clean") if isinstance(variants, dict) else None
+    baseline_rate = baseline.get("pass_rate") if isinstance(baseline, dict) else None
+    hooks_rate = hooks.get("pass_rate") if isinstance(hooks, dict) else None
+    delta = None
+    if isinstance(baseline_rate, int | float) and isinstance(hooks_rate, int | float):
+        delta = round(float(hooks_rate) - float(baseline_rate), 4)
+    return {
+        "baseline_clean_pass_rate": baseline_rate,
+        "skills_with_hooks_clean_pass_rate": hooks_rate,
+        "pass_rate_delta": delta,
+    }
+
+
+def _setup_failed_by_variant(summary: dict[str, Any]) -> dict[str, int]:
+    effect_summary = summary.get("effect_summary")
+    setup_failed = effect_summary.get("setup_failed_by_variant") if isinstance(effect_summary, dict) else None
+    if isinstance(setup_failed, dict):
+        return {str(variant): int(count) for variant, count in setup_failed.items() if isinstance(count, int)}
+    variants = summary.get("variants") if isinstance(summary.get("variants"), dict) else {}
+    return {
+        variant: _count_nested(payload, "failure_categories", "setup_failed")
+        for variant, payload in variants.items()
+        if isinstance(payload, dict)
+    }
 
 
 def _codex_live_strict_summary_errors(summary: dict[str, Any]) -> list[str]:
@@ -409,6 +512,7 @@ def _codex_live_strict_summary_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("dominant_failure_category is required")
     if summary.get("dominant_setup_failure_reason") not in {
         "none",
+        "missing_env_root",
         "missing_harness",
         "setup_script_missing",
         "setup_script_modified_bad_path",

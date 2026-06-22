@@ -1,105 +1,102 @@
 # Codex CLI Live Benchmark Summary
 
-- Status: `collected`
+- Status: `partial`
 - Evidence level: `local_codex_cli_live_benchmark`
 - Evidence scope: `multi_case_ablation_3_run`
 - Evidence scope ready: `True`
 - Evidence scope reason: ablation evidence includes the required assertion-backed case count and repeated runs
-- Evidence status: `pass`
-- Effect verdict: `negative`
-- Effect status: `regression`
-- Effect reason: skills_with_hooks_clean pass rate is below baseline_clean
-- Dominant failure category: `setup_failed`
-- Dominant setup failure reason: `setup_script_modified_bad_path`
-- Dominant setup failure subreason: `starter_fragile_path`
-- Unknown setup failure rate: `0.325`
+- Evidence status: `partial`
+- Effect verdict: `mixed`
+- Effect status: `mixed`
+- Effect reason: some case-level movement exists, but the aggregate effect is not clearly positive
+- Dominant failure category: `test_suite_failed`
+- Dominant setup failure reason: `none`
+- Dominant setup failure subreason: `none`
+- Unknown setup failure rate: `0.0`
 - Benchmark mode: `ablation`
 - Auth policy: `borrow-current`
 - Environment policy: `auth_borrowed_clean`
+- ChangeForge install source: `current_repository`
+- ChangeForge profile: `recommended`
+- ChangeForge hooks enabled: `True`
+- User-level install used: `False`
 - Strict benchmark eligible: `True`
-- Run id: `ablation-auth-borrowed-20260621-213019`
+- Run id: `ablation-5cases-3runs-20260622-125546`
 - Assertion-backed cases: `5`
-- Telemetry-only cases: `1`
-- Results: `54`
-- Benchmark eligible results: `45`
-- Telemetry-only results: `9`
+- Telemetry-only cases: `0`
+- Results: `45`
+- Benchmark eligible results: `43`
+- Telemetry-only results: `0`
 - Contaminated results: `0`
 
 ## Variants
 
 ### baseline_clean
 
-- Results: `18`
+- Results: `15`
 - Runs: `3`
-- Cases: `6`
+- Cases: `5`
 - Eligible results: `15`
-- Pass rate: `0.2`
-- Security pass rate: `0.2`
-- Dominant setup failure reason: `setup_script_modified_bad_path`
-- Dominant setup failure subreason: `starter_fragile_path`
-- Unknown setup failure rate: `0.25`
-- Average input tokens: `418332.78`
-- Median input tokens: `367045.5`
-- Average output tokens: `9534.5`
-- Average command executions: `66.0`
-- Average file changes: `5.78`
+- Pass rate: `0.2667`
+- Security pass rate: `0.8`
+- Dominant setup failure reason: `none`
+- Dominant setup failure subreason: `none`
+- Unknown setup failure rate: `0.0`
+- Average input tokens: `333157.33`
+- Median input tokens: `288397.0`
+- Average output tokens: `9280.33`
+- Average command executions: `56.8`
+- Average file changes: `5.73`
 
 ### skills_only_clean
 
-- Results: `18`
+- Results: `15`
 - Runs: `3`
-- Cases: `6`
+- Cases: `5`
 - Eligible results: `15`
-- Pass rate: `0.0667`
-- Security pass rate: `0.0667`
-- Dominant setup failure reason: `setup_script_modified_bad_path`
-- Dominant setup failure subreason: `starter_fragile_path`
-- Unknown setup failure rate: `0.3571`
-- Average input tokens: `972824.94`
-- Median input tokens: `952899.0`
-- Average output tokens: `9982.72`
-- Average command executions: `73.78`
-- Average file changes: `5.67`
+- Pass rate: `0.4667`
+- Security pass rate: `0.8667`
+- Dominant setup failure reason: `none`
+- Dominant setup failure subreason: `none`
+- Unknown setup failure rate: `0.0`
+- Average input tokens: `1039912.2`
+- Median input tokens: `829529.0`
+- Average output tokens: `11376.53`
+- Average command executions: `82.53`
+- Average file changes: `5.07`
 
 ### skills_with_hooks_clean
 
-- Results: `18`
+- Results: `15`
 - Runs: `3`
-- Cases: `6`
-- Eligible results: `15`
-- Pass rate: `0.0667`
-- Security pass rate: `0.0667`
-- Dominant setup failure reason: `setup_script_modified_bad_path`
-- Dominant setup failure subreason: `starter_fragile_path`
-- Unknown setup failure rate: `0.3571`
-- Average input tokens: `894470.44`
-- Median input tokens: `891559.0`
-- Average output tokens: `9141.44`
-- Average command executions: `68.89`
-- Average file changes: `4.44`
+- Cases: `5`
+- Eligible results: `13`
+- Pass rate: `0.4615`
+- Security pass rate: `0.7692`
+- Dominant setup failure reason: `none`
+- Dominant setup failure subreason: `none`
+- Unknown setup failure rate: `0.0`
+- Average input tokens: `714897.87`
+- Median input tokens: `744578.0`
+- Average output tokens: `8714.73`
+- Average command executions: `63.07`
+- Average file changes: `4.53`
 
 ## Cases
 
 ### backend/service-method-vs-new-helper
 
 - Grading mode: `assertion`
-- baseline_clean: runs `3`, pass rate `0.0`
-- skills_only_clean: runs `3`, pass rate `0.0`
-- skills_with_hooks_clean: runs `3`, pass rate `0.0`
+- baseline_clean: runs `3`, pass rate `1.0`
+- skills_only_clean: runs `3`, pass rate `1.0`
+- skills_with_hooks_clean: runs `3`, pass rate `1.0`
 
 ### devex/helper-reuse-search
 
 - Grading mode: `assertion`
-- baseline_clean: runs `3`, pass rate `0.0`
-- skills_only_clean: runs `3`, pass rate `0.0`
-- skills_with_hooks_clean: runs `3`, pass rate `0.0`
-
-### devex/minimal-correct-implementation-ladder
-
-- Grading mode: `telemetry_only`
-- baseline_clean: runs `3`, pass rate `not_collected`
-- skills_only_clean: runs `3`, pass rate `not_collected`
-- skills_with_hooks_clean: runs `3`, pass rate `not_collected`
+- baseline_clean: runs `3`, pass rate `0.3333`
+- skills_only_clean: runs `3`, pass rate `1.0`
+- skills_with_hooks_clean: runs `3`, pass rate `1.0`
 
 ### reliability/redis-cache-stampede-protection
 
@@ -111,14 +108,14 @@
 ### security/ssrf-url-allowlist
 
 - Grading mode: `assertion`
-- baseline_clean: runs `3`, pass rate `0.6667`
+- baseline_clean: runs `3`, pass rate `0.0`
 - skills_only_clean: runs `3`, pass rate `0.3333`
-- skills_with_hooks_clean: runs `3`, pass rate `0.3333`
+- skills_with_hooks_clean: runs `3`, pass rate `0.0`
 
 ### structure/object-method-encapsulation-placement
 
 - Grading mode: `assertion`
-- baseline_clean: runs `3`, pass rate `0.3333`
+- baseline_clean: runs `3`, pass rate `0.0`
 - skills_only_clean: runs `3`, pass rate `0.0`
 - skills_with_hooks_clean: runs `3`, pass rate `0.0`
 
@@ -130,4 +127,3 @@
 - Strict comparative claims may borrow Codex authentication only; user skills, hooks, config, and rules are not loaded.
 - Baseline contamination blocks publishing, and pass rates include assertion-backed eligible results only.
 - Current strict live evidence covers ablation across at least 5 assertion-backed cases and 3 runs per required variant, but remains local Codex CLI evidence.
-- Setup failure diagnostics remain incomplete.
