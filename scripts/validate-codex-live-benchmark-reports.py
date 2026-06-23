@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 from typing import Any
 
 from codex_live_benchmark_lib import (
+    CASE_TIERS,
     CODEX_LIVE_EVIDENCE_SCOPES,
     CURRENT_HOME_SMOKE_EVIDENCE_LEVEL,
     EFFECT_STATUSES,
@@ -28,6 +30,7 @@ from codex_live_benchmark_lib import (
     TEST_SUITE_FAILURE_REASONS,
     load_case_registry,
     print_errors,
+    public_status_from_live,
     read_json,
     scan_forbidden_absolute_user_paths,
     scan_forbidden_secrets,
@@ -46,6 +49,8 @@ REAL_RESULT_REQUIRED_FILES = (
     "grading/grading-result.json",
     "result.json",
 )
+CODEX_LIVE_BENCHMARK_NAME = "Codex CLI live benchmark"
+CODEX_LIVE_EVIDENCE_KEY = "local_codex_cli_live_benchmark"
 
 
 def validate_run_dir(run_dir: Path) -> list[str]:
@@ -144,6 +149,122 @@ def validate_summary(summary_path: Path, *, publishable: bool = True) -> list[st
     errors.extend(_variant_rate_errors(summary))
     errors.extend(_summary_structure_errors(summary))
     return errors
+
+
+def validate_report_consistency(
+    summary_path: Path,
+    *,
+    scorecard_path: Path | None = None,
+    public_summary_path: Path | None = None,
+) -> list[str]:
+    """Validate that generated scorecard/public reports reference the live summary."""
+    summary = read_json(summary_path)
+    if not isinstance(summary, dict):
+        return [f"{summary_path} missing or invalid"]
+    errors: list[str] = []
+    if scorecard_path is not None:
+        errors.extend(
+            _derived_live_report_errors(
+                summary,
+                scorecard_path,
+                report_kind="scorecard",
+                item_collection="dimensions",
+            )
+        )
+    if public_summary_path is not None:
+        errors.extend(
+            _derived_live_report_errors(
+                summary,
+                public_summary_path,
+                report_kind="public summary",
+                item_collection="items",
+            )
+        )
+    return errors
+
+
+def _default_existing_derived_report_paths(summary_path: Path) -> tuple[Path | None, Path | None]:
+    reports_dir = summary_path.parent
+    scorecard = reports_dir / "professional-scorecard.json"
+    public_summary = reports_dir / "public-benchmark-summary.json"
+    return (
+        scorecard if scorecard.exists() else None,
+        public_summary if public_summary.exists() else None,
+    )
+
+
+def _derived_live_report_errors(
+    summary: dict[str, Any],
+    report_path: Path,
+    *,
+    report_kind: str,
+    item_collection: str,
+) -> list[str]:
+    report = read_json(report_path)
+    if not isinstance(report, dict):
+        return [f"{report_kind} {report_path} missing or invalid"]
+    item = _find_live_report_item(report.get(item_collection))
+    if item is None:
+        return [f"{report_kind} missing {CODEX_LIVE_BENCHMARK_NAME} item"]
+    errors: list[str] = []
+    detail = _load_item_detail(item, report_kind)
+    expected_status = public_status_from_live(str(summary.get("status", "not_collected")))
+    item_status = item.get("status")
+    if item_status != expected_status:
+        errors.append(
+            f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} status {item_status!r} "
+            f"does not match summary status {expected_status!r}"
+        )
+    if not isinstance(detail, dict):
+        errors.append(f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail must be JSON object")
+        return errors
+    for field in ("run_id", "effect_verdict"):
+        if detail.get(field) != summary.get(field):
+            errors.append(
+                f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail {field} "
+                f"{detail.get(field)!r} does not match summary {summary.get(field)!r}"
+            )
+    if summary.get("evidence_status") == "pass":
+        if item_status != "pass":
+            errors.append(f"{report_kind} cannot show {item_status!r} when live summary evidence_status is pass")
+        if detail.get("evidence_status") != "pass":
+            errors.append(
+                f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail evidence_status "
+                f"{detail.get('evidence_status')!r} does not match summary pass"
+            )
+    if summary.get("effect_verdict") == "positive" and detail.get("effect_verdict") != "positive":
+        errors.append(f"{report_kind} cannot reference a non-positive live result when summary effect_verdict is positive")
+    if report_kind == "public summary":
+        evidence_level = (report.get("evidence_levels") or {}).get(CODEX_LIVE_EVIDENCE_KEY)
+        evidence_status = evidence_level.get("status") if isinstance(evidence_level, dict) else None
+        if evidence_status != expected_status:
+            errors.append(
+                f"public summary evidence_levels.{CODEX_LIVE_EVIDENCE_KEY}.status "
+                f"{evidence_status!r} does not match summary status {expected_status!r}"
+            )
+    return errors
+
+
+def _find_live_report_item(items: Any) -> dict[str, Any] | None:
+    if not isinstance(items, list):
+        return None
+    for item in items:
+        if isinstance(item, dict) and item.get("name") == CODEX_LIVE_BENCHMARK_NAME:
+            return item
+    return None
+
+
+def _load_item_detail(item: dict[str, Any], report_kind: str) -> dict[str, Any] | None:
+    detail = item.get("detail")
+    if isinstance(detail, dict):
+        return detail
+    if not isinstance(detail, str):
+        return None
+    try:
+        payload = json.loads(detail)
+    except json.JSONDecodeError:
+        return None
+    return payload if isinstance(payload, dict) else None
 
 
 def _strict_summary_errors(summary: dict[str, Any]) -> list[str]:
@@ -354,6 +475,9 @@ def _summary_structure_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("summary effect_summary must be an object")
     else:
         errors.extend(_setup_diagnostic_summary_errors("summary.effect_summary", summary["effect_summary"]))
+    errors.extend(_coverage_summary_errors(summary.get("coverage_summary")))
+    errors.extend(_cost_summary_errors(summary.get("cost_summary")))
+    errors.extend(_stability_summary_errors(summary.get("stability_summary")))
     variants = summary.get("variants")
     if not isinstance(variants, dict):
         errors.append("summary variants must be an object")
@@ -495,6 +619,119 @@ def _summary_structure_errors(summary: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _coverage_summary_errors(payload: Any) -> list[str]:
+    if not isinstance(payload, dict):
+        return ["summary coverage_summary must be an object"]
+    errors: list[str] = []
+    for field in (
+        "case_count",
+        "assertion_case_count",
+        "telemetry_only_case_count",
+        "publishable_assertion_case_count",
+        "unregistered_case_count",
+    ):
+        if not isinstance(payload.get(field), int):
+            errors.append(f"summary coverage_summary.{field} must be an integer")
+    tiers = payload.get("tiers")
+    if not isinstance(tiers, dict):
+        errors.append("summary coverage_summary.tiers must be an object")
+    else:
+        invalid_tiers = sorted(set(str(tier) for tier in tiers) - {*CASE_TIERS, "unregistered"})
+        if invalid_tiers:
+            errors.append(f"summary coverage_summary.tiers has invalid tiers {', '.join(invalid_tiers)}")
+        errors.extend(_int_count_errors("summary coverage_summary.tiers", tiers))
+    for field in ("categories", "coverage_dimensions"):
+        value = payload.get(field)
+        if not isinstance(value, dict):
+            errors.append(f"summary coverage_summary.{field} must be an object")
+        else:
+            errors.extend(_int_count_errors(f"summary coverage_summary.{field}", value))
+    return errors
+
+
+def _cost_summary_errors(payload: Any) -> list[str]:
+    if not isinstance(payload, dict):
+        return ["summary cost_summary must be an object"]
+    errors: list[str] = []
+    if not isinstance(payload.get("result_count"), int):
+        errors.append("summary cost_summary.result_count must be an integer")
+    for field in ("total_usage", "average_usage_per_result"):
+        errors.extend(_usage_payload_errors(f"summary cost_summary.{field}", payload.get(field)))
+    by_variant = payload.get("by_variant")
+    if not isinstance(by_variant, dict):
+        errors.append("summary cost_summary.by_variant must be an object")
+    else:
+        for variant, variant_payload in by_variant.items():
+            if not isinstance(variant_payload, dict):
+                errors.append(f"summary cost_summary.by_variant.{variant} must be an object")
+                continue
+            if not isinstance(variant_payload.get("result_count"), int):
+                errors.append(f"summary cost_summary.by_variant.{variant}.result_count must be an integer")
+            for field in ("total_usage", "average_usage_per_result", "median_usage_per_result"):
+                errors.extend(
+                    _usage_payload_errors(
+                        f"summary cost_summary.by_variant.{variant}.{field}",
+                        variant_payload.get(field),
+                    )
+                )
+    if not isinstance(payload.get("cost_caveat"), str):
+        errors.append("summary cost_summary.cost_caveat must be a string")
+    return errors
+
+
+def _stability_summary_errors(payload: Any) -> list[str]:
+    if not isinstance(payload, dict):
+        return ["summary stability_summary must be an object"]
+    errors: list[str] = []
+    for field in (
+        "requested_runs_per_variant",
+        "observed_case_variant_cell_count",
+        "observed_min_runs_per_case_variant",
+        "observed_max_runs_per_case_variant",
+    ):
+        if not isinstance(payload.get(field), int):
+            errors.append(f"summary stability_summary.{field} must be an integer")
+    for field in ("artifact_status_counts", "grading_status_counts"):
+        value = payload.get(field)
+        if not isinstance(value, dict):
+            errors.append(f"summary stability_summary.{field} must be an object")
+        else:
+            errors.extend(_int_count_errors(f"summary stability_summary.{field}", value))
+    for field in (
+        "setup_failure_rate",
+        "test_suite_failure_rate",
+        "security_failure_rate",
+        "codex_exec_failure_rate",
+        "not_collected_grading_rate",
+        "contamination_rate",
+    ):
+        value = payload.get(field)
+        if not isinstance(value, int | float) or value < 0 or value > 1:
+            errors.append(f"summary stability_summary.{field} must be a numeric rate from 0 to 1")
+    return errors
+
+
+def _usage_payload_errors(label: str, payload: Any) -> list[str]:
+    if not isinstance(payload, dict):
+        return [f"{label} must be an object"]
+    errors: list[str] = []
+    for field in ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_output_tokens"):
+        value = payload.get(field)
+        if not isinstance(value, int | float):
+            errors.append(f"{label}.{field} must be numeric")
+    return errors
+
+
+def _int_count_errors(label: str, payload: dict[Any, Any]) -> list[str]:
+    errors: list[str] = []
+    for key, value in payload.items():
+        if not isinstance(key, str):
+            errors.append(f"{label} keys must be strings")
+        if not isinstance(value, int):
+            errors.append(f"{label}.{key} must be an integer")
+    return errors
+
+
 def _grading_result_errors(payload: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     required = (
@@ -607,6 +844,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-dir", type=Path)
     parser.add_argument("--summary", type=Path)
+    parser.add_argument("--scorecard", type=Path)
+    parser.add_argument("--public-summary", type=Path)
     args = parser.parse_args(argv)
     if not args.run_dir and not args.summary:
         print("validate-codex-live-benchmark-reports: ERROR: --run-dir or --summary is required", file=sys.stderr)
@@ -616,6 +855,17 @@ def main(argv: list[str] | None = None) -> int:
         errors.extend(validate_run_dir(args.run_dir))
     if args.summary:
         errors.extend(validate_summary(args.summary))
+        scorecard_path = args.scorecard
+        public_summary_path = args.public_summary
+        if scorecard_path is None and public_summary_path is None:
+            scorecard_path, public_summary_path = _default_existing_derived_report_paths(args.summary)
+        errors.extend(
+            validate_report_consistency(
+                args.summary,
+                scorecard_path=scorecard_path,
+                public_summary_path=public_summary_path,
+            )
+        )
     return print_errors("validate-codex-live-benchmark-reports", errors)
 
 

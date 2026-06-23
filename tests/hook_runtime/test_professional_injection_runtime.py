@@ -183,9 +183,11 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0)
         context = additional_context(result.stdout).casefold()
+        self.assertIn("reliability gate", context)
         self.assertIn("cache_focus", context)
         self.assertIn("single-flight", context)
         self.assertIn("ttl jitter", context)
+        self.assertIn("no live redis", context)
         self.assertIn("fake cache plus fakebackend", context)
         self.assertIn("backend calls == 1", context)
         self.assertIn("network clients", context)

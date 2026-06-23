@@ -91,6 +91,7 @@ MODE_DEFAULT_VARIANTS = {
     "current-home-smoke": ("current_home_smoke",),
 }
 GRADING_MODES = ("assertion", "telemetry_only")
+CASE_TIERS = ("core", "level1", "experimental")
 PROFILES = ("recommended", "full", "dev")
 SANDBOXES = ("read-only", "workspace-write", "danger-full-access")
 AUTH_POLICIES = ("isolated-api-key", "borrow-current", "current-home-full")
@@ -156,6 +157,8 @@ class CodexLiveCase:
     grading_benchmark: str
     grading_mode: str
     publishable_for_strict: bool
+    tier: str
+    coverage_dimensions: tuple[str, ...]
 
 
 def utc_stamp() -> str:
@@ -209,6 +212,8 @@ def load_case_registry(path: Path = CASES_PATH, root: Path = ROOT) -> list[Codex
                 grading_benchmark=str(raw["grading_benchmark"]),
                 grading_mode=str(raw["grading_mode"]),
                 publishable_for_strict=bool(raw["publishable_for_strict"]),
+                tier=str(raw.get("tier", "core")),
+                coverage_dimensions=tuple(str(item) for item in raw.get("coverage_dimensions", [raw["category"]])),
             )
         )
     return cases
@@ -219,8 +224,9 @@ def validate_case_registry(data: Any, root: Path = ROOT) -> list[str]:
     errors: list[str] = []
     if not isinstance(data, dict):
         return ["cases.yaml must be a mapping"]
-    if data.get("schema_version") != 1:
-        errors.append("schema_version must be 1")
+    schema_version = data.get("schema_version")
+    if schema_version not in {1, 2}:
+        errors.append("schema_version must be 1 or 2")
     if data.get("kind") != "changeforge.codex_live_benchmark_cases":
         errors.append("kind must be changeforge.codex_live_benchmark_cases")
     cases = data.get("cases")
@@ -245,6 +251,8 @@ def validate_case_registry(data: Any, root: Path = ROOT) -> list[str]:
             "grading_mode",
             "publishable_for_strict",
         }
+        if schema_version == 2:
+            required.update({"tier", "coverage_dimensions"})
         missing = sorted(required - set(raw))
         if missing:
             errors.append(f"{prefix}: missing {', '.join(missing)}")
@@ -274,6 +282,18 @@ def validate_case_registry(data: Any, root: Path = ROOT) -> list[str]:
             errors.append(f"{prefix}: publishable_for_strict must be boolean")
         elif publishable and grading_mode != "assertion":
             errors.append(f"{prefix}: publishable_for_strict requires grading_mode assertion")
+        tier = str(raw.get("tier", "core"))
+        if tier not in CASE_TIERS:
+            errors.append(f"{prefix}: tier must be one of {', '.join(CASE_TIERS)}")
+        coverage_dimensions = raw.get("coverage_dimensions", [category])
+        if (
+            not isinstance(coverage_dimensions, list)
+            or not coverage_dimensions
+            or any(not isinstance(item, str) or not item.strip() for item in coverage_dimensions)
+        ):
+            errors.append(f"{prefix}: coverage_dimensions must be a non-empty list of strings")
+        elif len(set(coverage_dimensions)) != len(coverage_dimensions):
+            errors.append(f"{prefix}: coverage_dimensions must not contain duplicates")
         variants = raw.get("variants")
         if not isinstance(variants, list) or not variants:
             errors.append(f"{prefix}: variants must be a non-empty list")
@@ -547,6 +567,9 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "delta",
             "cases",
             "cases_summary",
+            "coverage_summary",
+            "cost_summary",
+            "stability_summary",
             "limitations",
         ),
     }

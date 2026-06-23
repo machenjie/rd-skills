@@ -109,6 +109,12 @@ def _scope_detail(**overrides: object) -> dict[str, object]:
 
 
 def _strict_summary_payload(**overrides: object) -> dict[str, object]:
+    usage = {
+        "input_tokens": 10,
+        "cached_input_tokens": 0,
+        "output_tokens": 5,
+        "reasoning_output_tokens": 0,
+    }
     payload: dict[str, object] = {
         "schema_version": 2,
         "generated_by": "scripts/generate-codex-live-summary.py",
@@ -227,6 +233,70 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
                     },
                 },
             }
+        },
+        "coverage_summary": {
+            "case_count": 1,
+            "assertion_case_count": 1,
+            "telemetry_only_case_count": 0,
+            "publishable_assertion_case_count": 1,
+            "tiers": {"core": 1, "level1": 0, "experimental": 0},
+            "categories": {"security": 1},
+            "coverage_dimensions": {"security-ssrf": 1},
+            "unregistered_case_count": 0,
+        },
+        "cost_summary": {
+            "result_count": 2,
+            "total_usage": {
+                "input_tokens": 20,
+                "cached_input_tokens": 0,
+                "output_tokens": 10,
+                "reasoning_output_tokens": 0,
+            },
+            "average_usage_per_result": {
+                "input_tokens": 10.0,
+                "cached_input_tokens": 0.0,
+                "output_tokens": 5.0,
+                "reasoning_output_tokens": 0.0,
+            },
+            "by_variant": {
+                "baseline_clean": {
+                    "result_count": 1,
+                    "total_usage": {
+                        "input_tokens": 10,
+                        "cached_input_tokens": 0,
+                        "output_tokens": 5,
+                        "reasoning_output_tokens": 0,
+                    },
+                    "average_usage_per_result": usage,
+                    "median_usage_per_result": usage,
+                },
+                "skills_with_hooks_clean": {
+                    "result_count": 1,
+                    "total_usage": {
+                        "input_tokens": 10,
+                        "cached_input_tokens": 0,
+                        "output_tokens": 5,
+                        "reasoning_output_tokens": 0,
+                    },
+                    "average_usage_per_result": usage,
+                    "median_usage_per_result": usage,
+                },
+            },
+            "cost_caveat": "Token usage is parsed local Codex telemetry, not a billing ledger.",
+        },
+        "stability_summary": {
+            "requested_runs_per_variant": 1,
+            "observed_case_variant_cell_count": 2,
+            "observed_min_runs_per_case_variant": 1,
+            "observed_max_runs_per_case_variant": 1,
+            "artifact_status_counts": {"collected": 2},
+            "grading_status_counts": {"passed": 2},
+            "setup_failure_rate": 0.0,
+            "test_suite_failure_rate": 0.0,
+            "security_failure_rate": 0.0,
+            "codex_exec_failure_rate": 0.0,
+            "not_collected_grading_rate": 0.0,
+            "contamination_rate": 0.0,
         },
         "telemetry": {"event_count": 2, "parse_error_count": 0},
         "limitations": ["strict local evidence"],
@@ -843,6 +913,14 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         )
         self.assertTrue(summary["variants"]["skills_with_hooks_clean"]["changeforge_hooks_enabled"])
         self.assertFalse(summary["evidence_scope_detail"]["evidence_scope_ready"])
+        self.assertEqual(summary["coverage_summary"]["case_count"], 2)
+        self.assertEqual(summary["coverage_summary"]["tiers"]["core"], 2)
+        self.assertEqual(summary["coverage_summary"]["assertion_case_count"], 1)
+        self.assertEqual(summary["coverage_summary"]["telemetry_only_case_count"], 1)
+        self.assertEqual(summary["cost_summary"]["total_usage"]["input_tokens"], 20)
+        self.assertEqual(summary["cost_summary"]["total_usage"]["output_tokens"], 10)
+        self.assertEqual(summary["stability_summary"]["observed_min_runs_per_case_variant"], 1)
+        self.assertEqual(summary["stability_summary"]["test_suite_failure_rate"], 0.0)
         self.assertTrue(any("smoke sample only" in item for item in summary["limitations"]))
 
     def test_summary_aggregates_ablation_runs_usage_cases_and_failure_categories(self) -> None:
@@ -1540,7 +1618,7 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         errors = helper.validate_case_registry(data, ROOT)
         self.assertTrue(any("requires real pytest assertion files" in error for error in errors))
 
-    def test_case_registry_has_five_publishable_assertion_backed_cases(self) -> None:
+    def test_case_registry_has_core_and_level1_publishable_assertion_backed_cases(self) -> None:
         helper = _load_script("codex_live_helper_registry_coverage", "scripts/codex_live_benchmark_lib.py")
         cases = helper.load_case_registry()
         publishable = [
@@ -1548,7 +1626,10 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             for case in cases
             if case.enabled and case.publishable_for_strict and case.grading_mode == "assertion"
         ]
-        self.assertGreaterEqual(len(publishable), 5)
+        self.assertGreaterEqual(len(publishable), 12)
+        self.assertGreaterEqual(sum(1 for case in publishable if case.tier == "core"), 5)
+        self.assertGreaterEqual(sum(1 for case in publishable if case.tier == "level1"), 7)
+        self.assertTrue(all(case.coverage_dimensions for case in cases))
         self.assertIn(
             "reliability/redis-cache-stampede-protection",
             {case.id for case in publishable},
@@ -1559,6 +1640,20 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         telemetry_only = [case for case in cases if case.grading_mode == "telemetry_only"]
         self.assertTrue(telemetry_only)
         self.assertTrue(all(not case.publishable_for_strict for case in telemetry_only))
+
+    def test_runner_filters_cases_by_tier(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_tier_filter", "scripts/run-codex-live-benchmarks.py")
+        helper = _load_script("codex_live_helper_tier_filter", "scripts/codex_live_benchmark_lib.py")
+        cases = helper.load_case_registry()
+
+        core_cases = runner.select_cases(cases, benchmarks=[], categories=[], tiers=["core"])
+        level1_cases = runner.select_cases(cases, benchmarks=[], categories=[], tiers=["level1"])
+
+        self.assertTrue(core_cases)
+        self.assertTrue(level1_cases)
+        self.assertTrue(all(case.tier == "core" for case in core_cases))
+        self.assertTrue(all(case.tier == "level1" for case in level1_cases))
+        self.assertNotIn("devex/minimal-correct-implementation-ladder", {case.id for case in core_cases})
 
     def test_publishable_starter_setup_runs_from_candidate_root_with_exported_root(self) -> None:
         helper = _load_script("codex_live_helper_candidate_setup_contract", "scripts/codex_live_benchmark_lib.py")
@@ -1896,6 +1991,136 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(item.status, "pass")
         self.assertIn('"effect_verdict": "inconclusive"', item.detail)
         self.assertEqual(item.evidence_level, "local_codex_cli_live_benchmark")
+
+    def test_report_consistency_rejects_stale_scorecard_run_id(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_report_consistency_stale_scorecard",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            summary_path = reports / "codex-live-benchmark-summary.json"
+            scorecard_path = reports / "professional-scorecard.json"
+            summary_path.write_text(
+                json.dumps(_strict_summary_payload(run_id="positive-run", effect_verdict="positive")),
+                encoding="utf-8",
+            )
+            scorecard_path.write_text(
+                json.dumps(
+                    {
+                        "dimensions": [
+                            {
+                                "name": "Codex CLI live benchmark",
+                                "status": "pass",
+                                "detail": json.dumps(
+                                    {
+                                        "run_id": "old-partial-run",
+                                        "evidence_status": "pass",
+                                        "effect_verdict": "positive",
+                                    }
+                                ),
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            errors = validator.validate_report_consistency(summary_path, scorecard_path=scorecard_path)
+        self.assertTrue(any("detail run_id" in error for error in errors))
+
+    def test_report_consistency_rejects_stale_public_partial_status(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_report_consistency_stale_public",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            summary_path = reports / "codex-live-benchmark-summary.json"
+            public_path = reports / "public-benchmark-summary.json"
+            summary_path.write_text(
+                json.dumps(_strict_summary_payload(run_id="positive-run", effect_verdict="positive")),
+                encoding="utf-8",
+            )
+            public_path.write_text(
+                json.dumps(
+                    {
+                        "items": [
+                            {
+                                "name": "Codex CLI live benchmark",
+                                "status": "partial",
+                                "detail": json.dumps(
+                                    {
+                                        "run_id": "positive-run",
+                                        "evidence_status": "partial",
+                                        "effect_verdict": "mixed",
+                                    }
+                                ),
+                            }
+                        ],
+                        "evidence_levels": {
+                            "local_codex_cli_live_benchmark": {
+                                "status": "partial",
+                                "meaning": "stale",
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            errors = validator.validate_report_consistency(summary_path, public_summary_path=public_path)
+        self.assertTrue(any("cannot show 'partial'" in error for error in errors))
+        self.assertTrue(any("effect_verdict" in error for error in errors))
+        self.assertTrue(any("evidence_levels.local_codex_cli_live_benchmark.status" in error for error in errors))
+
+    def test_report_consistency_accepts_consistent_positive_summary(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_report_consistency_positive",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        detail = {
+            "run_id": "positive-run",
+            "evidence_status": "pass",
+            "effect_verdict": "positive",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            summary_path = reports / "codex-live-benchmark-summary.json"
+            scorecard_path = reports / "professional-scorecard.json"
+            public_path = reports / "public-benchmark-summary.json"
+            summary_path.write_text(
+                json.dumps(_strict_summary_payload(run_id="positive-run", effect_verdict="positive")),
+                encoding="utf-8",
+            )
+            scorecard_path.write_text(
+                json.dumps({"dimensions": [{"name": "Codex CLI live benchmark", "status": "pass", "detail": json.dumps(detail)}]}),
+                encoding="utf-8",
+            )
+            public_path.write_text(
+                json.dumps(
+                    {
+                        "items": [{"name": "Codex CLI live benchmark", "status": "pass", "detail": json.dumps(detail)}],
+                        "evidence_levels": {
+                            "local_codex_cli_live_benchmark": {
+                                "status": "pass",
+                                "meaning": "Opt-in local Codex CLI benchmark run.",
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            errors = validator.validate_report_consistency(
+                summary_path,
+                scorecard_path=scorecard_path,
+                public_summary_path=public_path,
+            )
+        self.assertEqual(errors, [])
 
     def test_public_summary_rejects_current_home_smoke_as_strict_file(self) -> None:
         public = _load_script("generate_public_summary_codex_live_smoke", "scripts/generate-public-benchmark-summary.py")

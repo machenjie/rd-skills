@@ -15,6 +15,7 @@ from typing import Any
 from codex_live_benchmark_lib import (
     AUTH_POLICIES,
     BENCHMARK_MODES,
+    CASE_TIERS,
     MODE_DEFAULT_VARIANTS,
     PROFILES,
     ROOT,
@@ -92,6 +93,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--benchmark", action="append", default=[])
     parser.add_argument("--category", action="append", default=[])
+    parser.add_argument("--tier", action="append", choices=CASE_TIERS, default=[])
     parser.add_argument("--benchmark-mode", choices=BENCHMARK_MODES, default="clean-paired")
     parser.add_argument(
         "--auth-policy",
@@ -134,6 +136,7 @@ def select_cases(
     *,
     benchmarks: list[str],
     categories: list[str],
+    tiers: list[str],
 ) -> list[CodexLiveCase]:
     """Select enabled cases by id or category."""
     selected = [case for case in cases if case.enabled]
@@ -143,6 +146,9 @@ def select_cases(
     if categories:
         requested_categories = set(categories)
         selected = [case for case in selected if case.category in requested_categories]
+    if tiers:
+        requested_tiers = set(tiers)
+        selected = [case for case in selected if case.tier in requested_tiers]
     return selected
 
 
@@ -966,10 +972,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.list:
         for case in cases:
             state = "enabled" if case.enabled else "disabled"
-            print(f"{case.id}\t{state}\tvariants={','.join(case.variants)}")
+            dimensions = ",".join(case.coverage_dimensions)
+            print(f"{case.id}\t{state}\ttier={case.tier}\tcoverage={dimensions}\tvariants={','.join(case.variants)}")
         return 0
 
-    selected = select_cases(cases, benchmarks=args.benchmark, categories=args.category)
+    selected = select_cases(cases, benchmarks=args.benchmark, categories=args.category, tiers=args.tier)
     variants = selected_variants(args)
     if not selected:
         print("run-codex-live-benchmarks: ERROR: no cases selected", file=sys.stderr)

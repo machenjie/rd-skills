@@ -99,8 +99,11 @@ python3 scripts/run-codex-live-benchmarks.py \
 
 This mode runs `baseline_clean`, `skills_only_clean`, and
 `skills_with_hooks_clean` with the same clean auth-borrowing policy. Without a
-`--benchmark` filter it runs all publishable assertion-backed cases, currently
-covering `security`, `backend`, `devex`, `structure`, and `reliability`.
+`--benchmark` or `--tier` filter it runs all enabled cases. Use `--tier core`
+for the strongest current core set, or `--tier level1` for the broader
+assertion-backed coverage expansion. The registry records each case's tier and
+coverage dimensions, and generated summaries include coverage, cost, and
+stability sections.
 Repeated-run evidence should use at least 3 runs per variant. Single-case
 ablation runs are useful pipeline smoke evidence, not broad pass-rate claims.
 
@@ -146,6 +149,13 @@ Artifacts deliberately store bounded metadata:
 - candidate diffs, git status, final answer, and grading logs for the isolated
   starter repository;
 - limitations explaining what was and was not measured.
+
+Committed repository reports publish only sanitized summary artifacts such as
+`reports/codex-live-benchmark-summary.json`, professional scorecards, and public
+benchmark summaries. Per-run directories under `reports/codex-live-runs/` remain
+local-only by default because they can contain candidate diffs, redacted command
+metadata, grading logs, and final messages that are useful for diagnosis but
+not suitable as broad public artifacts without a separate sanitization review.
 
 Do not add cases that require external private paths, network-only resources,
 personal archives, or user-specific corpora.

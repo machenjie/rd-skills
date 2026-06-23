@@ -11,6 +11,7 @@ from statistics import median
 from typing import Any
 
 from codex_live_benchmark_lib import (
+    CASE_TIERS,
     CURRENT_HOME_SMOKE_EVIDENCE_LEVEL,
     LIVE_EVIDENCE_LEVEL,
     MODE_DEFAULT_VARIANTS,
@@ -22,6 +23,7 @@ from codex_live_benchmark_lib import (
     STRICT_AUTH_POLICIES,
     STRICT_BENCHMARK_MODES,
     STRICT_CODEX_ENVIRONMENT_POLICIES,
+    load_case_registry,
     read_json,
     validate_status,
     write_json,
@@ -57,6 +59,7 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
     for variant in variants:
         variants[variant]["delta_vs_baseline_clean"] = deltas.get(f"{variant}_vs_baseline_clean", {})
     cases_summary = _cases_summary(real_results)
+    case_metadata = _case_metadata_by_id()
 
     cases = sorted({str(result.get("case_id")) for result in real_results if result.get("case_id")})
     if not cases and isinstance(manifest.get("cases"), list):
@@ -166,6 +169,9 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         "delta": deltas,
         "cases": cases,
         "cases_summary": cases_summary,
+        "coverage_summary": _coverage_summary(cases, cases_summary, case_metadata),
+        "cost_summary": _cost_summary(real_results, variants),
+        "stability_summary": _stability_summary(real_results, variants, cases_summary, manifest),
         "telemetry": {
             "event_count": sum(int((result.get("metrics") or {}).get("event_count", 0) or 0) for result in real_results),
             "parse_error_count": sum(len((result.get("metrics") or {}).get("parse_errors", [])) for result in real_results),
@@ -179,6 +185,22 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         ),
     }
     return summary
+
+
+def _case_metadata_by_id() -> dict[str, dict[str, Any]]:
+    try:
+        cases = load_case_registry()
+    except Exception:
+        return {}
+    return {
+        case.id: {
+            "tier": case.tier,
+            "coverage_dimensions": list(case.coverage_dimensions),
+            "publishable_for_strict": case.publishable_for_strict,
+            "grading_mode": case.grading_mode,
+        }
+        for case in cases
+    }
 
 
 def _summary_status(manifest: dict[str, Any], results: list[dict[str, Any]]) -> str:
@@ -808,6 +830,113 @@ def _cases_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
     return summary
 
 
+def _coverage_summary(
+    cases: list[str],
+    cases_summary: dict[str, Any],
+    case_metadata: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    tiers: dict[str, int] = {tier: 0 for tier in CASE_TIERS}
+    dimensions: dict[str, int] = {}
+    categories: dict[str, int] = {}
+    publishable_assertion_case_count = 0
+    assertion_case_count = 0
+    telemetry_only_case_count = 0
+    for case_id in cases:
+        metadata = case_metadata.get(case_id, {})
+        tier = str(metadata.get("tier") or "unregistered")
+        tiers[tier] = tiers.get(tier, 0) + 1
+        category = case_id.split("/", 1)[0] if "/" in case_id else "unknown"
+        categories[category] = categories.get(category, 0) + 1
+        for dimension in metadata.get("coverage_dimensions") or [category]:
+            dimension_text = str(dimension)
+            dimensions[dimension_text] = dimensions.get(dimension_text, 0) + 1
+        case_payload = cases_summary.get(case_id)
+        grading_mode = case_payload.get("grading_mode") if isinstance(case_payload, dict) else metadata.get("grading_mode")
+        if grading_mode == "assertion":
+            assertion_case_count += 1
+            if metadata.get("publishable_for_strict") is True:
+                publishable_assertion_case_count += 1
+        elif grading_mode == "telemetry_only":
+            telemetry_only_case_count += 1
+    return {
+        "case_count": len(cases),
+        "assertion_case_count": assertion_case_count,
+        "telemetry_only_case_count": telemetry_only_case_count,
+        "publishable_assertion_case_count": publishable_assertion_case_count,
+        "tiers": {key: value for key, value in sorted(tiers.items()) if value > 0 or key in CASE_TIERS},
+        "categories": dict(sorted(categories.items())),
+        "coverage_dimensions": dict(sorted(dimensions.items())),
+        "unregistered_case_count": sum(1 for case_id in cases if case_id not in case_metadata),
+    }
+
+
+def _cost_summary(results: list[dict[str, Any]], variants: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "result_count": len(results),
+        "total_usage": _total_usage(results),
+        "average_usage_per_result": _average_usage(results),
+        "by_variant": {
+            variant: {
+                "result_count": int(variant_summary.get("result_count", 0) or 0),
+                "total_usage": _total_usage(_results_for_variant(results, variant)),
+                "average_usage_per_result": variant_summary.get("average_usage", {}),
+                "median_usage_per_result": variant_summary.get("median_usage", {}),
+            }
+            for variant, variant_summary in variants.items()
+        },
+        "cost_caveat": "Token usage is parsed local Codex telemetry, not a billing ledger.",
+    }
+
+
+def _stability_summary(
+    results: list[dict[str, Any]],
+    variants: dict[str, dict[str, Any]],
+    cases_summary: dict[str, Any],
+    manifest: dict[str, Any],
+) -> dict[str, Any]:
+    del variants  # Variant stability details are already embedded in cases_summary.
+    result_count = len(results)
+    failure_categories = _counts(results, "failure_category")
+    artifact_status_counts = _counts(results, "artifact_status")
+    grading_status_counts = _counts(results, "grading_status")
+    cell_runs = [
+        int(variant_payload.get("runs", 0) or 0)
+        for case_payload in cases_summary.values()
+        if isinstance(case_payload, dict)
+        for variant_payload in (case_payload.get("variants") or {}).values()
+        if isinstance(variant_payload, dict)
+    ]
+    return {
+        "requested_runs_per_variant": int(manifest.get("runs_per_variant", 0) or 0),
+        "observed_case_variant_cell_count": len(cell_runs),
+        "observed_min_runs_per_case_variant": min(cell_runs) if cell_runs else 0,
+        "observed_max_runs_per_case_variant": max(cell_runs) if cell_runs else 0,
+        "artifact_status_counts": artifact_status_counts,
+        "grading_status_counts": grading_status_counts,
+        "setup_failure_rate": _count_rate(failure_categories, "setup_failed", result_count),
+        "test_suite_failure_rate": _count_rate(failure_categories, "test_suite_failed", result_count),
+        "security_failure_rate": _count_rate(failure_categories, "security_checks_failed", result_count),
+        "codex_exec_failure_rate": _count_rate(failure_categories, "codex_exec_failed", result_count),
+        "not_collected_grading_rate": _count_rate(grading_status_counts, "not_collected", result_count),
+        "contamination_rate": _count_rate(failure_categories, "contaminated", result_count),
+    }
+
+
+def _total_usage(results: list[dict[str, Any]]) -> dict[str, int]:
+    totals = {key: 0 for key in USAGE_KEYS}
+    for result in results:
+        usage = ((result.get("metrics") or {}).get("usage") or {})
+        for key in USAGE_KEYS:
+            totals[key] += int(usage.get(key, 0) or 0)
+    return totals
+
+
+def _count_rate(counts: dict[str, int], key: str, denominator: int) -> float:
+    if denominator <= 0:
+        return 0.0
+    return round(int(counts.get(key, 0) or 0) / denominator, 4)
+
+
 def _common_value(
     manifest: dict[str, Any],
     results: list[dict[str, Any]],
@@ -1017,6 +1146,12 @@ def render_markdown(summary: dict[str, Any]) -> str:
         f"- Benchmark eligible results: `{summary['benchmark_eligible_result_count']}`",
         f"- Telemetry-only results: `{summary['telemetry_only_result_count']}`",
         f"- Contaminated results: `{summary['contaminated_result_count']}`",
+        f"- Coverage tiers: `{summary['coverage_summary']['tiers']}`",
+        f"- Coverage dimensions: `{summary['coverage_summary']['coverage_dimensions']}`",
+        f"- Total input tokens: `{summary['cost_summary']['total_usage']['input_tokens']}`",
+        f"- Total output tokens: `{summary['cost_summary']['total_usage']['output_tokens']}`",
+        f"- Observed min runs per case/variant: `{summary['stability_summary']['observed_min_runs_per_case_variant']}`",
+        f"- Test-suite failure rate: `{summary['stability_summary']['test_suite_failure_rate']}`",
         "",
         "## Variants",
         "",

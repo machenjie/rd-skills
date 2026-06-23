@@ -1058,6 +1058,9 @@ def _professional_focus_lines(context: dict[str, Any]) -> list[str]:
         )
     if "cache" in product_surfaces or "cache-design" in capabilities:
         lines.append(
+            "- Reliability Gate: for Redis/cache stampede work, prove per-key coordination, bounded timeout, jittered TTL, degraded fallback, no live Redis/network dependency, and concurrent local tests before claiming completion."
+        )
+        lines.append(
             "- cache_focus: implement executable local proof for per-key single-flight or short lease, bounded lock timeout, TTL jitter/range, tenant+permission+variant cache key, Redis-down fallback/backpressure, hot/miss/fallback/contention metrics, and deterministic fake cache plus FakeBackend/source-of-truth concurrent tests that assert backend calls == 1; keep local proofs free of network clients, URLs, and live Redis."
         )
     if (
