@@ -264,6 +264,12 @@
     "cases_summary": {
       "type": "object"
     },
+    "logging_summary": {
+      "type": "object"
+    },
+    "process_compliance_summary": {
+      "type": "object"
+    },
     "limitations": {
       "type": "array",
       "items": {

@@ -282,6 +282,10 @@ risk_escalation_triggers:
   - stop without residual risk
   - skipped engineering stage
 quality_gates:
+  - PDD gate
+  - DDD gate
+  - SDD gate
+  - TDD gate
   - requirement gate
   - impact gate
   - domain gate

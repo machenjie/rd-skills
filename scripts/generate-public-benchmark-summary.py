@@ -56,6 +56,7 @@ REFRESH_COMMANDS = [
     "python3 scripts/run-codex-live-benchmarks.py --list",
     "python3 scripts/run-codex-live-benchmarks.py --benchmark-mode ablation --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-ablation-dry-run",
     "python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-ablation-dry-run",
+    "python3 scripts/validate-report-consistency.py",
     "python3 scripts/validate-professionalism-regression.py --strict",
     "python3 scripts/validate-professional-routing-coverage.py",
     "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md",
@@ -647,7 +648,7 @@ def generate_summary(
     status_counts = {status: 0 for status in STATUS_ORDER}
     for item in items:
         status_counts[item.status] += 1
-    evidence_levels = _scorecard_evidence_levels(root, scorecard_path)
+    evidence_levels = _sync_codex_live_evidence_level(_scorecard_evidence_levels(root, scorecard_path), items)
     known_unknowns = _known_unknowns(items, evidence_levels)
     return {
         "schema_version": 1,
@@ -704,6 +705,30 @@ def _known_unknown_name(name: str) -> str:
         CODEX_LIVE_BENCHMARK_DIMENSION: "Codex CLI live benchmark",
     }
     return mapping.get(name, name)
+
+
+def _sync_codex_live_evidence_level(
+    evidence_levels: dict[str, dict[str, str]],
+    items: list[EvidenceItem],
+) -> dict[str, dict[str, str]]:
+    """Keep the public live evidence-level status tied to the live summary item."""
+    synced = {
+        str(level): dict(detail) if isinstance(detail, dict) else {"status": "unknown", "meaning": ""}
+        for level, detail in evidence_levels.items()
+    }
+    codex_item = next((item for item in items if item.name == CODEX_LIVE_BENCHMARK_DIMENSION), None)
+    if codex_item is None:
+        return synced
+    live_level = synced.setdefault(
+        LIVE_EVIDENCE_LEVEL,
+        {
+            "status": "not_collected",
+            "meaning": "Opt-in local Codex CLI benchmark run with sanitized bounded artifacts.",
+        },
+    )
+    live_level["status"] = codex_item.status if codex_item.status in STATUS_ORDER else "unknown"
+    live_level.setdefault("meaning", "Opt-in local Codex CLI benchmark run with sanitized bounded artifacts.")
+    return synced
 
 
 def render_markdown(payload: dict[str, Any]) -> str:

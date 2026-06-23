@@ -173,6 +173,8 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         "coverage_summary": _coverage_summary(cases, cases_summary, case_metadata),
         "cost_summary": _cost_summary(real_results, variants),
         "stability_summary": _stability_summary(real_results, variants, cases_summary, manifest),
+        "logging_summary": _logging_summary(run_dir),
+        "process_compliance_summary": _process_compliance_summary(real_results),
         "telemetry": {
             "event_count": sum(int((result.get("metrics") or {}).get("event_count", 0) or 0) for result in real_results),
             "parse_error_count": sum(len((result.get("metrics") or {}).get("parse_errors", [])) for result in real_results),
@@ -203,6 +205,81 @@ def _case_metadata_by_id() -> dict[str, dict[str, Any]]:
         }
         for case in cases
     }
+
+
+def _logging_summary(run_dir: Path) -> dict[str, Any]:
+    log_paths = [run_dir / "run.log.jsonl", run_dir / "timeline.jsonl"]
+    process_traces = sorted(run_dir.glob("cases/*/*/run-*/process-trace.json"))
+    redaction_errors: list[str] = []
+    max_event_size = 0
+    counts = {"run.log.jsonl": 0, "timeline.jsonl": 0}
+    for path in log_paths:
+        if not path.exists():
+            continue
+        for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            if not line.strip():
+                continue
+            counts[path.name] += 1
+            max_event_size = max(max_event_size, len(line.encode("utf-8")))
+            redaction_errors.extend(_redaction_errors(line))
+    for path in process_traces:
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        max_event_size = max(max_event_size, len(text.encode("utf-8")))
+        redaction_errors.extend(_redaction_errors(text))
+    return {
+        "run_log_events": counts["run.log.jsonl"],
+        "timeline_events": counts["timeline.jsonl"],
+        "process_trace_count": len(process_traces),
+        "redaction_status": "pass" if not redaction_errors else "fail",
+        "max_event_size_bytes": max_event_size,
+    }
+
+
+def _process_compliance_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
+    traces = [_load_process_trace(result) for result in results]
+    traces = [trace for trace in traces if isinstance(trace, dict)]
+    trace_count = len(traces)
+
+    def phase_rate(phase: str) -> float:
+        return _trace_rate(trace_count, sum(1 for trace in traces if (trace.get("phase_status") or {}).get(phase) == "present"))
+
+    def traceability_rate(field: str) -> float:
+        return _trace_rate(trace_count, sum(1 for trace in traces if (trace.get("traceability") or {}).get(field) is True))
+
+    return {
+        "pdd_present_rate": phase_rate("pdd"),
+        "ddd_present_rate": phase_rate("ddd"),
+        "sdd_present_rate": phase_rate("sdd"),
+        "tdd_present_rate": phase_rate("tdd"),
+        "pdd_to_tdd_traceability_rate": traceability_rate("pdd_to_tests"),
+        "ddd_invariant_test_or_code_coverage_rate": traceability_rate("ddd_invariants_to_code_or_tests"),
+        "sdd_public_api_validation_rate": traceability_rate("sdd_public_api_to_tests"),
+        "validation_command_present_rate": _trace_rate(
+            trace_count,
+            sum(1 for trace in traces if trace.get("validation_commands")),
+        ),
+        "process_trace_count": trace_count,
+    }
+
+
+def _load_process_trace(result: dict[str, Any]) -> dict[str, Any] | None:
+    result_dir = result.get("_result_dir")
+    if not isinstance(result_dir, Path):
+        return None
+    trace_path = result_dir / "process-trace.json"
+    payload = read_json(trace_path)
+    return payload if isinstance(payload, dict) else None
+
+
+def _trace_rate(denominator: int, numerator: int) -> float:
+    if denominator <= 0:
+        return 0.0
+    return round(numerator / denominator, 4)
+
+
+def _redaction_errors(text: str) -> list[str]:
+    forbidden = ("/Users/", "/home/", "C:\\Users\\", "auth.json", "CODEX_API_KEY", "OPENAI_API_KEY", "sk-")
+    return [marker for marker in forbidden if marker in text]
 
 
 def _summary_status(manifest: dict[str, Any], results: list[dict[str, Any]]) -> str:
@@ -1513,6 +1590,14 @@ def render_markdown(summary: dict[str, Any]) -> str:
         f"- Test-suite failure rate: `{summary['stability_summary']['test_suite_failure_rate']}`",
         f"- Codex exec retries: `{summary['stability_summary']['codex_exec_retry_count']}`",
         f"- Partial status reasons: `{summary['stability_summary']['partial_status_reasons']}`",
+        f"- Structured log events: `{summary.get('logging_summary', {}).get('run_log_events', 0)}`",
+        f"- Timeline events: `{summary.get('logging_summary', {}).get('timeline_events', 0)}`",
+        f"- Process trace count: `{summary.get('process_compliance_summary', {}).get('process_trace_count', 0)}`",
+        f"- PDD/DDD/SDD/TDD rates: "
+        f"`{summary.get('process_compliance_summary', {}).get('pdd_present_rate', 0.0)}`/"
+        f"`{summary.get('process_compliance_summary', {}).get('ddd_present_rate', 0.0)}`/"
+        f"`{summary.get('process_compliance_summary', {}).get('sdd_present_rate', 0.0)}`/"
+        f"`{summary.get('process_compliance_summary', {}).get('tdd_present_rate', 0.0)}`",
         "",
         "## Variants",
         "",

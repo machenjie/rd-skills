@@ -63,6 +63,15 @@
     "codex_environment_policy": {
       "enum": ["isolated_api_key", "auth_borrowed_clean", "current_home_full"]
     },
+    "run_selection": {
+      "type": "object"
+    },
+    "baseline_reuse_policy": {
+      "enum": ["none", "diagnostic_only"]
+    },
+    "reused_baseline_run_id": {
+      "type": ["string", "null"]
+    },
     "limitations": {
       "type": "array",
       "items": {

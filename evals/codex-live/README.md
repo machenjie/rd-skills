@@ -43,6 +43,7 @@ python3 scripts/run-codex-live-benchmarks.py \
   --out /tmp/changeforge-codex-live-ablation-dry-run
 python3 scripts/validate-codex-live-benchmark-reports.py \
   --run-dir /tmp/changeforge-codex-live-ablation-dry-run
+python3 scripts/validate-report-consistency.py
 ```
 
 ## Clean Auth-Borrowed Strict A/B
@@ -107,6 +108,72 @@ stability sections.
 Repeated-run evidence should use at least 3 runs per variant. Single-case
 ablation runs are useful pipeline smoke evidence, not broad pass-rate claims.
 
+## Long-Running Run Strategy
+
+Use the smallest evidence mode that answers the current release question:
+
+- PR quick mode: deterministic checks plus a core one-run diagnostic.
+- Merge final: `--tier core --runs 3` with all strict variants.
+- Weekly/manual: `--tier level1` diagnostic first, then final if setup and
+  execution failures are clean.
+- Release: extended/full suites only after core and Level 1 evidence are stable.
+
+Selection and recovery flags:
+
+- `--tier core|level1|experimental` selects registered case tiers.
+- `--changed-only` selects cases whose task, starter, grading, or cases registry
+  paths changed.
+- `--failed-only <run-id-or-dir>` and `--rerun-failures-from <run-id-or-dir>`
+  select failed case/variant/run cells from a previous run and mark the run as
+  diagnostic selection metadata.
+- `--max-cases N` limits selected cases for diagnostics.
+- `--max-runtime-minutes N` stops launching new cells after the budget.
+- `--case-shard INDEX/TOTAL` partitions sorted case ids deterministically;
+  variants remain balanced within each selected case.
+- `--resume-run <run-dir>` reuses a run directory and skips cells that already
+  have `result.json`.
+- `--parallel-cases N` is recorded for governance, but this runner executes
+  serially in-process; use shards for external parallel execution.
+
+Final strict runs do not reuse baselines. Diagnostic runs may record
+`baseline_reuse_policy`, but the default and current final policy is `none`.
+
+## Level 1 Diagnostic
+
+Level 1 cases are assertion-backed coverage expansion and must not dilute core
+pass claims. Run Level 1 separately after the core summary is pass/positive:
+
+```bash
+CHANGEFORGE_ENABLE_CODEX_LIVE_BENCHMARK=1 \
+python3 scripts/run-codex-live-benchmarks.py \
+  --benchmark-mode ablation \
+  --auth-policy borrow-current \
+  --tier level1 \
+  --runs 1 \
+  --profile recommended \
+  --sandbox workspace-write \
+  --out reports/codex-live-runs/ablation-level1-diagnostic-$(date +%Y%m%d-%H%M%S) \
+  --publish-summary
+```
+
+Only claim Level 1 coverage after actual Level 1 results exist in the summary;
+coverage summaries distinguish registered cases from actual run cases.
+
+## Structured Logs and Process Traces
+
+Live and dry-run directories include sanitized run-level logs:
+
+- `run.log.jsonl`
+- `timeline.jsonl`
+
+Live result cells include `process-trace.json` with compact PDD, DDD, SDD, TDD,
+implementation, validation, and review status. Validate these artifacts with:
+
+```bash
+python3 scripts/validate-codex-live-logs.py --run-dir <run-dir>
+python3 scripts/validate-process-traces.py --run-dir <run-dir>
+```
+
 ## Current-Home Smoke Example
 
 Run current-home smoke only to verify the real installed local Codex
@@ -150,12 +217,14 @@ Artifacts deliberately store bounded metadata:
   starter repository;
 - limitations explaining what was and was not measured.
 
-Committed repository reports publish only sanitized summary artifacts such as
+Published summaries are committed; detailed per-run artifacts remain local-only
+for privacy. Use sanitized artifact export manually when needed. Committed
+repository reports publish only sanitized summary artifacts such as
 `reports/codex-live-benchmark-summary.json`, professional scorecards, and public
 benchmark summaries. Per-run directories under `reports/codex-live-runs/` remain
 local-only by default because they can contain candidate diffs, redacted command
-metadata, grading logs, and final messages that are useful for diagnosis but
-not suitable as broad public artifacts without a separate sanitization review.
+metadata, grading logs, and final messages that are useful for diagnosis but not
+suitable as broad public artifacts without a separate sanitization review.
 
 Do not add cases that require external private paths, network-only resources,
 personal archives, or user-specific corpora.

@@ -12,6 +12,10 @@ an action hook needs a compact reminder.
 - Read only the selected capability references needed for the current risk.
 - Before editing code, identify setup/test entrypoints, public API, reuse
   candidates, and the owning object/module.
+- Apply compact PDD -> DDD -> SDD -> TDD gates before implementation: PDD
+  acceptance criteria/constraints/non-goals; DDD invariants and side-effect
+  boundaries; SDD public API/module/failure/logging/security/performance
+  constraints; TDD validation mapped to those facts.
 - Preserve setup and test harness scripts unless the task explicitly requires a
   change. Keep setup runnable from the candidate root, compatible with
   environment-provided roots, and free of external network or HOME/CODEX_HOME

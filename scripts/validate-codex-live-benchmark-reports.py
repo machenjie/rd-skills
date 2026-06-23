@@ -80,6 +80,9 @@ def validate_run_dir(run_dir: Path) -> list[str]:
         for summary_file in ("summary.json", "summary.md"):
             if not (run_dir / summary_file).exists():
                 errors.append(f"live run manifest is missing {summary_file}")
+        for log_file in ("run.log.jsonl", "timeline.jsonl"):
+            if not (run_dir / log_file).exists():
+                errors.append(f"live run manifest is missing {log_file}")
     if (run_dir / "summary.json").exists():
         errors.extend(f"summary.json: {error}" for error in validate_summary(run_dir / "summary.json", publishable=False))
     for result_path in result_paths:
@@ -100,6 +103,8 @@ def validate_run_dir(run_dir: Path) -> list[str]:
             for rel_file in REAL_RESULT_REQUIRED_FILES:
                 if not (case_dir / rel_file).exists():
                     errors.append(f"{case_dir}: missing required result artifact {rel_file}")
+            if not (case_dir / "process-trace.json").exists():
+                errors.append(f"{case_dir}: missing required result artifact process-trace.json")
             grading_payload = read_json(case_dir / "grading" / "grading-result.json")
             if not isinstance(grading_payload, dict):
                 errors.append(f"{case_dir}: grading/grading-result.json must be JSON object")
@@ -239,6 +244,21 @@ def _derived_live_report_errors(
     if summary.get("effect_verdict") == "positive" and detail.get("effect_verdict") != "positive":
         errors.append(f"{report_kind} cannot reference a non-positive live result when summary effect_verdict is positive")
     if report_kind == "public summary":
+        for field in ("benchmark_passed_result_count", "benchmark_eligible_result_count"):
+            if detail.get(field) != summary.get(field):
+                errors.append(
+                    f"public summary {CODEX_LIVE_BENCHMARK_NAME} detail {field} "
+                    f"{detail.get(field)!r} does not match summary {summary.get(field)!r}"
+                )
+        detail_hooks_rate = _variant_pass_rate(detail, "skills_with_hooks_clean")
+        summary_hooks_rate = _variant_pass_rate(summary, "skills_with_hooks_clean")
+        if detail_hooks_rate != summary_hooks_rate:
+            errors.append(
+                f"public summary {CODEX_LIVE_BENCHMARK_NAME} detail "
+                f"skills_with_hooks_clean.pass_rate {detail_hooks_rate!r} "
+                f"does not match summary {summary_hooks_rate!r}"
+            )
+    if report_kind == "public summary":
         evidence_level = (report.get("evidence_levels") or {}).get(CODEX_LIVE_EVIDENCE_KEY)
         evidence_status = evidence_level.get("status") if isinstance(evidence_level, dict) else None
         if evidence_status != expected_status:
@@ -292,6 +312,14 @@ def _load_item_detail(item: dict[str, Any], report_kind: str) -> dict[str, Any] 
     except json.JSONDecodeError:
         return None
     return payload if isinstance(payload, dict) else None
+
+
+def _variant_pass_rate(payload: dict[str, Any], variant: str) -> Any:
+    variants = payload.get("variants")
+    variant_payload = variants.get(variant) if isinstance(variants, dict) else None
+    if not isinstance(variant_payload, dict):
+        return None
+    return variant_payload.get("pass_rate")
 
 
 def _strict_summary_errors(summary: dict[str, Any]) -> list[str]:
@@ -505,6 +533,10 @@ def _summary_structure_errors(summary: dict[str, Any]) -> list[str]:
     errors.extend(_coverage_summary_errors(summary.get("coverage_summary")))
     errors.extend(_cost_summary_errors(summary.get("cost_summary")))
     errors.extend(_stability_summary_errors(summary.get("stability_summary")))
+    if "logging_summary" in summary:
+        errors.extend(_logging_summary_errors(summary.get("logging_summary")))
+    if "process_compliance_summary" in summary:
+        errors.extend(_process_compliance_summary_errors(summary.get("process_compliance_summary")))
     variants = summary.get("variants")
     if not isinstance(variants, dict):
         errors.append("summary variants must be an object")
@@ -794,6 +826,42 @@ def _stability_summary_errors(payload: Any) -> list[str]:
         value = payload.get(field)
         if not isinstance(value, int | float) or value < 0 or value > 1:
             errors.append(f"summary stability_summary.{field} must be a numeric rate from 0 to 1")
+    return errors
+
+
+def _logging_summary_errors(payload: Any) -> list[str]:
+    if not isinstance(payload, dict):
+        return ["summary logging_summary must be an object"]
+    errors: list[str] = []
+    for field in ("run_log_events", "timeline_events", "process_trace_count", "max_event_size_bytes"):
+        value = payload.get(field)
+        if not isinstance(value, int) or value < 0:
+            errors.append(f"summary logging_summary.{field} must be a non-negative integer")
+    if payload.get("redaction_status") not in {"pass", "fail"}:
+        errors.append("summary logging_summary.redaction_status must be pass or fail")
+    return errors
+
+
+def _process_compliance_summary_errors(payload: Any) -> list[str]:
+    if not isinstance(payload, dict):
+        return ["summary process_compliance_summary must be an object"]
+    errors: list[str] = []
+    for field in (
+        "pdd_present_rate",
+        "ddd_present_rate",
+        "sdd_present_rate",
+        "tdd_present_rate",
+        "pdd_to_tdd_traceability_rate",
+        "ddd_invariant_test_or_code_coverage_rate",
+        "sdd_public_api_validation_rate",
+        "validation_command_present_rate",
+    ):
+        value = payload.get(field)
+        if not isinstance(value, int | float) or value < 0 or value > 1:
+            errors.append(f"summary process_compliance_summary.{field} must be a numeric rate from 0 to 1")
+    trace_count = payload.get("process_trace_count")
+    if not isinstance(trace_count, int) or trace_count < 0:
+        errors.append("summary process_compliance_summary.process_trace_count must be a non-negative integer")
     return errors
 
 

@@ -18,11 +18,13 @@ stages:
       - refactoring
       - release
     required_evidence:
+      - PDD acceptance criteria
       - clarified scope
       - explicit non-goals
       - testable acceptance signal
       - clarification status before action
     required_quality_gates:
+      - PDD gate
       - requirement gate
     allowed_next_stages:
       - architecture-design
@@ -52,12 +54,14 @@ stages:
       - coding
       - test authoring
     required_evidence:
+      - DDD domain invariants
       - boundary owners
       - dependency direction
       - rejected alternatives
       - simplicity ladder result when extensibility or stack complexity is proposed
       - reversibility classification
     required_quality_gates:
+      - DDD gate
       - architecture gate
     allowed_next_stages:
       - implementation-planning
@@ -92,6 +96,7 @@ stages:
       - release
       - deep performance profiling
     required_evidence:
+      - SDD public API and module placement
       - target boundaries inspected before plan
       - repository context map with owning surface and caller/callee evidence
       - reuse candidates
@@ -102,6 +107,7 @@ stages:
       - test placement
       - TDD or validation signal
     required_quality_gates:
+      - SDD gate
       - implementation gate
     allowed_next_stages:
       - coding
@@ -131,6 +137,7 @@ stages:
       - release
       - full regression suite design
     required_evidence:
+      - PDD/DDD/SDD/TDD traceability
       - inspected implementation context
       - TDD or validation signal before code
       - idiomatic implementation
@@ -140,6 +147,7 @@ stages:
       - deleted or rejected complexity
       - tool permission and sandbox classification when risky tools or commands are used
     required_quality_gates:
+      - TDD gate
       - implementation gate
     allowed_next_stages:
       - testing
@@ -305,6 +313,7 @@ stages:
       - architecture redesign
       - coding of new features
     required_evidence:
+      - validation commands mapped to PDD/DDD/SDD
       - risk-based layer selection
       - deterministic data
       - observable-behavior assertions

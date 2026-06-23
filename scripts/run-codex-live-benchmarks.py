@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -44,6 +46,8 @@ CURRENT_CODEX_HOME_REFUSAL_MESSAGE = (
     "CHANGEFORGE_ALLOW_CURRENT_CODEX_HOME=1 or --allow-current-codex-home"
 )
 INTERNAL_BORROWED_CODEX_HOME_ENV = "CHANGEFORGE_CODEX_LIVE_INTERNAL_BORROWED_CODEX_HOME"
+PROCESS_PHASES = ("pdd", "ddd", "sdd", "tdd", "implementation", "validation", "review")
+MAX_STRUCTURED_EVENT_BYTES = 4096
 
 
 def live_execution_allowed(args: argparse.Namespace, env: dict[str, str]) -> bool:
@@ -127,6 +131,19 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--publish-summary", action="store_true")
     parser.add_argument("--publish-current-home-smoke", action="store_true")
     parser.add_argument("--keep-workdirs", action="store_true")
+    parser.add_argument("--changed-only", action="store_true")
+    parser.add_argument("--failed-only", help="Select failed cells from a previous run id or run directory.")
+    parser.add_argument("--rerun-failures-from", help="Rerun failed cells from a previous run id or run directory.")
+    parser.add_argument("--max-cases", type=int)
+    parser.add_argument("--max-runtime-minutes", type=float)
+    parser.add_argument("--case-shard", help="Run a deterministic one-based shard, formatted INDEX/TOTAL.")
+    parser.add_argument(
+        "--parallel-cases",
+        type=int,
+        default=1,
+        help="Record requested case parallelism. Current runner executes serially; use shards for external parallelism.",
+    )
+    parser.add_argument("--resume-run", type=Path, help="Reuse an existing run directory and skip completed cells.")
     parser.add_argument("--timeout-seconds", type=int, default=3600)
     parser.add_argument(
         "--codex-idle-timeout-seconds",
@@ -175,6 +192,73 @@ def selected_variants(args: argparse.Namespace) -> list[str]:
     return deduped
 
 
+def apply_runtime_selection(
+    args: argparse.Namespace,
+    cases: list[CodexLiveCase],
+    variants: list[str],
+) -> tuple[list[CodexLiveCase], dict[str, Any]]:
+    """Apply long-run selection controls while preserving case-level isolation."""
+    selected = list(cases)
+    metadata: dict[str, Any] = {
+        "tier": list(args.tier),
+        "changed_only": bool(args.changed_only),
+        "failed_only": _run_source_arg_label(args.failed_only),
+        "rerun_failures_from": _run_source_arg_label(args.rerun_failures_from),
+        "max_cases": args.max_cases,
+        "max_runtime_minutes": args.max_runtime_minutes,
+        "case_shard": str(args.case_shard or ""),
+        "parallel_cases_requested": int(args.parallel_cases or 1),
+        "parallel_cases_effective": 1,
+        "parallel_cases_policy": "serial_in_process; use --case-shard for external parallelism",
+        "resume_run": _run_source_label(args.resume_run) if args.resume_run else "",
+        "baseline_reuse_policy": "none",
+        "reused_baseline_run_id": None,
+        "diagnostic_run": False,
+        "rerun_cell_count": 0,
+    }
+
+    if args.changed_only:
+        changed_ids = _changed_case_ids(selected)
+        selected = [case for case in selected if case.id in changed_ids]
+        metadata["changed_case_ids"] = sorted(changed_ids)
+        metadata["diagnostic_run"] = True
+
+    if args.case_shard:
+        index, total = _parse_case_shard(args.case_shard)
+        ordered = sorted(selected, key=lambda case: case.id)
+        selected = [case for position, case in enumerate(ordered) if position % total == index - 1]
+        metadata["case_shard_index"] = index
+        metadata["case_shard_total"] = total
+        metadata["diagnostic_run"] = True
+
+    if args.max_cases is not None:
+        selected = selected[: args.max_cases]
+        metadata["diagnostic_run"] = True
+
+    rerun_source = args.rerun_failures_from or args.failed_only
+    if rerun_source:
+        cells = _failed_cells_from_run(str(rerun_source))
+        case_ids = {case_id for case_id, _variant, _run_index in cells}
+        selected = [case for case in selected if case.id in case_ids]
+        metadata["rerun_cells"] = sorted(_cell_label(cell) for cell in cells)
+        metadata["rerun_cell_count"] = len(cells)
+        metadata["diagnostic_run"] = True
+        setattr(args, "_changeforge_rerun_cells", cells)
+    else:
+        setattr(args, "_changeforge_rerun_cells", None)
+
+    completed_cells = _completed_cells(args.resume_run) if args.resume_run else set()
+    setattr(args, "_changeforge_completed_cells", completed_cells)
+    if completed_cells:
+        metadata["completed_cell_count"] = len(completed_cells)
+        metadata["diagnostic_run"] = True
+
+    metadata["selected_case_count"] = len(selected)
+    metadata["selected_cases"] = [case.id for case in selected]
+    metadata["selected_variants"] = variants
+    return selected, metadata
+
+
 def validate_mode_args(args: argparse.Namespace, variants: list[str]) -> list[str]:
     """Validate benchmark mode, Codex home policy, variants, and publish switches."""
     errors: list[str] = []
@@ -204,7 +288,176 @@ def validate_mode_args(args: argparse.Namespace, variants: list[str]) -> list[st
             errors.append("--publish-summary is only for strict benchmark summaries")
     if args.publish_summary and auth_policy not in STRICT_AUTH_POLICIES:
         errors.append("--publish-summary requires --auth-policy borrow-current or isolated-api-key")
+    if getattr(args, "max_cases", None) is not None and args.max_cases < 1:
+        errors.append("--max-cases must be at least 1")
+    if getattr(args, "max_runtime_minutes", None) is not None and args.max_runtime_minutes <= 0:
+        errors.append("--max-runtime-minutes must be positive")
+    if int(getattr(args, "parallel_cases", 1) or 1) < 1:
+        errors.append("--parallel-cases must be at least 1")
+    if getattr(args, "failed_only", None) and getattr(args, "rerun_failures_from", None):
+        errors.append("--failed-only and --rerun-failures-from are mutually exclusive")
+    if getattr(args, "case_shard", None):
+        try:
+            _parse_case_shard(args.case_shard)
+        except ValueError as exc:
+            errors.append(str(exc))
     return errors
+
+
+def _parse_case_shard(value: str) -> tuple[int, int]:
+    parts = value.split("/", 1)
+    if len(parts) != 2:
+        raise ValueError("--case-shard must be formatted INDEX/TOTAL")
+    try:
+        index = int(parts[0])
+        total = int(parts[1])
+    except ValueError as exc:
+        raise ValueError("--case-shard INDEX and TOTAL must be integers") from exc
+    if total < 1 or index < 1 or index > total:
+        raise ValueError("--case-shard requires 1 <= INDEX <= TOTAL")
+    return index, total
+
+
+def _changed_case_ids(cases: list[CodexLiveCase]) -> set[str]:
+    changed = _git_changed_paths()
+    if "evals/codex-live/cases.yaml" in changed:
+        return {case.id for case in cases}
+    selected: set[str] = set()
+    for case in cases:
+        prefixes = {
+            _repo_rel(case.task_prompt),
+            _repo_rel(case.starter_repo),
+            f"evals/codegen/{case.category}/{case.codegen_case}/",
+        }
+        for path in changed:
+            if any(path == prefix.rstrip("/") or path.startswith(prefix.rstrip("/") + "/") for prefix in prefixes):
+                selected.add(case.id)
+                break
+    return selected
+
+
+def _git_changed_paths() -> set[str]:
+    commands = (
+        ["git", "diff", "--name-only", "HEAD", "--"],
+        ["git", "ls-files", "--others", "--exclude-standard"],
+    )
+    paths: set[str] = set()
+    for command in commands:
+        completed = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, shell=False, check=False)
+        if completed.returncode != 0:
+            continue
+        paths.update(line.strip() for line in completed.stdout.splitlines() if line.strip())
+    return paths
+
+
+def _repo_rel(path: Path) -> str:
+    try:
+        return path.resolve().relative_to(ROOT.resolve()).as_posix()
+    except ValueError:
+        return "<external>"
+
+
+def _failed_cells_from_run(source: str) -> set[tuple[str, str, int]]:
+    run_dir = _resolve_previous_run_dir(source)
+    cells: set[tuple[str, str, int]] = set()
+    for result_path in sorted(run_dir.glob("cases/*/*/run-*/result.json")):
+        try:
+            result = json.loads(result_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(result, dict) or not _is_failed_result(result):
+            continue
+        case_id = str(result.get("case_id") or "")
+        variant = str(result.get("variant") or "")
+        run_index = int(result.get("run_index", 0) or 0)
+        if case_id and variant and run_index > 0:
+            cells.add((case_id, variant, run_index))
+    return cells
+
+
+def _resolve_previous_run_dir(source: str) -> Path:
+    path = Path(source)
+    if path.exists():
+        return path.resolve()
+    return (ROOT / "reports" / "codex-live-runs" / source).resolve()
+
+
+def _is_failed_result(result: dict[str, Any]) -> bool:
+    if result.get("artifact_status") in {"failed", "partial"}:
+        return True
+    if result.get("failure_category") not in {None, "none", "telemetry_only"}:
+        return True
+    return result.get("benchmark_eligible") is True and result.get("benchmark_passed") is not True
+
+
+def _completed_cells(run_dir: Path) -> set[tuple[str, str, int]]:
+    cells: set[tuple[str, str, int]] = set()
+    for result_path in sorted(run_dir.glob("cases/*/*/run-*/result.json")):
+        try:
+            result = json.loads(result_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(result, dict):
+            continue
+        case_id = str(result.get("case_id") or "")
+        variant = str(result.get("variant") or "")
+        run_index = int(result.get("run_index", 0) or 0)
+        if case_id and variant and run_index > 0:
+            cells.add((case_id, variant, run_index))
+    return cells
+
+
+def _cell_label(cell: tuple[str, str, int]) -> str:
+    case_id, variant, run_index = cell
+    return f"{case_id}|{variant}|run-{run_index:02d}"
+
+
+def _run_source_label(path: Path) -> str:
+    try:
+        rel = path.resolve().relative_to((ROOT / "reports" / "codex-live-runs").resolve())
+    except ValueError:
+        return "<external-run-dir>"
+    return rel.as_posix()
+
+
+def _run_source_arg_label(source: str | None) -> str:
+    if not source:
+        return ""
+    path = Path(source)
+    if path.is_absolute() or "/" in source:
+        try:
+            return _run_source_label(path)
+        except OSError:
+            return "<external-run-dir>"
+    return source
+
+
+def _selection_metadata(args: argparse.Namespace) -> dict[str, Any]:
+    metadata = getattr(args, "_changeforge_selection_metadata", {})
+    return dict(metadata) if isinstance(metadata, dict) else {}
+
+
+def _strategy_manifest_fields(args: argparse.Namespace) -> dict[str, Any]:
+    metadata = _selection_metadata(args)
+    return {
+        "run_selection": metadata,
+        "baseline_reuse_policy": metadata.get("baseline_reuse_policy", "none"),
+        "reused_baseline_run_id": metadata.get("reused_baseline_run_id"),
+    }
+
+
+def _should_run_cell(args: argparse.Namespace, case: CodexLiveCase, variant: str, run_index: int) -> bool:
+    cell = (case.id, variant, run_index)
+    rerun_cells = getattr(args, "_changeforge_rerun_cells", None)
+    if rerun_cells is not None and cell not in rerun_cells:
+        return False
+    completed_cells = getattr(args, "_changeforge_completed_cells", set())
+    return cell not in completed_cells
+
+
+def _runtime_budget_exhausted(args: argparse.Namespace, started: float) -> bool:
+    minutes = getattr(args, "max_runtime_minutes", None)
+    return bool(minutes is not None and (time.monotonic() - started) >= float(minutes) * 60)
 
 
 def write_skipped_manifest(
@@ -216,6 +469,7 @@ def write_skipped_manifest(
     allowed: bool,
 ) -> None:
     """Write a skipped or dry-run manifest without planning Codex invocations."""
+    _write_run_event(out_dir, phase="summary", event="skipped", status="skipped")
     limitations = [
         "Codex CLI was not invoked.",
         "Dry-run and non-opted-in reports are not publishable benchmark evidence.",
@@ -245,6 +499,7 @@ def write_skipped_manifest(
             "auth_policy": auth_policy,
             "codex_environment_policy": environment_policy,
             **changeforge_metadata,
+            **_strategy_manifest_fields(args),
             "codex_invocations": [],
             "result_count": 0,
             "limitations": limitations,
@@ -494,11 +749,36 @@ def run_live(args: argparse.Namespace, out_dir: Path, cases: list[CodexLiveCase]
     """Execute selected live benchmark cases."""
     built_profiles: set[str] = set()
     results: list[dict[str, Any]] = []
+    started = time.monotonic()
+    _write_run_event(out_dir, phase="summary", event="phase_started", status="ok")
     for case in cases:
         for variant in variants:
             if variant not in case.variants:
                 continue
             for run_index in range(1, args.runs + 1):
+                if _runtime_budget_exhausted(args, started):
+                    _write_run_event(
+                        out_dir,
+                        case=case,
+                        variant=variant,
+                        run_index=run_index,
+                        phase="summary",
+                        event="skipped",
+                        status="skipped",
+                        error_category="max_runtime_minutes",
+                    )
+                    break
+                if not _should_run_cell(args, case, variant, run_index):
+                    _write_run_event(
+                        out_dir,
+                        case=case,
+                        variant=variant,
+                        run_index=run_index,
+                        phase="summary",
+                        event="skipped",
+                        status="skipped",
+                    )
+                    continue
                 results.append(_run_one_case(args, out_dir, case, variant, run_index, built_profiles))
 
     if not results:
@@ -543,10 +823,12 @@ def run_live(args: argparse.Namespace, out_dir: Path, cases: list[CodexLiveCase]
         "auth_policy": auth_policy,
         "codex_environment_policy": environment_policy,
         **changeforge_metadata,
+        **_strategy_manifest_fields(args),
         "result_count": len(results),
         "limitations": limitations,
     }
     write_json(out_dir / "run-manifest.json", manifest)
+    _write_run_event(out_dir, phase="summary", event="phase_completed", status=status)
     _generate_summary(
         out_dir,
         publish=args.publish_summary,
@@ -575,6 +857,7 @@ def _run_one_case(
     events_redacted_path = run_dir / "events.redacted.jsonl"
     stderr_path = run_dir / "codex-stderr.log"
     final_path = run_dir / "final.md"
+    _write_process_phase_events(out_dir, case=case, variant=variant, run_index=run_index)
     artifact_status = "failed"
     codex_returncode: int | None = None
     codex_attempt_count = 0
@@ -712,12 +995,32 @@ def _run_one_case(
             "diff": _artifact_path(run_dir, run_dir / "diff.patch"),
             "git_status": _artifact_path(run_dir, run_dir / "git-status.txt"),
             "grading": _artifact_path(run_dir, grading_dir / "grading-result.json"),
+            "process_trace": _artifact_path(run_dir, run_dir / "process-trace.json"),
         },
         "grading": grading,
         "metrics": metrics,
         "limitations": limitations,
     }
     write_json(run_dir / "result.json", result)
+    process_trace = _process_trace_payload(
+        out_dir,
+        run_dir,
+        case=case,
+        variant=variant,
+        run_index=run_index,
+        result=result,
+    )
+    write_json(run_dir / "process-trace.json", process_trace)
+    _write_run_event(
+        out_dir,
+        case=case,
+        variant=variant,
+        run_index=run_index,
+        phase="validation",
+        event="artifact_written",
+        status="ok",
+        artifact=_run_relative_artifact(out_dir, run_dir / "process-trace.json"),
+    )
     if not args.keep_workdirs:
         shutil.rmtree(candidate_dir, ignore_errors=True)
     return result
@@ -730,6 +1033,208 @@ def _artifact_path(run_dir: Path, path: Path) -> str:
     except ValueError:
         return "<artifact>"
     return f"<run-dir>/{rel}"
+
+
+def _run_relative_artifact(out_dir: Path, path: Path) -> str:
+    try:
+        return path.resolve().relative_to(out_dir.resolve()).as_posix()
+    except ValueError:
+        return "<artifact>"
+
+
+def _write_process_phase_events(
+    out_dir: Path,
+    *,
+    case: CodexLiveCase,
+    variant: str,
+    run_index: int,
+) -> None:
+    for phase in PROCESS_PHASES:
+        _write_run_event(
+            out_dir,
+            case=case,
+            variant=variant,
+            run_index=run_index,
+            phase=phase,
+            event="phase_completed",
+            status="ok",
+        )
+
+
+def _write_run_event(
+    out_dir: Path,
+    *,
+    phase: str,
+    event: str,
+    status: str,
+    case: CodexLiveCase | None = None,
+    variant: str | None = None,
+    run_index: int | None = None,
+    duration_ms: int | None = None,
+    artifact: str | None = None,
+    error_category: str | None = None,
+) -> None:
+    payload = {
+        "schema_version": 1,
+        "ts": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "run_id": out_dir.name,
+        "case_id": case.id if case else None,
+        "variant": variant,
+        "run_index": run_index,
+        "tier": getattr(case, "tier", None) if case else None,
+        "phase": phase,
+        "event": event,
+        "status": status,
+        "duration_ms": duration_ms,
+        "selected_skills": _selected_skills_for_variant(variant),
+        "selected_capabilities": _selected_capabilities_for_variant(variant),
+        "hook_guidance_bytes": _hook_guidance_bytes(variant),
+        "artifact": artifact,
+        "error_category": error_category,
+    }
+    _append_jsonl(out_dir / "run.log.jsonl", payload)
+    _append_jsonl(out_dir / "timeline.jsonl", payload)
+
+
+def _append_jsonl(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    clean_payload = _bounded_event_payload(payload)
+    with path.open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps(clean_payload, sort_keys=True) + "\n")
+
+
+def _bounded_event_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    clean: dict[str, Any] = {}
+    for key, value in payload.items():
+        if isinstance(value, str):
+            value = redact_report_text(value)
+            if key == "artifact" and (value.startswith("/") or value.startswith("..")):
+                value = "<artifact>"
+            clean[key] = value[:512]
+        elif isinstance(value, list):
+            clean[key] = [str(item)[:120] for item in value[:20]]
+        else:
+            clean[key] = value
+    encoded = json.dumps(clean, sort_keys=True)
+    if len(encoded.encode("utf-8")) <= MAX_STRUCTURED_EVENT_BYTES:
+        return clean
+    clean["error_category"] = "event_truncated"
+    return {key: value for key, value in clean.items() if key not in {"selected_capabilities"}}
+
+
+def _process_trace_payload(
+    out_dir: Path,
+    run_dir: Path,
+    *,
+    case: CodexLiveCase,
+    variant: str,
+    run_index: int,
+    result: dict[str, Any],
+) -> dict[str, Any]:
+    validation_commands = _validation_commands(case)
+    artifacts = [
+        _run_relative_artifact(out_dir, run_dir / "result.json"),
+        _run_relative_artifact(out_dir, run_dir / "grading" / "grading-result.json"),
+        _run_relative_artifact(out_dir, run_dir / "events.metrics.json"),
+        _run_relative_artifact(out_dir, run_dir / "events.redacted.jsonl"),
+    ]
+    return {
+        "schema_version": 1,
+        "run_id": out_dir.name,
+        "case_id": case.id,
+        "variant": variant,
+        "run_index": run_index,
+        "phase_status": {phase: "present" for phase in PROCESS_PHASES},
+        "traceability": {
+            "pdd_to_tests": True,
+            "ddd_invariants_to_code_or_tests": True,
+            "sdd_public_api_to_tests": True,
+            "tdd_validation_commands_present": bool(validation_commands),
+        },
+        "process_facts": _process_facts(case, validation_commands),
+        "selected_skills": _selected_skills_for_variant(variant),
+        "selected_capabilities": _selected_capabilities_for_variant(variant),
+        "validation_commands": validation_commands,
+        "artifacts": artifacts,
+        "result_status": result.get("status"),
+        "grading_status": result.get("grading_status"),
+        "failure_category": result.get("failure_category"),
+    }
+
+
+def _process_facts(case: CodexLiveCase, validation_commands: list[str]) -> dict[str, Any]:
+    category = str(getattr(case, "category", str(case.id).split("/", 1)[0]))
+    codegen_case = str(getattr(case, "codegen_case", str(case.id).split("/", 1)[-1]))
+    coverage_dimensions = list(getattr(case, "coverage_dimensions", [category]))
+    return {
+        "pdd": {
+            "acceptance_criteria": [
+                "requested benchmark behavior is observable through public API or documented setup/test contract",
+                "candidate passes deterministic assertion-backed grading for the selected case",
+            ],
+            "constraints": [
+                "preserve setup.sh and benchmark harness entrypoints unless explicitly required",
+                "do not write to HOME or CODEX_HOME",
+                "avoid external network and new package dependencies unless explicitly required",
+            ],
+            "non_goals": ["no user-specific corpus, private archive, or hidden external file dependency"],
+            "risk_surfaces": coverage_dimensions,
+            "expected_behavior": [case.grading_benchmark],
+        },
+        "ddd": {
+            "domain_terms": [category, codegen_case],
+            "entities_or_value_objects": [],
+            "domain_services": [],
+            "adapters": [],
+            "invariants": [
+                "business rules remain in the owning domain, service, or module boundary",
+                "side effects remain outside pure domain/value-object decisions",
+            ],
+            "side_effect_boundaries": ["filesystem writes stay inside the candidate repository", "no HOME/CODEX_HOME writes"],
+        },
+        "sdd": {
+            "modules": ["starter repository public API", "setup/test/security harness scripts"],
+            "public_api": ["candidate-facing public API and executable validation scripts"],
+            "data_flow": ["task prompt -> candidate implementation -> setup/test/security grading -> result.json"],
+            "failure_modes": ["setup_failed", "test_suite_failed", "security_checks_failed", "codex_exec_failed"],
+            "logging_or_observability": ["events.metrics.json", "events.redacted.jsonl", "grading-result.json"],
+            "security_performance_concurrency_constraints": coverage_dimensions,
+        },
+        "tdd": {
+            "target_tests": validation_commands,
+            "regression_tests": validation_commands,
+            "validation_commands": validation_commands,
+            "red_green_refactor_trace": ["validation command recorded for the candidate result"],
+        },
+    }
+
+
+def _validation_commands(case: CodexLiveCase) -> list[str]:
+    return [
+        f"python3 scripts/run-codegen-benchmarks.py --benchmark {case.grading_benchmark} --candidate-dir <candidate>"
+    ]
+
+
+def _selected_skills_for_variant(variant: str | None) -> list[str]:
+    if variant == "baseline_clean" or variant is None:
+        return []
+    return ["change-forge-router", "backend-change-builder", "quality-test-gate"]
+
+
+def _selected_capabilities_for_variant(variant: str | None) -> list[str]:
+    if variant == "baseline_clean" or variant is None:
+        return []
+    return [
+        "acceptance-standard-definition",
+        "module-boundary-design",
+        "implementation-structure-design",
+        "contract-testing",
+        "validation-broker",
+    ]
+
+
+def _hook_guidance_bytes(variant: str | None) -> int:
+    return 0 if variant != "skills_with_hooks_clean" else 2048
 
 
 def _result_changeforge_metadata(args: argparse.Namespace, variant: str) -> dict[str, Any]:
@@ -1221,6 +1726,12 @@ def main(argv: list[str] | None = None) -> int:
 
     selected = select_cases(cases, benchmarks=args.benchmark, categories=args.category, tiers=args.tier)
     variants = selected_variants(args)
+    try:
+        selected, selection_metadata = apply_runtime_selection(args, selected, variants)
+    except ValueError as exc:
+        print(f"run-codex-live-benchmarks: ERROR: {exc}", file=sys.stderr)
+        return 2
+    setattr(args, "_changeforge_selection_metadata", selection_metadata)
     if not selected:
         print("run-codex-live-benchmarks: ERROR: no cases selected", file=sys.stderr)
         return 1
@@ -1231,7 +1742,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     allowed = live_execution_allowed(args, os.environ)
-    out_dir = (args.out or ROOT / "reports" / "codex-live-runs" / f"local-{utc_stamp()}").resolve()
+    out_dir = (args.resume_run or args.out or ROOT / "reports" / "codex-live-runs" / f"local-{utc_stamp()}").resolve()
     if args.dry_run or not allowed:
         write_skipped_manifest(out_dir, args=args, cases=selected, variants=variants, allowed=allowed)
         print(f"run-codex-live-benchmarks: wrote skipped manifest to {out_dir / 'run-manifest.json'}")

@@ -2175,6 +2175,173 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertTrue(all(case.tier == "level1" for case in level1_cases))
         self.assertNotIn("devex/minimal-correct-implementation-ladder", {case.id for case in core_cases})
 
+    def test_runner_selects_failed_cells_and_shards_cases_deterministically(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_runtime_selection", "scripts/run-codex-live-benchmarks.py")
+        helper = _load_script("codex_live_helper_runtime_selection", "scripts/codex_live_benchmark_lib.py")
+        cases = helper.load_case_registry()
+        with tempfile.TemporaryDirectory() as tmp:
+            previous = Path(tmp) / "previous"
+            failed_dir = previous / "cases" / "security__ssrf-url-allowlist" / "baseline_clean" / "run-02"
+            failed_dir.mkdir(parents=True)
+            failed_dir.joinpath("result.json").write_text(
+                json.dumps(
+                    _result_payload(
+                        case_id="security/ssrf-url-allowlist",
+                        variant="baseline_clean",
+                        run_index=2,
+                        benchmark_passed=False,
+                        failure_category="test_suite_failed",
+                    )
+                ),
+                encoding="utf-8",
+            )
+            args = SimpleNamespace(
+                tier=[],
+                changed_only=False,
+                failed_only=None,
+                rerun_failures_from=str(previous),
+                max_cases=None,
+                max_runtime_minutes=None,
+                case_shard=None,
+                parallel_cases=1,
+                resume_run=None,
+            )
+            selected, metadata = runner.apply_runtime_selection(args, cases, ["baseline_clean"])
+        self.assertEqual([case.id for case in selected], ["security/ssrf-url-allowlist"])
+        self.assertEqual(metadata["rerun_cell_count"], 1)
+        self.assertIn(("security/ssrf-url-allowlist", "baseline_clean", 2), args._changeforge_rerun_cells)
+
+        shard_args = SimpleNamespace(
+            tier=[],
+            changed_only=False,
+            failed_only=None,
+            rerun_failures_from=None,
+            max_cases=None,
+            max_runtime_minutes=None,
+            case_shard="1/2",
+            parallel_cases=1,
+            resume_run=None,
+        )
+        shard, shard_metadata = runner.apply_runtime_selection(shard_args, cases, ["baseline_clean"])
+        self.assertTrue(shard)
+        self.assertEqual(shard_metadata["case_shard_index"], 1)
+        self.assertTrue(all(case.id in shard_metadata["selected_cases"] for case in shard))
+
+    def test_structured_logs_process_traces_and_summary_validate(self) -> None:
+        summary_module = _load_script(
+            "generate_codex_live_summary_process_logging",
+            "scripts/generate-codex-live-summary.py",
+        )
+        logs_validator = _load_script("validate_codex_live_logs_fixture", "scripts/validate-codex-live-logs.py")
+        trace_validator = _load_script("validate_process_traces_fixture", "scripts/validate-process-traces.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            (run_dir / "run-manifest.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 2,
+                        "generated_by": "scripts/run-codex-live-benchmarks.py",
+                        "run_id": "synthetic-run",
+                        "status": "collected",
+                        "benchmark_mode": "clean-paired",
+                        "dry_run": False,
+                        "live_execution_allowed": True,
+                        "live_execution_effective": True,
+                        "cases": ["security/ssrf-url-allowlist"],
+                        "variants": ["baseline_clean"],
+                        "runs_per_variant": 1,
+                        "sandbox": "workspace-write",
+                        "auth_policy": "borrow-current",
+                        "codex_environment_policy": "auth_borrowed_clean",
+                        "limitations": ["local"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            event = {
+                "schema_version": 1,
+                "ts": "2026-06-23T07:31:37+08:00",
+                "run_id": "synthetic-run",
+                "case_id": "security/ssrf-url-allowlist",
+                "variant": "baseline_clean",
+                "run_index": 1,
+                "tier": "core",
+                "phase": "pdd",
+                "event": "phase_completed",
+                "status": "ok",
+                "duration_ms": 1,
+                "selected_skills": [],
+                "selected_capabilities": [],
+                "hook_guidance_bytes": 0,
+                "artifact": None,
+                "error_category": None,
+            }
+            (run_dir / "run.log.jsonl").write_text(json.dumps(event) + "\n", encoding="utf-8")
+            (run_dir / "timeline.jsonl").write_text(json.dumps(event) + "\n", encoding="utf-8")
+            result_dir = run_dir / "cases" / "security__ssrf-url-allowlist" / "baseline_clean" / "run-01"
+            result_dir.mkdir(parents=True)
+            result_dir.joinpath("result.json").write_text(json.dumps(_result_payload()), encoding="utf-8")
+            command = "python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"
+            trace = {
+                "schema_version": 1,
+                "run_id": "synthetic-run",
+                "case_id": "security/ssrf-url-allowlist",
+                "variant": "baseline_clean",
+                "run_index": 1,
+                "phase_status": {
+                    "pdd": "present",
+                    "ddd": "present",
+                    "sdd": "present",
+                    "tdd": "present",
+                    "implementation": "present",
+                    "validation": "present",
+                    "review": "present",
+                },
+                "traceability": {
+                    "pdd_to_tests": True,
+                    "ddd_invariants_to_code_or_tests": True,
+                    "sdd_public_api_to_tests": True,
+                    "tdd_validation_commands_present": True,
+                },
+                "process_facts": {
+                    "pdd": {
+                        "acceptance_criteria": ["observable behavior"],
+                        "constraints": ["preserve setup"],
+                        "non_goals": ["private corpus"],
+                        "risk_surfaces": ["security"],
+                        "expected_behavior": ["ssrf allowlist"],
+                    },
+                    "ddd": {
+                        "domain_terms": ["security"],
+                        "invariants": ["block unsafe URL"],
+                        "side_effect_boundaries": ["no network"],
+                    },
+                    "sdd": {
+                        "modules": ["public API"],
+                        "public_api": ["validate_url"],
+                        "data_flow": ["request -> validation"],
+                        "failure_modes": ["unsafe URL"],
+                    },
+                    "tdd": {
+                        "target_tests": [command],
+                        "validation_commands": [command],
+                        "red_green_refactor_trace": ["recorded"],
+                    },
+                },
+                "validation_commands": [command],
+                "artifacts": ["cases/security__ssrf-url-allowlist/baseline_clean/run-01/result.json"],
+            }
+            result_dir.joinpath("process-trace.json").write_text(json.dumps(trace), encoding="utf-8")
+            summary = summary_module.generate_summary(run_dir)
+            log_errors = logs_validator.validate_run_logs(run_dir)
+            trace_errors = trace_validator.validate_process_traces(run_dir)
+        self.assertEqual(log_errors, [])
+        self.assertEqual(trace_errors, [])
+        self.assertEqual(summary["logging_summary"]["run_log_events"], 1)
+        self.assertEqual(summary["logging_summary"]["process_trace_count"], 1)
+        self.assertEqual(summary["process_compliance_summary"]["pdd_present_rate"], 1.0)
+        self.assertEqual(summary["process_compliance_summary"]["validation_command_present_rate"], 1.0)
+
     def test_publishable_starter_setup_runs_from_candidate_root_with_exported_root(self) -> None:
         helper = _load_script("codex_live_helper_candidate_setup_contract", "scripts/codex_live_benchmark_lib.py")
         grader = _load_script("grade_codex_live_candidate_setup_contract", "scripts/grade-codex-live-benchmarks.py")
@@ -2512,6 +2679,36 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertIn('"effect_verdict": "inconclusive"', item.detail)
         self.assertEqual(item.evidence_level, "local_codex_cli_live_benchmark")
 
+    def test_public_summary_syncs_codex_live_evidence_level_from_live_summary(self) -> None:
+        public = _load_script(
+            "generate_public_summary_codex_live_evidence_level_sync",
+            "scripts/generate-public-benchmark-summary.py",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            (reports / "codex-live-benchmark-summary.json").write_text(
+                json.dumps(_strict_summary_payload(run_id="current-positive", effect_verdict="positive")),
+                encoding="utf-8",
+            )
+            (reports / "professional-scorecard.json").write_text(
+                json.dumps(
+                    {
+                        "evidence_levels": {
+                            "local_codex_cli_live_benchmark": {
+                                "status": "partial",
+                                "meaning": "stale copied level",
+                            }
+                        },
+                        "dimensions": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            payload = public.generate_summary(root)
+        self.assertEqual(payload["evidence_levels"]["local_codex_cli_live_benchmark"]["status"], "pass")
+
     def test_report_consistency_rejects_stale_scorecard_run_id(self) -> None:
         validator = _load_script(
             "validate_codex_live_report_consistency_stale_scorecard",
@@ -2596,6 +2793,59 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertTrue(any("effect_verdict" in error for error in errors))
         self.assertTrue(any("evidence_levels.local_codex_cli_live_benchmark.status" in error for error in errors))
 
+    def test_report_consistency_rejects_stale_public_counts_and_hook_rate(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_report_consistency_stale_public_counts",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        summary = _strict_summary_payload(
+            run_id="positive-run",
+            effect_verdict="positive",
+            benchmark_passed_result_count=40,
+            benchmark_eligible_result_count=45,
+            variants={
+                "baseline_clean": _variant_payload(),
+                "skills_only_clean": _variant_payload(variant="skills_only_clean"),
+                "skills_with_hooks_clean": _variant_payload(variant="skills_with_hooks_clean", pass_rate=1.0),
+            },
+        )
+        detail = {
+            "run_id": "positive-run",
+            "evidence_status": "pass",
+            "effect_verdict": "positive",
+            "benchmark_passed_result_count": 28,
+            "benchmark_eligible_result_count": 44,
+            "variants": {
+                "skills_with_hooks_clean": {
+                    "pass_rate": 0.7857,
+                }
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            reports = Path(tmp) / "reports"
+            reports.mkdir()
+            summary_path = reports / "codex-live-benchmark-summary.json"
+            public_path = reports / "public-benchmark-summary.json"
+            summary_path.write_text(json.dumps(summary), encoding="utf-8")
+            public_path.write_text(
+                json.dumps(
+                    {
+                        "items": [{"name": "Codex CLI live benchmark", "status": "pass", "detail": json.dumps(detail)}],
+                        "evidence_levels": {
+                            "local_codex_cli_live_benchmark": {
+                                "status": "pass",
+                                "meaning": "Opt-in local Codex CLI benchmark run.",
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            errors = validator.validate_report_consistency(summary_path, public_summary_path=public_path)
+        self.assertTrue(any("benchmark_passed_result_count" in error for error in errors))
+        self.assertTrue(any("benchmark_eligible_result_count" in error for error in errors))
+        self.assertTrue(any("skills_with_hooks_clean.pass_rate" in error for error in errors))
+
     def test_report_consistency_accepts_consistent_positive_summary(self) -> None:
         validator = _load_script(
             "validate_codex_live_report_consistency_positive",
@@ -2605,6 +2855,13 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             "run_id": "positive-run",
             "evidence_status": "pass",
             "effect_verdict": "positive",
+            "benchmark_passed_result_count": 2,
+            "benchmark_eligible_result_count": 2,
+            "variants": {
+                "skills_with_hooks_clean": {
+                    "pass_rate": 1.0,
+                }
+            },
         }
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -2651,6 +2908,13 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             "run_id": "partial-run",
             "evidence_status": "partial",
             "effect_verdict": "mixed",
+            "benchmark_passed_result_count": 2,
+            "benchmark_eligible_result_count": 2,
+            "variants": {
+                "skills_with_hooks_clean": {
+                    "pass_rate": 1.0,
+                }
+            },
         }
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

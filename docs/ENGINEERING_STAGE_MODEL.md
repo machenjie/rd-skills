@@ -20,8 +20,8 @@ quality gates, and the allowed handoff target stage.
 - Purpose: understand requirement, clarify scope, name non-goals, define acceptance.
 - Launch: `requirement-clarification`, `requirement-structuring`, `non-goal-boundary-definition`, `acceptance-standard-definition`, `scenario-decomposition`.
 - Do not launch by default: coding, language, testing, refactoring, release capabilities.
-- Required evidence: clarified scope, explicit non-goals, testable acceptance signal, clarification status before action.
-- Required quality gates: requirement gate.
+- Required evidence: clarified scope, explicit non-goals, testable acceptance signal, clarification status before action, PDD acceptance criteria.
+- Required quality gates: requirement gate, PDD gate.
 - Handoff: architecture-design or implementation-planning.
 
 ### architecture-design
@@ -29,8 +29,8 @@ quality gates, and the allowed handoff target stage.
 - Launch: `architecture-style-selection`, `module-boundary-design`, `layered-architecture-design`, `architecture-tradeoff-analysis`, `extensibility-design`, `solution-optimality-evaluation`.
 - Conditional launch: `minimal-correct-implementation` when extensibility, stack complexity, or future-proofing is proposed.
 - Do not launch by default: language idiom checks, coding, test authoring.
-- Required evidence: boundary owners, dependency direction, rejected alternatives, simplicity ladder result when extensibility or stack complexity is proposed, reversibility classification.
-- Required quality gates: architecture gate.
+- Required evidence: boundary owners, dependency direction, rejected alternatives, simplicity ladder result when extensibility or stack complexity is proposed, reversibility classification, DDD domain invariants.
+- Required quality gates: architecture gate, DDD gate.
 - Handoff: implementation-planning.
 
 ### implementation-planning
@@ -38,16 +38,16 @@ quality gates, and the allowed handoff target stage.
 - Launch: `repository-context-map`, `implementation-structure-design`, `module-boundary-design`, `code-clarity-maintainability`, `language-idiom-enforcement` (naming only); add `minimal-correct-implementation` when new structure, dependency, file, class, config, or abstraction is proposed.
 - Conditional launch: `repository-graph-analysis` when repo graph, context pack, generated artifact graph, affected-test graph, or source-of-truth uncertainty is part of the plan.
 - Do not launch by default: full architecture review, release gate, deep performance profiling.
-- Required evidence: target boundaries inspected before plan, repository context map with owning surface and caller/callee evidence, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal.
-- Required quality gates: implementation gate.
+- Required evidence: target boundaries inspected before plan, repository context map with owning surface and caller/callee evidence, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal, SDD public API and module placement.
+- Required quality gates: implementation gate, SDD gate.
 - Handoff: coding.
 
 ### coding
 - Purpose: implement code with language idiom, error handling, resource cleanup, input validation, concurrency, minimal implementation.
 - Launch: matching language professional usage capability, `language-idiom-enforcement`, `input-validation`, `logging-error-handling`, relevant builder skill; add `minimal-correct-implementation` when the implementation risks unnecessary scope.
 - Do not launch by default: architecture deep review, release gate, full regression suite design.
-- Required evidence: inspected implementation context, TDD or validation signal before code, idiomatic implementation, validated inputs, released resources, minimal scope diff, deleted or rejected complexity when selected, tool permission and sandbox classification when risky tools or commands are used.
-- Required quality gates: implementation gate.
+- Required evidence: inspected implementation context, TDD or validation signal before code, PDD/DDD/SDD/TDD traceability, idiomatic implementation, validated inputs, released resources, minimal scope diff, deleted or rejected complexity when selected, tool permission and sandbox classification when risky tools or commands are used.
+- Required quality gates: implementation gate, TDD gate.
 - Handoff: testing or code-review.
 
 ### debugging-diagnosis
@@ -89,7 +89,7 @@ quality gates, and the allowed handoff target stage.
 - Launch: `test-strategy`, `plan-execution-consistency`, `language-testing-strategy`, the matching test capability (`unit-testing`, `integration-testing`, `contract-testing`, `e2e-testing`, `regression-testing`), `test-data-management`; add `minimal-correct-implementation` when lower-depth validation is proposed.
 - Conditional launch: `validation-broker` and `repository-graph-analysis` when changed-path mapping, affected-test selection, stale validation, or generated artifact validation is in scope.
 - Do not launch by default: architecture redesign, coding of new features.
-- Required evidence: risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected, validation freshness after final material edits.
+- Required evidence: risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected, validation freshness after final material edits, validation commands mapped to PDD/DDD/SDD.
 - Required quality gates: test gate.
 - Handoff: code-review, release-delivery, or documentation-handoff.
 

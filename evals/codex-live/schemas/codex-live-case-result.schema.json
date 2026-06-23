@@ -183,6 +183,9 @@
     "paths": {
       "type": "object"
     },
+    "process_trace": {
+      "type": "object"
+    },
     "grading": {
       "type": "object"
     },
