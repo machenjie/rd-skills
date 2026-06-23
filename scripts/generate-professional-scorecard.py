@@ -615,6 +615,9 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
         "variants",
         "delta",
         "cases_summary",
+        "coverage_summary",
+        "cost_summary",
+        "stability_summary",
         "limitations",
     }
     missing = sorted(field for field in required if field not in summary)
@@ -677,6 +680,9 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
         },
         "delta": summary.get("delta"),
         "cases_summary": summary.get("cases_summary"),
+        "coverage_summary": summary.get("coverage_summary"),
+        "cost_summary": summary.get("cost_summary"),
+        "stability_summary": summary.get("stability_summary"),
         "limitations": summary.get("limitations"),
     }
     return scorecard_status, json.dumps(detail, sort_keys=True)

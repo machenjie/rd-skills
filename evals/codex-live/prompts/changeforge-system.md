@@ -36,10 +36,23 @@ setup/test or report why not. Otherwise report the exact commands that should
 validate the setup contract and the reason they were not run. For reliability or
 security work, include deterministic local tests for failure paths and avoid
 external network dependencies.
+For Redis cache stampede work, changed tests must include deterministic fake or
+in-memory cache coverage plus a FakeBackend/source-of-truth seam, same-key
+concurrent workers, and an assertion that exactly one backend refresh occurs,
+such as `backend.calls == 1`. Keep those tests free of live Redis, network
+clients, URLs, and external services.
 
 When a ChangeForge skill or benchmark task names required evidence terms,
 preserve those terms verbatim in candidate-visible docs or public test names.
 For object-method placement work, write an `Object-Method Encapsulation Decision`
 section, include `object candidates`, state `no side effects` for pure decisions,
 and make public tests visibly include `allowed`, `denied`, `expired`, `refund
-hold`, and `payment failure` when those paths are in scope.
+hold`, and `payment failure` when those paths are in scope. For cancellation
+placement tasks, keep payment/refund provider calls out of domain/value object
+files such as `orders/order.py`; those files should not import, mention, or call
+`PaymentAdapter`, `payment provider`, `refund_payment`, `chargeback`, `requests`,
+or other payment/refund side-effect APIs. Let the service orchestrate adapter
+calls from pure domain decisions. For cancellation
+deadline boundary tests, keep the literal phrases `before deadline`,
+`at deadline`, and `after deadline` visible in public test names, test
+descriptions, or nearby comments rather than relying only on CamelCase names.

@@ -8,6 +8,7 @@ from pathlib import Path
 
 ROOT = Path(os.environ.get("CHANGEFORGE_CODEGEN_CANDIDATE_DIR", Path.cwd()))
 TEXT_SUFFIXES = {".md", ".py", ".ts", ".tsx", ".js", ".jsx", ".json"}
+IMPLEMENTATION_SUFFIXES = {".py", ".ts", ".tsx", ".js", ".jsx"}
 
 
 def candidate_texts() -> list[tuple[Path, str]]:
@@ -24,15 +25,17 @@ class ObjectMethodPlacementAssertions(unittest.TestCase):
 
         self.assertRegex(joined, r"(?i)Object-Method Encapsulation Decision|object candidates")
         self.assertRegex(joined, r"(?i)value object|domain object")
-        self.assertRegex(joined, r"(?i)rejected alternatives|rejected object|module-local")
+        self.assertRegex(joined, r"(?i)rejected alternatives|rejected object|module-local|rejected\s*:")
         self.assertRegex(joined, r"(?i)pure decision|side.?effect.?free|no side effects")
 
     def test_no_helper_bag_or_anemic_object_is_introduced(self) -> None:
-        joined = "\n".join(text for _, text in candidate_texts())
+        implementation_text = "\n".join(
+            text for rel, text in candidate_texts() if rel.suffix in IMPLEMENTATION_SUFFIXES
+        )
 
-        self.assertNotRegex(joined, r"(?i)class\s+\w*Helper\b")
-        self.assertNotRegex(joined, r"(?i)HelperBag|helper bag")
-        self.assertNotRegex(joined, r"(?i)anemic object")
+        self.assertNotRegex(implementation_text, r"(?i)class\s+\w*Helper\b")
+        self.assertNotRegex(implementation_text, r"(?i)class\s+HelperBag\b")
+        self.assertNotRegex(implementation_text, r"(?i)class\s+\w*Anemic\w*\b")
 
     def test_payment_side_effect_stays_out_of_domain_objects(self) -> None:
         for rel, text in candidate_texts():

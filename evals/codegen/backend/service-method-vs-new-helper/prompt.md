@@ -17,7 +17,10 @@ and cancellation already flows through the service and policy.
 - Reuse or extend the existing order service and policy.
 - Reject a detached shared utility for the cancellation business rule.
 - Keep date arithmetic technical helpers separate from order policy decisions.
-- Add tests for cancellation before, at, and after the deadline.
+- Add public-workflow tests for cancellation before, at, and after the deadline.
+  Keep the literal phrases `before deadline`, `at deadline`, and
+  `after deadline` visible in test names, test descriptions, or nearby comments
+  so the boundary evidence is reviewable outside CamelCase identifiers.
 - Include an Implementation Structure Plan explaining service method versus helper placement.
 
 ## Constraints

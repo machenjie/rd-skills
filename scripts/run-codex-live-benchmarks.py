@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from typing import Any
 
@@ -127,6 +128,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--publish-current-home-smoke", action="store_true")
     parser.add_argument("--keep-workdirs", action="store_true")
     parser.add_argument("--timeout-seconds", type=int, default=3600)
+    parser.add_argument(
+        "--codex-idle-timeout-seconds",
+        type=int,
+        default=600,
+        help="Terminate a Codex exec child after this many seconds without stdout/stderr progress. Default: 600.",
+    )
+    parser.add_argument(
+        "--codex-exec-retries",
+        type=int,
+        default=1,
+        help="Retry transient no-output Codex exec failures with no candidate changes. Default: 1.",
+    )
     parser.add_argument("--list", action="store_true")
     return parser.parse_args(argv)
 
@@ -278,18 +291,203 @@ def run_codex_exec(
         raise RuntimeError(REFUSAL_MESSAGE)
     process_env = _subprocess_env(env)
     with events_path.open("w", encoding="utf-8") as events_file, stderr_path.open("w", encoding="utf-8") as stderr_file:
-        return subprocess.run(
+        process = subprocess.Popen(
             command,
             cwd=cwd,
-            input=prompt,
+            stdin=subprocess.PIPE,
             stdout=events_file,
             stderr=stderr_file,
             text=True,
             env=process_env,
-            timeout=args.timeout_seconds,
             shell=False,
-            check=False,
         )
+        try:
+            return _wait_for_codex_exec(
+                process,
+                command=command,
+                prompt=prompt,
+                events_path=events_path,
+                stderr_path=stderr_path,
+                timeout_seconds=args.timeout_seconds,
+                idle_timeout_seconds=getattr(args, "codex_idle_timeout_seconds", 0),
+            )
+        except Exception:
+            _terminate_codex_process(process)
+            raise
+
+
+def _wait_for_codex_exec(
+    process: subprocess.Popen[str],
+    *,
+    command: list[str],
+    prompt: str,
+    events_path: Path,
+    stderr_path: Path,
+    timeout_seconds: int | float,
+    idle_timeout_seconds: int | float | None,
+) -> subprocess.CompletedProcess[str]:
+    """Wait for Codex while enforcing both total and no-output timeouts."""
+    if process.stdin is not None:
+        try:
+            process.stdin.write(prompt)
+            process.stdin.close()
+        except BrokenPipeError:
+            pass
+
+    started = time.monotonic()
+    last_activity = started
+    last_sizes = _codex_exec_progress_sizes(events_path, stderr_path)
+    idle_timeout = float(idle_timeout_seconds or 0)
+    total_timeout = float(timeout_seconds)
+
+    while True:
+        returncode = process.poll()
+        current_sizes = _codex_exec_progress_sizes(events_path, stderr_path)
+        if current_sizes != last_sizes:
+            last_sizes = current_sizes
+            last_activity = time.monotonic()
+        now = time.monotonic()
+        if returncode is not None:
+            return subprocess.CompletedProcess(command, returncode, "", "")
+        if total_timeout > 0 and now - started > total_timeout:
+            raise subprocess.TimeoutExpired(command, total_timeout)
+        if idle_timeout > 0 and now - last_activity > idle_timeout:
+            raise subprocess.TimeoutExpired(command, idle_timeout, output="codex exec produced no stdout/stderr progress")
+        time.sleep(0.5)
+
+
+def _codex_exec_progress_sizes(*paths: Path) -> tuple[int, ...]:
+    return tuple(path.stat().st_size if path.exists() else 0 for path in paths)
+
+
+def _terminate_codex_process(process: subprocess.Popen[str]) -> None:
+    if process.poll() is not None:
+        return
+    process.terminate()
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=5)
+
+
+def run_codex_exec_with_retries(
+    command: list[str],
+    *,
+    prompt: str,
+    cwd: Path,
+    events_path: Path,
+    stderr_path: Path,
+    final_path: Path,
+    args: argparse.Namespace,
+    env: dict[str, str],
+) -> tuple[subprocess.CompletedProcess[str], dict[str, Any]]:
+    """Run Codex, retrying only empty no-diff transient failures."""
+    max_retries = max(0, int(getattr(args, "codex_exec_retries", 0) or 0))
+    attempts: list[dict[str, Any]] = []
+    attempt_index = 1
+    while True:
+        completed = run_codex_exec(
+            command,
+            prompt=prompt,
+            cwd=cwd,
+            events_path=events_path,
+            stderr_path=stderr_path,
+            args=args,
+            env=env,
+        )
+        retry_reason = _codex_exec_retry_reason(
+            completed,
+            cwd=cwd,
+            stderr_path=stderr_path,
+            final_path=final_path,
+        )
+        should_retry = len(attempts) < max_retries and retry_reason == "transient_no_output_no_candidate_changes"
+        attempts.append(
+            _codex_exec_attempt_metadata(
+                attempt_index,
+                completed,
+                retry_reason=retry_reason,
+                retried=should_retry,
+                stderr_path=stderr_path,
+            )
+        )
+        if not should_retry:
+            return completed, {
+                "codex_attempt_count": len(attempts),
+                "codex_retry_count": max(0, len(attempts) - 1),
+                "codex_exec_attempts": attempts,
+            }
+        _clear_codex_exec_artifacts(events_path, stderr_path, final_path)
+        attempt_index += 1
+
+
+def _codex_exec_retry_reason(
+    completed: subprocess.CompletedProcess[str],
+    *,
+    cwd: Path,
+    stderr_path: Path,
+    final_path: Path,
+) -> str:
+    """Classify whether a failed Codex exec is safe to retry once."""
+    if completed.returncode == 0:
+        return "not_needed"
+    if _candidate_has_git_changes(cwd):
+        return "candidate_changed"
+    if _path_has_text(final_path):
+        return "final_message_present"
+    if _path_has_text(stderr_path):
+        return "stderr_present"
+    return "transient_no_output_no_candidate_changes"
+
+
+def _codex_exec_attempt_metadata(
+    attempt_index: int,
+    completed: subprocess.CompletedProcess[str],
+    *,
+    retry_reason: str,
+    retried: bool,
+    stderr_path: Path,
+) -> dict[str, Any]:
+    stderr_excerpt = ""
+    if stderr_path.exists():
+        stderr_excerpt = redact_report_text(stderr_path.read_text(encoding="utf-8", errors="ignore").strip())[:400]
+    return {
+        "attempt_index": attempt_index,
+        "returncode": completed.returncode,
+        "retry_reason": retry_reason,
+        "retried": retried,
+        "stderr_excerpt": stderr_excerpt,
+    }
+
+
+def _path_has_text(path: Path) -> bool:
+    return path.exists() and bool(path.read_text(encoding="utf-8", errors="ignore").strip())
+
+
+def _candidate_has_git_changes(candidate_dir: Path) -> bool:
+    status = subprocess.run(
+        ["git", "status", "--short"],
+        cwd=candidate_dir,
+        text=True,
+        capture_output=True,
+        shell=False,
+        check=False,
+    )
+    if status.returncode != 0:
+        return True
+    for line in status.stdout.splitlines():
+        path = line[3:] if len(line) > 3 else line
+        if path.startswith(".agents/") or path.startswith(".codex/"):
+            continue
+        return True
+    return False
+
+
+def _clear_codex_exec_artifacts(*paths: Path) -> None:
+    for path in paths:
+        if path.exists():
+            path.unlink()
 
 
 def run_live(args: argparse.Namespace, out_dir: Path, cases: list[CodexLiveCase], variants: list[str]) -> dict[str, Any]:
@@ -379,6 +577,9 @@ def _run_one_case(
     final_path = run_dir / "final.md"
     artifact_status = "failed"
     codex_returncode: int | None = None
+    codex_attempt_count = 0
+    codex_retry_count = 0
+    codex_exec_attempts: list[dict[str, Any]] = []
     failure: str | None = None
     failure_stage: str | None = None
     env: dict[str, str] = {}
@@ -402,15 +603,19 @@ def _run_one_case(
             )
 
         stage = "codex_exec"
-        completed = run_codex_exec(
+        completed, codex_attempt_metadata = run_codex_exec_with_retries(
             command,
             prompt=prompt,
             cwd=candidate_dir,
             events_path=events_path,
             stderr_path=stderr_path,
+            final_path=final_path,
             args=args,
             env=env,
         )
+        codex_attempt_count = int(codex_attempt_metadata.get("codex_attempt_count", 0) or 0)
+        codex_retry_count = int(codex_attempt_metadata.get("codex_retry_count", 0) or 0)
+        codex_exec_attempts = list(codex_attempt_metadata.get("codex_exec_attempts", []))
         codex_returncode = completed.returncode
         artifact_status = "collected" if completed.returncode == 0 else "failed"
         if not final_path.exists():
@@ -433,6 +638,12 @@ def _run_one_case(
     grading = _grade(case, candidate_dir, grading_dir)
     contamination = _contamination_for_variant(variant, run_dir)
     grading_status = _grading_status(case, grading, contamination, variant)
+    artifact_status = _artifact_status_after_grading(
+        artifact_status=artifact_status,
+        codex_returncode=codex_returncode,
+        grading_status=grading_status,
+        grading=grading,
+    )
     benchmark_eligible = _benchmark_eligible(args, case, artifact_status, grading_status, contamination, environment)
     benchmark_passed = benchmark_eligible and grading_status == "passed"
     failure_category = _failure_category(
@@ -477,6 +688,9 @@ def _run_one_case(
         "contamination": contamination,
         "environment": environment,
         "codex_returncode": codex_returncode,
+        "codex_attempt_count": codex_attempt_count,
+        "codex_retry_count": codex_retry_count,
+        "codex_exec_attempts": codex_exec_attempts,
         "failure": failure,
         "failure_stage": failure_stage,
         "setup_failure_reason": grading.get("setup_failure_reason", "none"),
@@ -564,6 +778,23 @@ def _grading_status(
     if grading.get("returncode") == 0:
         return "failed"
     return "not_collected"
+
+
+def _artifact_status_after_grading(
+    *,
+    artifact_status: str,
+    codex_returncode: int | None,
+    grading_status: str,
+    grading: dict[str, Any],
+) -> str:
+    """Prefer deterministic grading evidence over a late non-zero Codex transport exit."""
+    if artifact_status not in {"failed", "partial"} or codex_returncode in {0, None}:
+        return artifact_status
+    if grading_status not in {"passed", "failed"}:
+        return artifact_status
+    if not any(key in grading for key in ("all_passed", "setup_passed", "test_suite_passed", "security_checks_passed")):
+        return artifact_status
+    return "collected"
 
 
 def _failure_category(
@@ -955,6 +1186,18 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     if args.runs > 5 and not args.allow_many_runs:
         print("run-codex-live-benchmarks: ERROR: --runs > 5 requires --allow-many-runs", file=sys.stderr)
+        return 2
+    if args.codex_exec_retries < 0:
+        print("run-codex-live-benchmarks: ERROR: --codex-exec-retries must be non-negative", file=sys.stderr)
+        return 2
+    if args.codex_idle_timeout_seconds < 0:
+        print("run-codex-live-benchmarks: ERROR: --codex-idle-timeout-seconds must be non-negative", file=sys.stderr)
+        return 2
+    if args.codex_exec_retries > 2 and not args.allow_many_runs:
+        print(
+            "run-codex-live-benchmarks: ERROR: --codex-exec-retries > 2 requires --allow-many-runs",
+            file=sys.stderr,
+        )
         return 2
     if args.sandbox == "danger-full-access" and not danger_full_access_allowed(args, os.environ):
         print(

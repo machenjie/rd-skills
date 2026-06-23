@@ -8,6 +8,15 @@ from pathlib import Path
 
 ROOT = Path(os.environ.get("CHANGEFORGE_CODEGEN_CANDIDATE_DIR", Path.cwd()))
 TEXT_SUFFIXES = {".md", ".py", ".ts", ".tsx", ".js", ".jsx", ".json"}
+DEPENDENCY_SUFFIXES = {".py", ".ts", ".tsx", ".js", ".jsx", ".json", ".sh"}
+NETWORK_DEPENDENCY_PATTERN = re.compile(
+    r"(?i)"
+    r"socket\.create_connection|"
+    r"\bimport\s+requests\b|"
+    r"\bfrom\s+requests\b|"
+    r"requests\.(?:get|post|put|delete|patch|request|Session)|"
+    r"http://|https://"
+)
 
 
 def candidate_texts() -> list[tuple[Path, str]]:
@@ -43,13 +52,16 @@ class CacheStampedeProtectionAssertions(unittest.TestCase):
 
     def test_redis_outage_degrades_without_external_network_dependency(self) -> None:
         joined = "\n".join(text for _, text in candidate_texts())
+        dependency_text = "\n".join(
+            text for rel, text in candidate_texts() if rel.suffix in DEPENDENCY_SUFFIXES
+        )
         test_text = "\n".join(
             text for rel, text in candidate_texts() if "test" in rel.name.casefold() or "/tests/" in rel.as_posix()
         )
 
         self.assertRegex(joined, r"(?i)redis.*down|redis.*unavailable|outage|degrad")
         self.assertRegex(test_text, r"(?i)redis.*down|redis.*unavailable|outage|fallback")
-        self.assertNotRegex(joined, r"(?i)socket\.create_connection|requests\.|http://|https://")
+        self.assertNotRegex(dependency_text, NETWORK_DEPENDENCY_PATTERN)
 
     def test_fake_cache_and_backend_verify_single_flight_behavior(self) -> None:
         test_text = "\n".join(

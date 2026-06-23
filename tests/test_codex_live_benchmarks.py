@@ -243,6 +243,30 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
             "categories": {"security": 1},
             "coverage_dimensions": {"security-ssrf": 1},
             "unregistered_case_count": 0,
+            "manifest_category_count": 19,
+            "manifest_case_count": 60,
+            "manifest_categories": ["security"],
+            "registered_live_case_count": 1,
+            "registered_assertion_case_count": 1,
+            "registered_telemetry_only_case_count": 0,
+            "registered_publishable_assertion_case_count": 1,
+            "registered_category_count": 1,
+            "registered_case_coverage_rate": 0.0167,
+            "registered_publishable_case_coverage_rate": 0.0167,
+            "tiers_registered": {"core": 1, "level1": 0, "experimental": 0},
+            "categories_registered": {"security": 1},
+            "publishable_categories_registered": {"security": 1},
+            "coverage_dimensions_registered": {"security-ssrf": 1},
+            "actual_run_case_count": 1,
+            "actual_run_assertion_case_count": 1,
+            "actual_run_publishable_assertion_case_count": 1,
+            "actual_run_category_count": 1,
+            "actual_run_case_coverage_rate": 0.0167,
+            "tiers_run": {"core": 1, "level1": 0, "experimental": 0},
+            "categories_run": {"security": 1},
+            "coverage_dimensions_run": {"security-ssrf": 1},
+            "registered_but_not_run_cases": [],
+            "missing_manifest_categories": [],
         },
         "cost_summary": {
             "result_count": 2,
@@ -269,6 +293,8 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
                     },
                     "average_usage_per_result": usage,
                     "median_usage_per_result": usage,
+                    "pass_rate_per_100k_input_tokens": 10000.0,
+                    "pass_rate_per_100_commands": 100.0,
                 },
                 "skills_with_hooks_clean": {
                     "result_count": 1,
@@ -280,8 +306,24 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
                     },
                     "average_usage_per_result": usage,
                     "median_usage_per_result": usage,
+                    "pass_rate_per_100k_input_tokens": 10000.0,
+                    "pass_rate_per_100_commands": 100.0,
                 },
             },
+            "cost_adjusted_delta": {
+                "skills_only_clean_vs_baseline_clean": {"status": "not_collected"},
+                "skills_with_hooks_clean_vs_baseline_clean": {
+                    "status": "collected",
+                    "pass_rate_delta": 0.0,
+                    "average_input_token_overhead_pct": 0.0,
+                    "average_command_execution_delta": 0.0,
+                    "pass_rate_per_100k_input_tokens_delta": 0.0,
+                    "pass_rate_per_100_commands_delta": 0.0,
+                    "cost_efficiency_note": "fixture",
+                },
+                "skills_with_hooks_clean_vs_skills_only_clean": {"status": "not_collected"},
+            },
+            "case_cost_outliers": [],
             "cost_caveat": "Token usage is parsed local Codex telemetry, not a billing ledger.",
         },
         "stability_summary": {
@@ -297,6 +339,14 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
             "codex_exec_failure_rate": 0.0,
             "not_collected_grading_rate": 0.0,
             "contamination_rate": 0.0,
+            "codex_exec_retry_count": 0,
+            "codex_exec_failed_by_case": {},
+            "codex_exec_retries_by_case": {},
+            "failed_run_reasons_by_case": {},
+            "flaky_case_variant_cells": [],
+            "case_regression_count": 0,
+            "skills_with_hooks_regression_cases": [],
+            "partial_status_reasons": [],
         },
         "telemetry": {"event_count": 2, "parse_error_count": 0},
         "limitations": ["strict local evidence"],
@@ -547,6 +597,152 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
                     )
             subprocess_run.assert_not_called()
 
+    def test_codex_exec_retries_empty_no_diff_failure_once(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_retry_empty_failure", "scripts/run-codex-live-benchmarks.py")
+        args = SimpleNamespace(allow_live_codex=True, dry_run=False, timeout_seconds=1, codex_exec_retries=1)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            candidate = root / "candidate"
+            candidate.mkdir()
+            (candidate / "README.md").write_text("starter\n", encoding="utf-8")
+            runner._init_git(candidate)
+            support_dir = candidate / ".agents" / "skills" / "change-forge-router"
+            support_dir.mkdir(parents=True)
+            (support_dir / "SKILL.md").write_text("support artifact\n", encoding="utf-8")
+            events_path = root / "events.jsonl"
+            stderr_path = root / "stderr.log"
+            final_path = root / "final.md"
+            calls = []
+
+            def fake_exec(command, *, prompt, cwd, events_path, stderr_path, args, env):
+                del prompt, cwd, args, env
+                calls.append(command)
+                events_path.write_text('{"type": "turn.failed"}\n', encoding="utf-8")
+                stderr_path.write_text("", encoding="utf-8")
+                if len(calls) == 1:
+                    return subprocess.CompletedProcess(command, 1, "", "")
+                final_path.write_text("done\n", encoding="utf-8")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with patch.object(runner, "run_codex_exec", side_effect=fake_exec):
+                completed, metadata = runner.run_codex_exec_with_retries(
+                    ["codex", "exec"],
+                    prompt="task",
+                    cwd=candidate,
+                    events_path=events_path,
+                    stderr_path=stderr_path,
+                    final_path=final_path,
+                    args=args,
+                    env={},
+                )
+        self.assertEqual(completed.returncode, 0)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(metadata["codex_attempt_count"], 2)
+        self.assertEqual(metadata["codex_retry_count"], 1)
+        self.assertTrue(metadata["codex_exec_attempts"][0]["retried"])
+        self.assertEqual(
+            metadata["codex_exec_attempts"][0]["retry_reason"],
+            "transient_no_output_no_candidate_changes",
+        )
+
+    def test_codex_exec_does_not_retry_after_candidate_changes(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_retry_changed_candidate", "scripts/run-codex-live-benchmarks.py")
+        args = SimpleNamespace(allow_live_codex=True, dry_run=False, timeout_seconds=1, codex_exec_retries=1)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            candidate = root / "candidate"
+            candidate.mkdir()
+            (candidate / "README.md").write_text("starter\n", encoding="utf-8")
+            runner._init_git(candidate)
+            events_path = root / "events.jsonl"
+            stderr_path = root / "stderr.log"
+            final_path = root / "final.md"
+            calls = []
+
+            def fake_exec(command, *, prompt, cwd, events_path, stderr_path, args, env):
+                del prompt, args, env
+                calls.append(command)
+                (cwd / "changed.txt").write_text("partial work\n", encoding="utf-8")
+                events_path.write_text('{"type": "turn.failed"}\n', encoding="utf-8")
+                stderr_path.write_text("", encoding="utf-8")
+                return subprocess.CompletedProcess(command, 1, "", "")
+
+            with patch.object(runner, "run_codex_exec", side_effect=fake_exec):
+                completed, metadata = runner.run_codex_exec_with_retries(
+                    ["codex", "exec"],
+                    prompt="task",
+                    cwd=candidate,
+                    events_path=events_path,
+                    stderr_path=stderr_path,
+                    final_path=final_path,
+                    args=args,
+                    env={},
+                )
+        self.assertEqual(completed.returncode, 1)
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(metadata["codex_retry_count"], 0)
+        self.assertEqual(metadata["codex_exec_attempts"][0]["retry_reason"], "candidate_changed")
+
+    def test_codex_exec_idle_timeout_terminates_child(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_idle_timeout", "scripts/run-codex-live-benchmarks.py")
+        args = SimpleNamespace(
+            allow_live_codex=True,
+            dry_run=False,
+            timeout_seconds=100,
+            codex_idle_timeout_seconds=1,
+        )
+
+        class FakeStdin:
+            def __init__(self) -> None:
+                self.writes: list[str] = []
+                self.closed = False
+
+            def write(self, text: str) -> None:
+                self.writes.append(text)
+
+            def close(self) -> None:
+                self.closed = True
+
+        class FakeProcess:
+            def __init__(self) -> None:
+                self.stdin = FakeStdin()
+                self.terminated = False
+                self.killed = False
+
+            def poll(self):
+                return None
+
+            def terminate(self) -> None:
+                self.terminated = True
+
+            def wait(self, timeout=None):
+                return -15
+
+            def kill(self) -> None:
+                self.killed = True
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            process = FakeProcess()
+            with patch.object(runner.subprocess, "Popen", return_value=process):
+                with patch.object(runner.time, "monotonic", side_effect=[0.0, 2.0]):
+                    with patch.object(runner.time, "sleep") as sleep:
+                        with self.assertRaises(runner.subprocess.TimeoutExpired):
+                            runner.run_codex_exec(
+                                ["codex", "exec", "--json", "-"],
+                                prompt="task",
+                                cwd=tmp_path,
+                                events_path=tmp_path / "events.jsonl",
+                                stderr_path=tmp_path / "stderr.log",
+                                args=args,
+                                env={},
+                            )
+        self.assertTrue(process.terminated)
+        self.assertFalse(process.killed)
+        self.assertEqual(process.stdin.writes, ["task"])
+        self.assertTrue(process.stdin.closed)
+        sleep.assert_not_called()
+
     def test_dry_run_has_priority_and_does_not_spawn_codex(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_dry_run", "scripts/run-codex-live-benchmarks.py")
         with tempfile.TemporaryDirectory() as tmp:
@@ -583,6 +779,287 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertIn("ChangeForge", skills)
         self.assertIn("Object-Method Encapsulation Decision", skills)
         self.assertIn("no side effects", skills)
+        self.assertIn("before deadline", skills)
+        self.assertIn("at deadline", skills)
+        self.assertIn("after deadline", skills)
+        self.assertIn("FakeBackend/source-of-truth seam", skills)
+        self.assertIn("backend.calls == 1", skills)
+        self.assertIn("live Redis", skills)
+        self.assertIn("PaymentAdapter", skills)
+        self.assertIn("refund_payment", skills)
+        self.assertIn("domain/value object", skills)
+
+    def test_backend_service_method_prompt_preserves_boundary_terms_for_assertions(self) -> None:
+        prompt = (
+            ROOT
+            / "evals"
+            / "codegen"
+            / "backend"
+            / "service-method-vs-new-helper"
+            / "prompt.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("before deadline", prompt)
+        self.assertIn("at deadline", prompt)
+        self.assertIn("after deadline", prompt)
+        self.assertIn("CamelCase", prompt)
+
+    def test_object_method_prompt_preserves_payment_boundary_terms_for_assertions(self) -> None:
+        prompt = (
+            ROOT
+            / "evals"
+            / "codegen"
+            / "structure"
+            / "object-method-encapsulation-placement"
+            / "prompt.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("orders/order.py", prompt)
+        self.assertIn("PaymentAdapter", prompt)
+        self.assertIn("payment provider", prompt)
+        self.assertIn("refund_payment", prompt)
+        self.assertIn("domain/value object", prompt)
+
+    def test_redis_stampede_assertion_allows_markdown_network_requests_prose(self) -> None:
+        assertion = (
+            ROOT
+            / "evals"
+            / "codegen"
+            / "reliability"
+            / "redis-cache-stampede-protection"
+            / "test-suite"
+            / "tests"
+            / "test_cache_stampede_protection.py"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp)
+            (candidate / "README.md").write_text(
+                "Redis outage degrades cleanly without external network requests.\n"
+                "The cache key includes tenant, permission, and variant dimensions.\n"
+                "Metrics cover hot keys, miss storms, fallback usage, and contention.\n",
+                encoding="utf-8",
+            )
+            (candidate / "product_cache.py").write_text(
+                "class ProductDetailCache:\n"
+                "    def get(self):\n"
+                "        # single-flight lock with ttl jitter and bounded timeout\n"
+                "        return 'fallback'\n",
+                encoding="utf-8",
+            )
+            tests_dir = candidate / "tests"
+            tests_dir.mkdir()
+            (tests_dir / "test_product_cache.py").write_text(
+                "class FakeBackend:\n"
+                "    calls = 0\n"
+                "class InMemoryCache:\n"
+                "    pass\n"
+                "def test_redis_down_fallback_single_flight():\n"
+                "    assert 'redis down fallback single flight only one concurrent lock'\n",
+                encoding="utf-8",
+            )
+            env = dict(os.environ)
+            env["CHANGEFORGE_CODEGEN_CANDIDATE_DIR"] = str(candidate)
+            completed = subprocess.run(
+                [sys.executable, str(assertion)],
+                cwd=ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp)
+            (candidate / "README.md").write_text(
+                "Redis outage degrades cleanly with tenant permission variant cache keys.\n"
+                "Metrics cover hot keys, miss storms, fallback usage, and contention.\n",
+                encoding="utf-8",
+            )
+            (candidate / "product_cache.py").write_text(
+                "import requests\n"
+                "def get_product():\n"
+                "    # single-flight lock with ttl jitter and bounded timeout\n"
+                "    return requests.get('example')\n",
+                encoding="utf-8",
+            )
+            tests_dir = candidate / "tests"
+            tests_dir.mkdir()
+            (tests_dir / "test_product_cache.py").write_text(
+                "class FakeBackend:\n"
+                "    calls = 0\n"
+                "class InMemoryCache:\n"
+                "    pass\n"
+                "def test_redis_down_fallback_single_flight():\n"
+                "    assert 'redis down fallback single flight only one concurrent lock'\n",
+                encoding="utf-8",
+            )
+            env = dict(os.environ)
+            env["CHANGEFORGE_CODEGEN_CANDIDATE_DIR"] = str(candidate)
+            completed = subprocess.run(
+                [sys.executable, str(assertion)],
+                cwd=ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertNotEqual(completed.returncode, 0)
+
+    def test_helper_reuse_assertion_accepts_existing_customer_as_normal_case(self) -> None:
+        # Regression fixture for a live candidate that named the normal case as an existing customer label.
+        assertion = (
+            ROOT
+            / "evals"
+            / "codegen"
+            / "devex"
+            / "helper-reuse-search"
+            / "test-suite"
+            / "tests"
+            / "test_helper_reuse_search.py"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp)
+            docs_dir = candidate / "docs"
+            docs_dir.mkdir()
+            docs_dir.joinpath("execution-discipline-report.md").write_text(
+                "Execution Discipline Report\n"
+                "Implementation Structure Plan\n"
+                "Reuse candidates: orderFormatter and customerFormatter.\n"
+                "Validation command: npm test.\n",
+                encoding="utf-8",
+            )
+            src = candidate / "src"
+            (src / "orders" / "__tests__").mkdir(parents=True)
+            (src / "customers").mkdir()
+            (src / "shared").mkdir()
+            (src / "orders" / "orderFormatter.ts").write_text(
+                "export function formatOrderNumber(value: string): string { return value.trim(); }\n",
+                encoding="utf-8",
+            )
+            (src / "customers" / "customerFormatter.ts").write_text(
+                "export function formatCustomerLabel(value: string): string { return value.trim(); }\n",
+                encoding="utf-8",
+            )
+            (src / "shared" / "stringUtils.ts").write_text(
+                "export function normalizeWhitespace(value: string): string { return value.trim(); }\n",
+                encoding="utf-8",
+            )
+            (src / "orders" / "__tests__" / "orderService.test.ts").write_text(
+                'test("public order API formats display name with the existing customer label", () => {});\n'
+                'test("public order API formats display name for a missing-customer order", () => {});\n'
+                'test("public order API formats display name for an archived-order display case", () => {});\n',
+                encoding="utf-8",
+            )
+            env = dict(os.environ)
+            env["CHANGEFORGE_CODEGEN_CANDIDATE_DIR"] = str(candidate)
+            completed = subprocess.run(
+                [sys.executable, str(assertion)],
+                cwd=ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+
+    def test_object_method_assertion_allows_rejected_anemic_object_prose(self) -> None:
+        assertion = (
+            ROOT
+            / "evals"
+            / "codegen"
+            / "structure"
+            / "object-method-encapsulation-placement"
+            / "test-suite"
+            / "tests"
+            / "test_object_method_encapsulation_placement.py"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp)
+            (candidate / "docs").mkdir()
+            (candidate / "docs" / "review-note.md").write_text(
+                "Object-Method Encapsulation Decision\n"
+                "Object candidates include a value object and a domain object.\n"
+                "Rejected: a helper bag and an anemic object.\n"
+                "The value object owns a pure decision with no side effects.\n",
+                encoding="utf-8",
+            )
+            (candidate / "orders").mkdir()
+            (candidate / "orders" / "order.py").write_text(
+                "class CancellationWindow:\n"
+                "    def is_expired(self):\n"
+                "        return False\n"
+                "class Order:\n"
+                "    def cancel(self):\n"
+                "        self.cancelled = True\n",
+                encoding="utf-8",
+            )
+            (candidate / "orders" / "payment_adapter.py").write_text(
+                "class PaymentAdapter:\n"
+                "    def refund(self):\n"
+                "        return 'payment provider refund adapter'\n",
+                encoding="utf-8",
+            )
+            tests_dir = candidate / "tests"
+            tests_dir.mkdir()
+            (tests_dir / "test_order_cancellation.py").write_text(
+                "def test_allowed_denied_expired_refund_hold_payment_failure():\n"
+                "    assert 'allowed denied expired refund hold payment failure'\n",
+                encoding="utf-8",
+            )
+            env = dict(os.environ)
+            env["CHANGEFORGE_CODEGEN_CANDIDATE_DIR"] = str(candidate)
+            completed = subprocess.run(
+                [sys.executable, str(assertion)],
+                cwd=ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp)
+            (candidate / "docs").mkdir()
+            (candidate / "docs" / "review-note.md").write_text(
+                "Object-Method Encapsulation Decision\n"
+                "Object candidates include a value object and a domain object.\n"
+                "Rejected alternatives are documented. Pure decision with no side effects.\n",
+                encoding="utf-8",
+            )
+            (candidate / "orders").mkdir()
+            (candidate / "orders" / "order.py").write_text(
+                "class CancellationHelper:\n"
+                "    pass\n",
+                encoding="utf-8",
+            )
+            (candidate / "orders" / "payment_adapter.py").write_text(
+                "class PaymentAdapter:\n"
+                "    pass\n",
+                encoding="utf-8",
+            )
+            tests_dir = candidate / "tests"
+            tests_dir.mkdir()
+            (tests_dir / "test_order_cancellation.py").write_text(
+                "def test_allowed_denied_expired_refund_hold_payment_failure():\n"
+                "    assert 'allowed denied expired refund hold payment failure'\n",
+                encoding="utf-8",
+            )
+            env = dict(os.environ)
+            env["CHANGEFORGE_CODEGEN_CANDIDATE_DIR"] = str(candidate)
+            completed = subprocess.run(
+                [sys.executable, str(assertion)],
+                cwd=ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertNotEqual(completed.returncode, 0)
 
     def test_installer_variants_split_skills_only_and_hooks(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_install_flags", "scripts/run-codex-live-benchmarks.py")
@@ -917,10 +1394,25 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(summary["coverage_summary"]["tiers"]["core"], 2)
         self.assertEqual(summary["coverage_summary"]["assertion_case_count"], 1)
         self.assertEqual(summary["coverage_summary"]["telemetry_only_case_count"], 1)
+        self.assertEqual(summary["coverage_summary"]["manifest_case_count"], 60)
+        self.assertEqual(summary["coverage_summary"]["registered_live_case_count"], 13)
+        self.assertEqual(summary["coverage_summary"]["registered_publishable_assertion_case_count"], 12)
+        self.assertEqual(summary["coverage_summary"]["actual_run_case_count"], 2)
+        self.assertEqual(summary["coverage_summary"]["tiers_registered"], {"core": 5, "experimental": 1, "level1": 7})
+        self.assertEqual(summary["coverage_summary"]["actual_run_case_coverage_rate"], 0.0333)
+        self.assertIn("frontend/accessible-form-error-state", summary["coverage_summary"]["registered_but_not_run_cases"])
+        self.assertIn("delivery", summary["coverage_summary"]["missing_manifest_categories"])
         self.assertEqual(summary["cost_summary"]["total_usage"]["input_tokens"], 20)
         self.assertEqual(summary["cost_summary"]["total_usage"]["output_tokens"], 10)
+        self.assertEqual(
+            summary["cost_summary"]["by_variant"]["skills_with_hooks_clean"]["pass_rate_per_100k_input_tokens"],
+            10000.0,
+        )
+        self.assertIn("skills_with_hooks_clean_vs_baseline_clean", summary["cost_summary"]["cost_adjusted_delta"])
         self.assertEqual(summary["stability_summary"]["observed_min_runs_per_case_variant"], 1)
         self.assertEqual(summary["stability_summary"]["test_suite_failure_rate"], 0.0)
+        self.assertEqual(summary["stability_summary"]["codex_exec_retry_count"], 0)
+        self.assertEqual(summary["stability_summary"]["failed_run_reasons_by_case"], {})
         self.assertTrue(any("smoke sample only" in item for item in summary["limitations"]))
 
     def test_summary_aggregates_ablation_runs_usage_cases_and_failure_categories(self) -> None:
@@ -1225,6 +1717,34 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
                 benchmark_passed=False,
             ),
             "install_failed",
+        )
+        normalized_status = runner._artifact_status_after_grading(
+            artifact_status="failed",
+            codex_returncode=1,
+            grading_status="passed",
+            grading={"all_passed": True},
+        )
+        self.assertEqual(normalized_status, "collected")
+        self.assertEqual(
+            runner._failure_category(
+                artifact_status=normalized_status,
+                failure_stage=None,
+                codex_returncode=1,
+                contamination={"contaminated": False},
+                grading_status="passed",
+                grading={"all_passed": True},
+                benchmark_passed=True,
+            ),
+            "none",
+        )
+        self.assertEqual(
+            runner._artifact_status_after_grading(
+                artifact_status="failed",
+                codex_returncode=1,
+                grading_status="not_collected",
+                grading={},
+            ),
+            "failed",
         )
         self.assertEqual(
             runner._failure_category(
@@ -2121,6 +2641,101 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
                 public_summary_path=public_path,
             )
         self.assertEqual(errors, [])
+
+    def test_report_consistency_accepts_consistent_partial_mixed_summary(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_report_consistency_partial",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        detail = {
+            "run_id": "partial-run",
+            "evidence_status": "partial",
+            "effect_verdict": "mixed",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            summary_path = reports / "codex-live-benchmark-summary.json"
+            scorecard_path = reports / "professional-scorecard.json"
+            public_path = reports / "public-benchmark-summary.json"
+            summary_path.write_text(
+                json.dumps(
+                    _strict_summary_payload(
+                        run_id="partial-run",
+                        status="partial",
+                        evidence_status="partial",
+                        effect_verdict="mixed",
+                    )
+                ),
+                encoding="utf-8",
+            )
+            scorecard_path.write_text(
+                json.dumps({"dimensions": [{"name": "Codex CLI live benchmark", "status": "partial", "detail": json.dumps(detail)}]}),
+                encoding="utf-8",
+            )
+            public_path.write_text(
+                json.dumps(
+                    {
+                        "items": [{"name": "Codex CLI live benchmark", "status": "partial", "detail": json.dumps(detail)}],
+                        "evidence_levels": {
+                            "local_codex_cli_live_benchmark": {
+                                "status": "partial",
+                                "meaning": "Opt-in local Codex CLI benchmark run.",
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            errors = validator.validate_report_consistency(
+                summary_path,
+                scorecard_path=scorecard_path,
+                public_summary_path=public_path,
+            )
+        self.assertEqual(errors, [])
+
+    def test_report_consistency_rejects_stale_public_markdown_run_id(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_report_consistency_stale_markdown",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        detail = {
+            "run_id": "current-run",
+            "evidence_status": "pass",
+            "effect_verdict": "positive",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            summary_path = reports / "codex-live-benchmark-summary.json"
+            public_path = reports / "public-benchmark-summary.json"
+            public_md_path = reports / "public-benchmark-summary.md"
+            summary_path.write_text(
+                json.dumps(_strict_summary_payload(run_id="current-run", effect_verdict="positive")),
+                encoding="utf-8",
+            )
+            public_path.write_text(
+                json.dumps(
+                    {
+                        "items": [{"name": "Codex CLI live benchmark", "status": "pass", "detail": json.dumps(detail)}],
+                        "evidence_levels": {
+                            "local_codex_cli_live_benchmark": {
+                                "status": "pass",
+                                "meaning": "Opt-in local Codex CLI benchmark run.",
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            public_md_path.write_text(
+                '| Codex CLI live benchmark | `pass` | {"run_id": "old-run", "effect_verdict": "positive"} |\n',
+                encoding="utf-8",
+            )
+            errors = validator.validate_report_consistency(summary_path, public_summary_path=public_path)
+        self.assertTrue(any("does not reference current live run_id" in error for error in errors))
 
     def test_public_summary_rejects_current_home_smoke_as_strict_file(self) -> None:
         public = _load_script("generate_public_summary_codex_live_smoke", "scripts/generate-public-benchmark-summary.py")

@@ -171,6 +171,7 @@ def validate_report_consistency(
                 item_collection="dimensions",
             )
         )
+        errors.extend(_derived_markdown_report_errors(summary, scorecard_path.with_suffix(".md"), "scorecard"))
     if public_summary_path is not None:
         errors.extend(
             _derived_live_report_errors(
@@ -179,6 +180,9 @@ def validate_report_consistency(
                 report_kind="public summary",
                 item_collection="items",
             )
+        )
+        errors.extend(
+            _derived_markdown_report_errors(summary, public_summary_path.with_suffix(".md"), "public summary")
         )
     return errors
 
@@ -224,14 +228,14 @@ def _derived_live_report_errors(
                 f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail {field} "
                 f"{detail.get(field)!r} does not match summary {summary.get(field)!r}"
             )
+    if detail.get("evidence_status") != summary.get("evidence_status"):
+        errors.append(
+            f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail evidence_status "
+            f"{detail.get('evidence_status')!r} does not match summary {summary.get('evidence_status')!r}"
+        )
     if summary.get("evidence_status") == "pass":
         if item_status != "pass":
             errors.append(f"{report_kind} cannot show {item_status!r} when live summary evidence_status is pass")
-        if detail.get("evidence_status") != "pass":
-            errors.append(
-                f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail evidence_status "
-                f"{detail.get('evidence_status')!r} does not match summary pass"
-            )
     if summary.get("effect_verdict") == "positive" and detail.get("effect_verdict") != "positive":
         errors.append(f"{report_kind} cannot reference a non-positive live result when summary effect_verdict is positive")
     if report_kind == "public summary":
@@ -242,6 +246,29 @@ def _derived_live_report_errors(
                 f"public summary evidence_levels.{CODEX_LIVE_EVIDENCE_KEY}.status "
                 f"{evidence_status!r} does not match summary status {expected_status!r}"
             )
+    return errors
+
+
+def _derived_markdown_report_errors(summary: dict[str, Any], report_path: Path, report_kind: str) -> list[str]:
+    if not report_path.exists():
+        return []
+    text = report_path.read_text(encoding="utf-8", errors="ignore")
+    if CODEX_LIVE_BENCHMARK_NAME not in text:
+        return []
+    errors: list[str] = []
+    run_id = str(summary.get("run_id") or "")
+    if ("run_id" in text or "Run id" in text) and run_id and run_id not in text:
+        errors.append(f"{report_kind} markdown {report_path} does not reference current live run_id {run_id!r}")
+    effect_verdict = str(summary.get("effect_verdict") or "")
+    if "effect_verdict" in text and effect_verdict and effect_verdict not in text:
+        errors.append(
+            f"{report_kind} markdown {report_path} does not reference current effect_verdict {effect_verdict!r}"
+        )
+    evidence_status = str(summary.get("evidence_status") or "")
+    if "evidence_status" in text and evidence_status and evidence_status not in text:
+        errors.append(
+            f"{report_kind} markdown {report_path} does not reference current evidence_status {evidence_status!r}"
+        )
     return errors
 
 
@@ -629,23 +656,51 @@ def _coverage_summary_errors(payload: Any) -> list[str]:
         "telemetry_only_case_count",
         "publishable_assertion_case_count",
         "unregistered_case_count",
+        "manifest_category_count",
+        "manifest_case_count",
+        "registered_live_case_count",
+        "registered_assertion_case_count",
+        "registered_telemetry_only_case_count",
+        "registered_publishable_assertion_case_count",
+        "registered_category_count",
+        "actual_run_case_count",
+        "actual_run_assertion_case_count",
+        "actual_run_publishable_assertion_case_count",
+        "actual_run_category_count",
     ):
         if not isinstance(payload.get(field), int):
             errors.append(f"summary coverage_summary.{field} must be an integer")
-    tiers = payload.get("tiers")
-    if not isinstance(tiers, dict):
-        errors.append("summary coverage_summary.tiers must be an object")
-    else:
-        invalid_tiers = sorted(set(str(tier) for tier in tiers) - {*CASE_TIERS, "unregistered"})
-        if invalid_tiers:
-            errors.append(f"summary coverage_summary.tiers has invalid tiers {', '.join(invalid_tiers)}")
-        errors.extend(_int_count_errors("summary coverage_summary.tiers", tiers))
-    for field in ("categories", "coverage_dimensions"):
+    for field in ("registered_case_coverage_rate", "registered_publishable_case_coverage_rate", "actual_run_case_coverage_rate"):
+        value = payload.get(field)
+        if not isinstance(value, int | float) or value < 0 or value > 1:
+            errors.append(f"summary coverage_summary.{field} must be a numeric rate from 0 to 1")
+    for field in ("tiers", "tiers_registered", "tiers_run"):
+        tiers = payload.get(field)
+        if not isinstance(tiers, dict):
+            errors.append(f"summary coverage_summary.{field} must be an object")
+        else:
+            invalid_tiers = sorted(set(str(tier) for tier in tiers) - {*CASE_TIERS, "unregistered"})
+            if invalid_tiers:
+                errors.append(f"summary coverage_summary.{field} has invalid tiers {', '.join(invalid_tiers)}")
+            errors.extend(_int_count_errors(f"summary coverage_summary.{field}", tiers))
+    for field in (
+        "categories",
+        "coverage_dimensions",
+        "categories_registered",
+        "publishable_categories_registered",
+        "coverage_dimensions_registered",
+        "categories_run",
+        "coverage_dimensions_run",
+    ):
         value = payload.get(field)
         if not isinstance(value, dict):
             errors.append(f"summary coverage_summary.{field} must be an object")
         else:
             errors.extend(_int_count_errors(f"summary coverage_summary.{field}", value))
+    for field in ("manifest_categories", "registered_but_not_run_cases", "missing_manifest_categories"):
+        value = payload.get(field)
+        if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
+            errors.append(f"summary coverage_summary.{field} must be a list of strings")
     return errors
 
 
@@ -674,6 +729,26 @@ def _cost_summary_errors(payload: Any) -> list[str]:
                         variant_payload.get(field),
                     )
                 )
+            for field in ("pass_rate_per_100k_input_tokens", "pass_rate_per_100_commands"):
+                value = variant_payload.get(field)
+                if not (isinstance(value, int | float) or value == "not_collected"):
+                    errors.append(
+                        f"summary cost_summary.by_variant.{variant}.{field} must be numeric or not_collected"
+                    )
+    cost_adjusted_delta = payload.get("cost_adjusted_delta")
+    if not isinstance(cost_adjusted_delta, dict):
+        errors.append("summary cost_summary.cost_adjusted_delta must be an object")
+    else:
+        for key, value in cost_adjusted_delta.items():
+            if not isinstance(key, str) or not isinstance(value, dict):
+                errors.append(f"summary cost_summary.cost_adjusted_delta.{key} must be an object")
+                continue
+            if value.get("status") not in {"collected", "not_collected"}:
+                errors.append(f"summary cost_summary.cost_adjusted_delta.{key}.status is invalid")
+            if value.get("status") == "collected" and not isinstance(value.get("cost_efficiency_note"), str):
+                errors.append(f"summary cost_summary.cost_adjusted_delta.{key}.cost_efficiency_note must be a string")
+    if not isinstance(payload.get("case_cost_outliers"), list):
+        errors.append("summary cost_summary.case_cost_outliers must be a list")
     if not isinstance(payload.get("cost_caveat"), str):
         errors.append("summary cost_summary.cost_caveat must be a string")
     return errors
@@ -688,15 +763,26 @@ def _stability_summary_errors(payload: Any) -> list[str]:
         "observed_case_variant_cell_count",
         "observed_min_runs_per_case_variant",
         "observed_max_runs_per_case_variant",
+        "codex_exec_retry_count",
+        "case_regression_count",
     ):
         if not isinstance(payload.get(field), int):
             errors.append(f"summary stability_summary.{field} must be an integer")
-    for field in ("artifact_status_counts", "grading_status_counts"):
+    for field in (
+        "artifact_status_counts",
+        "grading_status_counts",
+        "codex_exec_failed_by_case",
+        "codex_exec_retries_by_case",
+        "failed_run_reasons_by_case",
+    ):
         value = payload.get(field)
         if not isinstance(value, dict):
             errors.append(f"summary stability_summary.{field} must be an object")
-        else:
+        elif field in {"artifact_status_counts", "grading_status_counts"}:
             errors.extend(_int_count_errors(f"summary stability_summary.{field}", value))
+    for field in ("flaky_case_variant_cells", "skills_with_hooks_regression_cases", "partial_status_reasons"):
+        if not isinstance(payload.get(field), list):
+            errors.append(f"summary stability_summary.{field} must be a list")
     for field in (
         "setup_failure_rate",
         "test_suite_failure_rate",

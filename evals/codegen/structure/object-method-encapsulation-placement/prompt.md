@@ -21,6 +21,10 @@ helper calls a payment provider and must remain in an adapter boundary.
 - Keep orchestration in the service/use-case object.
 - Keep payment, persistence, cache, queue, clock, and framework side effects in
   adapters, repositories, or services rather than domain/value objects.
+- Domain/value object files such as `orders/order.py` must not import, mention,
+  or call `PaymentAdapter`, `payment provider`, `refund_payment`, `chargeback`,
+  `requests`, or other payment/refund side-effect APIs. They may return a pure
+  cancellation/refund-hold decision for the service to orchestrate.
 - Keep private helpers private and test behavior through public service or
   module facade behavior.
 
@@ -49,3 +53,5 @@ helper calls a payment provider and must remain in an adapter boundary.
   object placement.
 - Evidence shows private helpers remain private and infrastructure stays out of
   domain/value objects.
+- Evidence shows payment/refund provider calls are delegated from the service to
+  an adapter boundary and never hidden inside domain/value objects.

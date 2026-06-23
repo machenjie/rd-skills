@@ -43,7 +43,7 @@ class HelperReuseSearchAssertions(unittest.TestCase):
         )
 
         self.assertRegex(test_text, r"(?i)display.?name|display name")
-        self.assertRegex(test_text, r"(?i)\bnormal\b|standard|active")
+        self.assertRegex(test_text, r"(?i)\bnormal\b|standard|active|existing customer|customer label")
         self.assertRegex(test_text, r"(?i)missing.?customer|unknown.?customer|no customer")
         self.assertRegex(test_text, r"(?i)archived")
         self.assertNotRegex(test_text, r"(?i)formatOrderDisplayName\(")

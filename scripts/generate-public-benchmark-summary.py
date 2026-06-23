@@ -351,6 +351,9 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
         "delta": summary.get("delta"),
         "strict_errors": strict_errors,
         "cases_summary": summary.get("cases_summary"),
+        "coverage_summary": summary.get("coverage_summary"),
+        "cost_summary": summary.get("cost_summary"),
+        "stability_summary": summary.get("stability_summary"),
         "limitations": summary.get("limitations"),
     }
     comparison = _codex_live_previous_comparison(

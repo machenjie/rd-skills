@@ -14,18 +14,24 @@ The starter repo represents product detail caching where a flash-sale hot key ex
 - Add TTL jitter so many keys do not expire at the same instant.
 - Bound cache miss storms and protect the source of truth during Redis failures.
 - Emit metrics for hot keys, miss storms, fallback usage, and lock contention.
+- Prove the single-flight behavior with deterministic local tests that use a
+  fake or in-memory cache plus a FakeBackend/source-of-truth seam, same-key
+  concurrent workers, and an assertion that exactly one backend refresh occurs,
+  such as `backend.calls == 1`.
 
 ## Constraints
 
 - Cache keys must include tenant, permission, and variant dimensions when those dimensions affect correctness.
 - Lock ownership and timeout behavior must be documented and testable.
 - Do not replace the benchmark with documentation-only output.
-- Avoid any network dependency; scripts must run locally from the starter repo.
+- Avoid any network dependency, live Redis instance, network client, URL, or
+  external service; scripts must run locally from the starter repo.
 
 ## Deliverables
 
 - Source changes in the starter repo that implement the requested cache behavior.
-- Tests or executable checks that prove the required behavior and denial paths.
+- Tests or executable checks that prove the required behavior, Redis-down
+  fallback, and stampede protection using local fakes instead of live services.
 - A short implementation note describing important tradeoffs and residual risk.
 
 ## Completion Evidence
