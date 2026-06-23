@@ -240,20 +240,33 @@ def _process_compliance_summary(results: list[dict[str, Any]]) -> dict[str, Any]
     traces = [trace for trace in traces if isinstance(trace, dict)]
     trace_count = len(traces)
 
-    def phase_rate(phase: str) -> float:
-        return _trace_rate(trace_count, sum(1 for trace in traces if (trace.get("phase_status") or {}).get(phase) == "present"))
+    def phase_rate(phase: str, status: str) -> float:
+        return _trace_rate(
+            trace_count,
+            sum(1 for trace in traces if (trace.get("phase_status") or {}).get(phase) == status),
+        )
 
     def traceability_rate(field: str) -> float:
         return _trace_rate(trace_count, sum(1 for trace in traces if (trace.get("traceability") or {}).get(field) is True))
 
     return {
-        "pdd_present_rate": phase_rate("pdd"),
-        "ddd_present_rate": phase_rate("ddd"),
-        "sdd_present_rate": phase_rate("sdd"),
-        "tdd_present_rate": phase_rate("tdd"),
-        "pdd_to_tdd_traceability_rate": traceability_rate("pdd_to_tests"),
-        "ddd_invariant_test_or_code_coverage_rate": traceability_rate("ddd_invariants_to_code_or_tests"),
-        "sdd_public_api_validation_rate": traceability_rate("sdd_public_api_to_tests"),
+        "pdd_present_rate": phase_rate("pdd", "present"),
+        "ddd_present_rate": phase_rate("ddd", "present"),
+        "sdd_present_rate": phase_rate("sdd", "present"),
+        "tdd_present_rate": phase_rate("tdd", "present"),
+        "pdd_inferred_rate": phase_rate("pdd", "inferred"),
+        "ddd_inferred_rate": phase_rate("ddd", "inferred"),
+        "sdd_inferred_rate": phase_rate("sdd", "inferred"),
+        "tdd_inferred_rate": phase_rate("tdd", "inferred"),
+        "pdd_degraded_rate": phase_rate("pdd", "degraded"),
+        "ddd_degraded_rate": phase_rate("ddd", "degraded"),
+        "sdd_degraded_rate": phase_rate("sdd", "degraded"),
+        "tdd_degraded_rate": phase_rate("tdd", "degraded"),
+        "pdd_to_tdd_traceability_rate": traceability_rate("pdd_acceptance_to_tdd_tests"),
+        "ddd_invariant_test_or_code_coverage_rate": traceability_rate("ddd_invariants_to_tdd_tests"),
+        "sdd_public_api_validation_rate": traceability_rate("sdd_public_api_to_tdd_tests"),
+        "sdd_failure_mode_validation_rate": traceability_rate("sdd_failure_modes_to_tdd_tests"),
+        "sdd_logging_validation_rate": traceability_rate("sdd_logging_to_tdd_tests"),
         "validation_command_present_rate": _trace_rate(
             trace_count,
             sum(1 for trace in traces if trace.get("validation_commands")),

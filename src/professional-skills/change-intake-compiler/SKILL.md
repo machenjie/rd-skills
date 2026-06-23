@@ -11,6 +11,9 @@ changeforge_version: 0.1.0
 ## Mission
 Transform ambiguous, incomplete, or solution-premixed change input — from any source (user request, bug report, stakeholder instruction, PR description, planning session) — into a precise, structured Change Request that can be analyzed, impact-assessed, designed, implemented, reviewed, and verified without requiring further clarification from the original requester.
 
+## Stage Ownership
+Own the PDD slice for ChangeForge process traces: problem, affected user or system, acceptance criteria, constraints, non-goals, risk surfaces, and validation signal. Use `development-process-orchestrator` when the full PDD/DDD/SDD/TDD trace must be produced or validated.
+
 ## When To Use
 - The incoming request is incomplete: missing current behavior, desired outcome, constraints, or completion signal.
 - The request conflates desired behavior with a specific implementation choice — solution-first framing that forecloses better alternatives.

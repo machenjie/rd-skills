@@ -243,21 +243,20 @@ def _derived_live_report_errors(
             errors.append(f"{report_kind} cannot show {item_status!r} when live summary evidence_status is pass")
     if summary.get("effect_verdict") == "positive" and detail.get("effect_verdict") != "positive":
         errors.append(f"{report_kind} cannot reference a non-positive live result when summary effect_verdict is positive")
-    if report_kind == "public summary":
-        for field in ("benchmark_passed_result_count", "benchmark_eligible_result_count"):
-            if detail.get(field) != summary.get(field):
-                errors.append(
-                    f"public summary {CODEX_LIVE_BENCHMARK_NAME} detail {field} "
-                    f"{detail.get(field)!r} does not match summary {summary.get(field)!r}"
-                )
-        detail_hooks_rate = _variant_pass_rate(detail, "skills_with_hooks_clean")
-        summary_hooks_rate = _variant_pass_rate(summary, "skills_with_hooks_clean")
-        if detail_hooks_rate != summary_hooks_rate:
+    for field in ("benchmark_passed_result_count", "benchmark_eligible_result_count"):
+        if detail.get(field) != summary.get(field):
             errors.append(
-                f"public summary {CODEX_LIVE_BENCHMARK_NAME} detail "
-                f"skills_with_hooks_clean.pass_rate {detail_hooks_rate!r} "
-                f"does not match summary {summary_hooks_rate!r}"
+                f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail {field} "
+                f"{detail.get(field)!r} does not match summary {summary.get(field)!r}"
             )
+    detail_hooks_rate = _variant_pass_rate(detail, "skills_with_hooks_clean")
+    summary_hooks_rate = _variant_pass_rate(summary, "skills_with_hooks_clean")
+    if detail_hooks_rate != summary_hooks_rate:
+        errors.append(
+            f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail "
+            f"skills_with_hooks_clean.pass_rate {detail_hooks_rate!r} "
+            f"does not match summary {summary_hooks_rate!r}"
+        )
     if report_kind == "public summary":
         evidence_level = (report.get("evidence_levels") or {}).get(CODEX_LIVE_EVIDENCE_KEY)
         evidence_status = evidence_level.get("status") if isinstance(evidence_level, dict) else None
@@ -279,6 +278,12 @@ def _derived_markdown_report_errors(summary: dict[str, Any], report_path: Path, 
     run_id = str(summary.get("run_id") or "")
     if ("run_id" in text or "Run id" in text) and run_id and run_id not in text:
         errors.append(f"{report_kind} markdown {report_path} does not reference current live run_id {run_id!r}")
+    for stale_run_id in _live_run_ids_in_markdown(text):
+        if run_id and stale_run_id != run_id:
+            errors.append(
+                f"{report_kind} markdown {report_path} references stale live run_id "
+                f"{stale_run_id!r}; expected {run_id!r}"
+            )
     effect_verdict = str(summary.get("effect_verdict") or "")
     if "effect_verdict" in text and effect_verdict and effect_verdict not in text:
         errors.append(
@@ -289,7 +294,33 @@ def _derived_markdown_report_errors(summary: dict[str, Any], report_path: Path, 
         errors.append(
             f"{report_kind} markdown {report_path} does not reference current evidence_status {evidence_status!r}"
         )
+    for field in ("benchmark_passed_result_count", "benchmark_eligible_result_count"):
+        expected = summary.get(field)
+        if field in text and expected is not None and str(expected) not in text:
+            errors.append(f"{report_kind} markdown {report_path} does not reference current {field} {expected!r}")
+    hooks_rate = _variant_pass_rate(summary, "skills_with_hooks_clean")
+    if "skills_with_hooks_clean" in text and "pass_rate" in text and hooks_rate is not None and str(hooks_rate) not in text:
+        errors.append(
+            f"{report_kind} markdown {report_path} does not reference current "
+            f"skills_with_hooks_clean.pass_rate {hooks_rate!r}"
+        )
     return errors
+
+
+def _live_run_ids_in_markdown(text: str) -> set[str]:
+    run_ids: set[str] = set()
+    for line in text.splitlines():
+        if "Codex CLI live benchmark" not in line and "local_codex_cli_live_benchmark" not in line and "run_id" not in line:
+            continue
+        for marker in ('"run_id": "', "'run_id': '", "run_id="):
+            if marker not in line:
+                continue
+            remainder = line.split(marker, 1)[1]
+            delimiter = '"' if '"' in marker else "'" if "'" in marker else " "
+            value = remainder.split(delimiter, 1)[0].strip()
+            if value:
+                run_ids.add(value)
+    return run_ids
 
 
 def _find_live_report_item(items: Any) -> dict[str, Any] | None:

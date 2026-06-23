@@ -111,7 +111,7 @@ Domain extension routing:
 - `payment-trading-extension`: payment, subscription, billing, invoice, refund, chargeback, trading, ledger, balance, checkout, reconciliation, settlement, entitlement, or tax.
 - `low-level-systems-extension`: OS, kernel, driver, native performance, C, C++, Rust systems, FFI, ABI, syscall, memory safety, atomics, descriptor, or platform runtime.
 
-Runtime profile awareness: recommended has 19 professional skills; full has 19 professional skills plus 7 domain extensions; dev has 19 professional skills, 127 foundation capabilities, and 7 domain extensions. Foundation capabilities compile into professional references in every profile.
+Runtime profile awareness: recommended has 21 professional skills; full has 21 professional skills plus 7 domain extensions; dev has 21 professional skills, 127 foundation capabilities, and 7 domain extensions. Foundation capabilities compile into professional references in every profile.
 
 ## Mode Matrix
 Select the routing mode before naming a professional path.

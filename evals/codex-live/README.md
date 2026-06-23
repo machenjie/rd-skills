@@ -156,8 +156,11 @@ python3 scripts/run-codex-live-benchmarks.py \
   --publish-summary
 ```
 
-Only claim Level 1 coverage after actual Level 1 results exist in the summary;
-coverage summaries distinguish registered cases from actual run cases.
+Only claim Level 1 coverage after actual Level 1 results exist in the summary.
+Registered coverage means the cases exist in `cases.yaml`; actual run coverage
+means result rows for `--tier level1` were collected and included in the
+published summary. Coverage summaries must keep these two counts separate so
+new easy Level 1 cases cannot dilute or inflate core pass-rate claims.
 
 ## Structured Logs and Process Traces
 
@@ -167,7 +170,10 @@ Live and dry-run directories include sanitized run-level logs:
 - `timeline.jsonl`
 
 Live result cells include `process-trace.json` with compact PDD, DDD, SDD, TDD,
-implementation, validation, and review status. Validate these artifacts with:
+implementation, validation, and review status. `present` means concrete trace
+evidence was parsed from final output, telemetry, explicit trace artifacts, or
+grading evidence; case metadata fallback is `inferred` and is reported
+separately from present evidence. Validate these artifacts with:
 
 ```bash
 python3 scripts/validate-codex-live-logs.py --run-dir <run-dir>

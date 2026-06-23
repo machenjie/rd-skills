@@ -13,6 +13,8 @@ skills:
     path: src/professional-skills/acceptance-criteria-builder
   - name: task-dag-planner
     path: src/professional-skills/task-dag-planner
+  - name: development-process-orchestrator
+    path: src/professional-skills/development-process-orchestrator
   - name: experience-impact-modeler
     path: src/professional-skills/experience-impact-modeler
   - name: domain-impact-modeler
@@ -35,6 +37,8 @@ skills:
     path: src/professional-skills/security-privacy-gate
   - name: reliability-observability-gate
     path: src/professional-skills/reliability-observability-gate
+  - name: logging-design-gate
+    path: src/professional-skills/logging-design-gate
   - name: delivery-release-gate
     path: src/professional-skills/delivery-release-gate
   - name: ai-code-review-refactor

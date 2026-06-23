@@ -11,6 +11,9 @@ changeforge_version: 0.1.0
 ## Mission
 Identify, map, and reason about the full business domain impact of a proposed change — across bounded contexts, aggregate boundaries, domain events, ownership rules, and invariants — so that implementation decisions are grounded in domain model correctness, not technical convenience, and cross-domain side effects are discovered before they become production incidents.
 
+## Stage Ownership
+Own the DDD slice for ChangeForge process traces: domain terms, entity and value-object ownership, domain/application service boundaries, invariants, side-effect boundaries, and existing code ownership. Use `development-process-orchestrator` when DDD must map forward into SDD and TDD evidence.
+
 ## When To Use
 - A change creates, modifies, or deletes an entity, aggregate, or value object in a domain model.
 - A change adds, renames, or removes a domain event that other bounded contexts may consume.

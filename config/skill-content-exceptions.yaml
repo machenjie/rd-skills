@@ -10,4 +10,34 @@
 # The former implementation-structure-design and ci-cd body overages were resolved
 # by reference decomposition and body tightening (see
 # reports/skill-content-optimization-plan.md).
-exceptions: []
+exceptions:
+  - path: src/foundation/capabilities/agent-execution-discipline/SKILL.md
+    allow: [body_lines]
+    reason: Required execution-discipline guardrails must stay in skill.md because they are always-loaded behavior constraints and cannot move to references without weakening agent closure rules.
+    owner: ChangeForge maintainers
+    review_after: "2026-09-30"
+    mitigation: Keep future additions in references unless they are mandatory runtime behavior constraints.
+  - path: src/professional-skills/ai-code-review-refactor/SKILL.md
+    allow: [body_lines]
+    reason: AI code review risk taxonomy must stay in skill.md because it drives always-loaded review behavior and cannot move to references without losing review coverage.
+    owner: ChangeForge maintainers
+    review_after: "2026-09-30"
+    mitigation: Move examples and extended checklists into references before adding new review categories.
+  - path: src/professional-skills/change-forge-router/SKILL.md
+    allow: [section_lines]
+    reason: Router critical details must stay in skill.md because route selection is always-loaded and cannot move to references without breaking first-hop routing behavior.
+    owner: ChangeForge maintainers
+    review_after: "2026-09-30"
+    mitigation: Keep detailed examples in references and retain only routing-critical rules in the body.
+  - path: src/professional-skills/development-process-orchestrator/SKILL.md
+    allow: [section_lines]
+    reason: PDD/DDD/SDD/TDD schemas and pass criteria must stay in skill.md because the process trace method is always-loaded and cannot move to references before trace validation is stable.
+    owner: ChangeForge maintainers
+    review_after: "2026-09-30"
+    mitigation: Extract examples into references after validator fixtures prove the concise method remains sufficient.
+  - path: src/professional-skills/logging-design-gate/SKILL.md
+    allow: [section_lines]
+    reason: Logging taxonomy, level policy, structured field, and redaction rules must stay in skill.md because they are the selected skill's always-loaded safety contract and cannot move to references yet.
+    owner: ChangeForge maintainers
+    review_after: "2026-09-30"
+    mitigation: Move extended examples into references after deterministic logging-design tests cover the compact contract.

@@ -6,7 +6,19 @@ Read the task below, modify only the candidate repository, and leave a concise
 final answer that includes:
 
 - files changed;
-- compact PDD/DDD/SDD/TDD traceability when useful;
+- this compact trace block when the task changes behavior, tests, structure, or
+  operational evidence:
+
+```text
+Process Trace:
+PDD: problem + acceptance + constraints
+DDD: domain ownership + invariants + side-effect boundary
+SDD: modules + public API + error/logging decision
+TDD: tests/validation mapping
+Validation:
+Residual Risk:
+```
+
 - validation commands run and their result;
 - reuse or placement evidence when relevant;
 - residual risk.
@@ -21,7 +33,7 @@ existing files. If a dependency is unavoidable, document why and keep setup
 deterministic. Do not write into `HOME` or `CODEX_HOME`. Before the final
 response, run or reason through setup and report exact validation commands and
 results. Keep process notes compact: PDD acceptance criteria, DDD invariants,
-SDD public API/module/failure-mode choices, and TDD validation commands should
-map to the implemented change and tests.
+SDD public API/module/failure-mode/logging choices, and TDD validation commands
+should map to the implemented change and tests.
 
 {{TASK_PROMPT}}

@@ -9,7 +9,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from validation_utils import EXPECTED_PROFILE_TOP_LEVEL_COUNTS, load_yaml_file
+from validation_utils import (
+    EXPECTED_DOMAIN_EXTENSION_COUNT,
+    EXPECTED_FOUNDATION_CAPABILITY_COUNT,
+    EXPECTED_PROFESSIONAL_SKILL_COUNT,
+    EXPECTED_PROFILE_TOP_LEVEL_COUNTS,
+    load_yaml_file,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -134,9 +140,9 @@ def render_catalog(payload: dict[str, Any]) -> str:
         "",
         "| Profile | Top-Level Count | Exposure Rule |",
         "| --- | ---: | --- |",
-        f"| `recommended` | {EXPECTED_PROFILE_TOP_LEVEL_COUNTS['recommended']} | 19 professional skills top-level; foundation capabilities compiled into references; domain extensions indexed for routing. |",
-        f"| `full` | {EXPECTED_PROFILE_TOP_LEVEL_COUNTS['full']} | 19 professional skills plus 7 domain extensions top-level; foundation capabilities compiled into references. |",
-        f"| `dev` | {EXPECTED_PROFILE_TOP_LEVEL_COUNTS['dev']} | 19 professional skills plus 127 foundation capabilities plus 7 domain extensions top-level. |",
+        f"| `recommended` | {EXPECTED_PROFILE_TOP_LEVEL_COUNTS['recommended']} | {EXPECTED_PROFESSIONAL_SKILL_COUNT} professional skills top-level; foundation capabilities compiled into references; domain extensions indexed for routing. |",
+        f"| `full` | {EXPECTED_PROFILE_TOP_LEVEL_COUNTS['full']} | {EXPECTED_PROFESSIONAL_SKILL_COUNT} professional skills plus {EXPECTED_DOMAIN_EXTENSION_COUNT} domain extensions top-level; foundation capabilities compiled into references. |",
+        f"| `dev` | {EXPECTED_PROFILE_TOP_LEVEL_COUNTS['dev']} | {EXPECTED_PROFESSIONAL_SKILL_COUNT} professional skills plus {EXPECTED_FOUNDATION_CAPABILITY_COUNT} foundation capabilities plus {EXPECTED_DOMAIN_EXTENSION_COUNT} domain extensions top-level. |",
         "",
         "## Professional Skills",
         "",

@@ -11,6 +11,9 @@ changeforge_version: 0.1.0
 ## Mission
 Critically review, validate, and safely refactor AI-generated or AI-assisted code so it references real APIs, respects local architecture conventions, maintains testability, avoids dependency bloat, and stays within safe behavioral change boundaries — because LLM-generated code optimizes for plausibility, not correctness.
 
+## Stage Ownership
+Own cross-stage review for PDD/DDD/SDD/TDD traces: verify that problem definition, domain ownership, system design, logging decisions, tests, and validation evidence align with the actual diff. Reject boolean-only traceability and require concrete mappings when process evidence is claimed.
+
 ## When To Use
 - Code was generated, completed, or significantly transformed by an AI model (Copilot, Claude, ChatGPT, Cursor, etc.).
 - Abstractions feel invented, over-engineered, or inconsistent with the existing codebase style.

@@ -2282,6 +2282,11 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             result_dir.mkdir(parents=True)
             result_dir.joinpath("result.json").write_text(json.dumps(_result_payload()), encoding="utf-8")
             command = "python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"
+            acceptance = ["deny private, metadata, and loopback URLs"]
+            invariants = ["unsafe URL is never fetched"]
+            public_api = ["public URL validation/fetch entrypoint used by tests"]
+            error_contract = ["deny unsafe URLs with a stable error category"]
+            failure_modes = ["metadata URL denial"]
             trace = {
                 "schema_version": 1,
                 "run_id": "synthetic-run",
@@ -2298,6 +2303,11 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
                     "review": "present",
                 },
                 "traceability": {
+                    "pdd_acceptance_to_tdd_tests": True,
+                    "ddd_invariants_to_tdd_tests": True,
+                    "sdd_public_api_to_tdd_tests": True,
+                    "sdd_failure_modes_to_tdd_tests": True,
+                    "sdd_logging_to_tdd_tests": True,
                     "pdd_to_tests": True,
                     "ddd_invariants_to_code_or_tests": True,
                     "sdd_public_api_to_tests": True,
@@ -2305,29 +2315,61 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
                 },
                 "process_facts": {
                     "pdd": {
-                        "acceptance_criteria": ["observable behavior"],
+                        "problem": "Prevent SSRF with URL allowlist and safe diagnostics.",
+                        "user_or_system_impact": ["protect internal metadata services"],
+                        "acceptance_criteria": acceptance,
                         "constraints": ["preserve setup"],
                         "non_goals": ["private corpus"],
                         "risk_surfaces": ["security"],
-                        "expected_behavior": ["ssrf allowlist"],
+                        "validation_signal": [command],
                     },
                     "ddd": {
-                        "domain_terms": ["security"],
-                        "invariants": ["block unsafe URL"],
-                        "side_effect_boundaries": ["no network"],
+                        "domain_terms": ["URL candidate", "network boundary"],
+                        "entities": ["URL validation decision"],
+                        "value_objects": ["normalized URL"],
+                        "domain_services": [],
+                        "application_services": [],
+                        "adapters": [],
+                        "invariants": invariants,
+                        "ownership_decision": ["URL safety policy belongs before network fetch"],
+                        "side_effect_boundaries": ["no network fetch until allowlist passes"],
                     },
                     "sdd": {
-                        "modules": ["public API"],
-                        "public_api": ["validate_url"],
+                        "modules": ["URL validation module"],
+                        "files_to_change": ["candidate repository files selected by inspection"],
+                        "public_api": public_api,
                         "data_flow": ["request -> validation"],
-                        "failure_modes": ["unsafe URL"],
+                        "error_contract": error_contract,
+                        "failure_modes": failure_modes,
+                        "logging_decision": {
+                            "needed": True,
+                            "log_types": ["security"],
+                            "events": ["url_denied"],
+                            "levels": ["WARN"],
+                            "fields": ["operation", "error_category", "policy", "trace_id"],
+                            "redaction": ["raw URL query", "token"],
+                            "cardinality_controls": ["policy category instead of raw URL"],
+                            "rationale": "Security denial diagnostics must not leak query secrets.",
+                        },
+                        "metrics_traces_alerts": ["grading-result.json"],
+                        "performance_or_concurrency_constraints": ["security"],
+                        "compatibility_and_migration": ["preserve harness"],
+                        "rollback_or_recovery": ["revert candidate change"],
                     },
                     "tdd": {
-                        "target_tests": [command],
+                        "acceptance_to_tests": {acceptance[0]: [command]},
+                        "invariant_to_tests_or_code": {invariants[0]: [command]},
+                        "public_api_to_tests": {public_api[0]: [command]},
+                        "failure_mode_tests": [
+                            {"failure_mode": error_contract[0], "tests": [command]},
+                            {"failure_mode": failure_modes[0], "tests": [command]},
+                        ],
+                        "logging_or_security_tests": ["metadata denied without raw query token"],
                         "validation_commands": [command],
                         "red_green_refactor_trace": ["recorded"],
                     },
                 },
+                "evidence_sources": ["final.md:compact-process-trace"],
                 "validation_commands": [command],
                 "artifacts": ["cases/security__ssrf-url-allowlist/baseline_clean/run-01/result.json"],
             }
@@ -2340,6 +2382,7 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(summary["logging_summary"]["run_log_events"], 1)
         self.assertEqual(summary["logging_summary"]["process_trace_count"], 1)
         self.assertEqual(summary["process_compliance_summary"]["pdd_present_rate"], 1.0)
+        self.assertEqual(summary["process_compliance_summary"]["pdd_inferred_rate"], 0.0)
         self.assertEqual(summary["process_compliance_summary"]["validation_command_present_rate"], 1.0)
 
     def test_publishable_starter_setup_runs_from_candidate_root_with_exported_root(self) -> None:
@@ -2842,6 +2885,55 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
                 encoding="utf-8",
             )
             errors = validator.validate_report_consistency(summary_path, public_summary_path=public_path)
+        self.assertTrue(any("benchmark_passed_result_count" in error for error in errors))
+        self.assertTrue(any("benchmark_eligible_result_count" in error for error in errors))
+        self.assertTrue(any("skills_with_hooks_clean.pass_rate" in error for error in errors))
+
+    def test_report_consistency_rejects_stale_scorecard_counts_and_hook_rate(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_report_consistency_stale_scorecard_counts",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        summary = _strict_summary_payload(
+            run_id="positive-run",
+            effect_verdict="positive",
+            benchmark_passed_result_count=40,
+            benchmark_eligible_result_count=45,
+            variants={
+                "baseline_clean": _variant_payload(),
+                "skills_only_clean": _variant_payload(variant="skills_only_clean"),
+                "skills_with_hooks_clean": _variant_payload(variant="skills_with_hooks_clean", pass_rate=1.0),
+            },
+        )
+        detail = {
+            "run_id": "positive-run",
+            "evidence_status": "pass",
+            "effect_verdict": "positive",
+            "benchmark_passed_result_count": 28,
+            "benchmark_eligible_result_count": 44,
+            "variants": {
+                "skills_with_hooks_clean": {
+                    "pass_rate": 0.7857,
+                }
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            reports = Path(tmp) / "reports"
+            reports.mkdir()
+            summary_path = reports / "codex-live-benchmark-summary.json"
+            scorecard_path = reports / "professional-scorecard.json"
+            summary_path.write_text(json.dumps(summary), encoding="utf-8")
+            scorecard_path.write_text(
+                json.dumps(
+                    {
+                        "dimensions": [
+                            {"name": "Codex CLI live benchmark", "status": "pass", "detail": json.dumps(detail)}
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            errors = validator.validate_report_consistency(summary_path, scorecard_path=scorecard_path)
         self.assertTrue(any("benchmark_passed_result_count" in error for error in errors))
         self.assertTrue(any("benchmark_eligible_result_count" in error for error in errors))
         self.assertTrue(any("skills_with_hooks_clean.pass_rate" in error for error in errors))

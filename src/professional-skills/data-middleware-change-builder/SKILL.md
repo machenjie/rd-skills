@@ -11,6 +11,9 @@ changeforge_version: 0.1.0
 ## Mission
 Design and review changes to persistence, caching, queueing, search, streaming, and middleware layers with explicit source-of-truth ownership, consistency model, access pattern–driven index design, cache invalidation correctness, queue delivery semantics, and deterministic failure recovery — because data layer bugs are the most expensive to reverse and the least visible until they corrupt production.
 
+## Stage Ownership
+Own data and middleware implementation placement for databases, caches, queues, search, object storage, workers, retries, DLQs, lag, fallback, and consistency boundaries. Use `logging-design-gate` for queue, consumer, retry, DLQ, cache-stampede, lag, fallback, and source-of-truth diagnostics.
+
 ## When To Use
 - Database schema changes, query rewrites, index additions, or constraint modifications in SQL or NoSQL stores.
 - Cache layer additions, key design changes, TTL modifications, or invalidation logic changes.

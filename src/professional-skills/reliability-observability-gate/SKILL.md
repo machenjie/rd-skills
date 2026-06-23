@@ -11,6 +11,9 @@ changeforge_version: 0.1.0
 ## Mission
 Ensure every production-bound change has explicit reliability expectations, observable behavior, bounded failure modes, proportional alerting, and tested recovery paths — so that degradation is detected before users report it, incidents are diagnosed in minutes not hours, and rollback is executable without guesswork.
 
+## Stage Ownership
+Own observability and recovery beyond code logs: logs, metrics, traces, alerts, dashboards, SLOs, fallback, degradation, capacity, and incident diagnosis. Use `logging-design-gate` for concrete code logging design, field selection, log levels, redaction, correlation, and log tests.
+
 ## When To Use
 - Any change that modifies a production service's latency, throughput, error rate, or resource consumption.
 - Async processing changes: background jobs, queues, event processing, scheduled tasks.

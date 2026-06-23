@@ -280,15 +280,15 @@
       "description_findings": [],
       "description_length": 240,
       "findings": [
-        "body 363 lines exceeds heavy threshold 350"
+        "body 366 lines exceeds heavy threshold 350"
       ],
       "has_shared_optimality": false,
-      "heading_count": 23,
+      "heading_count": 24,
       "kind": "professional-skill",
       "largest_section_lines": 75,
       "largest_section_title": "Output Contract",
       "largest_table_rows": 10,
-      "line_count": 363,
+      "line_count": 366,
       "name": "ai-code-review-refactor",
       "optimality_section_length": 5,
       "output_contract_length": 75,
@@ -305,7 +305,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 5950
+      "word_count": 5990
     },
     {
       "anti_example_section_length": 10,
@@ -318,15 +318,15 @@
       "description_findings": [],
       "description_length": 215,
       "findings": [
-        "body 254 lines exceeds review threshold 250"
+        "body 257 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
-      "heading_count": 23,
+      "heading_count": 24,
       "kind": "professional-skill",
       "largest_section_lines": 44,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 7,
-      "line_count": 254,
+      "line_count": 257,
       "name": "architecture-impact-reviewer",
       "optimality_section_length": 5,
       "output_contract_length": 26,
@@ -343,7 +343,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4005
+      "word_count": 4050
     },
     {
       "anti_example_section_length": 10,
@@ -356,15 +356,15 @@
       "description_findings": [],
       "description_length": 212,
       "findings": [
-        "body 268 lines exceeds review threshold 250"
+        "body 271 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
-      "heading_count": 22,
+      "heading_count": 23,
       "kind": "professional-skill",
       "largest_section_lines": 40,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 268,
+      "line_count": 271,
       "name": "backend-change-builder",
       "optimality_section_length": 5,
       "output_contract_length": 33,
@@ -381,7 +381,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4761
+      "word_count": 4797
     },
     {
       "anti_example_section_length": 10,
@@ -511,12 +511,12 @@
       "description_length": 243,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 22,
+      "heading_count": 23,
       "kind": "professional-skill",
       "largest_section_lines": 26,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 6,
-      "line_count": 200,
+      "line_count": 203,
       "name": "change-intake-compiler",
       "optimality_section_length": 0,
       "output_contract_length": 23,
@@ -533,7 +533,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 3300
+      "word_count": 3337
     },
     {
       "anti_example_section_length": 10,
@@ -583,12 +583,12 @@
       "description_length": 213,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 21,
+      "heading_count": 22,
       "kind": "professional-skill",
       "largest_section_lines": 31,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 230,
+      "line_count": 233,
       "name": "data-middleware-change-builder",
       "optimality_section_length": 0,
       "output_contract_length": 25,
@@ -605,7 +605,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4171
+      "word_count": 4208
     },
     {
       "anti_example_section_length": 10,
@@ -646,6 +646,50 @@
       "word_count": 4519
     },
     {
+      "anti_example_section_length": 0,
+      "benchmark_section_length": 7,
+      "bullet_count": 128,
+      "classification": "MOVE_SECTIONS_TO_REFERENCES",
+      "code_block_count": 6,
+      "context_efficiency_score": 77,
+      "critical_details_length": 15,
+      "description_findings": [],
+      "description_length": 205,
+      "findings": [
+        "body 305 lines exceeds review threshold 250",
+        "section 'Technical Selection Criteria' is 186 lines (> 80) \u2014 reference candidate"
+      ],
+      "has_shared_optimality": false,
+      "heading_count": 19,
+      "kind": "professional-skill",
+      "largest_section_lines": 186,
+      "largest_section_title": "Technical Selection Criteria",
+      "largest_table_rows": 0,
+      "line_count": 305,
+      "name": "development-process-orchestrator",
+      "optimality_section_length": 0,
+      "output_contract_length": 29,
+      "oversized_sections": [
+        {
+          "lines": 186,
+          "title": "Technical Selection Criteria"
+        }
+      ],
+      "oversized_tables": [],
+      "path": "src/professional-skills/development-process-orchestrator/SKILL.md",
+      "professionalism_score": 100,
+      "recommended_phase": "P2",
+      "reference_link_count": 0,
+      "repeated_phrase_count": 0,
+      "risk_of_change": "low",
+      "routing_clarity_score": 100,
+      "split_candidate_score": 44,
+      "suggested_action": "Move oversized sections/tables into references/*.md; keep a concise body summary.",
+      "table_count": 0,
+      "used_by_count": 0,
+      "word_count": 1887
+    },
+    {
       "anti_example_section_length": 10,
       "benchmark_section_length": 18,
       "bullet_count": 108,
@@ -657,12 +701,12 @@
       "description_length": 189,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 21,
+      "heading_count": 22,
       "kind": "professional-skill",
       "largest_section_lines": 26,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 7,
-      "line_count": 202,
+      "line_count": 205,
       "name": "domain-impact-modeler",
       "optimality_section_length": 0,
       "output_contract_length": 20,
@@ -679,7 +723,7 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 3297
+      "word_count": 3336
     },
     {
       "anti_example_section_length": 10,
@@ -765,12 +809,12 @@
       "description_length": 234,
       "findings": [],
       "has_shared_optimality": false,
-      "heading_count": 22,
+      "heading_count": 23,
       "kind": "professional-skill",
       "largest_section_lines": 33,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 8,
-      "line_count": 234,
+      "line_count": 237,
       "name": "integration-change-builder",
       "optimality_section_length": 5,
       "output_contract_length": 25,
@@ -787,7 +831,50 @@
       "suggested_action": "Within size and professionalism budget; no action required.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4366
+      "word_count": 4406
+    },
+    {
+      "anti_example_section_length": 0,
+      "benchmark_section_length": 7,
+      "bullet_count": 127,
+      "classification": "MOVE_SECTIONS_TO_REFERENCES",
+      "code_block_count": 2,
+      "context_efficiency_score": 92,
+      "critical_details_length": 18,
+      "description_findings": [],
+      "description_length": 221,
+      "findings": [
+        "section 'Technical Selection Criteria' is 83 lines (> 80) \u2014 reference candidate"
+      ],
+      "has_shared_optimality": false,
+      "heading_count": 21,
+      "kind": "professional-skill",
+      "largest_section_lines": 83,
+      "largest_section_title": "Technical Selection Criteria",
+      "largest_table_rows": 0,
+      "line_count": 207,
+      "name": "logging-design-gate",
+      "optimality_section_length": 0,
+      "output_contract_length": 29,
+      "oversized_sections": [
+        {
+          "lines": 83,
+          "title": "Technical Selection Criteria"
+        }
+      ],
+      "oversized_tables": [],
+      "path": "src/professional-skills/logging-design-gate/SKILL.md",
+      "professionalism_score": 100,
+      "recommended_phase": "P2",
+      "reference_link_count": 0,
+      "repeated_phrase_count": 0,
+      "risk_of_change": "low",
+      "routing_clarity_score": 100,
+      "split_candidate_score": 14,
+      "suggested_action": "Move oversized sections/tables into references/*.md; keep a concise body summary.",
+      "table_count": 0,
+      "used_by_count": 0,
+      "word_count": 1851
     },
     {
       "anti_example_section_length": 10,
@@ -800,15 +887,15 @@
       "description_findings": [],
       "description_length": 202,
       "findings": [
-        "body 323 lines exceeds review threshold 250"
+        "body 326 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
-      "heading_count": 23,
+      "heading_count": 24,
       "kind": "professional-skill",
       "largest_section_lines": 44,
       "largest_section_title": "Proactive Professional Triggers",
       "largest_table_rows": 9,
-      "line_count": 323,
+      "line_count": 326,
       "name": "quality-test-gate",
       "optimality_section_length": 0,
       "output_contract_length": 34,
@@ -825,7 +912,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 6011
+      "word_count": 6056
     },
     {
       "anti_example_section_length": 10,
@@ -838,15 +925,15 @@
       "description_findings": [],
       "description_length": 276,
       "findings": [
-        "body 277 lines exceeds review threshold 250"
+        "body 280 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
-      "heading_count": 24,
+      "heading_count": 25,
       "kind": "professional-skill",
       "largest_section_lines": 31,
       "largest_section_title": "Cost And Capacity Guardrails",
       "largest_table_rows": 7,
-      "line_count": 277,
+      "line_count": 280,
       "name": "reliability-observability-gate",
       "optimality_section_length": 5,
       "output_contract_length": 29,
@@ -863,7 +950,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 5045
+      "word_count": 5083
     },
     {
       "anti_example_section_length": 11,
@@ -876,15 +963,15 @@
       "description_findings": [],
       "description_length": 273,
       "findings": [
-        "body 263 lines exceeds review threshold 250"
+        "body 266 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
-      "heading_count": 24,
+      "heading_count": 25,
       "kind": "professional-skill",
       "largest_section_lines": 35,
       "largest_section_title": "Compliance Evidence",
       "largest_table_rows": 14,
-      "line_count": 263,
+      "line_count": 266,
       "name": "security-privacy-gate",
       "optimality_section_length": 0,
       "output_contract_length": 23,
@@ -901,7 +988,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 3,
       "used_by_count": 0,
-      "word_count": 4523
+      "word_count": 4563
     },
     {
       "anti_example_section_length": 10,
@@ -3649,7 +3736,7 @@
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
-      "used_by_count": 2,
+      "used_by_count": 3,
       "word_count": 2675
     },
     {
@@ -3955,7 +4042,7 @@
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
-      "used_by_count": 2,
+      "used_by_count": 3,
       "word_count": 2602
     },
     {
@@ -4924,7 +5011,7 @@
       "split_candidate_score": 0,
       "suggested_action": "Compact decision aid within budget; no action required.",
       "table_count": 2,
-      "used_by_count": 2,
+      "used_by_count": 3,
       "word_count": 2528
     },
     {
@@ -6063,7 +6150,7 @@
   "summary": {
     "classifications": {
       "KEEP_AS_IS": 144,
-      "MOVE_SECTIONS_TO_REFERENCES": 1,
+      "MOVE_SECTIONS_TO_REFERENCES": 3,
       "TIGHTEN_BODY": 8
     },
     "domain_extensions": 7,
@@ -6072,8 +6159,8 @@
     "heavy_foundation": 1,
     "heavy_professional": 1,
     "low_professionalism": 0,
-    "move_to_reference": 1,
-    "professional_skills": 19,
+    "move_to_reference": 3,
+    "professional_skills": 21,
     "split_candidates": 0
   },
   "thresholds": {

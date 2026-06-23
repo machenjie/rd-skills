@@ -11,6 +11,9 @@ changeforge_version: 0.1.0
 ## Mission
 Prevent security and privacy regressions by systematically reviewing trust boundaries, authentication and authorization design, input validation and output encoding, injection risks, secrets management, dependency exposure, data handling obligations, and domain-specific risks (AI prompt injection, Web3 asset custody) — and by blocking high and critical risks before code ships, not after it is exploited.
 
+## Stage Ownership
+Own security and privacy decisions that affect PDD/DDD/SDD/TDD traces, including threat surfaces, authorization, sensitive data, redaction, audit boundaries, and security test obligations. Use `logging-design-gate` for security logs, audit versus diagnostic boundaries, denial categories, and forbidden log fields.
+
 ## When To Use
 - Any change that adds or modifies authentication, session management, or authorization logic.
 - Changes that handle user input, file upload, or external data parsed at trust boundaries.

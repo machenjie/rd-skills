@@ -11,6 +11,9 @@ changeforge_version: 0.1.0
 ## Mission
 Design and review external integration changes so that every outbound call is bounded, authenticated, and idempotent; every inbound webhook is authenticated, replay-protected, and idempotent; every failure mode is detected, bounded, and recoverable; and every credential, rate limit, and reconciliation gap is explicitly managed — because integration bugs are silent, expensive, and often undetected until they cause financial or compliance damage.
 
+## Stage Ownership
+Own integration implementation placement for adapters, provider clients, webhooks, reconciliation jobs, sandbox behavior, credentials, idempotency, retries, timeouts, and circuit breakers. Use `logging-design-gate` for dependency latency, provider error translation, retry attempt, circuit state, timeout, fallback, and reconciliation diagnostics.
+
 ## When To Use
 - Integrating with or modifying behavior for third-party REST APIs, SOAP services, or gRPC-based external services.
 - Adding or modifying outbound webhooks to notify external systems of internal events.

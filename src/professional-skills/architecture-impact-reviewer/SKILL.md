@@ -11,6 +11,9 @@ changeforge_version: 0.1.0
 ## Mission
 Keep the architecture coherent, observable, and evolutionarily sound by rigorously reviewing every change that touches module boundaries, dependency direction, service topology, shared abstractions, data ownership, or scalability assumptions — while consistently defaulting to the simplest design that satisfies current requirements and credible near-term constraints.
 
+## Stage Ownership
+Own the SDD slice for ChangeForge process traces: modules, files, public API, data flow, error contract, compatibility, migration, rollback, and structure tradeoffs. Use `logging-design-gate` for the SDD logging_decision when code logs, audit logs, security logs, dependency logs, or retry/fallback diagnostics are relevant.
+
 ## When To Use
 - A change introduces a new module, service, shared library, or cross-team dependency.
 - A monorepo, workspace, package graph, affected-test strategy, generated-file policy, or incremental-build system changes module boundaries.

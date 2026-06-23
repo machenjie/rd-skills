@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-23T22:25:48.971555+00:00",
+  "generated_at": "2026-06-23T23:33:42.572330+00:00",
   "rows": [
     {
       "anti_bloat_status": "ok",
@@ -922,6 +922,178 @@
     {
       "anti_bloat_status": "ok",
       "benchmark_coverage": "no",
+      "evidence_contract": "partial",
+      "failure_modes": "yes",
+      "kind": "professional-skill",
+      "mode_matrix": "no",
+      "name": "development-process-orchestrator",
+      "output_contract": "partial",
+      "path": "src/professional-skills/development-process-orchestrator/SKILL.md",
+      "proactive_triggers": "no",
+      "quality_gate": "yes",
+      "reference_loading_hint": "yes",
+      "routing_coverage": "no",
+      "score": 35,
+      "status": "needs-review",
+      "warnings": [
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "total score 35/60 is below warning threshold 42",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "total_score_below_threshold"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "Mode Matrix weak: mode_coverage score 0/5 needs review",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "weak_dimension_score"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "Proactive Professional Triggers weak: proactive_trigger_quality score 0/5 needs review",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "weak_dimension_score"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract weak: evidence_contract_strength score 0/5 needs review",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "weak_evidence_contract_strength"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "Output Contract weak: output_actionability score 2/5 needs review",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "weak_dimension_score"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "Output/Evidence/Quality Gate weak: validation_obligation score 2/5 needs review",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "weak_dimension_score"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "professional skill is missing Mode Matrix",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "missing_mode_matrix"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "professional skill is missing Proactive Professional Triggers",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "missing_proactive_professional_triggers"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'behavior preservation'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'boundaries inspected'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'next gate'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'residual risk'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'reuse / placement rationale'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'validation evidence'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'what evidence does not prove'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'what evidence proves'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "development-process-orchestrator",
+          "item_kind": "professional-skill",
+          "message": "long section 'Technical Selection Criteria' in SKILL.md body (184 lines); move deep material to references",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "body_bloat_exception"
+        }
+      ]
+    },
+    {
+      "anti_bloat_status": "ok",
+      "benchmark_coverage": "no",
       "evidence_contract": "yes",
       "failure_modes": "yes",
       "kind": "professional-skill",
@@ -990,6 +1162,169 @@
       "score": 57,
       "status": "sample-grade",
       "warnings": []
+    },
+    {
+      "anti_bloat_status": "ok",
+      "benchmark_coverage": "no",
+      "evidence_contract": "partial",
+      "failure_modes": "yes",
+      "kind": "professional-skill",
+      "mode_matrix": "no",
+      "name": "logging-design-gate",
+      "output_contract": "partial",
+      "path": "src/professional-skills/logging-design-gate/SKILL.md",
+      "proactive_triggers": "no",
+      "quality_gate": "yes",
+      "reference_loading_hint": "yes",
+      "routing_coverage": "no",
+      "score": 34,
+      "status": "needs-review",
+      "warnings": [
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "total score 34/60 is below warning threshold 42",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "total_score_below_threshold"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "Mode Matrix weak: mode_coverage score 0/5 needs review",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "weak_dimension_score"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "Stage Fit / Mode Matrix weak: stage_fit score 1/5 needs review",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "weak_dimension_score"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "Proactive Professional Triggers weak: proactive_trigger_quality score 0/5 needs review",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "weak_dimension_score"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract weak: evidence_contract_strength score 0/5 needs review",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "weak_evidence_contract_strength"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "Output Contract weak: output_actionability score 2/5 needs review",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "weak_dimension_score"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "professional skill is missing Mode Matrix",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "missing_mode_matrix"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "professional skill is missing Proactive Professional Triggers",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "missing_proactive_professional_triggers"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'behavior preservation'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'boundaries inspected'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'next gate'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'residual risk'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'reuse / placement rationale'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'validation evidence'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'what evidence does not prove'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        },
+        {
+          "item": "logging-design-gate",
+          "item_kind": "professional-skill",
+          "message": "Evidence Contract is missing 'what evidence proves'",
+          "reason": "Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.",
+          "release_relevance": "release-blocking",
+          "scope": "professional-skill",
+          "type": "evidence_contract_missing_term"
+        }
+      ]
     },
     {
       "anti_bloat_status": "ok",
@@ -1064,5 +1399,5 @@
       "warnings": []
     }
   ],
-  "rows_checked": 59
+  "rows_checked": 61
 }

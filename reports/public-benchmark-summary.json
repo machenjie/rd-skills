@@ -70,7 +70,7 @@
     },
     {
       "command": "python3 scripts/eval-skill-professionalism.py",
-      "detail": "average_score=41.66",
+      "detail": "average_score=41.56",
       "evidence_level": "structural fixture",
       "name": "Skill professionalism report",
       "source": "reports/skill-professionalism-eval.json",
@@ -78,7 +78,7 @@
     },
     {
       "command": "python3 scripts/eval-skill-professionalism.py --coverage-matrix",
-      "detail": "rows=59",
+      "detail": "rows=61",
       "evidence_level": "structural fixture",
       "name": "Professional coverage matrix",
       "source": "reports/professional-coverage-matrix.json",
@@ -86,7 +86,7 @@
     },
     {
       "command": "python3 scripts/build.py --profile recommended",
-      "detail": "top_level=19, expected=19",
+      "detail": "top_level=21, expected=21",
       "evidence_level": "structural fixture",
       "name": "Profile build: recommended",
       "source": "dist/universal/skills/recommended/.changeforge-build-manifest.json",
@@ -94,7 +94,7 @@
     },
     {
       "command": "python3 scripts/build.py --profile full",
-      "detail": "top_level=26, expected=26",
+      "detail": "top_level=28, expected=28",
       "evidence_level": "structural fixture",
       "name": "Profile build: full",
       "source": "dist/universal/skills/full/.changeforge-build-manifest.json",
@@ -102,7 +102,7 @@
     },
     {
       "command": "python3 scripts/build.py --profile dev",
-      "detail": "top_level=153, expected=153",
+      "detail": "top_level=155, expected=155",
       "evidence_level": "structural fixture",
       "name": "Profile build: dev",
       "source": "dist/universal/skills/dev/.changeforge-build-manifest.json",
@@ -118,7 +118,7 @@
     },
     {
       "command": "python3 scripts/validate-installation.py --json-out reports/installation-validation.json --out reports/installation-validation.md",
-      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/validate-installation.py\", \"summary\": {\"built_skill_directories\": 1980, \"dist_exists\": true, \"error_count\": 0, \"required_hook_runtime_files\": 396, \"runtime_roots\": 10, \"zip_count\": 198}}",
+      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/validate-installation.py\", \"summary\": {\"built_skill_directories\": 2040, \"dist_exists\": true, \"error_count\": 0, \"required_hook_runtime_files\": 396, \"runtime_roots\": 10, \"zip_count\": 204}}",
       "evidence_level": "structural fixture",
       "name": "Installation validation",
       "source": "reports/professional-scorecard.json",

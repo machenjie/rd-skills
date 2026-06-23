@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Sequence
 
+from validation_utils import EXPECTED_PROFILE_TOP_LEVEL_COUNTS
+
 
 ROOT = Path(__file__).resolve().parents[1]
 AGENTS = ("codex", "claude", "copilot", "cline", "openai-api")
@@ -19,11 +21,7 @@ ACTIVATION_LEVELS = ("none", "bootstrap", "hooks", "professional-injection")
 HOOK_AGENTS = ("codex", "claude", "copilot")
 HOOK_SCOPES = ("project", "user")
 BOOTSTRAP_AGENTS = ("codex", "claude", "copilot", "cline")
-EXPECTED_SKILL_COUNTS = {
-    "recommended": 19,
-    "full": 26,
-    "dev": 153,
-}
+EXPECTED_SKILL_COUNTS = dict(EXPECTED_PROFILE_TOP_LEVEL_COUNTS)
 NEXT_PROMPTS = {
     "codex": "Use change-forge-router to classify this request before implementation.",
     "claude": "Use change-forge-router to classify this request before implementation.",

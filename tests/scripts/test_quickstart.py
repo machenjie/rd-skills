@@ -55,7 +55,7 @@ class QuickstartTests(unittest.TestCase):
         module = _load_module()
         plan = module.build_plan(_args(agent="codex", scope="user"))
         self.assertEqual(plan.selected_profile, "recommended")
-        self.assertEqual(plan.expected_skill_count, 19)
+        self.assertEqual(plan.expected_skill_count, 21)
         self.assertEqual(
             plan.commands,
             [
@@ -94,7 +94,7 @@ class QuickstartTests(unittest.TestCase):
             _args(agent="copilot", scope="project", target=Path("/tmp/changeforge-project"))
         )
         self.assertEqual(plan.selected_profile, "full")
-        self.assertEqual(plan.expected_skill_count, 26)
+        self.assertEqual(plan.expected_skill_count, 28)
         self.assertEqual(plan.activation_level, "bootstrap")
         self.assertIn("--target", plan.commands[1])
         self.assertIn("--with-bootstrap", plan.commands[1])

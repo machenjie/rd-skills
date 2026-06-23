@@ -403,7 +403,7 @@ capabilities:
     group: backend-engineering
     path: src/foundation/capabilities/logging-error-handling
     status: implemented
-    used_by: [backend-change-builder, reliability-observability-gate]
+    used_by: [backend-change-builder, reliability-observability-gate, logging-design-gate]
     triggers: [design structured errors logging context propagation and safe diagnostics]
     risk_notes: [Poor errors and logs slow diagnosis or leak sensitive data]
     expected_outputs: [error handling and logging plan with taxonomy context and redaction rules]
@@ -515,7 +515,7 @@ capabilities:
     group: security-privacy
     path: src/foundation/capabilities/secret-configuration-security
     status: implemented
-    used_by: [security-privacy-gate, delivery-release-gate]
+    used_by: [security-privacy-gate, delivery-release-gate, logging-design-gate]
     triggers:
       - secure secrets environment variables configuration defaults KMS key policy secret manager scope and runtime exposure
       - Helm values.yaml values-prod.yaml secret-like keys password token apiKey clientSecret privateKey rendered manifest Secret ConfigMap credential leakage
@@ -634,7 +634,7 @@ capabilities:
     group: reliability-operations
     path: src/foundation/capabilities/observability
     status: implemented
-    used_by: [reliability-observability-gate, backend-change-builder]
+    used_by: [reliability-observability-gate, backend-change-builder, logging-design-gate]
     triggers: [design logs metrics traces dashboards alerts SLI and diagnostic context]
     risk_notes: [Insufficient observability makes incidents longer and verification weaker]
     expected_outputs: [observability plan with signals dashboards alerts and investigation paths]

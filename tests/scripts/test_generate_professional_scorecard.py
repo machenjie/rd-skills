@@ -91,7 +91,7 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
         # Regression: public benchmark and scorecard must agree that sample-grade is partial evidence.
         status = module._summary_status(
             "Professional skill coverage",
-            {"count": 19, "statuses": {"sample-grade": 19}},
+            {"count": 21, "statuses": {"sample-grade": 21}},
         )
         self.assertEqual(status, "partial")
 
@@ -99,7 +99,7 @@ class GenerateProfessionalScorecardTests(unittest.TestCase):
         module = _load_module()
         status = module._summary_status(
             "Professional skill coverage",
-            {"count": 19, "statuses": {"partial": 1, "acceptable": 18}},
+            {"count": 21, "statuses": {"partial": 1, "acceptable": 20}},
         )
         self.assertEqual(status, "partial")
 

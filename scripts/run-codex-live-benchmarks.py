@@ -47,6 +47,8 @@ CURRENT_CODEX_HOME_REFUSAL_MESSAGE = (
 )
 INTERNAL_BORROWED_CODEX_HOME_ENV = "CHANGEFORGE_CODEX_LIVE_INTERNAL_BORROWED_CODEX_HOME"
 PROCESS_PHASES = ("pdd", "ddd", "sdd", "tdd", "implementation", "validation", "review")
+PROCESS_CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
+PROCESS_PHASE_STATUSES = {"present", "missing", "degraded", "inferred", "not_applicable"}
 MAX_STRUCTURED_EVENT_BYTES = 4096
 
 
@@ -1132,6 +1134,10 @@ def _process_trace_payload(
     result: dict[str, Any],
 ) -> dict[str, Any]:
     validation_commands = _validation_commands(case)
+    facts, phase_status, evidence_sources = _process_trace_evidence(run_dir, case, validation_commands)
+    phase_status["implementation"] = "present" if result.get("status") in {"collected", "failed", "partial"} else "missing"
+    phase_status["validation"] = "present" if validation_commands and result.get("grading_status") else "missing"
+    phase_status["review"] = "present" if _final_mentions_review(run_dir) else "missing"
     artifacts = [
         _run_relative_artifact(out_dir, run_dir / "result.json"),
         _run_relative_artifact(out_dir, run_dir / "grading" / "grading-result.json"),
@@ -1144,14 +1150,10 @@ def _process_trace_payload(
         "case_id": case.id,
         "variant": variant,
         "run_index": run_index,
-        "phase_status": {phase: "present" for phase in PROCESS_PHASES},
-        "traceability": {
-            "pdd_to_tests": True,
-            "ddd_invariants_to_code_or_tests": True,
-            "sdd_public_api_to_tests": True,
-            "tdd_validation_commands_present": bool(validation_commands),
-        },
-        "process_facts": _process_facts(case, validation_commands),
+        "phase_status": phase_status,
+        "traceability": _process_traceability(facts, validation_commands),
+        "process_facts": facts,
+        "evidence_sources": evidence_sources,
         "selected_skills": _selected_skills_for_variant(variant),
         "selected_capabilities": _selected_capabilities_for_variant(variant),
         "validation_commands": validation_commands,
@@ -1162,16 +1164,82 @@ def _process_trace_payload(
     }
 
 
+def _process_trace_evidence(
+    run_dir: Path,
+    case: CodexLiveCase,
+    validation_commands: list[str],
+) -> tuple[dict[str, Any], dict[str, str], list[str]]:
+    facts = _process_facts(case, validation_commands)
+    phase_status = {phase: "missing" for phase in PROCESS_PHASES}
+    evidence_sources: list[str] = []
+    final_trace = _compact_process_trace(run_dir / "final.md")
+    if final_trace:
+        evidence_sources.append("final.md:compact-process-trace")
+        for phase in PROCESS_CORE_PHASES:
+            phase_status[phase] = "present" if final_trace.get(phase) else "degraded"
+        facts.setdefault("evidence", {})["final_compact_trace"] = final_trace
+    else:
+        evidence_sources.append("case_metadata_fallback")
+        for phase in PROCESS_CORE_PHASES:
+            phase_status[phase] = "inferred"
+    return facts, phase_status, evidence_sources
+
+
+def _compact_process_trace(path: Path) -> dict[str, str]:
+    if not path.exists():
+        return {}
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    if "Process Trace:" not in text:
+        return {}
+    trace: dict[str, str] = {}
+    labels = {
+        "pdd": "PDD:",
+        "ddd": "DDD:",
+        "sdd": "SDD:",
+        "tdd": "TDD:",
+    }
+    for phase, marker in labels.items():
+        for line in text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith(marker):
+                value = stripped[len(marker) :].strip()
+                if value:
+                    trace[phase] = redact_report_text(value)[:800]
+                break
+    return trace
+
+
+def _final_mentions_review(run_dir: Path) -> bool:
+    final_path = run_dir / "final.md"
+    if not final_path.exists():
+        return False
+    text = final_path.read_text(encoding="utf-8", errors="ignore").casefold()
+    return "review" in text or "residual risk" in text
+
+
 def _process_facts(case: CodexLiveCase, validation_commands: list[str]) -> dict[str, Any]:
+    case_specific = _case_specific_process_facts(case, validation_commands)
+    if case_specific is not None:
+        return case_specific
     category = str(getattr(case, "category", str(case.id).split("/", 1)[0]))
     codegen_case = str(getattr(case, "codegen_case", str(case.id).split("/", 1)[-1]))
     coverage_dimensions = list(getattr(case, "coverage_dimensions", [category]))
+    acceptance = [
+        f"{case.id} expected behavior is observable through public API or documented setup/test contract",
+        f"{case.id} passes deterministic assertion-backed grading benchmark {case.grading_benchmark}",
+    ]
+    invariants = [
+        f"{case.id} keeps business rules in the owning domain, service, or module boundary",
+        f"{case.id} keeps side effects outside pure domain/value-object decisions when relevant",
+    ]
+    public_api = ["candidate public API and executable validation scripts"]
+    error_contract = ["grading result categorizes setup, test, security, or execution failure"]
+    failure_modes = ["setup_failed", "test_suite_failed", "security_checks_failed", "codex_exec_failed"]
     return {
         "pdd": {
-            "acceptance_criteria": [
-                "requested benchmark behavior is observable through public API or documented setup/test contract",
-                "candidate passes deterministic assertion-backed grading for the selected case",
-            ],
+            "problem": f"Implement the benchmark case {case.id} without breaking its harness contract.",
+            "user_or_system_impact": [f"benchmark case {case.id}", f"coverage dimensions: {', '.join(coverage_dimensions)}"],
+            "acceptance_criteria": acceptance,
             "constraints": [
                 "preserve setup.sh and benchmark harness entrypoints unless explicitly required",
                 "do not write to HOME or CODEX_HOME",
@@ -1179,34 +1247,325 @@ def _process_facts(case: CodexLiveCase, validation_commands: list[str]) -> dict[
             ],
             "non_goals": ["no user-specific corpus, private archive, or hidden external file dependency"],
             "risk_surfaces": coverage_dimensions,
-            "expected_behavior": [case.grading_benchmark],
+            "validation_signal": validation_commands,
         },
         "ddd": {
             "domain_terms": [category, codegen_case],
-            "entities_or_value_objects": [],
+            "entities": [],
+            "value_objects": [],
             "domain_services": [],
+            "application_services": [],
             "adapters": [],
-            "invariants": [
-                "business rules remain in the owning domain, service, or module boundary",
-                "side effects remain outside pure domain/value-object decisions",
-            ],
+            "invariants": invariants,
+            "ownership_decision": [f"use existing owner for {case.id} behavior"],
             "side_effect_boundaries": ["filesystem writes stay inside the candidate repository", "no HOME/CODEX_HOME writes"],
         },
         "sdd": {
             "modules": ["starter repository public API", "setup/test/security harness scripts"],
-            "public_api": ["candidate-facing public API and executable validation scripts"],
+            "files_to_change": ["candidate repository files selected by inspection"],
+            "public_api": public_api,
             "data_flow": ["task prompt -> candidate implementation -> setup/test/security grading -> result.json"],
-            "failure_modes": ["setup_failed", "test_suite_failed", "security_checks_failed", "codex_exec_failed"],
-            "logging_or_observability": ["events.metrics.json", "events.redacted.jsonl", "grading-result.json"],
-            "security_performance_concurrency_constraints": coverage_dimensions,
+            "error_contract": error_contract,
+            "failure_modes": failure_modes,
+            "logging_decision": {
+                "needed": False,
+                "rationale": "No product logging requirement is inferred for this generic case fallback; benchmark artifacts provide validation evidence.",
+            },
+            "metrics_traces_alerts": ["events.metrics.json", "events.redacted.jsonl", "grading-result.json"],
+            "performance_or_concurrency_constraints": coverage_dimensions,
+            "compatibility_and_migration": ["preserve harness entrypoints"],
+            "rollback_or_recovery": ["revert candidate changes and rerun grading"],
         },
         "tdd": {
-            "target_tests": validation_commands,
-            "regression_tests": validation_commands,
+            "acceptance_to_tests": {criterion: validation_commands for criterion in acceptance},
+            "invariant_to_tests_or_code": {invariant: validation_commands for invariant in invariants},
+            "public_api_to_tests": {api: validation_commands for api in public_api},
+            "failure_mode_tests": [
+                {"failure_mode": failure, "tests": validation_commands}
+                for failure in [*error_contract, *failure_modes]
+            ],
+            "logging_or_security_tests": [],
             "validation_commands": validation_commands,
             "red_green_refactor_trace": ["validation command recorded for the candidate result"],
         },
     }
+
+
+def _case_specific_process_facts(
+    case: CodexLiveCase,
+    validation_commands: list[str],
+) -> dict[str, Any] | None:
+    if case.id == "security/ssrf-url-allowlist":
+        acceptance = [
+            "deny private, metadata, and loopback URLs",
+            "revalidate redirect targets before fetching",
+            "redact sensitive query values from diagnostics",
+        ]
+        invariants = [
+            "unsafe URL is never fetched",
+            "secret-bearing query is never logged",
+        ]
+        public_api = ["public URL validation/fetch entrypoint used by tests"]
+        failure_modes = ["metadata URL denial", "redirect-to-private denial", "token query redaction"]
+        return _mapped_process_facts(
+            case,
+            validation_commands,
+            problem="Prevent SSRF by allowlisting safe outbound URLs and redacting sensitive diagnostics.",
+            impact=["protect internal metadata, loopback, and private network resources"],
+            acceptance=acceptance,
+            risk_surfaces=["security", "ssrf", "redaction", "redirects"],
+            domain_terms=["URL candidate", "redirect target", "network boundary", "sensitive query"],
+            entities=["URL validation decision"],
+            value_objects=["normalized URL"],
+            invariants=invariants,
+            ownership=["URL safety policy belongs to validation/service boundary before network fetch"],
+            side_effects=["network fetch occurs only after allowlist and redirect revalidation pass"],
+            modules=["URL validation module", "fetch/service entrypoint", "security tests"],
+            public_api=public_api,
+            data_flow=["raw URL -> normalized URL -> allowlist decision -> optional fetch -> redacted diagnostic"],
+            error_contract=["deny unsafe URLs with a stable error category"],
+            failure_modes=failure_modes,
+            logging_decision={
+                "needed": True,
+                "log_types": ["security", "diagnostic"],
+                "events": ["url_denied", "redirect_denied", "redaction_applied"],
+                "levels": ["WARN"],
+                "fields": ["operation", "error_category", "policy", "reason", "trace_id"],
+                "redaction": ["raw URL query", "token", "signature", "session identifiers"],
+                "cardinality_controls": ["route or policy category instead of raw URL", "status/error category instead of full target"],
+                "rationale": "Security denial diagnostics must be explainable without leaking raw secret-bearing URL input.",
+            },
+            logging_tests=["metadata denied", "redirect revalidated", "token redacted"],
+        )
+    if case.id == "reliability/redis-cache-stampede-protection":
+        acceptance = [
+            "concurrent same-key miss causes one backend refresh",
+            "fallback path is deterministic when refresh fails",
+            "TTL jitter prevents synchronized expiration",
+        ]
+        invariants = [
+            "same key shares an in-flight refresh",
+            "source-of-truth backend is protected from duplicate concurrent refreshes",
+        ]
+        public_api = ["cache get/load public API used by tests"]
+        failure_modes = ["cache miss storm", "refresh failure fallback", "lock contention"]
+        return _mapped_process_facts(
+            case,
+            validation_commands,
+            problem="Prevent cache stampede when concurrent callers miss the same Redis key.",
+            impact=["protect source-of-truth backend under concurrent cache misses"],
+            acceptance=acceptance,
+            risk_surfaces=["reliability", "cache", "concurrency", "fallback"],
+            domain_terms=["cache key", "in-flight refresh", "source-of-truth", "TTL jitter"],
+            entities=["cache entry"],
+            value_objects=["cache key"],
+            invariants=invariants,
+            ownership=["stampede control belongs to cache service, not callers"],
+            side_effects=["backend refresh is coordinated behind per-key concurrency control"],
+            modules=["cache service", "backend seam", "concurrency tests"],
+            public_api=public_api,
+            data_flow=["same-key callers -> cache miss -> shared in-flight refresh -> cache fill or fallback"],
+            error_contract=["refresh failure is retryable or fallback-classified without duplicate backend pressure"],
+            failure_modes=failure_modes,
+            logging_decision={
+                "needed": True,
+                "log_types": ["diagnostic", "integration/dependency"],
+                "events": ["cache_miss_storm", "refresh_fallback", "lock_contention"],
+                "levels": ["WARN"],
+                "fields": ["operation", "entity_id_hash", "attempt", "retryable", "duration_ms", "fallback_used"],
+                "redaction": ["raw cache key when it contains user input", "token", "PII"],
+                "cardinality_controls": ["hash or bucket cache key", "aggregate hot-key events", "prefer metrics for high-frequency misses"],
+                "rationale": "Operators need to diagnose stampede, fallback, and lock contention without per-miss noisy INFO logs.",
+            },
+            logging_tests=["backend.calls == 1", "fallback observable", "TTL jitter covered"],
+        )
+    if case.id == "structure/object-method-encapsulation-placement":
+        acceptance = [
+            "allowed, denied, expired, refund hold, and payment failure paths work",
+            "pure domain decision has no payment or refund side effects",
+            "tests use public API instead of private helper",
+        ]
+        invariants = [
+            "domain cancellation decision remains pure",
+            "payment and refund side effects stay in service/adapter orchestration",
+        ]
+        public_api = ["public cancellation API used by tests"]
+        failure_modes = ["denied cancellation", "expired deadline", "refund hold", "payment failure"]
+        return _mapped_process_facts(
+            case,
+            validation_commands,
+            problem="Place cancellation behavior on the right object/service boundary without leaking payment side effects into pure domain code.",
+            impact=["preserve cancellation correctness and payment/refund side-effect safety"],
+            acceptance=acceptance,
+            risk_surfaces=["structure", "domain ownership", "side effects", "public tests"],
+            domain_terms=["order", "cancellation decision", "refund hold", "payment failure"],
+            entities=["order"],
+            value_objects=["cancellation window"],
+            invariants=invariants,
+            ownership=["pure cancellation decision belongs to domain object or domain service; provider calls belong to application service/adapter"],
+            side_effects=["payment/refund provider calls remain outside pure domain/value object files"],
+            modules=["order domain module", "cancellation service", "payment adapter boundary", "public tests"],
+            public_api=public_api,
+            data_flow=["public cancellation request -> pure decision -> service orchestrates adapter side effects"],
+            error_contract=["denied, expired, refund hold, and payment failure states are distinguishable"],
+            failure_modes=failure_modes,
+            logging_decision={
+                "needed": False,
+                "rationale": "This structural benchmark is graded through public behavior and side-effect placement tests; no product logging requirement is needed for the case.",
+            },
+            logging_tests=[],
+        )
+    return None
+
+
+def _mapped_process_facts(
+    case: CodexLiveCase,
+    validation_commands: list[str],
+    *,
+    problem: str,
+    impact: list[str],
+    acceptance: list[str],
+    risk_surfaces: list[str],
+    domain_terms: list[str],
+    entities: list[str],
+    value_objects: list[str],
+    invariants: list[str],
+    ownership: list[str],
+    side_effects: list[str],
+    modules: list[str],
+    public_api: list[str],
+    data_flow: list[str],
+    error_contract: list[str],
+    failure_modes: list[str],
+    logging_decision: dict[str, Any],
+    logging_tests: list[str],
+) -> dict[str, Any]:
+    failure_tests = [{"failure_mode": failure, "tests": validation_commands} for failure in [*error_contract, *failure_modes]]
+    return {
+        "pdd": {
+            "problem": problem,
+            "user_or_system_impact": impact,
+            "acceptance_criteria": acceptance,
+            "constraints": [
+                "preserve setup.sh and benchmark harness entrypoints unless explicitly required",
+                "do not write to HOME or CODEX_HOME",
+                "avoid external network and new package dependencies unless explicitly required",
+            ],
+            "non_goals": ["no user-specific corpus, private archive, or hidden external file dependency"],
+            "risk_surfaces": risk_surfaces,
+            "validation_signal": validation_commands,
+        },
+        "ddd": {
+            "domain_terms": domain_terms,
+            "entities": entities,
+            "value_objects": value_objects,
+            "domain_services": [],
+            "application_services": [],
+            "adapters": [],
+            "invariants": invariants,
+            "ownership_decision": ownership,
+            "side_effect_boundaries": side_effects,
+        },
+        "sdd": {
+            "modules": modules,
+            "files_to_change": ["candidate repository files selected by inspection"],
+            "public_api": public_api,
+            "data_flow": data_flow,
+            "error_contract": error_contract,
+            "failure_modes": failure_modes,
+            "logging_decision": logging_decision,
+            "metrics_traces_alerts": ["grading-result.json", "events.metrics.json"],
+            "performance_or_concurrency_constraints": risk_surfaces,
+            "compatibility_and_migration": ["preserve benchmark harness contract"],
+            "rollback_or_recovery": ["revert candidate change and rerun grading"],
+        },
+        "tdd": {
+            "acceptance_to_tests": {criterion: validation_commands for criterion in acceptance},
+            "invariant_to_tests_or_code": {invariant: validation_commands for invariant in invariants},
+            "public_api_to_tests": {api: validation_commands for api in public_api},
+            "failure_mode_tests": failure_tests,
+            "logging_or_security_tests": logging_tests,
+            "validation_commands": validation_commands,
+            "red_green_refactor_trace": ["validation command recorded for the candidate result"],
+        },
+        "case_specific": True,
+        "case_id": case.id,
+    }
+
+
+def _process_traceability(facts: dict[str, Any], validation_commands: list[str]) -> dict[str, bool]:
+    pdd = facts.get("pdd") if isinstance(facts.get("pdd"), dict) else {}
+    ddd = facts.get("ddd") if isinstance(facts.get("ddd"), dict) else {}
+    sdd = facts.get("sdd") if isinstance(facts.get("sdd"), dict) else {}
+    tdd = facts.get("tdd") if isinstance(facts.get("tdd"), dict) else {}
+    acceptance_mapped = _mapped_items(pdd.get("acceptance_criteria"), tdd.get("acceptance_to_tests"))
+    invariants_mapped = _mapped_items(ddd.get("invariants"), tdd.get("invariant_to_tests_or_code"))
+    public_api_mapped = _mapped_items(sdd.get("public_api"), tdd.get("public_api_to_tests"))
+    failure_mapped = _failure_modes_mapped(
+        _combined_string_items(sdd.get("error_contract"), sdd.get("failure_modes")),
+        tdd.get("failure_mode_tests"),
+    )
+    logging_mapped = _logging_mapped(sdd.get("logging_decision"), tdd, validation_commands)
+    return {
+        "pdd_acceptance_to_tdd_tests": acceptance_mapped,
+        "ddd_invariants_to_tdd_tests": invariants_mapped,
+        "sdd_public_api_to_tdd_tests": public_api_mapped,
+        "sdd_failure_modes_to_tdd_tests": failure_mapped,
+        "sdd_logging_to_tdd_tests": logging_mapped,
+        "pdd_to_tests": acceptance_mapped,
+        "ddd_invariants_to_code_or_tests": invariants_mapped,
+        "sdd_public_api_to_tests": public_api_mapped,
+        "tdd_validation_commands_present": bool(validation_commands),
+    }
+
+
+def _mapped_items(items: Any, mapping: Any) -> bool:
+    if not isinstance(items, list) or not items or not isinstance(mapping, dict):
+        return False
+    for item in items:
+        mapped = mapping.get(str(item))
+        if not mapped:
+            return False
+    return True
+
+
+def _failure_modes_mapped(failure_modes: Any, tests: Any) -> bool:
+    if not isinstance(failure_modes, list) or not failure_modes or not isinstance(tests, list) or not tests:
+        return False
+    mapped: set[str] = set()
+    for entry in tests:
+        if isinstance(entry, dict) and entry.get("tests"):
+            mapped.add(str(entry.get("failure_mode")))
+        elif isinstance(entry, str):
+            mapped.add(entry)
+    return all(str(mode) in mapped for mode in failure_modes)
+
+
+def _combined_string_items(*values: Any) -> list[str]:
+    combined: list[str] = []
+    for value in values:
+        if isinstance(value, list):
+            combined.extend(str(item) for item in value if str(item).strip())
+        elif isinstance(value, str) and value.strip():
+            combined.append(value)
+    return combined
+
+
+def _logging_mapped(logging_decision: Any, tdd: dict[str, Any], validation_commands: list[str]) -> bool:
+    if not isinstance(logging_decision, dict):
+        return False
+    if logging_decision.get("needed") is False:
+        return bool(str(logging_decision.get("rationale", "")).strip())
+    if logging_decision.get("needed") is not True:
+        return False
+    required = ("log_types", "events", "levels", "fields", "redaction", "cardinality_controls")
+    if any(not logging_decision.get(field) for field in required):
+        return False
+    logging_tests = tdd.get("logging_or_security_tests")
+    if isinstance(logging_tests, list) and logging_tests:
+        return True
+    evidence_words = ("log", "redact", "security", "audit")
+    return any(any(word in command.casefold() for word in evidence_words) for command in validation_commands)
 
 
 def _validation_commands(case: CodexLiveCase) -> list[str]:
@@ -1218,7 +1577,13 @@ def _validation_commands(case: CodexLiveCase) -> list[str]:
 def _selected_skills_for_variant(variant: str | None) -> list[str]:
     if variant == "baseline_clean" or variant is None:
         return []
-    return ["change-forge-router", "backend-change-builder", "quality-test-gate"]
+    return [
+        "change-forge-router",
+        "development-process-orchestrator",
+        "backend-change-builder",
+        "logging-design-gate",
+        "quality-test-gate",
+    ]
 
 
 def _selected_capabilities_for_variant(variant: str | None) -> list[str]:
@@ -1228,6 +1593,7 @@ def _selected_capabilities_for_variant(variant: str | None) -> list[str]:
         "acceptance-standard-definition",
         "module-boundary-design",
         "implementation-structure-design",
+        "logging-error-handling",
         "contract-testing",
         "validation-broker",
     ]

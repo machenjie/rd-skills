@@ -5,7 +5,7 @@
 
 Evidence inventory:
 - Command run: `python scripts/validate-skills.py`
-- Output captured: exit code 0; `validate-skills: validated 19 professional skill(s).`
+- Output captured: exit code 0; `validate-skills: validated 21 professional skill(s).`
 - Artifact produced: updated skill source and registry diff
 - Outcome: pass; proves skill metadata and required sections validate
 

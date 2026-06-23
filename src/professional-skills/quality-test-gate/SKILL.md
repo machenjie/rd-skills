@@ -11,6 +11,9 @@ changeforge_version: 0.1.0
 ## Mission
 Define the minimum evidence needed to prove a change works correctly, does not regress critical behavior, handles failure paths, and can be safely released — by mapping test types, depth, fixtures, and mocks to explicit risks, not to arbitrary coverage targets, and by treating missing test evidence for high-risk changes as a blocking gate condition.
 
+## Stage Ownership
+Own the TDD slice for ChangeForge process traces: PDD acceptance-to-test mapping, DDD invariant-to-test or code mapping, SDD public API-to-test mapping, failure-mode tests, logging/security tests, and validation commands. When logging is required, verify `logging-design-gate` fields, redaction, denial, retry, fallback, and trace propagation evidence.
+
 ## When To Use
 - Before code review, merge, or handoff when the test strategy for a change is undefined.
 - When the right test level (unit, integration, E2E, contract, migration) is unclear.

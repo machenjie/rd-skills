@@ -5,16 +5,25 @@ inspect `setup.sh`, `test-suite/run.sh`, `security-checks/run.sh`, and public
 API. Identify setup and test entrypoints, reuse candidates, and the owning
 object, service, or module. Use a compact execution flow:
 
-- PDD: define acceptance criteria, constraints, non-goals, risk surfaces, and
-  expected behavior before coding.
-- DDD: identify domain terms, owning objects/services/adapters, invariants, and
-  side-effect boundaries before choosing placement.
-- SDD: identify modules/files, public API, data flow, failure modes, and
-  logging/error/security/performance/concurrency constraints.
-- TDD: map PDD acceptance, DDD invariants, and SDD public API to tests or
-  validation commands before implementation.
+- PDD (Problem / Product / Purpose Definition Discipline): before coding,
+  state the problem, affected user or system, testable acceptance criteria,
+  constraints, non-goals, risk surfaces, and concrete validation signal.
+- DDD (Domain-Driven Design Discipline): before choosing placement, identify
+  domain terms, entity/value-object or service ownership, invariants, existing
+  owner code, and where side effects are allowed.
+- SDD (System / Software / Structure Design Discipline): before editing, name
+  modules/files, public API, data flow, error contract, failure modes, logging
+  decision, security/performance/concurrency constraints, compatibility, and
+  rollback or recovery implications.
+- TDD (Test-Driven Development Discipline): map PDD acceptance criteria, DDD
+  invariants, SDD public API, failure modes, and any logging/security decisions
+  to tests or validation commands. Do not claim traceability with booleans when
+  the mappings are missing.
 
 Do not output long process documents. Keep any process trace concise and useful.
+If logs are part of the change, specify log type, placement, level, fields,
+redaction, correlation, cardinality controls, and the test or validation that
+proves the decision.
 Inspect the relevant implementation, search for same-pattern reuse, and state a
 brief implementation structure plan. Make the minimal correct change, validate
 it, review PDD/DDD/SDD/TDD traceability, and include handoff evidence with

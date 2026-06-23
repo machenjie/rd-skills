@@ -8,7 +8,7 @@ Use for global installs.
 
 Top-level runtime skills:
 
-- 19 professional skills.
+- 21 professional skills.
 
 References:
 
@@ -18,7 +18,7 @@ References:
 
 Recommended does not install the 127 foundation capabilities as top-level skills.
 
-Top-level count: 19.
+Top-level count: 21.
 
 ## Full
 
@@ -26,7 +26,7 @@ Use for project installs where domain-specific routing should be visible as top-
 
 Top-level runtime skills:
 
-- 19 professional skills.
+- 21 professional skills.
 - 7 domain extensions.
 
 References:
@@ -35,7 +35,7 @@ References:
 
 Full does not install the 127 foundation capabilities as top-level skills.
 
-Top-level count: 26.
+Top-level count: 28.
 
 ## Dev
 
@@ -43,11 +43,11 @@ Use only for ChangeForge development and debugging.
 
 Top-level runtime skills:
 
-- 19 professional skills.
+- 21 professional skills.
 - 127 foundation capabilities.
 - 7 domain extensions.
 
-Top-level count: 153.
+Top-level count: 155.
 
 References:
 

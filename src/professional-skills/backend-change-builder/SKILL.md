@@ -11,6 +11,9 @@ changeforge_version: 0.1.0
 ## Mission
 Implement or review backend changes that preserve correctness, authorization integrity, consistency, idempotency, observable error semantics, concurrency safety, and operational transparency — because backend failures that are silent, partial, or irreversible are the most expensive failures in production.
 
+## Stage Ownership
+Own backend implementation placement for entry/controller, application service, domain-adjacent service, adapter, worker, transaction, and error boundaries. Use `logging-design-gate` to decide service, adapter, entry, and worker log placement, levels, fields, redaction, and trace correlation.
+
 ## When To Use
 - Service logic, endpoint handlers, command processors, or domain service methods are being added or modified.
 - Authorization rules, object-level permissions, or tenant isolation is being changed.

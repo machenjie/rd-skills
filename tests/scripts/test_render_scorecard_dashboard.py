@@ -30,7 +30,7 @@ def _payload() -> dict[str, object]:
         "schema_version": 1,
         "status_summary": {"pass": 2, "partial": 1, "fail": 1, "unknown": 1, "not_collected": 1},
         "profile_counts": {
-            "recommended": {"status": "pass", "detail": "recommended top-level count is 19"},
+            "recommended": {"status": "pass", "detail": "recommended top-level count is 21"},
         },
         "evidence_levels": {
             "structural fixture": {

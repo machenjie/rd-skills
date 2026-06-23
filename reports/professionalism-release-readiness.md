@@ -1,6 +1,6 @@
 # Professionalism Release Readiness
 
-- Generated: 2026-06-23T22:25:48.089081+00:00
+- Generated: 2026-06-23T23:33:40.734385+00:00
 - Status: strict-release-ready
 - Authoring ready: ready
 - Release ready: ready
@@ -31,7 +31,7 @@
 | professional benchmarks | pass | `reports/professional-benchmarks-report.json` | true | errors=0; quality_failures=0; empty_baseline_cases=0 |
 | routing coverage | pass | `reports/professional-routing-coverage.json` | true | needs_manual_review=0 |
 | promoted agent samples strict | pass | `reports/professional-agent-samples-report.json from python3 scripts/eval-professional-agent-samples.py --promoted-only --strict` | true | returncode=0; failures=0 |
-| content bloat exceptions | pass | `config/skill-content-exceptions.yaml and reports/skill-content-audit.json` | true | - classifications: {'KEEP_AS_IS': 144, 'MOVE_SECTIONS_TO_REFERENCES': 1, 'TIGHTEN_BODY': 8}; - domain_extensions: 7; - foundation_capabilities: 127; - heavy_domain: 0; - heavy_foundation: 1; - heavy_professional: 1; - low_professionalism: 0; - move_to_reference: 1; - professional_skills: 19; - split_candidates: 0 |
+| content bloat exceptions | pass | `config/skill-content-exceptions.yaml and reports/skill-content-audit.json` | true | - classifications: {'KEEP_AS_IS': 144, 'MOVE_SECTIONS_TO_REFERENCES': 3, 'TIGHTEN_BODY': 8}; - domain_extensions: 7; - foundation_capabilities: 127; - heavy_domain: 0; - heavy_foundation: 1; - heavy_professional: 1; - low_professionalism: 0; - move_to_reference: 3; - professional_skills: 21; - split_candidates: 0 |
 | known warnings budget | pass | `config/professionalism-baseline.yaml global_thresholds.max_known_warnings` | true | budget_blockers=0 |
 | baseline update drift | pass | `reports/professionalism-regression-report.json baseline_changes` | false | baseline_changes=0 |
 
