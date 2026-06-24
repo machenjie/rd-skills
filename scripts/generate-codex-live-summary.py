@@ -128,6 +128,7 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         "status": status,
         "evidence_level": evidence_level,
         "evidence_scope": evidence_scope,
+        "evidence_scope_ready": evidence_scope_detail["evidence_scope_ready"],
         "evidence_scope_detail": evidence_scope_detail,
         "evidence_status": _evidence_status(status),
         "effect_verdict": effect["verdict"],
@@ -293,7 +294,7 @@ def _process_compliance_summary(results: list[dict[str, Any]]) -> dict[str, Any]
             ),
         )
 
-    return {
+    summary = {
         "pdd_present_rate": phase_rate("pdd", "present"),
         "ddd_present_rate": phase_rate("ddd", "present"),
         "sdd_present_rate": phase_rate("sdd", "present"),
@@ -324,6 +325,23 @@ def _process_compliance_summary(results: list[dict[str, Any]]) -> dict[str, Any]
         ),
         "process_trace_count": trace_count,
     }
+    fallback_rates = [
+        summary["pdd_required_field_fallback_rate"],
+        summary["ddd_required_field_fallback_rate"],
+        summary["sdd_required_field_fallback_rate"],
+        summary["tdd_required_field_fallback_rate"],
+    ]
+    summary["required_field_fallback_rate"] = round(sum(fallback_rates) / len(fallback_rates), 4)
+    summary["process_trace_inferred_only_rate"] = summary["all_core_phases_inferred_only_rate"]
+    summary["explicit_trace_contract"] = {
+        "route_manifest": "changeforge_route or equivalent route manifest",
+        "pdd": "PDD acceptance trace",
+        "ddd": "DDD invariant trace",
+        "sdd": "SDD placement and error-contract trace",
+        "tdd": "TDD validation trace",
+        "inferred_only_label": "process_trace_inferred_only",
+    }
+    return summary
 
 
 def _load_process_trace(result: dict[str, Any]) -> dict[str, Any] | None:
@@ -384,10 +402,7 @@ def _results_for_variant(results: list[dict[str, Any]], variant: str) -> list[di
 def _variant_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
     eligible = [result for result in results if result.get("benchmark_eligible") is True]
     passed = [result for result in eligible if result.get("benchmark_passed") is True]
-    security_eligible = [result for result in eligible if "security_checks_passed" in (result.get("grading") or {})]
-    security_passed = [
-        result for result in security_eligible if (result.get("grading") or {}).get("security_checks_passed") is True
-    ]
+    security = _security_metric_buckets(results)
     setup_failure_reasons = _reason_counts(results, "setup_failure_reason", "setup_failed")
     setup_failure_subreasons = _setup_subreason_counts(results)
     changeforge_metadata = _changeforge_variant_metadata(results)
@@ -410,7 +425,11 @@ def _variant_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
         "benchmark_passed_result_count": len(passed),
         "pass_rate": _rate(len(passed), len(eligible)),
         "pass_rate_ci_note": "descriptive only; small sample",
-        "security_pass_rate": _rate(len(security_passed), len(security_eligible)),
+        "security_pass_rate": _rate(len(security["passed"]), len(security["eligible"])),
+        "security_assertion_failure_rate": _rate(len(security["assertion_failed"]), len(security["eligible"])),
+        "security_check_execution_failure_rate": _rate(len(security["execution_failed"]), len(results)),
+        "security_failure_rate": _rate(len(security["assertion_failed"]), len(security["eligible"])),
+        "security_failure_rate_definition": "alias of security_assertion_failure_rate; execution failures are tracked separately",
         "telemetry_only_result_count": sum(1 for result in results if result.get("grading_status") == "telemetry_only"),
         "not_collected_grading_count": sum(1 for result in results if result.get("grading_status") == "not_collected"),
         "contaminated_result_count": sum(
@@ -427,6 +446,27 @@ def _variant_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
         "average_event_count": _average_metrics(results)["event_count"],
         "average_file_change_count": _average_metrics(results)["file_change_count"],
         "average_command_execution_count": _average_metrics(results)["command_execution_count"],
+    }
+
+
+def _security_metric_buckets(results: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    """Separate assertion failures from missing or non-executable security checks."""
+    eligible = [result for result in results if "security_checks_passed" in (result.get("grading") or {})]
+    passed = [result for result in eligible if (result.get("grading") or {}).get("security_checks_passed") is True]
+    assertion_failed = [
+        result for result in eligible if (result.get("grading") or {}).get("security_checks_passed") is False
+    ]
+    execution_failed = [
+        result
+        for result in results
+        if result.get("security_failure_reason") in {"missing_security_script", "unknown"}
+        and result.get("failure_category") == "security_checks_failed"
+    ]
+    return {
+        "eligible": eligible,
+        "passed": passed,
+        "assertion_failed": assertion_failed,
+        "execution_failed": execution_failed,
     }
 
 
@@ -1194,6 +1234,14 @@ def _cost_adjusted_delta(
         float(variant_usage.get("input_tokens", 0) or 0),
         float(baseline_usage.get("input_tokens", 0) or 0),
     )
+    output_overhead_pct = _pct_delta(
+        float(variant_usage.get("output_tokens", 0) or 0),
+        float(baseline_usage.get("output_tokens", 0) or 0),
+    )
+    reasoning_overhead_pct = _pct_delta(
+        float(variant_usage.get("reasoning_output_tokens", 0) or 0),
+        float(baseline_usage.get("reasoning_output_tokens", 0) or 0),
+    )
     command_overhead_delta = _numeric_delta(
         variant_metrics.get("command_execution_count"),
         baseline_metrics.get("command_execution_count"),
@@ -1202,6 +1250,8 @@ def _cost_adjusted_delta(
         "status": "collected",
         "pass_rate_delta": pass_rate_delta,
         "average_input_token_overhead_pct": input_overhead_pct,
+        "average_output_token_overhead_pct": output_overhead_pct,
+        "average_reasoning_token_overhead_pct": reasoning_overhead_pct,
         "average_command_execution_delta": command_overhead_delta,
         "pass_rate_per_100k_input_tokens_delta": _numeric_delta(
             _pass_rate_per_usage_unit(variant_summary, "input_tokens", 100000),
@@ -1276,6 +1326,7 @@ def _stability_summary(
     flaky_case_variant_cells = _flaky_case_variant_cells(cases_summary)
     skills_with_hooks_regression_cases = _skills_with_hooks_regression_cases(cases_summary)
     codex_exec_retry_count = sum(int(result.get("codex_retry_count", 0) or 0) for result in results)
+    security = _security_metric_buckets(results)
     return {
         "requested_runs_per_variant": int(manifest.get("runs_per_variant", 0) or 0),
         "observed_case_variant_cell_count": len(cell_runs),
@@ -1285,7 +1336,10 @@ def _stability_summary(
         "grading_status_counts": grading_status_counts,
         "setup_failure_rate": _count_rate(failure_categories, "setup_failed", result_count),
         "test_suite_failure_rate": _count_rate(failure_categories, "test_suite_failed", result_count),
-        "security_failure_rate": _count_rate(failure_categories, "security_checks_failed", result_count),
+        "security_assertion_failure_rate": _rate(len(security["assertion_failed"]), len(security["eligible"])),
+        "security_check_execution_failure_rate": _rate(len(security["execution_failed"]), result_count),
+        "security_failure_rate": _rate(len(security["assertion_failed"]), len(security["eligible"])),
+        "security_failure_rate_definition": "alias of security_assertion_failure_rate; execution failures are tracked separately",
         "codex_exec_failure_rate": _count_rate(failure_categories, "codex_exec_failed", result_count),
         "not_collected_grading_rate": _count_rate(grading_status_counts, "not_collected", result_count),
         "contamination_rate": _count_rate(failure_categories, "contaminated", result_count),
@@ -1619,15 +1673,42 @@ def _limitations(
     return base
 
 
+def _markdown_pct(value: Any) -> str:
+    if not isinstance(value, int | float):
+        return "not_collected"
+    return f"{float(value) * 100:+.2f}%"
+
+
 def render_markdown(summary: dict[str, Any]) -> str:
     """Render a concise Markdown summary."""
+    process = summary.get("process_compliance_summary") if isinstance(summary.get("process_compliance_summary"), dict) else {}
+    coverage = summary.get("coverage_summary") if isinstance(summary.get("coverage_summary"), dict) else {}
+    cost = summary.get("cost_summary") if isinstance(summary.get("cost_summary"), dict) else {}
+    total_usage = cost.get("total_usage") if isinstance(cost.get("total_usage"), dict) else {}
+    stability = summary.get("stability_summary") if isinstance(summary.get("stability_summary"), dict) else {}
+    cost_delta = (
+        ((cost or {}).get("cost_adjusted_delta") or {}).get(
+            "skills_with_hooks_clean_vs_baseline_clean",
+            {},
+        )
+        if isinstance(cost, dict)
+        else {}
+    )
+    cost_delta = cost_delta if isinstance(cost_delta, dict) else {}
+    process_warning = (
+        int(process.get("process_trace_count", 0) or 0) > 0
+        and all(
+            float(process.get(field, 0.0) or 0.0) == 0.0
+            for field in ("pdd_present_rate", "ddd_present_rate", "sdd_present_rate", "tdd_present_rate")
+        )
+    )
     lines = [
         "# Codex CLI Live Benchmark Summary",
         "",
         f"- Status: `{summary['status']}`",
         f"- Evidence level: `{summary['evidence_level']}`",
         f"- Evidence scope: `{summary['evidence_scope']}`",
-        f"- Evidence scope ready: `{summary['evidence_scope_detail']['evidence_scope_ready']}`",
+        f"- Evidence scope ready: `{summary.get('evidence_scope_ready', summary['evidence_scope_detail']['evidence_scope_ready'])}`",
         f"- Evidence scope reason: {summary['evidence_scope_detail']['reason']}",
         f"- Evidence status: `{summary['evidence_status']}`",
         f"- Effect verdict: `{summary['effect_verdict']}`",
@@ -1652,30 +1733,56 @@ def render_markdown(summary: dict[str, Any]) -> str:
         f"- Benchmark eligible results: `{summary['benchmark_eligible_result_count']}`",
         f"- Telemetry-only results: `{summary['telemetry_only_result_count']}`",
         f"- Contaminated results: `{summary['contaminated_result_count']}`",
-        f"- Coverage tiers: `{summary['coverage_summary']['tiers']}`",
-        f"- Registered live cases: `{summary['coverage_summary']['registered_live_case_count']}`",
-        f"- Registered publishable assertion cases: `{summary['coverage_summary']['registered_publishable_assertion_case_count']}`",
-        f"- Actual run case coverage: `{summary['coverage_summary']['actual_run_case_count']}/{summary['coverage_summary']['manifest_case_count']}`",
-        f"- Coverage dimensions: `{summary['coverage_summary']['coverage_dimensions']}`",
-        f"- Total input tokens: `{summary['cost_summary']['total_usage']['input_tokens']}`",
-        f"- Total output tokens: `{summary['cost_summary']['total_usage']['output_tokens']}`",
-        f"- Observed min runs per case/variant: `{summary['stability_summary']['observed_min_runs_per_case_variant']}`",
-        f"- Test-suite failure rate: `{summary['stability_summary']['test_suite_failure_rate']}`",
-        f"- Codex exec retries: `{summary['stability_summary']['codex_exec_retry_count']}`",
-        f"- Partial status reasons: `{summary['stability_summary']['partial_status_reasons']}`",
+        f"- Coverage tiers: `{coverage.get('tiers', 'not_collected')}`",
+        f"- Registered live cases: `{coverage.get('registered_live_case_count', 'not_collected')}`",
+        f"- Registered publishable assertion cases: `{coverage.get('registered_publishable_assertion_case_count', 'not_collected')}`",
+        f"- Actual run case coverage: `{coverage.get('actual_run_case_count', 'not_collected')}/{coverage.get('manifest_case_count', 'not_collected')}`",
+        f"- Coverage dimensions: `{coverage.get('coverage_dimensions', 'not_collected')}`",
+        f"- Total input tokens: `{total_usage.get('input_tokens', 'not_collected')}`",
+        f"- Total output tokens: `{total_usage.get('output_tokens', 'not_collected')}`",
+        f"- Observed min runs per case/variant: `{stability.get('observed_min_runs_per_case_variant', 'not_collected')}`",
+        f"- Test-suite failure rate: `{stability.get('test_suite_failure_rate', 'not_collected')}`",
+        f"- Codex exec retries: `{stability.get('codex_exec_retry_count', 'not_collected')}`",
+        f"- Partial status reasons: `{stability.get('partial_status_reasons', 'not_collected')}`",
         f"- Structured log events: `{summary.get('logging_summary', {}).get('run_log_events', 0)}`",
         f"- Timeline events: `{summary.get('logging_summary', {}).get('timeline_events', 0)}`",
-        f"- Process trace count: `{summary.get('process_compliance_summary', {}).get('process_trace_count', 0)}`",
-        f"- PDD/DDD/SDD/TDD rates: "
-        f"`{summary.get('process_compliance_summary', {}).get('pdd_present_rate', 0.0)}`/"
-        f"`{summary.get('process_compliance_summary', {}).get('ddd_present_rate', 0.0)}`/"
-        f"`{summary.get('process_compliance_summary', {}).get('sdd_present_rate', 0.0)}`/"
-        f"`{summary.get('process_compliance_summary', {}).get('tdd_present_rate', 0.0)}`",
+        f"- Process trace count: `{process.get('process_trace_count', 'not_collected')}`",
         "",
-        "## Variants",
+        "## Process Compliance",
         "",
+        f"- pdd_present_rate: `{process.get('pdd_present_rate', 'not_collected')}`",
+        f"- ddd_present_rate: `{process.get('ddd_present_rate', 'not_collected')}`",
+        f"- sdd_present_rate: `{process.get('sdd_present_rate', 'not_collected')}`",
+        f"- tdd_present_rate: `{process.get('tdd_present_rate', 'not_collected')}`",
+        f"- inferred_rate: `{process.get('process_trace_inferred_only_rate', process.get('all_core_phases_inferred_only_rate', 'not_collected'))}`",
+        f"- required_field_fallback_rate: `{process.get('required_field_fallback_rate', 'not_collected')}`",
+        f"- validation_command_present_rate: `{process.get('validation_command_present_rate', 'not_collected')}`",
+        "- Explicit trace contract: `changeforge_route`, PDD acceptance, DDD invariants, SDD placement/error contract, and TDD validation trace.",
     ]
+    if process_warning:
+        lines.append("- Warning: explicit PDD/DDD/SDD/TDD traces were not captured; inferred/fallback traces do not prove full process compliance.")
+    lines.extend(
+        [
+            "",
+            "## Cost / Overhead",
+            "",
+            f"- skills_with_hooks_clean_vs_baseline_clean input token overhead: `{_markdown_pct(cost_delta.get('average_input_token_overhead_pct'))}`",
+            f"- skills_with_hooks_clean_vs_baseline_clean output token overhead: `{_markdown_pct(cost_delta.get('average_output_token_overhead_pct'))}`",
+            f"- skills_with_hooks_clean_vs_baseline_clean reasoning token overhead: `{_markdown_pct(cost_delta.get('average_reasoning_token_overhead_pct'))}`",
+            f"- skills_with_hooks_clean_vs_baseline_clean command execution delta: `{cost_delta.get('average_command_execution_delta', 'not_collected')}`",
+            f"- skills_with_hooks_clean_vs_baseline_clean pass rate delta: `{cost_delta.get('pass_rate_delta', 'not_collected')}`",
+            "- Cost caveat: parsed local Codex telemetry, not a billing ledger.",
+            "",
+            "## Variants",
+            "",
+        ]
+    )
     for variant, variant_summary in summary["variants"].items():
+        average_usage = variant_summary.get("average_usage") if isinstance(variant_summary.get("average_usage"), dict) else {}
+        median_usage = variant_summary.get("median_usage") if isinstance(variant_summary.get("median_usage"), dict) else {}
+        average_metrics = (
+            variant_summary.get("average_metrics") if isinstance(variant_summary.get("average_metrics"), dict) else {}
+        )
         lines.extend(
             [
                 f"### {variant}",
@@ -1686,14 +1793,17 @@ def render_markdown(summary: dict[str, Any]) -> str:
                 f"- Eligible results: `{variant_summary['benchmark_eligible_result_count']}`",
                 f"- Pass rate: `{variant_summary['pass_rate']}`",
                 f"- Security pass rate: `{variant_summary['security_pass_rate']}`",
+                f"- Security assertion failure rate: `{variant_summary.get('security_assertion_failure_rate', 'not_collected')}`",
+                f"- Security check execution failure rate: `{variant_summary.get('security_check_execution_failure_rate', 'not_collected')}`",
                 f"- Dominant setup failure reason: `{variant_summary['dominant_setup_failure_reason']}`",
                 f"- Dominant setup failure subreason: `{variant_summary['dominant_setup_failure_subreason']}`",
                 f"- Unknown setup failure rate: `{variant_summary['unknown_setup_failure_rate']}`",
-                f"- Average input tokens: `{variant_summary['average_usage']['input_tokens']}`",
-                f"- Median input tokens: `{variant_summary['median_usage']['input_tokens']}`",
-                f"- Average output tokens: `{variant_summary['average_usage']['output_tokens']}`",
-                f"- Average command executions: `{variant_summary['average_metrics']['command_execution_count']}`",
-                f"- Average file changes: `{variant_summary['average_metrics']['file_change_count']}`",
+                f"- Average input tokens: `{average_usage.get('input_tokens', 'not_collected')}`",
+                f"- Average output tokens: `{average_usage.get('output_tokens', 'not_collected')}`",
+                f"- Average reasoning tokens: `{average_usage.get('reasoning_output_tokens', 'not_collected')}`",
+                f"- Median input tokens: `{median_usage.get('input_tokens', 'not_collected')}`",
+                f"- Average command executions: `{average_metrics.get('command_execution_count', 'not_collected')}`",
+                f"- Average file changes: `{average_metrics.get('file_change_count', 'not_collected')}`",
                 "",
             ]
         )
@@ -1713,8 +1823,31 @@ def publish_summary(summary: dict[str, Any], markdown: str, *, root: Path = ROOT
     errors = strict_publish_errors(summary)
     if errors:
         raise ValueError("; ".join(errors))
+    if not _canonical_publish_ready(summary):
+        publish_smoke_summary(summary, markdown, root=root)
+        return
     write_json(root / "reports" / "codex-live-benchmark-summary.json", summary)
     (root / "reports" / "codex-live-benchmark-summary.md").write_text(markdown, encoding="utf-8")
+
+
+def publish_smoke_summary(summary: dict[str, Any], markdown: str, *, root: Path = ROOT) -> None:
+    """Publish strict smoke diagnostics without replacing canonical benchmark evidence."""
+    if summary.get("benchmark_mode") not in STRICT_BENCHMARK_MODES:
+        raise ValueError("Codex live smoke publication requires clean-paired or ablation mode")
+    write_json(root / "reports" / "codex-live-smoke-summary.json", summary)
+    (root / "reports" / "codex-live-smoke-summary.md").write_text(markdown, encoding="utf-8")
+
+
+def _canonical_publish_ready(summary: dict[str, Any]) -> bool:
+    detail = summary.get("evidence_scope_detail")
+    return (
+        summary.get("benchmark_mode") == "ablation"
+        and summary.get("evidence_scope") == "multi_case_ablation_3_run"
+        and isinstance(detail, dict)
+        and detail.get("evidence_scope_ready") is True
+        and summary.get("effect_status") != "inconclusive"
+        and summary.get("effect_verdict") != "inconclusive"
+    )
 
 
 def strict_publish_errors(summary: dict[str, Any]) -> list[str]:

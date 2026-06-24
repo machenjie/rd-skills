@@ -13,10 +13,9 @@ from typing import Any
 
 from codex_live_benchmark_lib import (
     LIVE_EVIDENCE_LEVEL,
-    MODE_DEFAULT_VARIANTS,
-    STRICT_AUTH_POLICIES,
-    STRICT_BENCHMARK_MODES,
-    STRICT_CODEX_ENVIRONMENT_POLICIES,
+    codex_live_compact_detail,
+    codex_live_repair_hints,
+    codex_live_scorecard_status,
 )
 from validation_utils import (
     EXPECTED_DOMAIN_EXTENSION_COUNT,
@@ -583,110 +582,14 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
     summary = _read_json(root / "reports" / "codex-live-benchmark-summary.json")
     if not isinstance(summary, dict):
         return "not_collected", "reports/codex-live-benchmark-summary.json missing or invalid"
-    required = {
-        "schema_version",
-        "generated_by",
-        "status",
-        "evidence_level",
-        "evidence_status",
-        "benchmark_mode",
-        "auth_policy",
-        "codex_environment_policy",
-        "effect_verdict",
-        "effect_status",
-        "effect_summary",
-        "strict_benchmark_eligible",
-        "run_id",
-        "case_count",
-        "assertion_case_count",
-        "result_count",
-        "benchmark_eligible_result_count",
-        "benchmark_passed_result_count",
-        "telemetry_only_result_count",
-        "contaminated_result_count",
-        "failure_categories",
-        "dominant_failure_category",
-        "setup_failure_reasons",
-        "dominant_setup_failure_reason",
-        "setup_failure_subreasons",
-        "dominant_setup_failure_subreason",
-        "unknown_setup_failure_rate",
-        "current_home_result_count",
-        "current_home_full_result_count",
-        "variants",
-        "delta",
-        "cases_summary",
-        "coverage_summary",
-        "cost_summary",
-        "stability_summary",
-        "limitations",
-    }
-    missing = sorted(field for field in required if field not in summary)
-    if missing:
-        return "fail", "missing Codex live summary fields: " + ", ".join(missing)
-    strict_errors = _codex_live_strict_summary_errors(summary)
-    if strict_errors:
-        return "fail", "; ".join(strict_errors)
-    status = str(summary.get("status"))
-    if status == "collected":
-        scorecard_status = "pass"
-    elif status == "partial":
-        scorecard_status = "partial"
-    elif status == "failed":
-        scorecard_status = "fail"
-    else:
-        scorecard_status = "not_collected"
-    detail = {
-        "evidence_status": scorecard_status,
-        "evidence_level": summary.get("evidence_level"),
-        "evidence_scope": summary.get("evidence_scope"),
-        "evidence_scope_detail": summary.get("evidence_scope_detail"),
-        "effect_verdict": summary.get("effect_verdict"),
-        "effect_status": summary.get("effect_status"),
-        "effect_summary": summary.get("effect_summary"),
-        "benchmark_mode": summary.get("benchmark_mode"),
-        "auth_policy": summary.get("auth_policy"),
-        "codex_environment_policy": summary.get("codex_environment_policy"),
-        "strict_benchmark_eligible": summary.get("strict_benchmark_eligible"),
-        "run_id": summary.get("run_id"),
-        "case_count": summary.get("case_count"),
-        "assertion_case_count": summary.get("assertion_case_count"),
-        "result_count": summary.get("result_count"),
-        "benchmark_eligible_result_count": summary.get("benchmark_eligible_result_count"),
-        "benchmark_passed_result_count": summary.get("benchmark_passed_result_count"),
-        "failure_categories": summary.get("failure_categories"),
-        "dominant_failure_category": summary.get("dominant_failure_category"),
-        "setup_failure_reasons": summary.get("setup_failure_reasons"),
-        "dominant_setup_failure_reason": summary.get("dominant_setup_failure_reason"),
-        "setup_failure_subreasons": summary.get("setup_failure_subreasons"),
-        "dominant_setup_failure_subreason": summary.get("dominant_setup_failure_subreason"),
-        "unknown_setup_failure_rate": summary.get("unknown_setup_failure_rate"),
-        "variants": {
-            variant: {
-                "run_count": payload.get("run_count"),
-                "case_count": payload.get("case_count"),
-                "pass_rate": payload.get("pass_rate"),
-                "security_pass_rate": payload.get("security_pass_rate"),
-                "benchmark_eligible_result_count": payload.get("benchmark_eligible_result_count"),
-                "benchmark_passed_result_count": payload.get("benchmark_passed_result_count"),
-                "failure_categories": payload.get("failure_categories"),
-                "setup_failure_reasons": payload.get("setup_failure_reasons"),
-                "dominant_setup_failure_reason": payload.get("dominant_setup_failure_reason"),
-                "setup_failure_subreasons": payload.get("setup_failure_subreasons"),
-                "dominant_setup_failure_subreason": payload.get("dominant_setup_failure_subreason"),
-                "unknown_setup_failure_rate": payload.get("unknown_setup_failure_rate"),
-            }
-            for variant, payload in (summary.get("variants") or {}).items()
-            if isinstance(payload, dict)
-        },
-        "delta": summary.get("delta"),
-        "cases_summary": summary.get("cases_summary"),
-        "coverage_summary": summary.get("coverage_summary"),
-        "cost_summary": summary.get("cost_summary"),
-        "stability_summary": summary.get("stability_summary"),
-        "limitations": summary.get("limitations"),
-    }
-    return scorecard_status, json.dumps(detail, sort_keys=True)
+    status, strict_errors, readiness_warnings = codex_live_scorecard_status(summary)
+    detail = codex_live_compact_detail(
+        summary,
+        status=status,
+        strict_errors=strict_errors,
+        readiness_warnings=readiness_warnings,
+    )
+    return status, json.dumps(detail, sort_keys=True)
 
 
 def _codex_live_strict_summary_errors(summary: dict[str, Any]) -> list[str]:
@@ -1033,13 +936,19 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
         )
 
     codex_live_status, codex_live_detail = codex_live_benchmark_status(root)
+    codex_live_summary = _read_json(root / "reports" / "codex-live-benchmark-summary.json")
+    codex_live_fix_hint = (
+        "; ".join(codex_live_repair_hints(codex_live_summary if isinstance(codex_live_summary, dict) else None))
+        if codex_live_status != "pass"
+        else "Keep canonical reports generated from the strongest strict ablation evidence."
+    )
     dimensions.append(
         Dimension(
             "Codex CLI live benchmark",
             codex_live_status,
             "reports/codex-live-benchmark-summary.json",
             "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json",
-            "Run and publish an explicit opt-in Codex CLI live benchmark summary before changing this status from not_collected.",
+            codex_live_fix_hint,
             codex_live_detail,
         )
     )

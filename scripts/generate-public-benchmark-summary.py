@@ -18,6 +18,10 @@ from codex_live_benchmark_lib import (
     STRICT_AUTH_POLICIES,
     STRICT_BENCHMARK_MODES,
     STRICT_CODEX_ENVIRONMENT_POLICIES,
+    codex_live_compact_detail,
+    codex_live_evidence_scope_ready,
+    codex_live_repair_hints,
+    codex_live_scorecard_status,
     public_status_from_live,
 )
 from validation_utils import EXPECTED_PROFILE_TOP_LEVEL_COUNTS
@@ -82,6 +86,7 @@ class EvidenceItem:
     detail: str
     command: str
     evidence_level: str = "structural fixture"
+    detail_data: dict[str, Any] | None = None
 
 
 def _read_json(path: Path) -> Any | None:
@@ -301,76 +306,96 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
             "python3 scripts/run-codex-live-benchmarks.py --list",
             LIVE_EVIDENCE_LEVEL,
         )
-    status = public_status_from_live(str(summary.get("status", "not_collected")))
-    strict_errors = _codex_live_strict_summary_errors(summary)
-    if strict_errors:
-        status = "fail"
-    detail = {
-        "evidence_status": status,
-        "effect_note": "evidence_status pass reports collection quality only; effect_verdict reports measured impact",
-        "evidence_level": summary.get("evidence_level"),
-        "evidence_scope": summary.get("evidence_scope"),
-        "evidence_scope_detail": summary.get("evidence_scope_detail"),
-        "effect_verdict": summary.get("effect_verdict"),
-        "effect_status": summary.get("effect_status"),
-        "effect_summary": summary.get("effect_summary"),
-        "benchmark_mode": summary.get("benchmark_mode"),
-        "auth_policy": summary.get("auth_policy"),
-        "codex_environment_policy": summary.get("codex_environment_policy"),
-        "strict_benchmark_eligible": summary.get("strict_benchmark_eligible"),
-        "run_id": summary.get("run_id"),
-        "case_count": summary.get("case_count"),
-        "assertion_case_count": summary.get("assertion_case_count"),
-        "result_count": summary.get("result_count"),
-        "benchmark_eligible_result_count": summary.get("benchmark_eligible_result_count"),
-        "benchmark_passed_result_count": summary.get("benchmark_passed_result_count"),
-        "failure_categories": summary.get("failure_categories"),
-        "dominant_failure_category": summary.get("dominant_failure_category"),
-        "setup_failure_reasons": summary.get("setup_failure_reasons"),
-        "dominant_setup_failure_reason": summary.get("dominant_setup_failure_reason"),
-        "setup_failure_subreasons": summary.get("setup_failure_subreasons"),
-        "dominant_setup_failure_subreason": summary.get("dominant_setup_failure_subreason"),
-        "unknown_setup_failure_rate": summary.get("unknown_setup_failure_rate"),
-        "variants": {
-            variant: {
-                "run_count": payload.get("run_count"),
-                "case_count": payload.get("case_count"),
-                "pass_rate": payload.get("pass_rate"),
-                "security_pass_rate": payload.get("security_pass_rate"),
-                "benchmark_eligible_result_count": payload.get("benchmark_eligible_result_count"),
-                "benchmark_passed_result_count": payload.get("benchmark_passed_result_count"),
-                "failure_categories": payload.get("failure_categories"),
-                "setup_failure_reasons": payload.get("setup_failure_reasons"),
-                "dominant_setup_failure_reason": payload.get("dominant_setup_failure_reason"),
-                "setup_failure_subreasons": payload.get("setup_failure_subreasons"),
-                "dominant_setup_failure_subreason": payload.get("dominant_setup_failure_subreason"),
-                "unknown_setup_failure_rate": payload.get("unknown_setup_failure_rate"),
-            }
-            for variant, payload in (summary.get("variants") or {}).items()
-            if isinstance(payload, dict)
-        },
-        "delta": summary.get("delta"),
-        "strict_errors": strict_errors,
-        "cases_summary": summary.get("cases_summary"),
-        "coverage_summary": summary.get("coverage_summary"),
-        "cost_summary": summary.get("cost_summary"),
-        "stability_summary": summary.get("stability_summary"),
-        "limitations": summary.get("limitations"),
-    }
+    status, strict_errors, readiness_warnings = codex_live_scorecard_status(summary)
+    detail = codex_live_compact_detail(
+        summary,
+        status=status,
+        strict_errors=strict_errors,
+        readiness_warnings=readiness_warnings,
+    )
     comparison = _codex_live_previous_comparison(
         previous=_read_previous_committed_json(root, source),
         current=summary,
     )
     if comparison:
         detail["previous_current_comparison"] = comparison
+    detail["repair_hints"] = codex_live_repair_hints(summary)
     return EvidenceItem(
         CODEX_LIVE_BENCHMARK_DIMENSION,
         status,
         source,
-        json.dumps(detail, sort_keys=True),
+        _codex_live_public_detail(summary, detail),
         "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json",
         LIVE_EVIDENCE_LEVEL,
+        detail,
     )
+
+
+def _codex_live_public_detail(summary: dict[str, Any], detail: dict[str, Any]) -> str:
+    """Render a compact human detail for the public Markdown table."""
+    variants = detail.get("variants") if isinstance(detail.get("variants"), dict) else {}
+    variant_names = ", ".join(sorted(variants)) if variants else "not_collected"
+    hooks = variants.get("skills_with_hooks_clean") if isinstance(variants, dict) else None
+    hooks_pass_rate = hooks.get("pass_rate") if isinstance(hooks, dict) else "not_collected"
+    run_counts = ", ".join(
+        f"{variant}:{payload.get('run_count')}"
+        for variant, payload in sorted(variants.items())
+        if isinstance(payload, dict)
+    ) or "not_collected"
+    delta = ((detail.get("cost_summary") or {}).get("cost_adjusted_delta") or {}).get(
+        "skills_with_hooks_clean_vs_baseline_clean",
+        {},
+    )
+    input_overhead = _format_pct(delta.get("average_input_token_overhead_pct") if isinstance(delta, dict) else None)
+    output_overhead = _format_pct(delta.get("average_output_token_overhead_pct") if isinstance(delta, dict) else None)
+    command_delta = (
+        delta.get("average_command_execution_delta")
+        if isinstance(delta, dict)
+        else "not_collected"
+    )
+    limitations = detail.get("limitations") if isinstance(detail.get("limitations"), list) else []
+    warnings = detail.get("readiness_warnings") if isinstance(detail.get("readiness_warnings"), list) else []
+    strict_errors = detail.get("strict_errors") if isinstance(detail.get("strict_errors"), list) else []
+    overhead_warning = _codex_live_overhead_warning(summary, delta if isinstance(delta, dict) else {})
+    if overhead_warning:
+        warnings = [*warnings, overhead_warning]
+    parts = [
+        f"mode={detail.get('benchmark_mode')}",
+        f"scope={detail.get('evidence_scope')}",
+        f"ready={detail.get('evidence_scope_ready')}",
+        f"cases={detail.get('assertion_case_count')}/{detail.get('case_count')}",
+        f"results={detail.get('benchmark_eligible_result_count')}/{detail.get('result_count')}",
+        f"runs={run_counts}",
+        f"variants={variant_names}",
+        f"skills_with_hooks_clean.pass_rate={hooks_pass_rate}",
+        f"effect={detail.get('effect_status')}/{detail.get('effect_verdict')}",
+        f"token_overhead=input {input_overhead}, output {output_overhead}",
+        f"command_delta={command_delta}",
+    ]
+    if strict_errors:
+        parts.append("errors=" + "; ".join(str(item) for item in strict_errors[:4]))
+    if warnings:
+        parts.append("warnings=" + "; ".join(str(item) for item in warnings[:4]))
+    if limitations:
+        parts.append("limitations=" + "; ".join(str(item) for item in limitations[:3]))
+    return "; ".join(parts)
+
+
+def _format_pct(value: Any) -> str:
+    if not isinstance(value, int | float):
+        return "not_collected"
+    return f"{float(value) * 100:+.2f}%"
+
+
+def _codex_live_overhead_warning(summary: dict[str, Any], delta: dict[str, Any]) -> str | None:
+    input_overhead = delta.get("average_input_token_overhead_pct")
+    if (
+        not codex_live_evidence_scope_ready(summary)
+        and isinstance(input_overhead, int | float)
+        and float(input_overhead) > 0.5
+    ):
+        return "Smoke run shows high overhead; do not claim efficiency improvement."
+    return None
 
 
 def _read_previous_committed_json(root: Path, source: str) -> dict[str, Any] | None:
@@ -632,6 +657,51 @@ def _additional_status_items(root: Path, scorecard_path: Path | None = None) -> 
     ]
 
 
+def _scorecard_dimension_items(root: Path, scorecard_path: Path | None = None) -> list[EvidenceItem] | None:
+    path, source = _scorecard_path_and_source(root, scorecard_path)
+    scorecard = _read_json(path)
+    if not isinstance(scorecard, dict):
+        return None
+    dimensions = scorecard.get("dimensions")
+    if not isinstance(scorecard.get("status_summary"), dict) or not isinstance(dimensions, list):
+        return None
+    items: list[EvidenceItem] = []
+    for dimension in dimensions:
+        if not isinstance(dimension, dict):
+            continue
+        name = str(dimension.get("name", "unknown"))
+        if name == CODEX_LIVE_BENCHMARK_DIMENSION:
+            items.append(_codex_live_benchmark_item(root))
+            continue
+        status = str(dimension.get("status", "unknown"))
+        if status not in STATUS_ORDER:
+            status = "unknown"
+        items.append(
+            EvidenceItem(
+                name,
+                status,
+                str(dimension.get("source") or source),
+                str(dimension.get("detail", "detail missing")),
+                str(dimension.get("verification_command", "")) or SCORECARD_REFRESH_COMMAND,
+                _dimension_evidence_level(name),
+            )
+        )
+    return items
+
+
+def _dimension_evidence_level(name: str) -> str:
+    mapping = {
+        "Promoted agent samples": "promoted golden case",
+        RUNTIME_TELEMETRY_FIXTURE_DIMENSION: "runtime telemetry fixture sample",
+        LIVE_RUNTIME_TELEMETRY_DIMENSION: "live runtime telemetry sample",
+        EXECUTOR_LIVE_PASS_RATE_DIMENSION: "live pass-rate",
+        EXECUTOR_TOKEN_OVERHEAD_DIMENSION: "token overhead",
+        EXECUTOR_TURN_OVERHEAD_DIMENSION: "turn overhead",
+        CODEX_LIVE_BENCHMARK_DIMENSION: LIVE_EVIDENCE_LEVEL,
+    }
+    return mapping.get(name, "structural fixture")
+
+
 def generate_summary(
     root: Path,
     *,
@@ -639,12 +709,14 @@ def generate_summary(
     scorecard_path: Path | None = None,
 ) -> dict[str, Any]:
     """Generate the public benchmark summary payload."""
-    items = [
-        *_release_readiness_items(root),
-        *_direct_report_items(root),
-        *_profile_build_items(root),
-        *_additional_status_items(root, scorecard_path),
-    ]
+    items = _scorecard_dimension_items(root, scorecard_path)
+    if items is None:
+        items = [
+            *_release_readiness_items(root),
+            *_direct_report_items(root),
+            *_profile_build_items(root),
+            *_additional_status_items(root, scorecard_path),
+        ]
     status_counts = {status: 0 for status in STATUS_ORDER}
     for item in items:
         status_counts[item.status] += 1

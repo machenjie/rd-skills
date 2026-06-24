@@ -32,6 +32,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--summary", type=Path, default=_default("reports/codex-live-benchmark-summary.json"))
     parser.add_argument("--scorecard", type=Path, default=_default("reports/professional-scorecard.json"))
     parser.add_argument("--public-summary", type=Path, default=_default("reports/public-benchmark-summary.json"))
+    parser.add_argument("--dashboard", type=Path, default=_default("docs/SCORECARD_DASHBOARD.md"))
+    parser.add_argument("--readme", type=Path, default=_default("README.md"))
     args = parser.parse_args(argv)
 
     validator = _load_validator()
@@ -39,6 +41,8 @@ def main(argv: list[str] | None = None) -> int:
         args.summary,
         scorecard_path=args.scorecard if args.scorecard.exists() else None,
         public_summary_path=args.public_summary if args.public_summary.exists() else None,
+        dashboard_path=args.dashboard if args.dashboard.exists() else None,
+        readme_path=args.readme if args.readme.exists() else None,
     )
     if errors:
         for error in errors:

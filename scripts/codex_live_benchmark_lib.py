@@ -103,6 +103,12 @@ CURRENT_HOME_SMOKE_EVIDENCE_LEVEL = "current_home_integration_smoke"
 CODEX_LIVE_EVIDENCE_SCOPES = ("smoke", "multi_case_ablation_3_run", "current_home_smoke")
 STRONG_CODEX_LIVE_ASSERTION_CASE_MIN = 5
 STRONG_CODEX_LIVE_RUNS_PER_VARIANT_MIN = 3
+STRONG_CODEX_LIVE_EVIDENCE_SCOPE = "multi_case_ablation_3_run"
+REQUIRED_ABLATION_DELTAS = (
+    "skills_only_clean_vs_baseline_clean",
+    "skills_with_hooks_clean_vs_skills_only_clean",
+    "skills_with_hooks_clean_vs_baseline_clean",
+)
 BASELINE_CONTAMINATION_SIGNALS = (
     "ChangeForge",
     "rd-skills",
@@ -438,6 +444,295 @@ def public_status_from_live(status: str) -> str:
     return "not_collected"
 
 
+def codex_live_evidence_scope_ready(summary: dict[str, Any]) -> bool:
+    """Return the strict readiness flag from either the top-level or nested summary field."""
+    if summary.get("evidence_scope_ready") is True:
+        return True
+    detail = summary.get("evidence_scope_detail")
+    return isinstance(detail, dict) and detail.get("evidence_scope_ready") is True
+
+
+def codex_live_strict_artifact_errors(summary: dict[str, Any]) -> list[str]:
+    """Return errors for strict, sanitized live benchmark artifact validity.
+
+    This validates whether a summary is a trustworthy local artifact. It does not
+    mean the artifact is strong enough to support a broad live benchmark pass.
+    Clean-paired smoke runs can pass this artifact check and still be partial.
+    """
+    errors: list[str] = []
+    required = (
+        "schema_version",
+        "generated_by",
+        "status",
+        "evidence_level",
+        "benchmark_mode",
+        "auth_policy",
+        "codex_environment_policy",
+        "strict_benchmark_eligible",
+        "run_id",
+        "case_count",
+        "assertion_case_count",
+        "result_count",
+        "benchmark_eligible_result_count",
+        "contaminated_result_count",
+        "current_home_result_count",
+        "current_home_full_result_count",
+        "user_skills_visible",
+        "user_config_loaded",
+        "user_rules_loaded",
+        "ignore_user_config",
+        "ignore_rules",
+        "plugins_disabled",
+        "variants",
+        "delta",
+    )
+    missing = sorted(field for field in required if field not in summary)
+    if missing:
+        errors.append("missing Codex live summary fields: " + ", ".join(missing))
+    benchmark_mode = summary.get("benchmark_mode")
+    if summary.get("evidence_level") != LIVE_EVIDENCE_LEVEL:
+        errors.append(f"evidence_level must be {LIVE_EVIDENCE_LEVEL}")
+    if benchmark_mode not in STRICT_BENCHMARK_MODES:
+        errors.append("benchmark_mode must be clean-paired or ablation")
+    if summary.get("auth_policy") not in STRICT_AUTH_POLICIES:
+        errors.append(f"auth_policy {summary.get('auth_policy')!r} must be borrow-current or isolated-api-key")
+    if summary.get("codex_environment_policy") not in STRICT_CODEX_ENVIRONMENT_POLICIES:
+        errors.append(
+            f"codex_environment_policy {summary.get('codex_environment_policy')!r} "
+            "must be auth_borrowed_clean or isolated_api_key"
+        )
+    if summary.get("strict_benchmark_eligible") is not True:
+        errors.append("strict_benchmark_eligible must be true")
+    if int(summary.get("current_home_result_count", 0) or 0) != 0 or int(
+        summary.get("current_home_full_result_count", 0) or 0
+    ) != 0:
+        errors.append("current-home-full results are not public benchmark evidence")
+    if summary.get("user_skills_visible") is not False:
+        errors.append("user_skills_visible must be false")
+    if summary.get("user_config_loaded") is not False:
+        errors.append("user_config_loaded must be false")
+    if summary.get("user_rules_loaded") is not False:
+        errors.append("user_rules_loaded must be false")
+    if summary.get("ignore_user_config") is not True:
+        errors.append("ignore_user_config must be true")
+    if summary.get("ignore_rules") is not True:
+        errors.append("ignore_rules must be true")
+    if summary.get("plugins_disabled") is not True:
+        errors.append("plugins_disabled must be true")
+    if int(summary.get("contaminated_result_count", 0) or 0) != 0:
+        errors.append("contaminated results are not public benchmark evidence")
+    if int(summary.get("benchmark_eligible_result_count", 0) or 0) <= 0:
+        errors.append("assertion-backed eligible results are required")
+    if summary.get("effect_verdict") not in EFFECT_VERDICTS:
+        errors.append("effect_verdict is required")
+    if summary.get("effect_status") not in EFFECT_STATUSES:
+        errors.append("effect_status is required")
+
+    variants = summary.get("variants") if isinstance(summary.get("variants"), dict) else {}
+    for variant in MODE_DEFAULT_VARIANTS.get(str(benchmark_mode), ()):
+        payload = variants.get(variant)
+        if not isinstance(payload, dict):
+            errors.append(f"variant {variant} is required")
+            continue
+        if int(payload.get("benchmark_eligible_result_count", 0) or 0) <= 0:
+            errors.append(f"eligible assertion results are required for {variant}")
+        if variant == "baseline_clean" and payload.get("changeforge_install_source") != "none":
+            errors.append("baseline_clean must not install ChangeForge")
+        if variant == "skills_only_clean":
+            if payload.get("changeforge_install_source") != "current_repository":
+                errors.append("skills_only_clean must use current_repository install source")
+            if payload.get("changeforge_hooks_enabled") is not False:
+                errors.append("skills_only_clean must not enable project-level hooks")
+        if variant == "skills_with_hooks_clean":
+            if payload.get("changeforge_install_source") != "current_repository":
+                errors.append("skills_with_hooks_clean must use current_repository install source")
+            if payload.get("changeforge_hooks_enabled") is not True:
+                errors.append("skills_with_hooks_clean must enable project-level hooks")
+        if payload.get("user_level_install_used") is not False:
+            errors.append(f"{variant} requires user_level_install_used=false")
+
+    if benchmark_mode == "ablation":
+        delta = summary.get("delta") if isinstance(summary.get("delta"), dict) else {}
+        for key in REQUIRED_ABLATION_DELTAS:
+            if key not in delta:
+                errors.append(f"ablation delta.{key} is required")
+    return errors
+
+
+def codex_live_evidence_readiness_warnings(summary: dict[str, Any]) -> list[str]:
+    """Return reasons a strict artifact is not broad live benchmark pass evidence."""
+    warnings: list[str] = []
+    benchmark_mode = str(summary.get("benchmark_mode") or "")
+    evidence_scope = str(summary.get("evidence_scope") or "")
+    if benchmark_mode != "ablation":
+        warnings.append("run ablation mode")
+    if evidence_scope == "smoke":
+        warnings.append("clean-paired smoke is diagnostic evidence only")
+    if evidence_scope != STRONG_CODEX_LIVE_EVIDENCE_SCOPE:
+        warnings.append(f"evidence_scope must be {STRONG_CODEX_LIVE_EVIDENCE_SCOPE}")
+    if not codex_live_evidence_scope_ready(summary):
+        warnings.append("evidence_scope_ready must be true")
+    if summary.get("effect_status") == "inconclusive" or summary.get("effect_verdict") == "inconclusive":
+        warnings.append("effect_status/effect_verdict is inconclusive")
+    if int(summary.get("assertion_case_count", 0) or 0) < STRONG_CODEX_LIVE_ASSERTION_CASE_MIN:
+        warnings.append(f"need >= {STRONG_CODEX_LIVE_ASSERTION_CASE_MIN} assertion-backed cases")
+    detail = summary.get("evidence_scope_detail")
+    observed_runs = None
+    if isinstance(detail, dict):
+        observed_runs = detail.get("observed_min_runs_per_required_variant")
+    if not isinstance(observed_runs, int | float):
+        observed_runs = _observed_min_runs_from_variants(summary)
+    if int(observed_runs or 0) < STRONG_CODEX_LIVE_RUNS_PER_VARIANT_MIN:
+        warnings.append(f"need >= {STRONG_CODEX_LIVE_RUNS_PER_VARIANT_MIN} runs per variant")
+    variants = summary.get("variants") if isinstance(summary.get("variants"), dict) else {}
+    missing_variants = [variant for variant in MODE_DEFAULT_VARIANTS["ablation"] if variant not in variants]
+    if missing_variants:
+        warnings.append("include required variants: " + ", ".join(missing_variants))
+    process_warning = codex_live_process_warning(summary)
+    if process_warning:
+        warnings.append(process_warning)
+    return _dedupe(warnings)
+
+
+def codex_live_process_warning(summary: dict[str, Any]) -> str | None:
+    """Return a warning when process evidence is inferred-only rather than explicit."""
+    process = summary.get("process_compliance_summary")
+    if not isinstance(process, dict):
+        return None
+    trace_count = int(process.get("process_trace_count", 0) or 0)
+    if trace_count <= 0:
+        return None
+    present_rates = [
+        process.get("pdd_present_rate"),
+        process.get("ddd_present_rate"),
+        process.get("sdd_present_rate"),
+        process.get("tdd_present_rate"),
+    ]
+    if all(isinstance(value, int | float) and float(value) == 0.0 for value in present_rates):
+        return "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
+    return None
+
+
+def codex_live_scorecard_status(summary: dict[str, Any] | None) -> tuple[str, list[str], list[str]]:
+    """Return scorecard status plus strict errors and readiness warnings."""
+    if not isinstance(summary, dict):
+        return "not_collected", [], ["summary missing"]
+    strict_errors = codex_live_strict_artifact_errors(summary)
+    if strict_errors:
+        return "fail", strict_errors, []
+    status = str(summary.get("status") or "not_collected")
+    if status == "failed":
+        return "fail", [], ["summary status is failed"]
+    if status in {"not_collected", "skipped_not_opted_in"}:
+        return "not_collected", [], ["summary not collected"]
+    readiness_warnings = codex_live_evidence_readiness_warnings(summary)
+    if status == "partial" or readiness_warnings:
+        return "partial", [], readiness_warnings
+    if status == "collected":
+        return "pass", [], []
+    return "not_collected", [], [f"summary status {status!r} is not recognized"]
+
+
+def codex_live_compact_detail(
+    summary: dict[str, Any],
+    *,
+    status: str,
+    strict_errors: list[str] | None = None,
+    readiness_warnings: list[str] | None = None,
+) -> dict[str, Any]:
+    """Build bounded detail for scorecard/public report consistency checks."""
+    variants = summary.get("variants") if isinstance(summary.get("variants"), dict) else {}
+    coverage = summary.get("coverage_summary") if isinstance(summary.get("coverage_summary"), dict) else {}
+    cost = summary.get("cost_summary") if isinstance(summary.get("cost_summary"), dict) else {}
+    return {
+        "evidence_status": status,
+        "evidence_level": summary.get("evidence_level"),
+        "evidence_scope": summary.get("evidence_scope"),
+        "evidence_scope_ready": codex_live_evidence_scope_ready(summary),
+        "effect_status": summary.get("effect_status"),
+        "effect_verdict": summary.get("effect_verdict"),
+        "benchmark_mode": summary.get("benchmark_mode"),
+        "auth_policy": summary.get("auth_policy"),
+        "codex_environment_policy": summary.get("codex_environment_policy"),
+        "strict_benchmark_eligible": summary.get("strict_benchmark_eligible"),
+        "run_id": summary.get("run_id"),
+        "case_count": summary.get("case_count"),
+        "assertion_case_count": summary.get("assertion_case_count"),
+        "result_count": summary.get("result_count"),
+        "benchmark_eligible_result_count": summary.get("benchmark_eligible_result_count"),
+        "benchmark_passed_result_count": summary.get("benchmark_passed_result_count"),
+        "coverage_summary": {
+            "registered_live_case_count": coverage.get("registered_live_case_count"),
+            "registered_publishable_assertion_case_count": coverage.get("registered_publishable_assertion_case_count"),
+            "actual_run_case_count": coverage.get("actual_run_case_count"),
+            "actual_run_assertion_case_count": coverage.get("actual_run_assertion_case_count"),
+            "actual_run_case_coverage_rate": coverage.get("actual_run_case_coverage_rate"),
+        },
+        "variants": {
+            variant: {
+                "run_count": payload.get("run_count"),
+                "case_count": payload.get("case_count"),
+                "pass_rate": payload.get("pass_rate"),
+                "security_pass_rate": payload.get("security_pass_rate"),
+                "security_assertion_failure_rate": payload.get("security_assertion_failure_rate"),
+                "security_check_execution_failure_rate": payload.get("security_check_execution_failure_rate"),
+                "benchmark_eligible_result_count": payload.get("benchmark_eligible_result_count"),
+                "benchmark_passed_result_count": payload.get("benchmark_passed_result_count"),
+                "average_usage": payload.get("average_usage"),
+                "average_metrics": payload.get("average_metrics"),
+            }
+            for variant, payload in variants.items()
+            if isinstance(payload, dict)
+        },
+        "delta": summary.get("delta"),
+        "cost_summary": {
+            "cost_adjusted_delta": cost.get("cost_adjusted_delta"),
+            "cost_caveat": cost.get("cost_caveat"),
+        },
+        "process_compliance_summary": summary.get("process_compliance_summary"),
+        "limitations": summary.get("limitations"),
+        "strict_errors": strict_errors or [],
+        "readiness_warnings": readiness_warnings or [],
+    }
+
+
+def codex_live_repair_hints(summary: dict[str, Any] | None) -> list[str]:
+    """Return concise repair hints for non-pass Codex live benchmark evidence."""
+    if not isinstance(summary, dict):
+        return ["run ablation mode", "include skills_only_clean", "use >=5 assertion-backed cases", "use >=3 runs per variant", "regenerate canonical reports"]
+    status, strict_errors, readiness_warnings = codex_live_scorecard_status(summary)
+    if status == "pass":
+        return []
+    hints = [
+        "run ablation mode",
+        "include skills_only_clean",
+        "use >=5 assertion-backed cases",
+        "use >=3 runs per variant",
+        "regenerate canonical reports",
+    ]
+    return _dedupe([*readiness_warnings, *strict_errors, *hints])
+
+
+def _observed_min_runs_from_variants(summary: dict[str, Any]) -> int:
+    variants = summary.get("variants") if isinstance(summary.get("variants"), dict) else {}
+    runs = [
+        int((variants.get(variant) or {}).get("run_count", 0) or 0)
+        for variant in MODE_DEFAULT_VARIANTS["ablation"]
+    ]
+    return min(runs) if runs else 0
+
+
+def _dedupe(values: list[str]) -> list[str]:
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        deduped.append(value)
+    return deduped
+
+
 def redact_codex_command(command: list[str]) -> list[str]:
     """Redact command paths that could expose local run directories."""
     redacted: list[str] = []
@@ -522,6 +817,7 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "status",
             "evidence_level",
             "evidence_scope",
+            "evidence_scope_ready",
             "evidence_scope_detail",
             "evidence_status",
             "effect_verdict",
@@ -568,8 +864,6 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "cases",
             "cases_summary",
             "coverage_summary",
-            "cost_summary",
-            "stability_summary",
             "limitations",
         ),
     }

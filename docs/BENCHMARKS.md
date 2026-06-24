@@ -66,6 +66,13 @@ default because they may use local credentials, network access, model quota, and
 writable candidate repositories. Dry-run and skipped reports are valid
 diagnostics, but they are not publishable benchmark evidence.
 
+The canonical strict report path, `reports/codex-live-benchmark-summary.*`,
+is reserved for the strongest currently available validated strict benchmark
+summary. A clean-paired smoke run must be retained as
+`reports/codex-live-smoke-summary.*` or a run-local artifact under
+`reports/codex-live-runs/<run-id>/`; it must not overwrite the canonical
+strict ablation summary and must not be counted as broad improvement evidence.
+
 ```bash
 python3 scripts/run-codex-live-benchmarks.py --list
 python3 scripts/run-codex-live-benchmarks.py --benchmark-mode ablation --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-ablation-dry-run
@@ -92,7 +99,9 @@ python3 scripts/run-codex-live-benchmarks.py \
 ```
 
 This single-case command is useful for validating the pipeline, not for broad
-rd-skills improvement claims.
+rd-skills improvement claims. It is smoke evidence: scorecard and public
+summary status should remain `partial` when `evidence_scope=smoke`,
+`evidence_scope_ready=false`, or `effect_status=inconclusive`.
 
 For a fully isolated strict A/B run, provide an API key only to the subprocess
 environment and keep both `HOME` and `CODEX_HOME` temporary:
@@ -131,10 +140,25 @@ Publishable assertion-backed live cases currently cover `security`,
 `backend`, `devex`, `structure`, and `reliability`. Telemetry-only cases are
 listed in run outputs but do not contribute to pass-rate evidence.
 
+Only ablation evidence with all of `baseline_clean`, `skills_only_clean`, and
+`skills_with_hooks_clean`, at least 5 assertion-backed cases, and at least 3
+runs per variant can support broad local improvement evidence. The ablation
+deltas distinguish hook increment from skill-only increment:
+`skills_only_clean_vs_baseline_clean`,
+`skills_with_hooks_clean_vs_skills_only_clean`, and
+`skills_with_hooks_clean_vs_baseline_clean` must all be present. Clean-paired
+smoke compares baseline directly with skills plus hooks and can diagnose the
+pipeline, but it cannot isolate hook increment because it lacks
+`skills_only_clean`.
+
 Process trace strictness is validated by deterministic parser and validator
 tests. The published `reports/codex-live-benchmark-summary.json` reflects the
 previous collected strict live run until maintainers explicitly publish a new
 live run; do not treat parser/schema improvements as new live pass-rate evidence.
+When live summaries include process compliance data, explicit PDD, DDD, SDD,
+and TDD trace rates are reported separately from inferred/fallback rates.
+Inferred-only process traces are warnings and must not be described as fully
+explicit process compliance.
 
 Codex live summaries aggregate per-variant pass rates, security pass rates,
 failure categories, mean/median/min/max usage and metric counts, ablation

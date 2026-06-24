@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -28,9 +29,10 @@ from codex_live_benchmark_lib import (
     STRICT_BENCHMARK_MODES,
     STRICT_CODEX_ENVIRONMENT_POLICIES,
     TEST_SUITE_FAILURE_REASONS,
+    codex_live_evidence_scope_ready,
+    codex_live_scorecard_status,
     load_case_registry,
     print_errors,
-    public_status_from_live,
     read_json,
     scan_forbidden_absolute_user_paths,
     scan_forbidden_secrets,
@@ -51,6 +53,7 @@ REAL_RESULT_REQUIRED_FILES = (
 )
 CODEX_LIVE_BENCHMARK_NAME = "Codex CLI live benchmark"
 CODEX_LIVE_EVIDENCE_KEY = "local_codex_cli_live_benchmark"
+REPORT_STATUSES = ("pass", "partial", "fail", "unknown", "not_collected")
 
 
 def validate_run_dir(run_dir: Path) -> list[str]:
@@ -147,6 +150,8 @@ def validate_summary(summary_path: Path, *, publishable: bool = True) -> list[st
         errors.append("summary evidence_scope multi_case_ablation_3_run requires evidence_scope_ready=true")
     elif evidence_scope == "smoke" and detail.get("evidence_scope_ready") is True:
         errors.append("summary evidence_scope smoke conflicts with evidence_scope_ready=true")
+    if isinstance(detail, dict) and summary.get("evidence_scope_ready") != detail.get("evidence_scope_ready"):
+        errors.append("summary evidence_scope_ready must match evidence_scope_detail.evidence_scope_ready")
     if publishable:
         errors.extend(_strict_summary_errors(summary))
     if "limitations" not in summary or not summary.get("limitations"):
@@ -161,12 +166,19 @@ def validate_report_consistency(
     *,
     scorecard_path: Path | None = None,
     public_summary_path: Path | None = None,
+    dashboard_path: Path | None = None,
+    readme_path: Path | None = None,
 ) -> list[str]:
     """Validate that generated scorecard/public reports reference the live summary."""
     summary = read_json(summary_path)
     if not isinstance(summary, dict):
         return [f"{summary_path} missing or invalid"]
     errors: list[str] = []
+    root = summary_path.parent.parent
+    scorecard_report = read_json(scorecard_path) if scorecard_path is not None else None
+    public_report = read_json(public_summary_path) if public_summary_path is not None else None
+    if summary_path.name == "codex-live-benchmark-summary.json" and summary.get("evidence_scope") == "smoke":
+        errors.append("canonical codex-live-benchmark-summary.json cannot contain a collected smoke artifact")
     if scorecard_path is not None:
         errors.extend(
             _derived_live_report_errors(
@@ -177,6 +189,7 @@ def validate_report_consistency(
             )
         )
         errors.extend(_derived_markdown_report_errors(summary, scorecard_path.with_suffix(".md"), "scorecard"))
+        errors.extend(_scorecard_markdown_count_errors(scorecard_path, scorecard_report))
     if public_summary_path is not None:
         errors.extend(
             _derived_live_report_errors(
@@ -189,6 +202,17 @@ def validate_report_consistency(
         errors.extend(
             _derived_markdown_report_errors(summary, public_summary_path.with_suffix(".md"), "public summary")
         )
+        errors.extend(_public_markdown_count_errors(public_summary_path, public_report))
+    if isinstance(scorecard_report, dict) and isinstance(public_report, dict):
+        errors.extend(_codex_public_scorecard_status_errors(scorecard_report, public_report))
+    dashboard = dashboard_path or root / "docs" / "SCORECARD_DASHBOARD.md"
+    if isinstance(scorecard_report, dict) and dashboard.exists():
+        errors.extend(_dashboard_count_errors(dashboard, scorecard_report))
+    readme = readme_path or root / "README.md"
+    if isinstance(scorecard_report, dict) and readme.exists():
+        errors.extend(_readme_profile_count_errors(readme, scorecard_report, root))
+        if dashboard.exists():
+            errors.extend(_readme_dashboard_summary_errors(readme, dashboard))
     return errors
 
 
@@ -200,6 +224,165 @@ def _default_existing_derived_report_paths(summary_path: Path) -> tuple[Path | N
         scorecard if scorecard.exists() else None,
         public_summary if public_summary.exists() else None,
     )
+
+
+def _scorecard_markdown_count_errors(scorecard_path: Path, report: Any) -> list[str]:
+    if not isinstance(report, dict):
+        return []
+    if not scorecard_path.with_suffix(".md").exists():
+        return []
+    expected = _normal_counts(report.get("status_summary") or _status_counts_from_items(report.get("dimensions")))
+    actual = _markdown_status_counts(scorecard_path.with_suffix(".md"))
+    return _count_compare_errors("professional-scorecard.json", "professional-scorecard.md", expected, actual)
+
+
+def _public_markdown_count_errors(public_path: Path, report: Any) -> list[str]:
+    if not isinstance(report, dict):
+        return []
+    if not public_path.with_suffix(".md").exists():
+        return []
+    expected = _normal_counts(report.get("status_counts") or _status_counts_from_items(report.get("items")))
+    actual = _markdown_status_counts(public_path.with_suffix(".md"))
+    return _count_compare_errors("public-benchmark-summary.json", "public-benchmark-summary.md", expected, actual)
+
+
+def _dashboard_count_errors(dashboard_path: Path, scorecard_report: dict[str, Any]) -> list[str]:
+    expected = _normal_counts(scorecard_report.get("status_summary") or _status_counts_from_items(scorecard_report.get("dimensions")))
+    actual = _markdown_status_counts(dashboard_path)
+    return _count_compare_errors("professional-scorecard.json", "SCORECARD_DASHBOARD.md", expected, actual)
+
+
+def _codex_public_scorecard_status_errors(
+    scorecard_report: dict[str, Any],
+    public_report: dict[str, Any],
+) -> list[str]:
+    scorecard_item = _find_live_report_item(scorecard_report.get("dimensions"))
+    public_item = _find_live_report_item(public_report.get("items"))
+    if not isinstance(scorecard_item, dict) or not isinstance(public_item, dict):
+        return []
+    if scorecard_item.get("status") != public_item.get("status"):
+        return [
+            "public summary Codex CLI live benchmark status "
+            f"{public_item.get('status')!r} does not match scorecard {scorecard_item.get('status')!r}"
+        ]
+    return []
+
+
+def _readme_profile_count_errors(readme_path: Path, scorecard_report: dict[str, Any], root: Path) -> list[str]:
+    text = readme_path.read_text(encoding="utf-8", errors="ignore")
+    match = re.search(r"Stable profile counts are `?recommended=(\d+)`?, `?full=(\d+)`?, and `?dev=(\d+)`?", text)
+    if not match:
+        return ["README stable profile counts sentence is missing"]
+    readme_counts = {
+        "recommended": int(match.group(1)),
+        "full": int(match.group(2)),
+        "dev": int(match.group(3)),
+    }
+    expected = _scorecard_profile_counts(scorecard_report)
+    errors: list[str] = []
+    if expected and readme_counts != expected:
+        errors.append(f"README profile counts {readme_counts} do not match scorecard profile counts {expected}")
+    manifest_counts = _build_manifest_profile_counts(root)
+    if manifest_counts and readme_counts != manifest_counts:
+        errors.append(f"README profile counts {readme_counts} do not match build manifests {manifest_counts}")
+    if expected and manifest_counts and expected != manifest_counts:
+        errors.append(f"scorecard profile counts {expected} do not match build manifests {manifest_counts}")
+    return errors
+
+
+def _readme_dashboard_summary_errors(readme_path: Path, dashboard_path: Path) -> list[str]:
+    readme_statuses = _table_statuses(readme_path.read_text(encoding="utf-8", errors="ignore"))
+    dashboard_statuses = _table_statuses(dashboard_path.read_text(encoding="utf-8", errors="ignore"))
+    errors: list[str] = []
+    for label, status in readme_statuses.items():
+        dashboard_status = dashboard_statuses.get(label)
+        if dashboard_status is not None and dashboard_status != status:
+            errors.append(
+                f"README scorecard summary {label} status {status!r} does not match dashboard {dashboard_status!r}"
+            )
+    return errors
+
+
+def _normal_counts(value: Any) -> dict[str, int]:
+    counts = {status: 0 for status in REPORT_STATUSES}
+    if isinstance(value, dict):
+        for status in REPORT_STATUSES:
+            raw = value.get(status, 0)
+            counts[status] = int(raw) if isinstance(raw, int) else 0
+    return counts
+
+
+def _status_counts_from_items(items: Any) -> dict[str, int]:
+    counts = {status: 0 for status in REPORT_STATUSES}
+    if not isinstance(items, list):
+        return counts
+    for item in items:
+        status = item.get("status") if isinstance(item, dict) else None
+        counts[status if status in counts else "unknown"] += 1
+    return counts
+
+
+def _markdown_status_counts(path: Path) -> dict[str, int] | None:
+    if not path.exists():
+        return None
+    counts: dict[str, int] = {}
+    for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        match = re.match(r"- `(?P<status>pass|partial|fail|unknown|not_collected)`: (?P<count>\d+)$", line.strip())
+        if match:
+            counts[match.group("status")] = int(match.group("count"))
+    if not counts:
+        return None
+    return _normal_counts(counts)
+
+
+def _count_compare_errors(
+    expected_label: str,
+    actual_label: str,
+    expected: dict[str, int],
+    actual: dict[str, int] | None,
+) -> list[str]:
+    if actual is None:
+        return [f"{actual_label} status counts are missing"]
+    if expected != actual:
+        return [f"{actual_label} status counts {actual} do not match {expected_label} {expected}"]
+    return []
+
+
+def _table_statuses(text: str) -> dict[str, str]:
+    statuses: dict[str, str] = {}
+    for line in text.splitlines():
+        if not line.startswith("|") or "`" not in line:
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) < 2 or cells[0] in {"Evidence", "Area", "---"}:
+            continue
+        match = re.search(r"`(pass|partial|fail|unknown|not_collected)`", cells[1])
+        if match:
+            statuses[cells[0]] = match.group(1)
+    return statuses
+
+
+def _scorecard_profile_counts(scorecard_report: dict[str, Any]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    profile_counts = scorecard_report.get("profile_counts")
+    if not isinstance(profile_counts, dict):
+        return counts
+    for profile in ("recommended", "full", "dev"):
+        detail = profile_counts.get(profile)
+        text = str(detail.get("detail", "")) if isinstance(detail, dict) else ""
+        match = re.search(r"top-level count is (\d+)", text)
+        if match:
+            counts[profile] = int(match.group(1))
+    return counts
+
+
+def _build_manifest_profile_counts(root: Path) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for profile in ("recommended", "full", "dev"):
+        manifest = read_json(root / "dist" / "universal" / "skills" / profile / ".changeforge-build-manifest.json")
+        if isinstance(manifest, dict) and isinstance(manifest.get("top_level_skills"), list):
+            counts[profile] = len(manifest["top_level_skills"])
+    return counts
 
 
 def _derived_live_report_errors(
@@ -217,12 +400,12 @@ def _derived_live_report_errors(
         return [f"{report_kind} missing {CODEX_LIVE_BENCHMARK_NAME} item"]
     errors: list[str] = []
     detail = _load_item_detail(item, report_kind)
-    expected_status = public_status_from_live(str(summary.get("status", "not_collected")))
+    expected_status, strict_errors, readiness_warnings = codex_live_scorecard_status(summary)
     item_status = item.get("status")
     if item_status != expected_status:
         errors.append(
             f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} status {item_status!r} "
-            f"does not match summary status {expected_status!r}"
+            f"does not match strict evidence status {expected_status!r}"
         )
     if not isinstance(detail, dict):
         errors.append(f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail must be JSON object")
@@ -233,14 +416,23 @@ def _derived_live_report_errors(
                 f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail {field} "
                 f"{detail.get(field)!r} does not match summary {summary.get(field)!r}"
             )
-    if detail.get("evidence_status") != summary.get("evidence_status"):
+    if detail.get("evidence_status") != expected_status:
         errors.append(
             f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail evidence_status "
-            f"{detail.get('evidence_status')!r} does not match summary {summary.get('evidence_status')!r}"
+            f"{detail.get('evidence_status')!r} does not match strict evidence status {expected_status!r}"
         )
-    if summary.get("evidence_status") == "pass":
-        if item_status != "pass":
-            errors.append(f"{report_kind} cannot show {item_status!r} when live summary evidence_status is pass")
+    if item_status == "pass" and strict_errors:
+        errors.append(f"{report_kind} cannot show pass while strict artifact errors exist: {strict_errors}")
+    if item_status == "pass" and readiness_warnings:
+        errors.append(f"{report_kind} cannot show pass while readiness warnings exist: {readiness_warnings}")
+    if item_status == "pass" and summary.get("evidence_scope") == "smoke":
+        errors.append(f"{report_kind} cannot show pass for smoke Codex live benchmark evidence")
+    if item_status == "pass" and codex_live_evidence_scope_ready(summary) is not True:
+        errors.append(f"{report_kind} cannot show pass when evidence_scope_ready=false")
+    if item_status == "pass" and (
+        summary.get("effect_status") == "inconclusive" or summary.get("effect_verdict") == "inconclusive"
+    ):
+        errors.append(f"{report_kind} cannot show pass when effect_status/effect_verdict is inconclusive")
     if summary.get("effect_verdict") == "positive" and detail.get("effect_verdict") != "positive":
         errors.append(f"{report_kind} cannot reference a non-positive live result when summary effect_verdict is positive")
     for field in ("benchmark_passed_result_count", "benchmark_eligible_result_count"):
@@ -263,7 +455,15 @@ def _derived_live_report_errors(
         if evidence_status != expected_status:
             errors.append(
                 f"public summary evidence_levels.{CODEX_LIVE_EVIDENCE_KEY}.status "
-                f"{evidence_status!r} does not match summary status {expected_status!r}"
+                f"{evidence_status!r} does not match strict evidence status {expected_status!r}"
+            )
+    if report_kind == "scorecard":
+        evidence_level = (report.get("evidence_levels") or {}).get(CODEX_LIVE_EVIDENCE_KEY)
+        evidence_status = evidence_level.get("status") if isinstance(evidence_level, dict) else None
+        if evidence_status is not None and evidence_status != expected_status:
+            errors.append(
+                f"scorecard evidence_levels.{CODEX_LIVE_EVIDENCE_KEY}.status "
+                f"{evidence_status!r} does not match strict evidence status {expected_status!r}"
             )
     return errors
 
@@ -333,6 +533,9 @@ def _find_live_report_item(items: Any) -> dict[str, Any] | None:
 
 
 def _load_item_detail(item: dict[str, Any], report_kind: str) -> dict[str, Any] | None:
+    detail_data = item.get("detail_data")
+    if isinstance(detail_data, dict):
+        return detail_data
     detail = item.get("detail")
     if isinstance(detail, dict):
         return detail
@@ -562,8 +765,10 @@ def _summary_structure_errors(summary: dict[str, Any]) -> list[str]:
     else:
         errors.extend(_setup_diagnostic_summary_errors("summary.effect_summary", summary["effect_summary"]))
     errors.extend(_coverage_summary_errors(summary.get("coverage_summary")))
-    errors.extend(_cost_summary_errors(summary.get("cost_summary")))
-    errors.extend(_stability_summary_errors(summary.get("stability_summary")))
+    if "cost_summary" in summary:
+        errors.extend(_cost_summary_errors(summary.get("cost_summary")))
+    if "stability_summary" in summary:
+        errors.extend(_stability_summary_errors(summary.get("stability_summary")))
     if "logging_summary" in summary:
         errors.extend(_logging_summary_errors(summary.get("logging_summary")))
     if "process_compliance_summary" in summary:
@@ -849,7 +1054,6 @@ def _stability_summary_errors(payload: Any) -> list[str]:
     for field in (
         "setup_failure_rate",
         "test_suite_failure_rate",
-        "security_failure_rate",
         "codex_exec_failure_rate",
         "not_collected_grading_rate",
         "contamination_rate",
@@ -857,6 +1061,17 @@ def _stability_summary_errors(payload: Any) -> list[str]:
         value = payload.get(field)
         if not isinstance(value, int | float) or value < 0 or value > 1:
             errors.append(f"summary stability_summary.{field} must be a numeric rate from 0 to 1")
+    for field in (
+        "security_assertion_failure_rate",
+        "security_check_execution_failure_rate",
+        "security_failure_rate",
+    ):
+        value = payload.get(field)
+        if not (isinstance(value, int | float) and 0 <= float(value) <= 1) and value != "not_collected":
+            errors.append(f"summary stability_summary.{field} must be a numeric rate from 0 to 1 or not_collected")
+    definition = payload.get("security_failure_rate_definition")
+    if definition is not None and not isinstance(definition, str):
+        errors.append("summary stability_summary.security_failure_rate_definition must be a string")
     return errors
 
 
@@ -903,6 +1118,8 @@ def _process_compliance_summary_errors(payload: Any) -> list[str]:
         "sdd_failure_mode_validation_rate",
         "sdd_logging_validation_rate",
         "validation_command_present_rate",
+        "required_field_fallback_rate",
+        "process_trace_inferred_only_rate",
     ):
         value = payload.get(field)
         if not isinstance(value, int | float) or value < 0 or value > 1:
@@ -1059,7 +1276,11 @@ def main(argv: list[str] | None = None) -> int:
         errors.extend(validate_summary(args.summary))
         scorecard_path = args.scorecard
         public_summary_path = args.public_summary
-        if scorecard_path is None and public_summary_path is None:
+        if (
+            args.summary.name == "codex-live-benchmark-summary.json"
+            and scorecard_path is None
+            and public_summary_path is None
+        ):
             scorecard_path, public_summary_path = _default_existing_derived_report_paths(args.summary)
         errors.extend(
             validate_report_consistency(

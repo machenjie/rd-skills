@@ -67,6 +67,10 @@ def _variant_payload(*, variant: str = "baseline_clean", **overrides: object) ->
         "pass_rate": 1.0,
         "pass_rate_ci_note": "descriptive only; small sample",
         "security_pass_rate": 1.0,
+        "security_assertion_failure_rate": 0.0,
+        "security_check_execution_failure_rate": 0.0,
+        "security_failure_rate": 0.0,
+        "security_failure_rate_definition": "alias of security_assertion_failure_rate; execution failures are tracked separately",
         "telemetry_only_result_count": 0,
         "not_collected_grading_count": 0,
         "contaminated_result_count": 0,
@@ -108,6 +112,41 @@ def _scope_detail(**overrides: object) -> dict[str, object]:
     return payload
 
 
+def _process_summary(**overrides: object) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "pdd_present_rate": 0.0,
+        "ddd_present_rate": 0.0,
+        "sdd_present_rate": 0.0,
+        "tdd_present_rate": 0.0,
+        "pdd_inferred_rate": 1.0,
+        "ddd_inferred_rate": 1.0,
+        "sdd_inferred_rate": 1.0,
+        "tdd_inferred_rate": 1.0,
+        "pdd_degraded_rate": 0.0,
+        "ddd_degraded_rate": 0.0,
+        "sdd_degraded_rate": 0.0,
+        "tdd_degraded_rate": 0.0,
+        "pdd_required_field_fallback_rate": 1.0,
+        "ddd_required_field_fallback_rate": 1.0,
+        "sdd_required_field_fallback_rate": 1.0,
+        "tdd_required_field_fallback_rate": 1.0,
+        "required_field_fallback_rate": 1.0,
+        "all_core_phases_present_rate": 0.0,
+        "all_core_phases_degraded_or_present_rate": 0.0,
+        "all_core_phases_inferred_only_rate": 1.0,
+        "process_trace_inferred_only_rate": 1.0,
+        "pdd_to_tdd_traceability_rate": 1.0,
+        "ddd_invariant_test_or_code_coverage_rate": 1.0,
+        "sdd_public_api_validation_rate": 1.0,
+        "sdd_failure_mode_validation_rate": 1.0,
+        "sdd_logging_validation_rate": 1.0,
+        "validation_command_present_rate": 1.0,
+        "process_trace_count": 2,
+    }
+    payload.update(overrides)
+    return payload
+
+
 def _strict_summary_payload(**overrides: object) -> dict[str, object]:
     usage = {
         "input_tokens": 10,
@@ -121,6 +160,7 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
         "status": "collected",
         "evidence_level": "local_codex_cli_live_benchmark",
         "evidence_scope": "smoke",
+        "evidence_scope_ready": False,
         "evidence_scope_detail": _scope_detail(),
         "evidence_status": "pass",
         "effect_verdict": "inconclusive",
@@ -316,6 +356,8 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
                     "status": "collected",
                     "pass_rate_delta": 0.0,
                     "average_input_token_overhead_pct": 0.0,
+                    "average_output_token_overhead_pct": 0.0,
+                    "average_reasoning_token_overhead_pct": 0.0,
                     "average_command_execution_delta": 0.0,
                     "pass_rate_per_100k_input_tokens_delta": 0.0,
                     "pass_rate_per_100_commands_delta": 0.0,
@@ -335,7 +377,10 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
             "grading_status_counts": {"passed": 2},
             "setup_failure_rate": 0.0,
             "test_suite_failure_rate": 0.0,
+            "security_assertion_failure_rate": 0.0,
+            "security_check_execution_failure_rate": 0.0,
             "security_failure_rate": 0.0,
+            "security_failure_rate_definition": "alias of security_assertion_failure_rate; execution failures are tracked separately",
             "codex_exec_failure_rate": 0.0,
             "not_collected_grading_rate": 0.0,
             "contamination_rate": 0.0,
@@ -348,11 +393,233 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
             "skills_with_hooks_regression_cases": [],
             "partial_status_reasons": [],
         },
+        "process_compliance_summary": _process_summary(),
         "telemetry": {"event_count": 2, "parse_error_count": 0},
         "limitations": ["strict local evidence"],
     }
     payload.update(overrides)
     return payload
+
+
+def _strong_ablation_summary_payload(**overrides: object) -> dict[str, object]:
+    cases = [
+        "devex/helper-reuse-search",
+        "structure/object-method-encapsulation-placement",
+        "backend/service-method-vs-new-helper",
+        "reliability/redis-cache-stampede-protection",
+        "security/ssrf-url-allowlist",
+    ]
+
+    def variant_payload(variant: str, passed: int, pass_rate: float) -> dict[str, object]:
+        return _variant_payload(
+            variant=variant,
+            run_count=3,
+            case_count=5,
+            result_count=15,
+            artifact_status_counts={"collected": 15},
+            grading_status_counts={"passed": passed, "failed": 15 - passed},
+            failure_categories={"none": passed, "test_suite_failed": 15 - passed},
+            setup_failure_reasons={"none": 15},
+            setup_failure_subreasons={"none": 15},
+            test_suite_failure_reasons={"none": passed, "assertion_failed": 15 - passed},
+            security_failure_reasons={"none": 15},
+            benchmark_eligible_result_count=15,
+            benchmark_passed_result_count=passed,
+            pass_rate=pass_rate,
+            security_pass_rate=1.0,
+            average_usage={
+                "input_tokens": 100,
+                "cached_input_tokens": 0,
+                "output_tokens": 50,
+                "reasoning_output_tokens": 5,
+            },
+            median_usage={
+                "input_tokens": 100,
+                "cached_input_tokens": 0,
+                "output_tokens": 50,
+                "reasoning_output_tokens": 5,
+            },
+            min_usage={
+                "input_tokens": 100,
+                "cached_input_tokens": 0,
+                "output_tokens": 50,
+                "reasoning_output_tokens": 5,
+            },
+            max_usage={
+                "input_tokens": 100,
+                "cached_input_tokens": 0,
+                "output_tokens": 50,
+                "reasoning_output_tokens": 5,
+            },
+        )
+
+    payload = _strict_summary_payload(
+        benchmark_mode="ablation",
+        evidence_scope="multi_case_ablation_3_run",
+        evidence_scope_ready=True,
+        evidence_scope_detail=_scope_detail(
+            evidence_scope_ready=True,
+            observed_benchmark_mode="ablation",
+            observed_assertion_case_count=5,
+            observed_variant_case_counts={
+                "baseline_clean": 5,
+                "skills_only_clean": 5,
+                "skills_with_hooks_clean": 5,
+            },
+            observed_min_runs_per_required_variant=3,
+            reason="ablation evidence includes the required assertion-backed case count and repeated runs",
+        ),
+        effect_verdict="positive",
+        effect_status="improved",
+        effect_summary={
+            "required_variants": ["baseline_clean", "skills_only_clean", "skills_with_hooks_clean"],
+            "missing_variants": [],
+            "eligible_result_counts": {
+                "baseline_clean": 15,
+                "skills_only_clean": 15,
+                "skills_with_hooks_clean": 15,
+            },
+            "pass_rates": {
+                "baseline_clean": 0.8,
+                "skills_only_clean": 0.9333,
+                "skills_with_hooks_clean": 1.0,
+            },
+            "reason": "skills_with_hooks_clean improved over baseline and skills_only_clean",
+            "dominant_setup_failure_reason": "none",
+            "dominant_setup_failure_subreason": "none",
+            "setup_failure_subreasons": {"none": 45},
+            "unknown_setup_failure_rate": 0.0,
+        },
+        case_count=5,
+        assertion_case_count=5,
+        result_count=45,
+        benchmark_eligible_result_count=45,
+        benchmark_passed_result_count=42,
+        failure_categories={"none": 42, "test_suite_failed": 3},
+        variants={
+            "baseline_clean": variant_payload("baseline_clean", 12, 0.8),
+            "skills_only_clean": variant_payload("skills_only_clean", 14, 0.9333),
+            "skills_with_hooks_clean": variant_payload("skills_with_hooks_clean", 15, 1.0),
+        },
+        delta={
+            "skills_only_clean_vs_baseline_clean": {"pass_rate_delta": 0.1333, "security_pass_rate_delta": 0.0},
+            "skills_with_hooks_clean_vs_skills_only_clean": {
+                "pass_rate_delta": 0.0667,
+                "security_pass_rate_delta": 0.0,
+            },
+            "skills_with_hooks_clean_vs_baseline_clean": {"pass_rate_delta": 0.2, "security_pass_rate_delta": 0.0},
+        },
+        cases=cases,
+        cases_summary={
+            case_id: {
+                "grading_mode": "assertion",
+                "setup_failure_reasons": {"none": 9},
+                "dominant_setup_failure_reason": "none",
+                "setup_failure_subreasons": {"none": 9},
+                "dominant_setup_failure_subreason": "none",
+                "unknown_setup_failure_rate": 0.0,
+                "variants": {
+                    "baseline_clean": {
+                        "runs": 3,
+                        "benchmark_eligible_result_count": 3,
+                        "benchmark_passed_result_count": 2,
+                        "pass_rate": 0.6667,
+                        "failure_categories": {"none": 2, "test_suite_failed": 1},
+                        "setup_failure_reasons": {"none": 3},
+                        "dominant_setup_failure_reason": "none",
+                        "setup_failure_subreasons": {"none": 3},
+                        "dominant_setup_failure_subreason": "none",
+                        "unknown_setup_failure_rate": 0.0,
+                        "test_suite_failure_reasons": {"none": 2, "assertion_failed": 1},
+                        "security_failure_reasons": {"none": 3},
+                    },
+                    "skills_only_clean": {
+                        "runs": 3,
+                        "benchmark_eligible_result_count": 3,
+                        "benchmark_passed_result_count": 3,
+                        "pass_rate": 1.0,
+                        "failure_categories": {"none": 3},
+                        "setup_failure_reasons": {"none": 3},
+                        "dominant_setup_failure_reason": "none",
+                        "setup_failure_subreasons": {"none": 3},
+                        "dominant_setup_failure_subreason": "none",
+                        "unknown_setup_failure_rate": 0.0,
+                        "test_suite_failure_reasons": {"none": 3},
+                        "security_failure_reasons": {"none": 3},
+                    },
+                    "skills_with_hooks_clean": {
+                        "runs": 3,
+                        "benchmark_eligible_result_count": 3,
+                        "benchmark_passed_result_count": 3,
+                        "pass_rate": 1.0,
+                        "failure_categories": {"none": 3},
+                        "setup_failure_reasons": {"none": 3},
+                        "dominant_setup_failure_reason": "none",
+                        "setup_failure_subreasons": {"none": 3},
+                        "dominant_setup_failure_subreason": "none",
+                        "unknown_setup_failure_rate": 0.0,
+                        "test_suite_failure_reasons": {"none": 3},
+                        "security_failure_reasons": {"none": 3},
+                    },
+                },
+            }
+            for case_id in cases
+        },
+        coverage_summary={
+            **_strict_summary_payload()["coverage_summary"],
+            "case_count": 5,
+            "assertion_case_count": 5,
+            "publishable_assertion_case_count": 5,
+            "actual_run_case_count": 5,
+            "actual_run_assertion_case_count": 5,
+            "actual_run_publishable_assertion_case_count": 5,
+        },
+        process_compliance_summary=_process_summary(
+            pdd_present_rate=1.0,
+            ddd_present_rate=1.0,
+            sdd_present_rate=1.0,
+            tdd_present_rate=1.0,
+            pdd_inferred_rate=0.0,
+            ddd_inferred_rate=0.0,
+            sdd_inferred_rate=0.0,
+            tdd_inferred_rate=0.0,
+            pdd_required_field_fallback_rate=0.0,
+            ddd_required_field_fallback_rate=0.0,
+            sdd_required_field_fallback_rate=0.0,
+            tdd_required_field_fallback_rate=0.0,
+            required_field_fallback_rate=0.0,
+            all_core_phases_present_rate=1.0,
+            all_core_phases_inferred_only_rate=0.0,
+            process_trace_inferred_only_rate=0.0,
+            process_trace_count=45,
+        ),
+    )
+    payload.update(overrides)
+    return payload
+
+
+def _codex_report_detail(summary: dict[str, object], *, status: str = "pass") -> dict[str, object]:
+    variants = summary.get("variants")
+    hooks = variants.get("skills_with_hooks_clean", {}) if isinstance(variants, dict) else {}
+    return {
+        "run_id": summary.get("run_id"),
+        "evidence_status": status,
+        "effect_verdict": summary.get("effect_verdict"),
+        "benchmark_passed_result_count": summary.get("benchmark_passed_result_count"),
+        "benchmark_eligible_result_count": summary.get("benchmark_eligible_result_count"),
+        "variants": {
+            "skills_with_hooks_clean": {
+                "pass_rate": hooks.get("pass_rate") if isinstance(hooks, dict) else None,
+            }
+        },
+    }
+
+
+def _write_profile_manifests(root: Path, counts: dict[str, int]) -> None:
+    for profile, count in counts.items():
+        path = root / "dist" / "universal" / "skills" / profile / ".changeforge-build-manifest.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"top_level_skills": [f"skill-{index}" for index in range(count)]}), encoding="utf-8")
 
 
 def _environment_payload(**overrides: object) -> dict[str, object]:
@@ -2908,7 +3175,7 @@ Residual Risk:
             "candidate_removed_required_file",
         )
 
-    def test_scorecard_and_public_summary_accept_strict_auth_borrowed_summary(self) -> None:
+    def test_scorecard_and_public_summary_mark_smoke_summary_partial(self) -> None:
         scorecard = _load_script("generate_professional_scorecard_codex_live", "scripts/generate-professional-scorecard.py")
         public = _load_script("generate_public_summary_codex_live", "scripts/generate-public-benchmark-summary.py")
         with tempfile.TemporaryDirectory() as tmp:
@@ -2920,13 +3187,36 @@ Residual Risk:
             )
             status, detail = scorecard.codex_live_benchmark_status(root)
             item = public._codex_live_benchmark_item(root)
-        self.assertEqual(status, "pass")
+        self.assertEqual(status, "partial")
         self.assertIn("auth_borrowed_clean", detail)
-        self.assertIn('"evidence_status": "pass"', detail)
+        self.assertIn('"evidence_status": "partial"', detail)
         self.assertIn('"effect_status": "inconclusive"', detail)
-        self.assertEqual(item.status, "pass")
-        self.assertIn('"effect_verdict": "inconclusive"', item.detail)
+        self.assertEqual(item.status, "partial")
+        self.assertIn("scope=smoke", item.detail)
+        self.assertIn("effect=inconclusive/inconclusive", item.detail)
         self.assertEqual(item.evidence_level, "local_codex_cli_live_benchmark")
+
+    def test_scorecard_and_public_summary_accept_strong_ablation_summary(self) -> None:
+        scorecard = _load_script(
+            "generate_professional_scorecard_codex_live_strong",
+            "scripts/generate-professional-scorecard.py",
+        )
+        public = _load_script("generate_public_summary_codex_live_strong", "scripts/generate-public-benchmark-summary.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "reports").mkdir()
+            (root / "reports" / "codex-live-benchmark-summary.json").write_text(
+                json.dumps(_strong_ablation_summary_payload()),
+                encoding="utf-8",
+            )
+            status, detail = scorecard.codex_live_benchmark_status(root)
+            item = public._codex_live_benchmark_item(root)
+        self.assertEqual(status, "pass")
+        self.assertIn('"evidence_scope": "multi_case_ablation_3_run"', detail)
+        self.assertIn('"evidence_status": "pass"', detail)
+        self.assertEqual(item.status, "pass")
+        self.assertIn("mode=ablation", item.detail)
+        self.assertIn("ready=True", item.detail)
 
     def test_public_summary_syncs_codex_live_evidence_level_from_live_summary(self) -> None:
         public = _load_script(
@@ -2938,7 +3228,7 @@ Residual Risk:
             reports = root / "reports"
             reports.mkdir()
             (reports / "codex-live-benchmark-summary.json").write_text(
-                json.dumps(_strict_summary_payload(run_id="current-positive", effect_verdict="positive")),
+                json.dumps(_strong_ablation_summary_payload(run_id="current-positive")),
                 encoding="utf-8",
             )
             (reports / "professional-scorecard.json").write_text(
@@ -2969,10 +3259,8 @@ Residual Risk:
             reports.mkdir()
             summary_path = reports / "codex-live-benchmark-summary.json"
             scorecard_path = reports / "professional-scorecard.json"
-            summary_path.write_text(
-                json.dumps(_strict_summary_payload(run_id="positive-run", effect_verdict="positive")),
-                encoding="utf-8",
-            )
+            summary = _strong_ablation_summary_payload(run_id="positive-run")
+            summary_path.write_text(json.dumps(summary), encoding="utf-8")
             scorecard_path.write_text(
                 json.dumps(
                     {
@@ -3007,10 +3295,8 @@ Residual Risk:
             reports.mkdir()
             summary_path = reports / "codex-live-benchmark-summary.json"
             public_path = reports / "public-benchmark-summary.json"
-            summary_path.write_text(
-                json.dumps(_strict_summary_payload(run_id="positive-run", effect_verdict="positive")),
-                encoding="utf-8",
-            )
+            summary = _strong_ablation_summary_payload(run_id="positive-run")
+            summary_path.write_text(json.dumps(summary), encoding="utf-8")
             public_path.write_text(
                 json.dumps(
                     {
@@ -3038,7 +3324,7 @@ Residual Risk:
                 encoding="utf-8",
             )
             errors = validator.validate_report_consistency(summary_path, public_summary_path=public_path)
-        self.assertTrue(any("cannot show 'partial'" in error for error in errors))
+        self.assertTrue(any("status 'partial' does not match strict evidence status 'pass'" in error for error in errors))
         self.assertTrue(any("effect_verdict" in error for error in errors))
         self.assertTrue(any("evidence_levels.local_codex_cli_live_benchmark.status" in error for error in errors))
 
@@ -3047,16 +3333,10 @@ Residual Risk:
             "validate_codex_live_report_consistency_stale_public_counts",
             "scripts/validate-codex-live-benchmark-reports.py",
         )
-        summary = _strict_summary_payload(
+        summary = _strong_ablation_summary_payload(
             run_id="positive-run",
-            effect_verdict="positive",
             benchmark_passed_result_count=40,
             benchmark_eligible_result_count=45,
-            variants={
-                "baseline_clean": _variant_payload(),
-                "skills_only_clean": _variant_payload(variant="skills_only_clean"),
-                "skills_with_hooks_clean": _variant_payload(variant="skills_with_hooks_clean", pass_rate=1.0),
-            },
         )
         detail = {
             "run_id": "positive-run",
@@ -3100,16 +3380,10 @@ Residual Risk:
             "validate_codex_live_report_consistency_stale_scorecard_counts",
             "scripts/validate-codex-live-benchmark-reports.py",
         )
-        summary = _strict_summary_payload(
+        summary = _strong_ablation_summary_payload(
             run_id="positive-run",
-            effect_verdict="positive",
             benchmark_passed_result_count=40,
             benchmark_eligible_result_count=45,
-            variants={
-                "baseline_clean": _variant_payload(),
-                "skills_only_clean": _variant_payload(variant="skills_only_clean"),
-                "skills_with_hooks_clean": _variant_payload(variant="skills_with_hooks_clean", pass_rate=1.0),
-            },
         )
         detail = {
             "run_id": "positive-run",
@@ -3149,18 +3423,8 @@ Residual Risk:
             "validate_codex_live_report_consistency_positive",
             "scripts/validate-codex-live-benchmark-reports.py",
         )
-        detail = {
-            "run_id": "positive-run",
-            "evidence_status": "pass",
-            "effect_verdict": "positive",
-            "benchmark_passed_result_count": 2,
-            "benchmark_eligible_result_count": 2,
-            "variants": {
-                "skills_with_hooks_clean": {
-                    "pass_rate": 1.0,
-                }
-            },
-        }
+        summary = _strong_ablation_summary_payload(run_id="positive-run")
+        detail = _codex_report_detail(summary)
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             reports = root / "reports"
@@ -3168,10 +3432,7 @@ Residual Risk:
             summary_path = reports / "codex-live-benchmark-summary.json"
             scorecard_path = reports / "professional-scorecard.json"
             public_path = reports / "public-benchmark-summary.json"
-            summary_path.write_text(
-                json.dumps(_strict_summary_payload(run_id="positive-run", effect_verdict="positive")),
-                encoding="utf-8",
-            )
+            summary_path.write_text(json.dumps(summary), encoding="utf-8")
             scorecard_path.write_text(
                 json.dumps({"dimensions": [{"name": "Codex CLI live benchmark", "status": "pass", "detail": json.dumps(detail)}]}),
                 encoding="utf-8",
@@ -3202,18 +3463,13 @@ Residual Risk:
             "validate_codex_live_report_consistency_partial",
             "scripts/validate-codex-live-benchmark-reports.py",
         )
-        detail = {
-            "run_id": "partial-run",
-            "evidence_status": "partial",
-            "effect_verdict": "mixed",
-            "benchmark_passed_result_count": 2,
-            "benchmark_eligible_result_count": 2,
-            "variants": {
-                "skills_with_hooks_clean": {
-                    "pass_rate": 1.0,
-                }
-            },
-        }
+        summary = _strong_ablation_summary_payload(
+            run_id="partial-run",
+            status="partial",
+            effect_verdict="mixed",
+            effect_status="mixed",
+        )
+        detail = _codex_report_detail(summary, status="partial")
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             reports = root / "reports"
@@ -3221,17 +3477,7 @@ Residual Risk:
             summary_path = reports / "codex-live-benchmark-summary.json"
             scorecard_path = reports / "professional-scorecard.json"
             public_path = reports / "public-benchmark-summary.json"
-            summary_path.write_text(
-                json.dumps(
-                    _strict_summary_payload(
-                        run_id="partial-run",
-                        status="partial",
-                        evidence_status="partial",
-                        effect_verdict="mixed",
-                    )
-                ),
-                encoding="utf-8",
-            )
+            summary_path.write_text(json.dumps(summary), encoding="utf-8")
             scorecard_path.write_text(
                 json.dumps({"dimensions": [{"name": "Codex CLI live benchmark", "status": "partial", "detail": json.dumps(detail)}]}),
                 encoding="utf-8",
@@ -3257,6 +3503,128 @@ Residual Risk:
             )
         self.assertEqual(errors, [])
 
+    def test_report_consistency_rejects_readme_profile_count_mismatch(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_report_consistency_readme_profiles",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        summary = _strong_ablation_summary_payload(run_id="profile-run")
+        detail = _codex_report_detail(summary)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            docs = root / "docs"
+            reports.mkdir()
+            docs.mkdir()
+            summary_path = reports / "codex-live-benchmark-summary.json"
+            scorecard_path = reports / "professional-scorecard.json"
+            dashboard_path = docs / "SCORECARD_DASHBOARD.md"
+            readme_path = root / "README.md"
+            summary_path.write_text(json.dumps(summary), encoding="utf-8")
+            scorecard_path.write_text(
+                json.dumps(
+                    {
+                        "status_summary": {"pass": 1, "partial": 0, "fail": 0, "unknown": 0, "not_collected": 0},
+                        "dimensions": [
+                            {"name": "Codex CLI live benchmark", "status": "pass", "detail": json.dumps(detail)}
+                        ],
+                        "profile_counts": {
+                            "recommended": {"detail": "recommended top-level count is 21"},
+                            "full": {"detail": "full top-level count is 28"},
+                            "dev": {"detail": "dev top-level count is 155"},
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            _write_profile_manifests(root, {"recommended": 21, "full": 28, "dev": 155})
+            dashboard_path.write_text(
+                "\n".join(
+                    [
+                        "# Scorecard Dashboard",
+                        "## Status Summary",
+                        "- `pass`: 1",
+                        "- `partial`: 0",
+                        "- `fail`: 0",
+                        "- `unknown`: 0",
+                        "- `not_collected`: 0",
+                        "| Evidence | Status | Detail |",
+                        "| --- | --- | --- |",
+                        "| Codex CLI live benchmark | `pass` | ok |",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            readme_path.write_text(
+                "\n".join(
+                    [
+                        "Stable profile counts are recommended=19, full=26, and dev=153; these generated manifests are the authoritative runtime profile count source.",
+                        "<!-- changeforge-scorecard-summary:start -->",
+                        "| Evidence | Status | Source |",
+                        "| --- | --- | --- |",
+                        "| Codex CLI live benchmark | `pass` | reports/codex-live-benchmark-summary.json |",
+                        "<!-- changeforge-scorecard-summary:end -->",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            errors = validator.validate_report_consistency(
+                summary_path,
+                scorecard_path=scorecard_path,
+                dashboard_path=dashboard_path,
+                readme_path=readme_path,
+            )
+        self.assertTrue(any("README profile counts" in error for error in errors))
+
+    def test_report_consistency_rejects_dashboard_count_mismatch(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_report_consistency_dashboard_counts",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        summary = _strong_ablation_summary_payload(run_id="dashboard-run")
+        detail = _codex_report_detail(summary)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            docs = root / "docs"
+            reports.mkdir()
+            docs.mkdir()
+            summary_path = reports / "codex-live-benchmark-summary.json"
+            scorecard_path = reports / "professional-scorecard.json"
+            dashboard_path = docs / "SCORECARD_DASHBOARD.md"
+            summary_path.write_text(json.dumps(summary), encoding="utf-8")
+            scorecard_path.write_text(
+                json.dumps(
+                    {
+                        "status_summary": {"pass": 1, "partial": 0, "fail": 0, "unknown": 0, "not_collected": 0},
+                        "dimensions": [
+                            {"name": "Codex CLI live benchmark", "status": "pass", "detail": json.dumps(detail)}
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            dashboard_path.write_text(
+                "\n".join(
+                    [
+                        "# Scorecard Dashboard",
+                        "## Status Summary",
+                        "- `pass`: 0",
+                        "- `partial`: 1",
+                        "- `fail`: 0",
+                        "- `unknown`: 0",
+                        "- `not_collected`: 0",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            errors = validator.validate_report_consistency(
+                summary_path,
+                scorecard_path=scorecard_path,
+                dashboard_path=dashboard_path,
+            )
+        self.assertTrue(any("SCORECARD_DASHBOARD.md status counts" in error for error in errors))
+
     def test_report_consistency_rejects_stale_public_markdown_run_id(self) -> None:
         validator = _load_script(
             "validate_codex_live_report_consistency_stale_markdown",
@@ -3275,7 +3643,7 @@ Residual Risk:
             public_path = reports / "public-benchmark-summary.json"
             public_md_path = reports / "public-benchmark-summary.md"
             summary_path.write_text(
-                json.dumps(_strict_summary_payload(run_id="current-run", effect_verdict="positive")),
+                json.dumps(_strong_ablation_summary_payload(run_id="current-run")),
                 encoding="utf-8",
             )
             public_path.write_text(
@@ -3318,6 +3686,58 @@ Residual Risk:
         self.assertEqual(item.status, "fail")
         self.assertIn("current-home-full", item.detail)
 
+    def test_scorecard_and_public_summary_reject_contaminated_summary(self) -> None:
+        scorecard = _load_script(
+            "generate_professional_scorecard_codex_live_contaminated",
+            "scripts/generate-professional-scorecard.py",
+        )
+        public = _load_script(
+            "generate_public_summary_codex_live_contaminated",
+            "scripts/generate-public-benchmark-summary.py",
+        )
+        payload = _strong_ablation_summary_payload(
+            contaminated_result_count=1,
+            user_skills_visible=True,
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "reports").mkdir()
+            (root / "reports" / "codex-live-benchmark-summary.json").write_text(
+                json.dumps(payload),
+                encoding="utf-8",
+            )
+            status, detail = scorecard.codex_live_benchmark_status(root)
+            item = public._codex_live_benchmark_item(root)
+        self.assertEqual(status, "fail")
+        self.assertIn("contaminated results", detail)
+        self.assertEqual(item.status, "fail")
+
+    def test_scorecard_and_public_summary_mark_inconclusive_ablation_partial(self) -> None:
+        scorecard = _load_script(
+            "generate_professional_scorecard_codex_live_inconclusive_ablation",
+            "scripts/generate-professional-scorecard.py",
+        )
+        public = _load_script(
+            "generate_public_summary_codex_live_inconclusive_ablation",
+            "scripts/generate-public-benchmark-summary.py",
+        )
+        payload = _strong_ablation_summary_payload(
+            effect_verdict="inconclusive",
+            effect_status="inconclusive",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "reports").mkdir()
+            (root / "reports" / "codex-live-benchmark-summary.json").write_text(
+                json.dumps(payload),
+                encoding="utf-8",
+            )
+            status, detail = scorecard.codex_live_benchmark_status(root)
+            item = public._codex_live_benchmark_item(root)
+        self.assertEqual(status, "partial")
+        self.assertIn("effect_status/effect_verdict is inconclusive", detail)
+        self.assertEqual(item.status, "partial")
+
     def test_scorecard_and_public_summary_reject_ablation_missing_delta(self) -> None:
         scorecard = _load_script(
             "generate_professional_scorecard_codex_live_ablation_delta",
@@ -3355,7 +3775,7 @@ Residual Risk:
         self.assertEqual(status, "fail")
         self.assertIn("delta.skills_with_hooks_clean_vs_skills_only_clean", detail)
         self.assertEqual(item.status, "fail")
-        self.assertIn("ablation delta skills_with_hooks_clean_vs_skills_only_clean", item.detail)
+        self.assertIn("ablation delta.skills_with_hooks_clean_vs_skills_only_clean", item.detail)
 
 
 if __name__ == "__main__":

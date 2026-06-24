@@ -91,11 +91,12 @@ These signals are generated or validator-backed local evidence, not external pop
 | --- | --- | --- |
 | Profile build reproducibility | `pass` | [docs/SCORECARD_DASHBOARD.md](docs/SCORECARD_DASHBOARD.md) |
 | Example coverage | `pass` | [scripts/validate-examples.py](scripts/validate-examples.py) |
+| Codex CLI live benchmark | `pass` | [reports/codex-live-benchmark-summary.json](reports/codex-live-benchmark-summary.json) |
 | Marketplace index validation | `pass` | [scripts/validate-marketplace-index.py](scripts/validate-marketplace-index.py) |
 | Open-source readiness | `partial` | [docs/OPEN_SOURCE_READINESS.md](docs/OPEN_SOURCE_READINESS.md) |
 <!-- changeforge-scorecard-summary:end -->
 
-Stable profile counts are `recommended=19`, `full=26`, and `dev=153`. Local install starts with `python3 scripts/quickstart.py --agent codex --scope user`; official Codex/Claude marketplace publishing is intentionally not implemented.
+Stable profile counts are `recommended=21`, `full=28`, and `dev=155`; these generated manifests are the authoritative runtime profile count source. Local install starts with `python3 scripts/quickstart.py --agent codex --scope user`; official Codex/Claude marketplace publishing is intentionally not implemented.
 
 Optional hook artifacts are also built for Codex, Claude Code, and GitHub
 Copilot. They are execution reminders, not skills and not a replacement for

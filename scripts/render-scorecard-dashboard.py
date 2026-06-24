@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -127,6 +128,7 @@ def render_dashboard(payload: dict[str, Any]) -> str:
         "Activation precision benchmark",
         "Runtime telemetry fixture sample",
         "Live runtime telemetry sample",
+        "Codex CLI live benchmark",
         "Marketplace index validation",
     ):
         lines.append(f"| {name} | `{_status(payload, name)}` | {_escape(_detail(payload, name))} |")
@@ -187,6 +189,7 @@ def readme_summary_block(payload: dict[str, Any]) -> str:
     rows = [
         ("Profile build reproducibility", "Profile build reproducibility", "docs/SCORECARD_DASHBOARD.md"),
         ("Example coverage", "Example coverage", "scripts/validate-examples.py"),
+        ("Codex CLI live benchmark", "Codex CLI live benchmark", "reports/codex-live-benchmark-summary.json"),
         ("Marketplace index validation", "Marketplace index validation", "scripts/validate-marketplace-index.py"),
         ("Open-source readiness", "Open-source readiness", "docs/OPEN_SOURCE_READINESS.md"),
     ]
@@ -209,6 +212,31 @@ def replace_readme_block(readme_text: str, block: str) -> str:
         raise ValueError("README scorecard summary markers are missing or malformed")
     end += len(README_END)
     return readme_text[:start] + block + readme_text[end:]
+
+
+def replace_readme_profile_counts(readme_text: str, payload: dict[str, Any]) -> str:
+    """Replace the README stable profile count sentence from scorecard profile counts."""
+    profile_counts = payload.get("profile_counts") if isinstance(payload.get("profile_counts"), dict) else {}
+    values: dict[str, int] = {}
+    for profile in ("recommended", "full", "dev"):
+        detail = profile_counts.get(profile)
+        text = str(detail.get("detail", "")) if isinstance(detail, dict) else ""
+        match = re.search(r"top-level count is (\d+)", text)
+        if match:
+            values[profile] = int(match.group(1))
+    if set(values) != {"recommended", "full", "dev"}:
+        return readme_text
+    replacement = (
+        "Stable profile counts are "
+        f"`recommended={values['recommended']}`, `full={values['full']}`, and `dev={values['dev']}`; "
+        "these generated manifests are the authoritative runtime profile count source. "
+        "Local install starts with `python3 scripts/quickstart.py --agent codex --scope user`; "
+        "official Codex/Claude marketplace publishing is intentionally not implemented."
+    )
+    pattern = re.compile(
+        r"Stable profile counts are `?recommended=\d+`?, `?full=\d+`?, and `?dev=\d+`?[.;] [^\n]*"
+    )
+    return pattern.sub(replacement, readme_text)
 
 
 def _check_file(path: Path, expected: str) -> list[str]:
@@ -238,7 +266,10 @@ def main(argv: list[str] | None = None) -> int:
             errors.extend(_check_file(out, dashboard))
             if args.readme:
                 readme = Path(args.readme)
-                expected_readme = replace_readme_block(readme.read_text(encoding="utf-8"), readme_block)
+                expected_readme = replace_readme_profile_counts(
+                    replace_readme_block(readme.read_text(encoding="utf-8"), readme_block),
+                    payload,
+                )
                 errors.extend(_check_file(readme, expected_readme))
             if errors:
                 for error in errors:
@@ -252,7 +283,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.readme:
             readme = Path(args.readme)
             readme.write_text(
-                replace_readme_block(readme.read_text(encoding="utf-8"), readme_block),
+                replace_readme_profile_counts(
+                    replace_readme_block(readme.read_text(encoding="utf-8"), readme_block),
+                    payload,
+                ),
                 encoding="utf-8",
             )
         print(f"wrote scorecard dashboard to {out}")
