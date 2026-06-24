@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 
@@ -16,6 +17,7 @@ if str(SCRIPTS) not in sys.path:
 
 PROCESS_SKILL = ROOT / "src" / "professional-skills" / "development-process-orchestrator" / "SKILL.md"
 COMMAND = "python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"
+CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
 
 
 def _load_script(name: str, relative: str):
@@ -29,6 +31,34 @@ def _load_script(name: str, relative: str):
 
 def _text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def _has_trace_value(value: Any) -> bool:
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, list):
+        return any(_has_trace_value(item) for item in value)
+    if isinstance(value, dict):
+        return any(not str(key).startswith("_") and _has_trace_value(item) for key, item in value.items())
+    return value is True or value not in {None, False}
+
+
+def _with_field_sources(trace: dict[str, Any], source: str = "final.md:compact-process-trace") -> dict[str, Any]:
+    facts = trace.get("process_facts")
+    if not isinstance(facts, dict):
+        return trace
+    for phase in CORE_PHASES:
+        payload = facts.get(phase)
+        if not isinstance(payload, dict):
+            continue
+        payload["_evidence_source"] = source
+        payload["_field_sources"] = {
+            field: source
+            for field, value in payload.items()
+            if not str(field).startswith("_") and _has_trace_value(value)
+        }
+        payload.setdefault("_inferred_fields", [])
+    return trace
 
 
 def test_process_skill_has_professional_pdd_ddd_sdd_tdd_methodology() -> None:
@@ -111,7 +141,7 @@ def _valid_trace(*, logging_needed: bool = True) -> dict[str, Any]:
             "rationale": "Validation command and public behavior tests are sufficient; no product log is required.",
         }
         logging_tests = []
-    return {
+    return _with_field_sources({
         "schema_version": 1,
         "run_id": "unit-run",
         "case_id": "security/ssrf-url-allowlist",
@@ -184,7 +214,7 @@ def _valid_trace(*, logging_needed: bool = True) -> dict[str, Any]:
         "validation_commands": [COMMAND],
         "evidence_sources": ["final.md:compact-process-trace"],
         "artifacts": ["cases/security__ssrf-url-allowlist/skills_only_clean/run-01/result.json"],
-    }
+    })
 
 
 def _run_trace_errors(trace: dict[str, Any], *, require_present: bool = False) -> list[str]:
@@ -199,6 +229,191 @@ def _run_trace_errors(trace: dict[str, Any], *, require_present: bool = False) -
         )
         result_dir.joinpath("process-trace.json").write_text(json.dumps(trace), encoding="utf-8")
         return validator.validate_process_traces(run_dir, require_present=require_present)
+
+
+def _trace_case(case_id: str = "security/ssrf-url-allowlist") -> SimpleNamespace:
+    category, codegen_case = case_id.split("/", 1)
+    return SimpleNamespace(
+        id=case_id,
+        category=category,
+        codegen_case=codegen_case,
+        grading_benchmark=case_id,
+        tier="core",
+        coverage_dimensions=(category,),
+    )
+
+
+def test_json_fenced_process_trace_sets_real_field_sources_and_present_status() -> None:
+    runner = _load_script("run_codex_live_json_process_trace_unit", "scripts/run-codex-live-benchmarks.py")
+    case = _trace_case()
+    with tempfile.TemporaryDirectory() as tmp:
+        out_dir = Path(tmp) / "run"
+        run_dir = out_dir / "cases" / "security__ssrf-url-allowlist" / "skills_only_clean" / "run-01"
+        run_dir.mkdir(parents=True)
+        run_dir.joinpath("final.md").write_text(
+            """Result
+
+```json
+{
+  "process_trace": {
+    "pdd": {
+      "problem": "Block SSRF metadata URLs",
+      "acceptance_criteria": ["deny metadata URL"],
+      "constraints": ["preserve harness"],
+      "validation_signal": ["python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"]
+    },
+    "ddd": {
+      "domain_terms": ["URL candidate", "network boundary"],
+      "invariants": ["unsafe URL is never fetched"],
+      "ownership_decision": ["URL safety policy owns deny decision"],
+      "side_effect_boundaries": ["no fetch before allowlist"]
+    },
+    "sdd": {
+      "modules": ["URL validation module"],
+      "public_api": ["URL validation public entrypoint"],
+      "error_contract": ["deny unsafe URLs with stable error"],
+      "failure_modes": ["metadata URL denial"],
+      "logging_decision": {"needed": false, "rationale": "public tests cover denial"}
+    },
+    "tdd": {
+      "acceptance_to_tests": {"deny metadata URL": ["python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"]},
+      "invariant_to_tests_or_code": {"unsafe URL is never fetched": ["python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"]},
+      "public_api_to_tests": {"URL validation public entrypoint": ["python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"]},
+      "failure_mode_tests": ["metadata URL denial covered"],
+      "validation_commands": ["python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"]
+    }
+  }
+}
+```
+""",
+            encoding="utf-8",
+        )
+        trace = runner._process_trace_payload(
+            out_dir,
+            run_dir,
+            case=case,
+            variant="skills_only_clean",
+            run_index=1,
+            result={"status": "collected", "grading_status": "passed"},
+        )
+    for phase in CORE_PHASES:
+        assert trace["phase_status"][phase] == "present"
+        for field in runner._required_process_fields(phase):
+            assert trace["process_facts"][phase]["_field_sources"][field] == "final.md:process-trace-json"
+            assert field not in trace["process_facts"][phase].get("_inferred_fields", [])
+
+
+def test_multiline_compact_process_trace_is_real_evidence_not_inferred() -> None:
+    runner = _load_script("run_codex_live_compact_process_trace_unit", "scripts/run-codex-live-benchmarks.py")
+    case = _trace_case()
+    with tempfile.TemporaryDirectory() as tmp:
+        out_dir = Path(tmp) / "run"
+        run_dir = out_dir / "cases" / "security__ssrf-url-allowlist" / "skills_only_clean" / "run-01"
+        run_dir.mkdir(parents=True)
+        run_dir.joinpath("final.md").write_text(
+            """Process Trace:
+PDD:
+  problem: Block SSRF metadata URLs
+  acceptance: deny metadata URL
+  constraints: preserve harness
+  validation_signal: python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>
+DDD:
+  domain_terms: URL candidate and network boundary
+  invariants: unsafe URL is never fetched
+  ownership_decision: URL safety policy owns deny decision
+  side_effect_boundaries: no fetch before allowlist
+SDD:
+  modules: URL validation module
+  public_api: URL validation public entrypoint
+  error_contract: deny unsafe URLs with stable error
+  failure_modes: metadata URL denial
+  logging_decision: public tests cover denial
+TDD:
+  acceptance_to_tests: deny metadata URL -> benchmark command
+  invariant_to_tests_or_code: unsafe URL is never fetched -> benchmark command
+  public_api_to_tests: public entrypoint -> benchmark command
+  failure_mode_tests: metadata URL denial covered
+  validation_commands: python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>
+""",
+            encoding="utf-8",
+        )
+        trace = runner._process_trace_payload(
+            out_dir,
+            run_dir,
+            case=case,
+            variant="skills_only_clean",
+            run_index=1,
+            result={"status": "collected", "grading_status": "passed"},
+        )
+    assert all(trace["phase_status"][phase] == "present" for phase in CORE_PHASES)
+    assert all(trace["process_facts"][phase]["_field_sources"] for phase in CORE_PHASES)
+    assert all(trace["phase_status"][phase] != "inferred" for phase in CORE_PHASES)
+
+
+def test_partial_final_trace_is_degraded_and_require_present_fails() -> None:
+    runner = _load_script("run_codex_live_partial_process_trace_unit", "scripts/run-codex-live-benchmarks.py")
+    case = _trace_case()
+    with tempfile.TemporaryDirectory() as tmp:
+        out_dir = Path(tmp) / "run"
+        run_dir = out_dir / "cases" / "security__ssrf-url-allowlist" / "skills_only_clean" / "run-01"
+        run_dir.mkdir(parents=True)
+        run_dir.joinpath("final.md").write_text(
+            """Process Trace:
+PDD: Block SSRF metadata URLs
+DDD: URL safety policy
+SDD: URL validation module
+TDD: benchmark command
+""",
+            encoding="utf-8",
+        )
+        trace = runner._process_trace_payload(
+            out_dir,
+            run_dir,
+            case=case,
+            variant="skills_only_clean",
+            run_index=1,
+            result={"status": "collected", "grading_status": "passed"},
+        )
+    assert all(trace["phase_status"][phase] == "degraded" for phase in CORE_PHASES)
+    assert "constraints" in trace["process_facts"]["pdd"]["_inferred_fields"]
+    assert "invariants" in trace["process_facts"]["ddd"]["_inferred_fields"]
+    assert "public_api" in trace["process_facts"]["sdd"]["_inferred_fields"]
+    assert "acceptance_to_tests" in trace["process_facts"]["tdd"]["_inferred_fields"]
+    errors = _run_trace_errors(trace, require_present=True)
+    assert any("--require-present requires phase pdd to be present" in error for error in errors)
+
+
+def test_fallback_only_trace_summary_counts_inferred_not_present() -> None:
+    runner = _load_script("run_codex_live_fallback_only_process_trace_unit", "scripts/run-codex-live-benchmarks.py")
+    summary_module = _load_script("generate_codex_live_summary_fallback_only_unit", "scripts/generate-codex-live-summary.py")
+    case = _trace_case("experimental/no-final-trace")
+    with tempfile.TemporaryDirectory() as tmp:
+        out_dir = Path(tmp) / "run"
+        run_dir = out_dir / "cases" / "experimental__no-final-trace" / "skills_only_clean" / "run-01"
+        run_dir.mkdir(parents=True)
+        trace = runner._process_trace_payload(
+            out_dir,
+            run_dir,
+            case=case,
+            variant="skills_only_clean",
+            run_index=1,
+            result={"status": "collected", "grading_status": "passed"},
+        )
+        run_dir.joinpath("process-trace.json").write_text(json.dumps(trace), encoding="utf-8")
+        summary = summary_module._process_compliance_summary([{"_result_dir": run_dir}])
+    assert summary["pdd_present_rate"] == 0.0
+    assert summary["pdd_inferred_rate"] == 1.0
+    assert summary["all_core_phases_inferred_only_rate"] == 1.0
+    assert summary["all_core_phases_present_rate"] == 0.0
+    assert summary["pdd_required_field_fallback_rate"] == 1.0
+
+
+def test_present_status_with_inferred_required_field_fails_validator() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["pdd"]["_field_sources"]["constraints"] = "case_metadata_fallback"
+    trace["process_facts"]["pdd"]["_inferred_fields"].append("constraints")
+    errors = _run_trace_errors(trace)
+    assert any("phase pdd is present but required field constraints comes from fallback source" in error for error in errors)
 
 
 def test_generic_synthetic_trace_fails() -> None:

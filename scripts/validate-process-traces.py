@@ -17,6 +17,20 @@ from codex_live_benchmark_lib import read_json
 PHASES = ("pdd", "ddd", "sdd", "tdd", "implementation", "validation", "review")
 CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
 ALLOWED_PHASE_STATUSES = {"present", "missing", "degraded", "inferred", "not_applicable"}
+FALLBACK_FIELD_SOURCE = "case_metadata_fallback"
+FALLBACK_SOURCE_ALIASES = {FALLBACK_FIELD_SOURCE, "inferred"}
+REQUIRED_PROCESS_FIELDS = {
+    "pdd": ("problem", "acceptance_criteria", "constraints", "validation_signal"),
+    "ddd": ("domain_terms", "invariants", "ownership_decision", "side_effect_boundaries"),
+    "sdd": ("modules", "public_api", "error_contract", "failure_modes", "logging_decision"),
+    "tdd": (
+        "acceptance_to_tests",
+        "invariant_to_tests_or_code",
+        "public_api_to_tests",
+        "failure_mode_tests",
+        "validation_commands",
+    ),
+}
 FORBIDDEN_TEXT = ("/Users/", "/home/", "C:\\Users\\", "auth.json", "CODEX_API_KEY", "OPENAI_API_KEY", "sk-")
 GENERIC_TRACE_MARKERS = (
     "requested benchmark behavior is observable through public api",
@@ -77,6 +91,7 @@ def _trace_errors(path: Path, run_dir: Path, trace: dict[str, Any], *, require_p
     if not isinstance(facts, dict):
         errors.append(f"{label}: process_facts must be an object")
         facts = {}
+    errors.extend(_phase_provenance_errors(label, phase_status, facts))
 
     pdd = facts.get("pdd")
     ddd = facts.get("ddd")
@@ -117,6 +132,63 @@ def _phase_status_errors(label: str, phase_status: Any, evidence_sources: Any, *
         if status == "not_applicable" and not _not_applicable_reason_present(phase_status, phase):
             errors.append(f"{label}: phase {phase} not_applicable requires a reason")
     return errors
+
+
+def _phase_provenance_errors(label: str, phase_status: Any, facts: dict[str, Any]) -> list[str]:
+    if not isinstance(phase_status, dict):
+        return []
+    errors: list[str] = []
+    for phase in CORE_PHASES:
+        status = phase_status.get(phase)
+        if status not in {"present", "degraded", "inferred"}:
+            continue
+        payload = facts.get(phase)
+        if not isinstance(payload, dict):
+            errors.append(f"{label}: phase {phase} status {status} requires process_facts.{phase}")
+            continue
+        field_sources = payload.get("_field_sources")
+        if status in {"present", "degraded"} and not isinstance(field_sources, dict):
+            errors.append(f"{label}: phase {phase} status {status} requires process_facts.{phase}._field_sources")
+            continue
+        sources = field_sources if isinstance(field_sources, dict) else {}
+        raw_inferred_fields = payload.get("_inferred_fields")
+        inferred_fields = {str(field) for field in raw_inferred_fields} if isinstance(raw_inferred_fields, list) else set()
+        real_required: list[str] = []
+        fallback_or_missing_required: list[str] = []
+        for field in _required_process_fields(phase):
+            has_value = _has_evidence(payload.get(field))
+            source = str(sources.get(field) or "")
+            source_is_fallback = field in inferred_fields or _source_is_fallback(source)
+            if status == "present":
+                if not has_value:
+                    errors.append(f"{label}: phase {phase} is present but required field {field} is missing")
+                elif not source:
+                    errors.append(f"{label}: phase {phase} is present but required field {field} has no field source")
+                elif source_is_fallback:
+                    errors.append(
+                        f"{label}: phase {phase} is present but required field {field} comes from fallback source {source!r}"
+                    )
+            if has_value and source and not source_is_fallback:
+                real_required.append(field)
+            else:
+                fallback_or_missing_required.append(field)
+        if status == "degraded":
+            if not real_required:
+                errors.append(f"{label}: phase {phase} is degraded but has no required field from real trace evidence")
+            if not fallback_or_missing_required:
+                errors.append(f"{label}: phase {phase} is degraded but no required field is fallback, inferred, or missing")
+        if status == "inferred" and any(not _source_is_fallback(str(source)) for source in sources.values()):
+            errors.append(f"{label}: phase {phase} is inferred but contains real field sources")
+    return errors
+
+
+def _required_process_fields(phase: str) -> tuple[str, ...]:
+    return REQUIRED_PROCESS_FIELDS.get(phase, ())
+
+
+def _source_is_fallback(source: str) -> bool:
+    normalized = str(source).split(":", 1)[0]
+    return normalized in FALLBACK_SOURCE_ALIASES
 
 
 def _not_applicable_reason_present(phase_status: dict[str, Any], phase: str) -> bool:

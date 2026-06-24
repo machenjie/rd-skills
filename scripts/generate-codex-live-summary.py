@@ -33,6 +33,21 @@ from codex_live_benchmark_lib import (
 
 METRIC_KEYS = ("event_count", "command_execution_count", "file_change_count", "plan_update_count", "error_count")
 USAGE_KEYS = ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_output_tokens")
+PROCESS_CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
+PROCESS_FALLBACK_FIELD_SOURCE = "case_metadata_fallback"
+PROCESS_FALLBACK_SOURCE_ALIASES = {PROCESS_FALLBACK_FIELD_SOURCE, "inferred"}
+PROCESS_REQUIRED_FIELDS = {
+    "pdd": ("problem", "acceptance_criteria", "constraints", "validation_signal"),
+    "ddd": ("domain_terms", "invariants", "ownership_decision", "side_effect_boundaries"),
+    "sdd": ("modules", "public_api", "error_contract", "failure_modes", "logging_decision"),
+    "tdd": (
+        "acceptance_to_tests",
+        "invariant_to_tests_or_code",
+        "public_api_to_tests",
+        "failure_mode_tests",
+        "validation_commands",
+    ),
+}
 
 
 def generate_summary(run_dir: Path) -> dict[str, Any]:
@@ -249,6 +264,35 @@ def _process_compliance_summary(results: list[dict[str, Any]]) -> dict[str, Any]
     def traceability_rate(field: str) -> float:
         return _trace_rate(trace_count, sum(1 for trace in traces if (trace.get("traceability") or {}).get(field) is True))
 
+    def required_field_fallback_rate(phase: str) -> float:
+        required_fields = _required_process_fields(phase)
+        denominator = trace_count * len(required_fields)
+        fallback_fields = 0
+        for trace in traces:
+            facts = trace.get("process_facts")
+            phase_payload = facts.get(phase) if isinstance(facts, dict) else None
+            if not isinstance(phase_payload, dict):
+                continue
+            field_sources = phase_payload.get("_field_sources")
+            sources = field_sources if isinstance(field_sources, dict) else {}
+            raw_inferred_fields = phase_payload.get("_inferred_fields")
+            inferred_fields = {str(field) for field in raw_inferred_fields} if isinstance(raw_inferred_fields, list) else set()
+            for field in required_fields:
+                source = str(sources.get(field) or "")
+                if field in inferred_fields or _source_is_fallback(source):
+                    fallback_fields += 1
+        return _trace_rate(denominator, fallback_fields)
+
+    def all_core_phase_rate(allowed_statuses: set[str]) -> float:
+        return _trace_rate(
+            trace_count,
+            sum(
+                1
+                for trace in traces
+                if all((trace.get("phase_status") or {}).get(phase) in allowed_statuses for phase in PROCESS_CORE_PHASES)
+            ),
+        )
+
     return {
         "pdd_present_rate": phase_rate("pdd", "present"),
         "ddd_present_rate": phase_rate("ddd", "present"),
@@ -262,6 +306,13 @@ def _process_compliance_summary(results: list[dict[str, Any]]) -> dict[str, Any]
         "ddd_degraded_rate": phase_rate("ddd", "degraded"),
         "sdd_degraded_rate": phase_rate("sdd", "degraded"),
         "tdd_degraded_rate": phase_rate("tdd", "degraded"),
+        "pdd_required_field_fallback_rate": required_field_fallback_rate("pdd"),
+        "ddd_required_field_fallback_rate": required_field_fallback_rate("ddd"),
+        "sdd_required_field_fallback_rate": required_field_fallback_rate("sdd"),
+        "tdd_required_field_fallback_rate": required_field_fallback_rate("tdd"),
+        "all_core_phases_present_rate": all_core_phase_rate({"present"}),
+        "all_core_phases_degraded_or_present_rate": all_core_phase_rate({"present", "degraded"}),
+        "all_core_phases_inferred_only_rate": all_core_phase_rate({"inferred"}),
         "pdd_to_tdd_traceability_rate": traceability_rate("pdd_acceptance_to_tdd_tests"),
         "ddd_invariant_test_or_code_coverage_rate": traceability_rate("ddd_invariants_to_tdd_tests"),
         "sdd_public_api_validation_rate": traceability_rate("sdd_public_api_to_tdd_tests"),
@@ -288,6 +339,15 @@ def _trace_rate(denominator: int, numerator: int) -> float:
     if denominator <= 0:
         return 0.0
     return round(numerator / denominator, 4)
+
+
+def _required_process_fields(phase: str) -> tuple[str, ...]:
+    return PROCESS_REQUIRED_FIELDS.get(phase, ())
+
+
+def _source_is_fallback(source: str) -> bool:
+    normalized = str(source).split(":", 1)[0]
+    return normalized in PROCESS_FALLBACK_SOURCE_ALIASES
 
 
 def _redaction_errors(text: str) -> list[str]:

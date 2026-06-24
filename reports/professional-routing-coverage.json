@@ -1514,7 +1514,7 @@
   ],
   "expected_route_only_supplemental": 7,
   "findings": [],
-  "generated_at": "2026-06-24T01:15:12.359662+00:00",
+  "generated_at": "2026-06-24T01:55:23.213619+00:00",
   "hidden_risks_checked": 91,
   "hidden_risks_covered": 87,
   "hidden_risks_matched_by_expected_route_only": 7,

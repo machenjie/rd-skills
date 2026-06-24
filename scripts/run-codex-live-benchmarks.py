@@ -50,6 +50,20 @@ INTERNAL_BORROWED_CODEX_HOME_ENV = "CHANGEFORGE_CODEX_LIVE_INTERNAL_BORROWED_COD
 PROCESS_PHASES = ("pdd", "ddd", "sdd", "tdd", "implementation", "validation", "review")
 PROCESS_CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
 PROCESS_PHASE_STATUSES = {"present", "missing", "degraded", "inferred", "not_applicable"}
+PROCESS_FALLBACK_FIELD_SOURCE = "case_metadata_fallback"
+PROCESS_FALLBACK_SOURCE_ALIASES = {PROCESS_FALLBACK_FIELD_SOURCE, "inferred"}
+PROCESS_REQUIRED_FIELDS = {
+    "pdd": ("problem", "acceptance_criteria", "constraints", "validation_signal"),
+    "ddd": ("domain_terms", "invariants", "ownership_decision", "side_effect_boundaries"),
+    "sdd": ("modules", "public_api", "error_contract", "failure_modes", "logging_decision"),
+    "tdd": (
+        "acceptance_to_tests",
+        "invariant_to_tests_or_code",
+        "public_api_to_tests",
+        "failure_mode_tests",
+        "validation_commands",
+    ),
+}
 MAX_STRUCTURED_EVENT_BYTES = 4096
 
 
@@ -1248,25 +1262,27 @@ def _process_trace_evidence(
     case: CodexLiveCase,
     validation_commands: list[str],
 ) -> tuple[dict[str, Any], dict[str, str], list[str]]:
-    fallback_facts = _mark_process_facts_source(_process_facts(case, validation_commands), "inferred")
+    fallback_facts = _mark_process_facts_source(_process_facts(case, validation_commands), PROCESS_FALLBACK_FIELD_SOURCE)
     phase_status = {phase: "missing" for phase in PROCESS_PHASES}
     parsed_trace = _final_process_trace(run_dir / "final.md")
     if not parsed_trace:
         parsed_trace = _hook_process_trace(run_dir)
     if parsed_trace:
         final_facts = _process_facts_from_trace_payload(parsed_trace)
-        facts, used_fallback = _merge_process_facts(final_facts, fallback_facts, str(parsed_trace.get("_evidence_source")))
-        evidence_sources = [str(parsed_trace.get("_evidence_source"))]
+        source = str(parsed_trace.get("_evidence_source") or "unknown")
+        facts, used_fallback = _merge_process_facts(final_facts, fallback_facts, source)
+        evidence_sources = [source]
         if used_fallback:
-            evidence_sources.append("case_metadata_fallback:missing-fields")
+            evidence_sources.append(f"{PROCESS_FALLBACK_FIELD_SOURCE}:missing-fields")
         for phase in PROCESS_CORE_PHASES:
-            phase_status[phase] = "present" if _phase_has_concrete_content(final_facts.get(phase)) else "inferred"
+            phase_status[phase] = _phase_status_from_sources(phase, facts.get(phase))
+        facts["evidence_source"] = source
         facts.setdefault("evidence", {})["parsed_process_trace"] = parsed_trace.get("_trace_kind", "unknown")
     else:
         facts = fallback_facts
-        evidence_sources = ["case_metadata_fallback"]
+        evidence_sources = [PROCESS_FALLBACK_FIELD_SOURCE]
         for phase in PROCESS_CORE_PHASES:
-            phase_status[phase] = "inferred"
+            phase_status[phase] = _phase_status_from_sources(phase, facts.get(phase))
     return facts, phase_status, evidence_sources
 
 
@@ -1536,7 +1552,7 @@ def _merge_process_facts(
         final_phase = final_facts.get(phase)
         fallback_phase = fallback_facts.get(phase)
         if _phase_has_concrete_content(final_phase):
-            phase_payload, phase_used_fallback = _merge_phase_facts(final_phase, fallback_phase, evidence_source)
+            phase_payload, phase_used_fallback = _merge_phase_facts(phase, final_phase, fallback_phase, evidence_source)
             merged[phase] = phase_payload
             used_fallback = used_fallback or phase_used_fallback
         else:
@@ -1545,23 +1561,34 @@ def _merge_process_facts(
     return merged, used_fallback
 
 
-def _merge_phase_facts(final_phase: Any, fallback_phase: Any, evidence_source: str) -> tuple[dict[str, Any], bool]:
-    final_payload = final_phase if isinstance(final_phase, dict) else _summary_phase_facts("", str(final_phase))
+def _merge_phase_facts(
+    phase: str,
+    final_phase: Any,
+    fallback_phase: Any,
+    evidence_source: str,
+) -> tuple[dict[str, Any], bool]:
+    final_payload = final_phase if isinstance(final_phase, dict) else _summary_phase_facts(phase, str(final_phase))
     fallback_payload = fallback_phase if isinstance(fallback_phase, dict) else {}
     merged = json.loads(json.dumps(fallback_payload))
-    inferred_fields: list[str] = []
+    field_sources = _field_sources_for_payload(fallback_payload, default_source=PROCESS_FALLBACK_FIELD_SOURCE)
+    inferred_fields = {
+        key for key, value in fallback_payload.items() if not key.startswith("_") and _has_trace_value(value)
+    }
     for key, value in final_payload.items():
+        if key.startswith("_"):
+            if key not in {"_evidence_source", "_field_sources", "_inferred_fields"} and _has_trace_value(value):
+                merged[key] = value
+            continue
         if _has_trace_value(value):
             merged[key] = value
-    for key, value in fallback_payload.items():
-        if key.startswith("_"):
-            continue
-        if key not in final_payload or not _has_trace_value(final_payload.get(key)):
-            inferred_fields.append(key)
-            merged.setdefault(key, value)
-    merged["_evidence_source"] = evidence_source
+            field_sources[key] = evidence_source
+            inferred_fields.discard(key)
+    merged["_field_sources"] = dict(sorted(field_sources.items()))
+    merged["_evidence_source"] = evidence_source if any(source == evidence_source for source in field_sources.values()) else PROCESS_FALLBACK_FIELD_SOURCE
     if inferred_fields:
-        merged["_inferred_fields"] = sorted(set(inferred_fields))
+        merged["_inferred_fields"] = sorted(inferred_fields)
+    else:
+        merged.pop("_inferred_fields", None)
     return merged, bool(inferred_fields)
 
 
@@ -1570,10 +1597,62 @@ def _mark_process_facts_source(facts: dict[str, Any], source: str) -> dict[str, 
     for phase in PROCESS_CORE_PHASES:
         phase_payload = marked.get(phase)
         if isinstance(phase_payload, dict):
-            phase_payload.setdefault("_evidence_source", source)
-    if source == "inferred":
-        marked.setdefault("evidence_source", "case_metadata_fallback")
+            phase_payload["_evidence_source"] = source
+            phase_payload["_field_sources"] = _field_sources_for_payload(phase_payload, default_source=source)
+            if _source_is_fallback(source):
+                phase_payload["_inferred_fields"] = sorted(phase_payload["_field_sources"])
+    if _source_is_fallback(source):
+        marked.setdefault("evidence_source", PROCESS_FALLBACK_FIELD_SOURCE)
     return marked
+
+
+def _field_sources_for_payload(payload: dict[str, Any], *, default_source: str) -> dict[str, str]:
+    existing = payload.get("_field_sources")
+    existing_sources = existing if isinstance(existing, dict) else {}
+    return {
+        str(key): str(existing_sources.get(key) or default_source)
+        for key, value in payload.items()
+        if not str(key).startswith("_") and _has_trace_value(value)
+    }
+
+
+def _required_process_fields(phase: str) -> tuple[str, ...]:
+    return PROCESS_REQUIRED_FIELDS.get(phase, ())
+
+
+def _phase_status_from_sources(phase: str, payload: Any) -> str:
+    if not isinstance(payload, dict) or not _phase_has_concrete_content(payload):
+        return "missing"
+    required_fields = _required_process_fields(phase)
+    if not required_fields:
+        return "present"
+    field_sources = payload.get("_field_sources")
+    sources = field_sources if isinstance(field_sources, dict) else {}
+    raw_inferred_fields = payload.get("_inferred_fields")
+    inferred_fields = {str(field) for field in raw_inferred_fields} if isinstance(raw_inferred_fields, list) else set()
+    has_real_field = any(not _source_is_fallback(str(source)) for source in sources.values())
+    real_required = 0
+    fallback_or_inferred_required = 0
+    for field in required_fields:
+        if not _has_trace_value(payload.get(field)):
+            continue
+        source = str(sources.get(field) or "")
+        if field in inferred_fields or _source_is_fallback(source):
+            fallback_or_inferred_required += 1
+        elif source:
+            real_required += 1
+    if real_required == len(required_fields):
+        return "present"
+    if real_required or has_real_field:
+        return "degraded"
+    if fallback_or_inferred_required:
+        return "inferred"
+    return "missing"
+
+
+def _source_is_fallback(source: str) -> bool:
+    normalized = str(source).split(":", 1)[0]
+    return normalized in PROCESS_FALLBACK_SOURCE_ALIASES
 
 
 def _phase_has_concrete_content(value: Any) -> bool:

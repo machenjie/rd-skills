@@ -447,6 +447,34 @@ def _result_payload(**overrides: object) -> dict[str, object]:
     return payload
 
 
+def _trace_value_present(value: object) -> bool:
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, list):
+        return any(_trace_value_present(item) for item in value)
+    if isinstance(value, dict):
+        return any(not str(key).startswith("_") and _trace_value_present(item) for key, item in value.items())
+    return value is True or value not in {None, False}
+
+
+def _with_process_field_sources(trace: dict[str, object], source: str = "final.md:compact-process-trace") -> dict[str, object]:
+    facts = trace.get("process_facts")
+    if not isinstance(facts, dict):
+        return trace
+    for phase in ("pdd", "ddd", "sdd", "tdd"):
+        payload = facts.get(phase)
+        if not isinstance(payload, dict):
+            continue
+        payload["_evidence_source"] = source
+        payload["_field_sources"] = {
+            str(field): source
+            for field, value in payload.items()
+            if not str(field).startswith("_") and _trace_value_present(value)
+        }
+        payload.setdefault("_inferred_fields", [])
+    return trace
+
+
 class CodexLiveBenchmarkTests(unittest.TestCase):
     def test_default_variants_for_clean_paired_ablation_and_smoke(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_defaults", "scripts/run-codex-live-benchmarks.py")
@@ -2375,6 +2403,7 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
                 "validation_commands": [command],
                 "artifacts": ["cases/security__ssrf-url-allowlist/baseline_clean/run-01/result.json"],
             }
+            trace = _with_process_field_sources(trace)
             result_dir.joinpath("process-trace.json").write_text(json.dumps(trace), encoding="utf-8")
             summary = summary_module.generate_summary(run_dir)
             log_errors = logs_validator.validate_run_logs(run_dir)
@@ -2428,9 +2457,12 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
                 run_index=1,
                 result={"status": "collected", "grading_status": "passed"},
             )
-        self.assertEqual(trace["phase_status"]["pdd"], "present")
+        self.assertEqual(trace["phase_status"]["pdd"], "degraded")
         self.assertEqual(trace["process_facts"]["pdd"]["problem"], "Block SSRF metadata URLs")
         self.assertEqual(trace["process_facts"]["pdd"]["_evidence_source"], "final.md:process-trace-json")
+        self.assertEqual(trace["process_facts"]["pdd"]["_field_sources"]["problem"], "final.md:process-trace-json")
+        self.assertEqual(trace["process_facts"]["pdd"]["_field_sources"]["constraints"], "case_metadata_fallback")
+        self.assertIn("constraints", trace["process_facts"]["pdd"]["_inferred_fields"])
         self.assertIn("case_metadata_fallback:missing-fields", trace["evidence_sources"])
         self.assertIn("pdd_acceptance_to_tdd_tests", trace["required_quality_gates"])
         self.assertEqual(trace["stage_ownership"]["pdd"], "change-intake-compiler")
@@ -2454,16 +2486,19 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
                 """Process Trace:
 PDD:
   problem: Block SSRF metadata URLs
-  acceptance:
-    - deny metadata URL
-  constraints:
-    - preserve harness
+  acceptance: deny metadata URL
+  constraints: preserve harness
+  validation_signal: python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>
 DDD:
-  invariants:
-    - unsafe URL is never fetched
+  domain_terms: URL candidate and network boundary
+  invariants: unsafe URL is never fetched
+  ownership_decision: URL safety policy owns deny decision
+  side_effect_boundaries: no fetch before allowlist
 SDD:
-  public_api:
-    - URL validation public entrypoint
+  modules: URL validation module
+  public_api: URL validation public entrypoint
+  error_contract: deny unsafe URLs with stable error
+  failure_modes: metadata URL denial
   logging_decision:
     needed: true
     log_types:
@@ -2486,8 +2521,11 @@ SDD:
     cardinality_controls:
       - policy category instead of raw URL
 TDD:
-  validation_commands:
-    - python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>
+  acceptance_to_tests: deny metadata URL -> benchmark command
+  invariant_to_tests_or_code: unsafe URL is never fetched -> benchmark command
+  public_api_to_tests: public entrypoint -> benchmark command
+  failure_mode_tests: metadata URL denial covered
+  validation_commands: python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>
 Validation:
   python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>
 Residual Risk:
@@ -2544,7 +2582,7 @@ Residual Risk:
                 for line in out_dir.joinpath("run.log.jsonl").read_text(encoding="utf-8").splitlines()
             ]
         self.assertEqual(trace["phase_status"]["pdd"], "inferred")
-        self.assertEqual(trace["process_facts"]["pdd"]["_evidence_source"], "inferred")
+        self.assertEqual(trace["process_facts"]["pdd"]["_evidence_source"], "case_metadata_fallback")
         self.assertEqual(trace["evidence_sources"], ["case_metadata_fallback"])
         self.assertFalse(
             any(event["event"] == "phase_completed" and event["phase"] in {"pdd", "ddd", "sdd", "tdd"} for event in events)
