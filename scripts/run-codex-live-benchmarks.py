@@ -64,6 +64,48 @@ PROCESS_REQUIRED_FIELDS = {
         "validation_commands",
     ),
 }
+PROCESS_LIST_FIELDS = {
+    "pdd": (
+        "user_or_system_impact",
+        "acceptance_criteria",
+        "constraints",
+        "non_goals",
+        "risk_surfaces",
+        "validation_signal",
+    ),
+    "ddd": (
+        "domain_terms",
+        "entities",
+        "value_objects",
+        "domain_services",
+        "application_services",
+        "adapters",
+        "invariants",
+        "ownership_decision",
+        "side_effect_boundaries",
+    ),
+    "sdd": (
+        "modules",
+        "files_to_change",
+        "public_api",
+        "data_flow",
+        "error_contract",
+        "failure_modes",
+        "metrics_traces_alerts",
+        "performance_or_concurrency_constraints",
+        "compatibility_and_migration",
+        "rollback_or_recovery",
+    ),
+    "tdd": (
+        "failure_mode_tests",
+        "logging_or_security_tests",
+        "validation_commands",
+        "red_green_refactor_trace",
+    ),
+}
+PROCESS_MAPPING_FIELDS = {
+    "tdd": ("acceptance_to_tests", "invariant_to_tests_or_code", "public_api_to_tests"),
+}
 MAX_STRUCTURED_EVENT_BYTES = 4096
 
 
@@ -1499,7 +1541,60 @@ def _normalize_phase_keys(phase: str, payload: dict[str, Any]) -> dict[str, Any]
     normalized: dict[str, Any] = {}
     for key, value in payload.items():
         normalized[aliases.get(phase, {}).get(key, key)] = value
+    for field in PROCESS_LIST_FIELDS.get(phase, ()):
+        if field in normalized and not isinstance(normalized[field], list):
+            normalized[field] = _trace_list(normalized[field])
+    for field in PROCESS_MAPPING_FIELDS.get(phase, ()):
+        if field in normalized:
+            normalized[field] = _trace_mapping(normalized[field])
+    if phase == "sdd":
+        logging_decision = normalized.get("logging_decision")
+        if logging_decision is not None and not isinstance(logging_decision, dict):
+            normalized["logging_decision"] = {
+                "needed": False,
+                "rationale": str(logging_decision).strip(),
+            }
     return normalized
+
+
+def _trace_list(value: Any) -> list[Any]:
+    if isinstance(value, list):
+        return [item for item in value if _has_trace_value(item)]
+    if _has_trace_value(value):
+        return [value]
+    return []
+
+
+def _trace_mapping(value: Any) -> dict[str, list[Any]]:
+    mapping: dict[str, list[Any]] = {}
+    if isinstance(value, dict):
+        for key, mapped_value in value.items():
+            _add_trace_mapping(mapping, str(key), mapped_value)
+        return mapping
+    values = value if isinstance(value, list) else [value]
+    for item in values:
+        if isinstance(item, dict):
+            for key, mapped_value in item.items():
+                _add_trace_mapping(mapping, str(key), mapped_value)
+            continue
+        text = str(item).strip()
+        if "->" not in text:
+            continue
+        source, mapped_value = text.split("->", 1)
+        _add_trace_mapping(mapping, source, mapped_value)
+    return mapping
+
+
+def _add_trace_mapping(mapping: dict[str, list[Any]], source: str, mapped_value: Any) -> None:
+    source = source.strip()
+    if not source:
+        return
+    values = _trace_list(mapped_value)
+    values = [value.strip() if isinstance(value, str) else value for value in values]
+    if not values:
+        return
+    mapping.setdefault(source, [])
+    mapping[source].extend(values)
 
 
 def _summary_phase_facts(phase: str, summary: str) -> dict[str, Any]:
@@ -1632,22 +1727,48 @@ def _phase_status_from_sources(phase: str, payload: Any) -> str:
     inferred_fields = {str(field) for field in raw_inferred_fields} if isinstance(raw_inferred_fields, list) else set()
     has_real_field = any(not _source_is_fallback(str(source)) for source in sources.values())
     real_required = 0
+    invalid_real_required = 0
     fallback_or_inferred_required = 0
     for field in required_fields:
-        if not _has_trace_value(payload.get(field)):
+        value = payload.get(field)
+        if not _has_trace_value(value):
             continue
         source = str(sources.get(field) or "")
         if field in inferred_fields or _source_is_fallback(source):
             fallback_or_inferred_required += 1
-        elif source:
+        elif source and _required_field_shape_valid(phase, field, value):
             real_required += 1
+        elif source:
+            invalid_real_required += 1
     if real_required == len(required_fields):
         return "present"
-    if real_required or has_real_field:
+    if real_required or invalid_real_required or has_real_field:
         return "degraded"
     if fallback_or_inferred_required:
         return "inferred"
     return "missing"
+
+
+def _required_field_shape_valid(phase: str, field: str, value: Any) -> bool:
+    if phase == "pdd" and field == "problem":
+        return isinstance(value, str) and bool(value.strip())
+    if phase == "pdd" and field in {"acceptance_criteria", "constraints", "validation_signal"}:
+        return _non_empty_trace_list(value)
+    if phase == "ddd" and field in {"domain_terms", "invariants", "ownership_decision", "side_effect_boundaries"}:
+        return _non_empty_trace_list(value)
+    if phase == "sdd" and field in {"modules", "public_api", "error_contract", "failure_modes"}:
+        return _non_empty_trace_list(value)
+    if phase == "sdd" and field == "logging_decision":
+        return isinstance(value, dict) and _has_trace_value(value)
+    if phase == "tdd" and field in {"acceptance_to_tests", "invariant_to_tests_or_code", "public_api_to_tests"}:
+        return isinstance(value, dict) and _has_trace_value(value)
+    if phase == "tdd" and field in {"failure_mode_tests", "validation_commands"}:
+        return _non_empty_trace_list(value)
+    return _has_trace_value(value)
+
+
+def _non_empty_trace_list(value: Any) -> bool:
+    return isinstance(value, list) and any(_has_trace_value(item) for item in value)
 
 
 def _source_is_fallback(source: str) -> bool:

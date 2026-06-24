@@ -19,6 +19,11 @@ Validation:
 Residual Risk:
 ```
 
+- the compact Process Trace parser supports a bounded YAML-like subset:
+  `key: value`, `key:` with indented child keys, nested `- item` lists, and
+  simple scalar booleans. Do not use anchors, flow collections, folded or block
+  scalars, multi-document YAML, or deeply nested structures. Prefer a fenced
+  JSON `process_trace` block when exact structure matters;
 - validation commands run and their result;
 - reuse or placement evidence when relevant;
 - residual risk.

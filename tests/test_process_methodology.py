@@ -301,6 +301,7 @@ def test_final_json_process_trace_populates_process_facts_and_present_status() -
         for field in runner._required_process_fields(phase):
             assert trace["process_facts"][phase]["_field_sources"][field] == "final.md:process-trace-json"
             assert field not in trace["process_facts"][phase].get("_inferred_fields", [])
+    assert _run_trace_errors(trace) == []
 
 
 def test_final_multiline_process_trace_populates_process_facts() -> None:
@@ -331,7 +332,7 @@ SDD:
 TDD:
   acceptance_to_tests: deny metadata URL -> benchmark command
   invariant_to_tests_or_code: unsafe URL is never fetched -> benchmark command
-  public_api_to_tests: public entrypoint -> benchmark command
+  public_api_to_tests: URL validation public entrypoint -> benchmark command
   failure_mode_tests: metadata URL denial covered
   validation_commands: python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>
 """,
@@ -347,11 +348,78 @@ TDD:
         )
     assert all(trace["phase_status"][phase] == "present" for phase in CORE_PHASES)
     assert trace["process_facts"]["pdd"]["problem"] == "Block SSRF metadata URLs"
-    assert trace["process_facts"]["ddd"]["invariants"] == "unsafe URL is never fetched"
-    assert trace["process_facts"]["sdd"]["public_api"] == "URL validation public entrypoint"
-    assert trace["process_facts"]["tdd"]["validation_commands"] == COMMAND
+    assert trace["process_facts"]["pdd"]["acceptance_criteria"] == ["deny metadata URL"]
+    assert trace["process_facts"]["ddd"]["invariants"] == ["unsafe URL is never fetched"]
+    assert trace["process_facts"]["sdd"]["public_api"] == ["URL validation public entrypoint"]
+    assert trace["process_facts"]["sdd"]["logging_decision"] == {
+        "needed": False,
+        "rationale": "public tests cover denial",
+    }
+    assert trace["process_facts"]["tdd"]["acceptance_to_tests"] == {"deny metadata URL": ["benchmark command"]}
+    assert trace["process_facts"]["tdd"]["validation_commands"] == [COMMAND]
     assert all(trace["process_facts"][phase]["_field_sources"] for phase in CORE_PHASES)
     assert all(trace["phase_status"][phase] != "inferred" for phase in CORE_PHASES)
+    assert _run_trace_errors(trace) == []
+
+
+def test_present_status_requires_real_required_field_shapes() -> None:
+    runner = _load_script("run_codex_live_invalid_shape_process_trace_unit", "scripts/run-codex-live-benchmarks.py")
+    case = _trace_case()
+    with tempfile.TemporaryDirectory() as tmp:
+        out_dir = Path(tmp) / "run"
+        run_dir = out_dir / "cases" / "security__ssrf-url-allowlist" / "skills_only_clean" / "run-01"
+        run_dir.mkdir(parents=True)
+        run_dir.joinpath("final.md").write_text(
+            """Result
+
+```json
+{
+  "process_trace": {
+    "pdd": {
+      "problem": "Block SSRF metadata URLs",
+      "acceptance_criteria": "deny metadata URL",
+      "constraints": ["preserve harness"],
+      "validation_signal": ["python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"]
+    },
+    "ddd": {
+      "domain_terms": ["URL candidate", "network boundary"],
+      "invariants": ["unsafe URL is never fetched"],
+      "ownership_decision": ["URL safety policy owns deny decision"],
+      "side_effect_boundaries": ["no fetch before allowlist"]
+    },
+    "sdd": {
+      "modules": ["URL validation module"],
+      "public_api": ["URL validation public entrypoint"],
+      "error_contract": ["deny unsafe URLs with stable error"],
+      "failure_modes": ["metadata URL denial"],
+      "logging_decision": {"needed": false, "rationale": "public tests cover denial"}
+    },
+    "tdd": {
+      "acceptance_to_tests": {"deny metadata URL": ["python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"]},
+      "invariant_to_tests_or_code": {"unsafe URL is never fetched": ["python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"]},
+      "public_api_to_tests": {"URL validation public entrypoint": ["python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"]},
+      "failure_mode_tests": ["metadata URL denial covered"],
+      "validation_commands": ["python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"]
+    }
+  }
+}
+```
+""",
+            encoding="utf-8",
+        )
+        trace = runner._process_trace_payload(
+            out_dir,
+            run_dir,
+            case=case,
+            variant="skills_only_clean",
+            run_index=1,
+            result={"status": "collected", "grading_status": "passed"},
+        )
+    assert trace["process_facts"]["pdd"]["_field_sources"]["acceptance_criteria"] == "final.md:process-trace-json"
+    assert trace["phase_status"]["pdd"] == "degraded"
+    assert trace["phase_status"]["ddd"] == "present"
+    assert trace["phase_status"]["sdd"] == "present"
+    assert trace["phase_status"]["tdd"] == "present"
 
 
 def test_partial_final_trace_with_fallback_required_fields_becomes_degraded() -> None:
@@ -567,6 +635,9 @@ class ProcessMethodologyTests(unittest.TestCase):
 
     def test_final_multiline_process_trace_populates_process_facts(self) -> None:
         test_final_multiline_process_trace_populates_process_facts()
+
+    def test_present_status_requires_real_required_field_shapes(self) -> None:
+        test_present_status_requires_real_required_field_shapes()
 
     def test_partial_final_trace_with_fallback_required_fields_becomes_degraded(self) -> None:
         test_partial_final_trace_with_fallback_required_fields_becomes_degraded()

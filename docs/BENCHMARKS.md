@@ -131,6 +131,11 @@ Publishable assertion-backed live cases currently cover `security`,
 `backend`, `devex`, `structure`, and `reliability`. Telemetry-only cases are
 listed in run outputs but do not contribute to pass-rate evidence.
 
+Process trace strictness is validated by deterministic parser and validator
+tests. The published `reports/codex-live-benchmark-summary.json` reflects the
+previous collected strict live run until maintainers explicitly publish a new
+live run; do not treat parser/schema improvements as new live pass-rate evidence.
+
 Codex live summaries aggregate per-variant pass rates, security pass rates,
 failure categories, mean/median/min/max usage and metric counts, ablation
 deltas, and per-case/per-variant pass rates. Pass-rate confidence text remains
