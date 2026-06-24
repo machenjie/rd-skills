@@ -26,12 +26,15 @@ route_hints:
 expected_outcomes:
   - COMPACTION_CONTEXT.json contains pre_compact and post_compact/session compact evidence.
   - Required route, skill, capability, gate, process, validation, review, repair, risk, memory, and changed-file fields are preserved.
+  - Required read paths, repo graph references, active skill context, and material edit / validation command indexes are preserved as bounded machine-readable context.
+  - Privacy redaction, context usability, and context retention are reported as separate statuses.
   - Final handoff continues repair and re-review after compaction rather than stopping at the snapshot.
   - No raw prompt, raw command output, secret, environment variable, full diff, full file content, or local absolute path is persisted.
 required_qualities:
   - Evidence is machine-readable and bounded.
   - Validation freshness is not overstated.
   - Review findings and repair state survive compaction.
+  - Repo-relative operational paths remain usable after compaction; redacted local paths do not count as retained operational context.
   - CAPABILITY_EVIDENCE.md is auxiliary and cannot substitute for JSON/process artifacts.
 forbidden_shortcuts:
   - Passing from self-reported markdown only.

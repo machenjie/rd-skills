@@ -15,6 +15,7 @@ REQUIRED_FIELDS = {
     "sdd_decisions",
     "tdd_validation_plan",
     "changed_paths",
+    "read_paths",
     "validation_results",
     "validation_freshness",
     "review_findings",
@@ -22,7 +23,10 @@ REQUIRED_FIELDS = {
     "rereview_events",
     "residual_risk",
     "memory_references",
+    "repo_graph_references",
     "active_skill_context",
+    "last_material_edit_index",
+    "last_validation_command_index",
 }
 
 
@@ -32,10 +36,15 @@ def _candidate_root() -> Path:
 
 def _load_context() -> dict:
     path = _candidate_root() / "COMPACTION_CONTEXT.json"
-    assert path.is_file(), "COMPACTION_CONTEXT.json is required; markdown-only evidence is not enough"
+    assert path.is_file(), "COMPACTION_CONTEXT.json is required as auxiliary evidence; markdown-only evidence is not enough"
     payload = json.loads(path.read_text(encoding="utf-8"))
     assert isinstance(payload, dict), "COMPACTION_CONTEXT.json must be a JSON object"
     return payload
+
+
+def _run_root() -> Path | None:
+    raw = os.environ.get("CHANGEFORGE_CODEGEN_RUN_DIR")
+    return Path(raw) if raw else None
 
 
 def test_required_context_survives_compaction_and_continuation() -> None:
@@ -47,11 +56,40 @@ def test_required_context_survives_compaction_and_continuation() -> None:
     assert payload.get("compact_after_repair_continuation_status") == "pass"
     assert payload.get("context_retention_status") == "pass"
     assert payload.get("privacy_redaction_status") == "pass"
+    assert payload.get("context_usable_status", "pass") == "pass"
+    assert not payload.get("redacted_required_context_fields", [])
+    assert not payload.get("context_unusable_fields", [])
     assert payload.get("validation_freshness") in {
         "fresh_after_latest_material_change",
         "rerun_after_material_change",
     }
     assert payload.get("compressed_state_not_overwritten_by_session_bootstrap") is True
+
+
+def test_runtime_compaction_artifacts_when_live_run_dir_is_available() -> None:
+    run_root = _run_root()
+    if run_root is None:
+        return
+    result = json.loads((run_root / "result.json").read_text(encoding="utf-8"))
+    process_trace = json.loads((run_root / "process-trace.json").read_text(encoding="utf-8"))
+    grading = json.loads((run_root / "grading" / "grading-result.json").read_text(encoding="utf-8"))
+    runtime = result.get("compact_runtime_evidence")
+    assert isinstance(runtime, dict), "result.json must include compact_runtime_evidence"
+    assert process_trace.get("compact_runtime_evidence") or process_trace.get("compaction_context")
+    assert "compact" in json.dumps(grading, sort_keys=True).casefold() or grading.get("all_passed") is True
+    reinject_path = run_root / "compaction" / "reinject-output.json"
+    assert reinject_path.is_file(), "compaction/reinject-output.json is required runtime evidence"
+    reinject = reinject_path.read_text(encoding="utf-8", errors="ignore").casefold()
+    assert "post_compact_reinject" in reinject or "session_compact_reinject" in reinject
+    assert int(runtime.get("pre_compact_snapshot_count", 0) or 0) > 0
+    assert int(runtime.get("post_compact_reinject_count", 0) or 0) > 0 or int(
+        runtime.get("session_compact_reinject_count", 0) or 0
+    ) > 0
+    assert not runtime.get("missing_required_context_fields")
+    assert not runtime.get("redacted_required_context_fields")
+    assert runtime.get("context_usable_status") == "pass"
+    assert runtime.get("privacy_redaction_status") == "pass"
+    assert runtime.get("compact_after_repair_continuation_status") == "pass"
 
 
 def test_final_handoff_references_preserved_context() -> None:

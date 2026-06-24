@@ -419,7 +419,7 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
         self.assertIn("warn:kubectl", state["permission_decisions"])
         self.assertNotIn("warn:FOO=bar", state["permission_decisions"])
 
-    def test_compaction_snapshot_runs_before_reinject_without_overwriting_active_context(self) -> None:
+    def test_session_compact_does_not_write_snapshot_or_overwrite_active_context(self) -> None:
         common = load_common()
         active_context = {
             "stage": "review",
@@ -467,7 +467,7 @@ class ProfessionalInjectionRuntimeTests(unittest.TestCase):
         self.assertEqual(injector.returncode, 0)
         self.assertEqual(injector.stdout, "")
         self.assertEqual(state["active_skill_context"]["stage"], "review")
-        self.assertTrue(any("stage=review" in item for item in state["compaction_snapshots"]))
+        self.assertEqual(state["compaction_snapshots"], [])
 
 
 if __name__ == "__main__":

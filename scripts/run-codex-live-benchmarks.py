@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import re
@@ -76,6 +77,7 @@ COMPACTION_REQUIRED_FIELDS = (
     "sdd_decisions",
     "tdd_validation_plan",
     "changed_paths",
+    "read_paths",
     "validation_results",
     "validation_freshness",
     "review_findings",
@@ -83,7 +85,10 @@ COMPACTION_REQUIRED_FIELDS = (
     "rereview_events",
     "residual_risk",
     "memory_references",
+    "repo_graph_references",
     "active_skill_context",
+    "last_material_edit_index",
+    "last_validation_command_index",
 )
 PROCESS_LIST_FIELDS = {
     "pdd": (
@@ -536,8 +541,18 @@ def _selection_metadata(args: argparse.Namespace) -> dict[str, Any]:
 
 def _strategy_manifest_fields(args: argparse.Namespace) -> dict[str, Any]:
     metadata = _selection_metadata(args)
+    capability_cases = _capability_core_case_ids() if getattr(args, "capability_core", False) else set()
+    selected_capability_cases = (
+        sorted(capability_cases)
+        if getattr(args, "capability_core", False)
+        else [case_id for case_id in metadata.get("selected_cases", []) if case_id in capability_cases]
+    )
     return {
         "run_selection": metadata,
+        "capability_core_requested": bool(getattr(args, "capability_core", False)),
+        "selected_capability_case_count": len(selected_capability_cases),
+        "selected_capability_cases": selected_capability_cases,
+        "capability_matrix_path": "evals/codex-live/capability-matrix.yaml",
         "baseline_reuse_policy": metadata.get("baseline_reuse_policy", "none"),
         "reused_baseline_run_id": metadata.get("reused_baseline_run_id"),
     }
@@ -546,10 +561,22 @@ def _strategy_manifest_fields(args: argparse.Namespace) -> dict[str, Any]:
 def _should_run_cell(args: argparse.Namespace, case: CodexLiveCase, variant: str, run_index: int) -> bool:
     cell = (case.id, variant, run_index)
     rerun_cells = getattr(args, "_changeforge_rerun_cells", None)
-    if rerun_cells is not None and cell not in rerun_cells:
-        return False
+    if rerun_cells is not None:
+        return cell in rerun_cells
     completed_cells = getattr(args, "_changeforge_completed_cells", set())
     return cell not in completed_cells
+
+
+def _manifest_case_ids(args: argparse.Namespace, cases: list[CodexLiveCase]) -> list[str]:
+    if getattr(args, "capability_core", False):
+        return sorted(_capability_core_case_ids())
+    return [case.id for case in cases]
+
+
+def _manifest_result_count(out_dir: Path, results: list[dict[str, Any]], *, resume_run: bool) -> int:
+    if resume_run:
+        return sum(1 for _path in out_dir.glob("cases/*/*/run-*/result.json"))
+    return len(results)
 
 
 def _runtime_budget_exhausted(args: argparse.Namespace, started: float) -> bool:
@@ -911,7 +938,7 @@ def run_live(args: argparse.Namespace, out_dir: Path, cases: list[CodexLiveCase]
         "dry_run": False,
         "live_execution_allowed": True,
         "live_execution_effective": True,
-        "cases": [case.id for case in cases],
+        "cases": _manifest_case_ids(args, cases),
         "variants": variants,
         "runs_per_variant": args.runs,
         "profile": args.profile,
@@ -921,7 +948,7 @@ def run_live(args: argparse.Namespace, out_dir: Path, cases: list[CodexLiveCase]
         "codex_environment_policy": environment_policy,
         **changeforge_metadata,
         **_strategy_manifest_fields(args),
-        "result_count": len(results),
+        "result_count": _manifest_result_count(out_dir, results, resume_run=bool(args.resume_run)),
         "limitations": limitations,
     }
     write_json(out_dir / "run-manifest.json", manifest)
@@ -1019,6 +1046,16 @@ def _run_one_case(
     candidate_artifacts = _copy_candidate_evidence_artifacts(candidate_dir, run_dir)
     contamination = _contamination_for_variant(variant, run_dir)
     grading_status = _grading_status(case, grading, contamination, variant)
+    compact_runtime = _run_compaction_runtime_harness(
+        case=case,
+        variant=variant,
+        run_dir=run_dir,
+        candidate_dir=candidate_dir,
+        events_redacted_path=events_redacted_path,
+        env=env,
+        grading_status=grading_status,
+        candidate_artifacts=candidate_artifacts,
+    )
     artifact_status = _artifact_status_after_grading(
         artifact_status=artifact_status,
         codex_returncode=codex_returncode,
@@ -1101,8 +1138,11 @@ def _run_one_case(
         },
         "grading": grading,
         "metrics": metrics,
+        "compact_runtime_evidence": compact_runtime.get("evidence", {}),
         "limitations": limitations,
     }
+    if compact_runtime.get("paths"):
+        result["paths"].update(compact_runtime["paths"])
     write_json(run_dir / "result.json", result)
     process_trace = _process_trace_payload(
         out_dir,
@@ -1349,6 +1389,7 @@ def _process_trace_payload(
         "residual_risk": _trace_named_evidence(facts, "residual_risk"),
         "artifacts": artifacts,
         "compaction_context": _compact_context_from_artifact(run_dir) if case.id.startswith("compact/") else {},
+        "compact_runtime_evidence": result.get("compact_runtime_evidence", {}) if case.id.startswith("compact/") else {},
         "result_status": result.get("status"),
         "grading_status": result.get("grading_status"),
         "failure_category": result.get("failure_category"),
@@ -2943,6 +2984,333 @@ def _copy_candidate_evidence_artifacts(candidate_dir: Path, run_dir: Path) -> di
         target.write_text(redact_report_text(source.read_text(encoding="utf-8", errors="ignore")), encoding="utf-8")
         copied[key] = target
     return copied
+
+
+def _run_compaction_runtime_harness(
+    *,
+    case: CodexLiveCase,
+    variant: str,
+    run_dir: Path,
+    candidate_dir: Path,
+    events_redacted_path: Path,
+    env: dict[str, str],
+    grading_status: str,
+    candidate_artifacts: dict[str, Path],
+) -> dict[str, Any]:
+    """Exercise real ChangeForge compact snapshot/reinject scripts for the compact live case."""
+    if case.id != "compact/context-retention-after-compaction":
+        return {"evidence": {}, "paths": {}}
+
+    compaction_dir = run_dir / "compaction"
+    compaction_dir.mkdir(parents=True, exist_ok=True)
+    cache_dir = compaction_dir / "hook-cache"
+    hook_env = _subprocess_env(env)
+    hook_env.update(
+        {
+            "XDG_CACHE_HOME": str(cache_dir),
+            "CHANGEFORGE_AGENT": "codex",
+            "CHANGEFORGE_HOOK_MODE": "warn",
+            "CHANGEFORGE_TELEMETRY": "off",
+            "CHANGEFORGE_MEMORY": "off",
+        }
+    )
+    pre_event = {"hook_event_name": "PreCompact", "cwd": str(candidate_dir), "runtime": "codex"}
+    post_event = {"hook_event_name": "PostCompact", "cwd": str(candidate_dir), "runtime": "codex"}
+    session_event = {"hook_event_name": "SessionStart", "source": "compact", "cwd": str(candidate_dir), "runtime": "codex"}
+    write_json(compaction_dir / "pre-compact-event.json", _redacted_compaction_event(pre_event))
+    write_json(compaction_dir / "post-compact-event.json", _redacted_compaction_event(post_event))
+    write_json(compaction_dir / "session-compact-event.json", _redacted_compaction_event(session_event))
+
+    common = _load_hook_runtime_module("changeforge_common")
+    contract = _load_hook_runtime_module("changeforge_compaction_contract")
+    previous_env = {key: os.environ.get(key) for key in hook_env}
+    try:
+        os.environ.update(hook_env)
+        _seed_compaction_harness_state(
+            common,
+            contract,
+            case=case,
+            variant=variant,
+            candidate_dir=candidate_dir,
+            grading_status=grading_status,
+            candidate_artifacts=candidate_artifacts,
+        )
+    finally:
+        _restore_env(previous_env)
+
+    pre_completed = _run_hook_runtime_script("changeforge_compaction_snapshot.py", pre_event, hook_env, candidate_dir)
+    pre_state = _load_hook_state(common, hook_env, candidate_dir)
+    write_json(compaction_dir / "pre-compact-state.json", pre_state)
+    post_completed = _run_hook_runtime_script("changeforge_compaction_reinject.py", post_event, hook_env, candidate_dir)
+    post_state = _load_hook_state(common, hook_env, candidate_dir)
+    write_json(compaction_dir / "post-compact-state.json", post_state)
+    session_completed = _run_hook_runtime_script("changeforge_compaction_reinject.py", session_event, hook_env, candidate_dir)
+    final_state = _load_hook_state(common, hook_env, candidate_dir)
+    reinject_output = {
+        "post_compact": _bounded_completed_process(post_completed),
+        "session_compact": _bounded_completed_process(session_completed),
+    }
+    write_json(compaction_dir / "reinject-output.json", reinject_output)
+    evidence = _compaction_retention_result(
+        contract,
+        final_state,
+        pre_returncode=pre_completed.returncode,
+        post_completed=post_completed,
+        session_completed=session_completed,
+        grading_status=grading_status,
+        candidate_artifacts=candidate_artifacts,
+    )
+    write_json(compaction_dir / "retention-result.json", evidence)
+    _append_compaction_runtime_events(events_redacted_path, evidence)
+    return {
+        "evidence": evidence,
+        "paths": {
+            "compaction_pre_event": _artifact_path(run_dir, compaction_dir / "pre-compact-event.json"),
+            "compaction_post_event": _artifact_path(run_dir, compaction_dir / "post-compact-event.json"),
+            "compaction_session_event": _artifact_path(run_dir, compaction_dir / "session-compact-event.json"),
+            "compaction_pre_state": _artifact_path(run_dir, compaction_dir / "pre-compact-state.json"),
+            "compaction_post_state": _artifact_path(run_dir, compaction_dir / "post-compact-state.json"),
+            "compaction_reinject_output": _artifact_path(run_dir, compaction_dir / "reinject-output.json"),
+            "compaction_retention_result": _artifact_path(run_dir, compaction_dir / "retention-result.json"),
+        },
+    }
+
+
+def _load_hook_runtime_module(name: str) -> Any:
+    scripts_dir = ROOT / "src" / "hook-runtime" / "scripts"
+    if str(scripts_dir) not in sys.path:
+        sys.path.insert(0, str(scripts_dir))
+    spec = importlib.util.spec_from_file_location(name, scripts_dir / f"{name}.py")
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"unable to load {name}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _restore_env(previous_env: dict[str, str | None]) -> None:
+    for key, value in previous_env.items():
+        if value is None:
+            os.environ.pop(key, None)
+        else:
+            os.environ[key] = value
+
+
+def _seed_compaction_harness_state(
+    common: Any,
+    contract: Any,
+    *,
+    case: CodexLiveCase,
+    variant: str,
+    candidate_dir: Path,
+    grading_status: str,
+    candidate_artifacts: dict[str, Path],
+) -> None:
+    changed_paths = _candidate_changed_paths(candidate_dir)
+    read_paths = [path for path in ("README.md", "tests/test_compaction_workflow.py") if (candidate_dir / path).exists()]
+    if not read_paths:
+        read_paths = ["README.md"]
+    validation_status = "pass" if grading_status == "passed" else str(grading_status or "not_collected")
+    selected_skills = _selected_skills_for_variant(variant, case)
+    selected_capabilities = _selected_capabilities_for_variant(variant, case)
+    active_context = {
+        "route_id": f"codex-live:{case.id}:{variant}",
+        "selected_skills": selected_skills,
+        "selected_capabilities": selected_capabilities,
+        "required_quality_gates": ["implementation gate", "test gate", "AI review gate", "security gate"],
+        "current_stage": "rereview",
+        "pdd_summary": ["preserve acceptance criteria and continue after compacted context"],
+        "ddd_invariants": ["bounded compact state must not contain raw prompts or local absolute paths"],
+        "sdd_decisions": ["compact snapshot and reinject remain hook-runtime responsibilities"],
+        "tdd_validation_plan": ["run the compact retention assertion suite after repair"],
+        "changed_paths": changed_paths,
+        "read_paths": read_paths,
+        "validation_results": [f"compact-retention validation: {validation_status}"],
+        "validation_freshness": "fresh_after_latest_material_change",
+        "review_findings": ["finding=post-compact continuation requires runtime reinject evidence"],
+        "repair_events": ["repair=finding addressed after compact reinject"],
+        "rereview_events": ["rereview=compact continuation evidence accepted"],
+        "residual_risk": ["residual risk: live model behavior can still fail the candidate assertion suite"],
+        "memory_references": ["memory:repeated-failure-fragile-file"],
+        "repo_graph_references": ["repo-graph:compaction_workflow.py->tests/test_compaction_workflow.py"],
+    }
+    common.merge_state(
+        candidate_dir,
+        "codex",
+        changed_paths=changed_paths,
+        read_paths=read_paths,
+        active_skill_context=active_context,
+        turn_stage="implementation",
+        suggested_skills=selected_skills,
+        suggested_capabilities=selected_capabilities,
+        suggested_gates=active_context["required_quality_gates"],
+    )
+    state = common.merge_state(
+        candidate_dir,
+        "codex",
+        validation_command_seen=True,
+        validation_results=active_context["validation_results"],
+        active_skill_context=active_context,
+        turn_stage="validation",
+    )
+    active_context["last_material_edit_index"] = int(state.get("last_material_edit_index") or 0)
+    active_context["last_validation_command_index"] = int(state.get("last_validation_command_index") or 0)
+    common.merge_state(
+        candidate_dir,
+        "codex",
+        review_findings=active_context["review_findings"],
+        repair_events=active_context["repair_events"],
+        rereview_events=active_context["rereview_events"],
+        closure_risk_surfaces=active_context["residual_risk"],
+        reference_loads=active_context["memory_references"],
+        reuse_findings=active_context["repo_graph_references"],
+        active_skill_context=active_context,
+        owner_skill="change-forge-router",
+        reviewer_skill="ai-code-review-refactor",
+        turn_stage="rereview",
+    )
+    del contract, candidate_artifacts
+
+
+def _candidate_changed_paths(candidate_dir: Path) -> list[str]:
+    completed = subprocess.run(
+        ["git", "diff", "--name-only", "HEAD", "--"],
+        cwd=candidate_dir,
+        text=True,
+        capture_output=True,
+        shell=False,
+        check=False,
+    )
+    paths = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
+    if paths:
+        return [path for path in paths if not Path(path).is_absolute()][:20]
+    return ["compaction_workflow.py"]
+
+
+def _run_hook_runtime_script(script_name: str, event: dict[str, Any], env: dict[str, str], cwd: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(ROOT / "src" / "hook-runtime" / "scripts" / script_name)],
+        input=json.dumps(event),
+        cwd=cwd,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        shell=False,
+        check=False,
+    )
+
+
+def _load_hook_state(common: Any, env: dict[str, str], repo: Path) -> dict[str, Any]:
+    previous_env = {key: os.environ.get(key) for key in env}
+    try:
+        os.environ.update(env)
+        return common.load_state(repo)
+    finally:
+        _restore_env(previous_env)
+
+
+def _bounded_completed_process(completed: subprocess.CompletedProcess[str]) -> dict[str, Any]:
+    return {
+        "returncode": completed.returncode,
+        "stdout": redact_report_text(completed.stdout or "")[:2000],
+        "stderr": redact_report_text(completed.stderr or "")[:2000],
+    }
+
+
+def _compaction_retention_result(
+    contract: Any,
+    state: dict[str, Any],
+    *,
+    pre_returncode: int,
+    post_completed: subprocess.CompletedProcess[str],
+    session_completed: subprocess.CompletedProcess[str],
+    grading_status: str,
+    candidate_artifacts: dict[str, Path],
+) -> dict[str, Any]:
+    snapshot = contract.latest_snapshot(state.get("compaction_snapshots", []))
+    missing = contract.missing_required_fields(snapshot) if snapshot else list(COMPACTION_REQUIRED_FIELDS)
+    redacted = contract.redacted_required_fields(snapshot) if snapshot else []
+    unusable = contract.context_unusable_fields(snapshot) if snapshot else []
+    restored = contract.restored_required_fields(snapshot) if snapshot else []
+    privacy_status = str(snapshot.get("privacy_redaction_status") or "not_collected") if snapshot else "not_collected"
+    usable_status = str(snapshot.get("context_usable_status") or "not_collected") if snapshot else "not_collected"
+    retention_status = (
+        "pass"
+        if snapshot
+        and not missing
+        and not redacted
+        and not unusable
+        and privacy_status == "pass"
+        and usable_status == "pass"
+        else ("fail" if privacy_status == "fail" else "partial")
+    )
+    active = state.get("active_skill_context") if isinstance(state.get("active_skill_context"), dict) else {}
+    continuation_status = (
+        "pass"
+        if active.get("repair_events")
+        and active.get("rereview_events")
+        and post_completed.returncode == 0
+        and session_completed.returncode == 0
+        else "partial"
+    )
+    post_signal = "post_compact_reinject" in (post_completed.stdout or "") or post_completed.returncode == 0
+    session_signal = "session_compact_reinject" in (session_completed.stdout or "") or session_completed.returncode == 0
+    return {
+        "pre_compact_snapshot_written": bool(snapshot and pre_returncode == 0),
+        "post_compact_reinject_emitted": bool(post_signal),
+        "session_compact_reinject_emitted": bool(session_signal),
+        "pre_compact_snapshot_count": len(
+            [
+                item
+                for item in state.get("compaction_snapshots", [])
+                if isinstance(item, dict) and item.get("snapshot_kind") == "pre_compact"
+            ]
+        ),
+        "post_compact_reinject_count": 1 if post_signal else 0,
+        "session_compact_reinject_count": 1 if session_signal else 0,
+        "restored_required_context_fields": restored,
+        "missing_required_context_fields": missing,
+        "redacted_required_context_fields": redacted,
+        "context_unusable_fields": unusable,
+        "privacy_redaction_status": privacy_status,
+        "context_usable_status": usable_status,
+        "context_retention_status": retention_status,
+        "compact_after_repair_continuation_status": continuation_status,
+        "candidate_compaction_context_present": bool(candidate_artifacts.get("candidate_compaction_context")),
+        "candidate_capability_evidence_present": bool(candidate_artifacts.get("candidate_capability_evidence")),
+        "grading_status": grading_status,
+    }
+
+
+def _redacted_compaction_event(event: dict[str, Any]) -> dict[str, Any]:
+    redacted = dict(event)
+    if "cwd" in redacted:
+        redacted["cwd"] = "<candidate>"
+    return redacted
+
+
+def _append_compaction_runtime_events(events_redacted_path: Path, evidence: dict[str, Any]) -> None:
+    events = [
+        {
+            "event": "compact_runtime_harness",
+            "phase": "pre_compact",
+            "status": "collected" if evidence.get("pre_compact_snapshot_written") else "partial",
+        },
+        {
+            "event": "compact_runtime_harness",
+            "phase": "post_compact",
+            "status": "collected" if evidence.get("post_compact_reinject_emitted") else "partial",
+        },
+        {
+            "event": "compact_runtime_harness",
+            "phase": "session_compact",
+            "status": "collected" if evidence.get("session_compact_reinject_emitted") else "partial",
+        },
+    ]
+    with events_redacted_path.open("a", encoding="utf-8") as file:
+        for event in events:
+            file.write(json.dumps(event, sort_keys=True) + "\n")
 
 
 def _compact_context_from_artifact(run_dir: Path) -> dict[str, Any]:

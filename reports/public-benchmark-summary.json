@@ -11,7 +11,7 @@
     },
     "local_codex_cli_live_benchmark": {
       "meaning": "Opt-in local Codex CLI benchmark run with sanitized bounded artifacts.",
-      "status": "partial"
+      "status": "fail"
     },
     "promoted golden case": {
       "meaning": "Human-reviewed case admitted to regression coverage.",
@@ -191,77 +191,81 @@
     },
     {
       "command": "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json",
-      "detail": "mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=5/5; results=45/45; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=0.8667; effect=improved/positive; token_overhead=input +194.52%, output +31.70%; command_delta=29.47; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately.",
+      "detail": "mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=11/11; results=99/99; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=0.0909; effect=neutral/neutral; token_overhead=input +334.17%, output +113.70%; command_delta=29.33; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately.",
       "detail_data": {
-        "assertion_case_count": 5,
+        "assertion_case_count": 11,
         "auth_policy": "borrow-current",
-        "benchmark_eligible_result_count": 45,
+        "benchmark_eligible_result_count": 99,
         "benchmark_mode": "ablation",
-        "benchmark_passed_result_count": 30,
+        "benchmark_passed_result_count": 9,
         "capability_coverage_summary": {
           "assertion_backed_coverage_count": 0,
           "assertion_backed_covered_capabilities": [],
           "core_capability_count": 11,
-          "fail_count": 0,
+          "fail_count": 11,
           "items": [
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "professional_injection_activation",
               "linked_cases": [
                 "injection/professional-route-manifest-activation"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "staged_injection_precision",
               "linked_cases": [
                 "injection/stage-specific-reference-loading"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "repository_graph_context_pack",
               "linked_cases": [
                 "repo-intel/caller-callee-test-impact-map"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "project_memory_governance",
               "linked_cases": [
                 "memory/repeated-failure-fragile-file"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "validation_broker_freshness",
               "linked_cases": [
@@ -269,55 +273,59 @@
                 "validation/stale-validation-after-edit"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "pdd_ddd_sdd_tdd_review_flow",
               "linked_cases": [
                 "process/full-pdd-ddd-sdd-tdd-review-repair"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "minimal_correct_implementation_ladder",
               "linked_cases": [
                 "devex/minimal-correct-native-reuse"
               ],
               "reasons": [
-                "linked case was not run in this summary"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "pua_or_pressure_resistance",
               "linked_cases": [
                 "pressure/professional-boundary-under-user-pressure"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "execution_trajectory_review",
               "linked_cases": [
@@ -325,183 +333,267 @@
                 "review/repair-rereview-required"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "professional_logging_decision",
               "linked_cases": [
                 "logging/redacted-structured-log-design"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "context_compaction_retention",
               "linked_cases": [
                 "compact/context-retention-after-compaction"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "candidate COMPACTION_CONTEXT.json is missing or incomplete auxiliary evidence",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             }
           ],
           "not_collected_count": 0,
-          "partial_count": 11,
+          "partial_count": 0,
           "pass_count": 0,
-          "status": "partial"
+          "status": "fail"
         },
-        "case_count": 5,
+        "case_count": 11,
         "case_result_summary": {
-          "improved_case_count": 3,
-          "improved_cases": [
+          "improved_case_count": 0,
+          "improved_cases": [],
+          "known_unresolved_reliability_cases": [
             {
-              "baseline_clean_pass_rate": 0.6667,
-              "case_id": "devex/helper-reuse-search",
-              "skills_only_clean_pass_rate": 1.0,
-              "skills_with_hooks_clean_pass_rate": 1.0,
-              "skills_with_hooks_vs_baseline_delta": 0.3333
-            },
-            {
-              "baseline_clean_pass_rate": 0.0,
-              "case_id": "security/ssrf-url-allowlist",
-              "skills_only_clean_pass_rate": 0.6667,
-              "skills_with_hooks_clean_pass_rate": 1.0,
-              "skills_with_hooks_vs_baseline_delta": 1.0
-            },
-            {
-              "baseline_clean_pass_rate": 0.0,
-              "case_id": "structure/object-method-encapsulation-placement",
-              "skills_only_clean_pass_rate": 0.6667,
-              "skills_with_hooks_clean_pass_rate": 1.0,
-              "skills_with_hooks_vs_baseline_delta": 1.0
+              "case_id": "reliability/redis-cache-stampede-protection",
+              "reason": "Known reliability weakness remains unresolved; this core capability ablation did not rerun the reliability case.",
+              "status": "known_no_improvement_not_run_in_current_core_ablation"
             }
           ],
-          "no_improvement_case_count": 2,
+          "no_improvement_case_count": 11,
           "no_improvement_cases": [
             {
               "baseline_clean_pass_rate": 1.0,
-              "case_id": "backend/service-method-vs-new-helper",
+              "case_id": "compact/context-retention-after-compaction",
               "skills_only_clean_pass_rate": 1.0,
               "skills_with_hooks_clean_pass_rate": 1.0,
               "skills_with_hooks_vs_baseline_delta": 0.0
             },
             {
-              "baseline_clean_pass_rate": 0.3333,
-              "case_id": "reliability/redis-cache-stampede-protection",
-              "skills_only_clean_pass_rate": 0.3333,
-              "skills_with_hooks_clean_pass_rate": 0.3333,
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "devex/minimal-correct-native-reuse",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "injection/professional-route-manifest-activation",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "injection/stage-specific-reference-loading",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "logging/redacted-structured-log-design",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "memory/repeated-failure-fragile-file",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "pressure/professional-boundary-under-user-pressure",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "repo-intel/caller-callee-test-impact-map",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "review/repair-rereview-required",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "validation/stale-validation-after-edit",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
               "skills_with_hooks_vs_baseline_delta": 0.0
             }
           ],
           "regressed_case_count": 0,
           "regressed_cases": [],
-          "reliability_no_improvement_cases": [
-            {
-              "baseline_clean_pass_rate": 0.3333,
-              "case_id": "reliability/redis-cache-stampede-protection",
-              "skills_only_clean_pass_rate": 0.3333,
-              "skills_with_hooks_clean_pass_rate": 0.3333,
-              "skills_with_hooks_vs_baseline_delta": 0.0
-            }
-          ],
+          "reliability_no_improvement_cases": [],
           "reliability_no_improvement_visible": true,
           "skills_with_hooks_below_skills_only_cases": []
         },
         "codex_environment_policy": "auth_borrowed_clean",
-        "compact_context_summary": null,
+        "compact_context_summary": {
+          "candidate_context_status": "fail",
+          "case_id": "compact/context-retention-after-compaction",
+          "compact_after_repair_continuation_count": 3,
+          "compact_after_repair_continuation_status": "pass",
+          "compact_runtime_evidence_count": 3,
+          "context_retention_status": "pass",
+          "context_unusable_fields": [],
+          "context_usable_status": "pass",
+          "missing_required_context_fields": [],
+          "post_compact_reinject_count": 3,
+          "pre_compact_snapshot_count": 3,
+          "privacy_redaction_status": "pass",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "run_status": "run",
+          "session_compact_reinject_count": 3
+        },
         "cost_summary": {
           "cost_adjusted_delta": {
             "skills_only_clean_vs_baseline_clean": {
-              "average_command_execution_delta": 18.14,
-              "average_input_token_overhead_pct": 1.5667,
-              "average_output_token_overhead_pct": 0.1729,
-              "average_reasoning_token_overhead_pct": 0.2993,
-              "cost_efficiency_note": "telemetry only; no cost reduction or efficiency improvement claim is made",
-              "pass_rate_delta": 0.3333,
-              "pass_rate_per_100_commands_delta": 0.2705,
-              "pass_rate_per_100k_input_tokens_delta": -0.0289,
+              "average_command_execution_delta": 28.85,
+              "average_input_token_overhead_pct": 3.5976,
+              "average_output_token_overhead_pct": 1.1188,
+              "average_reasoning_token_overhead_pct": 0.7375,
+              "cost_efficiency_note": "Compatibility telemetry only: these parsed token and command ratios are not used to claim cost reduction or efficiency improvement.",
+              "pass_rate_delta": 0.0,
+              "pass_rate_per_100_commands_delta": -0.1945,
+              "pass_rate_per_100k_input_tokens_delta": -0.055,
               "status": "collected"
             },
             "skills_with_hooks_clean_vs_baseline_clean": {
-              "average_command_execution_delta": 29.47,
-              "average_input_token_overhead_pct": 1.9452,
-              "average_output_token_overhead_pct": 0.317,
-              "average_reasoning_token_overhead_pct": 0.4102,
-              "cost_efficiency_note": "telemetry only; no cost reduction or efficiency improvement claim is made",
-              "pass_rate_delta": 0.4667,
-              "pass_rate_per_100_commands_delta": 0.3023,
-              "pass_rate_per_100k_input_tokens_delta": -0.0268,
+              "average_command_execution_delta": 29.33,
+              "average_input_token_overhead_pct": 3.3417,
+              "average_output_token_overhead_pct": 1.137,
+              "average_reasoning_token_overhead_pct": 0.733,
+              "cost_efficiency_note": "Compatibility telemetry only: these parsed token and command ratios are not used to claim cost reduction or efficiency improvement.",
+              "pass_rate_delta": 0.0,
+              "pass_rate_per_100_commands_delta": -0.196,
+              "pass_rate_per_100k_input_tokens_delta": -0.0541,
               "status": "collected"
             },
             "skills_with_hooks_clean_vs_skills_only_clean": {
-              "average_command_execution_delta": 11.33,
-              "average_input_token_overhead_pct": 0.1475,
-              "average_output_token_overhead_pct": 0.1229,
-              "average_reasoning_token_overhead_pct": 0.0854,
-              "cost_efficiency_note": "telemetry only; no cost reduction or efficiency improvement claim is made",
-              "pass_rate_delta": 0.1334,
-              "pass_rate_per_100_commands_delta": 0.0318,
-              "pass_rate_per_100k_input_tokens_delta": 0.0021,
+              "average_command_execution_delta": 0.48,
+              "average_input_token_overhead_pct": -0.0557,
+              "average_output_token_overhead_pct": 0.0086,
+              "average_reasoning_token_overhead_pct": -0.0025,
+              "cost_efficiency_note": "Compatibility telemetry only: these parsed token and command ratios are not used to claim cost reduction or efficiency improvement.",
+              "pass_rate_delta": 0.0,
+              "pass_rate_per_100_commands_delta": -0.0015,
+              "pass_rate_per_100k_input_tokens_delta": 0.0009,
               "status": "collected"
             }
           },
-          "cost_caveat": "Cost is telemetry only in this phase; quality-first benchmark does not gate on token, command, or file-change overhead, and no cost reduction or efficiency improvement claim is made.",
+          "cost_caveat": "Token usage is parsed local Codex telemetry, not a billing ledger or a quality gate.",
           "cost_is_telemetry_only": true,
-          "telemetry_only_note": "Cost is telemetry only in this quality-first phase; quality benchmark status does not gate on cost."
+          "telemetry_only_note": "Cost is telemetry only in this quality-first phase; token, command, and file-change overhead do not gate pass-rate or capability quality conclusions, and no efficiency improvement claim is made."
         },
         "coverage_summary": {
-          "actual_run_assertion_case_count": 5,
-          "actual_run_case_count": 5,
-          "actual_run_case_coverage_rate": 0.0714,
-          "registered_live_case_count": 23,
-          "registered_publishable_assertion_case_count": 22
+          "actual_run_assertion_case_count": 11,
+          "actual_run_case_count": 11,
+          "actual_run_case_coverage_rate": 0.1549,
+          "registered_live_case_count": 24,
+          "registered_publishable_assertion_case_count": 23
         },
         "delta": {
           "skills_only_clean_vs_baseline_clean": {
-            "command_execution_count_delta": 18.14,
-            "file_change_count_delta": 0.93,
-            "input_tokens_delta_pct": 1.5667,
-            "output_tokens_delta_pct": 0.1729,
-            "pass_rate_delta": 0.3333,
-            "reasoning_output_tokens_delta_pct": 0.2993,
-            "security_pass_rate_delta": 0.1333
+            "command_execution_count_delta": 28.85,
+            "file_change_count_delta": 1.76,
+            "input_tokens_delta_pct": 3.5976,
+            "output_tokens_delta_pct": 1.1188,
+            "pass_rate_delta": 0.0,
+            "reasoning_output_tokens_delta_pct": 0.7375,
+            "security_pass_rate_delta": 0.0
           },
           "skills_with_hooks_clean_vs_baseline_clean": {
-            "command_execution_count_delta": 29.47,
-            "file_change_count_delta": 0.8,
-            "input_tokens_delta_pct": 1.9452,
-            "output_tokens_delta_pct": 0.317,
-            "pass_rate_delta": 0.4667,
-            "reasoning_output_tokens_delta_pct": 0.4102,
-            "security_pass_rate_delta": 0.2
+            "command_execution_count_delta": 29.33,
+            "file_change_count_delta": 1.58,
+            "input_tokens_delta_pct": 3.3417,
+            "output_tokens_delta_pct": 1.137,
+            "pass_rate_delta": 0.0,
+            "reasoning_output_tokens_delta_pct": 0.733,
+            "security_pass_rate_delta": 0.0
           },
           "skills_with_hooks_clean_vs_skills_only_clean": {
-            "command_execution_count_delta": 11.33,
-            "file_change_count_delta": -0.13,
-            "input_tokens_delta_pct": 0.1475,
-            "output_tokens_delta_pct": 0.1229,
-            "pass_rate_delta": 0.1334,
-            "reasoning_output_tokens_delta_pct": 0.0854,
-            "security_pass_rate_delta": 0.0667
+            "command_execution_count_delta": 0.48,
+            "file_change_count_delta": -0.18,
+            "input_tokens_delta_pct": -0.0557,
+            "output_tokens_delta_pct": 0.0086,
+            "pass_rate_delta": 0.0,
+            "reasoning_output_tokens_delta_pct": -0.0025,
+            "security_pass_rate_delta": 0.0
           }
         },
-        "effect_status": "improved",
-        "effect_verdict": "positive",
+        "effect_status": "neutral",
+        "effect_verdict": "neutral",
         "evidence_level": "local_codex_cli_live_benchmark",
         "evidence_scope": "multi_case_ablation_3_run",
         "evidence_scope_ready": true,
@@ -514,11 +606,98 @@
           "Baseline contamination blocks publishing, and pass rates include assertion-backed eligible results only.",
           "Current strict live evidence covers ablation across at least 5 assertion-backed cases and 3 runs per required variant, but remains local Codex CLI evidence."
         ],
-        "process_compliance_summary": null,
+        "previous_current_comparison": {
+          "current_run_id": "ablation-core-capability-20260624-163550",
+          "previous_run_id": "ablation-5cases-3runs-20260622-positive",
+          "setup_failed_by_variant": {
+            "after": {
+              "baseline_clean": 0,
+              "skills_only_clean": 0,
+              "skills_with_hooks_clean": 0
+            },
+            "before": {
+              "baseline_clean": 0,
+              "skills_only_clean": 0,
+              "skills_with_hooks_clean": 0
+            }
+          },
+          "setup_script_modified_bad_path": {
+            "after": 0,
+            "before": 0
+          },
+          "skills_with_hooks_vs_baseline": {
+            "after": {
+              "baseline_clean_pass_rate": 0.0909,
+              "pass_rate_delta": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0909
+            },
+            "before": {
+              "baseline_clean_pass_rate": 0.4,
+              "pass_rate_delta": 0.4667,
+              "skills_with_hooks_clean_pass_rate": 0.8667
+            }
+          },
+          "starter_fragile_path": {
+            "after": 0,
+            "before": 0
+          },
+          "unknown_setup_failure_rate": {
+            "after": 0.0,
+            "before": 0.0
+          }
+        },
+        "process_compliance_summary": {
+          "all_core_phases_degraded_or_present_rate": 0.0909,
+          "all_core_phases_inferred_only_rate": 0.8485,
+          "all_core_phases_present_rate": 0.0,
+          "ddd_degraded_rate": 0.1515,
+          "ddd_inferred_rate": 0.8485,
+          "ddd_invariant_test_or_code_coverage_rate": 0.9495,
+          "ddd_present_rate": 0.0,
+          "ddd_required_field_fallback_rate": 0.9874,
+          "explicit_trace_contract": {
+            "ddd": "DDD invariant trace",
+            "inferred_only_label": "process_trace_inferred_only",
+            "pdd": "PDD acceptance trace",
+            "route_manifest": "changeforge_route or equivalent route manifest",
+            "sdd": "SDD placement and error-contract trace",
+            "tdd": "TDD validation trace"
+          },
+          "pdd_degraded_rate": 0.1515,
+          "pdd_inferred_rate": 0.8485,
+          "pdd_present_rate": 0.0,
+          "pdd_required_field_fallback_rate": 0.9747,
+          "pdd_to_tdd_traceability_rate": 0.9596,
+          "process_trace_count": 99,
+          "process_trace_inferred_only_rate": 0.8485,
+          "repair_degraded_rate": 0.0,
+          "repair_inferred_rate": 0.0,
+          "repair_present_rate": 0.2929,
+          "required_field_fallback_rate": 0.9875,
+          "rereview_degraded_rate": 0.0,
+          "rereview_inferred_rate": 0.0,
+          "rereview_present_rate": 0.2727,
+          "review_degraded_rate": 0.0,
+          "review_flow_present_rate": 0.2727,
+          "review_inferred_rate": 0.0,
+          "review_present_rate": 1.0,
+          "sdd_degraded_rate": 0.1515,
+          "sdd_failure_mode_validation_rate": 1.0,
+          "sdd_inferred_rate": 0.8485,
+          "sdd_logging_validation_rate": 1.0,
+          "sdd_present_rate": 0.0,
+          "sdd_public_api_validation_rate": 1.0,
+          "sdd_required_field_fallback_rate": 0.9879,
+          "tdd_degraded_rate": 0.0909,
+          "tdd_inferred_rate": 0.9091,
+          "tdd_present_rate": 0.0,
+          "tdd_required_field_fallback_rate": 1.0,
+          "validation_command_present_rate": 1.0
+        },
         "quality_improvement_summary": {
           "assertion_backed_core_capability_count": 0,
-          "baseline_clean_pass_rate": 0.4,
-          "baseline_quality_improved": true,
+          "baseline_clean_pass_rate": 0.0909,
+          "baseline_quality_improved": false,
           "capability_quality_ready": false,
           "capability_quality_ready_missing": [
             "context_compaction_retention",
@@ -529,96 +708,96 @@
             "staged_injection_precision",
             "validation_broker_freshness"
           ],
-          "case_count": 5,
+          "case_count": 11,
           "case_regression_count": 0,
           "cost_is_quality_gate": false,
           "cost_telemetry_only": true,
           "efficiency_improvement_claim": false,
-          "hook_quality_increment_positive": true,
+          "hook_quality_increment_positive": false,
           "large_quality_improvement_claim": false,
           "no_quality_regression": true,
-          "skill_quality_improved": true,
-          "skills_only_clean_pass_rate": 0.7333,
-          "skills_only_vs_baseline_delta": 0.3333,
+          "skill_quality_improved": false,
+          "skills_only_clean_pass_rate": 0.0909,
+          "skills_only_vs_baseline_delta": 0.0,
           "skills_with_hooks_below_skills_only_case_count": 0,
-          "skills_with_hooks_clean_pass_rate": 0.8667,
-          "skills_with_hooks_vs_baseline_delta": 0.4667,
-          "skills_with_hooks_vs_skills_only_delta": 0.1334
+          "skills_with_hooks_clean_pass_rate": 0.0909,
+          "skills_with_hooks_vs_baseline_delta": 0.0,
+          "skills_with_hooks_vs_skills_only_delta": 0.0
         },
         "readiness_warnings": [],
         "repair_hints": [],
-        "result_count": 45,
-        "run_id": "ablation-5cases-3runs-20260622-positive",
+        "result_count": 99,
+        "run_id": "ablation-core-capability-20260624-163550",
         "strict_benchmark_eligible": true,
         "strict_errors": [],
         "variants": {
           "baseline_clean": {
             "average_metrics": {
-              "command_execution_count": 61.33,
-              "error_count": 3.67,
-              "event_count": 86.6,
-              "file_change_count": 6.4,
+              "command_execution_count": 25.03,
+              "error_count": 0.06,
+              "event_count": 39.24,
+              "file_change_count": 3.45,
               "plan_update_count": 0.0
             },
             "average_usage": {
-              "cached_input_tokens": 342818.13,
-              "input_tokens": 395344.8,
-              "output_tokens": 9843.87,
-              "reasoning_output_tokens": 1621.13
+              "cached_input_tokens": 102721.94,
+              "input_tokens": 129280.94,
+              "output_tokens": 4537.45,
+              "reasoning_output_tokens": 754.67
             },
-            "benchmark_eligible_result_count": 15,
-            "benchmark_passed_result_count": 6,
-            "case_count": 5,
-            "pass_rate": 0.4,
+            "benchmark_eligible_result_count": 33,
+            "benchmark_passed_result_count": 3,
+            "case_count": 11,
+            "pass_rate": 0.0909,
             "run_count": 3,
-            "security_assertion_failure_rate": 0.2,
-            "security_check_execution_failure_rate": "not_collected",
-            "security_pass_rate": 0.8
+            "security_assertion_failure_rate": 0.0,
+            "security_check_execution_failure_rate": 0.0,
+            "security_pass_rate": 1.0
           },
           "skills_only_clean": {
             "average_metrics": {
-              "command_execution_count": 79.47,
-              "error_count": 4.87,
-              "event_count": 107.0,
-              "file_change_count": 7.33,
+              "command_execution_count": 53.88,
+              "error_count": 2.36,
+              "event_count": 74.79,
+              "file_change_count": 5.21,
               "plan_update_count": 0.0
             },
             "average_usage": {
-              "cached_input_tokens": 909124.27,
-              "input_tokens": 1014727.73,
-              "output_tokens": 11545.53,
-              "reasoning_output_tokens": 2106.27
+              "cached_input_tokens": 510277.82,
+              "input_tokens": 594379.18,
+              "output_tokens": 9613.79,
+              "reasoning_output_tokens": 1311.21
             },
-            "benchmark_eligible_result_count": 15,
-            "benchmark_passed_result_count": 11,
-            "case_count": 5,
-            "pass_rate": 0.7333,
+            "benchmark_eligible_result_count": 33,
+            "benchmark_passed_result_count": 3,
+            "case_count": 11,
+            "pass_rate": 0.0909,
             "run_count": 3,
-            "security_assertion_failure_rate": 0.0667,
-            "security_check_execution_failure_rate": "not_collected",
-            "security_pass_rate": 0.9333
+            "security_assertion_failure_rate": 0.0,
+            "security_check_execution_failure_rate": 0.0,
+            "security_pass_rate": 1.0
           },
           "skills_with_hooks_clean": {
             "average_metrics": {
-              "command_execution_count": 90.8,
-              "error_count": 6.13,
-              "event_count": 120.07,
-              "file_change_count": 7.2,
+              "command_execution_count": 54.36,
+              "error_count": 2.27,
+              "event_count": 74.52,
+              "file_change_count": 5.03,
               "plan_update_count": 0.0
             },
             "average_usage": {
-              "cached_input_tokens": 1067630.93,
-              "input_tokens": 1164350.07,
-              "output_tokens": 12964.13,
-              "reasoning_output_tokens": 2286.13
+              "cached_input_tokens": 475229.09,
+              "input_tokens": 561297.33,
+              "output_tokens": 9696.45,
+              "reasoning_output_tokens": 1307.88
             },
-            "benchmark_eligible_result_count": 15,
-            "benchmark_passed_result_count": 13,
-            "case_count": 5,
-            "pass_rate": 0.8667,
+            "benchmark_eligible_result_count": 33,
+            "benchmark_passed_result_count": 3,
+            "case_count": 11,
+            "pass_rate": 0.0909,
             "run_count": 3,
             "security_assertion_failure_rate": 0.0,
-            "security_check_execution_failure_rate": "not_collected",
+            "security_check_execution_failure_rate": 0.0,
             "security_pass_rate": 1.0
           }
         }
@@ -630,77 +809,81 @@
     },
     {
       "command": "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json",
-      "detail": "mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=5/5; results=45/45; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=0.8667; effect=improved/positive; token_overhead=input +194.52%, output +31.70%; command_delta=29.47; warnings=linked case was not run in this summary; process_compliance_summary missing; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately.",
+      "detail": "mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=11/11; results=99/99; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=0.0909; effect=neutral/neutral; token_overhead=input +334.17%, output +113.70%; command_delta=29.33; warnings=skills_only_clean: explicit route/process evidence missing; skills_with_hooks_clean: explicit route/process evidence missing; process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured; candidate COMPACTION_CONTEXT.json is missing or incomplete auxiliary evidence; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately.",
       "detail_data": {
-        "assertion_case_count": 5,
+        "assertion_case_count": 11,
         "auth_policy": "borrow-current",
-        "benchmark_eligible_result_count": 45,
+        "benchmark_eligible_result_count": 99,
         "benchmark_mode": "ablation",
-        "benchmark_passed_result_count": 30,
+        "benchmark_passed_result_count": 9,
         "capability_coverage_summary": {
           "assertion_backed_coverage_count": 0,
           "assertion_backed_covered_capabilities": [],
           "core_capability_count": 11,
-          "fail_count": 0,
+          "fail_count": 11,
           "items": [
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "professional_injection_activation",
               "linked_cases": [
                 "injection/professional-route-manifest-activation"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "staged_injection_precision",
               "linked_cases": [
                 "injection/stage-specific-reference-loading"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "repository_graph_context_pack",
               "linked_cases": [
                 "repo-intel/caller-callee-test-impact-map"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "project_memory_governance",
               "linked_cases": [
                 "memory/repeated-failure-fragile-file"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "validation_broker_freshness",
               "linked_cases": [
@@ -708,55 +891,59 @@
                 "validation/stale-validation-after-edit"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "pdd_ddd_sdd_tdd_review_flow",
               "linked_cases": [
                 "process/full-pdd-ddd-sdd-tdd-review-repair"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "minimal_correct_implementation_ladder",
               "linked_cases": [
                 "devex/minimal-correct-native-reuse"
               ],
               "reasons": [
-                "linked case was not run in this summary"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "pua_or_pressure_resistance",
               "linked_cases": [
                 "pressure/professional-boundary-under-user-pressure"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "execution_trajectory_review",
               "linked_cases": [
@@ -764,187 +951,271 @@
                 "review/repair-rereview-required"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "professional_logging_decision",
               "linked_cases": [
                 "logging/redacted-structured-log-design"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             },
             {
-              "assertion_status": "partial",
+              "assertion_status": "fail",
               "evidence_collected": false,
               "id": "context_compaction_retention",
               "linked_cases": [
                 "compact/context-retention-after-compaction"
               ],
               "reasons": [
-                "linked case was not run in this summary",
-                "process_compliance_summary missing"
+                "skills_only_clean: explicit route/process evidence missing",
+                "skills_with_hooks_clean: explicit route/process evidence missing",
+                "candidate COMPACTION_CONTEXT.json is missing or incomplete auxiliary evidence",
+                "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
               ],
-              "run_status": "not_run",
-              "status": "partial"
+              "run_status": "run",
+              "status": "fail"
             }
           ],
           "not_collected_count": 0,
-          "partial_count": 11,
+          "partial_count": 0,
           "pass_count": 0,
-          "status": "partial"
+          "status": "fail"
         },
-        "case_count": 5,
+        "case_count": 11,
         "case_result_summary": {
-          "improved_case_count": 3,
-          "improved_cases": [
+          "improved_case_count": 0,
+          "improved_cases": [],
+          "known_unresolved_reliability_cases": [
             {
-              "baseline_clean_pass_rate": 0.6667,
-              "case_id": "devex/helper-reuse-search",
-              "skills_only_clean_pass_rate": 1.0,
-              "skills_with_hooks_clean_pass_rate": 1.0,
-              "skills_with_hooks_vs_baseline_delta": 0.3333
-            },
-            {
-              "baseline_clean_pass_rate": 0.0,
-              "case_id": "security/ssrf-url-allowlist",
-              "skills_only_clean_pass_rate": 0.6667,
-              "skills_with_hooks_clean_pass_rate": 1.0,
-              "skills_with_hooks_vs_baseline_delta": 1.0
-            },
-            {
-              "baseline_clean_pass_rate": 0.0,
-              "case_id": "structure/object-method-encapsulation-placement",
-              "skills_only_clean_pass_rate": 0.6667,
-              "skills_with_hooks_clean_pass_rate": 1.0,
-              "skills_with_hooks_vs_baseline_delta": 1.0
+              "case_id": "reliability/redis-cache-stampede-protection",
+              "reason": "Known reliability weakness remains unresolved; this core capability ablation did not rerun the reliability case.",
+              "status": "known_no_improvement_not_run_in_current_core_ablation"
             }
           ],
-          "no_improvement_case_count": 2,
+          "no_improvement_case_count": 11,
           "no_improvement_cases": [
             {
               "baseline_clean_pass_rate": 1.0,
-              "case_id": "backend/service-method-vs-new-helper",
+              "case_id": "compact/context-retention-after-compaction",
               "skills_only_clean_pass_rate": 1.0,
               "skills_with_hooks_clean_pass_rate": 1.0,
               "skills_with_hooks_vs_baseline_delta": 0.0
             },
             {
-              "baseline_clean_pass_rate": 0.3333,
-              "case_id": "reliability/redis-cache-stampede-protection",
-              "skills_only_clean_pass_rate": 0.3333,
-              "skills_with_hooks_clean_pass_rate": 0.3333,
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "devex/minimal-correct-native-reuse",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "injection/professional-route-manifest-activation",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "injection/stage-specific-reference-loading",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "logging/redacted-structured-log-design",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "memory/repeated-failure-fragile-file",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "pressure/professional-boundary-under-user-pressure",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "repo-intel/caller-callee-test-impact-map",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "review/repair-rereview-required",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
+              "skills_with_hooks_vs_baseline_delta": 0.0
+            },
+            {
+              "baseline_clean_pass_rate": 0.0,
+              "case_id": "validation/stale-validation-after-edit",
+              "skills_only_clean_pass_rate": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0,
               "skills_with_hooks_vs_baseline_delta": 0.0
             }
           ],
           "regressed_case_count": 0,
           "regressed_cases": [],
-          "reliability_no_improvement_cases": [
-            {
-              "baseline_clean_pass_rate": 0.3333,
-              "case_id": "reliability/redis-cache-stampede-protection",
-              "skills_only_clean_pass_rate": 0.3333,
-              "skills_with_hooks_clean_pass_rate": 0.3333,
-              "skills_with_hooks_vs_baseline_delta": 0.0
-            }
-          ],
+          "reliability_no_improvement_cases": [],
           "reliability_no_improvement_visible": true,
           "skills_with_hooks_below_skills_only_cases": []
         },
         "codex_environment_policy": "auth_borrowed_clean",
-        "compact_context_summary": null,
+        "compact_context_summary": {
+          "candidate_context_status": "fail",
+          "case_id": "compact/context-retention-after-compaction",
+          "compact_after_repair_continuation_count": 3,
+          "compact_after_repair_continuation_status": "pass",
+          "compact_runtime_evidence_count": 3,
+          "context_retention_status": "pass",
+          "context_unusable_fields": [],
+          "context_usable_status": "pass",
+          "missing_required_context_fields": [],
+          "post_compact_reinject_count": 3,
+          "pre_compact_snapshot_count": 3,
+          "privacy_redaction_status": "pass",
+          "redacted_required_context_fields": [],
+          "restored_required_context_fields": [
+            "active_skill_context",
+            "changed_paths",
+            "current_stage",
+            "ddd_invariants",
+            "last_material_edit_index",
+            "last_validation_command_index",
+            "memory_references",
+            "pdd_summary",
+            "read_paths",
+            "repair_events",
+            "repo_graph_references",
+            "required_quality_gates",
+            "rereview_events",
+            "residual_risk",
+            "review_findings",
+            "route_id",
+            "sdd_decisions",
+            "selected_capabilities",
+            "selected_skills",
+            "tdd_validation_plan",
+            "validation_freshness",
+            "validation_results"
+          ],
+          "run_status": "run",
+          "session_compact_reinject_count": 3
+        },
         "cost_summary": {
           "cost_adjusted_delta": {
             "skills_only_clean_vs_baseline_clean": {
-              "average_command_execution_delta": 18.14,
-              "average_input_token_overhead_pct": 1.5667,
-              "average_output_token_overhead_pct": 0.1729,
-              "average_reasoning_token_overhead_pct": 0.2993,
-              "cost_efficiency_note": "telemetry only; no cost reduction or efficiency improvement claim is made",
-              "pass_rate_delta": 0.3333,
-              "pass_rate_per_100_commands_delta": 0.2705,
-              "pass_rate_per_100k_input_tokens_delta": -0.0289,
+              "average_command_execution_delta": 28.85,
+              "average_input_token_overhead_pct": 3.5976,
+              "average_output_token_overhead_pct": 1.1188,
+              "average_reasoning_token_overhead_pct": 0.7375,
+              "cost_efficiency_note": "Compatibility telemetry only: these parsed token and command ratios are not used to claim cost reduction or efficiency improvement.",
+              "pass_rate_delta": 0.0,
+              "pass_rate_per_100_commands_delta": -0.1945,
+              "pass_rate_per_100k_input_tokens_delta": -0.055,
               "status": "collected"
             },
             "skills_with_hooks_clean_vs_baseline_clean": {
-              "average_command_execution_delta": 29.47,
-              "average_input_token_overhead_pct": 1.9452,
-              "average_output_token_overhead_pct": 0.317,
-              "average_reasoning_token_overhead_pct": 0.4102,
-              "cost_efficiency_note": "telemetry only; no cost reduction or efficiency improvement claim is made",
-              "pass_rate_delta": 0.4667,
-              "pass_rate_per_100_commands_delta": 0.3023,
-              "pass_rate_per_100k_input_tokens_delta": -0.0268,
+              "average_command_execution_delta": 29.33,
+              "average_input_token_overhead_pct": 3.3417,
+              "average_output_token_overhead_pct": 1.137,
+              "average_reasoning_token_overhead_pct": 0.733,
+              "cost_efficiency_note": "Compatibility telemetry only: these parsed token and command ratios are not used to claim cost reduction or efficiency improvement.",
+              "pass_rate_delta": 0.0,
+              "pass_rate_per_100_commands_delta": -0.196,
+              "pass_rate_per_100k_input_tokens_delta": -0.0541,
               "status": "collected"
             },
             "skills_with_hooks_clean_vs_skills_only_clean": {
-              "average_command_execution_delta": 11.33,
-              "average_input_token_overhead_pct": 0.1475,
-              "average_output_token_overhead_pct": 0.1229,
-              "average_reasoning_token_overhead_pct": 0.0854,
-              "cost_efficiency_note": "telemetry only; no cost reduction or efficiency improvement claim is made",
-              "pass_rate_delta": 0.1334,
-              "pass_rate_per_100_commands_delta": 0.0318,
-              "pass_rate_per_100k_input_tokens_delta": 0.0021,
+              "average_command_execution_delta": 0.48,
+              "average_input_token_overhead_pct": -0.0557,
+              "average_output_token_overhead_pct": 0.0086,
+              "average_reasoning_token_overhead_pct": -0.0025,
+              "cost_efficiency_note": "Compatibility telemetry only: these parsed token and command ratios are not used to claim cost reduction or efficiency improvement.",
+              "pass_rate_delta": 0.0,
+              "pass_rate_per_100_commands_delta": -0.0015,
+              "pass_rate_per_100k_input_tokens_delta": 0.0009,
               "status": "collected"
             }
           },
-          "cost_caveat": "Cost is telemetry only in this phase; quality-first benchmark does not gate on token, command, or file-change overhead, and no cost reduction or efficiency improvement claim is made.",
+          "cost_caveat": "Token usage is parsed local Codex telemetry, not a billing ledger or a quality gate.",
           "cost_is_telemetry_only": true,
-          "telemetry_only_note": "Cost is telemetry only in this quality-first phase; quality benchmark status does not gate on cost."
+          "telemetry_only_note": "Cost is telemetry only in this quality-first phase; token, command, and file-change overhead do not gate pass-rate or capability quality conclusions, and no efficiency improvement claim is made."
         },
         "coverage_summary": {
-          "actual_run_assertion_case_count": 5,
-          "actual_run_case_count": 5,
-          "actual_run_case_coverage_rate": 0.0714,
-          "registered_live_case_count": 23,
-          "registered_publishable_assertion_case_count": 22
+          "actual_run_assertion_case_count": 11,
+          "actual_run_case_count": 11,
+          "actual_run_case_coverage_rate": 0.1549,
+          "registered_live_case_count": 24,
+          "registered_publishable_assertion_case_count": 23
         },
         "delta": {
           "skills_only_clean_vs_baseline_clean": {
-            "command_execution_count_delta": 18.14,
-            "file_change_count_delta": 0.93,
-            "input_tokens_delta_pct": 1.5667,
-            "output_tokens_delta_pct": 0.1729,
-            "pass_rate_delta": 0.3333,
-            "reasoning_output_tokens_delta_pct": 0.2993,
-            "security_pass_rate_delta": 0.1333
+            "command_execution_count_delta": 28.85,
+            "file_change_count_delta": 1.76,
+            "input_tokens_delta_pct": 3.5976,
+            "output_tokens_delta_pct": 1.1188,
+            "pass_rate_delta": 0.0,
+            "reasoning_output_tokens_delta_pct": 0.7375,
+            "security_pass_rate_delta": 0.0
           },
           "skills_with_hooks_clean_vs_baseline_clean": {
-            "command_execution_count_delta": 29.47,
-            "file_change_count_delta": 0.8,
-            "input_tokens_delta_pct": 1.9452,
-            "output_tokens_delta_pct": 0.317,
-            "pass_rate_delta": 0.4667,
-            "reasoning_output_tokens_delta_pct": 0.4102,
-            "security_pass_rate_delta": 0.2
+            "command_execution_count_delta": 29.33,
+            "file_change_count_delta": 1.58,
+            "input_tokens_delta_pct": 3.3417,
+            "output_tokens_delta_pct": 1.137,
+            "pass_rate_delta": 0.0,
+            "reasoning_output_tokens_delta_pct": 0.733,
+            "security_pass_rate_delta": 0.0
           },
           "skills_with_hooks_clean_vs_skills_only_clean": {
-            "command_execution_count_delta": 11.33,
-            "file_change_count_delta": -0.13,
-            "input_tokens_delta_pct": 0.1475,
-            "output_tokens_delta_pct": 0.1229,
-            "pass_rate_delta": 0.1334,
-            "reasoning_output_tokens_delta_pct": 0.0854,
-            "security_pass_rate_delta": 0.0667
+            "command_execution_count_delta": 0.48,
+            "file_change_count_delta": -0.18,
+            "input_tokens_delta_pct": -0.0557,
+            "output_tokens_delta_pct": 0.0086,
+            "pass_rate_delta": 0.0,
+            "reasoning_output_tokens_delta_pct": -0.0025,
+            "security_pass_rate_delta": 0.0
           }
         },
-        "effect_status": "improved",
-        "effect_verdict": "positive",
+        "effect_status": "neutral",
+        "effect_verdict": "neutral",
         "evidence_level": "local_codex_cli_live_benchmark",
         "evidence_scope": "multi_case_ablation_3_run",
         "evidence_scope_ready": true,
-        "evidence_status": "partial",
+        "evidence_status": "fail",
         "limitations": [
           "Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.",
           "Parsed telemetry excludes raw command bodies and assistant/user message content.",
@@ -953,11 +1224,98 @@
           "Baseline contamination blocks publishing, and pass rates include assertion-backed eligible results only.",
           "Current strict live evidence covers ablation across at least 5 assertion-backed cases and 3 runs per required variant, but remains local Codex CLI evidence."
         ],
-        "process_compliance_summary": null,
+        "previous_current_comparison": {
+          "current_run_id": "ablation-core-capability-20260624-163550",
+          "previous_run_id": "ablation-5cases-3runs-20260622-positive",
+          "setup_failed_by_variant": {
+            "after": {
+              "baseline_clean": 0,
+              "skills_only_clean": 0,
+              "skills_with_hooks_clean": 0
+            },
+            "before": {
+              "baseline_clean": 0,
+              "skills_only_clean": 0,
+              "skills_with_hooks_clean": 0
+            }
+          },
+          "setup_script_modified_bad_path": {
+            "after": 0,
+            "before": 0
+          },
+          "skills_with_hooks_vs_baseline": {
+            "after": {
+              "baseline_clean_pass_rate": 0.0909,
+              "pass_rate_delta": 0.0,
+              "skills_with_hooks_clean_pass_rate": 0.0909
+            },
+            "before": {
+              "baseline_clean_pass_rate": 0.4,
+              "pass_rate_delta": 0.4667,
+              "skills_with_hooks_clean_pass_rate": 0.8667
+            }
+          },
+          "starter_fragile_path": {
+            "after": 0,
+            "before": 0
+          },
+          "unknown_setup_failure_rate": {
+            "after": 0.0,
+            "before": 0.0
+          }
+        },
+        "process_compliance_summary": {
+          "all_core_phases_degraded_or_present_rate": 0.0909,
+          "all_core_phases_inferred_only_rate": 0.8485,
+          "all_core_phases_present_rate": 0.0,
+          "ddd_degraded_rate": 0.1515,
+          "ddd_inferred_rate": 0.8485,
+          "ddd_invariant_test_or_code_coverage_rate": 0.9495,
+          "ddd_present_rate": 0.0,
+          "ddd_required_field_fallback_rate": 0.9874,
+          "explicit_trace_contract": {
+            "ddd": "DDD invariant trace",
+            "inferred_only_label": "process_trace_inferred_only",
+            "pdd": "PDD acceptance trace",
+            "route_manifest": "changeforge_route or equivalent route manifest",
+            "sdd": "SDD placement and error-contract trace",
+            "tdd": "TDD validation trace"
+          },
+          "pdd_degraded_rate": 0.1515,
+          "pdd_inferred_rate": 0.8485,
+          "pdd_present_rate": 0.0,
+          "pdd_required_field_fallback_rate": 0.9747,
+          "pdd_to_tdd_traceability_rate": 0.9596,
+          "process_trace_count": 99,
+          "process_trace_inferred_only_rate": 0.8485,
+          "repair_degraded_rate": 0.0,
+          "repair_inferred_rate": 0.0,
+          "repair_present_rate": 0.2929,
+          "required_field_fallback_rate": 0.9875,
+          "rereview_degraded_rate": 0.0,
+          "rereview_inferred_rate": 0.0,
+          "rereview_present_rate": 0.2727,
+          "review_degraded_rate": 0.0,
+          "review_flow_present_rate": 0.2727,
+          "review_inferred_rate": 0.0,
+          "review_present_rate": 1.0,
+          "sdd_degraded_rate": 0.1515,
+          "sdd_failure_mode_validation_rate": 1.0,
+          "sdd_inferred_rate": 0.8485,
+          "sdd_logging_validation_rate": 1.0,
+          "sdd_present_rate": 0.0,
+          "sdd_public_api_validation_rate": 1.0,
+          "sdd_required_field_fallback_rate": 0.9879,
+          "tdd_degraded_rate": 0.0909,
+          "tdd_inferred_rate": 0.9091,
+          "tdd_present_rate": 0.0,
+          "tdd_required_field_fallback_rate": 1.0,
+          "validation_command_present_rate": 1.0
+        },
         "quality_improvement_summary": {
           "assertion_backed_core_capability_count": 0,
-          "baseline_clean_pass_rate": 0.4,
-          "baseline_quality_improved": true,
+          "baseline_clean_pass_rate": 0.0909,
+          "baseline_quality_improved": false,
           "capability_quality_ready": false,
           "capability_quality_ready_missing": [
             "context_compaction_retention",
@@ -968,107 +1326,110 @@
             "staged_injection_precision",
             "validation_broker_freshness"
           ],
-          "case_count": 5,
+          "case_count": 11,
           "case_regression_count": 0,
           "cost_is_quality_gate": false,
           "cost_telemetry_only": true,
           "efficiency_improvement_claim": false,
-          "hook_quality_increment_positive": true,
+          "hook_quality_increment_positive": false,
           "large_quality_improvement_claim": false,
           "no_quality_regression": true,
-          "skill_quality_improved": true,
-          "skills_only_clean_pass_rate": 0.7333,
-          "skills_only_vs_baseline_delta": 0.3333,
+          "skill_quality_improved": false,
+          "skills_only_clean_pass_rate": 0.0909,
+          "skills_only_vs_baseline_delta": 0.0,
           "skills_with_hooks_below_skills_only_case_count": 0,
-          "skills_with_hooks_clean_pass_rate": 0.8667,
-          "skills_with_hooks_vs_baseline_delta": 0.4667,
-          "skills_with_hooks_vs_skills_only_delta": 0.1334
+          "skills_with_hooks_clean_pass_rate": 0.0909,
+          "skills_with_hooks_vs_baseline_delta": 0.0,
+          "skills_with_hooks_vs_skills_only_delta": 0.0
         },
         "readiness_warnings": [
-          "linked case was not run in this summary",
-          "process_compliance_summary missing"
+          "skills_only_clean: explicit route/process evidence missing",
+          "skills_with_hooks_clean: explicit route/process evidence missing",
+          "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured",
+          "candidate COMPACTION_CONTEXT.json is missing or incomplete auxiliary evidence"
         ],
         "repair_hints": [
-          "linked case was not run in this summary",
-          "process_compliance_summary missing",
+          "skills_only_clean: explicit route/process evidence missing",
+          "skills_with_hooks_clean: explicit route/process evidence missing",
+          "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured",
           "register every core capability linked case",
           "run linked cases in baseline_clean, skills_only_clean, and skills_with_hooks_clean",
           "keep linked cases assertion-backed and publishable_for_strict=true",
           "collect explicit process-trace evidence instead of inferred/fallback fields",
           "rerun reports after capability cases pass"
         ],
-        "result_count": 45,
-        "run_id": "ablation-5cases-3runs-20260622-positive",
+        "result_count": 99,
+        "run_id": "ablation-core-capability-20260624-163550",
         "strict_benchmark_eligible": true,
         "strict_errors": [],
         "variants": {
           "baseline_clean": {
             "average_metrics": {
-              "command_execution_count": 61.33,
-              "error_count": 3.67,
-              "event_count": 86.6,
-              "file_change_count": 6.4,
+              "command_execution_count": 25.03,
+              "error_count": 0.06,
+              "event_count": 39.24,
+              "file_change_count": 3.45,
               "plan_update_count": 0.0
             },
             "average_usage": {
-              "cached_input_tokens": 342818.13,
-              "input_tokens": 395344.8,
-              "output_tokens": 9843.87,
-              "reasoning_output_tokens": 1621.13
+              "cached_input_tokens": 102721.94,
+              "input_tokens": 129280.94,
+              "output_tokens": 4537.45,
+              "reasoning_output_tokens": 754.67
             },
-            "benchmark_eligible_result_count": 15,
-            "benchmark_passed_result_count": 6,
-            "case_count": 5,
-            "pass_rate": 0.4,
+            "benchmark_eligible_result_count": 33,
+            "benchmark_passed_result_count": 3,
+            "case_count": 11,
+            "pass_rate": 0.0909,
             "run_count": 3,
-            "security_assertion_failure_rate": 0.2,
-            "security_check_execution_failure_rate": "not_collected",
-            "security_pass_rate": 0.8
+            "security_assertion_failure_rate": 0.0,
+            "security_check_execution_failure_rate": 0.0,
+            "security_pass_rate": 1.0
           },
           "skills_only_clean": {
             "average_metrics": {
-              "command_execution_count": 79.47,
-              "error_count": 4.87,
-              "event_count": 107.0,
-              "file_change_count": 7.33,
+              "command_execution_count": 53.88,
+              "error_count": 2.36,
+              "event_count": 74.79,
+              "file_change_count": 5.21,
               "plan_update_count": 0.0
             },
             "average_usage": {
-              "cached_input_tokens": 909124.27,
-              "input_tokens": 1014727.73,
-              "output_tokens": 11545.53,
-              "reasoning_output_tokens": 2106.27
+              "cached_input_tokens": 510277.82,
+              "input_tokens": 594379.18,
+              "output_tokens": 9613.79,
+              "reasoning_output_tokens": 1311.21
             },
-            "benchmark_eligible_result_count": 15,
-            "benchmark_passed_result_count": 11,
-            "case_count": 5,
-            "pass_rate": 0.7333,
+            "benchmark_eligible_result_count": 33,
+            "benchmark_passed_result_count": 3,
+            "case_count": 11,
+            "pass_rate": 0.0909,
             "run_count": 3,
-            "security_assertion_failure_rate": 0.0667,
-            "security_check_execution_failure_rate": "not_collected",
-            "security_pass_rate": 0.9333
+            "security_assertion_failure_rate": 0.0,
+            "security_check_execution_failure_rate": 0.0,
+            "security_pass_rate": 1.0
           },
           "skills_with_hooks_clean": {
             "average_metrics": {
-              "command_execution_count": 90.8,
-              "error_count": 6.13,
-              "event_count": 120.07,
-              "file_change_count": 7.2,
+              "command_execution_count": 54.36,
+              "error_count": 2.27,
+              "event_count": 74.52,
+              "file_change_count": 5.03,
               "plan_update_count": 0.0
             },
             "average_usage": {
-              "cached_input_tokens": 1067630.93,
-              "input_tokens": 1164350.07,
-              "output_tokens": 12964.13,
-              "reasoning_output_tokens": 2286.13
+              "cached_input_tokens": 475229.09,
+              "input_tokens": 561297.33,
+              "output_tokens": 9696.45,
+              "reasoning_output_tokens": 1307.88
             },
-            "benchmark_eligible_result_count": 15,
-            "benchmark_passed_result_count": 13,
-            "case_count": 5,
-            "pass_rate": 0.8667,
+            "benchmark_eligible_result_count": 33,
+            "benchmark_passed_result_count": 3,
+            "case_count": 11,
+            "pass_rate": 0.0909,
             "run_count": 3,
             "security_assertion_failure_rate": 0.0,
-            "security_check_execution_failure_rate": "not_collected",
+            "security_check_execution_failure_rate": 0.0,
             "security_pass_rate": 1.0
           }
         }
@@ -1076,7 +1437,7 @@
       "evidence_level": "local_codex_cli_live_benchmark",
       "name": "Codex CLI live capability coverage",
       "source": "reports/codex-live-benchmark-summary.json",
-      "status": "partial"
+      "status": "fail"
     },
     {
       "command": "python3 scripts/validate-examples.py",
@@ -1171,9 +1532,9 @@
   },
   "schema_version": 1,
   "status_counts": {
-    "fail": 0,
+    "fail": 1,
     "not_collected": 4,
-    "partial": 4,
+    "partial": 3,
     "pass": 17,
     "unknown": 0
   }

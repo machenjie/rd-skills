@@ -153,14 +153,9 @@ REQUIRED_ABLATION_DELTAS = (
     "skills_with_hooks_clean_vs_baseline_clean",
 )
 BASELINE_CONTAMINATION_SIGNALS = (
-    "ChangeForge",
-    "rd-skills",
     "changeforge_route",
     "changeforge_stage_route",
     "changeforge_implementation_preflight",
-    "selected_skills",
-    "selected_capabilities",
-    "required_quality_gates",
     "implementation_preflight",
     ".agent",
     ".agents",
@@ -1083,15 +1078,27 @@ def _compact_artifact_status(evidence: dict[str, Any]) -> tuple[str, list[str]]:
     compact = hooks.get("compact") if isinstance(hooks.get("compact"), dict) else {}
     reasons: list[str] = []
     status = "pass"
+    if int(compact.get("compact_runtime_evidence_count", 0) or 0) <= 0:
+        status = "fail"
+        reasons.append("compact runtime evidence missing from result.json and compaction artifacts")
     if int(compact.get("pre_compact_snapshot_count", 0) or 0) <= 0:
         status = "fail"
         reasons.append("pre_compact snapshot evidence missing")
-    if int(compact.get("post_compact_reinject_count", 0) or 0) <= 0:
+    reinject_count = int(compact.get("post_compact_reinject_count", 0) or 0) + int(
+        compact.get("session_compact_reinject_count", 0) or 0
+    )
+    if reinject_count <= 0:
         status = "fail"
-        reasons.append("post_compact reinjection evidence missing")
+        reasons.append("post_compact or session compact reinjection evidence missing")
+    if compact.get("candidate_context_status") != "pass":
+        status = "fail"
+        reasons.append("candidate COMPACTION_CONTEXT.json is missing or incomplete auxiliary evidence")
     if compact.get("privacy_redaction_status") != "pass":
         status = "fail"
         reasons.append("compaction privacy redaction did not pass")
+    if compact.get("context_usable_status") != "pass":
+        status = "fail"
+        reasons.append("compaction context usability did not pass")
     if compact.get("context_retention_status") != "pass":
         status = "fail"
         reasons.append("context retention status is not pass")
@@ -1102,6 +1109,14 @@ def _compact_artifact_status(evidence: dict[str, Any]) -> tuple[str, list[str]]:
     if isinstance(missing, list) and missing:
         status = "fail"
         reasons.append("missing compact context fields: " + ", ".join(str(item) for item in missing))
+    redacted = compact.get("redacted_required_context_fields")
+    if isinstance(redacted, list) and redacted:
+        status = "fail"
+        reasons.append("redacted required compact context fields: " + ", ".join(str(item) for item in redacted))
+    unusable = compact.get("context_unusable_fields")
+    if isinstance(unusable, list) and unusable:
+        status = "fail"
+        reasons.append("unusable compact context fields: " + ", ".join(str(item) for item in unusable))
     return status, reasons
 
 

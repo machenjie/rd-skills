@@ -13,6 +13,8 @@ SCHEMA_VERSION = 1
 MAX_ITEMS = 20
 MAX_TEXT = 240
 MAX_MAPPING_KEYS = 40
+MAX_SNAPSHOTS = 5
+OPERATIONAL_CONTEXT_FIELDS = ("changed_paths", "read_paths")
 
 REQUIRED_CONTEXT_FIELDS = (
     "route_id",
@@ -137,7 +139,14 @@ def snapshot_from_state(
     missing = missing_required_fields(snapshot)
     snapshot["missing_required_fields"] = missing
     snapshot["privacy_redaction_status"] = "pass" if not privacy_findings(snapshot) else "fail"
+    snapshot["redacted_required_fields"] = redacted_required_fields(snapshot)
+    snapshot["context_usable_fields"] = context_usable_fields(snapshot)
+    snapshot["context_unusable_fields"] = context_unusable_fields(snapshot)
+    snapshot["context_usable_status"] = "pass" if not snapshot["context_unusable_fields"] else "fail"
+    snapshot["context_retention_status"] = _context_retention_status(snapshot)
     warnings = [f"missing_required_field:{field}" for field in missing]
+    warnings.extend(f"redacted_required_field:{field}" for field in snapshot["redacted_required_fields"])
+    warnings.extend(f"context_unusable_field:{field}" for field in snapshot["context_unusable_fields"])
     snapshot["warnings"] = warnings[:20]
     return snapshot
 
@@ -182,8 +191,20 @@ def sanitize_compaction_snapshot(snapshot: Any) -> dict[str, Any]:
     }
     clean["missing_required_fields"] = missing_required_fields(clean)
     clean["privacy_redaction_status"] = "pass" if not privacy_findings(clean) else "fail"
+    clean["redacted_required_fields"] = redacted_required_fields(clean)
+    clean["context_usable_fields"] = context_usable_fields(clean)
+    clean["context_unusable_fields"] = context_unusable_fields(clean)
+    clean["context_usable_status"] = "pass" if not clean["context_unusable_fields"] else "fail"
+    clean["context_retention_status"] = _context_retention_status(clean)
     raw_warnings = snapshot.get("warnings") if isinstance(snapshot.get("warnings"), list) else []
-    clean["warnings"] = _clean_list([*raw_warnings, *[f"missing_required_field:{field}" for field in clean["missing_required_fields"]]])
+    clean["warnings"] = _clean_list(
+        [
+            *raw_warnings,
+            *[f"missing_required_field:{field}" for field in clean["missing_required_fields"]],
+            *[f"redacted_required_field:{field}" for field in clean["redacted_required_fields"]],
+            *[f"context_unusable_field:{field}" for field in clean["context_unusable_fields"]],
+        ]
+    )
     return clean
 
 
@@ -200,7 +221,45 @@ def missing_required_fields(snapshot: dict[str, Any]) -> list[str]:
 def restored_required_fields(snapshot: dict[str, Any]) -> list[str]:
     """Return required fields that have usable bounded values."""
     missing = set(missing_required_fields(snapshot))
-    return [field for field in REQUIRED_CONTEXT_FIELDS if field not in missing]
+    unusable = set(context_unusable_fields(snapshot))
+    return [field for field in REQUIRED_CONTEXT_FIELDS if field not in missing and field not in unusable]
+
+
+def redacted_required_fields(snapshot: dict[str, Any]) -> list[str]:
+    """Return required fields whose value is privacy-safe but operationally redacted."""
+    redacted: list[str] = []
+    for field in REQUIRED_CONTEXT_FIELDS:
+        value = snapshot.get(field)
+        if field in OPERATIONAL_CONTEXT_FIELDS and _has_local_path_redaction(value):
+            redacted.append(field)
+    return redacted
+
+
+def context_usable_fields(snapshot: dict[str, Any]) -> list[str]:
+    """Return required fields that can be used to continue work after compaction."""
+    usable: list[str] = []
+    missing = set(missing_required_fields(snapshot))
+    for field in REQUIRED_CONTEXT_FIELDS:
+        if field in missing:
+            continue
+        value = snapshot.get(field)
+        if field in OPERATIONAL_CONTEXT_FIELDS and not _path_values_usable(value):
+            continue
+        usable.append(field)
+    return usable
+
+
+def context_unusable_fields(snapshot: dict[str, Any]) -> list[str]:
+    """Return required fields that are present but not usable for continuation."""
+    unusable: list[str] = []
+    missing = set(missing_required_fields(snapshot))
+    for field in REQUIRED_CONTEXT_FIELDS:
+        if field in missing:
+            continue
+        value = snapshot.get(field)
+        if field in OPERATIONAL_CONTEXT_FIELDS and not _path_values_usable(value):
+            unusable.append(field)
+    return unusable
 
 
 def privacy_findings(value: Any) -> list[str]:
@@ -236,12 +295,64 @@ def snapshot_priority_key(snapshot: dict[str, Any]) -> tuple[int, int, str]:
     return (max(last_edit, last_validation), completeness, str(snapshot.get("snapshot_id") or ""))
 
 
+def preserve_required_snapshots(existing: Any, incoming: Any = (), *, limit: int = MAX_SNAPSHOTS) -> list[Any]:
+    """Preserve critical compact checkpoints instead of trimming by insertion time only."""
+    raw_values = [*_as_list(existing), *_as_list(incoming)]
+    legacy = [
+        str(value).strip()[:MAX_TEXT]
+        for value in raw_values
+        if isinstance(value, str) and str(value).strip() and not str(value).lstrip().startswith("{")
+    ]
+    snapshots = [sanitize_compaction_snapshot(value) for value in raw_values]
+    by_id: dict[str, dict[str, Any]] = {}
+    for snapshot in snapshots:
+        snapshot_id = str(snapshot.get("snapshot_id") or "")
+        if not snapshot_id:
+            continue
+        current = by_id.get(snapshot_id)
+        if current is None or snapshot_priority_key(snapshot) >= snapshot_priority_key(current):
+            by_id[snapshot_id] = snapshot
+    snapshots = list(by_id.values())
+    if not snapshots:
+        return _dedupe_text(legacy)[-limit:]
+
+    kept: list[dict[str, Any]] = []
+
+    def add(snapshot: dict[str, Any] | None) -> None:
+        if not snapshot:
+            return
+        if any(item.get("snapshot_id") == snapshot.get("snapshot_id") for item in kept):
+            return
+        kept.append(snapshot)
+
+    complete = [snapshot for snapshot in snapshots if not missing_required_fields(snapshot)]
+    add(max(complete, key=snapshot_priority_key, default=None))
+    add(max(snapshots, key=lambda snapshot: _safe_int(snapshot.get("last_material_edit_index")), default=None))
+    add(max((snapshot for snapshot in snapshots if _snapshot_has_stale_validation(snapshot)), key=snapshot_priority_key, default=None))
+    add(max((snapshot for snapshot in snapshots if _snapshot_has_unresolved_review(snapshot)), key=snapshot_priority_key, default=None))
+    add(max((snapshot for snapshot in snapshots if _snapshot_has_repair_state(snapshot)), key=snapshot_priority_key, default=None))
+
+    for snapshot in sorted(snapshots, key=snapshot_priority_key, reverse=True):
+        add(snapshot)
+        if len(kept) >= limit:
+            break
+    kept = kept[:limit]
+    kept.sort(key=snapshot_priority_key)
+    return [*kept, *_dedupe_text(legacy)[-limit:]]
+
+
 def merge_active_context(existing: Any, snapshot: dict[str, Any]) -> dict[str, Any]:
     """Fill missing active context fields from a snapshot without overwriting richer context."""
     base = _clean_mapping(existing)
     source = snapshot.get("active_skill_context") if isinstance(snapshot.get("active_skill_context"), dict) else {}
     source = _clean_mapping(source)
     for key, value in source.items():
+        if isinstance(value, list):
+            base[key] = _bounded_context_union(base.get(key), value)
+            continue
+        if key == "validation_freshness":
+            base[key] = _merge_validation_freshness(base.get(key), value)
+            continue
         if _has_value(base.get(key)):
             continue
         base[key] = value
@@ -251,9 +362,31 @@ def merge_active_context(existing: Any, snapshot: dict[str, Any]) -> dict[str, A
         ("selected_capabilities", "selected_capabilities"),
         ("required_quality_gates", "required_quality_gates"),
         ("current_stage", "current_stage"),
+        ("pdd_summary", "pdd_summary"),
+        ("ddd_invariants", "ddd_invariants"),
+        ("sdd_decisions", "sdd_decisions"),
+        ("tdd_validation_plan", "tdd_validation_plan"),
+        ("changed_paths", "changed_paths"),
+        ("read_paths", "read_paths"),
+        ("validation_results", "validation_results"),
         ("validation_freshness", "validation_freshness"),
+        ("review_findings", "review_findings"),
+        ("repair_events", "repair_events"),
+        ("rereview_events", "rereview_events"),
+        ("residual_risk", "residual_risk"),
+        ("memory_references", "memory_references"),
+        ("repo_graph_references", "repo_graph_references"),
+        ("last_material_edit_index", "last_material_edit_index"),
+        ("last_validation_command_index", "last_validation_command_index"),
     ):
-        if not _has_value(base.get(context_key)) and _has_value(snapshot.get(snapshot_key)):
+        value = snapshot.get(snapshot_key)
+        if isinstance(value, list):
+            base[context_key] = _bounded_context_union(base.get(context_key), value)
+            continue
+        if context_key == "validation_freshness":
+            base[context_key] = _merge_validation_freshness(base.get(context_key), value)
+            continue
+        if not _has_value(base.get(context_key)) and _has_value(value):
             base[context_key] = snapshot[snapshot_key]
     return _clean_mapping(base)
 
@@ -285,9 +418,18 @@ def format_compaction_lines(snapshot: dict[str, Any], state: dict[str, Any] | No
         lines.append("- P2 unsupported_runtime_checks: " + _display(unsupported))
     if missing:
         lines.append("- warning missing_required_context_fields: " + ", ".join(missing))
+    redacted = redacted_required_fields(snapshot)
+    if redacted:
+        lines.append("- warning redacted_required_context_fields: " + ", ".join(redacted))
+    unusable = context_unusable_fields(snapshot)
+    if unusable:
+        lines.append("- warning context_unusable_fields: " + ", ".join(unusable))
     privacy = privacy_findings(snapshot)
     if privacy:
         lines.append("- warning compaction_privacy_findings: " + ", ".join(privacy))
+    lines.append("- privacy_redaction_status: " + _display(snapshot.get("privacy_redaction_status")))
+    lines.append("- context_usable_status: " + _display(snapshot.get("context_usable_status")))
+    lines.append("- context_retention_status: " + _display(snapshot.get("context_retention_status")))
     return lines
 
 
@@ -401,6 +543,29 @@ def _clean_path(value: Any) -> str:
     return text[:200]
 
 
+def _path_values_usable(value: Any) -> bool:
+    paths = _path_list(value)
+    if not paths:
+        return False
+    return all(_is_repo_relative_path(path) for path in paths)
+
+
+def _is_repo_relative_path(path: str) -> bool:
+    if not path or path == "<local-path>" or "<local-path>" in path:
+        return False
+    if path.startswith(("/", "~")):
+        return False
+    if re.match(r"^[A-Za-z]:/", path):
+        return False
+    if "://" in path or path.startswith("../"):
+        return False
+    return True
+
+
+def _has_local_path_redaction(value: Any) -> bool:
+    return any("<local-path>" in str(item) for item in _as_list(value))
+
+
 def _clean_text(value: Any, *, limit: int = MAX_TEXT) -> str:
     text = str(value or "").strip()
     if not text:
@@ -435,6 +600,80 @@ def _has_value(value: Any) -> bool:
     return value not in (None, "", [], {})
 
 
+def _context_retention_status(snapshot: dict[str, Any]) -> str:
+    if missing_required_fields(snapshot):
+        return "partial"
+    redacted_operational = [
+        field for field in redacted_required_fields(snapshot) if field in OPERATIONAL_CONTEXT_FIELDS
+    ]
+    if redacted_operational:
+        return "partial"
+    if snapshot.get("privacy_redaction_status") != "pass":
+        return "fail"
+    if snapshot.get("context_usable_status") != "pass":
+        return "partial"
+    return "pass"
+
+
+def _bounded_context_union(existing: Any, incoming: Any) -> list[str]:
+    values = _clean_list([*_as_list(existing), *_as_list(incoming)], max_items=MAX_ITEMS * 2)
+    if not values:
+        return []
+
+    def score(item: str) -> tuple[int, int]:
+        lowered = item.casefold()
+        risky = any(term in lowered for term in ("critical", "p0", "security", "stale", "unresolved", "repair"))
+        return (0 if risky else 1, values.index(item))
+
+    return sorted(values, key=score)[:MAX_ITEMS]
+
+
+def _merge_validation_freshness(existing: Any, incoming: Any) -> str:
+    current = _clean_text(existing, limit=160)
+    candidate = _clean_text(incoming, limit=160)
+    if "stale" in current.casefold() and candidate and "rerun" not in candidate.casefold():
+        return current
+    if "stale" in candidate.casefold():
+        return candidate
+    return current or candidate
+
+
+def _snapshot_has_stale_validation(snapshot: dict[str, Any]) -> bool:
+    text = json.dumps(
+        {
+            "validation_freshness": snapshot.get("validation_freshness"),
+            "validation_results": snapshot.get("validation_results"),
+        },
+        sort_keys=True,
+    ).casefold()
+    return "stale" in text
+
+
+def _snapshot_has_unresolved_review(snapshot: dict[str, Any]) -> bool:
+    for value in _clean_list(snapshot.get("review_findings"), max_items=MAX_ITEMS):
+        lowered = value.casefold()
+        if "unresolved" in lowered:
+            return True
+        if not any(term in lowered for term in ("resolved", "fixed", "closed", "rereview passed")):
+            return True
+    return False
+
+
+def _snapshot_has_repair_state(snapshot: dict[str, Any]) -> bool:
+    return bool(_clean_list(snapshot.get("repair_events")) or _clean_list(snapshot.get("rereview_events")))
+
+
+def _dedupe_text(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    out: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        out.append(value)
+    return out
+
+
 def _hash_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()[:24]
 
@@ -449,12 +688,16 @@ def _display(value: Any) -> str:
 
 __all__ = [
     "REQUIRED_CONTEXT_FIELDS",
+    "context_unusable_fields",
+    "context_usable_fields",
     "compaction_event_phase",
     "format_compaction_lines",
     "latest_snapshot",
     "merge_active_context",
     "missing_required_fields",
+    "preserve_required_snapshots",
     "privacy_findings",
+    "redacted_required_fields",
     "restored_required_fields",
     "sanitize_compaction_snapshot",
     "snapshot_from_state",

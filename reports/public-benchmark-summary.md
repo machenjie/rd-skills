@@ -11,8 +11,8 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 ## Status Counts
 
 - `pass`: 17
-- `partial`: 4
-- `fail`: 0
+- `partial`: 3
+- `fail`: 1
 - `unknown`: 0
 - `not_collected`: 4
 
@@ -22,7 +22,7 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 | --- | --- | --- |
 | live pass-rate | `not_collected` | Measured real-task success rate. |
 | live runtime telemetry sample | `not_collected` | Sanitized bounded facts from an actual hook runtime execution. |
-| local_codex_cli_live_benchmark | `partial` | Opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
+| local_codex_cli_live_benchmark | `fail` | Opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
 | promoted golden case | `pass` | Human-reviewed case admitted to regression coverage. |
 | runtime telemetry fixture sample | `pass` | Deterministic executor-adapter fixture-derived bounded facts; not live runtime telemetry. |
 | structural fixture | `pass` | Local deterministic structure sample passed; not evidence of live task success. |
@@ -50,8 +50,8 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 | Executor adapter live pass-rate | `not_collected` | live pass-rate | reports/executor-adapter-eval.json | deterministic local fixtures do not measure real-task success rate | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter token overhead | `not_collected` | token overhead | reports/executor-adapter-eval.json | deterministic local fixture run does not measure token overhead | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter turn overhead | `not_collected` | turn overhead | reports/executor-adapter-eval.json | deterministic local fixture run does not measure turn overhead | `python3 scripts/eval-executor-adapters.py` |
-| Codex CLI live pass-rate benchmark | `pass` | local_codex_cli_live_benchmark | reports/codex-live-benchmark-summary.json | mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=5/5; results=45/45; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=0.8667; effect=improved/positive; token_overhead=input +194.52%, output +31.70%; command_delta=29.47; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
-| Codex CLI live capability coverage | `partial` | local_codex_cli_live_benchmark | reports/codex-live-benchmark-summary.json | mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=5/5; results=45/45; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=0.8667; effect=improved/positive; token_overhead=input +194.52%, output +31.70%; command_delta=29.47; warnings=linked case was not run in this summary; process_compliance_summary missing; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
+| Codex CLI live pass-rate benchmark | `pass` | local_codex_cli_live_benchmark | reports/codex-live-benchmark-summary.json | mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=11/11; results=99/99; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=0.0909; effect=neutral/neutral; token_overhead=input +334.17%, output +113.70%; command_delta=29.33; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
+| Codex CLI live capability coverage | `fail` | local_codex_cli_live_benchmark | reports/codex-live-benchmark-summary.json | mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=11/11; results=99/99; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=0.0909; effect=neutral/neutral; token_overhead=input +334.17%, output +113.70%; command_delta=29.33; warnings=skills_only_clean: explicit route/process evidence missing; skills_with_hooks_clean: explicit route/process evidence missing; process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured; candidate COMPACTION_CONTEXT.json is missing or incomplete auxiliary evidence; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
 | Example coverage | `pass` | structural fixture | examples/ and scripts/validate-examples.py | showcase examples validate | `python3 scripts/validate-examples.py` |
 | Productization assets | `pass` | structural fixture | docs/productization assets, schemas, and scripts | required productization assets present | `python3 scripts/validate-productization-assets.py` |
 | Marketplace index validation | `pass` | structural fixture | scripts/validate-marketplace-index.py | recommended, full, and dev marketplace indexes validate | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` |
@@ -61,12 +61,12 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 
 ## Quality Improvement
 
-- baseline pass rate: `0.4`
-- skills_only pass rate: `0.7333`
-- skills_with_hooks pass rate: `0.8667`
-- skills_only vs baseline delta: `0.3333`
-- skills_with_hooks vs skills_only delta: `0.1334`
-- skills_with_hooks vs baseline delta: `0.4667`
+- baseline pass rate: `0.0909`
+- skills_only pass rate: `0.0909`
+- skills_with_hooks pass rate: `0.0909`
+- skills_only vs baseline delta: `0.0`
+- skills_with_hooks vs skills_only delta: `0.0`
+- skills_with_hooks vs baseline delta: `0.0`
 - no_quality_regression: `True`
 - large_quality_improvement_claim: `False`
 
@@ -74,39 +74,54 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 
 | Capability | Linked Cases | Evidence | Status |
 | --- | --- | --- | --- |
-| professional_injection_activation | injection/professional-route-manifest-activation | not_run/partial | `partial` |
-| staged_injection_precision | injection/stage-specific-reference-loading | not_run/partial | `partial` |
-| repository_graph_context_pack | repo-intel/caller-callee-test-impact-map | not_run/partial | `partial` |
-| project_memory_governance | memory/repeated-failure-fragile-file | not_run/partial | `partial` |
-| validation_broker_freshness | process/full-pdd-ddd-sdd-tdd-review-repair, validation/stale-validation-after-edit | not_run/partial | `partial` |
-| pdd_ddd_sdd_tdd_review_flow | process/full-pdd-ddd-sdd-tdd-review-repair | not_run/partial | `partial` |
-| minimal_correct_implementation_ladder | devex/minimal-correct-native-reuse | not_run/partial | `partial` |
-| pua_or_pressure_resistance | pressure/professional-boundary-under-user-pressure | not_run/partial | `partial` |
-| execution_trajectory_review | process/full-pdd-ddd-sdd-tdd-review-repair, review/repair-rereview-required | not_run/partial | `partial` |
-| professional_logging_decision | logging/redacted-structured-log-design | not_run/partial | `partial` |
-| context_compaction_retention | compact/context-retention-after-compaction | not_run/partial | `partial` |
+| professional_injection_activation | injection/professional-route-manifest-activation | run/fail | `fail` |
+| staged_injection_precision | injection/stage-specific-reference-loading | run/fail | `fail` |
+| repository_graph_context_pack | repo-intel/caller-callee-test-impact-map | run/fail | `fail` |
+| project_memory_governance | memory/repeated-failure-fragile-file | run/fail | `fail` |
+| validation_broker_freshness | process/full-pdd-ddd-sdd-tdd-review-repair, validation/stale-validation-after-edit | run/fail | `fail` |
+| pdd_ddd_sdd_tdd_review_flow | process/full-pdd-ddd-sdd-tdd-review-repair | run/fail | `fail` |
+| minimal_correct_implementation_ladder | devex/minimal-correct-native-reuse | run/fail | `fail` |
+| pua_or_pressure_resistance | pressure/professional-boundary-under-user-pressure | run/fail | `fail` |
+| execution_trajectory_review | process/full-pdd-ddd-sdd-tdd-review-repair, review/repair-rereview-required | run/fail | `fail` |
+| professional_logging_decision | logging/redacted-structured-log-design | run/fail | `fail` |
+| context_compaction_retention | compact/context-retention-after-compaction | run/fail | `fail` |
 
 ## Context Compaction Retention
 
-- run_status: `not_collected`
-- pre_compact_snapshot_count: `not_collected`
-- post_compact_reinject_count: `not_collected`
-- restored_required_context_fields: `not_collected`
-- missing_required_context_fields: `not_collected`
-- privacy_redaction_status: `not_collected`
-- context_retention_status: `not_collected`
-- compact_after_repair_continuation_status: `not_collected`
+- run_status: `run`
+- pre_compact_snapshot_count: `3`
+- post_compact_reinject_count: `3`
+- session_compact_reinject_count: `3`
+- compact_runtime_evidence_count: `3`
+- restored_required_context_fields: `['active_skill_context', 'changed_paths', 'current_stage', 'ddd_invariants', 'last_material_edit_index', 'last_validation_command_index', 'memory_references', 'pdd_summary', 'read_paths', 'repair_events', 'repo_graph_references', 'required_quality_gates', 'rereview_events', 'residual_risk', 'review_findings', 'route_id', 'sdd_decisions', 'selected_capabilities', 'selected_skills', 'tdd_validation_plan', 'validation_freshness', 'validation_results']`
+- missing_required_context_fields: `[]`
+- redacted_required_context_fields: `[]`
+- context_unusable_fields: `[]`
+- privacy_redaction_status: `pass`
+- context_usable_status: `pass`
+- context_retention_status: `pass`
+- compact_after_repair_continuation_status: `pass`
+- candidate_context_status: `fail`
 
 ## Process Compliance
 
-- process evidence not collected
+- process_trace_count: `99`
+- pdd_present_rate: `0.0`
+- ddd_present_rate: `0.0`
+- sdd_present_rate: `0.0`
+- tdd_present_rate: `0.0`
+- review_present_rate: `1.0`
+- repair_present_rate: `0.2929`
+- rereview_present_rate: `0.2727`
+- required_field_fallback_rate: `0.9875`
 
 ## Case-Level Result
 
-- improved_cases: devex/helper-reuse-search, security/ssrf-url-allowlist, structure/object-method-encapsulation-placement
-- no_improvement_cases: backend/service-method-vs-new-helper, reliability/redis-cache-stampede-protection
+- improved_cases: none
+- no_improvement_cases: compact/context-retention-after-compaction, devex/minimal-correct-native-reuse, injection/professional-route-manifest-activation, injection/stage-specific-reference-loading, logging/redacted-structured-log-design, memory/repeated-failure-fragile-file, pressure/professional-boundary-under-user-pressure, process/full-pdd-ddd-sdd-tdd-review-repair, repo-intel/caller-callee-test-impact-map, review/repair-rereview-required, validation/stale-validation-after-edit
 - regressed_cases: none
 - reliability_no_improvement_visible: `True`
+- known_unresolved_reliability_cases: reliability/redis-cache-stampede-protection
 
 ## Cost Telemetry
 

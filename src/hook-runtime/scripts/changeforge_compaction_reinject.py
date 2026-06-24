@@ -5,13 +5,15 @@ from __future__ import annotations
 
 from changeforge_compaction_contract import (
     compaction_event_phase,
+    context_unusable_fields,
     format_compaction_lines,
     latest_snapshot,
     merge_active_context,
     missing_required_fields,
-    snapshot_from_state,
+    redacted_required_fields,
 )
 from changeforge_common import (
+    bounded_hook_text,
     cwd_from_event,
     detect_runtime,
     event_name,
@@ -35,10 +37,6 @@ def main() -> int:
     state = load_state(repo)
     phase = compaction_event_phase(event)
     if phase == "pre_compact":
-        snapshot = snapshot_from_state(state, event, snapshot_kind=phase)
-        state.setdefault("compaction_snapshots", [])
-        state["compaction_snapshots"] = [*state.get("compaction_snapshots", []), snapshot]
-        save_state(repo, state)
         return 0
 
     snapshot = latest_snapshot(state.get("compaction_snapshots", []))
@@ -50,21 +48,30 @@ def main() -> int:
             save_state(repo, state)
             context = restored_context
     state_lines = _bounded_state_lines(state, snapshot)
-    if not context and not state_lines:
-        return 0
     missing = missing_required_fields(snapshot) if snapshot else []
+    redacted = redacted_required_fields(snapshot) if snapshot else []
+    unusable = context_unusable_fields(snapshot) if snapshot else []
+    if not snapshot:
+        state_lines.append("- warning compaction_snapshot_missing: latest pre_compact snapshot is not available")
+    status = "partial" if phase == "compact" or missing or redacted or unusable or not snapshot else "pass"
     message = "\n".join(
         [
             "ChangeForge Compaction Reinject",
             "- context was compacted; continue from the active professional context below",
             f"- compaction_phase: {phase}",
-            f"- context_retention_status: {'partial' if missing else 'pass'}",
+            f"- context_retention_status: {status}",
+            f"- compaction_reinject_signal: {phase}_reinject",
             *context_lines(context),
             *state_lines,
         ]
     )
     if hook_mode() != "monitor":
-        adapter_for(runtime).emit_context(event_name(event) or "SessionStart", message)
+        adapter = adapter_for(runtime)
+        target_event = event_name(event) or "SessionStart"
+        if adapter.supports_context_event(target_event):
+            adapter.emit_context(target_event, message)
+        else:
+            print(bounded_hook_text(message))
     return 0
 
 

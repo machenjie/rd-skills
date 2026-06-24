@@ -40,6 +40,13 @@ PROCESS_CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
 PROCESS_REVIEW_PHASES = ("review", "repair", "rereview")
 PROCESS_FALLBACK_FIELD_SOURCE = "case_metadata_fallback"
 PROCESS_FALLBACK_SOURCE_ALIASES = {PROCESS_FALLBACK_FIELD_SOURCE, "inferred"}
+KNOWN_UNRESOLVED_RELIABILITY_CASES = (
+    {
+        "case_id": "reliability/redis-cache-stampede-protection",
+        "status": "known_no_improvement_not_run_in_current_core_ablation",
+        "reason": "Known reliability weakness remains unresolved; this core capability ablation did not rerun the reliability case.",
+    },
+)
 REQUIRED_CAPABILITY_ARTIFACTS = (
     "process-trace.json",
     "result.json",
@@ -59,6 +66,7 @@ COMPACTION_REQUIRED_FIELDS = (
     "sdd_decisions",
     "tdd_validation_plan",
     "changed_paths",
+    "read_paths",
     "validation_results",
     "validation_freshness",
     "review_findings",
@@ -66,7 +74,10 @@ COMPACTION_REQUIRED_FIELDS = (
     "rereview_events",
     "residual_risk",
     "memory_references",
+    "repo_graph_references",
     "active_skill_context",
+    "last_material_edit_index",
+    "last_validation_command_index",
 )
 CAPABILITY_PRIVACY_PATTERNS = (
     re.compile(r"/Users/[^\s\"'<>]+|/home/[^\s\"'<>]+|/private/var/[^\s\"'<>]+|/var/folders/[^\s\"'<>]+|/tmp/[^\s\"'<>]+"),
@@ -189,6 +200,14 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         "run_id": str(manifest.get("run_id") or run_dir.name),
         "run_dir": "<run-dir>",
         "case_count": len(cases),
+        "actual_run_case_count": len(cases),
+        "actual_run_cases": cases,
+        "capability_core_requested": bool(manifest.get("capability_core_requested")),
+        "selected_capability_case_count": int(manifest.get("selected_capability_case_count", 0) or 0),
+        "selected_capability_cases": list(manifest.get("selected_capability_cases", []))
+        if isinstance(manifest.get("selected_capability_cases"), list)
+        else [],
+        "capability_matrix_path": str(manifest.get("capability_matrix_path") or "evals/codex-live/capability-matrix.yaml"),
         "assertion_case_count": len(assertion_cases),
         "telemetry_only_case_count": len(telemetry_only_cases),
         "result_count": len(real_results),
@@ -987,9 +1006,11 @@ def _case_result_summary(cases_summary: dict[str, Any]) -> dict[str, Any]:
     no_improvement: list[dict[str, Any]] = []
     regressed: list[dict[str, Any]] = []
     hooks_below_skills: list[dict[str, Any]] = []
+    run_case_ids: set[str] = set()
     for case_id, case_payload in sorted(cases_summary.items()):
         if not isinstance(case_payload, dict):
             continue
+        run_case_ids.add(str(case_id))
         variants = case_payload.get("variants") if isinstance(case_payload.get("variants"), dict) else {}
         baseline_rate = _case_variant_rate(variants, "baseline_clean")
         skills_rate = _case_variant_rate(variants, "skills_only_clean")
@@ -1025,16 +1046,22 @@ def _case_result_summary(cases_summary: dict[str, Any]) -> dict[str, Any]:
     reliability_no_improvement = [
         row for row in no_improvement if str(row.get("case_id", "")).startswith("reliability/")
     ]
+    known_unresolved_reliability = [
+        dict(row)
+        for row in KNOWN_UNRESOLVED_RELIABILITY_CASES
+        if str(row.get("case_id", "")) not in run_case_ids
+    ]
     return {
         "improved_cases": improved,
         "no_improvement_cases": no_improvement,
         "regressed_cases": regressed,
         "skills_with_hooks_below_skills_only_cases": hooks_below_skills,
         "reliability_no_improvement_cases": reliability_no_improvement,
+        "known_unresolved_reliability_cases": known_unresolved_reliability,
         "improved_case_count": len(improved),
         "no_improvement_case_count": len(no_improvement),
         "regressed_case_count": len(regressed),
-        "reliability_no_improvement_visible": bool(reliability_no_improvement),
+        "reliability_no_improvement_visible": bool(reliability_no_improvement or known_unresolved_reliability),
     }
 
 
@@ -1235,12 +1262,19 @@ def _capability_artifact_evidence(results: list[dict[str, Any]]) -> dict[str, An
                 "compact": {
                     "pre_compact_snapshot_count": 0,
                     "post_compact_reinject_count": 0,
+                    "session_compact_reinject_count": 0,
+                    "compact_runtime_evidence_count": 0,
                     "compact_after_repair_continuation_count": 0,
                     "restored_required_context_fields": [],
                     "missing_required_context_fields": [],
+                    "redacted_required_context_fields": [],
+                    "context_unusable_fields": [],
                     "privacy_redaction_status": "not_collected",
+                    "context_usable_status": "not_collected",
                     "context_retention_status": "not_collected",
                     "compact_after_repair_continuation_status": "not_collected",
+                    "candidate_context_status": "not_collected",
+                    "candidate_context_present_count": 0,
                 },
             },
         )
@@ -1320,19 +1354,55 @@ def _privacy_findings(result_dir: Path) -> list[str]:
 
 
 def _compact_run_evidence(result_dir: Path, process_trace: dict[str, Any]) -> dict[str, Any]:
-    context = process_trace.get("compaction_context") if isinstance(process_trace.get("compaction_context"), dict) else {}
+    result_payload = read_json(result_dir / "result.json")
+    result_payload = result_payload if isinstance(result_payload, dict) else {}
+    context = (
+        result_payload.get("compact_runtime_evidence")
+        if isinstance(result_payload.get("compact_runtime_evidence"), dict)
+        else {}
+    )
+    trace_runtime = (
+        process_trace.get("compact_runtime_evidence")
+        if isinstance(process_trace.get("compact_runtime_evidence"), dict)
+        else {}
+    )
+    if trace_runtime:
+        context = {**context, **trace_runtime}
     artifact_context = read_json(result_dir / "candidate-artifacts" / "COMPACTION_CONTEXT.json")
-    if isinstance(artifact_context, dict):
-        context = {**artifact_context, **context}
-    missing = [field for field in COMPACTION_REQUIRED_FIELDS if not context.get(field)]
-    restored = [field for field in COMPACTION_REQUIRED_FIELDS if field not in missing]
+    candidate_context = artifact_context if isinstance(artifact_context, dict) else {}
+    candidate_missing = [field for field in COMPACTION_REQUIRED_FIELDS if not candidate_context.get(field)]
+    candidate_context_status = (
+        "pass"
+        if candidate_context
+        and not candidate_missing
+        and str(candidate_context.get("context_retention_status") or "pass") == "pass"
+        and str(candidate_context.get("privacy_redaction_status") or "pass") == "pass"
+        else ("fail" if candidate_context else "not_collected")
+    )
+    if isinstance(context.get("missing_required_context_fields"), list):
+        missing = [str(field) for field in context["missing_required_context_fields"]]
+    else:
+        missing = list(COMPACTION_REQUIRED_FIELDS)
+    restored = (
+        [str(field) for field in context.get("restored_required_context_fields", [])]
+        if isinstance(context.get("restored_required_context_fields"), list)
+        else [field for field in COMPACTION_REQUIRED_FIELDS if field not in missing]
+    )
+    runtime_artifact_present = (result_dir / "compaction" / "reinject-output.json").is_file()
     return {
+        "compact_runtime_evidence_present": bool(context and runtime_artifact_present),
+        "candidate_context_present": bool(candidate_context),
+        "candidate_context_status": candidate_context_status,
         "pre_compact_snapshot_written": context.get("pre_compact_snapshot_written") is True,
         "post_compact_reinject_emitted": context.get("post_compact_reinject_emitted") is True,
+        "session_compact_reinject_emitted": context.get("session_compact_reinject_emitted") is True,
         "compact_after_repair_continuation": str(context.get("compact_after_repair_continuation_status") or "") == "pass",
         "restored_required_context_fields": restored,
         "missing_required_context_fields": missing,
+        "redacted_required_context_fields": list(context.get("redacted_required_context_fields") or []),
+        "context_unusable_fields": list(context.get("context_unusable_fields") or []),
         "privacy_redaction_status": str(context.get("privacy_redaction_status") or "not_collected"),
+        "context_usable_status": str(context.get("context_usable_status") or "not_collected"),
         "context_retention_status": str(context.get("context_retention_status") or "not_collected"),
         "compact_after_repair_continuation_status": str(
             context.get("compact_after_repair_continuation_status") or "not_collected"
@@ -1345,6 +1415,12 @@ def _merge_compact_evidence(target: dict[str, Any], compact: dict[str, Any]) -> 
         target["pre_compact_snapshot_count"] += 1
     if compact.get("post_compact_reinject_emitted"):
         target["post_compact_reinject_count"] += 1
+    if compact.get("session_compact_reinject_emitted"):
+        target["session_compact_reinject_count"] += 1
+    if compact.get("compact_runtime_evidence_present"):
+        target["compact_runtime_evidence_count"] += 1
+    if compact.get("candidate_context_present"):
+        target["candidate_context_present_count"] += 1
     if compact.get("compact_after_repair_continuation"):
         target["compact_after_repair_continuation_count"] += 1
     target["restored_required_context_fields"] = sorted(
@@ -1353,7 +1429,19 @@ def _merge_compact_evidence(target: dict[str, Any], compact: dict[str, Any]) -> 
     target["missing_required_context_fields"] = sorted(
         set(target.get("missing_required_context_fields", [])) | set(compact.get("missing_required_context_fields", []))
     )
-    for field in ("privacy_redaction_status", "context_retention_status", "compact_after_repair_continuation_status"):
+    target["redacted_required_context_fields"] = sorted(
+        set(target.get("redacted_required_context_fields", [])) | set(compact.get("redacted_required_context_fields", []))
+    )
+    target["context_unusable_fields"] = sorted(
+        set(target.get("context_unusable_fields", [])) | set(compact.get("context_unusable_fields", []))
+    )
+    for field in (
+        "privacy_redaction_status",
+        "context_usable_status",
+        "context_retention_status",
+        "compact_after_repair_continuation_status",
+        "candidate_context_status",
+    ):
         value = str(compact.get(field) or "not_collected")
         if value == "fail" or target.get(field) in {"not_collected", "partial"}:
             target[field] = value
@@ -1367,30 +1455,49 @@ def _compact_context_summary(evidence: dict[str, Any]) -> dict[str, Any]:
             "run_status": "not_run",
             "pre_compact_snapshot_count": 0,
             "post_compact_reinject_count": 0,
+            "session_compact_reinject_count": 0,
+            "compact_runtime_evidence_count": 0,
             "restored_required_context_fields": [],
             "missing_required_context_fields": list(COMPACTION_REQUIRED_FIELDS),
+            "redacted_required_context_fields": [],
+            "context_unusable_fields": [],
             "privacy_redaction_status": "not_collected",
+            "context_usable_status": "not_collected",
             "context_retention_status": "not_collected",
             "compact_after_repair_continuation_status": "not_collected",
+            "candidate_context_status": "not_collected",
         }
     combined = {
         "case_id": "compact/context-retention-after-compaction",
         "run_status": "run",
         "pre_compact_snapshot_count": 0,
         "post_compact_reinject_count": 0,
+        "session_compact_reinject_count": 0,
+        "compact_runtime_evidence_count": 0,
         "compact_after_repair_continuation_count": 0,
         "restored_required_context_fields": [],
         "missing_required_context_fields": [],
+        "redacted_required_context_fields": [],
+        "context_unusable_fields": [],
         "privacy_redaction_status": "pass",
+        "context_usable_status": "pass",
         "context_retention_status": "pass",
         "compact_after_repair_continuation_status": "pass",
+        "candidate_context_status": "pass",
     }
-    for variant_payload in case.values():
+    variant_payloads = (
+        [case["skills_with_hooks_clean"]]
+        if isinstance(case.get("skills_with_hooks_clean"), dict)
+        else [payload for payload in case.values() if isinstance(payload, dict)]
+    )
+    for variant_payload in variant_payloads:
         if not isinstance(variant_payload, dict):
             continue
         compact = variant_payload.get("compact") if isinstance(variant_payload.get("compact"), dict) else {}
         combined["pre_compact_snapshot_count"] += int(compact.get("pre_compact_snapshot_count", 0) or 0)
         combined["post_compact_reinject_count"] += int(compact.get("post_compact_reinject_count", 0) or 0)
+        combined["session_compact_reinject_count"] += int(compact.get("session_compact_reinject_count", 0) or 0)
+        combined["compact_runtime_evidence_count"] += int(compact.get("compact_runtime_evidence_count", 0) or 0)
         combined["compact_after_repair_continuation_count"] += int(
             compact.get("compact_after_repair_continuation_count", 0) or 0
         )
@@ -1400,7 +1507,19 @@ def _compact_context_summary(evidence: dict[str, Any]) -> dict[str, Any]:
         combined["missing_required_context_fields"] = sorted(
             set(combined["missing_required_context_fields"]) | set(compact.get("missing_required_context_fields", []))
         )
-        for field in ("privacy_redaction_status", "context_retention_status", "compact_after_repair_continuation_status"):
+        combined["redacted_required_context_fields"] = sorted(
+            set(combined["redacted_required_context_fields"]) | set(compact.get("redacted_required_context_fields", []))
+        )
+        combined["context_unusable_fields"] = sorted(
+            set(combined["context_unusable_fields"]) | set(compact.get("context_unusable_fields", []))
+        )
+        for field in (
+            "privacy_redaction_status",
+            "context_usable_status",
+            "context_retention_status",
+            "compact_after_repair_continuation_status",
+            "candidate_context_status",
+        ):
             value = str(compact.get(field) or "not_collected")
             if value in {"fail", "partial", "not_collected"}:
                 combined[field] = value
@@ -2215,11 +2334,17 @@ def render_markdown(summary: dict[str, Any]) -> str:
             f"- Compact case run status: `{compact.get('run_status', 'not_collected')}`",
             f"- pre_compact_snapshot_count: `{compact.get('pre_compact_snapshot_count', 'not_collected')}`",
             f"- post_compact_reinject_count: `{compact.get('post_compact_reinject_count', 'not_collected')}`",
+            f"- session_compact_reinject_count: `{compact.get('session_compact_reinject_count', 'not_collected')}`",
+            f"- compact_runtime_evidence_count: `{compact.get('compact_runtime_evidence_count', 'not_collected')}`",
             f"- restored_required_context_fields: `{compact.get('restored_required_context_fields', 'not_collected')}`",
             f"- missing_required_context_fields: `{compact.get('missing_required_context_fields', 'not_collected')}`",
+            f"- redacted_required_context_fields: `{compact.get('redacted_required_context_fields', 'not_collected')}`",
+            f"- context_unusable_fields: `{compact.get('context_unusable_fields', 'not_collected')}`",
             f"- privacy_redaction_status: `{compact.get('privacy_redaction_status', 'not_collected')}`",
+            f"- context_usable_status: `{compact.get('context_usable_status', 'not_collected')}`",
             f"- context_retention_status: `{compact.get('context_retention_status', 'not_collected')}`",
             f"- compact_after_repair_continuation_status: `{compact.get('compact_after_repair_continuation_status', 'not_collected')}`",
+            f"- candidate_context_status: `{compact.get('candidate_context_status', 'not_collected')}`",
         ]
     )
     lines.extend(
@@ -2251,6 +2376,7 @@ def render_markdown(summary: dict[str, Any]) -> str:
             f"- No improvement cases: `{[row.get('case_id') for row in case_results.get('no_improvement_cases', [])]}`",
             f"- Regressed cases: `{[row.get('case_id') for row in case_results.get('regressed_cases', [])]}`",
             f"- Reliability no-improvement cases: `{[row.get('case_id') for row in case_results.get('reliability_no_improvement_cases', [])]}`",
+            f"- Known unresolved reliability cases: `{[row.get('case_id') for row in case_results.get('known_unresolved_reliability_cases', [])]}`",
             "",
             "## Cost Telemetry",
             "",

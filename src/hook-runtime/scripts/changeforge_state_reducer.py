@@ -10,10 +10,10 @@ try:
     from changeforge_compaction_contract import (
         latest_snapshot,
         merge_active_context,
+        preserve_required_snapshots,
         sanitize_compaction_snapshot,
-        snapshot_priority_key,
     )
-except ModuleNotFoundError:  # pragma: no cover - importlib test loading fallback
+except (ImportError, ModuleNotFoundError):  # pragma: no cover - importlib test loading fallback
     import importlib.util
     from pathlib import Path
 
@@ -27,8 +27,8 @@ except ModuleNotFoundError:  # pragma: no cover - importlib test loading fallbac
     _contract_spec.loader.exec_module(_contract_module)
     latest_snapshot = _contract_module.latest_snapshot
     merge_active_context = _contract_module.merge_active_context
+    preserve_required_snapshots = _contract_module.preserve_required_snapshots
     sanitize_compaction_snapshot = _contract_module.sanitize_compaction_snapshot
-    snapshot_priority_key = _contract_module.snapshot_priority_key
 
 
 MAX_STATE_ITEMS = 50
@@ -205,29 +205,7 @@ def _mapping_value(value: Any) -> dict:
 
 
 def _latest_checkpoint_preserve_required_fields(existing: Any, incoming: Any) -> list[dict[str, Any]]:
-    raw_values = [*_as_iterable(existing), *_as_iterable(incoming)]
-    legacy = [
-        str(value).strip()[:MAX_STATE_VALUE_LEN]
-        for value in raw_values
-        if isinstance(value, str) and str(value).strip() and not str(value).lstrip().startswith("{")
-    ]
-    snapshots = [sanitize_compaction_snapshot(value) for value in raw_values]
-    snapshots = [snapshot for snapshot in snapshots if snapshot.get("snapshot_id")]
-    if not snapshots:
-        return _unique(legacy)[-5:]
-    snapshots.sort(key=snapshot_priority_key, reverse=True)
-    kept: list[dict[str, Any]] = []
-    seen: set[str] = set()
-    for snapshot in snapshots:
-        snapshot_id = str(snapshot.get("snapshot_id") or "")
-        if snapshot_id in seen:
-            continue
-        seen.add(snapshot_id)
-        kept.append(snapshot)
-        if len(kept) >= 5:
-            break
-    kept.sort(key=snapshot_priority_key)
-    return [*kept, *_unique(legacy)[-5:]]
+    return preserve_required_snapshots(existing, incoming, limit=5)
 
 
 def _latest_by_key_preserve_stale(existing: Any, incoming: Any) -> list[str]:

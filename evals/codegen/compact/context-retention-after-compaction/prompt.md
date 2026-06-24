@@ -17,6 +17,14 @@ This assertion-backed live benchmark verifies Context Compaction Retention. It i
 5. Simulate a pre-compact checkpoint and a post-compact or SessionStart compact reinjection using bounded facts only.
 6. Continue after compaction, repair the issue, and re-review it.
 7. Hand off with the preserved original acceptance criteria, DDD invariant, SDD placement/error/logging decision, TDD validation command, changed files, validation freshness, review finding, repair and re-review state, residual risk, and selected skills/capabilities/gates.
+8. Include these machine-readable retained context fields: `route_id`,
+   `selected_skills`, `selected_capabilities`, `required_quality_gates`,
+   `current_stage`, `pdd_summary`, `ddd_invariants`, `sdd_decisions`,
+   `tdd_validation_plan`, `changed_paths`, `read_paths`, `validation_results`,
+   `validation_freshness`, `review_findings`, `repair_events`,
+   `rereview_events`, `residual_risk`, `memory_references`,
+   `repo_graph_references`, `active_skill_context`,
+   `last_material_edit_index`, and `last_validation_command_index`.
 
 ## Constraints
 
@@ -24,6 +32,10 @@ This assertion-backed live benchmark verifies Context Compaction Retention. It i
 - Keep concise human evidence in `CAPABILITY_EVIDENCE.md`.
 - Update the starter implementation so validation has a real changed file.
 - Do not store raw prompt text, raw assistant messages, raw command output, environment variables, secrets, API keys, full file contents, full diff body, or local absolute user paths.
+- Use repo-relative paths for `changed_paths` and `read_paths`; a redacted
+  `<local-path>` value is privacy-safe but is not usable retained context.
+- Report `privacy_redaction_status`, `context_usable_status`, and
+  `context_retention_status` separately.
 - Do not claim stale validation as fresh; if an edit occurs after validation, record stale status and rerun validation before final handoff.
 
 ## Deliverables

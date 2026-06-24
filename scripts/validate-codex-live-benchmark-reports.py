@@ -824,6 +824,7 @@ def _summary_structure_errors(summary: dict[str, Any]) -> list[str]:
         errors.extend(_logging_summary_errors(summary.get("logging_summary")))
     if "process_compliance_summary" in summary:
         errors.extend(_process_compliance_summary_errors(summary.get("process_compliance_summary")))
+    errors.extend(_capability_semantic_errors(summary))
     variants = summary.get("variants")
     if not isinstance(variants, dict):
         errors.append("summary variants must be an object")
@@ -962,6 +963,50 @@ def _summary_structure_errors(summary: dict[str, Any]) -> list[str]:
                         SECURITY_FAILURE_REASONS,
                     )
                 )
+    return errors
+
+
+def _capability_semantic_errors(summary: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    capability = summary.get("capability_coverage_summary")
+    if not isinstance(capability, dict):
+        return errors
+    items = capability.get("items") if isinstance(capability.get("items"), list) else []
+    compact_summary = summary.get("compact_context_summary") if isinstance(summary.get("compact_context_summary"), dict) else {}
+    process = (
+        summary.get("process_compliance_summary")
+        if isinstance(summary.get("process_compliance_summary"), dict)
+        else {}
+    )
+    process_trace_count = process.get("process_trace_count")
+    for item in items:
+        if not isinstance(item, dict) or item.get("status") != "pass":
+            continue
+        capability_id = str(item.get("id") or "")
+        if item.get("run_status") != "run":
+            errors.append(f"capability {capability_id} cannot pass when linked cases were not run")
+        case_results = item.get("case_results") if isinstance(item.get("case_results"), list) else []
+        for case in case_results:
+            if isinstance(case, dict) and case.get("run_status") != "run":
+                errors.append(
+                    f"capability {capability_id} cannot pass with linked case "
+                    f"{case.get('case_id')} run_status={case.get('run_status')}"
+                )
+        if capability_id == "context_compaction_retention":
+            if compact_summary.get("run_status") != "run":
+                errors.append("context_compaction_retention cannot pass when compact case was not run")
+            if int(compact_summary.get("compact_runtime_evidence_count", 0) or 0) <= 0:
+                errors.append("context_compaction_retention cannot pass without compact runtime evidence")
+            if int(compact_summary.get("pre_compact_snapshot_count", 0) or 0) <= 0:
+                errors.append("context_compaction_retention cannot pass without pre_compact snapshots")
+            reinject_count = int(compact_summary.get("post_compact_reinject_count", 0) or 0) + int(
+                compact_summary.get("session_compact_reinject_count", 0) or 0
+            )
+            if reinject_count <= 0:
+                errors.append("context_compaction_retention cannot pass without post/session compact reinject evidence")
+        if capability_id == "pdd_ddd_sdd_tdd_review_flow":
+            if not isinstance(process_trace_count, int) or process_trace_count <= 0:
+                errors.append("pdd_ddd_sdd_tdd_review_flow cannot pass when process_trace_count is zero or not_collected")
     return errors
 
 

@@ -940,11 +940,17 @@ def _append_codex_live_sections(lines: list[str], payload: dict[str, Any]) -> No
         "run_status",
         "pre_compact_snapshot_count",
         "post_compact_reinject_count",
+        "session_compact_reinject_count",
+        "compact_runtime_evidence_count",
         "restored_required_context_fields",
         "missing_required_context_fields",
+        "redacted_required_context_fields",
+        "context_unusable_fields",
         "privacy_redaction_status",
+        "context_usable_status",
         "context_retention_status",
         "compact_after_repair_continuation_status",
+        "candidate_context_status",
     ):
         lines.append(f"- {field}: `{compact.get(field, 'not_collected')}`")
 
@@ -981,6 +987,17 @@ def _append_codex_live_sections(lines: list[str], payload: dict[str, Any]) -> No
     lines.append(
         "- reliability_no_improvement_visible: "
         f"`{cases.get('reliability_no_improvement_visible', 'not_collected')}`"
+    )
+    lines.append(
+        "- known_unresolved_reliability_cases: "
+        + (
+            ", ".join(
+                row["case_id"]
+                for row in cases.get("known_unresolved_reliability_cases", [])
+                if isinstance(row, dict) and "case_id" in row
+            )
+            or "none"
+        )
     )
 
     lines.extend(["", "## Cost Telemetry", ""])

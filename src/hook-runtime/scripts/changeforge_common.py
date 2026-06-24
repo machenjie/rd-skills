@@ -30,8 +30,8 @@ except ModuleNotFoundError:  # pragma: no cover - importlib test loading fallbac
     reduce_state_update = _reducer_module.reduce_state_update
 
 try:
-    from changeforge_compaction_contract import sanitize_compaction_snapshot, snapshot_priority_key
-except ModuleNotFoundError:  # pragma: no cover - importlib test loading fallback
+    from changeforge_compaction_contract import preserve_required_snapshots
+except (ImportError, ModuleNotFoundError):  # pragma: no cover - importlib test loading fallback
     import importlib.util
 
     _contract_path = Path(__file__).with_name("changeforge_compaction_contract.py")
@@ -42,8 +42,7 @@ except ModuleNotFoundError:  # pragma: no cover - importlib test loading fallbac
         raise
     _contract_module = importlib.util.module_from_spec(_contract_spec)
     _contract_spec.loader.exec_module(_contract_module)
-    sanitize_compaction_snapshot = _contract_module.sanitize_compaction_snapshot
-    snapshot_priority_key = _contract_module.snapshot_priority_key
+    preserve_required_snapshots = _contract_module.preserve_required_snapshots
 
 _SRC_ROOT = Path(__file__).resolve().parents[2]
 if (_SRC_ROOT / "project_memory").is_dir() and str(_SRC_ROOT) not in sys.path:
@@ -704,7 +703,7 @@ def is_permission_request(event: dict) -> bool:
 def is_compaction_event(event: dict) -> bool:
     """Detect context-compaction events without depending on one vendor field."""
     name = _compact(event_name(event))
-    if name in {"compact", "compaction", "contextcompact"}:
+    if name in {"compact", "compaction", "contextcompact", "precompact", "postcompact", "beforecompact", "aftercompact"}:
         return True
     source = event.get("source") or event.get("reason") or event.get("matcher")
     return isinstance(source, str) and "compact" in source.casefold()
@@ -2699,23 +2698,7 @@ def _capped_state_items(values: Iterable[str]) -> list[str]:
 
 def _capped_compaction_snapshots(values: Iterable[object]) -> list[dict[str, Any]]:
     """Preserve the latest bounded compaction checkpoints without string truncation."""
-    snapshots: list[dict[str, Any]] = []
-    legacy: list[str] = []
-    seen: set[str] = set()
-    for raw in values:
-        if isinstance(raw, str) and raw.strip() and not raw.lstrip().startswith("{"):
-            legacy.append(raw.strip()[:MAX_STATE_VALUE_LEN])
-            continue
-        snapshot = sanitize_compaction_snapshot(raw)
-        snapshot_id = str(snapshot.get("snapshot_id") or "")
-        if not snapshot_id or snapshot_id in seen:
-            continue
-        seen.add(snapshot_id)
-        snapshots.append(snapshot)
-    snapshots.sort(key=snapshot_priority_key, reverse=True)
-    kept = snapshots[:5]
-    kept.sort(key=snapshot_priority_key)
-    return [*kept, *_unique(legacy)[-5:]]
+    return preserve_required_snapshots(list(values), (), limit=5)
 
 
 def _clean_state_mapping(value: dict) -> dict:

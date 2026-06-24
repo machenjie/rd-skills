@@ -30,7 +30,9 @@
     "active_skill_context",
     "last_material_edit_index",
     "last_validation_command_index",
-    "privacy_redaction_status"
+    "privacy_redaction_status",
+    "context_usable_status",
+    "context_retention_status"
   ],
   "properties": {
     "schema_version": { "const": 1 },
@@ -60,7 +62,12 @@
     "last_material_edit_index": { "type": "integer", "minimum": 0 },
     "last_validation_command_index": { "type": "integer", "minimum": 0 },
     "privacy_redaction_status": { "type": "string", "enum": ["pass", "fail"] },
+    "context_usable_status": { "type": "string", "enum": ["pass", "fail"] },
+    "context_retention_status": { "type": "string", "enum": ["pass", "partial", "fail"] },
     "missing_required_fields": { "type": "array", "items": { "type": "string" }, "maxItems": 30 },
+    "redacted_required_fields": { "type": "array", "items": { "type": "string" }, "maxItems": 30 },
+    "context_usable_fields": { "type": "array", "items": { "type": "string" }, "maxItems": 30 },
+    "context_unusable_fields": { "type": "array", "items": { "type": "string" }, "maxItems": 30 },
     "warnings": { "type": "array", "items": { "type": "string", "maxLength": 200 }, "maxItems": 20 }
   }
 }
