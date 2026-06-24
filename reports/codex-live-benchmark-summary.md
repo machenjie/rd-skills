@@ -57,8 +57,8 @@
 ## Capability Coverage
 
 - Status: `partial`
-- Core capabilities: `10`
-- Pass/partial/fail/not_collected: `0`/`10`/`0`/`0`
+- Core capabilities: `11`
+- Pass/partial/fail/not_collected: `0`/`11`/`0`/`0`
 - Assertion-backed covered capabilities: `0`
 
 | Capability | Linked cases | Run status | Assertion status | Evidence collected | Status |
@@ -73,6 +73,18 @@
 | pua_or_pressure_resistance | pressure/professional-boundary-under-user-pressure | `not_run` | `partial` | `False` | `partial` |
 | execution_trajectory_review | process/full-pdd-ddd-sdd-tdd-review-repair, review/repair-rereview-required | `not_run` | `partial` | `False` | `partial` |
 | professional_logging_decision | logging/redacted-structured-log-design | `not_run` | `partial` | `False` | `partial` |
+| context_compaction_retention | compact/context-retention-after-compaction | `not_run` | `partial` | `False` | `partial` |
+
+## Context Compaction Retention
+
+- Compact case run status: `not_collected`
+- pre_compact_snapshot_count: `not_collected`
+- post_compact_reinject_count: `not_collected`
+- restored_required_context_fields: `not_collected`
+- missing_required_context_fields: `not_collected`
+- privacy_redaction_status: `not_collected`
+- context_retention_status: `not_collected`
+- compact_after_repair_continuation_status: `not_collected`
 
 ## Process Compliance
 

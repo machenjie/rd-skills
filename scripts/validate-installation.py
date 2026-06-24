@@ -56,6 +56,7 @@ HOOK_SCRIPT_FILENAMES = (
     "changeforge_runtime_adapters.py",
     "changeforge_hook_policy.py",
     "changeforge_state_reducer.py",
+    "changeforge_compaction_contract.py",
     "changeforge_normalized_event.py",
     "changeforge_lifecycle_state.py",
     "changeforge_evidence_ledger.py",

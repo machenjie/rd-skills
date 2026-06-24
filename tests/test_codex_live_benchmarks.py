@@ -775,6 +775,67 @@ def _result_payload(**overrides: object) -> dict[str, object]:
     return payload
 
 
+def _capability_artifact_evidence_payload(
+    *,
+    runs: int = 3,
+    route_process: bool = True,
+    hook_bounded: bool = True,
+    privacy: str = "pass",
+    self_report_only: bool = False,
+    compact_missing: list[str] | None = None,
+    compact_continuation: str = "pass",
+    post_compact_count: int = 3,
+) -> dict[str, object]:
+    def variant_payload(variant: str) -> dict[str, object]:
+        route_count = runs if route_process and variant != "baseline_clean" else 0
+        hook_count = runs if hook_bounded and variant == "skills_with_hooks_clean" else 0
+        compact = {
+            "pre_compact_snapshot_count": runs if variant == "skills_with_hooks_clean" else 0,
+            "post_compact_reinject_count": post_compact_count if variant == "skills_with_hooks_clean" else 0,
+            "compact_after_repair_continuation_count": runs if compact_continuation == "pass" else 0,
+            "restored_required_context_fields": [
+                "route_id",
+                "selected_skills",
+                "selected_capabilities",
+                "required_quality_gates",
+                "current_stage",
+                "pdd_summary",
+                "ddd_invariants",
+                "sdd_decisions",
+                "tdd_validation_plan",
+                "changed_paths",
+                "validation_results",
+                "validation_freshness",
+                "review_findings",
+                "repair_events",
+                "rereview_events",
+                "residual_risk",
+                "memory_references",
+                "active_skill_context",
+            ],
+            "missing_required_context_fields": compact_missing or [],
+            "privacy_redaction_status": privacy,
+            "context_retention_status": "pass" if not compact_missing else "fail",
+            "compact_after_repair_continuation_status": compact_continuation,
+        }
+        return {
+            "runs": runs,
+            "artifact_backed_run_count": 0 if self_report_only else runs,
+            "route_process_evidence_count": route_count,
+            "hook_bounded_evidence_count": hook_count,
+            "self_report_only_count": runs if self_report_only else 0,
+            "privacy_redaction_status": privacy,
+            "missing_required_artifacts": {"process-trace.json": runs} if self_report_only else {},
+            "compact": compact,
+        }
+
+    return {
+        "baseline_clean": variant_payload("baseline_clean"),
+        "skills_only_clean": variant_payload("skills_only_clean"),
+        "skills_with_hooks_clean": variant_payload("skills_with_hooks_clean"),
+    }
+
+
 def _trace_value_present(value: object) -> bool:
     if isinstance(value, str):
         return bool(value.strip())
@@ -1759,12 +1820,12 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(summary["coverage_summary"]["tiers"]["core"], 2)
         self.assertEqual(summary["coverage_summary"]["assertion_case_count"], 1)
         self.assertEqual(summary["coverage_summary"]["telemetry_only_case_count"], 1)
-        self.assertEqual(summary["coverage_summary"]["manifest_case_count"], 70)
-        self.assertEqual(summary["coverage_summary"]["registered_live_case_count"], 23)
-        self.assertEqual(summary["coverage_summary"]["registered_publishable_assertion_case_count"], 22)
+        self.assertEqual(summary["coverage_summary"]["manifest_case_count"], 71)
+        self.assertEqual(summary["coverage_summary"]["registered_live_case_count"], 24)
+        self.assertEqual(summary["coverage_summary"]["registered_publishable_assertion_case_count"], 23)
         self.assertEqual(summary["coverage_summary"]["actual_run_case_count"], 2)
-        self.assertEqual(summary["coverage_summary"]["tiers_registered"], {"core": 15, "experimental": 1, "level1": 7})
-        self.assertEqual(summary["coverage_summary"]["actual_run_case_coverage_rate"], 0.0286)
+        self.assertEqual(summary["coverage_summary"]["tiers_registered"], {"core": 16, "experimental": 1, "level1": 7})
+        self.assertEqual(summary["coverage_summary"]["actual_run_case_coverage_rate"], 0.0282)
         self.assertIn("frontend/accessible-form-error-state", summary["coverage_summary"]["registered_but_not_run_cases"])
         self.assertIn("delivery", summary["coverage_summary"]["missing_manifest_categories"])
         self.assertEqual(summary["cost_summary"]["total_usage"]["input_tokens"], 20)
@@ -3965,6 +4026,303 @@ Residual Risk:
         item = next(row for row in coverage["items"] if row["id"] == "professional_injection_activation")
         self.assertEqual(item["status"], "fail")
         self.assertEqual(item["assertion_status"], "fail")
+
+    def test_compaction_snapshot_preserves_required_fields(self) -> None:
+        contract = _load_script(
+            "changeforge_compaction_contract_preserve",
+            "src/hook-runtime/scripts/changeforge_compaction_contract.py",
+        )
+        state = {
+            "turn_id": "turn-1",
+            "turn_stage": "repair",
+            "active_skill_context": {
+                "route_id": "route-1",
+                "selected_skills": ["change-forge-router"],
+                "selected_capabilities": ["validation-broker"],
+                "required_quality_gates": ["test gate"],
+                "pdd_summary": ["acceptance criteria"],
+                "ddd_invariants": ["invariant"],
+                "sdd_decisions": ["placement decision"],
+                "tdd_validation_plan": ["python3 -m unittest"],
+            },
+            "changed_paths": ["compaction_workflow.py"],
+            "read_paths": ["README.md"],
+            "validation_results": ["python3 -m unittest: pass"],
+            "review_findings": ["finding=missing rerun"],
+            "repair_events": ["finding=missing rerun repaired"],
+            "rereview_events": ["finding=missing rerun rereview passed"],
+            "closure_risk_surfaces": ["residual risk none"],
+            "reference_loads": ["memory:fragile validation"],
+            "reuse_findings": ["repo graph: tests/test_compaction_workflow.py"],
+            "last_material_edit_index": 2,
+            "last_validation_command_index": 3,
+        }
+        snapshot = contract.snapshot_from_state(state, {"hook_event_name": "PreCompact"})
+        self.assertEqual(snapshot["snapshot_kind"], "pre_compact")
+        self.assertEqual(contract.missing_required_fields(snapshot), [])
+        for field in contract.REQUIRED_CONTEXT_FIELDS:
+            self.assertIn(field, snapshot)
+
+    def test_compaction_snapshot_rejects_sensitive_fields(self) -> None:
+        contract = _load_script(
+            "changeforge_compaction_contract_sensitive",
+            "src/hook-runtime/scripts/changeforge_compaction_contract.py",
+        )
+        snapshot = contract.sanitize_compaction_snapshot(
+            {
+                "snapshot_id": "sensitive",
+                "snapshot_kind": "pre_compact",
+                "route_id": "/Users/example/project",
+                "selected_skills": ["change-forge-router"],
+                "selected_capabilities": ["validation-broker"],
+                "required_quality_gates": ["security gate"],
+                "current_stage": "repair",
+                "raw_prompt": "raw prompt should not persist",
+                "env": {"OPENAI_API_KEY": "sk-ABCDEF1234567890"},
+                "active_skill_context": {
+                    "route_id": "route",
+                    "raw_command_output": "secret output",
+                    "safe": "bounded",
+                },
+            }
+        )
+        encoded = json.dumps(snapshot, sort_keys=True)
+        self.assertNotIn("/Users/example", encoded)
+        self.assertNotIn("OPENAI_API_KEY", encoded)
+        self.assertNotIn("raw prompt should not persist", encoded)
+        self.assertNotIn("raw_command_output", encoded)
+        self.assertEqual(contract.privacy_findings(snapshot), [])
+
+    def test_compaction_reinject_restores_active_context(self) -> None:
+        common = _load_script("changeforge_common_reinject_restore", "src/hook-runtime/scripts/changeforge_common.py")
+        contract = _load_script(
+            "changeforge_compaction_contract_reinject_restore",
+            "src/hook-runtime/scripts/changeforge_compaction_contract.py",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            cache = Path(tmp) / "cache"
+            repo = Path(tmp) / "repo"
+            repo.mkdir()
+            env = os.environ.copy()
+            env["XDG_CACHE_HOME"] = str(cache)
+            env["CHANGEFORGE_AGENT"] = "codex"
+            env["CHANGEFORGE_HOOK_MODE"] = "warn"
+            with patch.dict(os.environ, env, clear=False):
+                state = common._empty_state()
+                state["active_skill_context"] = {}
+                snapshot = contract.sanitize_compaction_snapshot(
+                    {
+                        "snapshot_id": "snap-restore",
+                        "route_id": "route-restored",
+                        "selected_skills": ["change-forge-router"],
+                        "selected_capabilities": ["validation-broker"],
+                        "required_quality_gates": ["test gate"],
+                        "current_stage": "repair",
+                        "pdd_summary": ["acceptance"],
+                        "ddd_invariants": ["invariant"],
+                        "sdd_decisions": ["placement"],
+                        "tdd_validation_plan": ["python3 -m unittest"],
+                        "changed_paths": ["compaction_workflow.py"],
+                        "read_paths": ["README.md"],
+                        "validation_results": ["pass"],
+                        "validation_freshness": "fresh_after_latest_material_change",
+                        "review_findings": ["finding"],
+                        "repair_events": ["repair"],
+                        "rereview_events": ["rereview"],
+                        "residual_risk": ["none"],
+                        "memory_references": ["memory"],
+                        "repo_graph_references": ["repo graph"],
+                        "active_skill_context": {"route_id": "route-restored", "current_stage": "repair"},
+                        "last_material_edit_index": 2,
+                        "last_validation_command_index": 3,
+                    }
+                )
+                state["compaction_snapshots"] = [snapshot]
+                common.save_state(repo, state)
+            completed = subprocess.run(
+                [sys.executable, str(ROOT / "src/hook-runtime/scripts/changeforge_compaction_reinject.py")],
+                input=json.dumps({"hook_event_name": "SessionStart", "source": "compact", "cwd": str(repo)}),
+                env=env,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertIn("route-restored", completed.stdout)
+            with patch.dict(os.environ, env, clear=False):
+                restored = common.load_state(repo)
+            self.assertEqual(restored["active_skill_context"]["route_id"], "route-restored")
+
+    def test_compaction_reinject_does_not_overwrite_existing_context(self) -> None:
+        contract = _load_script(
+            "changeforge_compaction_contract_nonoverwrite",
+            "src/hook-runtime/scripts/changeforge_compaction_contract.py",
+        )
+        snapshot = contract.sanitize_compaction_snapshot(
+            {
+                "snapshot_id": "snap-old",
+                "route_id": "old-route",
+                "selected_skills": ["old-skill"],
+                "selected_capabilities": ["old-capability"],
+                "required_quality_gates": ["old gate"],
+                "current_stage": "old-stage",
+                "active_skill_context": {"route_id": "old-route", "current_stage": "old-stage"},
+            }
+        )
+        merged = contract.merge_active_context(
+            {"route_id": "richer-route", "current_stage": "richer-stage", "selected_skills": ["current-skill"]},
+            snapshot,
+        )
+        self.assertEqual(merged["route_id"], "richer-route")
+        self.assertEqual(merged["current_stage"], "richer-stage")
+        self.assertEqual(merged["selected_skills"], ["current-skill"])
+
+    def test_state_reducer_preserves_latest_compaction_snapshot(self) -> None:
+        reducer = _load_script("changeforge_state_reducer_compaction", "src/hook-runtime/scripts/changeforge_state_reducer.py")
+        snapshots = [
+            {
+                "snapshot_id": f"snap-{index}",
+                "route_id": f"route-{index}",
+                "selected_skills": ["skill"],
+                "selected_capabilities": ["capability"],
+                "required_quality_gates": ["gate"],
+                "current_stage": "repair",
+                "pdd_summary": ["acceptance"],
+                "ddd_invariants": ["invariant"],
+                "sdd_decisions": ["decision"],
+                "tdd_validation_plan": ["test"],
+                "changed_paths": [f"file-{index}.py"],
+                "read_paths": ["README.md"],
+                "validation_results": ["stale_after_material_change" if index == 58 else "pass"],
+                "validation_freshness": "stale_after_material_change" if index == 58 else "fresh_after_latest_material_change",
+                "review_findings": ["unresolved critical finding"] if index == 59 else [],
+                "repair_events": ["repair"],
+                "rereview_events": ["rereview"],
+                "residual_risk": ["risk"],
+                "memory_references": ["memory"],
+                "repo_graph_references": ["repo"],
+                "active_skill_context": {"route_id": f"route-{index}"},
+                "last_material_edit_index": index,
+                "last_validation_command_index": index,
+            }
+            for index in range(60)
+        ]
+        state = reducer.reduce_state_update(
+            {},
+            {
+                "compaction_snapshots": snapshots,
+                "review_findings": ["resolved low finding", "unresolved critical finding"],
+                "validation_results": ["pass", "stale_after_material_change"],
+            },
+        )
+        self.assertLessEqual(len(state["compaction_snapshots"]), 5)
+        self.assertEqual(state["compaction_snapshots"][-1]["snapshot_id"], "snap-59")
+        self.assertEqual(state["review_findings"][0], "unresolved critical finding")
+        self.assertIn("stale_after_material_change", state["validation_results"][0])
+
+    def test_compact_live_case_requires_post_compact_continuation(self) -> None:
+        lib = _load_script("codex_live_lib_compact_no_continuation", "scripts/codex_live_benchmark_lib.py")
+        summary = _strong_ablation_summary_payload(
+            cases=["compact/context-retention-after-compaction"],
+            cases_summary={"compact/context-retention-after-compaction": _case_summary_payload()},
+            process_compliance_summary=_process_summary(
+                pdd_present_rate=1.0,
+                ddd_present_rate=1.0,
+                sdd_present_rate=1.0,
+                tdd_present_rate=1.0,
+                required_field_fallback_rate=0.0,
+                process_trace_inferred_only_rate=0.0,
+            ),
+            capability_artifact_evidence={
+                "compact/context-retention-after-compaction": _capability_artifact_evidence_payload(
+                    compact_continuation="not_collected"
+                )
+            },
+        )
+        coverage = lib.codex_live_capability_coverage_summary(summary)
+        item = next(row for row in coverage["items"] if row["id"] == "context_compaction_retention")
+        self.assertEqual(item["status"], "fail")
+        self.assertTrue(any("repair continuation" in reason for reason in item["reasons"]))
+
+    def test_public_summary_capability_rows_not_empty(self) -> None:
+        lib = _load_script("codex_live_lib_public_rows", "scripts/codex_live_benchmark_lib.py")
+        public = _load_script("public_summary_capability_rows", "scripts/generate-public-benchmark-summary.py")
+        summary = _strong_ablation_summary_payload(
+            capability_artifact_evidence={
+                "compact/context-retention-after-compaction": _capability_artifact_evidence_payload()
+            }
+        )
+        summary["capability_coverage_summary"] = lib.codex_live_capability_coverage_summary(summary)
+        detail = lib.codex_live_compact_detail(summary, status="partial")
+        payload = {
+            "repository": {"name": "fixture", "version": "0", "source_commit": "fixture"},
+            "status_counts": {},
+            "evidence_levels": {},
+            "items": [
+                {
+                    "name": public.CODEX_LIVE_PASS_RATE_DIMENSION,
+                    "status": "partial",
+                    "source": "reports/codex-live-benchmark-summary.json",
+                    "detail": "fixture",
+                    "command": "fixture",
+                    "detail_data": detail,
+                }
+            ],
+            "known_unknowns": [],
+            "refresh_commands": [],
+        }
+        markdown = public.render_markdown(payload)
+        self.assertIn("| context_compaction_retention | compact/context-retention-after-compaction |", markdown)
+
+    def test_self_reported_capability_evidence_not_enough(self) -> None:
+        lib = _load_script("codex_live_lib_self_report_not_enough", "scripts/codex_live_benchmark_lib.py")
+        summary = _strong_ablation_summary_payload(
+            cases_summary={
+                "injection/professional-route-manifest-activation": _case_summary_payload(),
+            },
+            process_compliance_summary=_process_summary(
+                pdd_present_rate=1.0,
+                ddd_present_rate=1.0,
+                sdd_present_rate=1.0,
+                tdd_present_rate=1.0,
+                required_field_fallback_rate=0.0,
+                process_trace_inferred_only_rate=0.0,
+            ),
+            capability_artifact_evidence={
+                "injection/professional-route-manifest-activation": _capability_artifact_evidence_payload(
+                    self_report_only=True
+                )
+            },
+        )
+        coverage = lib.codex_live_capability_coverage_summary(summary)
+        item = next(row for row in coverage["items"] if row["id"] == "professional_injection_activation")
+        self.assertNotEqual(item["status"], "pass")
+        self.assertTrue(any("CAPABILITY_EVIDENCE.md" in reason for reason in item["reasons"]))
+
+    def test_context_loss_blocks_capability_pass(self) -> None:
+        lib = _load_script("codex_live_lib_context_loss", "scripts/codex_live_benchmark_lib.py")
+        summary = _strong_ablation_summary_payload(
+            cases=["compact/context-retention-after-compaction"],
+            cases_summary={"compact/context-retention-after-compaction": _case_summary_payload()},
+            process_compliance_summary=_process_summary(
+                pdd_present_rate=1.0,
+                ddd_present_rate=1.0,
+                sdd_present_rate=1.0,
+                tdd_present_rate=1.0,
+                required_field_fallback_rate=0.0,
+                process_trace_inferred_only_rate=0.0,
+            ),
+            capability_artifact_evidence={
+                "compact/context-retention-after-compaction": _capability_artifact_evidence_payload(
+                    compact_missing=["validation_freshness", "review_findings"]
+                )
+            },
+        )
+        coverage = lib.codex_live_capability_coverage_summary(summary)
+        item = next(row for row in coverage["items"] if row["id"] == "context_compaction_retention")
+        self.assertEqual(item["status"], "fail")
+        self.assertTrue(any("validation_freshness" in reason for reason in item["reasons"]))
 
     def test_quality_improvement_ignores_cost(self) -> None:
         lib = _load_script("codex_live_lib_quality_ignores_cost", "scripts/codex_live_benchmark_lib.py")

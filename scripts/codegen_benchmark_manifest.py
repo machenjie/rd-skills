@@ -96,6 +96,9 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
     "validation": (
         "stale-validation-after-edit",
     ),
+    "compact": (
+        "context-retention-after-compaction",
+    ),
     "structure": (
         "design-pattern-overengineering",
         "inheritance-vs-composition-decision",

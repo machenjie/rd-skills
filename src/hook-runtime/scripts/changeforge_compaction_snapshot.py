@@ -14,6 +14,7 @@ from changeforge_common import (
     read_event,
     repo_root,
 )
+from changeforge_compaction_contract import snapshot_from_state
 from changeforge_executor_adapter_core import (
     snapshot_from_event_state,
     state_update_from_snapshot,
@@ -28,6 +29,7 @@ def main() -> int:
     repo = repo_root(cwd_from_event(event))
     state = load_state(repo)
     snapshot = _snapshot_label(state, event_name(event))
+    context_snapshot = snapshot_from_state(state, event, snapshot_kind="pre_compact")
     adapter_snapshot = snapshot_from_event_state(
         event,
         state,
@@ -42,7 +44,7 @@ def main() -> int:
         repo,
         runtime,
         **state_update_from_snapshot(adapter_snapshot),
-        compaction_snapshots=[snapshot],
+        compaction_snapshots=[context_snapshot, snapshot],
         turn_stage="compaction",
         suggested_capabilities=["context-packaging", "agent-execution-discipline"],
     )

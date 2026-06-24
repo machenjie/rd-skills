@@ -24,7 +24,7 @@ DIST_COPILOT_HOOK_SUPPORT = (
     / "changeforge"
     / "changeforge_copilot_skill_summary.md"
 )
-EXPECTED_HOOK_SCRIPT_COUNT = 29
+EXPECTED_HOOK_SCRIPT_COUNT = 30
 RUNTIME_ROUTE_RESOLVER_NAME = "changeforge_runtime_route_resolver.py"
 RUNTIME_ROUTE_INDEX_NAME = "changeforge_runtime_route_index.json"
 EXPECTED_COMMON_SUPPORT_FILES = [
@@ -165,6 +165,7 @@ class InstallHooksTests(unittest.TestCase):
             self.assertTrue(
                 (codex_dir / "hooks" / "changeforge_pre_tool_risk_preview.py").is_file()
             )
+            self.assertTrue((codex_dir / "hooks" / "changeforge_compaction_contract.py").is_file())
             self.assertTrue((codex_dir / "hooks" / RUNTIME_ROUTE_RESOLVER_NAME).is_file())
             self.assertTrue(
                 (codex_dir / "hooks" / "changeforge_subagent_stop_reminder.py").is_file()

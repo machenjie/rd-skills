@@ -909,6 +909,7 @@ def _append_codex_live_sections(lines: list[str], payload: dict[str, Any]) -> No
     process = detail.get("process_compliance_summary") if isinstance(detail.get("process_compliance_summary"), dict) else None
     cases = detail.get("case_result_summary") if isinstance(detail.get("case_result_summary"), dict) else {}
     cost = detail.get("cost_summary") if isinstance(detail.get("cost_summary"), dict) else {}
+    compact = detail.get("compact_context_summary") if isinstance(detail.get("compact_context_summary"), dict) else {}
 
     lines.extend(["", "## Quality Improvement", ""])
     for label, field in (
@@ -933,6 +934,19 @@ def _append_codex_live_sections(lines: list[str], payload: dict[str, Any]) -> No
             f"{item.get('run_status', 'not_collected')}/{item.get('assertion_status', 'not_collected')} | "
             f"`{item.get('status', 'unknown')}` |"
         )
+
+    lines.extend(["", "## Context Compaction Retention", ""])
+    for field in (
+        "run_status",
+        "pre_compact_snapshot_count",
+        "post_compact_reinject_count",
+        "restored_required_context_fields",
+        "missing_required_context_fields",
+        "privacy_redaction_status",
+        "context_retention_status",
+        "compact_after_repair_continuation_status",
+    ):
+        lines.append(f"- {field}: `{compact.get(field, 'not_collected')}`")
 
     lines.extend(["", "## Process Compliance", ""])
     if isinstance(process, dict):

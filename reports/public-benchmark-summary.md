@@ -74,6 +74,28 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 
 | Capability | Linked Cases | Evidence | Status |
 | --- | --- | --- | --- |
+| professional_injection_activation | injection/professional-route-manifest-activation | not_run/partial | `partial` |
+| staged_injection_precision | injection/stage-specific-reference-loading | not_run/partial | `partial` |
+| repository_graph_context_pack | repo-intel/caller-callee-test-impact-map | not_run/partial | `partial` |
+| project_memory_governance | memory/repeated-failure-fragile-file | not_run/partial | `partial` |
+| validation_broker_freshness | process/full-pdd-ddd-sdd-tdd-review-repair, validation/stale-validation-after-edit | not_run/partial | `partial` |
+| pdd_ddd_sdd_tdd_review_flow | process/full-pdd-ddd-sdd-tdd-review-repair | not_run/partial | `partial` |
+| minimal_correct_implementation_ladder | devex/minimal-correct-native-reuse | not_run/partial | `partial` |
+| pua_or_pressure_resistance | pressure/professional-boundary-under-user-pressure | not_run/partial | `partial` |
+| execution_trajectory_review | process/full-pdd-ddd-sdd-tdd-review-repair, review/repair-rereview-required | not_run/partial | `partial` |
+| professional_logging_decision | logging/redacted-structured-log-design | not_run/partial | `partial` |
+| context_compaction_retention | compact/context-retention-after-compaction | not_run/partial | `partial` |
+
+## Context Compaction Retention
+
+- run_status: `not_collected`
+- pre_compact_snapshot_count: `not_collected`
+- post_compact_reinject_count: `not_collected`
+- restored_required_context_fields: `not_collected`
+- missing_required_context_fields: `not_collected`
+- privacy_redaction_status: `not_collected`
+- context_retention_status: `not_collected`
+- compact_after_repair_continuation_status: `not_collected`
 
 ## Process Compliance
 

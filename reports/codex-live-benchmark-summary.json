@@ -7,7 +7,7 @@
   "capability_coverage_summary": {
     "assertion_backed_coverage_count": 0,
     "assertion_backed_covered_capabilities": [],
-    "core_capability_count": 10,
+    "core_capability_count": 11,
     "errors": [],
     "fail_count": 0,
     "items": [
@@ -459,14 +459,65 @@
         "run_status": "not_run",
         "status": "partial",
         "title": "Professional Logging Decision"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "compact/context-retention-after-compaction",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Missing post-compact continuation or leaked raw context means compacted sessions can lose critical delivery state.",
+        "id": "context_compaction_retention",
+        "linked_assertions": [
+          "pre_compact_snapshot_written",
+          "post_compact_reinject_emitted",
+          "route_manifest_preserved",
+          "active_skill_context_preserved",
+          "pdd_ddd_sdd_tdd_state_preserved",
+          "changed_paths_preserved",
+          "validation_freshness_preserved",
+          "review_findings_preserved",
+          "repair_rereview_state_preserved",
+          "residual_risk_preserved",
+          "memory_references_preserved",
+          "no_raw_prompt_or_secret_persisted",
+          "compressed_state_not_overwritten_by_session_bootstrap"
+        ],
+        "linked_cases": [
+          "compact/context-retention-after-compaction"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "partial",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary",
+          "process_compliance_summary missing"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Context Compaction Retention"
       }
     ],
     "matrix_path": "evals/codex-live/capability-matrix.yaml",
     "not_collected_count": 0,
-    "partial_count": 10,
+    "partial_count": 11,
     "pass_count": 0,
     "quality_ready_required_pass": [],
     "required_quality_ready_capabilities": [
+      "context_compaction_retention",
       "minimal_correct_implementation_ladder",
       "pdd_ddd_sdd_tdd_review_flow",
       "professional_injection_activation",
@@ -1458,6 +1509,7 @@
     "baseline_quality_improved": true,
     "capability_quality_ready": false,
     "capability_quality_ready_missing": [
+      "context_compaction_retention",
       "minimal_correct_implementation_ladder",
       "pdd_ddd_sdd_tdd_review_flow",
       "professional_injection_activation",

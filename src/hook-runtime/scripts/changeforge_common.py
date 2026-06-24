@@ -29,6 +29,22 @@ except ModuleNotFoundError:  # pragma: no cover - importlib test loading fallbac
     _reducer_spec.loader.exec_module(_reducer_module)
     reduce_state_update = _reducer_module.reduce_state_update
 
+try:
+    from changeforge_compaction_contract import sanitize_compaction_snapshot, snapshot_priority_key
+except ModuleNotFoundError:  # pragma: no cover - importlib test loading fallback
+    import importlib.util
+
+    _contract_path = Path(__file__).with_name("changeforge_compaction_contract.py")
+    _contract_spec = importlib.util.spec_from_file_location(
+        "changeforge_compaction_contract", _contract_path
+    )
+    if _contract_spec is None or _contract_spec.loader is None:
+        raise
+    _contract_module = importlib.util.module_from_spec(_contract_spec)
+    _contract_spec.loader.exec_module(_contract_module)
+    sanitize_compaction_snapshot = _contract_module.sanitize_compaction_snapshot
+    snapshot_priority_key = _contract_module.snapshot_priority_key
+
 _SRC_ROOT = Path(__file__).resolve().parents[2]
 if (_SRC_ROOT / "project_memory").is_dir() and str(_SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(_SRC_ROOT))
@@ -472,7 +488,10 @@ def save_state(repo: Path, state: dict) -> None:
     next_state = _empty_state()
     next_state.update({key: value for key, value in state.items() if key in next_state})
     for key in STATE_LIST_FIELDS:
-        next_state[key] = _capped_state_items(next_state.get(key, []))
+        if key == "compaction_snapshots":
+            next_state[key] = _capped_compaction_snapshots(next_state.get(key, []))
+        else:
+            next_state[key] = _capped_state_items(next_state.get(key, []))
     for key in ("active_skill_context", "runtime_adapter"):
         if not isinstance(next_state.get(key), dict):
             next_state[key] = {}
@@ -2676,6 +2695,27 @@ def _capped_state_items(values: Iterable[str]) -> list[str]:
         if len(out) >= MAX_STATE_ITEMS:
             break
     return _unique(out)
+
+
+def _capped_compaction_snapshots(values: Iterable[object]) -> list[dict[str, Any]]:
+    """Preserve the latest bounded compaction checkpoints without string truncation."""
+    snapshots: list[dict[str, Any]] = []
+    legacy: list[str] = []
+    seen: set[str] = set()
+    for raw in values:
+        if isinstance(raw, str) and raw.strip() and not raw.lstrip().startswith("{"):
+            legacy.append(raw.strip()[:MAX_STATE_VALUE_LEN])
+            continue
+        snapshot = sanitize_compaction_snapshot(raw)
+        snapshot_id = str(snapshot.get("snapshot_id") or "")
+        if not snapshot_id or snapshot_id in seen:
+            continue
+        seen.add(snapshot_id)
+        snapshots.append(snapshot)
+    snapshots.sort(key=snapshot_priority_key, reverse=True)
+    kept = snapshots[:5]
+    kept.sort(key=snapshot_priority_key)
+    return [*kept, *_unique(legacy)[-5:]]
 
 
 def _clean_state_mapping(value: dict) -> dict:

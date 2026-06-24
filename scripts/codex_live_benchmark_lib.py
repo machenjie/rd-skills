@@ -119,6 +119,7 @@ CORE_CAPABILITY_IDS = (
     "pua_or_pressure_resistance",
     "execution_trajectory_review",
     "professional_logging_decision",
+    "context_compaction_retention",
 )
 PROCESS_EVIDENCE_CAPABILITY_IDS = frozenset(
     {
@@ -131,6 +132,7 @@ PROCESS_EVIDENCE_CAPABILITY_IDS = frozenset(
         "pua_or_pressure_resistance",
         "execution_trajectory_review",
         "professional_logging_decision",
+        "context_compaction_retention",
     }
 )
 CAPABILITY_QUALITY_READY_REQUIRED_IDS = frozenset(
@@ -141,6 +143,7 @@ CAPABILITY_QUALITY_READY_REQUIRED_IDS = frozenset(
         "validation_broker_freshness",
         "minimal_correct_implementation_ladder",
         "professional_logging_decision",
+        "context_compaction_retention",
     }
 )
 LARGE_QUALITY_IMPROVEMENT_MIN_CAPABILITY_COUNT = 6
@@ -187,6 +190,14 @@ FORBIDDEN_ABSOLUTE_USER_PATH_PATTERNS = (
 )
 RAW_ARTIFACT_FILENAMES = frozenset({"events.jsonl"})
 CODEGEN_HARNESS_ENV_PATTERN = re.compile(r"(?i)\bCHANGEFORGE_CODEGEN_[A-Z0-9_]+\b")
+REQUIRED_CAPABILITY_ARTIFACTS = (
+    "process-trace.json",
+    "result.json",
+    "grading/grading-result.json",
+    "events.redacted.jsonl",
+    "final.md",
+    "diff.patch",
+)
 
 
 @dataclass(frozen=True)
@@ -803,9 +814,7 @@ def codex_live_capability_coverage_status(summary: dict[str, Any] | None) -> tup
     """Return core capability coverage status plus errors and warnings."""
     if not isinstance(summary, dict):
         return "not_collected", [], ["summary missing"]
-    coverage = summary.get("capability_coverage_summary")
-    if not isinstance(coverage, dict):
-        coverage = codex_live_capability_coverage_summary(summary)
+    coverage = codex_live_capability_coverage_summary(summary)
     status = str(coverage.get("status") or "not_collected")
     errors = [str(error) for error in coverage.get("errors", [])] if isinstance(coverage.get("errors"), list) else []
     warnings = [
@@ -954,7 +963,6 @@ def _capability_case_result(
     *,
     root: Path,
 ) -> dict[str, Any]:
-    del root
     metadata = case_metadata.get(case_id)
     cases_summary = summary.get("cases_summary") if isinstance(summary.get("cases_summary"), dict) else {}
     payload = cases_summary.get(case_id) if isinstance(cases_summary, dict) else None
@@ -987,14 +995,127 @@ def _capability_case_result(
         assertion_status = "fail"
     else:
         assertion_status = _skills_variant_assertion_status(variants)
+    artifact_status, artifact_reasons, artifact_evidence_collected = _capability_artifact_status(
+        summary,
+        case_id,
+        capability,
+    )
+    reasons.extend(artifact_reasons)
+    if artifact_status == "fail":
+        assertion_status = "fail"
+    elif artifact_status == "partial" and assertion_status == "pass":
+        assertion_status = "partial"
     run_status = "run" if not missing_variants else "missing_required_variant"
-    evidence_collected = assertion_status == "pass" and not missing_variants and not reasons
+    evidence_collected = (
+        assertion_status == "pass"
+        and artifact_evidence_collected
+        and not missing_variants
+        and not reasons
+    )
     return {
         "case_id": case_id,
         "run_status": run_status,
         "assertion_status": assertion_status,
         "evidence_collected": evidence_collected,
+        "artifact_evidence_status": artifact_status,
+        "artifact_evidence": _bounded_artifact_evidence(summary, case_id),
         "reasons": _dedupe(reasons),
+    }
+
+
+def _capability_artifact_status(
+    summary: dict[str, Any],
+    case_id: str,
+    capability: CodexLiveCapability,
+) -> tuple[str, list[str], bool]:
+    evidence = _bounded_artifact_evidence(summary, case_id)
+    reasons: list[str] = []
+    if not evidence:
+        return "partial", ["run artifact evidence missing for linked case"], False
+    status = "pass"
+    for variant in capability.required_variants:
+        variant_evidence = evidence.get(variant)
+        if not isinstance(variant_evidence, dict):
+            status = "partial"
+            reasons.append(f"{variant}: run artifact evidence missing")
+            continue
+        runs = int(variant_evidence.get("runs", 0) or 0)
+        artifact_runs = int(variant_evidence.get("artifact_backed_run_count", 0) or 0)
+        if runs <= 0:
+            status = "partial"
+            reasons.append(f"{variant}: no artifact-backed runs recorded")
+            continue
+        if artifact_runs < runs:
+            status = "partial"
+            reasons.append(f"{variant}: missing required run artifacts")
+        missing = variant_evidence.get("missing_required_artifacts")
+        if isinstance(missing, dict) and missing:
+            status = "partial"
+            reasons.append(f"{variant}: missing artifacts {', '.join(sorted(missing))}")
+        if int(variant_evidence.get("self_report_only_count", 0) or 0) > 0:
+            status = "partial"
+            reasons.append(f"{variant}: CAPABILITY_EVIDENCE.md is not backed by run metadata artifacts")
+        if variant_evidence.get("privacy_redaction_status") == "fail":
+            status = "fail"
+            reasons.append(f"{variant}: forbidden raw prompt, secret, command output, or absolute path leaked")
+        if variant in {"skills_only_clean", "skills_with_hooks_clean"}:
+            route_count = int(variant_evidence.get("route_process_evidence_count", 0) or 0)
+            if route_count < runs:
+                status = "partial"
+                reasons.append(f"{variant}: explicit route/process evidence missing")
+        if variant == "skills_with_hooks_clean":
+            hook_count = int(variant_evidence.get("hook_bounded_evidence_count", 0) or 0)
+            if hook_count < runs:
+                status = "partial"
+                reasons.append(f"{variant}: hook-specific bounded evidence missing")
+    if capability.id == "context_compaction_retention":
+        compact_status, compact_reasons = _compact_artifact_status(evidence)
+        reasons.extend(compact_reasons)
+        if compact_status == "fail":
+            status = "fail"
+        elif compact_status == "partial" and status == "pass":
+            status = "partial"
+    return status, _dedupe(reasons), status == "pass"
+
+
+def _compact_artifact_status(evidence: dict[str, Any]) -> tuple[str, list[str]]:
+    hooks = evidence.get("skills_with_hooks_clean") if isinstance(evidence.get("skills_with_hooks_clean"), dict) else {}
+    compact = hooks.get("compact") if isinstance(hooks.get("compact"), dict) else {}
+    reasons: list[str] = []
+    status = "pass"
+    if int(compact.get("pre_compact_snapshot_count", 0) or 0) <= 0:
+        status = "fail"
+        reasons.append("pre_compact snapshot evidence missing")
+    if int(compact.get("post_compact_reinject_count", 0) or 0) <= 0:
+        status = "fail"
+        reasons.append("post_compact reinjection evidence missing")
+    if compact.get("privacy_redaction_status") != "pass":
+        status = "fail"
+        reasons.append("compaction privacy redaction did not pass")
+    if compact.get("context_retention_status") != "pass":
+        status = "fail"
+        reasons.append("context retention status is not pass")
+    if compact.get("compact_after_repair_continuation_status") != "pass":
+        status = "fail"
+        reasons.append("post-compact repair continuation evidence missing")
+    missing = compact.get("missing_required_context_fields")
+    if isinstance(missing, list) and missing:
+        status = "fail"
+        reasons.append("missing compact context fields: " + ", ".join(str(item) for item in missing))
+    return status, reasons
+
+
+def _bounded_artifact_evidence(summary: dict[str, Any], case_id: str) -> dict[str, Any]:
+    evidence = summary.get("capability_artifact_evidence")
+    if not isinstance(evidence, dict):
+        return {}
+    case_evidence = evidence.get(case_id)
+    if not isinstance(case_evidence, dict):
+        return {}
+    return {
+        str(variant): payload
+        for variant, payload in case_evidence.items()
+        if isinstance(payload, dict)
     }
 
 
@@ -1062,9 +1183,7 @@ def codex_live_compact_detail(
     variants = summary.get("variants") if isinstance(summary.get("variants"), dict) else {}
     coverage = summary.get("coverage_summary") if isinstance(summary.get("coverage_summary"), dict) else {}
     cost = summary.get("cost_summary") if isinstance(summary.get("cost_summary"), dict) else {}
-    capability = summary.get("capability_coverage_summary")
-    if not isinstance(capability, dict):
-        capability = codex_live_capability_coverage_summary(summary)
+    capability = codex_live_capability_coverage_summary(summary)
     return {
         "evidence_status": status,
         "evidence_level": summary.get("evidence_level"),
@@ -1116,7 +1235,21 @@ def codex_live_compact_detail(
             "not_collected_count": capability.get("not_collected_count"),
             "assertion_backed_coverage_count": capability.get("assertion_backed_coverage_count"),
             "assertion_backed_covered_capabilities": capability.get("assertion_backed_covered_capabilities"),
+            "items": [
+                {
+                    "id": item.get("id"),
+                    "linked_cases": item.get("linked_cases"),
+                    "run_status": item.get("run_status"),
+                    "assertion_status": item.get("assertion_status"),
+                    "evidence_collected": item.get("evidence_collected"),
+                    "status": item.get("status"),
+                    "reasons": list(item.get("reasons", []))[:6] if isinstance(item.get("reasons"), list) else [],
+                }
+                for item in capability.get("items", [])
+                if isinstance(item, dict)
+            ],
         },
+        "compact_context_summary": summary.get("compact_context_summary"),
         "case_result_summary": summary.get("case_result_summary"),
         "cost_summary": {
             "cost_adjusted_delta": cost.get("cost_adjusted_delta"),
@@ -1152,9 +1285,7 @@ def codex_live_capability_repair_hints(summary: dict[str, Any] | None) -> list[s
     """Return concise repair hints for non-pass live capability coverage."""
     if not isinstance(summary, dict):
         return ["add capability matrix", "register assertion-backed live cases", "run strict ablation", "collect explicit process traces"]
-    coverage = summary.get("capability_coverage_summary")
-    if not isinstance(coverage, dict):
-        coverage = codex_live_capability_coverage_summary(summary)
+    coverage = codex_live_capability_coverage_summary(summary)
     if coverage.get("status") == "pass":
         return []
     hints = [

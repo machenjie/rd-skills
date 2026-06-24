@@ -255,3 +255,35 @@ core_capabilities:
     evidence_kind: process-trace, test-suite assertions, security checks, final.md, diff.patch
     failure_interpretation: Raw sensitive logging or missing redaction tests fail this capability.
     current_status: derived_from_live_summary
+  - id: context_compaction_retention
+    title: Context Compaction Retention
+    description: Verify that required task context survives context compression and is reinjected as bounded facts.
+    expected_runtime_signal: pre_compact snapshot plus post_compact or SessionStart compact reinjection; continuation uses preserved route, stage, validation, review, risk, memory, and changed-file context.
+    linked_live_cases:
+      - compact/context-retention-after-compaction
+    linked_assertions:
+      - pre_compact_snapshot_written
+      - post_compact_reinject_emitted
+      - route_manifest_preserved
+      - active_skill_context_preserved
+      - pdd_ddd_sdd_tdd_state_preserved
+      - changed_paths_preserved
+      - validation_freshness_preserved
+      - review_findings_preserved
+      - repair_rereview_state_preserved
+      - residual_risk_preserved
+      - memory_references_preserved
+      - no_raw_prompt_or_secret_persisted
+      - compressed_state_not_overwritten_by_session_bootstrap
+    required_variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+    publishable_for_strict: true
+    quality_pass_criteria: >
+      Compaction preserves bounded professional context and blocks pass when
+      validation freshness, review findings, repair state, or privacy redaction
+      evidence is missing.
+    evidence_kind: compaction-context snapshot, process-trace, events.redacted.jsonl, final.md, grading metadata
+    failure_interpretation: Missing post-compact continuation or leaked raw context means compacted sessions can lose critical delivery state.
+    current_status: derived_from_live_summary

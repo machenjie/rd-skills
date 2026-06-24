@@ -29,6 +29,7 @@ from codex_live_benchmark_lib import (
     VARIANTS,
     CodexLiveCase,
     detect_baseline_contamination,
+    load_capability_matrix,
     load_case_registry,
     redact_codex_command,
     redact_report_text,
@@ -64,6 +65,26 @@ PROCESS_REQUIRED_FIELDS = {
         "validation_commands",
     ),
 }
+COMPACTION_REQUIRED_FIELDS = (
+    "route_id",
+    "selected_skills",
+    "selected_capabilities",
+    "required_quality_gates",
+    "current_stage",
+    "pdd_summary",
+    "ddd_invariants",
+    "sdd_decisions",
+    "tdd_validation_plan",
+    "changed_paths",
+    "validation_results",
+    "validation_freshness",
+    "review_findings",
+    "repair_events",
+    "rereview_events",
+    "residual_risk",
+    "memory_references",
+    "active_skill_context",
+)
 PROCESS_LIST_FIELDS = {
     "pdd": (
         "user_or_system_impact",
@@ -158,6 +179,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--benchmark", action="append", default=[])
     parser.add_argument("--category", action="append", default=[])
     parser.add_argument("--tier", action="append", choices=CASE_TIERS, default=[])
+    parser.add_argument(
+        "--capability-core",
+        action="store_true",
+        help="Run the core capability linked live cases declared in evals/codex-live/capability-matrix.yaml.",
+    )
     parser.add_argument("--benchmark-mode", choices=BENCHMARK_MODES, default="clean-paired")
     parser.add_argument(
         "--auth-policy",
@@ -226,9 +252,13 @@ def select_cases(
     benchmarks: list[str],
     categories: list[str],
     tiers: list[str],
+    capability_core: bool = False,
 ) -> list[CodexLiveCase]:
     """Select enabled cases by id or category."""
     selected = [case for case in cases if case.enabled]
+    if capability_core:
+        capability_case_ids = _capability_core_case_ids()
+        selected = [case for case in selected if case.id in capability_case_ids]
     if benchmarks:
         requested = set(benchmarks)
         selected = [case for case in selected if case.id in requested]
@@ -239,6 +269,14 @@ def select_cases(
         requested_tiers = set(tiers)
         selected = [case for case in selected if case.tier in requested_tiers]
     return selected
+
+
+def _capability_core_case_ids() -> set[str]:
+    return {
+        case_id
+        for capability in load_capability_matrix()
+        for case_id in capability.linked_live_cases
+    }
 
 
 def selected_variants(args: argparse.Namespace) -> list[str]:
@@ -978,6 +1016,7 @@ def _run_one_case(
     _remove_changeforge_support_artifacts_for_grading(candidate_dir)
     metrics = _parse_events(events_path, run_dir / "events.metrics.json", events_redacted_path)
     grading = _grade(case, candidate_dir, grading_dir)
+    candidate_artifacts = _copy_candidate_evidence_artifacts(candidate_dir, run_dir)
     contamination = _contamination_for_variant(variant, run_dir)
     grading_status = _grading_status(case, grading, contamination, variant)
     artifact_status = _artifact_status_after_grading(
@@ -1055,6 +1094,10 @@ def _run_one_case(
             "git_status": _artifact_path(run_dir, run_dir / "git-status.txt"),
             "grading": _artifact_path(run_dir, grading_dir / "grading-result.json"),
             "process_trace": _artifact_path(run_dir, run_dir / "process-trace.json"),
+            **{
+                key: _artifact_path(run_dir, path)
+                for key, path in candidate_artifacts.items()
+            },
         },
         "grading": grading,
         "metrics": metrics,
@@ -1305,6 +1348,7 @@ def _process_trace_payload(
         "trajectory_findings": _trace_named_evidence(facts, "trajectory_findings"),
         "residual_risk": _trace_named_evidence(facts, "residual_risk"),
         "artifacts": artifacts,
+        "compaction_context": _compact_context_from_artifact(run_dir) if case.id.startswith("compact/") else {},
         "result_status": result.get("status"),
         "grading_status": result.get("grading_status"),
         "failure_category": result.get("failure_category"),
@@ -2475,6 +2519,8 @@ def _selected_skills_for_variant(variant: str | None, case: CodexLiveCase | None
         skills.extend(["security-privacy-gate", "logging-design-gate"])
     if case_id.startswith(("repo-intel/", "memory/", "validation/", "process/", "review/")):
         skills.append("ai-code-review-refactor")
+    if case_id.startswith("compact/"):
+        skills.extend(["quality-test-gate", "ai-code-review-refactor"])
     return list(dict.fromkeys(skills))
 
 
@@ -2504,6 +2550,15 @@ def _selected_capabilities_for_variant(variant: str | None, case: CodexLiveCase 
         capabilities.append("validation-broker")
     if case_id.startswith(("process/", "review/")):
         capabilities.extend(["engineering-stage-professionalism", "execution-trajectory-analysis"])
+    if case_id.startswith("compact/"):
+        capabilities.extend(
+            [
+                "agent-workflow-state-machine",
+                "project-memory-governance",
+                "validation-broker",
+                "execution-trajectory-analysis",
+            ]
+        )
     if case_id.startswith("devex/"):
         capabilities.extend(["minimal-correct-implementation", "agent-execution-discipline"])
     if case_id.startswith("pressure/"):
@@ -2871,6 +2926,54 @@ def _remove_changeforge_support_artifacts_for_grading(candidate_dir: Path) -> No
         shutil.rmtree(candidate_dir / support_dir, ignore_errors=True)
 
 
+def _copy_candidate_evidence_artifacts(candidate_dir: Path, run_dir: Path) -> dict[str, Path]:
+    """Preserve bounded candidate evidence without retaining the full candidate repo."""
+    artifact_names = {
+        "candidate_capability_evidence": "CAPABILITY_EVIDENCE.md",
+        "candidate_compaction_context": "COMPACTION_CONTEXT.json",
+    }
+    copied: dict[str, Path] = {}
+    target_dir = run_dir / "candidate-artifacts"
+    for key, name in artifact_names.items():
+        source = candidate_dir / name
+        if not source.is_file():
+            continue
+        target_dir.mkdir(parents=True, exist_ok=True)
+        target = target_dir / name
+        target.write_text(redact_report_text(source.read_text(encoding="utf-8", errors="ignore")), encoding="utf-8")
+        copied[key] = target
+    return copied
+
+
+def _compact_context_from_artifact(run_dir: Path) -> dict[str, Any]:
+    path = run_dir / "candidate-artifacts" / "COMPACTION_CONTEXT.json"
+    if not path.is_file():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {"context_retention_status": "fail", "missing_required_context_fields": list(COMPACTION_REQUIRED_FIELDS)}
+    if not isinstance(payload, dict):
+        return {"context_retention_status": "fail", "missing_required_context_fields": list(COMPACTION_REQUIRED_FIELDS)}
+    missing = [field for field in COMPACTION_REQUIRED_FIELDS if not payload.get(field)]
+    restored = [field for field in COMPACTION_REQUIRED_FIELDS if field not in missing]
+    return {
+        "pre_compact_snapshot_written": payload.get("pre_compact_snapshot_written") is True,
+        "post_compact_reinject_emitted": payload.get("post_compact_reinject_emitted") is True,
+        "restored_required_context_fields": restored,
+        "missing_required_context_fields": missing,
+        "privacy_redaction_status": str(payload.get("privacy_redaction_status") or "not_collected"),
+        "context_retention_status": str(payload.get("context_retention_status") or ("pass" if not missing else "partial")),
+        "compact_after_repair_continuation_status": str(
+            payload.get("compact_after_repair_continuation_status") or "not_collected"
+        ),
+        "compressed_state_not_overwritten_by_session_bootstrap": payload.get(
+            "compressed_state_not_overwritten_by_session_bootstrap"
+        )
+        is True,
+    }
+
+
 def _redact_text_artifact(path: Path) -> None:
     if path.exists() and path.is_file():
         path.write_text(redact_report_text(path.read_text(encoding="utf-8", errors="ignore")), encoding="utf-8")
@@ -3002,7 +3105,13 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{case.id}\t{state}\ttier={case.tier}\tcoverage={dimensions}\tvariants={','.join(case.variants)}")
         return 0
 
-    selected = select_cases(cases, benchmarks=args.benchmark, categories=args.category, tiers=args.tier)
+    selected = select_cases(
+        cases,
+        benchmarks=args.benchmark,
+        categories=args.category,
+        tiers=args.tier,
+        capability_core=args.capability_core,
+    )
     variants = selected_variants(args)
     try:
         selected, selection_metadata = apply_runtime_selection(args, selected, variants)

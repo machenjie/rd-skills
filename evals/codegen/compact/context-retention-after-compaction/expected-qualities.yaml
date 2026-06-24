@@ -1,0 +1,45 @@
+id: context-retention-after-compaction
+category: compact
+complexity: L4
+focus:
+  - context compaction retention
+  - bounded state reinjection
+  - validation freshness
+  - repair and re-review continuation
+route_hints:
+  skills:
+    - change-forge-router
+    - development-process-orchestrator
+    - quality-test-gate
+    - ai-code-review-refactor
+  capabilities:
+    - agent-workflow-state-machine
+    - validation-broker
+    - project-memory-governance
+    - agent-execution-discipline
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+    - security gate
+expected_outcomes:
+  - COMPACTION_CONTEXT.json contains pre_compact and post_compact/session compact evidence.
+  - Required route, skill, capability, gate, process, validation, review, repair, risk, memory, and changed-file fields are preserved.
+  - Final handoff continues repair and re-review after compaction rather than stopping at the snapshot.
+  - No raw prompt, raw command output, secret, environment variable, full diff, full file content, or local absolute path is persisted.
+required_qualities:
+  - Evidence is machine-readable and bounded.
+  - Validation freshness is not overstated.
+  - Review findings and repair state survive compaction.
+  - CAPABILITY_EVIDENCE.md is auxiliary and cannot substitute for JSON/process artifacts.
+forbidden_shortcuts:
+  - Passing from self-reported markdown only.
+  - Treating inferred or fallback process text as explicit compact evidence.
+  - Saving raw prompt, raw command output, env vars, secrets, full file contents, or full diff body.
+  - Claiming completion before post-compact repair and re-review.
+evidence:
+  - COMPACTION_CONTEXT.json
+  - CAPABILITY_EVIDENCE.md
+  - validation command evidence
+  - absence of forbidden raw or sensitive context

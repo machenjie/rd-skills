@@ -3,7 +3,32 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
+
+try:
+    from changeforge_compaction_contract import (
+        latest_snapshot,
+        merge_active_context,
+        sanitize_compaction_snapshot,
+        snapshot_priority_key,
+    )
+except ModuleNotFoundError:  # pragma: no cover - importlib test loading fallback
+    import importlib.util
+    from pathlib import Path
+
+    _contract_path = Path(__file__).with_name("changeforge_compaction_contract.py")
+    _contract_spec = importlib.util.spec_from_file_location(
+        "changeforge_compaction_contract", _contract_path
+    )
+    if _contract_spec is None or _contract_spec.loader is None:
+        raise
+    _contract_module = importlib.util.module_from_spec(_contract_spec)
+    _contract_spec.loader.exec_module(_contract_module)
+    latest_snapshot = _contract_module.latest_snapshot
+    merge_active_context = _contract_module.merge_active_context
+    sanitize_compaction_snapshot = _contract_module.sanitize_compaction_snapshot
+    snapshot_priority_key = _contract_module.snapshot_priority_key
 
 
 MAX_STATE_ITEMS = 50
@@ -12,10 +37,10 @@ MAX_STATE_VALUE_LEN = 300
 STATE_REDUCERS = {
     "runtime_adapter": "mapping_replace",
     "normalized_events": "additive_unique",
-    "changed_paths": "additive_unique",
+    "changed_paths": "risk_priority_then_recent",
     "deleted_paths": "additive_unique",
     "generated_paths": "additive_unique",
-    "read_paths": "additive_unique",
+    "read_paths": "risk_priority_then_recent",
     "read_tools": "additive_unique",
     "searched_patterns": "additive_unique",
     "external_file_changes": "additive_unique",
@@ -29,11 +54,11 @@ STATE_REDUCERS = {
     "structure_quality_findings": "additive_unique",
     "post_edit_structure_findings": "additive_unique",
     "review_targets": "additive_unique",
-    "review_findings": "additive_unique",
+    "review_findings": "unresolved_findings_first",
     "repair_findings": "additive_unique",
-    "repair_events": "additive_unique",
-    "rereview_events": "additive_unique",
-    "validation_results": "additive_unique",
+    "repair_events": "latest_by_finding",
+    "rereview_events": "latest_by_finding",
+    "validation_results": "latest_by_command_or_path_preserve_stale_state",
     "risk_surfaces": "additive_unique",
     "changed_path_risk_surfaces": "additive_unique",
     "command_risk_surfaces": "additive_unique",
@@ -44,7 +69,7 @@ STATE_REDUCERS = {
     "rollback_points": "additive_unique",
     "reference_loads": "additive_unique",
     "subagent_contracts": "additive_unique",
-    "compaction_snapshots": "additive_unique",
+    "compaction_snapshots": "latest_checkpoint_preserve_required_fields",
     "prompt_signals": "additive_unique",
     "suggested_skills": "additive_unique",
     "suggested_capabilities": "additive_unique",
@@ -84,7 +109,7 @@ STATE_REDUCERS = {
     "turn_stage": "last_non_empty",
     "owner_skill": "last_non_empty",
     "reviewer_skill": "last_non_empty",
-    "active_skill_context": "mapping_replace",
+    "active_skill_context": "merge_preserve_required_fields",
 }
 
 
@@ -114,6 +139,23 @@ def reduce_state_update(state: dict, update: dict) -> dict:
         elif reducer == "mapping_replace":
             if isinstance(value, dict) and value:
                 next_state[field] = _clean_mapping(value)
+        elif reducer == "merge_preserve_required_fields":
+            if isinstance(value, dict) and value:
+                snapshot = latest_snapshot(next_state.get("compaction_snapshots", []))
+                merged = _clean_mapping({**_mapping_value(next_state.get(field)), **value})
+                if snapshot:
+                    merged = merge_active_context(merged, snapshot)
+                next_state[field] = merged
+        elif reducer == "latest_checkpoint_preserve_required_fields":
+            next_state[field] = _latest_checkpoint_preserve_required_fields(next_state.get(field, []), value)
+        elif reducer == "latest_by_command_or_path_preserve_stale_state":
+            next_state[field] = _latest_by_key_preserve_stale(next_state.get(field, []), value)
+        elif reducer == "unresolved_findings_first":
+            next_state[field] = _unresolved_findings_first(next_state.get(field, []), value)
+        elif reducer == "latest_by_finding":
+            next_state[field] = _latest_by_key(next_state.get(field, []), value)
+        elif reducer == "risk_priority_then_recent":
+            next_state[field] = _risk_priority_then_recent(next_state.get(field, []), value)
     return next_state
 
 
@@ -156,6 +198,105 @@ def _clean_mapping(value: dict) -> dict:
         else:
             cleaned[name] = str(raw).strip()[:MAX_STATE_VALUE_LEN]
     return cleaned
+
+
+def _mapping_value(value: Any) -> dict:
+    return value if isinstance(value, dict) else {}
+
+
+def _latest_checkpoint_preserve_required_fields(existing: Any, incoming: Any) -> list[dict[str, Any]]:
+    raw_values = [*_as_iterable(existing), *_as_iterable(incoming)]
+    legacy = [
+        str(value).strip()[:MAX_STATE_VALUE_LEN]
+        for value in raw_values
+        if isinstance(value, str) and str(value).strip() and not str(value).lstrip().startswith("{")
+    ]
+    snapshots = [sanitize_compaction_snapshot(value) for value in raw_values]
+    snapshots = [snapshot for snapshot in snapshots if snapshot.get("snapshot_id")]
+    if not snapshots:
+        return _unique(legacy)[-5:]
+    snapshots.sort(key=snapshot_priority_key, reverse=True)
+    kept: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for snapshot in snapshots:
+        snapshot_id = str(snapshot.get("snapshot_id") or "")
+        if snapshot_id in seen:
+            continue
+        seen.add(snapshot_id)
+        kept.append(snapshot)
+        if len(kept) >= 5:
+            break
+    kept.sort(key=snapshot_priority_key)
+    return [*kept, *_unique(legacy)[-5:]]
+
+
+def _latest_by_key_preserve_stale(existing: Any, incoming: Any) -> list[str]:
+    values = _latest_by_key(existing, incoming)
+    stale = [value for value in values if "stale" in value.casefold()]
+    fresh = [value for value in values if value not in stale]
+    return _unique([*stale, *fresh])[:MAX_STATE_ITEMS]
+
+
+def _unresolved_findings_first(existing: Any, incoming: Any) -> list[str]:
+    values = _unique([*_string_items(existing), *_string_items(incoming)])
+
+    def score(value: str) -> tuple[int, int]:
+        lowered = value.casefold()
+        unresolved = not any(term in lowered for term in ("resolved", "closed", "fixed", "rereview passed"))
+        severity = 0 if any(term in lowered for term in ("critical", "p0", "security", "data loss")) else 1
+        return (0 if unresolved else 1, severity)
+
+    return sorted(values, key=score)[:MAX_STATE_ITEMS]
+
+
+def _latest_by_key(existing: Any, incoming: Any) -> list[str]:
+    values = [*_string_items(existing), *_string_items(incoming)]
+    by_key: dict[str, str] = {}
+    order: list[str] = []
+    for value in values:
+        key = _record_key(value)
+        if key not in order:
+            order.append(key)
+        by_key[key] = value
+    return [by_key[key] for key in order[-MAX_STATE_ITEMS:]]
+
+
+def _risk_priority_then_recent(existing: Any, incoming: Any) -> list[str]:
+    values = _unique([*_string_items(existing), *_string_items(incoming)])
+    values = values[-MAX_STATE_ITEMS * 2 :]
+    if not any(
+        any(term in value.casefold() for term in ("security", "schema", "migration", "auth", "hook", "runtime", "state"))
+        for value in values
+    ):
+        return values[:MAX_STATE_ITEMS]
+
+    def score(value: str) -> tuple[int, int]:
+        lowered = value.casefold()
+        risky = any(term in lowered for term in ("security", "schema", "migration", "auth", "hook", "runtime", "state"))
+        recent_index = values.index(value)
+        return (0 if risky else 1, -recent_index)
+
+    return sorted(values, key=score)[:MAX_STATE_ITEMS]
+
+
+def _string_items(value: Any) -> list[str]:
+    items: list[str] = []
+    for raw in _as_iterable(value):
+        if isinstance(raw, dict):
+            text = json.dumps(_clean_mapping(raw), sort_keys=True)
+        else:
+            text = str(raw).strip()
+        if text:
+            items.append(text[:MAX_STATE_VALUE_LEN])
+    return items
+
+
+def _record_key(value: str) -> str:
+    lowered = value.casefold()
+    for marker in ("finding=", "finding:", "path=", "path:", "command=", "command:"):
+        if marker in lowered:
+            return lowered.split(marker, 1)[1].split()[0][:120]
+    return lowered[:120]
 
 
 def _unique(values: list[str]) -> list[str]:

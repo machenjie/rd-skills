@@ -103,8 +103,9 @@ The first-stage runtime provides these reminder gates:
   It only emits a route preflight; it never selects a full route and never reads
   every reference. It is wired as a `SessionStart` hook for Codex, Claude, and Copilot
   (Codex `SessionStart` also fires with the `compact` source after compaction,
-  so the runtime snapshots active context before bootstrap/reinject and keeps
-  professional injection from overwriting compacted context). Copilot
+  so the runtime writes a bounded compaction snapshot before bootstrap/reinject,
+  restores missing active context from that snapshot, and keeps professional
+  injection from overwriting compacted context). Copilot
   `SessionStart` and `SubagentStart` also inject the static ChangeForge skill
   summary as top-level `additionalContext`. The same guidance also ships as an
   install-time bootstrap fragment for users who prefer not to trust executable hooks.
@@ -458,6 +459,14 @@ Runtime support:
   `SubagentStart` so spawned subagents inherit the preflight. Codex
   `SessionStart` additionally fires with the `compact` source, re-injecting the
   preflight after compaction.
+- Compaction reinjection uses `changeforge_compaction_contract.py` and
+  `schemas/compaction-context.schema.json` to preserve only bounded fields:
+  route id, selected skills/capabilities/gates, current stage, PDD/DDD/SDD/TDD
+  summaries, changed/read paths, validation freshness, review/repair/re-review
+  state, residual risk, memory references, repo graph references, and active
+  skill context. The snapshot rejects or redacts raw prompts, raw assistant
+  messages, raw command output, environment variables, secrets, API keys, local
+  absolute paths, full file contents, and full diff bodies.
 - The same guidance also ships as an install-time fragment
   (`changeforge-route-preflight.md`) for users who prefer not to trust an
   executable hook, or to reference from the project's agent instructions.
@@ -472,9 +481,10 @@ events whose advisory output Copilot actually consumes:
 
 - `SessionStart` (Codex also with the `compact` source) and `SubagentStart`
   inject the route preflight. On compact sources the compaction snapshot runs
-  before bootstrap/reinject and the professional injector does not replace the
-  prior active context. Copilot also injects the static ChangeForge skill summary
-  on these two events.
+  before bootstrap/reinject, latest active snapshots and unresolved
+  review/repair/validation state are preserved by priority-aware reducers, and
+  the professional injector does not replace the prior active context. Copilot
+  also injects the static ChangeForge skill summary on these two events.
 - `UserPromptSubmit` adds a per-prompt route reminder for Codex and Claude.
   Copilot templates omit the event because Copilot does not process its
   advisory output.

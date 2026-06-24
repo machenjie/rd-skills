@@ -809,6 +809,7 @@ def _write_hook_manifest(
         "changeforge_adapter_capabilities",
         "changeforge_hook_policy",
         "changeforge_state_reducer",
+        "changeforge_compaction_contract",
         "changeforge_normalized_event",
         "changeforge_lifecycle_state",
         "changeforge_evidence_ledger",

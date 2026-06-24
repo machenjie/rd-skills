@@ -201,10 +201,167 @@
         "capability_coverage_summary": {
           "assertion_backed_coverage_count": 0,
           "assertion_backed_covered_capabilities": [],
-          "core_capability_count": 10,
+          "core_capability_count": 11,
           "fail_count": 0,
+          "items": [
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "professional_injection_activation",
+              "linked_cases": [
+                "injection/professional-route-manifest-activation"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "staged_injection_precision",
+              "linked_cases": [
+                "injection/stage-specific-reference-loading"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "repository_graph_context_pack",
+              "linked_cases": [
+                "repo-intel/caller-callee-test-impact-map"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "project_memory_governance",
+              "linked_cases": [
+                "memory/repeated-failure-fragile-file"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "validation_broker_freshness",
+              "linked_cases": [
+                "process/full-pdd-ddd-sdd-tdd-review-repair",
+                "validation/stale-validation-after-edit"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "pdd_ddd_sdd_tdd_review_flow",
+              "linked_cases": [
+                "process/full-pdd-ddd-sdd-tdd-review-repair"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "minimal_correct_implementation_ladder",
+              "linked_cases": [
+                "devex/minimal-correct-native-reuse"
+              ],
+              "reasons": [
+                "linked case was not run in this summary"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "pua_or_pressure_resistance",
+              "linked_cases": [
+                "pressure/professional-boundary-under-user-pressure"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "execution_trajectory_review",
+              "linked_cases": [
+                "process/full-pdd-ddd-sdd-tdd-review-repair",
+                "review/repair-rereview-required"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "professional_logging_decision",
+              "linked_cases": [
+                "logging/redacted-structured-log-design"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "context_compaction_retention",
+              "linked_cases": [
+                "compact/context-retention-after-compaction"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            }
+          ],
           "not_collected_count": 0,
-          "partial_count": 10,
+          "partial_count": 11,
           "pass_count": 0,
           "status": "partial"
         },
@@ -266,6 +423,7 @@
           "skills_with_hooks_below_skills_only_cases": []
         },
         "codex_environment_policy": "auth_borrowed_clean",
+        "compact_context_summary": null,
         "cost_summary": {
           "cost_adjusted_delta": {
             "skills_only_clean_vs_baseline_clean": {
@@ -363,6 +521,7 @@
           "baseline_quality_improved": true,
           "capability_quality_ready": false,
           "capability_quality_ready_missing": [
+            "context_compaction_retention",
             "minimal_correct_implementation_ladder",
             "pdd_ddd_sdd_tdd_review_flow",
             "professional_injection_activation",
@@ -481,10 +640,167 @@
         "capability_coverage_summary": {
           "assertion_backed_coverage_count": 0,
           "assertion_backed_covered_capabilities": [],
-          "core_capability_count": 10,
+          "core_capability_count": 11,
           "fail_count": 0,
+          "items": [
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "professional_injection_activation",
+              "linked_cases": [
+                "injection/professional-route-manifest-activation"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "staged_injection_precision",
+              "linked_cases": [
+                "injection/stage-specific-reference-loading"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "repository_graph_context_pack",
+              "linked_cases": [
+                "repo-intel/caller-callee-test-impact-map"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "project_memory_governance",
+              "linked_cases": [
+                "memory/repeated-failure-fragile-file"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "validation_broker_freshness",
+              "linked_cases": [
+                "process/full-pdd-ddd-sdd-tdd-review-repair",
+                "validation/stale-validation-after-edit"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "pdd_ddd_sdd_tdd_review_flow",
+              "linked_cases": [
+                "process/full-pdd-ddd-sdd-tdd-review-repair"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "minimal_correct_implementation_ladder",
+              "linked_cases": [
+                "devex/minimal-correct-native-reuse"
+              ],
+              "reasons": [
+                "linked case was not run in this summary"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "pua_or_pressure_resistance",
+              "linked_cases": [
+                "pressure/professional-boundary-under-user-pressure"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "execution_trajectory_review",
+              "linked_cases": [
+                "process/full-pdd-ddd-sdd-tdd-review-repair",
+                "review/repair-rereview-required"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "professional_logging_decision",
+              "linked_cases": [
+                "logging/redacted-structured-log-design"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            },
+            {
+              "assertion_status": "partial",
+              "evidence_collected": false,
+              "id": "context_compaction_retention",
+              "linked_cases": [
+                "compact/context-retention-after-compaction"
+              ],
+              "reasons": [
+                "linked case was not run in this summary",
+                "process_compliance_summary missing"
+              ],
+              "run_status": "not_run",
+              "status": "partial"
+            }
+          ],
           "not_collected_count": 0,
-          "partial_count": 10,
+          "partial_count": 11,
           "pass_count": 0,
           "status": "partial"
         },
@@ -546,6 +862,7 @@
           "skills_with_hooks_below_skills_only_cases": []
         },
         "codex_environment_policy": "auth_borrowed_clean",
+        "compact_context_summary": null,
         "cost_summary": {
           "cost_adjusted_delta": {
             "skills_only_clean_vs_baseline_clean": {
@@ -643,6 +960,7 @@
           "baseline_quality_improved": true,
           "capability_quality_ready": false,
           "capability_quality_ready_missing": [
+            "context_compaction_retention",
             "minimal_correct_implementation_ladder",
             "pdd_ddd_sdd_tdd_review_flow",
             "professional_injection_activation",

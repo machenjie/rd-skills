@@ -418,3 +418,22 @@ cases:
     tier: core
     coverage_dimensions:
       - professional_logging_decision
+  - id: compact/context-retention-after-compaction
+    category: compact
+    codegen_case: context-retention-after-compaction
+    enabled: true
+    variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
+    task_prompt: evals/codegen/compact/context-retention-after-compaction/prompt.md
+    starter_repo: evals/codegen/compact/context-retention-after-compaction/starter-repo
+    grading_benchmark: compact/context-retention-after-compaction
+    grading_mode: assertion
+    publishable_for_strict: true
+    tier: core
+    coverage_dimensions:
+      - context_compaction_retention
+      - validation_broker_freshness
+      - execution_trajectory_review

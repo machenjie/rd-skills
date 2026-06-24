@@ -40,6 +40,38 @@ PROCESS_CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
 PROCESS_REVIEW_PHASES = ("review", "repair", "rereview")
 PROCESS_FALLBACK_FIELD_SOURCE = "case_metadata_fallback"
 PROCESS_FALLBACK_SOURCE_ALIASES = {PROCESS_FALLBACK_FIELD_SOURCE, "inferred"}
+REQUIRED_CAPABILITY_ARTIFACTS = (
+    "process-trace.json",
+    "result.json",
+    "grading/grading-result.json",
+    "events.redacted.jsonl",
+    "final.md",
+    "diff.patch",
+)
+COMPACTION_REQUIRED_FIELDS = (
+    "route_id",
+    "selected_skills",
+    "selected_capabilities",
+    "required_quality_gates",
+    "current_stage",
+    "pdd_summary",
+    "ddd_invariants",
+    "sdd_decisions",
+    "tdd_validation_plan",
+    "changed_paths",
+    "validation_results",
+    "validation_freshness",
+    "review_findings",
+    "repair_events",
+    "rereview_events",
+    "residual_risk",
+    "memory_references",
+    "active_skill_context",
+)
+CAPABILITY_PRIVACY_PATTERNS = (
+    re.compile(r"/Users/[^\s\"'<>]+|/home/[^\s\"'<>]+|/private/var/[^\s\"'<>]+|/var/folders/[^\s\"'<>]+|/tmp/[^\s\"'<>]+"),
+    re.compile(r"OPENAI_API_KEY|CODEX_API_KEY|sk-[A-Za-z0-9_-]{10,}", re.IGNORECASE),
+)
 PROCESS_REQUIRED_FIELDS = {
     "pdd": ("problem", "acceptance_criteria", "constraints", "validation_signal"),
     "ddd": ("domain_terms", "invariants", "ownership_decision", "side_effect_boundaries"),
@@ -79,6 +111,7 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
     for variant in variants:
         variants[variant]["delta_vs_baseline_clean"] = deltas.get(f"{variant}_vs_baseline_clean", {})
     cases_summary = _cases_summary(real_results)
+    capability_artifact_evidence = _capability_artifact_evidence(real_results)
     case_metadata = _case_metadata_by_id()
 
     cases = sorted({str(result.get("case_id")) for result in real_results if result.get("case_id")})
@@ -190,6 +223,8 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         "delta": deltas,
         "cases": cases,
         "cases_summary": cases_summary,
+        "capability_artifact_evidence": capability_artifact_evidence,
+        "compact_context_summary": _compact_context_summary(capability_artifact_evidence),
         "coverage_summary": _coverage_summary(cases, cases_summary, case_metadata),
         "cost_summary": _cost_summary(real_results, variants),
         "stability_summary": _stability_summary(real_results, variants, cases_summary, manifest),
@@ -1178,6 +1213,200 @@ def _cases_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
     return summary
 
 
+def _capability_artifact_evidence(results: list[dict[str, Any]]) -> dict[str, Any]:
+    evidence: dict[str, Any] = {}
+    for result in results:
+        case_id = str(result.get("case_id") or "")
+        variant = str(result.get("variant") or "")
+        result_dir = result.get("_result_dir")
+        if not case_id or not variant or not isinstance(result_dir, Path):
+            continue
+        run_evidence = _run_artifact_evidence(result, result_dir)
+        variant_bucket = evidence.setdefault(case_id, {}).setdefault(
+            variant,
+            {
+                "runs": 0,
+                "artifact_backed_run_count": 0,
+                "route_process_evidence_count": 0,
+                "hook_bounded_evidence_count": 0,
+                "self_report_only_count": 0,
+                "privacy_redaction_status": "pass",
+                "missing_required_artifacts": {},
+                "compact": {
+                    "pre_compact_snapshot_count": 0,
+                    "post_compact_reinject_count": 0,
+                    "compact_after_repair_continuation_count": 0,
+                    "restored_required_context_fields": [],
+                    "missing_required_context_fields": [],
+                    "privacy_redaction_status": "not_collected",
+                    "context_retention_status": "not_collected",
+                    "compact_after_repair_continuation_status": "not_collected",
+                },
+            },
+        )
+        variant_bucket["runs"] += 1
+        if run_evidence["artifact_backed"]:
+            variant_bucket["artifact_backed_run_count"] += 1
+        if run_evidence["route_process_evidence"]:
+            variant_bucket["route_process_evidence_count"] += 1
+        if run_evidence["hook_bounded_evidence"]:
+            variant_bucket["hook_bounded_evidence_count"] += 1
+        if run_evidence["self_report_only"]:
+            variant_bucket["self_report_only_count"] += 1
+        if run_evidence["privacy_redaction_status"] == "fail":
+            variant_bucket["privacy_redaction_status"] = "fail"
+        for artifact in run_evidence["missing_required_artifacts"]:
+            missing = variant_bucket["missing_required_artifacts"]
+            missing[artifact] = int(missing.get(artifact, 0) or 0) + 1
+        _merge_compact_evidence(variant_bucket["compact"], run_evidence.get("compact", {}))
+    return evidence
+
+
+def _run_artifact_evidence(result: dict[str, Any], result_dir: Path) -> dict[str, Any]:
+    missing = [relative for relative in REQUIRED_CAPABILITY_ARTIFACTS if not (result_dir / relative).is_file()]
+    process_trace = read_json(result_dir / "process-trace.json")
+    process_trace = process_trace if isinstance(process_trace, dict) else {}
+    route_process = _route_process_evidence(process_trace)
+    privacy_status = "fail" if _privacy_findings(result_dir) else "pass"
+    candidate_evidence = (result_dir / "candidate-artifacts" / "CAPABILITY_EVIDENCE.md").is_file()
+    compact = _compact_run_evidence(result_dir, process_trace)
+    return {
+        "artifact_backed": not missing,
+        "missing_required_artifacts": missing,
+        "route_process_evidence": route_process,
+        "hook_bounded_evidence": bool(
+            result.get("changeforge_hooks_enabled") is True
+            and not missing
+            and privacy_status == "pass"
+            and (result_dir / "events.redacted.jsonl").is_file()
+        ),
+        "self_report_only": bool(candidate_evidence and missing),
+        "privacy_redaction_status": privacy_status,
+        "compact": compact,
+    }
+
+
+def _route_process_evidence(process_trace: dict[str, Any]) -> bool:
+    if not process_trace:
+        return False
+    evidence_sources = [str(source) for source in process_trace.get("evidence_sources", []) if str(source).strip()]
+    explicit_source = any(source != PROCESS_FALLBACK_FIELD_SOURCE for source in evidence_sources)
+    phases = process_trace.get("phase_status") if isinstance(process_trace.get("phase_status"), dict) else {}
+    core_present = any(phases.get(phase) in {"present", "degraded"} for phase in PROCESS_CORE_PHASES)
+    route_manifest = process_trace.get("route_manifest_present") is True
+    selected = bool(process_trace.get("selected_skills") and process_trace.get("selected_capabilities"))
+    return bool((route_manifest or selected) and core_present and explicit_source)
+
+
+def _privacy_findings(result_dir: Path) -> list[str]:
+    findings: list[str] = []
+    for relative in REQUIRED_CAPABILITY_ARTIFACTS:
+        path = result_dir / relative
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        for pattern in CAPABILITY_PRIVACY_PATTERNS:
+            if pattern.search(text):
+                findings.append(relative)
+                break
+    for path in sorted((result_dir / "candidate-artifacts").glob("*")):
+        if path.is_file():
+            text = path.read_text(encoding="utf-8", errors="ignore")
+            for pattern in CAPABILITY_PRIVACY_PATTERNS:
+                if pattern.search(text):
+                    findings.append(f"candidate-artifacts/{path.name}")
+                    break
+    return findings
+
+
+def _compact_run_evidence(result_dir: Path, process_trace: dict[str, Any]) -> dict[str, Any]:
+    context = process_trace.get("compaction_context") if isinstance(process_trace.get("compaction_context"), dict) else {}
+    artifact_context = read_json(result_dir / "candidate-artifacts" / "COMPACTION_CONTEXT.json")
+    if isinstance(artifact_context, dict):
+        context = {**artifact_context, **context}
+    missing = [field for field in COMPACTION_REQUIRED_FIELDS if not context.get(field)]
+    restored = [field for field in COMPACTION_REQUIRED_FIELDS if field not in missing]
+    return {
+        "pre_compact_snapshot_written": context.get("pre_compact_snapshot_written") is True,
+        "post_compact_reinject_emitted": context.get("post_compact_reinject_emitted") is True,
+        "compact_after_repair_continuation": str(context.get("compact_after_repair_continuation_status") or "") == "pass",
+        "restored_required_context_fields": restored,
+        "missing_required_context_fields": missing,
+        "privacy_redaction_status": str(context.get("privacy_redaction_status") or "not_collected"),
+        "context_retention_status": str(context.get("context_retention_status") or "not_collected"),
+        "compact_after_repair_continuation_status": str(
+            context.get("compact_after_repair_continuation_status") or "not_collected"
+        ),
+    }
+
+
+def _merge_compact_evidence(target: dict[str, Any], compact: dict[str, Any]) -> None:
+    if compact.get("pre_compact_snapshot_written"):
+        target["pre_compact_snapshot_count"] += 1
+    if compact.get("post_compact_reinject_emitted"):
+        target["post_compact_reinject_count"] += 1
+    if compact.get("compact_after_repair_continuation"):
+        target["compact_after_repair_continuation_count"] += 1
+    target["restored_required_context_fields"] = sorted(
+        set(target.get("restored_required_context_fields", [])) | set(compact.get("restored_required_context_fields", []))
+    )
+    target["missing_required_context_fields"] = sorted(
+        set(target.get("missing_required_context_fields", [])) | set(compact.get("missing_required_context_fields", []))
+    )
+    for field in ("privacy_redaction_status", "context_retention_status", "compact_after_repair_continuation_status"):
+        value = str(compact.get(field) or "not_collected")
+        if value == "fail" or target.get(field) in {"not_collected", "partial"}:
+            target[field] = value
+
+
+def _compact_context_summary(evidence: dict[str, Any]) -> dict[str, Any]:
+    case = evidence.get("compact/context-retention-after-compaction")
+    if not isinstance(case, dict):
+        return {
+            "case_id": "compact/context-retention-after-compaction",
+            "run_status": "not_run",
+            "pre_compact_snapshot_count": 0,
+            "post_compact_reinject_count": 0,
+            "restored_required_context_fields": [],
+            "missing_required_context_fields": list(COMPACTION_REQUIRED_FIELDS),
+            "privacy_redaction_status": "not_collected",
+            "context_retention_status": "not_collected",
+            "compact_after_repair_continuation_status": "not_collected",
+        }
+    combined = {
+        "case_id": "compact/context-retention-after-compaction",
+        "run_status": "run",
+        "pre_compact_snapshot_count": 0,
+        "post_compact_reinject_count": 0,
+        "compact_after_repair_continuation_count": 0,
+        "restored_required_context_fields": [],
+        "missing_required_context_fields": [],
+        "privacy_redaction_status": "pass",
+        "context_retention_status": "pass",
+        "compact_after_repair_continuation_status": "pass",
+    }
+    for variant_payload in case.values():
+        if not isinstance(variant_payload, dict):
+            continue
+        compact = variant_payload.get("compact") if isinstance(variant_payload.get("compact"), dict) else {}
+        combined["pre_compact_snapshot_count"] += int(compact.get("pre_compact_snapshot_count", 0) or 0)
+        combined["post_compact_reinject_count"] += int(compact.get("post_compact_reinject_count", 0) or 0)
+        combined["compact_after_repair_continuation_count"] += int(
+            compact.get("compact_after_repair_continuation_count", 0) or 0
+        )
+        combined["restored_required_context_fields"] = sorted(
+            set(combined["restored_required_context_fields"]) | set(compact.get("restored_required_context_fields", []))
+        )
+        combined["missing_required_context_fields"] = sorted(
+            set(combined["missing_required_context_fields"]) | set(compact.get("missing_required_context_fields", []))
+        )
+        for field in ("privacy_redaction_status", "context_retention_status", "compact_after_repair_continuation_status"):
+            value = str(compact.get(field) or "not_collected")
+            if value in {"fail", "partial", "not_collected"}:
+                combined[field] = value
+    return combined
+
+
 def _coverage_summary(
     cases: list[str],
     cases_summary: dict[str, Any],
@@ -1883,6 +2112,11 @@ def render_markdown(summary: dict[str, Any]) -> str:
         if isinstance(summary.get("case_result_summary"), dict)
         else {}
     )
+    compact = (
+        summary.get("compact_context_summary")
+        if isinstance(summary.get("compact_context_summary"), dict)
+        else {}
+    )
     cost = summary.get("cost_summary") if isinstance(summary.get("cost_summary"), dict) else {}
     total_usage = cost.get("total_usage") if isinstance(cost.get("total_usage"), dict) else {}
     stability = summary.get("stability_summary") if isinstance(summary.get("stability_summary"), dict) else {}
@@ -1973,6 +2207,21 @@ def render_markdown(summary: dict[str, Any]) -> str:
             + f"`{item.get('evidence_collected', False)}` | "
             + f"`{item.get('status', 'not_collected')}` |"
         )
+    lines.extend(
+        [
+            "",
+            "## Context Compaction Retention",
+            "",
+            f"- Compact case run status: `{compact.get('run_status', 'not_collected')}`",
+            f"- pre_compact_snapshot_count: `{compact.get('pre_compact_snapshot_count', 'not_collected')}`",
+            f"- post_compact_reinject_count: `{compact.get('post_compact_reinject_count', 'not_collected')}`",
+            f"- restored_required_context_fields: `{compact.get('restored_required_context_fields', 'not_collected')}`",
+            f"- missing_required_context_fields: `{compact.get('missing_required_context_fields', 'not_collected')}`",
+            f"- privacy_redaction_status: `{compact.get('privacy_redaction_status', 'not_collected')}`",
+            f"- context_retention_status: `{compact.get('context_retention_status', 'not_collected')}`",
+            f"- compact_after_repair_continuation_status: `{compact.get('compact_after_repair_continuation_status', 'not_collected')}`",
+        ]
+    )
     lines.extend(
         [
             "",
