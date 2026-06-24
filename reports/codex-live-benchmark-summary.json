@@ -4,7 +4,535 @@
   "benchmark_eligible_result_count": 45,
   "benchmark_mode": "ablation",
   "benchmark_passed_result_count": 30,
+  "capability_coverage_summary": {
+    "assertion_backed_coverage_count": 0,
+    "assertion_backed_covered_capabilities": [],
+    "core_capability_count": 10,
+    "errors": [],
+    "fail_count": 0,
+    "items": [
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "injection/professional-route-manifest-activation",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Missing route evidence means professional injection is not live-proven; baseline contamination means the comparison is invalid.",
+        "id": "professional_injection_activation",
+        "linked_assertions": [
+          "route_manifest_present",
+          "selected_skills_present",
+          "selected_capabilities_present",
+          "required_quality_gates_present",
+          "baseline_changeforge_contamination_absent",
+          "bounded_hook_signal_present",
+          "raw_prompt_secret_absolute_path_absent"
+        ],
+        "linked_cases": [
+          "injection/professional-route-manifest-activation"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "partial",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary",
+          "process_compliance_summary missing"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Professional Injection Activation"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "injection/stage-specific-reference-loading",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Missing or broad unrelated stage selections indicate under-routing or over-routing rather than precise injection.",
+        "id": "staged_injection_precision",
+        "linked_assertions": [
+          "pdd_requirement_capabilities_only",
+          "ddd_domain_capabilities_present",
+          "sdd_design_capabilities_present",
+          "tdd_validation_capabilities_present",
+          "review_repair_capabilities_present",
+          "unrelated_language_or_surface_overroute_absent",
+          "stage_results_in_trace_or_manifest"
+        ],
+        "linked_cases": [
+          "injection/stage-specific-reference-loading"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "partial",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary",
+          "process_compliance_summary missing"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Staged Injection Precision"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "repo-intel/caller-callee-test-impact-map",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Without graph evidence, repository intelligence remains structural or inferred rather than live-proven.",
+        "id": "repository_graph_context_pack",
+        "linked_assertions": [
+          "repo_graph_built_or_read",
+          "symbol_import_caller_callee_evidence_present",
+          "test_ownership_evidence_present",
+          "plan_cites_graph_evidence",
+          "validation_covers_impacted_tests",
+          "graph_freshness_and_residual_risk_reported"
+        ],
+        "linked_cases": [
+          "repo-intel/caller-callee-test-impact-map"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "partial",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary",
+          "process_compliance_summary missing"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Repository Graph Context Pack"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "memory/repeated-failure-fragile-file",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Missing second-run influence means memory governance is not live-proven; raw or source-tree memory writes are failures.",
+        "id": "project_memory_governance",
+        "linked_assertions": [
+          "bounded_memory_candidate_written",
+          "second_run_reads_bounded_memory",
+          "memory_changes_route_plan_validation_or_review",
+          "no_skill_registry_capability_mutation_from_memory",
+          "raw_prompt_secret_command_path_absent"
+        ],
+        "linked_cases": [
+          "memory/repeated-failure-fragile-file"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "partial",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary",
+          "process_compliance_summary missing"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Project Memory Governance"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          },
+          {
+            "assertion_status": "not_collected",
+            "case_id": "validation/stale-validation-after-edit",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Stale validation treated as fresh means closure discipline is not live-ready.",
+        "id": "validation_broker_freshness",
+        "linked_assertions": [
+          "validation_before_material_edit_detected",
+          "stale_validation_marked_at_stop",
+          "stale_validation_not_claimed_fresh",
+          "relevant_validation_rerun_or_residual_risk",
+          "closure_blocks_fully_done_without_fresh_validation"
+        ],
+        "linked_cases": [
+          "process/full-pdd-ddd-sdd-tdd-review-repair",
+          "validation/stale-validation-after-edit"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "partial",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary",
+          "process_compliance_summary missing"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Validation Broker Freshness"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Any missing explicit stage prevents this capability from passing.",
+        "id": "pdd_ddd_sdd_tdd_review_flow",
+        "linked_assertions": [
+          "explicit_pdd_fields_present",
+          "explicit_ddd_fields_present",
+          "explicit_sdd_fields_present",
+          "explicit_tdd_fields_present",
+          "final_diff_review_present",
+          "repair_and_rereview_when_review_finds_issue",
+          "inferred_fallback_not_counted_as_explicit"
+        ],
+        "linked_cases": [
+          "process/full-pdd-ddd-sdd-tdd-review-repair"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "partial",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary",
+          "process_compliance_summary missing"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "PDD DDD SDD TDD Review Flow"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "devex/minimal-correct-native-reuse",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Overbuilt or under-validated solutions mean minimal-correct is not live-ready.",
+        "id": "minimal_correct_implementation_ladder",
+        "linked_assertions": [
+          "existing_helper_reused",
+          "stdlib_or_native_feature_used",
+          "no_new_dependency",
+          "no_unnecessary_new_file_or_helper",
+          "validation_security_error_handling_preserved",
+          "loc_dependency_file_count_recorded_as_telemetry"
+        ],
+        "linked_cases": [
+          "devex/minimal-correct-native-reuse"
+        ],
+        "process_evidence_required": false,
+        "process_evidence_status": "pass",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Minimal Correct Implementation Ladder"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "pressure/professional-boundary-under-user-pressure",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Unsupported completion claims or manipulative language fail this capability.",
+        "id": "pua_or_pressure_resistance",
+        "linked_assertions": [
+          "assumptions_non_goals_acceptance_signal_recorded",
+          "validation_signal_or_residual_risk_present",
+          "anti_overengineering_triggered",
+          "no_fully_done_claim_without_evidence",
+          "professional_restrained_language"
+        ],
+        "linked_cases": [
+          "pressure/professional-boundary-under-user-pressure"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "partial",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary",
+          "process_compliance_summary missing"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Professional Boundary Under User Pressure"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          },
+          {
+            "assertion_status": "not_collected",
+            "case_id": "review/repair-rereview-required",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Missing trajectory findings allow process drift to be hidden by aggregate pass rates.",
+        "id": "execution_trajectory_review",
+        "linked_assertions": [
+          "trajectory_summary_from_bounded_telemetry",
+          "edit_before_read_or_skipped_stage_detected",
+          "repair_without_rereview_detected",
+          "stale_validation_detected",
+          "plan_actual_diff_mismatch_detected",
+          "final_handoff_contains_validation_risk_files_review"
+        ],
+        "linked_cases": [
+          "process/full-pdd-ddd-sdd-tdd-review-repair",
+          "review/repair-rereview-required"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "partial",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary",
+          "process_compliance_summary missing"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Execution Trajectory Review"
+      },
+      {
+        "assertion_status": "partial",
+        "case_results": [
+          {
+            "assertion_status": "not_collected",
+            "case_id": "logging/redacted-structured-log-design",
+            "evidence_collected": false,
+            "reasons": [
+              "linked case was not run in this summary"
+            ],
+            "run_status": "not_run"
+          }
+        ],
+        "evidence_collected": false,
+        "failure_interpretation": "Raw sensitive logging or missing redaction tests fail this capability.",
+        "id": "professional_logging_decision",
+        "linked_assertions": [
+          "logging_design_gate_selected",
+          "security_privacy_gate_selected",
+          "log_type_level_fields_redaction_correlation_cardinality_present",
+          "no_log_rationale_present_when_applicable",
+          "secret_pii_token_cookie_auth_header_absent",
+          "redaction_or_no_log_tests_present"
+        ],
+        "linked_cases": [
+          "logging/redacted-structured-log-design"
+        ],
+        "process_evidence_required": true,
+        "process_evidence_status": "partial",
+        "publishable_for_strict": true,
+        "reasons": [
+          "linked case was not run in this summary",
+          "process_compliance_summary missing"
+        ],
+        "required_variants": [
+          "baseline_clean",
+          "skills_only_clean",
+          "skills_with_hooks_clean"
+        ],
+        "run_status": "not_run",
+        "status": "partial",
+        "title": "Professional Logging Decision"
+      }
+    ],
+    "matrix_path": "evals/codex-live/capability-matrix.yaml",
+    "not_collected_count": 0,
+    "partial_count": 10,
+    "pass_count": 0,
+    "quality_ready_required_pass": [],
+    "required_quality_ready_capabilities": [
+      "minimal_correct_implementation_ladder",
+      "pdd_ddd_sdd_tdd_review_flow",
+      "professional_injection_activation",
+      "professional_logging_decision",
+      "staged_injection_precision",
+      "validation_broker_freshness"
+    ],
+    "status": "partial"
+  },
   "case_count": 5,
+  "case_result_summary": {
+    "improved_case_count": 3,
+    "improved_cases": [
+      {
+        "baseline_clean_pass_rate": 0.6667,
+        "case_id": "devex/helper-reuse-search",
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
+        "skills_with_hooks_vs_baseline_delta": 0.3333
+      },
+      {
+        "baseline_clean_pass_rate": 0.0,
+        "case_id": "security/ssrf-url-allowlist",
+        "skills_only_clean_pass_rate": 0.6667,
+        "skills_with_hooks_clean_pass_rate": 1.0,
+        "skills_with_hooks_vs_baseline_delta": 1.0
+      },
+      {
+        "baseline_clean_pass_rate": 0.0,
+        "case_id": "structure/object-method-encapsulation-placement",
+        "skills_only_clean_pass_rate": 0.6667,
+        "skills_with_hooks_clean_pass_rate": 1.0,
+        "skills_with_hooks_vs_baseline_delta": 1.0
+      }
+    ],
+    "no_improvement_case_count": 2,
+    "no_improvement_cases": [
+      {
+        "baseline_clean_pass_rate": 1.0,
+        "case_id": "backend/service-method-vs-new-helper",
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
+        "skills_with_hooks_vs_baseline_delta": 0.0
+      },
+      {
+        "baseline_clean_pass_rate": 0.3333,
+        "case_id": "reliability/redis-cache-stampede-protection",
+        "skills_only_clean_pass_rate": 0.3333,
+        "skills_with_hooks_clean_pass_rate": 0.3333,
+        "skills_with_hooks_vs_baseline_delta": 0.0
+      }
+    ],
+    "regressed_case_count": 0,
+    "regressed_cases": [],
+    "reliability_no_improvement_cases": [
+      {
+        "baseline_clean_pass_rate": 0.3333,
+        "case_id": "reliability/redis-cache-stampede-protection",
+        "skills_only_clean_pass_rate": 0.3333,
+        "skills_with_hooks_clean_pass_rate": 0.3333,
+        "skills_with_hooks_vs_baseline_delta": 0.0
+      }
+    ],
+    "reliability_no_improvement_visible": true,
+    "skills_with_hooks_below_skills_only_cases": []
+  },
   "cases": [
     "backend/service-method-vs-new-helper",
     "devex/helper-reuse-search",
@@ -548,7 +1076,7 @@
         "average_input_token_overhead_pct": 1.5667,
         "average_output_token_overhead_pct": 0.1729,
         "average_reasoning_token_overhead_pct": 0.2993,
-        "cost_efficiency_note": "Derived from published variant average telemetry; parsed local Codex telemetry, not a billing ledger.",
+        "cost_efficiency_note": "telemetry only; no cost reduction or efficiency improvement claim is made",
         "pass_rate_delta": 0.3333,
         "pass_rate_per_100_commands_delta": 0.2705,
         "pass_rate_per_100k_input_tokens_delta": -0.0289,
@@ -559,7 +1087,7 @@
         "average_input_token_overhead_pct": 1.9452,
         "average_output_token_overhead_pct": 0.317,
         "average_reasoning_token_overhead_pct": 0.4102,
-        "cost_efficiency_note": "Derived from published variant average telemetry; parsed local Codex telemetry, not a billing ledger.",
+        "cost_efficiency_note": "telemetry only; no cost reduction or efficiency improvement claim is made",
         "pass_rate_delta": 0.4667,
         "pass_rate_per_100_commands_delta": 0.3023,
         "pass_rate_per_100k_input_tokens_delta": -0.0268,
@@ -570,15 +1098,18 @@
         "average_input_token_overhead_pct": 0.1475,
         "average_output_token_overhead_pct": 0.1229,
         "average_reasoning_token_overhead_pct": 0.0854,
-        "cost_efficiency_note": "Derived from published variant average telemetry; parsed local Codex telemetry, not a billing ledger.",
+        "cost_efficiency_note": "telemetry only; no cost reduction or efficiency improvement claim is made",
         "pass_rate_delta": 0.1334,
         "pass_rate_per_100_commands_delta": 0.0318,
         "pass_rate_per_100k_input_tokens_delta": 0.0021,
         "status": "collected"
       }
     },
-    "cost_caveat": "Token usage is parsed local Codex telemetry, not a billing ledger.",
+    "cost_caveat": "Cost is telemetry only in this phase; quality-first benchmark does not gate on token, command, or file-change overhead, and no cost reduction or efficiency improvement claim is made.",
+    "cost_is_telemetry_only": true,
+    "quality_gate_uses_cost": false,
     "result_count": 45,
+    "telemetry_only_note": "Cost is telemetry only in this quality-first phase; quality benchmark status does not gate on cost.",
     "total_usage": {
       "cached_input_tokens": 34793599.95,
       "input_tokens": 38616339.0,
@@ -589,7 +1120,7 @@
   "coverage_summary": {
     "actual_run_assertion_case_count": 5,
     "actual_run_case_count": 5,
-    "actual_run_case_coverage_rate": 0.0833,
+    "actual_run_case_coverage_rate": 0.0714,
     "actual_run_category_count": 5,
     "actual_run_publishable_assertion_case_count": 5,
     "assertion_case_count": 5,
@@ -605,13 +1136,21 @@
       "backend": 1,
       "data-api": 1,
       "data-middleware": 1,
-      "devex": 3,
+      "devex": 4,
       "frontend": 1,
+      "injection": 2,
       "integration": 1,
+      "logging": 1,
+      "memory": 1,
       "performance": 2,
+      "pressure": 1,
+      "process": 1,
       "reliability": 1,
+      "repo-intel": 1,
+      "review": 1,
       "security": 1,
-      "structure": 1
+      "structure": 1,
+      "validation": 1
     },
     "categories_run": {
       "backend": 1,
@@ -641,6 +1180,7 @@
       "devex-implementation-ladder": 1,
       "devex-reuse": 1,
       "execution-discipline": 1,
+      "execution_trajectory_review": 3,
       "experience-states": 1,
       "form-validation": 1,
       "frontend-accessibility": 1,
@@ -649,19 +1189,28 @@
       "input-validation": 1,
       "integration-webhook": 1,
       "message-queue": 1,
+      "minimal_correct_implementation_ladder": 1,
       "object-boundary": 1,
       "observability": 2,
+      "pdd_ddd_sdd_tdd_review_flow": 1,
       "performance-async": 1,
       "performance-locking": 1,
+      "professional_injection_activation": 1,
+      "professional_logging_decision": 1,
+      "project_memory_governance": 1,
+      "pua_or_pressure_resistance": 1,
       "regression-testing": 1,
       "reliability-backpressure": 1,
       "reliability-cache": 1,
       "reliability-deadlock": 1,
+      "repository_graph_context_pack": 1,
       "same-pattern-scan": 1,
       "secret-verification": 1,
       "security-authenticity": 1,
       "security-ssrf": 1,
-      "structure-placement": 1
+      "staged_injection_precision": 1,
+      "structure-placement": 1,
+      "validation_broker_freshness": 2
     },
     "coverage_dimensions_run": {
       "backend-service-boundary": 1,
@@ -675,7 +1224,7 @@
       "security-ssrf": 1,
       "structure-placement": 1
     },
-    "manifest_case_count": 60,
+    "manifest_case_count": 70,
     "manifest_categories": [
       "ai",
       "backend",
@@ -686,18 +1235,26 @@
       "devex",
       "finops",
       "frontend",
+      "injection",
       "integration",
       "iot",
+      "logging",
       "low-level",
+      "memory",
       "mobile",
       "payment",
       "performance",
+      "pressure",
+      "process",
       "reliability",
+      "repo-intel",
+      "review",
       "security",
       "structure",
+      "validation",
       "web3"
     ],
-    "manifest_category_count": 19,
+    "manifest_category_count": 27,
     "missing_manifest_categories": [
       "ai",
       "bigdata",
@@ -714,29 +1271,47 @@
       "backend": 1,
       "data-api": 1,
       "data-middleware": 1,
-      "devex": 2,
+      "devex": 3,
       "frontend": 1,
+      "injection": 2,
       "integration": 1,
+      "logging": 1,
+      "memory": 1,
       "performance": 2,
+      "pressure": 1,
+      "process": 1,
       "reliability": 1,
+      "repo-intel": 1,
+      "review": 1,
       "security": 1,
-      "structure": 1
+      "structure": 1,
+      "validation": 1
     },
-    "registered_assertion_case_count": 12,
+    "registered_assertion_case_count": 22,
     "registered_but_not_run_cases": [
       "data-api/backward-compatible-api-field",
       "data-middleware/kafka-consumer-offset-dlq",
       "devex/bugfix-same-pattern-scan",
+      "devex/minimal-correct-native-reuse",
       "frontend/accessible-form-error-state",
+      "injection/professional-route-manifest-activation",
+      "injection/stage-specific-reference-loading",
       "integration/webhook-hmac-raw-body",
+      "logging/redacted-structured-log-design",
+      "memory/repeated-failure-fragile-file",
       "performance/event-loop-blocking-async-path",
-      "performance/lock-held-across-io"
+      "performance/lock-held-across-io",
+      "pressure/professional-boundary-under-user-pressure",
+      "process/full-pdd-ddd-sdd-tdd-review-repair",
+      "repo-intel/caller-callee-test-impact-map",
+      "review/repair-rereview-required",
+      "validation/stale-validation-after-edit"
     ],
-    "registered_case_coverage_rate": 0.2167,
-    "registered_category_count": 10,
-    "registered_live_case_count": 13,
-    "registered_publishable_assertion_case_count": 12,
-    "registered_publishable_case_coverage_rate": 0.2,
+    "registered_case_coverage_rate": 0.3286,
+    "registered_category_count": 18,
+    "registered_live_case_count": 23,
+    "registered_publishable_assertion_case_count": 22,
+    "registered_publishable_case_coverage_rate": 0.3143,
     "registered_telemetry_only_case_count": 1,
     "telemetry_only_case_count": 0,
     "tiers": {
@@ -745,7 +1320,7 @@
       "level1": 0
     },
     "tiers_registered": {
-      "core": 5,
+      "core": 15,
       "experimental": 1,
       "level1": 7
     },
@@ -877,6 +1452,35 @@
   "not_collected_grading_count": 0,
   "plugins_disabled": true,
   "publishable_for_strict_benchmark": true,
+  "quality_improvement_summary": {
+    "assertion_backed_core_capability_count": 0,
+    "baseline_clean_pass_rate": 0.4,
+    "baseline_quality_improved": true,
+    "capability_quality_ready": false,
+    "capability_quality_ready_missing": [
+      "minimal_correct_implementation_ladder",
+      "pdd_ddd_sdd_tdd_review_flow",
+      "professional_injection_activation",
+      "professional_logging_decision",
+      "staged_injection_precision",
+      "validation_broker_freshness"
+    ],
+    "case_count": 5,
+    "case_regression_count": 0,
+    "cost_is_quality_gate": false,
+    "cost_telemetry_only": true,
+    "efficiency_improvement_claim": false,
+    "hook_quality_increment_positive": true,
+    "large_quality_improvement_claim": false,
+    "no_quality_regression": true,
+    "skill_quality_improved": true,
+    "skills_only_clean_pass_rate": 0.7333,
+    "skills_only_vs_baseline_delta": 0.3333,
+    "skills_with_hooks_below_skills_only_case_count": 0,
+    "skills_with_hooks_clean_pass_rate": 0.8667,
+    "skills_with_hooks_vs_baseline_delta": 0.4667,
+    "skills_with_hooks_vs_skills_only_delta": 0.1334
+  },
   "result_count": 45,
   "run_dir": "<run-dir>",
   "run_id": "ablation-5cases-3runs-20260622-positive",

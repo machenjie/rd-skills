@@ -12,8 +12,10 @@ from typing import Any
 
 from codegen_benchmark_manifest import EXPECTED_BENCHMARKS
 from codex_live_benchmark_lib import (
+    CAPABILITY_QUALITY_READY_REQUIRED_IDS,
     CASE_TIERS,
     CURRENT_HOME_SMOKE_EVIDENCE_LEVEL,
+    LARGE_QUALITY_IMPROVEMENT_MIN_CAPABILITY_COUNT,
     LIVE_EVIDENCE_LEVEL,
     MODE_DEFAULT_VARIANTS,
     ROOT,
@@ -25,6 +27,7 @@ from codex_live_benchmark_lib import (
     STRICT_BENCHMARK_MODES,
     STRICT_CODEX_ENVIRONMENT_POLICIES,
     load_case_registry,
+    codex_live_capability_coverage_summary,
     read_json,
     validate_status,
     write_json,
@@ -34,6 +37,7 @@ from codex_live_benchmark_lib import (
 METRIC_KEYS = ("event_count", "command_execution_count", "file_change_count", "plan_update_count", "error_count")
 USAGE_KEYS = ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_output_tokens")
 PROCESS_CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
+PROCESS_REVIEW_PHASES = ("review", "repair", "rereview")
 PROCESS_FALLBACK_FIELD_SOURCE = "case_metadata_fallback"
 PROCESS_FALLBACK_SOURCE_ALIASES = {PROCESS_FALLBACK_FIELD_SOURCE, "inferred"}
 PROCESS_REQUIRED_FIELDS = {
@@ -203,6 +207,14 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
             unknown_setup_failure_rate=unknown_setup_failure_rate,
         ),
     }
+    summary["case_result_summary"] = _case_result_summary(cases_summary)
+    summary["capability_coverage_summary"] = codex_live_capability_coverage_summary(summary)
+    summary["quality_improvement_summary"] = _quality_improvement_summary(
+        variants,
+        cases_summary,
+        summary["case_result_summary"],
+        summary["capability_coverage_summary"],
+    )
     return summary
 
 
@@ -299,14 +311,23 @@ def _process_compliance_summary(results: list[dict[str, Any]]) -> dict[str, Any]
         "ddd_present_rate": phase_rate("ddd", "present"),
         "sdd_present_rate": phase_rate("sdd", "present"),
         "tdd_present_rate": phase_rate("tdd", "present"),
+        "review_present_rate": phase_rate("review", "present"),
+        "repair_present_rate": phase_rate("repair", "present"),
+        "rereview_present_rate": phase_rate("rereview", "present"),
         "pdd_inferred_rate": phase_rate("pdd", "inferred"),
         "ddd_inferred_rate": phase_rate("ddd", "inferred"),
         "sdd_inferred_rate": phase_rate("sdd", "inferred"),
         "tdd_inferred_rate": phase_rate("tdd", "inferred"),
+        "review_inferred_rate": phase_rate("review", "inferred"),
+        "repair_inferred_rate": phase_rate("repair", "inferred"),
+        "rereview_inferred_rate": phase_rate("rereview", "inferred"),
         "pdd_degraded_rate": phase_rate("pdd", "degraded"),
         "ddd_degraded_rate": phase_rate("ddd", "degraded"),
         "sdd_degraded_rate": phase_rate("sdd", "degraded"),
         "tdd_degraded_rate": phase_rate("tdd", "degraded"),
+        "review_degraded_rate": phase_rate("review", "degraded"),
+        "repair_degraded_rate": phase_rate("repair", "degraded"),
+        "rereview_degraded_rate": phase_rate("rereview", "degraded"),
         "pdd_required_field_fallback_rate": required_field_fallback_rate("pdd"),
         "ddd_required_field_fallback_rate": required_field_fallback_rate("ddd"),
         "sdd_required_field_fallback_rate": required_field_fallback_rate("sdd"),
@@ -333,6 +354,14 @@ def _process_compliance_summary(results: list[dict[str, Any]]) -> dict[str, Any]
     ]
     summary["required_field_fallback_rate"] = round(sum(fallback_rates) / len(fallback_rates), 4)
     summary["process_trace_inferred_only_rate"] = summary["all_core_phases_inferred_only_rate"]
+    summary["review_flow_present_rate"] = _trace_rate(
+        trace_count,
+        sum(
+            1
+            for trace in traces
+            if all((trace.get("phase_status") or {}).get(phase) == "present" for phase in PROCESS_REVIEW_PHASES)
+        ),
+    )
     summary["explicit_trace_contract"] = {
         "route_manifest": "changeforge_route or equivalent route manifest",
         "pdd": "PDD acceptance trace",
@@ -918,6 +947,133 @@ def _case_improvements(cases_summary: dict[str, Any]) -> list[str]:
     return improved
 
 
+def _case_result_summary(cases_summary: dict[str, Any]) -> dict[str, Any]:
+    improved: list[dict[str, Any]] = []
+    no_improvement: list[dict[str, Any]] = []
+    regressed: list[dict[str, Any]] = []
+    hooks_below_skills: list[dict[str, Any]] = []
+    for case_id, case_payload in sorted(cases_summary.items()):
+        if not isinstance(case_payload, dict):
+            continue
+        variants = case_payload.get("variants") if isinstance(case_payload.get("variants"), dict) else {}
+        baseline_rate = _case_variant_rate(variants, "baseline_clean")
+        skills_rate = _case_variant_rate(variants, "skills_only_clean")
+        hooks_rate = _case_variant_rate(variants, "skills_with_hooks_clean")
+        if isinstance(baseline_rate, int | float) and isinstance(hooks_rate, int | float):
+            delta = round(float(hooks_rate) - float(baseline_rate), 4)
+            row = {
+                "case_id": case_id,
+                "baseline_clean_pass_rate": baseline_rate,
+                "skills_only_clean_pass_rate": skills_rate,
+                "skills_with_hooks_clean_pass_rate": hooks_rate,
+                "skills_with_hooks_vs_baseline_delta": delta,
+            }
+            if delta > 0:
+                improved.append(row)
+            elif delta < 0:
+                regressed.append(row)
+            else:
+                no_improvement.append(row)
+        if (
+            isinstance(skills_rate, int | float)
+            and isinstance(hooks_rate, int | float)
+            and float(hooks_rate) < float(skills_rate)
+        ):
+            hooks_below_skills.append(
+                {
+                    "case_id": case_id,
+                    "skills_only_clean_pass_rate": skills_rate,
+                    "skills_with_hooks_clean_pass_rate": hooks_rate,
+                    "delta": round(float(hooks_rate) - float(skills_rate), 4),
+                }
+            )
+    reliability_no_improvement = [
+        row for row in no_improvement if str(row.get("case_id", "")).startswith("reliability/")
+    ]
+    return {
+        "improved_cases": improved,
+        "no_improvement_cases": no_improvement,
+        "regressed_cases": regressed,
+        "skills_with_hooks_below_skills_only_cases": hooks_below_skills,
+        "reliability_no_improvement_cases": reliability_no_improvement,
+        "improved_case_count": len(improved),
+        "no_improvement_case_count": len(no_improvement),
+        "regressed_case_count": len(regressed),
+        "reliability_no_improvement_visible": bool(reliability_no_improvement),
+    }
+
+
+def _quality_improvement_summary(
+    variants: dict[str, dict[str, Any]],
+    cases_summary: dict[str, Any],
+    case_result_summary: dict[str, Any],
+    capability_coverage_summary: dict[str, Any],
+) -> dict[str, Any]:
+    baseline_rate = _summary_variant_rate(variants, "baseline_clean")
+    skills_rate = _summary_variant_rate(variants, "skills_only_clean")
+    hooks_rate = _summary_variant_rate(variants, "skills_with_hooks_clean")
+    hooks_vs_baseline = _numeric_delta(hooks_rate, baseline_rate)
+    skills_vs_baseline = _numeric_delta(skills_rate, baseline_rate)
+    hooks_vs_skills = _numeric_delta(hooks_rate, skills_rate)
+    no_aggregate_regression = (
+        isinstance(hooks_rate, int | float)
+        and isinstance(skills_rate, int | float)
+        and float(hooks_rate) >= float(skills_rate)
+    )
+    no_case_regression = not case_result_summary.get("skills_with_hooks_below_skills_only_cases")
+    no_quality_regression = bool(no_aggregate_regression and no_case_regression)
+    pass_ids = set(capability_coverage_summary.get("assertion_backed_covered_capabilities") or [])
+    required_ready_missing = sorted(CAPABILITY_QUALITY_READY_REQUIRED_IDS - pass_ids)
+    capability_quality_ready = not required_ready_missing
+    assertion_backed_coverage_count = int(
+        capability_coverage_summary.get("assertion_backed_coverage_count", 0) or 0
+    )
+    baseline_quality_improved = isinstance(hooks_vs_baseline, int | float) and hooks_vs_baseline >= 0.20
+    skill_quality_improved = isinstance(skills_vs_baseline, int | float) and skills_vs_baseline >= 0.15
+    hook_quality_increment_positive = isinstance(hooks_vs_skills, int | float) and hooks_vs_skills >= 0.05
+    large_quality_improvement_claim = bool(
+        baseline_quality_improved
+        and skill_quality_improved
+        and hook_quality_increment_positive
+        and no_quality_regression
+        and assertion_backed_coverage_count >= LARGE_QUALITY_IMPROVEMENT_MIN_CAPABILITY_COUNT
+    )
+    return {
+        "baseline_clean_pass_rate": baseline_rate,
+        "skills_only_clean_pass_rate": skills_rate,
+        "skills_with_hooks_clean_pass_rate": hooks_rate,
+        "skills_only_vs_baseline_delta": skills_vs_baseline,
+        "skills_with_hooks_vs_skills_only_delta": hooks_vs_skills,
+        "skills_with_hooks_vs_baseline_delta": hooks_vs_baseline,
+        "baseline_quality_improved": baseline_quality_improved,
+        "skill_quality_improved": skill_quality_improved,
+        "hook_quality_increment_positive": hook_quality_increment_positive,
+        "no_quality_regression": no_quality_regression,
+        "capability_quality_ready": capability_quality_ready,
+        "capability_quality_ready_missing": required_ready_missing,
+        "assertion_backed_core_capability_count": assertion_backed_coverage_count,
+        "large_quality_improvement_claim": large_quality_improvement_claim,
+        "cost_is_quality_gate": False,
+        "cost_telemetry_only": True,
+        "efficiency_improvement_claim": False,
+        "case_regression_count": len(case_result_summary.get("regressed_cases") or []),
+        "skills_with_hooks_below_skills_only_case_count": len(
+            case_result_summary.get("skills_with_hooks_below_skills_only_cases") or []
+        ),
+        "case_count": len(cases_summary),
+    }
+
+
+def _case_variant_rate(variants: dict[str, Any], variant: str) -> Any:
+    payload = variants.get(variant) if isinstance(variants, dict) else None
+    return payload.get("pass_rate") if isinstance(payload, dict) else "not_collected"
+
+
+def _summary_variant_rate(variants: dict[str, dict[str, Any]], variant: str) -> Any:
+    payload = variants.get(variant) if isinstance(variants, dict) else None
+    return payload.get("pass_rate") if isinstance(payload, dict) else "not_collected"
+
+
 def _variant_deltas(variants: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
     deltas: dict[str, dict[str, Any]] = {}
     pairs = (
@@ -1186,7 +1342,13 @@ def _cost_summary(results: list[dict[str, Any]], variants: dict[str, dict[str, A
             ),
         },
         "case_cost_outliers": _case_cost_outliers(results),
-        "cost_caveat": "Token usage is parsed local Codex telemetry, not a billing ledger.",
+        "cost_is_telemetry_only": True,
+        "quality_gate_uses_cost": False,
+        "telemetry_only_note": (
+            "Cost is telemetry only in this quality-first phase; token, command, and file-change overhead "
+            "do not gate pass-rate or capability quality conclusions, and no efficiency improvement claim is made."
+        ),
+        "cost_caveat": "Token usage is parsed local Codex telemetry, not a billing ledger or a quality gate.",
     }
 
 
@@ -1262,8 +1424,8 @@ def _cost_adjusted_delta(
             _pass_rate_per_metric_unit(baseline_summary, "command_execution_count", 100),
         ),
         "cost_efficiency_note": (
-            "Cost-adjusted metrics use parsed average tokens and command counts per result; "
-            "they are directional local telemetry, not billing evidence."
+            "Compatibility telemetry only: these parsed token and command ratios are not used to claim "
+            "cost reduction or efficiency improvement."
         ),
     }
 
@@ -1679,10 +1841,48 @@ def _markdown_pct(value: Any) -> str:
     return f"{float(value) * 100:+.2f}%"
 
 
+def _render_process_warning(process: dict[str, Any]) -> str | None:
+    if not process:
+        return "process evidence not collected"
+    raw_trace_count = process.get("process_trace_count", "not_collected")
+    if raw_trace_count == "not_collected":
+        return "process_trace_count not_collected"
+    trace_count = int(raw_trace_count or 0)
+    if trace_count <= 0:
+        return "process_trace_count is 0"
+    present_rates = (
+        process.get("pdd_present_rate"),
+        process.get("ddd_present_rate"),
+        process.get("sdd_present_rate"),
+        process.get("tdd_present_rate"),
+    )
+    if all(isinstance(value, int | float) and float(value) == 0.0 for value in present_rates):
+        return "explicit PDD/DDD/SDD/TDD traces were not captured"
+    fallback_rate = process.get("required_field_fallback_rate")
+    if isinstance(fallback_rate, int | float) and float(fallback_rate) > 0.5:
+        return "required field fallback rate exceeds 0.5"
+    return None
+
+
 def render_markdown(summary: dict[str, Any]) -> str:
     """Render a concise Markdown summary."""
     process = summary.get("process_compliance_summary") if isinstance(summary.get("process_compliance_summary"), dict) else {}
     coverage = summary.get("coverage_summary") if isinstance(summary.get("coverage_summary"), dict) else {}
+    quality = (
+        summary.get("quality_improvement_summary")
+        if isinstance(summary.get("quality_improvement_summary"), dict)
+        else {}
+    )
+    capability = (
+        summary.get("capability_coverage_summary")
+        if isinstance(summary.get("capability_coverage_summary"), dict)
+        else {}
+    )
+    case_results = (
+        summary.get("case_result_summary")
+        if isinstance(summary.get("case_result_summary"), dict)
+        else {}
+    )
     cost = summary.get("cost_summary") if isinstance(summary.get("cost_summary"), dict) else {}
     total_usage = cost.get("total_usage") if isinstance(cost.get("total_usage"), dict) else {}
     stability = summary.get("stability_summary") if isinstance(summary.get("stability_summary"), dict) else {}
@@ -1695,13 +1895,7 @@ def render_markdown(summary: dict[str, Any]) -> str:
         else {}
     )
     cost_delta = cost_delta if isinstance(cost_delta, dict) else {}
-    process_warning = (
-        int(process.get("process_trace_count", 0) or 0) > 0
-        and all(
-            float(process.get(field, 0.0) or 0.0) == 0.0
-            for field in ("pdd_present_rate", "ddd_present_rate", "sdd_present_rate", "tdd_present_rate")
-        )
-    )
+    process_warning = _render_process_warning(process)
     lines = [
         "# Codex CLI Live Benchmark Summary",
         "",
@@ -1748,30 +1942,78 @@ def render_markdown(summary: dict[str, Any]) -> str:
         f"- Timeline events: `{summary.get('logging_summary', {}).get('timeline_events', 0)}`",
         f"- Process trace count: `{process.get('process_trace_count', 'not_collected')}`",
         "",
+        "## Quality Improvement",
+        "",
+        f"- baseline_clean pass rate: `{quality.get('baseline_clean_pass_rate', 'not_collected')}`",
+        f"- skills_only_clean pass rate: `{quality.get('skills_only_clean_pass_rate', 'not_collected')}`",
+        f"- skills_with_hooks_clean pass rate: `{quality.get('skills_with_hooks_clean_pass_rate', 'not_collected')}`",
+        f"- skills_only vs baseline delta: `{quality.get('skills_only_vs_baseline_delta', 'not_collected')}`",
+        f"- skills_with_hooks vs skills_only delta: `{quality.get('skills_with_hooks_vs_skills_only_delta', 'not_collected')}`",
+        f"- skills_with_hooks vs baseline delta: `{quality.get('skills_with_hooks_vs_baseline_delta', 'not_collected')}`",
+        f"- no_quality_regression: `{quality.get('no_quality_regression', 'not_collected')}`",
+        f"- large_quality_improvement_claim: `{quality.get('large_quality_improvement_claim', 'not_collected')}`",
+        "",
+        "## Capability Coverage",
+        "",
+        f"- Status: `{capability.get('status', 'not_collected')}`",
+        f"- Core capabilities: `{capability.get('core_capability_count', 'not_collected')}`",
+        f"- Pass/partial/fail/not_collected: `{capability.get('pass_count', 'not_collected')}`/`{capability.get('partial_count', 'not_collected')}`/`{capability.get('fail_count', 'not_collected')}`/`{capability.get('not_collected_count', 'not_collected')}`",
+        f"- Assertion-backed covered capabilities: `{capability.get('assertion_backed_coverage_count', 'not_collected')}`",
+        "",
+        "| Capability | Linked cases | Run status | Assertion status | Evidence collected | Status |",
+        "| --- | --- | --- | --- | --- | --- |",
+    ]
+    for item in capability.get("items", []) if isinstance(capability.get("items"), list) else []:
+        lines.append(
+            "| "
+            + f"{item.get('id')} | "
+            + f"{', '.join(str(case) for case in item.get('linked_cases', [])) or 'not_collected'} | "
+            + f"`{item.get('run_status', 'not_collected')}` | "
+            + f"`{item.get('assertion_status', 'not_collected')}` | "
+            + f"`{item.get('evidence_collected', False)}` | "
+            + f"`{item.get('status', 'not_collected')}` |"
+        )
+    lines.extend(
+        [
+            "",
         "## Process Compliance",
         "",
         f"- pdd_present_rate: `{process.get('pdd_present_rate', 'not_collected')}`",
         f"- ddd_present_rate: `{process.get('ddd_present_rate', 'not_collected')}`",
         f"- sdd_present_rate: `{process.get('sdd_present_rate', 'not_collected')}`",
         f"- tdd_present_rate: `{process.get('tdd_present_rate', 'not_collected')}`",
+        f"- review_present_rate: `{process.get('review_present_rate', 'not_collected')}`",
+        f"- repair_present_rate: `{process.get('repair_present_rate', 'not_collected')}`",
+        f"- rereview_present_rate: `{process.get('rereview_present_rate', 'not_collected')}`",
         f"- inferred_rate: `{process.get('process_trace_inferred_only_rate', process.get('all_core_phases_inferred_only_rate', 'not_collected'))}`",
         f"- required_field_fallback_rate: `{process.get('required_field_fallback_rate', 'not_collected')}`",
         f"- validation_command_present_rate: `{process.get('validation_command_present_rate', 'not_collected')}`",
         "- Explicit trace contract: `changeforge_route`, PDD acceptance, DDD invariants, SDD placement/error contract, and TDD validation trace.",
-    ]
+        ]
+    )
     if process_warning:
-        lines.append("- Warning: explicit PDD/DDD/SDD/TDD traces were not captured; inferred/fallback traces do not prove full process compliance.")
+        lines.append(f"- Warning: {process_warning}; inferred/fallback traces do not prove full process compliance.")
     lines.extend(
         [
             "",
-            "## Cost / Overhead",
+            "## Case-Level Result",
+            "",
+            f"- Improved cases: `{[row.get('case_id') for row in case_results.get('improved_cases', [])]}`",
+            f"- No improvement cases: `{[row.get('case_id') for row in case_results.get('no_improvement_cases', [])]}`",
+            f"- Regressed cases: `{[row.get('case_id') for row in case_results.get('regressed_cases', [])]}`",
+            f"- Reliability no-improvement cases: `{[row.get('case_id') for row in case_results.get('reliability_no_improvement_cases', [])]}`",
+            "",
+            "## Cost Telemetry",
             "",
             f"- skills_with_hooks_clean_vs_baseline_clean input token overhead: `{_markdown_pct(cost_delta.get('average_input_token_overhead_pct'))}`",
             f"- skills_with_hooks_clean_vs_baseline_clean output token overhead: `{_markdown_pct(cost_delta.get('average_output_token_overhead_pct'))}`",
             f"- skills_with_hooks_clean_vs_baseline_clean reasoning token overhead: `{_markdown_pct(cost_delta.get('average_reasoning_token_overhead_pct'))}`",
             f"- skills_with_hooks_clean_vs_baseline_clean command execution delta: `{cost_delta.get('average_command_execution_delta', 'not_collected')}`",
             f"- skills_with_hooks_clean_vs_baseline_clean pass rate delta: `{cost_delta.get('pass_rate_delta', 'not_collected')}`",
-            "- Cost caveat: parsed local Codex telemetry, not a billing ledger.",
+            f"- Cost is telemetry only: `{cost.get('cost_is_telemetry_only', 'not_collected')}`",
+            "- Quality-first benchmark does not gate on cost.",
+            "- No cost reduction or efficiency improvement claim is made.",
+            f"- Cost caveat: {cost.get('cost_caveat', 'parsed local Codex telemetry, not a billing ledger or quality gate.')}",
             "",
             "## Variants",
             "",

@@ -65,10 +65,36 @@ EXPECTED_BENCHMARKS: dict[str, tuple[str, ...]] = {
         "bugfix-same-pattern-scan",
         "dependency-stdlib-native-ladder",
         "helper-reuse-search",
+        "minimal-correct-native-reuse",
         "minimal-correct-implementation-ladder",
         "monorepo-affected-tests",
         "structure-placement-reuse-existing-function",
         "test-failure-no-env-blame",
+    ),
+    "injection": (
+        "professional-route-manifest-activation",
+        "stage-specific-reference-loading",
+    ),
+    "logging": (
+        "redacted-structured-log-design",
+    ),
+    "memory": (
+        "repeated-failure-fragile-file",
+    ),
+    "pressure": (
+        "professional-boundary-under-user-pressure",
+    ),
+    "process": (
+        "full-pdd-ddd-sdd-tdd-review-repair",
+    ),
+    "repo-intel": (
+        "caller-callee-test-impact-map",
+    ),
+    "review": (
+        "repair-rereview-required",
+    ),
+    "validation": (
+        "stale-validation-after-edit",
     ),
     "structure": (
         "design-pattern-overengineering",

@@ -47,7 +47,7 @@ CURRENT_CODEX_HOME_REFUSAL_MESSAGE = (
     "CHANGEFORGE_ALLOW_CURRENT_CODEX_HOME=1 or --allow-current-codex-home"
 )
 INTERNAL_BORROWED_CODEX_HOME_ENV = "CHANGEFORGE_CODEX_LIVE_INTERNAL_BORROWED_CODEX_HOME"
-PROCESS_PHASES = ("pdd", "ddd", "sdd", "tdd", "implementation", "validation", "review")
+PROCESS_PHASES = ("pdd", "ddd", "sdd", "tdd", "implementation", "validation", "review", "repair", "rereview")
 PROCESS_CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
 PROCESS_PHASE_STATUSES = {"present", "missing", "degraded", "inferred", "not_applicable"}
 PROCESS_FALLBACK_FIELD_SOURCE = "case_metadata_fallback"
@@ -1221,8 +1221,8 @@ def _write_run_event(
         "event": event,
         "status": status,
         "duration_ms": duration_ms,
-        "selected_skills": _selected_skills_for_variant(variant),
-        "selected_capabilities": _selected_capabilities_for_variant(variant),
+        "selected_skills": _selected_skills_for_variant(variant, case),
+        "selected_capabilities": _selected_capabilities_for_variant(variant, case),
         "hook_guidance_bytes": _hook_guidance_bytes(variant),
         "artifact": artifact,
         "error_category": error_category,
@@ -1271,6 +1271,11 @@ def _process_trace_payload(
     phase_status["implementation"] = "present" if result.get("status") in {"collected", "failed", "partial"} else "missing"
     phase_status["validation"] = "present" if validation_commands and result.get("grading_status") else "missing"
     phase_status["review"] = "present" if _final_mentions_review(run_dir) else "missing"
+    phase_status["repair"] = "present" if _final_mentions(run_dir, ("repair", "fixed review finding")) else "missing"
+    phase_status["rereview"] = "present" if _final_mentions(run_dir, ("re-review", "rereview", "reviewed again")) else "missing"
+    selected_skills = _selected_skills_for_variant(variant, case)
+    selected_capabilities = _selected_capabilities_for_variant(variant, case)
+    required_quality_gates = _required_quality_gates_for_process_trace(facts)
     artifacts = [
         _run_relative_artifact(out_dir, run_dir / "result.json"),
         _run_relative_artifact(out_dir, run_dir / "grading" / "grading-result.json"),
@@ -1278,20 +1283,27 @@ def _process_trace_payload(
         _run_relative_artifact(out_dir, run_dir / "events.redacted.jsonl"),
     ]
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "run_id": out_dir.name,
         "case_id": case.id,
         "variant": variant,
         "run_index": run_index,
+        "route_manifest_present": _final_has_route_manifest(run_dir),
         "phase_status": phase_status,
         "traceability": _process_traceability(facts, validation_commands),
         "process_facts": facts,
         "evidence_sources": evidence_sources,
-        "selected_skills": _selected_skills_for_variant(variant),
-        "selected_capabilities": _selected_capabilities_for_variant(variant),
-        "required_quality_gates": _required_quality_gates_for_process_trace(facts),
+        "selected_skills": selected_skills,
+        "selected_capabilities": selected_capabilities,
+        "required_quality_gates": required_quality_gates,
         "stage_ownership": _process_stage_ownership(),
         "validation_commands": validation_commands,
+        "read_evidence": _trace_named_evidence(facts, "read_evidence"),
+        "repo_graph_evidence": _trace_named_evidence(facts, "repo_graph_evidence"),
+        "memory_evidence": _trace_named_evidence(facts, "memory_evidence"),
+        "validation_broker_evidence": _trace_named_evidence(facts, "validation_broker_evidence"),
+        "trajectory_findings": _trace_named_evidence(facts, "trajectory_findings"),
+        "residual_risk": _trace_named_evidence(facts, "residual_risk"),
         "artifacts": artifacts,
         "result_status": result.get("status"),
         "grading_status": result.get("grading_status"),
@@ -1826,15 +1838,42 @@ def _process_stage_ownership() -> dict[str, str]:
         "sdd_logging_decision": "logging-design-gate",
         "tdd": "quality-test-gate",
         "cross_stage_review": "ai-code-review-refactor",
+        "repair": "ai-code-review-refactor",
+        "rereview": "ai-code-review-refactor",
     }
 
 
 def _final_mentions_review(run_dir: Path) -> bool:
+    return _final_mentions(run_dir, ("review", "residual risk"))
+
+
+def _final_mentions(run_dir: Path, needles: tuple[str, ...]) -> bool:
     final_path = run_dir / "final.md"
     if not final_path.exists():
         return False
     text = final_path.read_text(encoding="utf-8", errors="ignore").casefold()
-    return "review" in text or "residual risk" in text
+    return any(needle in text for needle in needles)
+
+
+def _final_has_route_manifest(run_dir: Path) -> bool:
+    final_path = run_dir / "final.md"
+    if not final_path.exists():
+        return False
+    text = final_path.read_text(encoding="utf-8", errors="ignore")
+    return "changeforge_route" in text or (
+        "selected_skills" in text and "selected_capabilities" in text and "required_quality_gates" in text
+    )
+
+
+def _trace_named_evidence(facts: dict[str, Any], field: str) -> Any:
+    value = facts.get(field)
+    if value is not None:
+        return _redact_process_trace_payload(value)
+    evidence = facts.get("evidence") if isinstance(facts.get("evidence"), dict) else {}
+    value = evidence.get(field) if isinstance(evidence, dict) else None
+    if value is not None:
+        return _redact_process_trace_payload(value)
+    return []
 
 
 def _process_facts(case: CodexLiveCase, validation_commands: list[str]) -> dict[str, Any]:
@@ -2416,10 +2455,10 @@ def _validation_commands(case: CodexLiveCase) -> list[str]:
     ]
 
 
-def _selected_skills_for_variant(variant: str | None) -> list[str]:
+def _selected_skills_for_variant(variant: str | None, case: CodexLiveCase | None = None) -> list[str]:
     if variant == "baseline_clean" or variant is None:
         return []
-    return [
+    skills = [
         "change-forge-router",
         "development-process-orchestrator",
         "change-intake-compiler",
@@ -2429,12 +2468,20 @@ def _selected_skills_for_variant(variant: str | None) -> list[str]:
         "logging-design-gate",
         "quality-test-gate",
     ]
+    case_id = getattr(case, "id", "") if case is not None else ""
+    if case_id.startswith("reliability/"):
+        skills.extend(["reliability-observability-gate", "data-middleware-change-builder"])
+    if case_id.startswith(("security/", "logging/")):
+        skills.extend(["security-privacy-gate", "logging-design-gate"])
+    if case_id.startswith(("repo-intel/", "memory/", "validation/", "process/", "review/")):
+        skills.append("ai-code-review-refactor")
+    return list(dict.fromkeys(skills))
 
 
-def _selected_capabilities_for_variant(variant: str | None) -> list[str]:
+def _selected_capabilities_for_variant(variant: str | None, case: CodexLiveCase | None = None) -> list[str]:
     if variant == "baseline_clean" or variant is None:
         return []
-    return [
+    capabilities = [
         "acceptance-standard-definition",
         "module-boundary-design",
         "implementation-structure-design",
@@ -2442,6 +2489,26 @@ def _selected_capabilities_for_variant(variant: str | None) -> list[str]:
         "contract-testing",
         "validation-broker",
     ]
+    case_id = getattr(case, "id", "") if case is not None else ""
+    if case_id.startswith("reliability/"):
+        capabilities.extend(["cache-design", "concurrency-control", "observability-design", "fallback-design"])
+    if case_id.startswith("logging/"):
+        capabilities.extend(["logging-error-handling", "secret-redaction", "threat-modeling"])
+    if case_id.startswith("security/"):
+        capabilities.extend(["threat-modeling", "secret-configuration-security"])
+    if case_id.startswith("repo-intel/"):
+        capabilities.extend(["repository-context-map", "repository-graph-analysis"])
+    if case_id.startswith("memory/"):
+        capabilities.extend(["project-memory-governance"])
+    if case_id.startswith("validation/"):
+        capabilities.append("validation-broker")
+    if case_id.startswith(("process/", "review/")):
+        capabilities.extend(["engineering-stage-professionalism", "execution-trajectory-analysis"])
+    if case_id.startswith("devex/"):
+        capabilities.extend(["minimal-correct-implementation", "agent-execution-discipline"])
+    if case_id.startswith("pressure/"):
+        capabilities.extend(["agent-execution-discipline", "minimal-correct-implementation"])
+    return list(dict.fromkeys(capabilities))
 
 
 def _hook_guidance_bytes(variant: str | None) -> int:

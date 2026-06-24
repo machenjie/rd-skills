@@ -1,0 +1,45 @@
+id: full-pdd-ddd-sdd-tdd-review-repair
+category: process
+complexity: L4
+focus:
+  - explicit professional process trace
+  - review and repair closure
+  - validation freshness evidence
+  - bounded handoff evidence
+route_hints:
+  skills:
+    - backend-change-builder
+    - ai-code-review-refactor
+    - quality-test-gate
+  capabilities:
+    - agent-execution-discipline
+    - implementation-structure-design
+    - code-review
+    - unit-testing
+    - regression-testing
+  domain_extensions: []
+  quality_gates:
+    - implementation gate
+    - test gate
+    - AI review gate
+    - execution discipline gate
+expected_outcomes:
+  - The candidate produces CAPABILITY_EVIDENCE.md with every named process stage.
+  - Review, repair, and re-review are visible in bounded evidence, not inferred.
+  - Validation commands and residual risk are named explicitly.
+  - No raw prompt, secret, or local absolute user path is stored.
+required_qualities:
+  - Evidence is explicit and machine-inspectable rather than inferred from a polished answer.
+  - Route, process, validation, or review decisions are tied to the concrete benchmark case.
+  - Validation evidence and residual risk are both present in final handoff artifacts.
+  - Bounded telemetry is separated from assertion-backed quality evidence.
+forbidden_shortcuts:
+  - Claiming capability coverage from telemetry-only diagnostics.
+  - Treating inferred or fallback process language as explicit compliance.
+  - Lowering security, validation, accessibility, or error-handling expectations to keep the change small.
+  - Claiming cost reduction or efficiency improvement during this quality-first benchmark phase.
+evidence:
+  - Candidate artifact containing capability-specific assertion terms.
+  - Validation command or explicit residual-risk statement.
+  - Final handoff listing changed files or evidence files.
+  - Absence of raw prompts, secrets, full command output, and local absolute user paths.

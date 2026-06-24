@@ -46,7 +46,8 @@ python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out
 | Executor adapter live pass-rate | Measured real-task executor adapter success rate, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
 | Executor adapter token overhead | Measured additional token cost, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
 | Executor adapter turn overhead | Measured additional turn cost, when available. | `python3 scripts/eval-executor-adapters.py` | Keep `not_collected` until a real measured run exists. |
-| Codex CLI live benchmark | Published `reports/codex-live-benchmark-summary.json` from an explicit opt-in strict Codex CLI run using `auth-policy=borrow-current` or `isolated-api-key`. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` | Keep `not_collected` until a real validated strict run is published; dry-run, skipped, telemetry-only, contaminated-baseline, user-skill/config/rule-visible, missing assertion, missing ablation-delta, current-home smoke, clean-paired smoke, `evidence_scope_ready=false`, and `effect_status=inconclusive` reports cannot satisfy this dimension as `pass`. |
+| Codex CLI live pass-rate benchmark | Published `reports/codex-live-benchmark-summary.json` pass-rate evidence from an explicit opt-in strict Codex CLI run using `auth-policy=borrow-current` or `isolated-api-key`. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` | Keep `not_collected` until a real validated strict run is published; dry-run, skipped, telemetry-only, contaminated-baseline, user-skill/config/rule-visible, missing assertion, missing ablation-delta, current-home smoke, clean-paired smoke, `evidence_scope_ready=false`, and `effect_status=inconclusive` reports cannot satisfy this dimension as `pass`. |
+| Codex CLI live capability coverage | Published `reports/codex-live-benchmark-summary.json` capability matrix evidence showing core ChangeForge capabilities have linked assertion-backed live cases and explicit bounded evidence. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` | Keep `partial` or `not_collected` until every core capability in `evals/codex-live/capability-matrix.yaml` has linked live cases, required variants, assertion pass, and process/repo/memory/validation/review/injection evidence where required. |
 | Open-source readiness | `config/open-source-release.yaml`, [LICENSE_DECISION.md](LICENSE_DECISION.md), [OPEN_SOURCE_READINESS.md](OPEN_SOURCE_READINESS.md), `pyproject.toml`, `CONTRIBUTING.md`, `SECURITY.md`, and root `LICENSE`. | `python3 scripts/validate-open-source-readiness.py` | Owner chooses license, adds exact license text, updates package metadata, confirms contribution licensing, and confirms private vulnerability reporting or private security contact before open-source publication. |
 | Example coverage | `examples/` scenario structure. | `python3 scripts/validate-examples.py` | Add prompt, route, and evidence files for each scenario. |
 | Productization assets | Productization docs, schema, and generation/validation scripts. | `python3 scripts/validate-productization-assets.py` | Restore required productization assets. |
@@ -86,7 +87,10 @@ fixture-derived. It does not make `live runtime telemetry sample`,
 remain `not_collected` until separately measured or collected.
 
 Codex CLI live benchmark evidence is separate from executor adapter telemetry.
-The scorecard and public summary only read the strict
+The scorecard and public summary split this evidence into pass-rate and core
+capability coverage dimensions. A pass-rate `pass` is not broad capability
+coverage unless the capability coverage dimension is also `pass`. The scorecard
+and public summary only read the strict
 `reports/codex-live-benchmark-summary.json`; they never run Codex and they do
 not read `reports/codex-current-home-smoke-summary.json` or
 `reports/codex-live-smoke-summary.json` as pass evidence. A strict summary may
@@ -102,6 +106,11 @@ dimension from `not_collected`. Ablation summaries must include
 failure-category buckets, mean/median/min/max usage and metric counts, and
 per-case/per-variant pass rates so the public scorecard does not flatten the
 evidence into a single headline pass rate.
+
+Cost telemetry is reported for later optimization only. Token usage, command
+executions, and file changes do not gate the quality result in this phase, and
+the scorecard must not claim cost reduction or efficiency improvement from the
+current quality-first benchmark.
 
 For this dimension, artifact validity and evidence readiness are separate.
 `clean-paired` smoke can be a valid diagnostic artifact, but it remains

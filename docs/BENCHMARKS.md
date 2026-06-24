@@ -17,7 +17,8 @@ ChangeForge benchmarks are release evidence, not marketing claims. They are loca
 | Executor adapter structural fixtures | Deterministic adapter fixtures and sanitized telemetry sample under `evals/executor-adapter` and `reports/`. | `python3 scripts/eval-executor-adapters.py` |
 | Activation precision benchmark | Deterministic activation fixtures for stage, skill, capability, reference, language, risk, and overroute precision against the built hook runtime. | `python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks` |
 | Codegen benchmark smoke | Codegen benchmark manifest and limited run. | `python3 scripts/validate-codegen-benchmarks.py` and `python3 scripts/run-codegen-benchmarks.py --limit 3` |
-| Codex CLI live benchmark | Explicit opt-in local Codex CLI runs over selected codegen starter repos, summarized from validated run artifacts. | `python3 scripts/run-codex-live-benchmarks.py --list` and `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
+| Codex CLI live pass-rate benchmark | Explicit opt-in local Codex CLI runs over selected codegen starter repos, summarized from assertion-backed validated run artifacts. | `python3 scripts/run-codex-live-benchmarks.py --list` and `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
+| Codex CLI live capability coverage | Core ChangeForge capability matrix coverage from assertion-backed live cases, process traces, route manifests, and bounded evidence. | `python3 scripts/run-codex-live-benchmarks.py --list` and `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
 | Professionalism regression | Baseline-aware regression check. | `python3 scripts/validate-professionalism-regression.py --strict` |
 
 ## Scorecard Generation
@@ -136,9 +137,21 @@ python3 scripts/run-codex-live-benchmarks.py \
   --publish-summary
 ```
 
-Publishable assertion-backed live cases currently cover `security`,
-`backend`, `devex`, `structure`, and `reliability`. Telemetry-only cases are
-listed in run outputs but do not contribute to pass-rate evidence.
+Publishable assertion-backed live cases currently include the original
+`security`, `backend`, `devex`, `structure`, and `reliability` quality cases
+plus core capability cases for professional injection, staged injection,
+repository graph evidence, project memory, validation freshness, full
+PDD/DDD/SDD/TDD/review flow, minimal-correct reuse, pressure resistance,
+repair/re-review, and logging/security decisions. Telemetry-only cases are
+listed in run outputs but do not contribute to pass-rate or capability coverage
+evidence.
+
+The scorecard intentionally splits Codex live evidence into two dimensions:
+the pass-rate benchmark shows assertion-backed codegen quality deltas, while
+the capability coverage dimension shows whether rd-skills core capabilities
+were explicitly covered by live cases and evidence. A pass-rate `pass` must not
+be read as broad core capability coverage unless the capability coverage
+dimension is also `pass`.
 
 Only ablation evidence with all of `baseline_clean`, `skills_only_clean`, and
 `skills_with_hooks_clean`, at least 5 assertion-backed cases, and at least 3
@@ -164,6 +177,11 @@ Codex live summaries aggregate per-variant pass rates, security pass rates,
 failure categories, mean/median/min/max usage and metric counts, ablation
 deltas, and per-case/per-variant pass rates. Pass-rate confidence text remains
 descriptive because these are local small-sample runs.
+
+In the current quality-first phase, token usage, command executions, and file
+changes are telemetry only. They are reported for later analysis, but they do
+not gate the quality result, and the reports must not claim cost reduction or
+efficiency improvement.
 
 The `danger-full-access` sandbox also requires
 `CHANGEFORGE_ALLOW_DANGER_FULL_ACCESS=1` or `--allow-danger-full-access`.

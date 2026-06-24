@@ -11,7 +11,7 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 ## Status Counts
 
 - `pass`: 17
-- `partial`: 3
+- `partial`: 4
 - `fail`: 0
 - `unknown`: 0
 - `not_collected`: 4
@@ -22,7 +22,7 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 | --- | --- | --- |
 | live pass-rate | `not_collected` | Measured real-task success rate. |
 | live runtime telemetry sample | `not_collected` | Sanitized bounded facts from an actual hook runtime execution. |
-| local_codex_cli_live_benchmark | `pass` | Opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
+| local_codex_cli_live_benchmark | `partial` | Opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
 | promoted golden case | `pass` | Human-reviewed case admitted to regression coverage. |
 | runtime telemetry fixture sample | `pass` | Deterministic executor-adapter fixture-derived bounded facts; not live runtime telemetry. |
 | structural fixture | `pass` | Local deterministic structure sample passed; not evidence of live task success. |
@@ -50,13 +50,50 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 | Executor adapter live pass-rate | `not_collected` | live pass-rate | reports/executor-adapter-eval.json | deterministic local fixtures do not measure real-task success rate | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter token overhead | `not_collected` | token overhead | reports/executor-adapter-eval.json | deterministic local fixture run does not measure token overhead | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter turn overhead | `not_collected` | turn overhead | reports/executor-adapter-eval.json | deterministic local fixture run does not measure turn overhead | `python3 scripts/eval-executor-adapters.py` |
-| Codex CLI live benchmark | `pass` | local_codex_cli_live_benchmark | reports/codex-live-benchmark-summary.json | mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=5/5; results=45/45; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=0.8667; effect=improved/positive; token_overhead=input +194.52%, output +31.70%; command_delta=29.47; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
+| Codex CLI live pass-rate benchmark | `pass` | local_codex_cli_live_benchmark | reports/codex-live-benchmark-summary.json | mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=5/5; results=45/45; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=0.8667; effect=improved/positive; token_overhead=input +194.52%, output +31.70%; command_delta=29.47; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
+| Codex CLI live capability coverage | `partial` | local_codex_cli_live_benchmark | reports/codex-live-benchmark-summary.json | mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=5/5; results=45/45; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=0.8667; effect=improved/positive; token_overhead=input +194.52%, output +31.70%; command_delta=29.47; warnings=linked case was not run in this summary; process_compliance_summary missing; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
 | Example coverage | `pass` | structural fixture | examples/ and scripts/validate-examples.py | showcase examples validate | `python3 scripts/validate-examples.py` |
 | Productization assets | `pass` | structural fixture | docs/productization assets, schemas, and scripts | required productization assets present | `python3 scripts/validate-productization-assets.py` |
 | Marketplace index validation | `pass` | structural fixture | scripts/validate-marketplace-index.py | recommended, full, and dev marketplace indexes validate | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` |
 | Open-source readiness | `partial` | structural fixture | config/open-source-release.yaml, docs/LICENSE_DECISION.md, docs/OPEN_SOURCE_READINESS.md, pyproject.toml, CONTRIBUTING.md, SECURITY.md, LICENSE | config_present=True, selected_license_non_null=False, selected_license_allowed=True, license_file=False, pyproject_license_not_proprietary=False, contribution_licensing_confirmed=False, contribution_licensing_evidence=False, security_contact_confirmed=False, security_contact_evidence=False, dist_release_policy_explicit=True, dist_release_policy_valid=True | `python3 scripts/validate-open-source-readiness.py` |
 | Hook safety | `pass` | structural fixture | reports/hook-validation.json | {"error_count": 0, "generated_by": "scripts/validate-hooks.py", "summary": {"claude_templates": 2, "codex_templates": 2, "copilot_templates": 2, "error_count": 0, "hook_runtime_root": "src/hook-runtime", "required_hook_scripts": 29, "required_hook_scripts_present": true}} | `python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md` |
 | Installation validation | `pass` | structural fixture | reports/installation-validation.json | {"error_count": 0, "generated_by": "scripts/validate-installation.py", "summary": {"built_skill_directories": 2040, "dist_exists": true, "error_count": 0, "required_hook_runtime_files": 396, "runtime_roots": 10, "zip_count": 204}} | `python3 scripts/validate-installation.py --json-out reports/installation-validation.json --out reports/installation-validation.md` |
+
+## Quality Improvement
+
+- baseline pass rate: `0.4`
+- skills_only pass rate: `0.7333`
+- skills_with_hooks pass rate: `0.8667`
+- skills_only vs baseline delta: `0.3333`
+- skills_with_hooks vs skills_only delta: `0.1334`
+- skills_with_hooks vs baseline delta: `0.4667`
+- no_quality_regression: `True`
+- large_quality_improvement_claim: `False`
+
+## Capability Coverage
+
+| Capability | Linked Cases | Evidence | Status |
+| --- | --- | --- | --- |
+
+## Process Compliance
+
+- process evidence not collected
+
+## Case-Level Result
+
+- improved_cases: devex/helper-reuse-search, security/ssrf-url-allowlist, structure/object-method-encapsulation-placement
+- no_improvement_cases: backend/service-method-vs-new-helper, reliability/redis-cache-stampede-protection
+- regressed_cases: none
+- reliability_no_improvement_visible: `True`
+
+## Cost Telemetry
+
+- cost is telemetry only in this phase
+- quality-first benchmark does not gate on cost
+- no cost reduction or efficiency improvement claim is made
+- input_tokens: `not_collected`
+- output_tokens: `not_collected`
+- reasoning_output_tokens: `not_collected`
 
 ## Known Unknowns / Not Collected
 

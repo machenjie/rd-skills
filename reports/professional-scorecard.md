@@ -5,7 +5,7 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 ## Summary
 
 - `pass`: 17
-- `partial`: 3
+- `partial`: 4
 - `fail`: 0
 - `unknown`: 0
 - `not_collected`: 4
@@ -21,7 +21,7 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 | live pass-rate | `not_collected` | Measured real-task success rate. |
 | token overhead | `not_collected` | Measured additional token cost. |
 | turn overhead | `not_collected` | Measured additional turn cost. |
-| local_codex_cli_live_benchmark | `pass` | Opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
+| local_codex_cli_live_benchmark | `partial` | Opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
 
 ## Dimensions
 
@@ -44,7 +44,8 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 | Executor adapter live pass-rate | `not_collected` | reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter token overhead | `not_collected` | reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter turn overhead | `not_collected` | reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
-| Codex CLI live benchmark | `pass` | reports/codex-live-benchmark-summary.json | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
+| Codex CLI live pass-rate benchmark | `pass` | reports/codex-live-benchmark-summary.json | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
+| Codex CLI live capability coverage | `partial` | reports/codex-live-benchmark-summary.json and evals/codex-live/capability-matrix.yaml | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
 | Example coverage | `pass` | examples/ and scripts/validate-examples.py | `python3 scripts/validate-examples.py` |
 | Productization assets | `pass` | docs/productization assets, schemas, and scripts | `python3 scripts/validate-productization-assets.py` |
 | Marketplace index validation | `pass` | scripts/validate-marketplace-index.py | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` |
@@ -66,4 +67,5 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 - Executor adapter live pass-rate: Collect a real measured run before changing this status from not_collected.
 - Executor adapter token overhead: Collect a real measured run before changing this status from not_collected.
 - Executor adapter turn overhead: Collect a real measured run before changing this status from not_collected.
+- Codex CLI live capability coverage: linked case was not run in this summary; process_compliance_summary missing; register every core capability linked case; run linked cases in baseline_clean, skills_only_clean, and skills_with_hooks_clean; keep linked cases assertion-backed and publishable_for_strict=true; collect explicit process-trace evidence instead of inferred/fallback fields; rerun reports after capability cases pass
 - Open-source readiness: Owner must select an OSI license, update package metadata, confirm contribution licensing, and configure private vulnerability reporting before open-source publication.

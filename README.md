@@ -91,7 +91,8 @@ These signals are generated or validator-backed local evidence, not external pop
 | --- | --- | --- |
 | Profile build reproducibility | `pass` | [docs/SCORECARD_DASHBOARD.md](docs/SCORECARD_DASHBOARD.md) |
 | Example coverage | `pass` | [scripts/validate-examples.py](scripts/validate-examples.py) |
-| Codex CLI live benchmark | `pass` | [reports/codex-live-benchmark-summary.json](reports/codex-live-benchmark-summary.json) |
+| Codex CLI live pass-rate benchmark | `pass` | [reports/codex-live-benchmark-summary.json](reports/codex-live-benchmark-summary.json) |
+| Codex CLI live capability coverage | `partial` | [reports/codex-live-benchmark-summary.json](reports/codex-live-benchmark-summary.json) |
 | Marketplace index validation | `pass` | [scripts/validate-marketplace-index.py](scripts/validate-marketplace-index.py) |
 | Open-source readiness | `partial` | [docs/OPEN_SOURCE_READINESS.md](docs/OPEN_SOURCE_READINESS.md) |
 <!-- changeforge-scorecard-summary:end -->

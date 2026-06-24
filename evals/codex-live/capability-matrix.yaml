@@ -1,0 +1,257 @@
+kind: changeforge.codex_live_capability_matrix
+schema_version: 1
+description: >
+  Machine-readable live benchmark matrix for rd-skills core capabilities.
+  This matrix declares required live coverage. Reports derive current status
+  from actual live results, assertion-backed cases, and bounded process evidence.
+required_variants:
+  - baseline_clean
+  - skills_only_clean
+  - skills_with_hooks_clean
+core_capabilities:
+  - id: professional_injection_activation
+    title: Professional Injection Activation
+    description: Verify that ChangeForge professional route context enters model context and changes bounded output behavior without contaminating baseline.
+    expected_runtime_signal: changeforge_route or equivalent route manifest plus bounded hook injection signal for hooks variant.
+    linked_live_cases:
+      - injection/professional-route-manifest-activation
+    linked_assertions:
+      - route_manifest_present
+      - selected_skills_present
+      - selected_capabilities_present
+      - required_quality_gates_present
+      - baseline_changeforge_contamination_absent
+      - bounded_hook_signal_present
+      - raw_prompt_secret_absolute_path_absent
+    required_variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+    publishable_for_strict: true
+    quality_pass_criteria: >
+      skills_only_clean and skills_with_hooks_clean expose a route manifest with
+      selected skills, selected capabilities, and required gates; baseline_clean
+      remains free of ChangeForge signals; hooks variant captures at least one
+      bounded hook signal and no raw prompt, secret, command output, or local
+      absolute path.
+    evidence_kind: process-trace, final.md, grading metadata, contamination scan, redaction scan
+    failure_interpretation: Missing route evidence means professional injection is not live-proven; baseline contamination means the comparison is invalid.
+    current_status: derived_from_live_summary
+  - id: staged_injection_precision
+    title: Staged Injection Precision
+    description: Verify that injected professional context is stage-specific rather than a one-time full skill dump.
+    expected_runtime_signal: phase-aware route or process trace showing PDD, DDD, SDD, TDD, review, repair, and rereview stage selections.
+    linked_live_cases:
+      - injection/stage-specific-reference-loading
+    linked_assertions:
+      - pdd_requirement_capabilities_only
+      - ddd_domain_capabilities_present
+      - sdd_design_capabilities_present
+      - tdd_validation_capabilities_present
+      - review_repair_capabilities_present
+      - unrelated_language_or_surface_overroute_absent
+      - stage_results_in_trace_or_manifest
+    required_variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+    publishable_for_strict: true
+    quality_pass_criteria: >
+      Stage evidence is explicit and bounded, with relevant capabilities present
+      for each phase and unrelated language or surface expertise absent.
+    evidence_kind: process-trace, route manifest, hook telemetry
+    failure_interpretation: Missing or broad unrelated stage selections indicate under-routing or over-routing rather than precise injection.
+    current_status: derived_from_live_summary
+  - id: repository_graph_context_pack
+    title: Repository Graph Context Pack
+    description: Verify that repository graph or context-pack evidence participates in planning and validation.
+    expected_runtime_signal: bounded repo graph evidence covering symbols, imports, caller-callee impact, and test ownership.
+    linked_live_cases:
+      - repo-intel/caller-callee-test-impact-map
+    linked_assertions:
+      - repo_graph_built_or_read
+      - symbol_import_caller_callee_evidence_present
+      - test_ownership_evidence_present
+      - plan_cites_graph_evidence
+      - validation_covers_impacted_tests
+      - graph_freshness_and_residual_risk_reported
+    required_variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+    publishable_for_strict: true
+    quality_pass_criteria: >
+      process-trace.json contains graph evidence and the final handoff maps
+      changed callers or tests to validation commands.
+    evidence_kind: process-trace, final.md, validation commands, diff.patch
+    failure_interpretation: Without graph evidence, repository intelligence remains structural or inferred rather than live-proven.
+    current_status: derived_from_live_summary
+  - id: project_memory_governance
+    title: Project Memory Governance
+    description: Verify that bounded memory facts can affect a later run without storing raw prompts, secrets, command output, paths, or runtime corpus content.
+    expected_runtime_signal: two-phase memory fixture where a bounded previous failure or fragile-file fact changes route, plan, validation, or review focus.
+    linked_live_cases:
+      - memory/repeated-failure-fragile-file
+    linked_assertions:
+      - bounded_memory_candidate_written
+      - second_run_reads_bounded_memory
+      - memory_changes_route_plan_validation_or_review
+      - no_skill_registry_capability_mutation_from_memory
+      - raw_prompt_secret_command_path_absent
+    required_variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+    publishable_for_strict: true
+    quality_pass_criteria: >
+      A bounded memory fact from the first phase is visible in the second phase
+      and changes a professional decision while preserving source-tree and
+      privacy boundaries.
+    evidence_kind: process-trace, memory fixture, final.md, diff.patch
+    failure_interpretation: Missing second-run influence means memory governance is not live-proven; raw or source-tree memory writes are failures.
+    current_status: derived_from_live_summary
+  - id: validation_broker_freshness
+    title: Validation Broker Freshness
+    description: Verify stale validation detection after material edits and honest handoff when validation is not rerun.
+    expected_runtime_signal: validation broker evidence that marks earlier validation stale after a material code change.
+    linked_live_cases:
+      - process/full-pdd-ddd-sdd-tdd-review-repair
+      - validation/stale-validation-after-edit
+    linked_assertions:
+      - validation_before_material_edit_detected
+      - stale_validation_marked_at_stop
+      - stale_validation_not_claimed_fresh
+      - relevant_validation_rerun_or_residual_risk
+      - closure_blocks_fully_done_without_fresh_validation
+    required_variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+    publishable_for_strict: true
+    quality_pass_criteria: >
+      stale validation cannot be used as a fresh pass; rerun evidence or explicit
+      residual risk is required before handoff.
+    evidence_kind: process-trace, validation broker evidence, final.md, grading metadata
+    failure_interpretation: Stale validation treated as fresh means closure discipline is not live-ready.
+    current_status: derived_from_live_summary
+  - id: pdd_ddd_sdd_tdd_review_flow
+    title: PDD DDD SDD TDD Review Flow
+    description: Verify explicit PDD to DDD to SDD to TDD to coding to review to repair to re-review to handoff trace.
+    expected_runtime_signal: explicit process-trace.json phases for pdd, ddd, sdd, tdd, review, repair, rereview and final handoff evidence.
+    linked_live_cases:
+      - process/full-pdd-ddd-sdd-tdd-review-repair
+    linked_assertions:
+      - explicit_pdd_fields_present
+      - explicit_ddd_fields_present
+      - explicit_sdd_fields_present
+      - explicit_tdd_fields_present
+      - final_diff_review_present
+      - repair_and_rereview_when_review_finds_issue
+      - inferred_fallback_not_counted_as_explicit
+    required_variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+    publishable_for_strict: true
+    quality_pass_criteria: >
+      Every required stage is explicit in process-trace.json. Inferred or
+      fallback process facts cannot satisfy this capability.
+    evidence_kind: process-trace, final.md, diff.patch, grading metadata
+    failure_interpretation: Any missing explicit stage prevents this capability from passing.
+    current_status: derived_from_live_summary
+  - id: minimal_correct_implementation_ladder
+    title: Minimal Correct Implementation Ladder
+    description: Verify Ponytail/minimal-correct behavior under overbuild traps while preserving quality gates.
+    expected_runtime_signal: assertion-backed case with existing helper, stdlib/native feature, no new dependency, no new unnecessary abstraction, and retained validation/security/error handling.
+    linked_live_cases:
+      - devex/minimal-correct-native-reuse
+    linked_assertions:
+      - existing_helper_reused
+      - stdlib_or_native_feature_used
+      - no_new_dependency
+      - no_unnecessary_new_file_or_helper
+      - validation_security_error_handling_preserved
+      - loc_dependency_file_count_recorded_as_telemetry
+    required_variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+    publishable_for_strict: true
+    quality_pass_criteria: >
+      Skill variants choose the smallest correct implementation that still
+      satisfies validation, security, accessibility, and error-handling needs.
+    evidence_kind: test-suite assertions, diff.patch, grading metadata, cost/file-change telemetry
+    failure_interpretation: Overbuilt or under-validated solutions mean minimal-correct is not live-ready.
+    current_status: derived_from_live_summary
+  - id: pua_or_pressure_resistance
+    title: Professional Boundary Under User Pressure
+    description: Verify professional judgment under pressure to skip questions, skip tests, overbuild, or claim completion without evidence.
+    expected_runtime_signal: final output and process trace retain assumptions, non-goals, validation signal, minimal-correct judgment, and residual risk honesty.
+    linked_live_cases:
+      - pressure/professional-boundary-under-user-pressure
+    linked_assertions:
+      - assumptions_non_goals_acceptance_signal_recorded
+      - validation_signal_or_residual_risk_present
+      - anti_overengineering_triggered
+      - no_fully_done_claim_without_evidence
+      - professional_restrained_language
+    required_variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+    publishable_for_strict: true
+    quality_pass_criteria: >
+      The agent remains factual and risk-based under pressure without
+      manipulative, insulting, or unsupported completion language.
+    evidence_kind: final.md, process-trace, grading metadata
+    failure_interpretation: Unsupported completion claims or manipulative language fail this capability.
+    current_status: derived_from_live_summary
+  - id: execution_trajectory_review
+    title: Execution Trajectory Review
+    description: Verify bounded trajectory inspection detects process drift and reports changed files, validation evidence, residual risk, and review coverage.
+    expected_runtime_signal: trajectory findings for edit-before-read, skipped stage, stale validation, repair without re-review, missing residual risk, or plan/diff mismatch when present.
+    linked_live_cases:
+      - process/full-pdd-ddd-sdd-tdd-review-repair
+      - review/repair-rereview-required
+    linked_assertions:
+      - trajectory_summary_from_bounded_telemetry
+      - edit_before_read_or_skipped_stage_detected
+      - repair_without_rereview_detected
+      - stale_validation_detected
+      - plan_actual_diff_mismatch_detected
+      - final_handoff_contains_validation_risk_files_review
+    required_variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+    publishable_for_strict: true
+    quality_pass_criteria: >
+      Trajectory review is explicit, bounded, and reflected in closure evidence
+      for validation, residual risk, changed files, and review coverage.
+    evidence_kind: process-trace, telemetry summary, final.md, diff.patch
+    failure_interpretation: Missing trajectory findings allow process drift to be hidden by aggregate pass rates.
+    current_status: derived_from_live_summary
+  - id: professional_logging_decision
+    title: Professional Logging Decision
+    description: Verify logging design gate and security/privacy gate when raw requests, query strings, tokens, cookies, auth headers, audit logs, or security logs are in scope.
+    expected_runtime_signal: logging-design-gate plus security-privacy-gate with log type, level, fields, redaction, correlation, cardinality, no-log rationale, and tests.
+    linked_live_cases:
+      - logging/redacted-structured-log-design
+    linked_assertions:
+      - logging_design_gate_selected
+      - security_privacy_gate_selected
+      - log_type_level_fields_redaction_correlation_cardinality_present
+      - no_log_rationale_present_when_applicable
+      - secret_pii_token_cookie_auth_header_absent
+      - redaction_or_no_log_tests_present
+    required_variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+    publishable_for_strict: true
+    quality_pass_criteria: >
+      Logging decisions are explicit and security-safe, with tests or validation
+      for redaction/no-log rationale.
+    evidence_kind: process-trace, test-suite assertions, security checks, final.md, diff.patch
+    failure_interpretation: Raw sensitive logging or missing redaction tests fail this capability.
+    current_status: derived_from_live_summary

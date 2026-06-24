@@ -12,7 +12,10 @@ from typing import Any
 
 from codex_live_benchmark_lib import (
     CASE_TIERS,
+    CODEX_LIVE_CAPABILITY_COVERAGE_NAME,
     CODEX_LIVE_EVIDENCE_SCOPES,
+    CODEX_LIVE_LEGACY_BENCHMARK_NAME,
+    CODEX_LIVE_PASS_RATE_BENCHMARK_NAME,
     CURRENT_HOME_SMOKE_EVIDENCE_LEVEL,
     EFFECT_STATUSES,
     EFFECT_VERDICTS,
@@ -29,8 +32,9 @@ from codex_live_benchmark_lib import (
     STRICT_BENCHMARK_MODES,
     STRICT_CODEX_ENVIRONMENT_POLICIES,
     TEST_SUITE_FAILURE_REASONS,
+    codex_live_capability_coverage_status,
     codex_live_evidence_scope_ready,
-    codex_live_scorecard_status,
+    codex_live_pass_rate_status,
     load_case_registry,
     print_errors,
     read_json,
@@ -51,7 +55,6 @@ REAL_RESULT_REQUIRED_FILES = (
     "grading/grading-result.json",
     "result.json",
 )
-CODEX_LIVE_BENCHMARK_NAME = "Codex CLI live benchmark"
 CODEX_LIVE_EVIDENCE_KEY = "local_codex_cli_live_benchmark"
 REPORT_STATUSES = ("pass", "partial", "fail", "unknown", "not_collected")
 
@@ -256,16 +259,18 @@ def _codex_public_scorecard_status_errors(
     scorecard_report: dict[str, Any],
     public_report: dict[str, Any],
 ) -> list[str]:
-    scorecard_item = _find_live_report_item(scorecard_report.get("dimensions"))
-    public_item = _find_live_report_item(public_report.get("items"))
-    if not isinstance(scorecard_item, dict) or not isinstance(public_item, dict):
-        return []
-    if scorecard_item.get("status") != public_item.get("status"):
-        return [
-            "public summary Codex CLI live benchmark status "
-            f"{public_item.get('status')!r} does not match scorecard {scorecard_item.get('status')!r}"
-        ]
-    return []
+    errors: list[str] = []
+    for name in (CODEX_LIVE_PASS_RATE_BENCHMARK_NAME, CODEX_LIVE_CAPABILITY_COVERAGE_NAME):
+        scorecard_item = _find_live_report_item(scorecard_report.get("dimensions"), name)
+        public_item = _find_live_report_item(public_report.get("items"), name)
+        if not isinstance(scorecard_item, dict) or not isinstance(public_item, dict):
+            continue
+        if scorecard_item.get("status") != public_item.get("status"):
+            errors.append(
+                f"public summary {name} status {public_item.get('status')!r} "
+                f"does not match scorecard {scorecard_item.get('status')!r}"
+            )
+    return errors
 
 
 def _readme_profile_count_errors(readme_path: Path, scorecard_report: dict[str, Any], root: Path) -> list[str]:
@@ -395,30 +400,72 @@ def _derived_live_report_errors(
     report = read_json(report_path)
     if not isinstance(report, dict):
         return [f"{report_kind} {report_path} missing or invalid"]
-    item = _find_live_report_item(report.get(item_collection))
-    if item is None:
-        return [f"{report_kind} missing {CODEX_LIVE_BENCHMARK_NAME} item"]
+    errors: list[str] = []
+    expected_statuses: list[str] = []
+    for name, status_func in (
+        (CODEX_LIVE_PASS_RATE_BENCHMARK_NAME, codex_live_pass_rate_status),
+        (CODEX_LIVE_CAPABILITY_COVERAGE_NAME, codex_live_capability_coverage_status),
+    ):
+        item = _find_live_report_item(report.get(item_collection), name)
+        if item is None:
+            errors.append(f"{report_kind} missing {name} item")
+            continue
+        expected_status, strict_errors, readiness_warnings = status_func(summary)
+        expected_statuses.append(expected_status)
+        errors.extend(
+            _derived_live_report_item_errors(
+                summary,
+                item,
+                report_kind=report_kind,
+                item_name=name,
+                expected_status=expected_status,
+                strict_errors=strict_errors,
+                readiness_warnings=readiness_warnings,
+            )
+        )
+    if expected_statuses and report_kind in {"public summary", "scorecard"}:
+        evidence_level = (report.get("evidence_levels") or {}).get(CODEX_LIVE_EVIDENCE_KEY)
+        evidence_status = evidence_level.get("status") if isinstance(evidence_level, dict) else None
+        expected_evidence_status = _weaker_status(*expected_statuses)
+        if evidence_status is not None and evidence_status != expected_evidence_status:
+            errors.append(
+                f"{report_kind} evidence_levels.{CODEX_LIVE_EVIDENCE_KEY}.status "
+                f"{evidence_status!r} does not match combined live evidence status "
+                f"{expected_evidence_status!r}"
+            )
+    return errors
+
+
+def _derived_live_report_item_errors(
+    summary: dict[str, Any],
+    item: dict[str, Any],
+    *,
+    report_kind: str,
+    item_name: str,
+    expected_status: str,
+    strict_errors: list[str],
+    readiness_warnings: list[str],
+) -> list[str]:
     errors: list[str] = []
     detail = _load_item_detail(item, report_kind)
-    expected_status, strict_errors, readiness_warnings = codex_live_scorecard_status(summary)
     item_status = item.get("status")
     if item_status != expected_status:
         errors.append(
-            f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} status {item_status!r} "
+            f"{report_kind} {item_name} status {item_status!r} "
             f"does not match strict evidence status {expected_status!r}"
         )
     if not isinstance(detail, dict):
-        errors.append(f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail must be JSON object")
+        errors.append(f"{report_kind} {item_name} detail must be JSON object")
         return errors
     for field in ("run_id", "effect_verdict"):
         if detail.get(field) != summary.get(field):
             errors.append(
-                f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail {field} "
+                f"{report_kind} {item_name} detail {field} "
                 f"{detail.get(field)!r} does not match summary {summary.get(field)!r}"
             )
     if detail.get("evidence_status") != expected_status:
         errors.append(
-            f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail evidence_status "
+            f"{report_kind} {item_name} detail evidence_status "
             f"{detail.get('evidence_status')!r} does not match strict evidence status {expected_status!r}"
         )
     if item_status == "pass" and strict_errors:
@@ -438,33 +485,17 @@ def _derived_live_report_errors(
     for field in ("benchmark_passed_result_count", "benchmark_eligible_result_count"):
         if detail.get(field) != summary.get(field):
             errors.append(
-                f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail {field} "
+                f"{report_kind} {item_name} detail {field} "
                 f"{detail.get(field)!r} does not match summary {summary.get(field)!r}"
             )
     detail_hooks_rate = _variant_pass_rate(detail, "skills_with_hooks_clean")
     summary_hooks_rate = _variant_pass_rate(summary, "skills_with_hooks_clean")
     if detail_hooks_rate != summary_hooks_rate:
         errors.append(
-            f"{report_kind} {CODEX_LIVE_BENCHMARK_NAME} detail "
+            f"{report_kind} {item_name} detail "
             f"skills_with_hooks_clean.pass_rate {detail_hooks_rate!r} "
             f"does not match summary {summary_hooks_rate!r}"
         )
-    if report_kind == "public summary":
-        evidence_level = (report.get("evidence_levels") or {}).get(CODEX_LIVE_EVIDENCE_KEY)
-        evidence_status = evidence_level.get("status") if isinstance(evidence_level, dict) else None
-        if evidence_status != expected_status:
-            errors.append(
-                f"public summary evidence_levels.{CODEX_LIVE_EVIDENCE_KEY}.status "
-                f"{evidence_status!r} does not match strict evidence status {expected_status!r}"
-            )
-    if report_kind == "scorecard":
-        evidence_level = (report.get("evidence_levels") or {}).get(CODEX_LIVE_EVIDENCE_KEY)
-        evidence_status = evidence_level.get("status") if isinstance(evidence_level, dict) else None
-        if evidence_status is not None and evidence_status != expected_status:
-            errors.append(
-                f"scorecard evidence_levels.{CODEX_LIVE_EVIDENCE_KEY}.status "
-                f"{evidence_status!r} does not match strict evidence status {expected_status!r}"
-            )
     return errors
 
 
@@ -472,7 +503,12 @@ def _derived_markdown_report_errors(summary: dict[str, Any], report_path: Path, 
     if not report_path.exists():
         return []
     text = report_path.read_text(encoding="utf-8", errors="ignore")
-    if CODEX_LIVE_BENCHMARK_NAME not in text:
+    live_names = (
+        CODEX_LIVE_PASS_RATE_BENCHMARK_NAME,
+        CODEX_LIVE_CAPABILITY_COVERAGE_NAME,
+        CODEX_LIVE_LEGACY_BENCHMARK_NAME,
+    )
+    if not any(name in text for name in live_names):
         return []
     errors: list[str] = []
     run_id = str(summary.get("run_id") or "")
@@ -510,7 +546,13 @@ def _derived_markdown_report_errors(summary: dict[str, Any], report_path: Path, 
 def _live_run_ids_in_markdown(text: str) -> set[str]:
     run_ids: set[str] = set()
     for line in text.splitlines():
-        if "Codex CLI live benchmark" not in line and "local_codex_cli_live_benchmark" not in line and "run_id" not in line:
+        if (
+            CODEX_LIVE_LEGACY_BENCHMARK_NAME not in line
+            and CODEX_LIVE_PASS_RATE_BENCHMARK_NAME not in line
+            and CODEX_LIVE_CAPABILITY_COVERAGE_NAME not in line
+            and "local_codex_cli_live_benchmark" not in line
+            and "run_id" not in line
+        ):
             continue
         for marker in ('"run_id": "', "'run_id': '", "run_id="):
             if marker not in line:
@@ -523,13 +565,22 @@ def _live_run_ids_in_markdown(text: str) -> set[str]:
     return run_ids
 
 
-def _find_live_report_item(items: Any) -> dict[str, Any] | None:
+def _find_live_report_item(items: Any, name: str) -> dict[str, Any] | None:
     if not isinstance(items, list):
         return None
     for item in items:
-        if isinstance(item, dict) and item.get("name") == CODEX_LIVE_BENCHMARK_NAME:
+        if isinstance(item, dict) and item.get("name") == name:
             return item
     return None
+
+
+def _weaker_status(*statuses: str) -> str:
+    order = ("fail", "partial", "not_collected", "unknown", "pass")
+    cleaned = [status if status in REPORT_STATUSES else "unknown" for status in statuses]
+    for status in order:
+        if status in cleaned:
+            return status
+    return "unknown"
 
 
 def _load_item_detail(item: dict[str, Any], report_kind: str) -> dict[str, Any] | None:

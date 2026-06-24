@@ -17,6 +17,7 @@ from validation_utils import ValidationProblem, load_yaml_file
 
 ROOT = Path(__file__).resolve().parents[1]
 CASES_PATH = ROOT / "evals" / "codex-live" / "cases.yaml"
+CAPABILITY_MATRIX_PATH = ROOT / "evals" / "codex-live" / "capability-matrix.yaml"
 STATUSES = ("not_collected", "skipped_not_opted_in", "partial", "collected", "failed")
 ARTIFACT_STATUSES = ("collected", "partial", "failed")
 GRADING_STATUSES = ("passed", "failed", "not_collected", "telemetry_only", "contaminated")
@@ -100,10 +101,49 @@ CODEX_ENVIRONMENT_POLICIES = ("isolated_api_key", "auth_borrowed_clean", "curren
 STRICT_CODEX_ENVIRONMENT_POLICIES = ("isolated_api_key", "auth_borrowed_clean")
 LIVE_EVIDENCE_LEVEL = "local_codex_cli_live_benchmark"
 CURRENT_HOME_SMOKE_EVIDENCE_LEVEL = "current_home_integration_smoke"
+CODEX_LIVE_LEGACY_BENCHMARK_NAME = "Codex CLI live benchmark"
+CODEX_LIVE_PASS_RATE_BENCHMARK_NAME = "Codex CLI live pass-rate benchmark"
+CODEX_LIVE_CAPABILITY_COVERAGE_NAME = "Codex CLI live capability coverage"
 CODEX_LIVE_EVIDENCE_SCOPES = ("smoke", "multi_case_ablation_3_run", "current_home_smoke")
 STRONG_CODEX_LIVE_ASSERTION_CASE_MIN = 5
 STRONG_CODEX_LIVE_RUNS_PER_VARIANT_MIN = 3
 STRONG_CODEX_LIVE_EVIDENCE_SCOPE = "multi_case_ablation_3_run"
+CORE_CAPABILITY_IDS = (
+    "professional_injection_activation",
+    "staged_injection_precision",
+    "repository_graph_context_pack",
+    "project_memory_governance",
+    "validation_broker_freshness",
+    "pdd_ddd_sdd_tdd_review_flow",
+    "minimal_correct_implementation_ladder",
+    "pua_or_pressure_resistance",
+    "execution_trajectory_review",
+    "professional_logging_decision",
+)
+PROCESS_EVIDENCE_CAPABILITY_IDS = frozenset(
+    {
+        "professional_injection_activation",
+        "staged_injection_precision",
+        "repository_graph_context_pack",
+        "project_memory_governance",
+        "validation_broker_freshness",
+        "pdd_ddd_sdd_tdd_review_flow",
+        "pua_or_pressure_resistance",
+        "execution_trajectory_review",
+        "professional_logging_decision",
+    }
+)
+CAPABILITY_QUALITY_READY_REQUIRED_IDS = frozenset(
+    {
+        "professional_injection_activation",
+        "staged_injection_precision",
+        "pdd_ddd_sdd_tdd_review_flow",
+        "validation_broker_freshness",
+        "minimal_correct_implementation_ladder",
+        "professional_logging_decision",
+    }
+)
+LARGE_QUALITY_IMPROVEMENT_MIN_CAPABILITY_COUNT = 6
 REQUIRED_ABLATION_DELTAS = (
     "skills_only_clean_vs_baseline_clean",
     "skills_with_hooks_clean_vs_skills_only_clean",
@@ -167,6 +207,24 @@ class CodexLiveCase:
     coverage_dimensions: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class CodexLiveCapability:
+    """One declared core capability in the live benchmark matrix."""
+
+    id: str
+    title: str
+    description: str
+    expected_runtime_signal: str
+    linked_live_cases: tuple[str, ...]
+    linked_assertions: tuple[str, ...]
+    required_variants: tuple[str, ...]
+    publishable_for_strict: bool
+    quality_pass_criteria: str
+    evidence_kind: str
+    failure_interpretation: str
+    current_status: str
+
+
 def utc_stamp() -> str:
     """Return a filesystem-safe UTC timestamp."""
     return datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
@@ -223,6 +281,107 @@ def load_case_registry(path: Path = CASES_PATH, root: Path = ROOT) -> list[Codex
             )
         )
     return cases
+
+
+def load_capability_matrix(path: Path = CAPABILITY_MATRIX_PATH) -> list[CodexLiveCapability]:
+    """Load and validate the Codex live core capability matrix."""
+    data = load_yaml_file(path)
+    errors = validate_capability_matrix(data)
+    if errors:
+        raise ValidationProblem("; ".join(errors))
+    capabilities = []
+    for raw in data.get("core_capabilities", []):
+        capabilities.append(
+            CodexLiveCapability(
+                id=str(raw["id"]),
+                title=str(raw["title"]),
+                description=str(raw["description"]),
+                expected_runtime_signal=str(raw["expected_runtime_signal"]),
+                linked_live_cases=tuple(str(item) for item in raw["linked_live_cases"]),
+                linked_assertions=tuple(str(item) for item in raw["linked_assertions"]),
+                required_variants=tuple(str(item) for item in raw["required_variants"]),
+                publishable_for_strict=bool(raw["publishable_for_strict"]),
+                quality_pass_criteria=str(raw["quality_pass_criteria"]),
+                evidence_kind=str(raw["evidence_kind"]),
+                failure_interpretation=str(raw["failure_interpretation"]),
+                current_status=str(raw["current_status"]),
+            )
+        )
+    return capabilities
+
+
+def validate_capability_matrix(data: Any) -> list[str]:
+    """Return live capability matrix validation errors without raising."""
+    errors: list[str] = []
+    if not isinstance(data, dict):
+        return ["capability matrix must be a mapping"]
+    if data.get("kind") != "changeforge.codex_live_capability_matrix":
+        errors.append("kind must be changeforge.codex_live_capability_matrix")
+    if data.get("schema_version") != 1:
+        errors.append("schema_version must be 1")
+    required_variants = data.get("required_variants")
+    if (
+        not isinstance(required_variants, list)
+        or tuple(str(item) for item in required_variants) != MODE_DEFAULT_VARIANTS["ablation"]
+    ):
+        errors.append("required_variants must equal baseline_clean, skills_only_clean, skills_with_hooks_clean")
+    capabilities = data.get("core_capabilities")
+    if not isinstance(capabilities, list) or not capabilities:
+        return [*errors, "core_capabilities must be a non-empty list"]
+    seen: set[str] = set()
+    required_fields = {
+        "id",
+        "title",
+        "description",
+        "expected_runtime_signal",
+        "linked_live_cases",
+        "linked_assertions",
+        "required_variants",
+        "publishable_for_strict",
+        "quality_pass_criteria",
+        "evidence_kind",
+        "failure_interpretation",
+        "current_status",
+    }
+    for index, raw in enumerate(capabilities):
+        prefix = f"core_capabilities[{index}]"
+        if not isinstance(raw, dict):
+            errors.append(f"{prefix}: must be a mapping")
+            continue
+        missing = sorted(required_fields - set(raw))
+        if missing:
+            errors.append(f"{prefix}: missing {', '.join(missing)}")
+            continue
+        capability_id = str(raw["id"])
+        if capability_id in seen:
+            errors.append(f"{prefix}: duplicate id {capability_id}")
+        seen.add(capability_id)
+        if capability_id not in CORE_CAPABILITY_IDS:
+            errors.append(f"{prefix}: unknown core capability id {capability_id}")
+        for field in ("linked_live_cases", "linked_assertions", "required_variants"):
+            value = raw.get(field)
+            if not isinstance(value, list) or not value or any(not isinstance(item, str) or not item.strip() for item in value):
+                errors.append(f"{prefix}: {field} must be a non-empty list of strings")
+        invalid_variants = sorted({str(item) for item in raw.get("required_variants", [])} - set(VARIANTS))
+        if invalid_variants:
+            errors.append(f"{prefix}: invalid variants {', '.join(invalid_variants)}")
+        if raw.get("publishable_for_strict") is not True:
+            errors.append(f"{prefix}: publishable_for_strict must be true for core live capabilities")
+        for field in (
+            "title",
+            "description",
+            "expected_runtime_signal",
+            "quality_pass_criteria",
+            "evidence_kind",
+            "failure_interpretation",
+            "current_status",
+        ):
+            if not isinstance(raw.get(field), str) or not str(raw.get(field)).strip():
+                errors.append(f"{prefix}: {field} must be a non-empty string")
+    missing_core = sorted(set(CORE_CAPABILITY_IDS) - seen)
+    if missing_core:
+        errors.append("core_capabilities missing required ids: " + ", ".join(missing_core))
+    return errors
 
 
 def validate_case_registry(data: Any, root: Path = ROOT) -> list[str]:
@@ -401,7 +560,6 @@ def detect_baseline_contamination(run_dir: Path) -> dict[str, Any]:
         "diff.patch",
         "git-status.txt",
         "codex-command.redacted.json",
-        "prompt.md",
         "events.metrics.json",
     )
     signals: set[str] = set()
@@ -560,7 +718,7 @@ def codex_live_strict_artifact_errors(summary: dict[str, Any]) -> list[str]:
 
 
 def codex_live_evidence_readiness_warnings(summary: dict[str, Any]) -> list[str]:
-    """Return reasons a strict artifact is not broad live benchmark pass evidence."""
+    """Return reasons a strict artifact is not broad pass-rate benchmark evidence."""
     warnings: list[str] = []
     benchmark_mode = str(summary.get("benchmark_mode") or "")
     evidence_scope = str(summary.get("evidence_scope") or "")
@@ -588,9 +746,6 @@ def codex_live_evidence_readiness_warnings(summary: dict[str, Any]) -> list[str]
     missing_variants = [variant for variant in MODE_DEFAULT_VARIANTS["ablation"] if variant not in variants]
     if missing_variants:
         warnings.append("include required variants: " + ", ".join(missing_variants))
-    process_warning = codex_live_process_warning(summary)
-    if process_warning:
-        warnings.append(process_warning)
     return _dedupe(warnings)
 
 
@@ -598,10 +753,13 @@ def codex_live_process_warning(summary: dict[str, Any]) -> str | None:
     """Return a warning when process evidence is inferred-only rather than explicit."""
     process = summary.get("process_compliance_summary")
     if not isinstance(process, dict):
-        return None
-    trace_count = int(process.get("process_trace_count", 0) or 0)
+        return "process_compliance_summary missing"
+    raw_trace_count = process.get("process_trace_count", 0)
+    if raw_trace_count == "not_collected":
+        return "process_trace_count not_collected"
+    trace_count = int(raw_trace_count or 0)
     if trace_count <= 0:
-        return None
+        return "process_trace_count is 0"
     present_rates = [
         process.get("pdd_present_rate"),
         process.get("ddd_present_rate"),
@@ -610,11 +768,14 @@ def codex_live_process_warning(summary: dict[str, Any]) -> str | None:
     ]
     if all(isinstance(value, int | float) and float(value) == 0.0 for value in present_rates):
         return "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
+    fallback_rate = process.get("required_field_fallback_rate")
+    if isinstance(fallback_rate, int | float) and float(fallback_rate) > 0.5:
+        return "process_trace_fallback_heavy: required field fallback rate exceeds 0.5"
     return None
 
 
-def codex_live_scorecard_status(summary: dict[str, Any] | None) -> tuple[str, list[str], list[str]]:
-    """Return scorecard status plus strict errors and readiness warnings."""
+def codex_live_pass_rate_status(summary: dict[str, Any] | None) -> tuple[str, list[str], list[str]]:
+    """Return pass-rate benchmark status plus strict errors and readiness warnings."""
     if not isinstance(summary, dict):
         return "not_collected", [], ["summary missing"]
     strict_errors = codex_live_strict_artifact_errors(summary)
@@ -633,6 +794,263 @@ def codex_live_scorecard_status(summary: dict[str, Any] | None) -> tuple[str, li
     return "not_collected", [], [f"summary status {status!r} is not recognized"]
 
 
+def codex_live_scorecard_status(summary: dict[str, Any] | None) -> tuple[str, list[str], list[str]]:
+    """Backward-compatible alias for pass-rate benchmark status."""
+    return codex_live_pass_rate_status(summary)
+
+
+def codex_live_capability_coverage_status(summary: dict[str, Any] | None) -> tuple[str, list[str], list[str]]:
+    """Return core capability coverage status plus errors and warnings."""
+    if not isinstance(summary, dict):
+        return "not_collected", [], ["summary missing"]
+    coverage = summary.get("capability_coverage_summary")
+    if not isinstance(coverage, dict):
+        coverage = codex_live_capability_coverage_summary(summary)
+    status = str(coverage.get("status") or "not_collected")
+    errors = [str(error) for error in coverage.get("errors", [])] if isinstance(coverage.get("errors"), list) else []
+    warnings = [
+        str(reason)
+        for item in coverage.get("items", [])
+        if isinstance(item, dict)
+        for reason in item.get("reasons", [])
+        if isinstance(reason, str)
+    ]
+    if status not in PUBLIC_STATUSES:
+        return "fail", [f"invalid capability coverage status {status!r}"], warnings
+    return status, errors, _dedupe(warnings)
+
+
+def codex_live_capability_coverage_summary(
+    summary: dict[str, Any],
+    *,
+    capabilities: list[CodexLiveCapability] | None = None,
+    root: Path = ROOT,
+) -> dict[str, Any]:
+    """Evaluate live core capability coverage from a summary and matrix."""
+    errors: list[str] = []
+    if capabilities is None:
+        try:
+            capabilities = load_capability_matrix()
+        except Exception as exc:
+            return {
+                "status": "not_collected",
+                "matrix_path": relpath(root, CAPABILITY_MATRIX_PATH),
+                "core_capability_count": len(CORE_CAPABILITY_IDS),
+                "items": [],
+                "errors": [f"capability matrix missing or invalid: {exc}"],
+            }
+    case_metadata = _live_case_metadata(root)
+    items = [
+        _capability_coverage_item(capability, summary, case_metadata, root=root)
+        for capability in capabilities
+    ]
+    declared_ids = {item["id"] for item in items}
+    for missing_id in sorted(set(CORE_CAPABILITY_IDS) - declared_ids):
+        items.append(
+            {
+                "id": missing_id,
+                "title": missing_id,
+                "linked_cases": [],
+                "run_status": "not_collected",
+                "assertion_status": "not_collected",
+                "evidence_collected": False,
+                "status": "not_collected",
+                "reasons": ["capability missing from matrix"],
+            }
+        )
+    status_counts = {status: 0 for status in PUBLIC_STATUSES}
+    for item in items:
+        status = str(item.get("status") or "unknown")
+        status_counts[status if status in status_counts else "unknown"] += 1
+    if status_counts["fail"]:
+        status = "fail"
+    elif status_counts["partial"] or status_counts["not_collected"] or status_counts["unknown"]:
+        status = "partial"
+    elif items:
+        status = "pass"
+    else:
+        status = "not_collected"
+    pass_ids = [str(item["id"]) for item in items if item.get("status") == "pass"]
+    return {
+        "status": status,
+        "matrix_path": relpath(root, CAPABILITY_MATRIX_PATH),
+        "core_capability_count": len(items),
+        "pass_count": status_counts["pass"],
+        "partial_count": status_counts["partial"],
+        "fail_count": status_counts["fail"],
+        "not_collected_count": status_counts["not_collected"],
+        "assertion_backed_coverage_count": len(pass_ids),
+        "assertion_backed_covered_capabilities": pass_ids,
+        "required_quality_ready_capabilities": sorted(CAPABILITY_QUALITY_READY_REQUIRED_IDS),
+        "quality_ready_required_pass": sorted(CAPABILITY_QUALITY_READY_REQUIRED_IDS & set(pass_ids)),
+        "items": items,
+        "errors": errors,
+    }
+
+
+def _capability_coverage_item(
+    capability: CodexLiveCapability,
+    summary: dict[str, Any],
+    case_metadata: dict[str, dict[str, Any]],
+    *,
+    root: Path,
+) -> dict[str, Any]:
+    linked_cases = list(capability.linked_live_cases)
+    case_results = [
+        _capability_case_result(case_id, capability, summary, case_metadata, root=root)
+        for case_id in linked_cases
+    ]
+    run_status = _combined_case_status(case_results, "run_status")
+    assertion_status = _combined_case_status(case_results, "assertion_status")
+    process_warning = codex_live_process_warning(summary)
+    process_required = capability.id in PROCESS_EVIDENCE_CAPABILITY_IDS
+    process_ok = not process_required or process_warning is None
+    evidence_collected = bool(case_results) and any(case.get("evidence_collected") is True for case in case_results)
+    reasons = [
+        str(reason)
+        for case in case_results
+        for reason in case.get("reasons", [])
+        if isinstance(reason, str)
+    ]
+    if process_required and process_warning:
+        reasons.append(process_warning)
+    if not linked_cases:
+        status = "partial"
+        reasons.append("capability has no linked live case")
+    elif any(case.get("assertion_status") == "fail" for case in case_results):
+        status = "fail"
+    elif all(case.get("assertion_status") == "pass" for case in case_results) and process_ok:
+        status = "pass"
+    elif any(case.get("run_status") == "not_registered" for case in case_results):
+        status = "partial"
+    elif any(case.get("run_status") == "not_run" for case in case_results):
+        status = "partial"
+    else:
+        status = "partial"
+    return {
+        "id": capability.id,
+        "title": capability.title,
+        "linked_cases": linked_cases,
+        "linked_assertions": list(capability.linked_assertions),
+        "required_variants": list(capability.required_variants),
+        "publishable_for_strict": capability.publishable_for_strict,
+        "run_status": run_status,
+        "assertion_status": assertion_status,
+        "evidence_collected": evidence_collected and process_ok,
+        "process_evidence_required": process_required,
+        "process_evidence_status": "pass" if process_ok else "partial",
+        "case_results": case_results,
+        "status": status,
+        "reasons": _dedupe(reasons),
+        "failure_interpretation": capability.failure_interpretation,
+    }
+
+
+def _capability_case_result(
+    case_id: str,
+    capability: CodexLiveCapability,
+    summary: dict[str, Any],
+    case_metadata: dict[str, dict[str, Any]],
+    *,
+    root: Path,
+) -> dict[str, Any]:
+    del root
+    metadata = case_metadata.get(case_id)
+    cases_summary = summary.get("cases_summary") if isinstance(summary.get("cases_summary"), dict) else {}
+    payload = cases_summary.get(case_id) if isinstance(cases_summary, dict) else None
+    reasons: list[str] = []
+    if not isinstance(metadata, dict):
+        return {
+            "case_id": case_id,
+            "run_status": "not_registered",
+            "assertion_status": "not_collected",
+            "evidence_collected": False,
+            "reasons": ["linked case is not registered in cases.yaml"],
+        }
+    if metadata.get("grading_mode") != "assertion" or metadata.get("publishable_for_strict") is not True:
+        reasons.append("linked case is not assertion-backed publishable strict evidence")
+    if not isinstance(payload, dict):
+        return {
+            "case_id": case_id,
+            "run_status": "not_run",
+            "assertion_status": "not_collected",
+            "evidence_collected": False,
+            "reasons": [*reasons, "linked case was not run in this summary"],
+        }
+    variants = payload.get("variants") if isinstance(payload.get("variants"), dict) else {}
+    missing_variants = [variant for variant in capability.required_variants if variant not in variants]
+    if missing_variants:
+        reasons.append("missing required variants: " + ", ".join(missing_variants))
+    baseline = variants.get("baseline_clean") if isinstance(variants, dict) else None
+    if isinstance(baseline, dict) and int(((baseline.get("failure_categories") or {}).get("contaminated", 0)) or 0) > 0:
+        reasons.append("baseline contamination detected")
+        assertion_status = "fail"
+    else:
+        assertion_status = _skills_variant_assertion_status(variants)
+    run_status = "run" if not missing_variants else "missing_required_variant"
+    evidence_collected = assertion_status == "pass" and not missing_variants and not reasons
+    return {
+        "case_id": case_id,
+        "run_status": run_status,
+        "assertion_status": assertion_status,
+        "evidence_collected": evidence_collected,
+        "reasons": _dedupe(reasons),
+    }
+
+
+def _skills_variant_assertion_status(variants: dict[str, Any]) -> str:
+    statuses: list[str] = []
+    for variant in ("skills_only_clean", "skills_with_hooks_clean"):
+        payload = variants.get(variant)
+        if not isinstance(payload, dict):
+            statuses.append("not_collected")
+            continue
+        eligible = int(payload.get("benchmark_eligible_result_count", 0) or 0)
+        passed = int(payload.get("benchmark_passed_result_count", 0) or 0)
+        if eligible <= 0:
+            statuses.append("not_collected")
+        elif passed < eligible:
+            statuses.append("fail")
+        else:
+            statuses.append("pass")
+    if "fail" in statuses:
+        return "fail"
+    if all(status == "pass" for status in statuses):
+        return "pass"
+    return "partial"
+
+
+def _combined_case_status(case_results: list[dict[str, Any]], field: str) -> str:
+    if not case_results:
+        return "not_collected"
+    values = [str(item.get(field) or "not_collected") for item in case_results]
+    if "fail" in values:
+        return "fail"
+    if all(value in {"run", "pass"} for value in values):
+        return "run" if field == "run_status" else "pass"
+    if any(value == "not_registered" for value in values):
+        return "not_registered"
+    if any(value == "not_run" for value in values):
+        return "not_run"
+    return "partial"
+
+
+def _live_case_metadata(root: Path) -> dict[str, dict[str, Any]]:
+    try:
+        cases = load_case_registry(root=root)
+    except Exception:
+        return {}
+    return {
+        case.id: {
+            "grading_mode": case.grading_mode,
+            "publishable_for_strict": case.publishable_for_strict,
+            "coverage_dimensions": list(case.coverage_dimensions),
+            "enabled": case.enabled,
+        }
+        for case in cases
+    }
+
+
 def codex_live_compact_detail(
     summary: dict[str, Any],
     *,
@@ -644,6 +1062,9 @@ def codex_live_compact_detail(
     variants = summary.get("variants") if isinstance(summary.get("variants"), dict) else {}
     coverage = summary.get("coverage_summary") if isinstance(summary.get("coverage_summary"), dict) else {}
     cost = summary.get("cost_summary") if isinstance(summary.get("cost_summary"), dict) else {}
+    capability = summary.get("capability_coverage_summary")
+    if not isinstance(capability, dict):
+        capability = codex_live_capability_coverage_summary(summary)
     return {
         "evidence_status": status,
         "evidence_level": summary.get("evidence_level"),
@@ -685,9 +1106,23 @@ def codex_live_compact_detail(
             if isinstance(payload, dict)
         },
         "delta": summary.get("delta"),
+        "quality_improvement_summary": summary.get("quality_improvement_summary"),
+        "capability_coverage_summary": {
+            "status": capability.get("status"),
+            "core_capability_count": capability.get("core_capability_count"),
+            "pass_count": capability.get("pass_count"),
+            "partial_count": capability.get("partial_count"),
+            "fail_count": capability.get("fail_count"),
+            "not_collected_count": capability.get("not_collected_count"),
+            "assertion_backed_coverage_count": capability.get("assertion_backed_coverage_count"),
+            "assertion_backed_covered_capabilities": capability.get("assertion_backed_covered_capabilities"),
+        },
+        "case_result_summary": summary.get("case_result_summary"),
         "cost_summary": {
             "cost_adjusted_delta": cost.get("cost_adjusted_delta"),
             "cost_caveat": cost.get("cost_caveat"),
+            "cost_is_telemetry_only": cost.get("cost_is_telemetry_only"),
+            "telemetry_only_note": cost.get("telemetry_only_note"),
         },
         "process_compliance_summary": summary.get("process_compliance_summary"),
         "limitations": summary.get("limitations"),
@@ -711,6 +1146,32 @@ def codex_live_repair_hints(summary: dict[str, Any] | None) -> list[str]:
         "regenerate canonical reports",
     ]
     return _dedupe([*readiness_warnings, *strict_errors, *hints])
+
+
+def codex_live_capability_repair_hints(summary: dict[str, Any] | None) -> list[str]:
+    """Return concise repair hints for non-pass live capability coverage."""
+    if not isinstance(summary, dict):
+        return ["add capability matrix", "register assertion-backed live cases", "run strict ablation", "collect explicit process traces"]
+    coverage = summary.get("capability_coverage_summary")
+    if not isinstance(coverage, dict):
+        coverage = codex_live_capability_coverage_summary(summary)
+    if coverage.get("status") == "pass":
+        return []
+    hints = [
+        "register every core capability linked case",
+        "run linked cases in baseline_clean, skills_only_clean, and skills_with_hooks_clean",
+        "keep linked cases assertion-backed and publishable_for_strict=true",
+        "collect explicit process-trace evidence instead of inferred/fallback fields",
+        "rerun reports after capability cases pass",
+    ]
+    reasons = [
+        str(reason)
+        for item in coverage.get("items", [])
+        if isinstance(item, dict)
+        for reason in item.get("reasons", [])
+        if isinstance(reason, str)
+    ]
+    return _dedupe([*reasons[:8], *hints])
 
 
 def _observed_min_runs_from_variants(summary: dict[str, Any]) -> int:

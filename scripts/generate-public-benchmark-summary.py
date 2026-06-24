@@ -13,15 +13,19 @@ from pathlib import Path
 from typing import Any
 
 from codex_live_benchmark_lib import (
+    CODEX_LIVE_CAPABILITY_COVERAGE_NAME,
+    CODEX_LIVE_PASS_RATE_BENCHMARK_NAME,
     LIVE_EVIDENCE_LEVEL,
     MODE_DEFAULT_VARIANTS,
     STRICT_AUTH_POLICIES,
     STRICT_BENCHMARK_MODES,
     STRICT_CODEX_ENVIRONMENT_POLICIES,
+    codex_live_capability_coverage_status,
+    codex_live_capability_repair_hints,
     codex_live_compact_detail,
     codex_live_evidence_scope_ready,
+    codex_live_pass_rate_status,
     codex_live_repair_hints,
-    codex_live_scorecard_status,
     public_status_from_live,
 )
 from validation_utils import EXPECTED_PROFILE_TOP_LEVEL_COUNTS
@@ -41,7 +45,8 @@ LIVE_RUNTIME_TELEMETRY_DIMENSION = "Live runtime telemetry sample"
 EXECUTOR_LIVE_PASS_RATE_DIMENSION = "Executor adapter live pass-rate"
 EXECUTOR_TOKEN_OVERHEAD_DIMENSION = "Executor adapter token overhead"
 EXECUTOR_TURN_OVERHEAD_DIMENSION = "Executor adapter turn overhead"
-CODEX_LIVE_BENCHMARK_DIMENSION = "Codex CLI live benchmark"
+CODEX_LIVE_PASS_RATE_DIMENSION = CODEX_LIVE_PASS_RATE_BENCHMARK_NAME
+CODEX_LIVE_CAPABILITY_COVERAGE_DIMENSION = CODEX_LIVE_CAPABILITY_COVERAGE_NAME
 HOOK_SAFETY_DIMENSION = "Hook safety"
 INSTALLATION_VALIDATION_DIMENSION = "Installation validation"
 SCORECARD_REFRESH_COMMAND = (
@@ -293,20 +298,26 @@ def _scorecard_dimension_item(
     )
 
 
-def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
+def _codex_live_benchmark_item(
+    root: Path,
+    *,
+    dimension_name: str = CODEX_LIVE_PASS_RATE_DIMENSION,
+    status_func=codex_live_pass_rate_status,
+    repair_hints_func=codex_live_repair_hints,
+) -> EvidenceItem:
     """Return public evidence directly from the published Codex live summary."""
     source = "reports/codex-live-benchmark-summary.json"
     summary = _read_json(root / source)
     if not isinstance(summary, dict):
         return EvidenceItem(
-            CODEX_LIVE_BENCHMARK_DIMENSION,
+            dimension_name,
             "not_collected",
             source,
             "Codex live benchmark summary missing or invalid",
             "python3 scripts/run-codex-live-benchmarks.py --list",
             LIVE_EVIDENCE_LEVEL,
         )
-    status, strict_errors, readiness_warnings = codex_live_scorecard_status(summary)
+    status, strict_errors, readiness_warnings = status_func(summary)
     detail = codex_live_compact_detail(
         summary,
         status=status,
@@ -319,15 +330,33 @@ def _codex_live_benchmark_item(root: Path) -> EvidenceItem:
     )
     if comparison:
         detail["previous_current_comparison"] = comparison
-    detail["repair_hints"] = codex_live_repair_hints(summary)
+    detail["repair_hints"] = repair_hints_func(summary)
     return EvidenceItem(
-        CODEX_LIVE_BENCHMARK_DIMENSION,
+        dimension_name,
         status,
         source,
         _codex_live_public_detail(summary, detail),
         "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json",
         LIVE_EVIDENCE_LEVEL,
         detail,
+    )
+
+
+def _codex_live_pass_rate_benchmark_item(root: Path) -> EvidenceItem:
+    return _codex_live_benchmark_item(
+        root,
+        dimension_name=CODEX_LIVE_PASS_RATE_DIMENSION,
+        status_func=codex_live_pass_rate_status,
+        repair_hints_func=codex_live_repair_hints,
+    )
+
+
+def _codex_live_capability_coverage_item(root: Path) -> EvidenceItem:
+    return _codex_live_benchmark_item(
+        root,
+        dimension_name=CODEX_LIVE_CAPABILITY_COVERAGE_DIMENSION,
+        status_func=codex_live_capability_coverage_status,
+        repair_hints_func=codex_live_capability_repair_hints,
     )
 
 
@@ -652,7 +681,8 @@ def _additional_status_items(root: Path, scorecard_path: Path | None = None) -> 
             scorecard_path,
             "turn overhead",
         ),
-        _codex_live_benchmark_item(root),
+        _codex_live_pass_rate_benchmark_item(root),
+        _codex_live_capability_coverage_item(root),
         _scorecard_dimension_item(root, MARKETPLACE_DIMENSION, MARKETPLACE_DIMENSION, scorecard_path),
     ]
 
@@ -670,8 +700,11 @@ def _scorecard_dimension_items(root: Path, scorecard_path: Path | None = None) -
         if not isinstance(dimension, dict):
             continue
         name = str(dimension.get("name", "unknown"))
-        if name == CODEX_LIVE_BENCHMARK_DIMENSION:
-            items.append(_codex_live_benchmark_item(root))
+        if name == CODEX_LIVE_PASS_RATE_DIMENSION:
+            items.append(_codex_live_pass_rate_benchmark_item(root))
+            continue
+        if name == CODEX_LIVE_CAPABILITY_COVERAGE_DIMENSION:
+            items.append(_codex_live_capability_coverage_item(root))
             continue
         status = str(dimension.get("status", "unknown"))
         if status not in STATUS_ORDER:
@@ -697,7 +730,8 @@ def _dimension_evidence_level(name: str) -> str:
         EXECUTOR_LIVE_PASS_RATE_DIMENSION: "live pass-rate",
         EXECUTOR_TOKEN_OVERHEAD_DIMENSION: "token overhead",
         EXECUTOR_TURN_OVERHEAD_DIMENSION: "turn overhead",
-        CODEX_LIVE_BENCHMARK_DIMENSION: LIVE_EVIDENCE_LEVEL,
+        CODEX_LIVE_PASS_RATE_DIMENSION: LIVE_EVIDENCE_LEVEL,
+        CODEX_LIVE_CAPABILITY_COVERAGE_DIMENSION: LIVE_EVIDENCE_LEVEL,
     }
     return mapping.get(name, "structural fixture")
 
@@ -774,7 +808,8 @@ def _known_unknown_name(name: str) -> str:
         "turn overhead": "Turn overhead",
         EXECUTOR_TURN_OVERHEAD_DIMENSION: "Turn overhead",
         "local_codex_cli_live_benchmark": "Codex CLI live benchmark",
-        CODEX_LIVE_BENCHMARK_DIMENSION: "Codex CLI live benchmark",
+        CODEX_LIVE_PASS_RATE_DIMENSION: "Codex CLI live pass-rate benchmark",
+        CODEX_LIVE_CAPABILITY_COVERAGE_DIMENSION: "Codex CLI live capability coverage",
     }
     return mapping.get(name, name)
 
@@ -788,8 +823,12 @@ def _sync_codex_live_evidence_level(
         str(level): dict(detail) if isinstance(detail, dict) else {"status": "unknown", "meaning": ""}
         for level, detail in evidence_levels.items()
     }
-    codex_item = next((item for item in items if item.name == CODEX_LIVE_BENCHMARK_DIMENSION), None)
-    if codex_item is None:
+    codex_statuses = [
+        item.status
+        for item in items
+        if item.name in {CODEX_LIVE_PASS_RATE_DIMENSION, CODEX_LIVE_CAPABILITY_COVERAGE_DIMENSION}
+    ]
+    if not codex_statuses:
         return synced
     live_level = synced.setdefault(
         LIVE_EVIDENCE_LEVEL,
@@ -798,9 +837,18 @@ def _sync_codex_live_evidence_level(
             "meaning": "Opt-in local Codex CLI benchmark run with sanitized bounded artifacts.",
         },
     )
-    live_level["status"] = codex_item.status if codex_item.status in STATUS_ORDER else "unknown"
+    live_level["status"] = _weaker_status(*codex_statuses)
     live_level.setdefault("meaning", "Opt-in local Codex CLI benchmark run with sanitized bounded artifacts.")
     return synced
+
+
+def _weaker_status(*statuses: str) -> str:
+    order = ("fail", "partial", "not_collected", "unknown", "pass")
+    cleaned = [status if status in STATUS_ORDER else "unknown" for status in statuses]
+    for status in order:
+        if status in cleaned:
+            return status
+    return "unknown"
 
 
 def render_markdown(payload: dict[str, Any]) -> str:
@@ -839,6 +887,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
             f"| {item['name']} | `{item['status']}` | {item.get('evidence_level', 'structural fixture')} | "
             f"{item['source']} | {item['detail']} | `{item['command']}` |"
         )
+    _append_codex_live_sections(lines, payload)
     lines.extend(["", "## Known Unknowns / Not Collected", ""])
     if payload["known_unknowns"]:
         for name in payload["known_unknowns"]:
@@ -849,6 +898,93 @@ def render_markdown(payload: dict[str, Any]) -> str:
     lines.extend(payload["refresh_commands"])
     lines.extend(["```", ""])
     return "\n".join(lines)
+
+
+def _append_codex_live_sections(lines: list[str], payload: dict[str, Any]) -> None:
+    detail = _public_codex_live_detail(payload)
+    if not detail:
+        return
+    quality = detail.get("quality_improvement_summary") if isinstance(detail.get("quality_improvement_summary"), dict) else {}
+    capability = detail.get("capability_coverage_summary") if isinstance(detail.get("capability_coverage_summary"), dict) else {}
+    process = detail.get("process_compliance_summary") if isinstance(detail.get("process_compliance_summary"), dict) else None
+    cases = detail.get("case_result_summary") if isinstance(detail.get("case_result_summary"), dict) else {}
+    cost = detail.get("cost_summary") if isinstance(detail.get("cost_summary"), dict) else {}
+
+    lines.extend(["", "## Quality Improvement", ""])
+    for label, field in (
+        ("baseline pass rate", "baseline_clean_pass_rate"),
+        ("skills_only pass rate", "skills_only_clean_pass_rate"),
+        ("skills_with_hooks pass rate", "skills_with_hooks_clean_pass_rate"),
+        ("skills_only vs baseline delta", "skills_only_vs_baseline_delta"),
+        ("skills_with_hooks vs skills_only delta", "skills_with_hooks_vs_skills_only_delta"),
+        ("skills_with_hooks vs baseline delta", "skills_with_hooks_vs_baseline_delta"),
+        ("no_quality_regression", "no_quality_regression"),
+        ("large_quality_improvement_claim", "large_quality_improvement_claim"),
+    ):
+        lines.append(f"- {label}: `{quality.get(field, 'not_collected')}`")
+
+    lines.extend(["", "## Capability Coverage", "", "| Capability | Linked Cases | Evidence | Status |", "| --- | --- | --- | --- |"])
+    for item in capability.get("items", []) if isinstance(capability.get("items"), list) else []:
+        if not isinstance(item, dict):
+            continue
+        linked_cases = ", ".join(str(case) for case in item.get("linked_cases", []) if isinstance(case, str))
+        lines.append(
+            f"| {item.get('id', 'unknown')} | {linked_cases or 'not_collected'} | "
+            f"{item.get('run_status', 'not_collected')}/{item.get('assertion_status', 'not_collected')} | "
+            f"`{item.get('status', 'unknown')}` |"
+        )
+
+    lines.extend(["", "## Process Compliance", ""])
+    if isinstance(process, dict):
+        for field in (
+            "process_trace_count",
+            "pdd_present_rate",
+            "ddd_present_rate",
+            "sdd_present_rate",
+            "tdd_present_rate",
+            "review_present_rate",
+            "repair_present_rate",
+            "rereview_present_rate",
+            "required_field_fallback_rate",
+        ):
+            lines.append(f"- {field}: `{process.get(field, 'not_collected')}`")
+    else:
+        lines.append("- process evidence not collected")
+
+    lines.extend(["", "## Case-Level Result", ""])
+    lines.append(
+        "- improved_cases: "
+        + (", ".join(row["case_id"] for row in cases.get("improved_cases", []) if isinstance(row, dict) and "case_id" in row) or "none")
+    )
+    lines.append(
+        "- no_improvement_cases: "
+        + (", ".join(row["case_id"] for row in cases.get("no_improvement_cases", []) if isinstance(row, dict) and "case_id" in row) or "none")
+    )
+    lines.append(
+        "- regressed_cases: "
+        + (", ".join(row["case_id"] for row in cases.get("regressed_cases", []) if isinstance(row, dict) and "case_id" in row) or "none")
+    )
+    lines.append(
+        "- reliability_no_improvement_visible: "
+        f"`{cases.get('reliability_no_improvement_visible', 'not_collected')}`"
+    )
+
+    lines.extend(["", "## Cost Telemetry", ""])
+    lines.append("- cost is telemetry only in this phase")
+    lines.append("- quality-first benchmark does not gate on cost")
+    lines.append("- no cost reduction or efficiency improvement claim is made")
+    total_usage = cost.get("total_usage") if isinstance(cost.get("total_usage"), dict) else {}
+    for field in ("input_tokens", "output_tokens", "reasoning_output_tokens"):
+        lines.append(f"- {field}: `{total_usage.get(field, 'not_collected')}`")
+
+
+def _public_codex_live_detail(payload: dict[str, Any]) -> dict[str, Any] | None:
+    for item in payload.get("items", []):
+        if not isinstance(item, dict) or item.get("name") != CODEX_LIVE_PASS_RATE_DIMENSION:
+            continue
+        detail = item.get("detail_data")
+        return detail if isinstance(detail, dict) else None
+    return None
 
 
 def _scorecard_evidence_levels(root: Path, scorecard_path: Path | None) -> dict[str, dict[str, str]]:

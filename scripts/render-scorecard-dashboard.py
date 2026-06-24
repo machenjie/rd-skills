@@ -128,7 +128,8 @@ def render_dashboard(payload: dict[str, Any]) -> str:
         "Activation precision benchmark",
         "Runtime telemetry fixture sample",
         "Live runtime telemetry sample",
-        "Codex CLI live benchmark",
+        "Codex CLI live pass-rate benchmark",
+        "Codex CLI live capability coverage",
         "Marketplace index validation",
     ):
         lines.append(f"| {name} | `{_status(payload, name)}` | {_escape(_detail(payload, name))} |")
@@ -189,7 +190,16 @@ def readme_summary_block(payload: dict[str, Any]) -> str:
     rows = [
         ("Profile build reproducibility", "Profile build reproducibility", "docs/SCORECARD_DASHBOARD.md"),
         ("Example coverage", "Example coverage", "scripts/validate-examples.py"),
-        ("Codex CLI live benchmark", "Codex CLI live benchmark", "reports/codex-live-benchmark-summary.json"),
+        (
+            "Codex CLI live pass-rate benchmark",
+            "Codex CLI live pass-rate benchmark",
+            "reports/codex-live-benchmark-summary.json",
+        ),
+        (
+            "Codex CLI live capability coverage",
+            "Codex CLI live capability coverage",
+            "reports/codex-live-benchmark-summary.json",
+        ),
         ("Marketplace index validation", "Marketplace index validation", "scripts/validate-marketplace-index.py"),
         ("Open-source readiness", "Open-source readiness", "docs/OPEN_SOURCE_READINESS.md"),
     ]

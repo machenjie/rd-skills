@@ -29,9 +29,9 @@
 - Telemetry-only results: `0`
 - Contaminated results: `0`
 - Coverage tiers: `{'core': 5, 'experimental': 0, 'level1': 0}`
-- Registered live cases: `13`
-- Registered publishable assertion cases: `12`
-- Actual run case coverage: `5/60`
+- Registered live cases: `23`
+- Registered publishable assertion cases: `22`
+- Actual run case coverage: `5/70`
 - Coverage dimensions: `{'backend-service-boundary': 1, 'concurrency-control': 1, 'devex-reuse': 1, 'implementation-structure': 2, 'input-validation': 1, 'object-boundary': 1, 'observability': 1, 'reliability-cache': 1, 'security-ssrf': 1, 'structure-placement': 1}`
 - Total input tokens: `38616339.0`
 - Total output tokens: `515302.95`
@@ -43,25 +43,70 @@
 - Timeline events: `0`
 - Process trace count: `not_collected`
 
+## Quality Improvement
+
+- baseline_clean pass rate: `0.4`
+- skills_only_clean pass rate: `0.7333`
+- skills_with_hooks_clean pass rate: `0.8667`
+- skills_only vs baseline delta: `0.3333`
+- skills_with_hooks vs skills_only delta: `0.1334`
+- skills_with_hooks vs baseline delta: `0.4667`
+- no_quality_regression: `True`
+- large_quality_improvement_claim: `False`
+
+## Capability Coverage
+
+- Status: `partial`
+- Core capabilities: `10`
+- Pass/partial/fail/not_collected: `0`/`10`/`0`/`0`
+- Assertion-backed covered capabilities: `0`
+
+| Capability | Linked cases | Run status | Assertion status | Evidence collected | Status |
+| --- | --- | --- | --- | --- | --- |
+| professional_injection_activation | injection/professional-route-manifest-activation | `not_run` | `partial` | `False` | `partial` |
+| staged_injection_precision | injection/stage-specific-reference-loading | `not_run` | `partial` | `False` | `partial` |
+| repository_graph_context_pack | repo-intel/caller-callee-test-impact-map | `not_run` | `partial` | `False` | `partial` |
+| project_memory_governance | memory/repeated-failure-fragile-file | `not_run` | `partial` | `False` | `partial` |
+| validation_broker_freshness | process/full-pdd-ddd-sdd-tdd-review-repair, validation/stale-validation-after-edit | `not_run` | `partial` | `False` | `partial` |
+| pdd_ddd_sdd_tdd_review_flow | process/full-pdd-ddd-sdd-tdd-review-repair | `not_run` | `partial` | `False` | `partial` |
+| minimal_correct_implementation_ladder | devex/minimal-correct-native-reuse | `not_run` | `partial` | `False` | `partial` |
+| pua_or_pressure_resistance | pressure/professional-boundary-under-user-pressure | `not_run` | `partial` | `False` | `partial` |
+| execution_trajectory_review | process/full-pdd-ddd-sdd-tdd-review-repair, review/repair-rereview-required | `not_run` | `partial` | `False` | `partial` |
+| professional_logging_decision | logging/redacted-structured-log-design | `not_run` | `partial` | `False` | `partial` |
+
 ## Process Compliance
 
 - pdd_present_rate: `not_collected`
 - ddd_present_rate: `not_collected`
 - sdd_present_rate: `not_collected`
 - tdd_present_rate: `not_collected`
+- review_present_rate: `not_collected`
+- repair_present_rate: `not_collected`
+- rereview_present_rate: `not_collected`
 - inferred_rate: `not_collected`
 - required_field_fallback_rate: `not_collected`
 - validation_command_present_rate: `not_collected`
 - Explicit trace contract: `changeforge_route`, PDD acceptance, DDD invariants, SDD placement/error contract, and TDD validation trace.
+- Warning: process evidence not collected; inferred/fallback traces do not prove full process compliance.
 
-## Cost / Overhead
+## Case-Level Result
+
+- Improved cases: `['devex/helper-reuse-search', 'security/ssrf-url-allowlist', 'structure/object-method-encapsulation-placement']`
+- No improvement cases: `['backend/service-method-vs-new-helper', 'reliability/redis-cache-stampede-protection']`
+- Regressed cases: `[]`
+- Reliability no-improvement cases: `['reliability/redis-cache-stampede-protection']`
+
+## Cost Telemetry
 
 - skills_with_hooks_clean_vs_baseline_clean input token overhead: `+194.52%`
 - skills_with_hooks_clean_vs_baseline_clean output token overhead: `+31.70%`
 - skills_with_hooks_clean_vs_baseline_clean reasoning token overhead: `+41.02%`
 - skills_with_hooks_clean_vs_baseline_clean command execution delta: `29.47`
 - skills_with_hooks_clean_vs_baseline_clean pass rate delta: `0.4667`
-- Cost caveat: parsed local Codex telemetry, not a billing ledger.
+- Cost is telemetry only: `True`
+- Quality-first benchmark does not gate on cost.
+- No cost reduction or efficiency improvement claim is made.
+- Cost caveat: Cost is telemetry only in this phase; quality-first benchmark does not gate on token, command, or file-change overhead, and no cost reduction or efficiency improvement claim is made.
 
 ## Variants
 
@@ -170,4 +215,3 @@
 - Strict comparative claims may borrow Codex authentication only; user skills, hooks, config, and rules are not loaded.
 - Baseline contamination blocks publishing, and pass rates include assertion-backed eligible results only.
 - Current strict live evidence covers ablation across at least 5 assertion-backed cases and 3 runs per required variant, but remains local Codex CLI evidence.
-

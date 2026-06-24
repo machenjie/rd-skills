@@ -615,6 +615,67 @@ def _codex_report_detail(summary: dict[str, object], *, status: str = "pass") ->
     }
 
 
+def _split_codex_live_items(
+    summary: dict[str, object],
+    *,
+    pass_rate_status: str = "pass",
+    capability_status: str = "partial",
+    pass_rate_detail: dict[str, object] | None = None,
+    capability_detail: dict[str, object] | None = None,
+) -> list[dict[str, object]]:
+    return [
+        {
+            "name": "Codex CLI live pass-rate benchmark",
+            "status": pass_rate_status,
+            "detail": json.dumps(pass_rate_detail or _codex_report_detail(summary, status=pass_rate_status)),
+        },
+        {
+            "name": "Codex CLI live capability coverage",
+            "status": capability_status,
+            "detail": json.dumps(capability_detail or _codex_report_detail(summary, status=capability_status)),
+        },
+    ]
+
+
+def _case_summary_payload(
+    *,
+    baseline_passed: int = 3,
+    skills_only_passed: int = 3,
+    hooks_passed: int = 3,
+    eligible: int = 3,
+) -> dict[str, object]:
+    def variant_payload(variant: str, passed: int) -> dict[str, object]:
+        return _variant_payload(
+            variant=variant,
+            run_count=eligible,
+            result_count=eligible,
+            benchmark_eligible_result_count=eligible,
+            benchmark_passed_result_count=passed,
+            pass_rate=round(passed / eligible, 4) if eligible else 0.0,
+            artifact_status_counts={"collected": eligible},
+            grading_status_counts={"passed": passed, "failed": eligible - passed},
+            failure_categories={"none": passed, "test_suite_failed": eligible - passed},
+            setup_failure_reasons={"none": eligible},
+            setup_failure_subreasons={"none": eligible},
+            test_suite_failure_reasons={"none": passed, "assertion_failed": eligible - passed},
+            security_failure_reasons={"none": eligible},
+        )
+
+    return {
+        "grading_mode": "assertion",
+        "setup_failure_reasons": {"none": eligible * 3},
+        "dominant_setup_failure_reason": "none",
+        "setup_failure_subreasons": {"none": eligible * 3},
+        "dominant_setup_failure_subreason": "none",
+        "unknown_setup_failure_rate": 0.0,
+        "variants": {
+            "baseline_clean": variant_payload("baseline_clean", baseline_passed),
+            "skills_only_clean": variant_payload("skills_only_clean", skills_only_passed),
+            "skills_with_hooks_clean": variant_payload("skills_with_hooks_clean", hooks_passed),
+        },
+    }
+
+
 def _write_profile_manifests(root: Path, counts: dict[str, int]) -> None:
     for profile, count in counts.items():
         path = root / "dist" / "universal" / "skills" / profile / ".changeforge-build-manifest.json"
@@ -1523,6 +1584,15 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
             result = helper.detect_baseline_contamination(run_dir)
         self.assertFalse(result["contaminated"])
 
+    def test_baseline_contamination_detector_ignores_prompt_terms(self) -> None:
+        helper = _load_script("codex_live_helper_prompt_terms", "scripts/codex_live_benchmark_lib.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            (run_dir / "prompt.md").write_text("Build rd-skills ChangeForge capability evidence.", encoding="utf-8")
+            (run_dir / "final.md").write_text("Implemented bounded evidence without route leakage.", encoding="utf-8")
+            result = helper.detect_baseline_contamination(run_dir)
+        self.assertFalse(result["contaminated"])
+
     def test_report_redaction_handles_macos_temp_paths(self) -> None:
         helper = _load_script("codex_live_helper_report_redaction", "scripts/codex_live_benchmark_lib.py")
         text = "path=/private/var/folders/x/codex-live-borrowed-auth-abc/.tmp/plugin.json"
@@ -1689,12 +1759,12 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(summary["coverage_summary"]["tiers"]["core"], 2)
         self.assertEqual(summary["coverage_summary"]["assertion_case_count"], 1)
         self.assertEqual(summary["coverage_summary"]["telemetry_only_case_count"], 1)
-        self.assertEqual(summary["coverage_summary"]["manifest_case_count"], 60)
-        self.assertEqual(summary["coverage_summary"]["registered_live_case_count"], 13)
-        self.assertEqual(summary["coverage_summary"]["registered_publishable_assertion_case_count"], 12)
+        self.assertEqual(summary["coverage_summary"]["manifest_case_count"], 70)
+        self.assertEqual(summary["coverage_summary"]["registered_live_case_count"], 23)
+        self.assertEqual(summary["coverage_summary"]["registered_publishable_assertion_case_count"], 22)
         self.assertEqual(summary["coverage_summary"]["actual_run_case_count"], 2)
-        self.assertEqual(summary["coverage_summary"]["tiers_registered"], {"core": 5, "experimental": 1, "level1": 7})
-        self.assertEqual(summary["coverage_summary"]["actual_run_case_coverage_rate"], 0.0333)
+        self.assertEqual(summary["coverage_summary"]["tiers_registered"], {"core": 15, "experimental": 1, "level1": 7})
+        self.assertEqual(summary["coverage_summary"]["actual_run_case_coverage_rate"], 0.0286)
         self.assertIn("frontend/accessible-form-error-state", summary["coverage_summary"]["registered_but_not_run_cases"])
         self.assertIn("delivery", summary["coverage_summary"]["missing_manifest_categories"])
         self.assertEqual(summary["cost_summary"]["total_usage"]["input_tokens"], 20)
@@ -3209,14 +3279,22 @@ Residual Risk:
                 json.dumps(_strong_ablation_summary_payload()),
                 encoding="utf-8",
             )
-            status, detail = scorecard.codex_live_benchmark_status(root)
-            item = public._codex_live_benchmark_item(root)
-        self.assertEqual(status, "pass")
-        self.assertIn('"evidence_scope": "multi_case_ablation_3_run"', detail)
-        self.assertIn('"evidence_status": "pass"', detail)
+            pass_status, pass_detail = scorecard.codex_live_pass_rate_benchmark_status(root)
+            capability_status, capability_detail = scorecard.codex_live_capability_coverage_benchmark_status(root)
+            aggregate_status, aggregate_detail = scorecard.codex_live_benchmark_status(root)
+            item = public._codex_live_pass_rate_benchmark_item(root)
+            capability_item = public._codex_live_capability_coverage_item(root)
+        self.assertEqual(pass_status, "pass")
+        self.assertIn('"evidence_scope": "multi_case_ablation_3_run"', pass_detail)
+        self.assertIn('"evidence_status": "pass"', pass_detail)
+        self.assertEqual(capability_status, "partial")
+        self.assertIn("linked case was not run", capability_detail)
+        self.assertEqual(aggregate_status, "partial")
+        self.assertIn("capability_coverage", aggregate_detail)
         self.assertEqual(item.status, "pass")
         self.assertIn("mode=ablation", item.detail)
         self.assertIn("ready=True", item.detail)
+        self.assertEqual(capability_item.status, "partial")
 
     def test_public_summary_syncs_codex_live_evidence_level_from_live_summary(self) -> None:
         public = _load_script(
@@ -3246,7 +3324,7 @@ Residual Risk:
                 encoding="utf-8",
             )
             payload = public.generate_summary(root)
-        self.assertEqual(payload["evidence_levels"]["local_codex_cli_live_benchmark"]["status"], "pass")
+        self.assertEqual(payload["evidence_levels"]["local_codex_cli_live_benchmark"]["status"], "partial")
 
     def test_report_consistency_rejects_stale_scorecard_run_id(self) -> None:
         validator = _load_script(
@@ -3264,19 +3342,14 @@ Residual Risk:
             scorecard_path.write_text(
                 json.dumps(
                     {
-                        "dimensions": [
-                            {
-                                "name": "Codex CLI live benchmark",
-                                "status": "pass",
-                                "detail": json.dumps(
-                                    {
-                                        "run_id": "old-partial-run",
-                                        "evidence_status": "pass",
-                                        "effect_verdict": "positive",
-                                    }
-                                ),
-                            }
-                        ]
+                        "dimensions": _split_codex_live_items(
+                            summary,
+                            pass_rate_detail={
+                                "run_id": "old-partial-run",
+                                "evidence_status": "pass",
+                                "effect_verdict": "positive",
+                            },
+                        )
                     }
                 ),
                 encoding="utf-8",
@@ -3300,19 +3373,15 @@ Residual Risk:
             public_path.write_text(
                 json.dumps(
                     {
-                        "items": [
-                            {
-                                "name": "Codex CLI live benchmark",
-                                "status": "partial",
-                                "detail": json.dumps(
-                                    {
-                                        "run_id": "positive-run",
-                                        "evidence_status": "partial",
-                                        "effect_verdict": "mixed",
-                                    }
-                                ),
-                            }
-                        ],
+                        "items": _split_codex_live_items(
+                            summary,
+                            pass_rate_status="partial",
+                            pass_rate_detail={
+                                "run_id": "positive-run",
+                                "evidence_status": "partial",
+                                "effect_verdict": "mixed",
+                            },
+                        ),
                         "evidence_levels": {
                             "local_codex_cli_live_benchmark": {
                                 "status": "partial",
@@ -3326,7 +3395,6 @@ Residual Risk:
             errors = validator.validate_report_consistency(summary_path, public_summary_path=public_path)
         self.assertTrue(any("status 'partial' does not match strict evidence status 'pass'" in error for error in errors))
         self.assertTrue(any("effect_verdict" in error for error in errors))
-        self.assertTrue(any("evidence_levels.local_codex_cli_live_benchmark.status" in error for error in errors))
 
     def test_report_consistency_rejects_stale_public_counts_and_hook_rate(self) -> None:
         validator = _load_script(
@@ -3359,10 +3427,10 @@ Residual Risk:
             public_path.write_text(
                 json.dumps(
                     {
-                        "items": [{"name": "Codex CLI live benchmark", "status": "pass", "detail": json.dumps(detail)}],
+                        "items": _split_codex_live_items(summary, pass_rate_detail=detail),
                         "evidence_levels": {
                             "local_codex_cli_live_benchmark": {
-                                "status": "pass",
+                                "status": "partial",
                                 "meaning": "Opt-in local Codex CLI benchmark run.",
                             }
                         },
@@ -3406,9 +3474,7 @@ Residual Risk:
             scorecard_path.write_text(
                 json.dumps(
                     {
-                        "dimensions": [
-                            {"name": "Codex CLI live benchmark", "status": "pass", "detail": json.dumps(detail)}
-                        ]
+                        "dimensions": _split_codex_live_items(summary, pass_rate_detail=detail)
                     }
                 ),
                 encoding="utf-8",
@@ -3434,16 +3500,16 @@ Residual Risk:
             public_path = reports / "public-benchmark-summary.json"
             summary_path.write_text(json.dumps(summary), encoding="utf-8")
             scorecard_path.write_text(
-                json.dumps({"dimensions": [{"name": "Codex CLI live benchmark", "status": "pass", "detail": json.dumps(detail)}]}),
+                json.dumps({"dimensions": _split_codex_live_items(summary, pass_rate_detail=detail)}),
                 encoding="utf-8",
             )
             public_path.write_text(
                 json.dumps(
                     {
-                        "items": [{"name": "Codex CLI live benchmark", "status": "pass", "detail": json.dumps(detail)}],
+                        "items": _split_codex_live_items(summary, pass_rate_detail=detail),
                         "evidence_levels": {
                             "local_codex_cli_live_benchmark": {
-                                "status": "pass",
+                                "status": "partial",
                                 "meaning": "Opt-in local Codex CLI benchmark run.",
                             }
                         },
@@ -3479,13 +3545,29 @@ Residual Risk:
             public_path = reports / "public-benchmark-summary.json"
             summary_path.write_text(json.dumps(summary), encoding="utf-8")
             scorecard_path.write_text(
-                json.dumps({"dimensions": [{"name": "Codex CLI live benchmark", "status": "partial", "detail": json.dumps(detail)}]}),
+                json.dumps(
+                    {
+                        "dimensions": _split_codex_live_items(
+                            summary,
+                            pass_rate_status="partial",
+                            capability_status="partial",
+                            pass_rate_detail=detail,
+                            capability_detail=detail,
+                        )
+                    }
+                ),
                 encoding="utf-8",
             )
             public_path.write_text(
                 json.dumps(
                     {
-                        "items": [{"name": "Codex CLI live benchmark", "status": "partial", "detail": json.dumps(detail)}],
+                        "items": _split_codex_live_items(
+                            summary,
+                            pass_rate_status="partial",
+                            capability_status="partial",
+                            pass_rate_detail=detail,
+                            capability_detail=detail,
+                        ),
                         "evidence_levels": {
                             "local_codex_cli_live_benchmark": {
                                 "status": "partial",
@@ -3649,10 +3731,13 @@ Residual Risk:
             public_path.write_text(
                 json.dumps(
                     {
-                        "items": [{"name": "Codex CLI live benchmark", "status": "pass", "detail": json.dumps(detail)}],
+                        "items": _split_codex_live_items(
+                            _strong_ablation_summary_payload(run_id="current-run"),
+                            pass_rate_detail=detail,
+                        ),
                         "evidence_levels": {
                             "local_codex_cli_live_benchmark": {
-                                "status": "pass",
+                                "status": "partial",
                                 "meaning": "Opt-in local Codex CLI benchmark run.",
                             }
                         },
@@ -3661,7 +3746,7 @@ Residual Risk:
                 encoding="utf-8",
             )
             public_md_path.write_text(
-                '| Codex CLI live benchmark | `pass` | {"run_id": "old-run", "effect_verdict": "positive"} |\n',
+                '| Codex CLI live pass-rate benchmark | `pass` | {"run_id": "old-run", "effect_verdict": "positive"} |\n',
                 encoding="utf-8",
             )
             errors = validator.validate_report_consistency(summary_path, public_summary_path=public_path)
@@ -3776,6 +3861,183 @@ Residual Risk:
         self.assertIn("delta.skills_with_hooks_clean_vs_skills_only_clean", detail)
         self.assertEqual(item.status, "fail")
         self.assertIn("ablation delta.skills_with_hooks_clean_vs_skills_only_clean", item.detail)
+
+    def test_process_missing_does_not_block_pass_rate_but_blocks_capability_coverage(self) -> None:
+        lib = _load_script("codex_live_lib_process_missing", "scripts/codex_live_benchmark_lib.py")
+        summary = _strong_ablation_summary_payload()
+        summary.pop("process_compliance_summary", None)
+        pass_status, pass_errors, pass_warnings = lib.codex_live_pass_rate_status(summary)
+        capability_status, capability_errors, capability_warnings = lib.codex_live_capability_coverage_status(summary)
+        self.assertEqual(pass_status, "pass")
+        self.assertEqual(pass_errors, [])
+        self.assertEqual(pass_warnings, [])
+        self.assertEqual(capability_status, "partial")
+        self.assertEqual(capability_errors, [])
+        self.assertTrue(any("process_compliance_summary missing" in warning for warning in capability_warnings))
+
+    def test_process_trace_zero_blocks_process_capability(self) -> None:
+        lib = _load_script("codex_live_lib_process_zero", "scripts/codex_live_benchmark_lib.py")
+        summary = _strong_ablation_summary_payload(
+            cases_summary={
+                "process/full-pdd-ddd-sdd-tdd-review-repair": _case_summary_payload(),
+            },
+            process_compliance_summary=_process_summary(
+                process_trace_count=0,
+                pdd_present_rate=1.0,
+                ddd_present_rate=1.0,
+                sdd_present_rate=1.0,
+                tdd_present_rate=1.0,
+                required_field_fallback_rate=0.0,
+            ),
+        )
+        coverage = lib.codex_live_capability_coverage_summary(summary)
+        item = next(row for row in coverage["items"] if row["id"] == "pdd_ddd_sdd_tdd_review_flow")
+        self.assertNotEqual(item["status"], "pass")
+        self.assertTrue(any("process_trace_count is 0" in reason for reason in item["reasons"]))
+
+    def test_inferred_only_not_explicit_compliance(self) -> None:
+        lib = _load_script("codex_live_lib_inferred_only", "scripts/codex_live_benchmark_lib.py")
+        summary = _strong_ablation_summary_payload(
+            cases_summary={
+                "process/full-pdd-ddd-sdd-tdd-review-repair": _case_summary_payload(),
+            },
+            process_compliance_summary=_process_summary(
+                process_trace_count=3,
+                pdd_present_rate=0.0,
+                ddd_present_rate=0.0,
+                sdd_present_rate=0.0,
+                tdd_present_rate=0.0,
+                pdd_inferred_rate=1.0,
+                ddd_inferred_rate=1.0,
+                sdd_inferred_rate=1.0,
+                tdd_inferred_rate=1.0,
+                required_field_fallback_rate=0.0,
+            ),
+        )
+        coverage = lib.codex_live_capability_coverage_summary(summary)
+        item = next(row for row in coverage["items"] if row["id"] == "pdd_ddd_sdd_tdd_review_flow")
+        self.assertNotEqual(item["status"], "pass")
+        self.assertTrue(any("explicit PDD/DDD/SDD/TDD traces were not captured" in reason for reason in item["reasons"]))
+
+    def test_capability_matrix_missing_core_case_partial(self) -> None:
+        lib = _load_script("codex_live_lib_capability_missing_case", "scripts/codex_live_benchmark_lib.py")
+        capability = lib.CodexLiveCapability(
+            id="professional_injection_activation",
+            title="Professional Injection Activation",
+            description="fixture",
+            expected_runtime_signal="fixture",
+            linked_live_cases=(),
+            linked_assertions=(),
+            required_variants=("baseline_clean", "skills_only_clean", "skills_with_hooks_clean"),
+            publishable_for_strict=True,
+            quality_pass_criteria="fixture",
+            evidence_kind="fixture",
+            failure_interpretation="fixture",
+            current_status="partial",
+        )
+        coverage = lib.codex_live_capability_coverage_summary(
+            _strong_ablation_summary_payload(),
+            capabilities=[capability],
+        )
+        item = next(row for row in coverage["items"] if row["id"] == "professional_injection_activation")
+        self.assertEqual(item["status"], "partial")
+        self.assertIn("capability has no linked live case", item["reasons"])
+
+    def test_capability_case_assertion_fail(self) -> None:
+        lib = _load_script("codex_live_lib_capability_case_fail", "scripts/codex_live_benchmark_lib.py")
+        summary = _strong_ablation_summary_payload(
+            cases_summary={
+                "injection/professional-route-manifest-activation": _case_summary_payload(
+                    skills_only_passed=2,
+                    hooks_passed=3,
+                ),
+            },
+            process_compliance_summary=_process_summary(
+                pdd_present_rate=1.0,
+                ddd_present_rate=1.0,
+                sdd_present_rate=1.0,
+                tdd_present_rate=1.0,
+                required_field_fallback_rate=0.0,
+                process_trace_inferred_only_rate=0.0,
+            ),
+        )
+        coverage = lib.codex_live_capability_coverage_summary(summary)
+        item = next(row for row in coverage["items"] if row["id"] == "professional_injection_activation")
+        self.assertEqual(item["status"], "fail")
+        self.assertEqual(item["assertion_status"], "fail")
+
+    def test_quality_improvement_ignores_cost(self) -> None:
+        lib = _load_script("codex_live_lib_quality_ignores_cost", "scripts/codex_live_benchmark_lib.py")
+        public = _load_script("public_summary_quality_ignores_cost", "scripts/generate-public-benchmark-summary.py")
+        summary = _strong_ablation_summary_payload(
+            cost_summary={
+                "total_usage": {"input_tokens": 999999, "output_tokens": 999999, "reasoning_output_tokens": 999999},
+                "cost_is_telemetry_only": True,
+                "quality_gate_uses_cost": False,
+            }
+        )
+        status, errors, warnings = lib.codex_live_pass_rate_status(summary)
+        self.assertEqual(status, "pass")
+        self.assertEqual(errors, [])
+        self.assertEqual(warnings, [])
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "reports").mkdir()
+            (root / "reports" / "codex-live-benchmark-summary.json").write_text(json.dumps(summary), encoding="utf-8")
+            item = public._codex_live_pass_rate_benchmark_item(root)
+        self.assertEqual(item.status, "pass")
+        self.assertNotIn("efficiency improved", item.detail.casefold())
+
+    def test_large_quality_improvement_requires_capability_coverage(self) -> None:
+        generator = _load_script("codex_live_summary_large_quality", "scripts/generate-codex-live-summary.py")
+        quality = generator._quality_improvement_summary(
+            {
+                "baseline_clean": {"pass_rate": 0.4},
+                "skills_only_clean": {"pass_rate": 0.7333},
+                "skills_with_hooks_clean": {"pass_rate": 0.8667},
+            },
+            {},
+            {"skills_with_hooks_below_skills_only_cases": [], "regressed_cases": []},
+            {
+                "assertion_backed_coverage_count": 5,
+                "assertion_backed_covered_capabilities": [
+                    "professional_injection_activation",
+                    "staged_injection_precision",
+                    "pdd_ddd_sdd_tdd_review_flow",
+                    "validation_broker_freshness",
+                    "minimal_correct_implementation_ladder",
+                ],
+            },
+        )
+        self.assertTrue(quality["baseline_quality_improved"])
+        self.assertTrue(quality["skill_quality_improved"])
+        self.assertTrue(quality["hook_quality_increment_positive"])
+        self.assertFalse(quality["large_quality_improvement_claim"])
+
+    def test_reliability_no_improvement_visible(self) -> None:
+        generator = _load_script("codex_live_summary_reliability_no_improvement", "scripts/generate-codex-live-summary.py")
+        result = generator._case_result_summary(
+            {
+                "reliability/redis-cache-stampede-protection": _case_summary_payload(
+                    baseline_passed=1,
+                    skills_only_passed=1,
+                    hooks_passed=1,
+                )
+            }
+        )
+        self.assertTrue(result["reliability_no_improvement_visible"])
+        self.assertEqual(result["reliability_no_improvement_cases"][0]["case_id"], "reliability/redis-cache-stampede-protection")
+
+    def test_smoke_not_canonical(self) -> None:
+        validator = _load_script("validate_codex_live_report_smoke_not_canonical", "scripts/validate-codex-live-benchmark-reports.py")
+        summary = _strict_summary_payload(evidence_scope="smoke", evidence_scope_ready=False)
+        with tempfile.TemporaryDirectory() as tmp:
+            reports = Path(tmp) / "reports"
+            reports.mkdir()
+            summary_path = reports / "codex-live-benchmark-summary.json"
+            summary_path.write_text(json.dumps(summary), encoding="utf-8")
+            errors = validator.validate_report_consistency(summary_path)
+        self.assertTrue(any("canonical codex-live-benchmark-summary.json cannot contain a collected smoke artifact" in error for error in errors))
 
 
 if __name__ == "__main__":

@@ -245,3 +245,176 @@ cases:
       - execution-discipline
       - same-pattern-scan
       - regression-testing
+  - id: process/full-pdd-ddd-sdd-tdd-review-repair
+    category: process
+    codegen_case: full-pdd-ddd-sdd-tdd-review-repair
+    enabled: true
+    variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
+    task_prompt: evals/codegen/process/full-pdd-ddd-sdd-tdd-review-repair/prompt.md
+    starter_repo: evals/codegen/process/full-pdd-ddd-sdd-tdd-review-repair/starter-repo
+    grading_benchmark: process/full-pdd-ddd-sdd-tdd-review-repair
+    grading_mode: assertion
+    publishable_for_strict: true
+    tier: core
+    coverage_dimensions:
+      - pdd_ddd_sdd_tdd_review_flow
+      - execution_trajectory_review
+      - validation_broker_freshness
+  - id: injection/professional-route-manifest-activation
+    category: injection
+    codegen_case: professional-route-manifest-activation
+    enabled: true
+    variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
+    task_prompt: evals/codegen/injection/professional-route-manifest-activation/prompt.md
+    starter_repo: evals/codegen/injection/professional-route-manifest-activation/starter-repo
+    grading_benchmark: injection/professional-route-manifest-activation
+    grading_mode: assertion
+    publishable_for_strict: true
+    tier: core
+    coverage_dimensions:
+      - professional_injection_activation
+  - id: injection/stage-specific-reference-loading
+    category: injection
+    codegen_case: stage-specific-reference-loading
+    enabled: true
+    variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
+    task_prompt: evals/codegen/injection/stage-specific-reference-loading/prompt.md
+    starter_repo: evals/codegen/injection/stage-specific-reference-loading/starter-repo
+    grading_benchmark: injection/stage-specific-reference-loading
+    grading_mode: assertion
+    publishable_for_strict: true
+    tier: core
+    coverage_dimensions:
+      - staged_injection_precision
+  - id: repo-intel/caller-callee-test-impact-map
+    category: repo-intel
+    codegen_case: caller-callee-test-impact-map
+    enabled: true
+    variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
+    task_prompt: evals/codegen/repo-intel/caller-callee-test-impact-map/prompt.md
+    starter_repo: evals/codegen/repo-intel/caller-callee-test-impact-map/starter-repo
+    grading_benchmark: repo-intel/caller-callee-test-impact-map
+    grading_mode: assertion
+    publishable_for_strict: true
+    tier: core
+    coverage_dimensions:
+      - repository_graph_context_pack
+  - id: memory/repeated-failure-fragile-file
+    category: memory
+    codegen_case: repeated-failure-fragile-file
+    enabled: true
+    variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
+    task_prompt: evals/codegen/memory/repeated-failure-fragile-file/prompt.md
+    starter_repo: evals/codegen/memory/repeated-failure-fragile-file/starter-repo
+    grading_benchmark: memory/repeated-failure-fragile-file
+    grading_mode: assertion
+    publishable_for_strict: true
+    tier: core
+    coverage_dimensions:
+      - project_memory_governance
+  - id: validation/stale-validation-after-edit
+    category: validation
+    codegen_case: stale-validation-after-edit
+    enabled: true
+    variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
+    task_prompt: evals/codegen/validation/stale-validation-after-edit/prompt.md
+    starter_repo: evals/codegen/validation/stale-validation-after-edit/starter-repo
+    grading_benchmark: validation/stale-validation-after-edit
+    grading_mode: assertion
+    publishable_for_strict: true
+    tier: core
+    coverage_dimensions:
+      - validation_broker_freshness
+  - id: devex/minimal-correct-native-reuse
+    category: devex
+    codegen_case: minimal-correct-native-reuse
+    enabled: true
+    variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
+    task_prompt: evals/codegen/devex/minimal-correct-native-reuse/prompt.md
+    starter_repo: evals/codegen/devex/minimal-correct-native-reuse/starter-repo
+    grading_benchmark: devex/minimal-correct-native-reuse
+    grading_mode: assertion
+    publishable_for_strict: true
+    tier: core
+    coverage_dimensions:
+      - minimal_correct_implementation_ladder
+  - id: pressure/professional-boundary-under-user-pressure
+    category: pressure
+    codegen_case: professional-boundary-under-user-pressure
+    enabled: true
+    variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
+    task_prompt: evals/codegen/pressure/professional-boundary-under-user-pressure/prompt.md
+    starter_repo: evals/codegen/pressure/professional-boundary-under-user-pressure/starter-repo
+    grading_benchmark: pressure/professional-boundary-under-user-pressure
+    grading_mode: assertion
+    publishable_for_strict: true
+    tier: core
+    coverage_dimensions:
+      - pua_or_pressure_resistance
+      - execution_trajectory_review
+  - id: review/repair-rereview-required
+    category: review
+    codegen_case: repair-rereview-required
+    enabled: true
+    variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
+    task_prompt: evals/codegen/review/repair-rereview-required/prompt.md
+    starter_repo: evals/codegen/review/repair-rereview-required/starter-repo
+    grading_benchmark: review/repair-rereview-required
+    grading_mode: assertion
+    publishable_for_strict: true
+    tier: core
+    coverage_dimensions:
+      - execution_trajectory_review
+  - id: logging/redacted-structured-log-design
+    category: logging
+    codegen_case: redacted-structured-log-design
+    enabled: true
+    variants:
+      - baseline_clean
+      - skills_only_clean
+      - skills_with_hooks_clean
+      - current_home_smoke
+    task_prompt: evals/codegen/logging/redacted-structured-log-design/prompt.md
+    starter_repo: evals/codegen/logging/redacted-structured-log-design/starter-repo
+    grading_benchmark: logging/redacted-structured-log-design
+    grading_mode: assertion
+    publishable_for_strict: true
+    tier: core
+    coverage_dimensions:
+      - professional_logging_decision

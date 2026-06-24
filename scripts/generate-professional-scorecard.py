@@ -12,10 +12,14 @@ from pathlib import Path
 from typing import Any
 
 from codex_live_benchmark_lib import (
+    CODEX_LIVE_CAPABILITY_COVERAGE_NAME,
+    CODEX_LIVE_PASS_RATE_BENCHMARK_NAME,
     LIVE_EVIDENCE_LEVEL,
+    codex_live_capability_coverage_status,
+    codex_live_capability_repair_hints,
     codex_live_compact_detail,
+    codex_live_pass_rate_status,
     codex_live_repair_hints,
-    codex_live_scorecard_status,
 )
 from validation_utils import (
     EXPECTED_DOMAIN_EXTENSION_COUNT,
@@ -577,12 +581,12 @@ def executor_adapter_metric_status(root: Path, metric: str) -> tuple[str, str]:
     return "not_collected", str(detail or "not collected")
 
 
-def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
-    """Return status for a published opt-in Codex CLI live benchmark summary."""
+def codex_live_pass_rate_benchmark_status(root: Path) -> tuple[str, str]:
+    """Return pass-rate quality status for a published opt-in Codex CLI live summary."""
     summary = _read_json(root / "reports" / "codex-live-benchmark-summary.json")
     if not isinstance(summary, dict):
         return "not_collected", "reports/codex-live-benchmark-summary.json missing or invalid"
-    status, strict_errors, readiness_warnings = codex_live_scorecard_status(summary)
+    status, strict_errors, readiness_warnings = codex_live_pass_rate_status(summary)
     detail = codex_live_compact_detail(
         summary,
         status=status,
@@ -590,6 +594,42 @@ def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
         readiness_warnings=readiness_warnings,
     )
     return status, json.dumps(detail, sort_keys=True)
+
+
+def codex_live_capability_coverage_benchmark_status(root: Path) -> tuple[str, str]:
+    """Return core capability coverage status for a published opt-in Codex CLI live summary."""
+    summary = _read_json(root / "reports" / "codex-live-benchmark-summary.json")
+    if not isinstance(summary, dict):
+        return "not_collected", "reports/codex-live-benchmark-summary.json missing or invalid"
+    status, strict_errors, readiness_warnings = codex_live_capability_coverage_status(summary)
+    detail = codex_live_compact_detail(
+        summary,
+        status=status,
+        strict_errors=strict_errors,
+        readiness_warnings=readiness_warnings,
+    )
+    return status, json.dumps(detail, sort_keys=True)
+
+
+def codex_live_benchmark_status(root: Path) -> tuple[str, str]:
+    """Backward-compatible aggregate status for legacy callers."""
+    pass_status, pass_detail = codex_live_pass_rate_benchmark_status(root)
+    capability_status, capability_detail = codex_live_capability_coverage_benchmark_status(root)
+    return _weaker_status(pass_status, capability_status), json.dumps(
+        {
+            "pass_rate": _json_detail(pass_detail),
+            "capability_coverage": _json_detail(capability_detail),
+        },
+        sort_keys=True,
+    )
+
+
+def _json_detail(value: str) -> dict[str, Any]:
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        return {"detail": value}
+    return parsed if isinstance(parsed, dict) else {"detail": parsed}
 
 
 def _codex_live_strict_summary_errors(summary: dict[str, Any]) -> list[str]:
@@ -935,21 +975,41 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
             )
         )
 
-    codex_live_status, codex_live_detail = codex_live_benchmark_status(root)
     codex_live_summary = _read_json(root / "reports" / "codex-live-benchmark-summary.json")
-    codex_live_fix_hint = (
+    codex_live_pass_rate_status_value, codex_live_pass_rate_detail = codex_live_pass_rate_benchmark_status(root)
+    codex_live_pass_rate_fix_hint = (
         "; ".join(codex_live_repair_hints(codex_live_summary if isinstance(codex_live_summary, dict) else None))
-        if codex_live_status != "pass"
+        if codex_live_pass_rate_status_value != "pass"
         else "Keep canonical reports generated from the strongest strict ablation evidence."
     )
     dimensions.append(
         Dimension(
-            "Codex CLI live benchmark",
-            codex_live_status,
+            CODEX_LIVE_PASS_RATE_BENCHMARK_NAME,
+            codex_live_pass_rate_status_value,
             "reports/codex-live-benchmark-summary.json",
             "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json",
-            codex_live_fix_hint,
-            codex_live_detail,
+            codex_live_pass_rate_fix_hint,
+            codex_live_pass_rate_detail,
+        )
+    )
+    codex_live_capability_status_value, codex_live_capability_detail = (
+        codex_live_capability_coverage_benchmark_status(root)
+    )
+    codex_live_capability_fix_hint = (
+        "; ".join(
+            codex_live_capability_repair_hints(codex_live_summary if isinstance(codex_live_summary, dict) else None)
+        )
+        if codex_live_capability_status_value != "pass"
+        else "Keep every core capability backed by run assertion evidence and explicit process traces."
+    )
+    dimensions.append(
+        Dimension(
+            CODEX_LIVE_CAPABILITY_COVERAGE_NAME,
+            codex_live_capability_status_value,
+            "reports/codex-live-benchmark-summary.json and evals/codex-live/capability-matrix.yaml",
+            "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json",
+            codex_live_capability_fix_hint,
+            codex_live_capability_detail,
         )
     )
 
@@ -1101,7 +1161,12 @@ def _evidence_levels(dimensions: list[Dimension]) -> dict[str, dict[str, str]]:
     live_pass_rate_status = _status_for_dimension(dimensions, "Executor adapter live pass-rate")
     token_overhead_status = _status_for_dimension(dimensions, "Executor adapter token overhead")
     turn_overhead_status = _status_for_dimension(dimensions, "Executor adapter turn overhead")
-    codex_live_benchmark_status_value = _status_for_dimension(dimensions, "Codex CLI live benchmark")
+    codex_live_pass_rate_status_value = _status_for_dimension(dimensions, CODEX_LIVE_PASS_RATE_BENCHMARK_NAME)
+    codex_live_capability_status_value = _status_for_dimension(dimensions, CODEX_LIVE_CAPABILITY_COVERAGE_NAME)
+    codex_live_benchmark_status_value = _weaker_status(
+        codex_live_pass_rate_status_value,
+        codex_live_capability_status_value,
+    )
     return {
         level: {
             "status": _evidence_level_status(
@@ -1124,6 +1189,16 @@ def _status_for_dimension(dimensions: list[Dimension], name: str) -> str:
     for dimension in dimensions:
         if dimension.name == name:
             return dimension.status
+    return "unknown"
+
+
+def _weaker_status(*statuses: str) -> str:
+    """Return the weakest report status for combined evidence-level display."""
+    order = ("fail", "partial", "not_collected", "unknown", "pass")
+    cleaned = [status if status in STATUSES else "unknown" for status in statuses]
+    for status in order:
+        if status in cleaned:
+            return status
     return "unknown"
 
 
