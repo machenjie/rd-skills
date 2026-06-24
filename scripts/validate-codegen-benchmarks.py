@@ -151,6 +151,60 @@ def _as_string_list(value: Any) -> list[str] | None:
     return out
 
 
+def _markdown_section(text: str, heading: str) -> str:
+    lines = text.splitlines()
+    start: int | None = None
+    level: int | None = None
+    pattern = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
+    for index, line in enumerate(lines):
+        match = pattern.match(line)
+        if not match:
+            continue
+        if match.group(2).strip().casefold() == heading.casefold():
+            start = index + 1
+            level = len(match.group(1))
+            break
+    if start is None or level is None:
+        return ""
+    out: list[str] = []
+    for line in lines[start:]:
+        match = pattern.match(line)
+        if match and len(match.group(1)) <= level:
+            break
+        out.append(line)
+    return "\n".join(out)
+
+
+def _expected_commands_from_readme(path: Path) -> list[str]:
+    section = _markdown_section(path.read_text(encoding="utf-8"), "Expected Commands")
+    return [match.strip() for match in re.findall(r"`([^`]+)`", section)]
+
+
+def _expected_commands_from_script(path: Path) -> list[str]:
+    commands: list[str] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        match = re.match(r"\s*#\s*expected-command:\s*(.+?)\s*$", line)
+        if match:
+            commands.append(match.group(1).strip())
+    return commands
+
+
+def _validate_expected_command_contract(case_dir: Path, errors: list[str]) -> None:
+    readme_path = case_dir / "test-suite" / "README.md"
+    run_path = case_dir / "test-suite" / "run.sh"
+    if not readme_path.is_file() or not run_path.is_file():
+        return
+    readme_commands = _expected_commands_from_readme(readme_path)
+    script_commands = _expected_commands_from_script(run_path)
+    if not readme_commands:
+        errors.append(f"{relpath(ROOT, readme_path)}: Expected Commands must declare run.sh")
+    elif readme_commands != script_commands:
+        errors.append(
+            f"{relpath(ROOT, readme_path)}: Expected Commands {readme_commands!r} "
+            f"do not match {relpath(ROOT, run_path)} metadata {script_commands!r}"
+        )
+
+
 def _validate_markdown(
     path: Path,
     relative_name: str,
@@ -328,6 +382,7 @@ def _validate_case(
 
     for directory_name in REQUIRED_CHILD_DIRS:
         _validate_directory_readme(case_dir, directory_name, errors)
+    _validate_expected_command_contract(case_dir, errors)
     _validate_starter_setup_contract(case_dir, errors)
 
 

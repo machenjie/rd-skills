@@ -10,8 +10,7 @@ The suite uses the benchmark worktree produced by `starter-repo/setup.sh`. It do
 
 ## Expected Commands
 
-- `./test-suite/run.sh`
-- `python -m pytest test-suite/tests`
+- `bash ../test-suite/run.sh`
 
 ## Regression Cases
 
