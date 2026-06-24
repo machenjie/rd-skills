@@ -1,445 +1,71 @@
 {
-  "assertion_case_count": 5,
+  "assertion_case_count": 1,
   "auth_policy": "borrow-current",
-  "benchmark_eligible_result_count": 45,
-  "benchmark_mode": "ablation",
-  "benchmark_passed_result_count": 40,
-  "case_count": 5,
+  "benchmark_eligible_result_count": 2,
+  "benchmark_mode": "clean-paired",
+  "benchmark_passed_result_count": 1,
+  "case_count": 1,
   "cases": [
-    "backend/service-method-vs-new-helper",
-    "devex/helper-reuse-search",
-    "reliability/redis-cache-stampede-protection",
-    "security/ssrf-url-allowlist",
-    "structure/object-method-encapsulation-placement"
+    "security/ssrf-url-allowlist"
   ],
   "cases_summary": {
-    "backend/service-method-vs-new-helper": {
-      "dominant_setup_failure_reason": "none",
-      "dominant_setup_failure_subreason": "none",
-      "grading_mode": "assertion",
-      "setup_failure_reasons": {
-        "none": 9
-      },
-      "setup_failure_subreasons": {
-        "none": 9
-      },
-      "unknown_setup_failure_rate": 0.0,
-      "variants": {
-        "baseline_clean": {
-          "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 3,
-          "dominant_setup_failure_reason": "none",
-          "dominant_setup_failure_subreason": "none",
-          "failure_categories": {
-            "none": 3
-          },
-          "pass_rate": 1.0,
-          "runs": 3,
-          "security_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_subreasons": {
-            "none": 3
-          },
-          "test_suite_failure_reasons": {
-            "none": 3
-          },
-          "unknown_setup_failure_rate": 0.0
-        },
-        "skills_only_clean": {
-          "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 3,
-          "dominant_setup_failure_reason": "none",
-          "dominant_setup_failure_subreason": "none",
-          "failure_categories": {
-            "none": 3
-          },
-          "pass_rate": 1.0,
-          "runs": 3,
-          "security_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_subreasons": {
-            "none": 3
-          },
-          "test_suite_failure_reasons": {
-            "none": 3
-          },
-          "unknown_setup_failure_rate": 0.0
-        },
-        "skills_with_hooks_clean": {
-          "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 3,
-          "dominant_setup_failure_reason": "none",
-          "dominant_setup_failure_subreason": "none",
-          "failure_categories": {
-            "none": 3
-          },
-          "pass_rate": 1.0,
-          "runs": 3,
-          "security_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_subreasons": {
-            "none": 3
-          },
-          "test_suite_failure_reasons": {
-            "none": 3
-          },
-          "unknown_setup_failure_rate": 0.0
-        }
-      }
-    },
-    "devex/helper-reuse-search": {
-      "dominant_setup_failure_reason": "none",
-      "dominant_setup_failure_subreason": "none",
-      "grading_mode": "assertion",
-      "setup_failure_reasons": {
-        "none": 9
-      },
-      "setup_failure_subreasons": {
-        "none": 9
-      },
-      "unknown_setup_failure_rate": 0.0,
-      "variants": {
-        "baseline_clean": {
-          "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 3,
-          "dominant_setup_failure_reason": "none",
-          "dominant_setup_failure_subreason": "none",
-          "failure_categories": {
-            "none": 3
-          },
-          "pass_rate": 1.0,
-          "runs": 3,
-          "security_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_subreasons": {
-            "none": 3
-          },
-          "test_suite_failure_reasons": {
-            "none": 3
-          },
-          "unknown_setup_failure_rate": 0.0
-        },
-        "skills_only_clean": {
-          "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 3,
-          "dominant_setup_failure_reason": "none",
-          "dominant_setup_failure_subreason": "none",
-          "failure_categories": {
-            "none": 3
-          },
-          "pass_rate": 1.0,
-          "runs": 3,
-          "security_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_subreasons": {
-            "none": 3
-          },
-          "test_suite_failure_reasons": {
-            "none": 3
-          },
-          "unknown_setup_failure_rate": 0.0
-        },
-        "skills_with_hooks_clean": {
-          "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 3,
-          "dominant_setup_failure_reason": "none",
-          "dominant_setup_failure_subreason": "none",
-          "failure_categories": {
-            "none": 3
-          },
-          "pass_rate": 1.0,
-          "runs": 3,
-          "security_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_subreasons": {
-            "none": 3
-          },
-          "test_suite_failure_reasons": {
-            "none": 3
-          },
-          "unknown_setup_failure_rate": 0.0
-        }
-      }
-    },
-    "reliability/redis-cache-stampede-protection": {
-      "dominant_setup_failure_reason": "none",
-      "dominant_setup_failure_subreason": "none",
-      "grading_mode": "assertion",
-      "setup_failure_reasons": {
-        "none": 9
-      },
-      "setup_failure_subreasons": {
-        "none": 9
-      },
-      "unknown_setup_failure_rate": 0.0,
-      "variants": {
-        "baseline_clean": {
-          "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 3,
-          "dominant_setup_failure_reason": "none",
-          "dominant_setup_failure_subreason": "none",
-          "failure_categories": {
-            "none": 3
-          },
-          "pass_rate": 1.0,
-          "runs": 3,
-          "security_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_subreasons": {
-            "none": 3
-          },
-          "test_suite_failure_reasons": {
-            "none": 3
-          },
-          "unknown_setup_failure_rate": 0.0
-        },
-        "skills_only_clean": {
-          "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 3,
-          "dominant_setup_failure_reason": "none",
-          "dominant_setup_failure_subreason": "none",
-          "failure_categories": {
-            "none": 3
-          },
-          "pass_rate": 1.0,
-          "runs": 3,
-          "security_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_subreasons": {
-            "none": 3
-          },
-          "test_suite_failure_reasons": {
-            "none": 3
-          },
-          "unknown_setup_failure_rate": 0.0
-        },
-        "skills_with_hooks_clean": {
-          "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 3,
-          "dominant_setup_failure_reason": "none",
-          "dominant_setup_failure_subreason": "none",
-          "failure_categories": {
-            "none": 3
-          },
-          "pass_rate": 1.0,
-          "runs": 3,
-          "security_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_subreasons": {
-            "none": 3
-          },
-          "test_suite_failure_reasons": {
-            "none": 3
-          },
-          "unknown_setup_failure_rate": 0.0
-        }
-      }
-    },
     "security/ssrf-url-allowlist": {
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
       "grading_mode": "assertion",
       "setup_failure_reasons": {
-        "none": 9
+        "none": 2
       },
       "setup_failure_subreasons": {
-        "none": 9
+        "none": 2
       },
       "unknown_setup_failure_rate": 0.0,
       "variants": {
         "baseline_clean": {
-          "benchmark_eligible_result_count": 3,
+          "benchmark_eligible_result_count": 1,
           "benchmark_passed_result_count": 0,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "test_suite_failed": 1
           },
           "pass_rate": 0.0,
-          "runs": 3,
+          "runs": 1,
           "security_failure_reasons": {
-            "sensitive_log_leak": 3
+            "sensitive_log_leak": 1
           },
           "setup_failure_reasons": {
-            "none": 3
+            "none": 1
           },
           "setup_failure_subreasons": {
-            "none": 3
+            "none": 1
           },
           "test_suite_failure_reasons": {
-            "assertion_failed": 3
-          },
-          "unknown_setup_failure_rate": 0.0
-        },
-        "skills_only_clean": {
-          "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 3,
-          "dominant_setup_failure_reason": "none",
-          "dominant_setup_failure_subreason": "none",
-          "failure_categories": {
-            "none": 3
-          },
-          "pass_rate": 1.0,
-          "runs": 3,
-          "security_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_subreasons": {
-            "none": 3
-          },
-          "test_suite_failure_reasons": {
-            "none": 3
+            "assertion_failed": 1
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
-          "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 3,
-          "dominant_setup_failure_reason": "none",
-          "dominant_setup_failure_subreason": "none",
-          "failure_categories": {
-            "none": 3
-          },
-          "pass_rate": 1.0,
-          "runs": 3,
-          "security_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_subreasons": {
-            "none": 3
-          },
-          "test_suite_failure_reasons": {
-            "none": 3
-          },
-          "unknown_setup_failure_rate": 0.0
-        }
-      }
-    },
-    "structure/object-method-encapsulation-placement": {
-      "dominant_setup_failure_reason": "none",
-      "dominant_setup_failure_subreason": "none",
-      "grading_mode": "assertion",
-      "setup_failure_reasons": {
-        "none": 9
-      },
-      "setup_failure_subreasons": {
-        "none": 9
-      },
-      "unknown_setup_failure_rate": 0.0,
-      "variants": {
-        "baseline_clean": {
-          "benchmark_eligible_result_count": 3,
+          "benchmark_eligible_result_count": 1,
           "benchmark_passed_result_count": 1,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "none": 1,
-            "test_suite_failed": 2
-          },
-          "pass_rate": 0.3333,
-          "runs": 3,
-          "security_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_subreasons": {
-            "none": 3
-          },
-          "test_suite_failure_reasons": {
-            "assertion_failed": 2,
             "none": 1
           },
-          "unknown_setup_failure_rate": 0.0
-        },
-        "skills_only_clean": {
-          "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 3,
-          "dominant_setup_failure_reason": "none",
-          "dominant_setup_failure_subreason": "none",
-          "failure_categories": {
-            "none": 3
-          },
           "pass_rate": 1.0,
-          "runs": 3,
+          "runs": 1,
           "security_failure_reasons": {
-            "none": 3
+            "none": 1
           },
           "setup_failure_reasons": {
-            "none": 3
+            "none": 1
           },
           "setup_failure_subreasons": {
-            "none": 3
+            "none": 1
           },
           "test_suite_failure_reasons": {
-            "none": 3
-          },
-          "unknown_setup_failure_rate": 0.0
-        },
-        "skills_with_hooks_clean": {
-          "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 3,
-          "dominant_setup_failure_reason": "none",
-          "dominant_setup_failure_subreason": "none",
-          "failure_categories": {
-            "none": 3
-          },
-          "pass_rate": 1.0,
-          "runs": 3,
-          "security_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_reasons": {
-            "none": 3
-          },
-          "setup_failure_subreasons": {
-            "none": 3
-          },
-          "test_suite_failure_reasons": {
-            "none": 3
+            "none": 1
           },
           "unknown_setup_failure_rate": 0.0
         }
@@ -454,135 +80,96 @@
   "contaminated_result_count": 0,
   "cost_summary": {
     "average_usage_per_result": {
-      "cached_input_tokens": 765616.36,
-      "input_tokens": 844985.51,
-      "output_tokens": 10631.31,
-      "reasoning_output_tokens": 1928.69
+      "cached_input_tokens": 672128.0,
+      "input_tokens": 782176.5,
+      "output_tokens": 10433.5,
+      "reasoning_output_tokens": 2311.0
     },
     "by_variant": {
       "baseline_clean": {
         "average_usage_per_result": {
-          "cached_input_tokens": 290491.73,
-          "input_tokens": 341090.0,
-          "output_tokens": 8929.2,
-          "reasoning_output_tokens": 1567.6
+          "cached_input_tokens": 422528.0,
+          "input_tokens": 525515.0,
+          "output_tokens": 9375.0,
+          "reasoning_output_tokens": 1896.0
         },
         "median_usage_per_result": {
-          "cached_input_tokens": 300416.0,
-          "input_tokens": 341327.0,
-          "output_tokens": 8739.0,
-          "reasoning_output_tokens": 1421.0
+          "cached_input_tokens": 422528.0,
+          "input_tokens": 525515.0,
+          "output_tokens": 9375.0,
+          "reasoning_output_tokens": 1896.0
         },
-        "pass_rate_per_100_commands": 1.1711,
-        "pass_rate_per_100k_input_tokens": 0.1955,
-        "result_count": 15,
+        "pass_rate_per_100_commands": 0.0,
+        "pass_rate_per_100k_input_tokens": 0.0,
+        "result_count": 1,
         "total_usage": {
-          "cached_input_tokens": 4357376,
-          "input_tokens": 5116350,
-          "output_tokens": 133938,
-          "reasoning_output_tokens": 23514
-        }
-      },
-      "skills_only_clean": {
-        "average_usage_per_result": {
-          "cached_input_tokens": 920277.33,
-          "input_tokens": 1019449.33,
-          "output_tokens": 11193.6,
-          "reasoning_output_tokens": 2080.0
-        },
-        "median_usage_per_result": {
-          "cached_input_tokens": 922752.0,
-          "input_tokens": 991191.0,
-          "output_tokens": 10937.0,
-          "reasoning_output_tokens": 1936.0
-        },
-        "pass_rate_per_100_commands": 1.2799,
-        "pass_rate_per_100k_input_tokens": 0.0981,
-        "result_count": 15,
-        "total_usage": {
-          "cached_input_tokens": 13804160,
-          "input_tokens": 15291740,
-          "output_tokens": 167904,
-          "reasoning_output_tokens": 31200
+          "cached_input_tokens": 422528,
+          "input_tokens": 525515,
+          "output_tokens": 9375,
+          "reasoning_output_tokens": 1896
         }
       },
       "skills_with_hooks_clean": {
         "average_usage_per_result": {
-          "cached_input_tokens": 1086080.0,
-          "input_tokens": 1174417.2,
-          "output_tokens": 11771.13,
-          "reasoning_output_tokens": 2138.47
+          "cached_input_tokens": 921728.0,
+          "input_tokens": 1038838.0,
+          "output_tokens": 11492.0,
+          "reasoning_output_tokens": 2726.0
         },
         "median_usage_per_result": {
-          "cached_input_tokens": 1088896.0,
-          "input_tokens": 1173268.0,
-          "output_tokens": 11946.0,
-          "reasoning_output_tokens": 2123.0
+          "cached_input_tokens": 921728.0,
+          "input_tokens": 1038838.0,
+          "output_tokens": 11492.0,
+          "reasoning_output_tokens": 2726.0
         },
-        "pass_rate_per_100_commands": 1.1504,
-        "pass_rate_per_100k_input_tokens": 0.0851,
-        "result_count": 15,
+        "pass_rate_per_100_commands": 1.25,
+        "pass_rate_per_100k_input_tokens": 0.0963,
+        "result_count": 1,
         "total_usage": {
-          "cached_input_tokens": 16291200,
-          "input_tokens": 17616258,
-          "output_tokens": 176567,
-          "reasoning_output_tokens": 32077
+          "cached_input_tokens": 921728,
+          "input_tokens": 1038838,
+          "output_tokens": 11492,
+          "reasoning_output_tokens": 2726
         }
       }
     },
     "case_cost_outliers": [],
     "cost_adjusted_delta": {
       "skills_only_clean_vs_baseline_clean": {
-        "average_command_execution_delta": 21.2,
-        "average_input_token_overhead_pct": 1.9888,
-        "cost_efficiency_note": "Cost-adjusted metrics use parsed average tokens and command counts per result; they are directional local telemetry, not billing evidence.",
-        "pass_rate_delta": 0.3333,
-        "pass_rate_per_100_commands_delta": 0.1088,
-        "pass_rate_per_100k_input_tokens_delta": -0.0974,
-        "status": "collected"
+        "status": "not_collected"
       },
       "skills_with_hooks_clean_vs_baseline_clean": {
-        "average_command_execution_delta": 30.0,
-        "average_input_token_overhead_pct": 2.4431,
+        "average_command_execution_delta": 18.0,
+        "average_input_token_overhead_pct": 0.9768,
         "cost_efficiency_note": "Cost-adjusted metrics use parsed average tokens and command counts per result; they are directional local telemetry, not billing evidence.",
-        "pass_rate_delta": 0.3333,
-        "pass_rate_per_100_commands_delta": -0.0207,
-        "pass_rate_per_100k_input_tokens_delta": -0.1104,
+        "pass_rate_delta": 1.0,
+        "pass_rate_per_100_commands_delta": 1.25,
+        "pass_rate_per_100k_input_tokens_delta": 0.0963,
         "status": "collected"
       },
       "skills_with_hooks_clean_vs_skills_only_clean": {
-        "average_command_execution_delta": 8.8,
-        "average_input_token_overhead_pct": 0.152,
-        "cost_efficiency_note": "Cost-adjusted metrics use parsed average tokens and command counts per result; they are directional local telemetry, not billing evidence.",
-        "pass_rate_delta": 0.0,
-        "pass_rate_per_100_commands_delta": -0.1295,
-        "pass_rate_per_100k_input_tokens_delta": -0.013,
-        "status": "collected"
+        "status": "not_collected"
       }
     },
     "cost_caveat": "Token usage is parsed local Codex telemetry, not a billing ledger.",
-    "result_count": 45,
+    "result_count": 2,
     "total_usage": {
-      "cached_input_tokens": 34452736,
-      "input_tokens": 38024348,
-      "output_tokens": 478409,
-      "reasoning_output_tokens": 86791
+      "cached_input_tokens": 1344256,
+      "input_tokens": 1564353,
+      "output_tokens": 20867,
+      "reasoning_output_tokens": 4622
     }
   },
   "coverage_summary": {
-    "actual_run_assertion_case_count": 5,
-    "actual_run_case_count": 5,
-    "actual_run_case_coverage_rate": 0.0833,
-    "actual_run_category_count": 5,
-    "actual_run_publishable_assertion_case_count": 5,
-    "assertion_case_count": 5,
-    "case_count": 5,
+    "actual_run_assertion_case_count": 1,
+    "actual_run_case_count": 1,
+    "actual_run_case_coverage_rate": 0.0167,
+    "actual_run_category_count": 1,
+    "actual_run_publishable_assertion_case_count": 1,
+    "assertion_case_count": 1,
+    "case_count": 1,
     "categories": {
-      "backend": 1,
-      "devex": 1,
-      "reliability": 1,
-      "security": 1,
-      "structure": 1
+      "security": 1
     },
     "categories_registered": {
       "backend": 1,
@@ -597,23 +184,11 @@
       "structure": 1
     },
     "categories_run": {
-      "backend": 1,
-      "devex": 1,
-      "reliability": 1,
-      "security": 1,
-      "structure": 1
+      "security": 1
     },
     "coverage_dimensions": {
-      "backend-service-boundary": 1,
-      "concurrency-control": 1,
-      "devex-reuse": 1,
-      "implementation-structure": 2,
       "input-validation": 1,
-      "object-boundary": 1,
-      "observability": 1,
-      "reliability-cache": 1,
-      "security-ssrf": 1,
-      "structure-placement": 1
+      "security-ssrf": 1
     },
     "coverage_dimensions_registered": {
       "api-compatibility": 1,
@@ -647,16 +222,8 @@
       "structure-placement": 1
     },
     "coverage_dimensions_run": {
-      "backend-service-boundary": 1,
-      "concurrency-control": 1,
-      "devex-reuse": 1,
-      "implementation-structure": 2,
       "input-validation": 1,
-      "object-boundary": 1,
-      "observability": 1,
-      "reliability-cache": 1,
-      "security-ssrf": 1,
-      "structure-placement": 1
+      "security-ssrf": 1
     },
     "manifest_case_count": 60,
     "manifest_categories": [
@@ -692,7 +259,7 @@
       "payment",
       "web3"
     ],
-    "publishable_assertion_case_count": 5,
+    "publishable_assertion_case_count": 1,
     "publishable_categories_registered": {
       "backend": 1,
       "data-api": 1,
@@ -707,13 +274,17 @@
     },
     "registered_assertion_case_count": 12,
     "registered_but_not_run_cases": [
+      "backend/service-method-vs-new-helper",
       "data-api/backward-compatible-api-field",
       "data-middleware/kafka-consumer-offset-dlq",
       "devex/bugfix-same-pattern-scan",
+      "devex/helper-reuse-search",
       "frontend/accessible-form-error-state",
       "integration/webhook-hmac-raw-body",
       "performance/event-loop-blocking-async-path",
-      "performance/lock-held-across-io"
+      "performance/lock-held-across-io",
+      "reliability/redis-cache-stampede-protection",
+      "structure/object-method-encapsulation-placement"
     ],
     "registered_case_coverage_rate": 0.2167,
     "registered_category_count": 10,
@@ -723,7 +294,7 @@
     "registered_telemetry_only_case_count": 1,
     "telemetry_only_case_count": 0,
     "tiers": {
-      "core": 5,
+      "core": 1,
       "experimental": 0,
       "level1": 0
     },
@@ -733,7 +304,7 @@
       "level1": 7
     },
     "tiers_run": {
-      "core": 5,
+      "core": 1,
       "experimental": 0,
       "level1": 0
     },
@@ -742,55 +313,38 @@
   "current_home_full_result_count": 0,
   "current_home_result_count": 0,
   "delta": {
-    "skills_only_clean_vs_baseline_clean": {
-      "command_execution_count_delta": 21.2,
-      "file_change_count_delta": 0.8,
-      "input_tokens_delta_pct": 1.9888,
-      "output_tokens_delta_pct": 0.2536,
-      "pass_rate_delta": 0.3333,
-      "reasoning_output_tokens_delta_pct": 0.3269,
-      "security_pass_rate_delta": 0.2
-    },
     "skills_with_hooks_clean_vs_baseline_clean": {
-      "command_execution_count_delta": 30.0,
-      "file_change_count_delta": 1.2,
-      "input_tokens_delta_pct": 2.4431,
-      "output_tokens_delta_pct": 0.3183,
-      "pass_rate_delta": 0.3333,
-      "reasoning_output_tokens_delta_pct": 0.3642,
-      "security_pass_rate_delta": 0.2
-    },
-    "skills_with_hooks_clean_vs_skills_only_clean": {
-      "command_execution_count_delta": 8.8,
-      "file_change_count_delta": 0.4,
-      "input_tokens_delta_pct": 0.152,
-      "output_tokens_delta_pct": 0.0516,
-      "pass_rate_delta": 0.0,
-      "reasoning_output_tokens_delta_pct": 0.0281,
-      "security_pass_rate_delta": 0.0
+      "command_execution_count_delta": 18.0,
+      "file_change_count_delta": -2.0,
+      "input_tokens_delta_pct": 0.9768,
+      "output_tokens_delta_pct": 0.2258,
+      "pass_rate_delta": 1.0,
+      "reasoning_output_tokens_delta_pct": 0.4378,
+      "security_pass_rate_delta": 1.0
     }
   },
-  "dominant_failure_category": "none",
+  "dominant_failure_category": "test_suite_failed",
   "dominant_setup_failure_reason": "none",
   "dominant_setup_failure_subreason": "none",
-  "effect_status": "improved",
+  "effect_status": "inconclusive",
   "effect_summary": {
-    "baseline_clean_pass_rate": 0.6667,
+    "baseline_clean_pass_rate": 0.0,
     "case_improvements": [
-      "security/ssrf-url-allowlist",
-      "structure/object-method-encapsulation-placement"
+      "security/ssrf-url-allowlist"
     ],
-    "dominant_failure_category": "none",
-    "dominant_failure_count": 40,
+    "dominant_failure_category": "test_suite_failed",
+    "dominant_failure_count": 1,
     "dominant_setup_failure_reason": "none",
     "dominant_setup_failure_subreason": "none",
     "eligible_result_counts": {
-      "baseline_clean": 15,
-      "skills_only_clean": 15,
-      "skills_with_hooks_clean": 15
+      "baseline_clean": 1,
+      "skills_only_clean": 0,
+      "skills_with_hooks_clean": 1
     },
-    "missing_variants": [],
-    "reason": "skills_with_hooks_clean improves over baseline_clean and is not below skills_only_clean",
+    "missing_variants": [
+      "skills_only_clean"
+    ],
+    "reason": "missing required ablation variants, repeated runs, or eligible assertion-backed results",
     "required_variants": [
       "baseline_clean",
       "skills_only_clean",
@@ -803,33 +357,33 @@
     },
     "setup_failed_rate_by_variant": {
       "baseline_clean": 0.0,
-      "skills_only_clean": 0.0,
+      "skills_only_clean": "not_collected",
       "skills_with_hooks_clean": 0.0
     },
     "setup_failed_result_count": 0,
     "setup_failure_subreasons": {
-      "none": 45
+      "none": 2
     },
-    "skills_only_clean_pass_rate": 1.0,
+    "skills_only_clean_pass_rate": null,
     "skills_with_hooks_clean_pass_rate": 1.0,
-    "skills_with_hooks_vs_baseline_pass_rate_delta": 0.3333,
-    "skills_with_hooks_vs_skills_only_pass_rate_delta": 0.0,
+    "skills_with_hooks_vs_baseline_pass_rate_delta": 1.0,
+    "skills_with_hooks_vs_skills_only_pass_rate_delta": "not_collected",
     "unknown_setup_failure_rate": 0.0
   },
-  "effect_verdict": "positive",
+  "effect_verdict": "inconclusive",
   "evidence_level": "local_codex_cli_live_benchmark",
-  "evidence_scope": "multi_case_ablation_3_run",
+  "evidence_scope": "smoke",
   "evidence_scope_detail": {
-    "evidence_scope_ready": true,
-    "observed_assertion_case_count": 5,
-    "observed_benchmark_mode": "ablation",
-    "observed_min_runs_per_required_variant": 3,
+    "evidence_scope_ready": false,
+    "observed_assertion_case_count": 1,
+    "observed_benchmark_mode": "clean-paired",
+    "observed_min_runs_per_required_variant": 0,
     "observed_variant_case_counts": {
-      "baseline_clean": 5,
-      "skills_only_clean": 5,
-      "skills_with_hooks_clean": 5
+      "baseline_clean": 1,
+      "skills_only_clean": 0,
+      "skills_with_hooks_clean": 1
     },
-    "reason": "ablation evidence includes the required assertion-backed case count and repeated runs",
+    "reason": "strict clean-paired evidence is smoke-scale until ablation covers the required cases and runs",
     "required_assertion_case_count": 5,
     "required_benchmark_mode": "ablation",
     "required_runs_per_variant": 3,
@@ -841,8 +395,8 @@
   },
   "evidence_status": "pass",
   "failure_categories": {
-    "none": 40,
-    "test_suite_failed": 5
+    "none": 1,
+    "test_suite_failed": 1
   },
   "generated_by": "scripts/generate-codex-live-summary.py",
   "ignore_rules": true,
@@ -853,28 +407,63 @@
     "Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately.",
     "Strict comparative claims may borrow Codex authentication only; user skills, hooks, config, and rules are not loaded.",
     "Baseline contamination blocks publishing, and pass rates include assertion-backed eligible results only.",
-    "Current strict live evidence covers ablation across at least 5 assertion-backed cases and 3 runs per required variant, but remains local Codex CLI evidence."
+    "Current strict live evidence is a smoke sample only: it supports only the listed case and variants, not a broad rd-skills pass-rate improvement claim. Stronger claims require at least 3-5 assertion-backed cases with 3 runs per variant."
   ],
+  "logging_summary": {
+    "max_event_size_bytes": 12528,
+    "process_trace_count": 2,
+    "redaction_status": "pass",
+    "run_log_events": 16,
+    "timeline_events": 16
+  },
   "not_collected_grading_count": 0,
   "plugins_disabled": true,
+  "process_compliance_summary": {
+    "all_core_phases_degraded_or_present_rate": 0.0,
+    "all_core_phases_inferred_only_rate": 1.0,
+    "all_core_phases_present_rate": 0.0,
+    "ddd_degraded_rate": 0.0,
+    "ddd_inferred_rate": 1.0,
+    "ddd_invariant_test_or_code_coverage_rate": 1.0,
+    "ddd_present_rate": 0.0,
+    "ddd_required_field_fallback_rate": 1.0,
+    "pdd_degraded_rate": 0.0,
+    "pdd_inferred_rate": 1.0,
+    "pdd_present_rate": 0.0,
+    "pdd_required_field_fallback_rate": 1.0,
+    "pdd_to_tdd_traceability_rate": 1.0,
+    "process_trace_count": 2,
+    "sdd_degraded_rate": 0.0,
+    "sdd_failure_mode_validation_rate": 1.0,
+    "sdd_inferred_rate": 1.0,
+    "sdd_logging_validation_rate": 1.0,
+    "sdd_present_rate": 0.0,
+    "sdd_public_api_validation_rate": 1.0,
+    "sdd_required_field_fallback_rate": 1.0,
+    "tdd_degraded_rate": 0.0,
+    "tdd_inferred_rate": 1.0,
+    "tdd_present_rate": 0.0,
+    "tdd_required_field_fallback_rate": 1.0,
+    "validation_command_present_rate": 1.0
+  },
   "publishable_for_strict_benchmark": true,
-  "result_count": 45,
+  "result_count": 2,
   "run_dir": "<run-dir>",
-  "run_id": "ablation-core-final-20260623-fix8",
+  "run_id": "clean-auth-borrowed-20260624-042529",
   "schema_version": 2,
   "security_failure_reasons": {
-    "none": 42,
-    "sensitive_log_leak": 3
+    "none": 1,
+    "sensitive_log_leak": 1
   },
   "setup_failure_reasons": {
-    "none": 45
+    "none": 2
   },
   "setup_failure_subreasons": {
-    "none": 45
+    "none": 2
   },
   "stability_summary": {
     "artifact_status_counts": {
-      "collected": 45
+      "collected": 2
     },
     "case_regression_count": 0,
     "codex_exec_failed_by_case": {},
@@ -885,55 +474,39 @@
     "failed_run_reasons_by_case": {
       "security/ssrf-url-allowlist": {
         "baseline_clean": {
-          "test_suite_failed": 3
-        }
-      },
-      "structure/object-method-encapsulation-placement": {
-        "baseline_clean": {
-          "test_suite_failed": 2
+          "test_suite_failed": 1
         }
       }
     },
-    "flaky_case_variant_cells": [
-      {
-        "case_id": "structure/object-method-encapsulation-placement",
-        "failed_count": 2,
-        "failure_categories": {
-          "none": 1,
-          "test_suite_failed": 2
-        },
-        "passed_count": 1,
-        "variant": "baseline_clean"
-      }
-    ],
+    "flaky_case_variant_cells": [],
     "grading_status_counts": {
-      "failed": 5,
-      "passed": 40
+      "failed": 1,
+      "passed": 1
     },
     "not_collected_grading_rate": 0.0,
-    "observed_case_variant_cell_count": 15,
-    "observed_max_runs_per_case_variant": 3,
-    "observed_min_runs_per_case_variant": 3,
+    "observed_case_variant_cell_count": 2,
+    "observed_max_runs_per_case_variant": 1,
+    "observed_min_runs_per_case_variant": 1,
     "partial_status_reasons": [
-      "test_suite_failed:5"
+      "test_suite_failed:1"
     ],
-    "requested_runs_per_variant": 3,
+    "requested_runs_per_variant": 1,
     "security_failure_rate": 0.0,
     "setup_failure_rate": 0.0,
     "skills_with_hooks_regression_cases": [],
-    "test_suite_failure_rate": 0.1111
+    "test_suite_failure_rate": 0.5
   },
   "status": "collected",
   "strict_benchmark_eligible": true,
   "telemetry": {
-    "event_count": 4542,
+    "event_count": 204,
     "parse_error_count": 0
   },
   "telemetry_only_case_count": 0,
   "telemetry_only_result_count": 0,
   "test_suite_failure_reasons": {
-    "assertion_failed": 5,
-    "none": 40
+    "assertion_failed": 1,
+    "none": 1
   },
   "unknown_setup_failure_rate": 0.0,
   "user_config_loaded": false,
@@ -943,27 +516,27 @@
   "variants": {
     "baseline_clean": {
       "artifact_status_counts": {
-        "collected": 15
+        "collected": 1
       },
-      "average_command_execution_count": 56.93,
-      "average_event_count": 81.67,
-      "average_file_change_count": 5.87,
+      "average_command_execution_count": 62.0,
+      "average_event_count": 94.0,
+      "average_file_change_count": 10.0,
       "average_metrics": {
-        "command_execution_count": 56.93,
-        "error_count": 5.67,
-        "event_count": 81.67,
-        "file_change_count": 5.87,
+        "command_execution_count": 62.0,
+        "error_count": 5.0,
+        "event_count": 94.0,
+        "file_change_count": 10.0,
         "plan_update_count": 0.0
       },
       "average_usage": {
-        "cached_input_tokens": 290491.73,
-        "input_tokens": 341090.0,
-        "output_tokens": 8929.2,
-        "reasoning_output_tokens": 1567.6
+        "cached_input_tokens": 422528.0,
+        "input_tokens": 525515.0,
+        "output_tokens": 9375.0,
+        "reasoning_output_tokens": 1896.0
       },
-      "benchmark_eligible_result_count": 15,
-      "benchmark_passed_result_count": 10,
-      "case_count": 5,
+      "benchmark_eligible_result_count": 1,
+      "benchmark_passed_result_count": 0,
+      "case_count": 1,
       "changeforge_hooks_enabled": false,
       "changeforge_install_source": "none",
       "changeforge_profile": "none",
@@ -972,282 +545,173 @@
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
       "failure_categories": {
-        "none": 10,
-        "test_suite_failed": 5
+        "test_suite_failed": 1
       },
       "grading_status_counts": {
-        "failed": 5,
-        "passed": 10
+        "failed": 1
       },
       "max_metrics": {
-        "command_execution_count": 80,
-        "error_count": 12,
-        "event_count": 116,
-        "file_change_count": 12,
+        "command_execution_count": 62,
+        "error_count": 5,
+        "event_count": 94,
+        "file_change_count": 10,
         "plan_update_count": 0
       },
       "max_usage": {
-        "cached_input_tokens": 430592,
-        "input_tokens": 505142,
-        "output_tokens": 12833,
-        "reasoning_output_tokens": 2778
+        "cached_input_tokens": 422528,
+        "input_tokens": 525515,
+        "output_tokens": 9375,
+        "reasoning_output_tokens": 1896
       },
       "median_metrics": {
-        "command_execution_count": 54.0,
+        "command_execution_count": 62.0,
         "error_count": 5.0,
-        "event_count": 76.0,
-        "file_change_count": 4.0,
+        "event_count": 94.0,
+        "file_change_count": 10.0,
         "plan_update_count": 0.0
       },
       "median_usage": {
-        "cached_input_tokens": 300416.0,
-        "input_tokens": 341327.0,
-        "output_tokens": 8739.0,
-        "reasoning_output_tokens": 1421.0
+        "cached_input_tokens": 422528.0,
+        "input_tokens": 525515.0,
+        "output_tokens": 9375.0,
+        "reasoning_output_tokens": 1896.0
       },
       "min_metrics": {
-        "command_execution_count": 36,
-        "error_count": 2,
-        "event_count": 52,
-        "file_change_count": 2,
+        "command_execution_count": 62,
+        "error_count": 5,
+        "event_count": 94,
+        "file_change_count": 10,
         "plan_update_count": 0
       },
       "min_usage": {
-        "cached_input_tokens": 167040,
-        "input_tokens": 192338,
-        "output_tokens": 6126,
-        "reasoning_output_tokens": 904
+        "cached_input_tokens": 422528,
+        "input_tokens": 525515,
+        "output_tokens": 9375,
+        "reasoning_output_tokens": 1896
       },
       "not_collected_grading_count": 0,
-      "pass_rate": 0.6667,
+      "pass_rate": 0.0,
       "pass_rate_ci_note": "descriptive only; small sample",
-      "result_count": 15,
-      "run_count": 3,
+      "result_count": 1,
+      "run_count": 1,
       "security_failure_reasons": {
-        "none": 12,
-        "sensitive_log_leak": 3
+        "sensitive_log_leak": 1
       },
-      "security_pass_rate": 0.8,
+      "security_pass_rate": 0.0,
       "setup_failure_reasons": {
-        "none": 15
+        "none": 1
       },
       "setup_failure_subreasons": {
-        "none": 15
+        "none": 1
       },
       "telemetry_only_result_count": 0,
       "test_suite_failure_reasons": {
-        "assertion_failed": 5,
-        "none": 10
-      },
-      "unknown_setup_failure_rate": 0.0,
-      "user_level_install_used": false
-    },
-    "skills_only_clean": {
-      "artifact_status_counts": {
-        "collected": 15
-      },
-      "average_command_execution_count": 78.13,
-      "average_event_count": 105.53,
-      "average_file_change_count": 6.67,
-      "average_metrics": {
-        "command_execution_count": 78.13,
-        "error_count": 5.73,
-        "event_count": 105.53,
-        "file_change_count": 6.67,
-        "plan_update_count": 0.0
-      },
-      "average_usage": {
-        "cached_input_tokens": 920277.33,
-        "input_tokens": 1019449.33,
-        "output_tokens": 11193.6,
-        "reasoning_output_tokens": 2080.0
-      },
-      "benchmark_eligible_result_count": 15,
-      "benchmark_passed_result_count": 15,
-      "case_count": 5,
-      "changeforge_hooks_enabled": false,
-      "changeforge_install_source": "current_repository",
-      "changeforge_profile": "recommended",
-      "contaminated_result_count": 0,
-      "delta_vs_baseline_clean": {
-        "command_execution_count_delta": 21.2,
-        "file_change_count_delta": 0.8,
-        "input_tokens_delta_pct": 1.9888,
-        "output_tokens_delta_pct": 0.2536,
-        "pass_rate_delta": 0.3333,
-        "reasoning_output_tokens_delta_pct": 0.3269,
-        "security_pass_rate_delta": 0.2
-      },
-      "dominant_setup_failure_reason": "none",
-      "dominant_setup_failure_subreason": "none",
-      "failure_categories": {
-        "none": 15
-      },
-      "grading_status_counts": {
-        "passed": 15
-      },
-      "max_metrics": {
-        "command_execution_count": 108,
-        "error_count": 12,
-        "event_count": 145,
-        "file_change_count": 18,
-        "plan_update_count": 0
-      },
-      "max_usage": {
-        "cached_input_tokens": 1448448,
-        "input_tokens": 1659684,
-        "output_tokens": 15553,
-        "reasoning_output_tokens": 3264
-      },
-      "median_metrics": {
-        "command_execution_count": 74.0,
-        "error_count": 5.0,
-        "event_count": 101.0,
-        "file_change_count": 6.0,
-        "plan_update_count": 0.0
-      },
-      "median_usage": {
-        "cached_input_tokens": 922752.0,
-        "input_tokens": 991191.0,
-        "output_tokens": 10937.0,
-        "reasoning_output_tokens": 1936.0
-      },
-      "min_metrics": {
-        "command_execution_count": 60,
-        "error_count": 1,
-        "event_count": 78,
-        "file_change_count": 2,
-        "plan_update_count": 0
-      },
-      "min_usage": {
-        "cached_input_tokens": 406656,
-        "input_tokens": 516083,
-        "output_tokens": 8073,
-        "reasoning_output_tokens": 1519
-      },
-      "not_collected_grading_count": 0,
-      "pass_rate": 1.0,
-      "pass_rate_ci_note": "descriptive only; small sample",
-      "result_count": 15,
-      "run_count": 3,
-      "security_failure_reasons": {
-        "none": 15
-      },
-      "security_pass_rate": 1.0,
-      "setup_failure_reasons": {
-        "none": 15
-      },
-      "setup_failure_subreasons": {
-        "none": 15
-      },
-      "telemetry_only_result_count": 0,
-      "test_suite_failure_reasons": {
-        "none": 15
+        "assertion_failed": 1
       },
       "unknown_setup_failure_rate": 0.0,
       "user_level_install_used": false
     },
     "skills_with_hooks_clean": {
       "artifact_status_counts": {
-        "collected": 15
+        "collected": 1
       },
-      "average_command_execution_count": 86.93,
-      "average_event_count": 115.6,
-      "average_file_change_count": 7.07,
+      "average_command_execution_count": 80.0,
+      "average_event_count": 110.0,
+      "average_file_change_count": 8.0,
       "average_metrics": {
-        "command_execution_count": 86.93,
-        "error_count": 6.8,
-        "event_count": 115.6,
-        "file_change_count": 7.07,
+        "command_execution_count": 80.0,
+        "error_count": 7.0,
+        "event_count": 110.0,
+        "file_change_count": 8.0,
         "plan_update_count": 0.0
       },
       "average_usage": {
-        "cached_input_tokens": 1086080.0,
-        "input_tokens": 1174417.2,
-        "output_tokens": 11771.13,
-        "reasoning_output_tokens": 2138.47
+        "cached_input_tokens": 921728.0,
+        "input_tokens": 1038838.0,
+        "output_tokens": 11492.0,
+        "reasoning_output_tokens": 2726.0
       },
-      "benchmark_eligible_result_count": 15,
-      "benchmark_passed_result_count": 15,
-      "case_count": 5,
+      "benchmark_eligible_result_count": 1,
+      "benchmark_passed_result_count": 1,
+      "case_count": 1,
       "changeforge_hooks_enabled": true,
       "changeforge_install_source": "current_repository",
       "changeforge_profile": "recommended",
       "contaminated_result_count": 0,
       "delta_vs_baseline_clean": {
-        "command_execution_count_delta": 30.0,
-        "file_change_count_delta": 1.2,
-        "input_tokens_delta_pct": 2.4431,
-        "output_tokens_delta_pct": 0.3183,
-        "pass_rate_delta": 0.3333,
-        "reasoning_output_tokens_delta_pct": 0.3642,
-        "security_pass_rate_delta": 0.2
+        "command_execution_count_delta": 18.0,
+        "file_change_count_delta": -2.0,
+        "input_tokens_delta_pct": 0.9768,
+        "output_tokens_delta_pct": 0.2258,
+        "pass_rate_delta": 1.0,
+        "reasoning_output_tokens_delta_pct": 0.4378,
+        "security_pass_rate_delta": 1.0
       },
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
       "failure_categories": {
-        "none": 15
+        "none": 1
       },
       "grading_status_counts": {
-        "passed": 15
+        "passed": 1
       },
       "max_metrics": {
-        "command_execution_count": 116,
-        "error_count": 14,
-        "event_count": 159,
-        "file_change_count": 14,
+        "command_execution_count": 80,
+        "error_count": 7,
+        "event_count": 110,
+        "file_change_count": 8,
         "plan_update_count": 0
       },
       "max_usage": {
-        "cached_input_tokens": 1629696,
-        "input_tokens": 1702373,
-        "output_tokens": 15798,
-        "reasoning_output_tokens": 3253
+        "cached_input_tokens": 921728,
+        "input_tokens": 1038838,
+        "output_tokens": 11492,
+        "reasoning_output_tokens": 2726
       },
       "median_metrics": {
-        "command_execution_count": 84.0,
-        "error_count": 6.0,
-        "event_count": 111.0,
+        "command_execution_count": 80.0,
+        "error_count": 7.0,
+        "event_count": 110.0,
         "file_change_count": 8.0,
         "plan_update_count": 0.0
       },
       "median_usage": {
-        "cached_input_tokens": 1088896.0,
-        "input_tokens": 1173268.0,
-        "output_tokens": 11946.0,
-        "reasoning_output_tokens": 2123.0
+        "cached_input_tokens": 921728.0,
+        "input_tokens": 1038838.0,
+        "output_tokens": 11492.0,
+        "reasoning_output_tokens": 2726.0
       },
       "min_metrics": {
-        "command_execution_count": 64,
-        "error_count": 3,
-        "event_count": 83,
-        "file_change_count": 2,
+        "command_execution_count": 80,
+        "error_count": 7,
+        "event_count": 110,
+        "file_change_count": 8,
         "plan_update_count": 0
       },
       "min_usage": {
-        "cached_input_tokens": 471808,
-        "input_tokens": 560172,
-        "output_tokens": 7913,
-        "reasoning_output_tokens": 1094
+        "cached_input_tokens": 921728,
+        "input_tokens": 1038838,
+        "output_tokens": 11492,
+        "reasoning_output_tokens": 2726
       },
       "not_collected_grading_count": 0,
       "pass_rate": 1.0,
       "pass_rate_ci_note": "descriptive only; small sample",
-      "result_count": 15,
-      "run_count": 3,
+      "result_count": 1,
+      "run_count": 1,
       "security_failure_reasons": {
-        "none": 15
+        "none": 1
       },
       "security_pass_rate": 1.0,
       "setup_failure_reasons": {
-        "none": 15
+        "none": 1
       },
       "setup_failure_subreasons": {
-        "none": 15
+        "none": 1
       },
       "telemetry_only_result_count": 0,
       "test_suite_failure_reasons": {
-        "none": 15
+        "none": 1
       },
       "unknown_setup_failure_rate": 0.0,
       "user_level_install_used": false
