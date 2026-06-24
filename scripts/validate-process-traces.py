@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -17,14 +19,30 @@ CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
 ALLOWED_PHASE_STATUSES = {"present", "missing", "degraded", "inferred", "not_applicable"}
 FORBIDDEN_TEXT = ("/Users/", "/home/", "C:\\Users\\", "auth.json", "CODEX_API_KEY", "OPENAI_API_KEY", "sk-")
 GENERIC_TRACE_MARKERS = (
+    "requested benchmark behavior is observable through public api",
     "requested benchmark behavior is observable through public api or documented setup/test contract",
+    "expected behavior is observable through public api or documented setup/test contract",
+    "candidate passes deterministic assertion-backed grading benchmark",
     "candidate passes deterministic assertion-backed grading for the selected case",
+    "business rules remain in the owning domain",
+    "side effects remain outside pure domain",
+    "candidate public api",
     "starter repository public api",
+    "validation command recorded",
     "validation command recorded for the candidate result",
 )
+GENERIC_DDD_MARKERS = (
+    "keeps business rules in the owning domain",
+    "keeps side effects outside pure domain",
+    "business rules remain in the owning domain",
+    "side effects remain outside pure domain",
+)
+GENERIC_PUBLIC_API_MARKERS = ("candidate public api", "starter repository public api")
+LOGGING_VALIDATOR_PATH = Path(__file__).with_name("validate-logging-design.py")
+_LOGGING_VALIDATOR: Any = None
 
 
-def validate_process_traces(run_dir: Path) -> list[str]:
+def validate_process_traces(run_dir: Path, *, require_present: bool = False) -> list[str]:
     errors: list[str] = []
     result_paths = sorted(run_dir.glob("cases/*/*/run-*/result.json"))
     for result_path in result_paths:
@@ -41,11 +59,11 @@ def validate_process_traces(run_dir: Path) -> list[str]:
         if not isinstance(trace, dict):
             errors.append(f"{_rel(run_dir, trace_path)} must be a JSON object")
             continue
-        errors.extend(_trace_errors(trace_path, run_dir, trace))
+        errors.extend(_trace_errors(trace_path, run_dir, trace, require_present=require_present))
     return errors
 
 
-def _trace_errors(path: Path, run_dir: Path, trace: dict[str, Any]) -> list[str]:
+def _trace_errors(path: Path, run_dir: Path, trace: dict[str, Any], *, require_present: bool = False) -> list[str]:
     label = _rel(run_dir, path)
     errors = _forbidden_text_errors(label, path.read_text(encoding="utf-8", errors="ignore"))
     for field in ("schema_version", "run_id", "case_id", "variant", "run_index", "phase_status", "traceability", "process_facts"):
@@ -53,7 +71,7 @@ def _trace_errors(path: Path, run_dir: Path, trace: dict[str, Any]) -> list[str]
             errors.append(f"{label}: missing {field}")
 
     phase_status = trace.get("phase_status")
-    errors.extend(_phase_status_errors(label, phase_status, trace.get("evidence_sources")))
+    errors.extend(_phase_status_errors(label, phase_status, trace.get("evidence_sources"), require_present=require_present))
 
     facts = trace.get("process_facts")
     if not isinstance(facts, dict):
@@ -81,7 +99,7 @@ def _trace_errors(path: Path, run_dir: Path, trace: dict[str, Any]) -> list[str]
     return errors
 
 
-def _phase_status_errors(label: str, phase_status: Any, evidence_sources: Any) -> list[str]:
+def _phase_status_errors(label: str, phase_status: Any, evidence_sources: Any, *, require_present: bool = False) -> list[str]:
     errors: list[str] = []
     if not isinstance(phase_status, dict):
         return [f"{label}: phase_status must be an object"]
@@ -94,6 +112,8 @@ def _phase_status_errors(label: str, phase_status: Any, evidence_sources: Any) -
             errors.append(f"{label}: phase {phase} is missing")
         if phase in CORE_PHASES and status == "present" and fallback_only:
             errors.append(f"{label}: phase {phase} cannot be present from case metadata fallback only")
+        if phase in CORE_PHASES and require_present and status != "present":
+            errors.append(f"{label}: --require-present requires phase {phase} to be present, got {status!r}")
         if status == "not_applicable" and not _not_applicable_reason_present(phase_status, phase):
             errors.append(f"{label}: phase {phase} not_applicable requires a reason")
     return errors
@@ -254,13 +274,14 @@ def _failure_mode_mapping_errors(label: str, sdd: dict[str, Any], tdd: dict[str,
 def _logging_mapping_errors(label: str, logging_decision: Any, tdd: dict[str, Any], validation_commands: Any) -> list[str]:
     if not isinstance(logging_decision, dict):
         return [f"{label}: SDD.logging_decision must be an object"]
+    validator_errors = _logging_design_errors(label, logging_decision, tdd, validation_commands)
     if logging_decision.get("needed") is False:
         if not str(logging_decision.get("rationale", "")).strip():
             return [f"{label}: SDD.logging_decision.needed=false requires rationale"]
-        return []
+        return validator_errors
     if logging_decision.get("needed") is not True:
         return [f"{label}: SDD.logging_decision.needed must be true or false"]
-    errors: list[str] = []
+    errors: list[str] = list(validator_errors)
     for field in ("log_types", "events", "levels", "fields", "redaction", "cardinality_controls"):
         if not _string_list(logging_decision.get(field)):
             errors.append(f"{label}: SDD.logging_decision.{field} must be non-empty when logging is needed")
@@ -269,6 +290,43 @@ def _logging_mapping_errors(label: str, logging_decision: Any, tdd: dict[str, An
     if not logging_tests and not any(marker in validation_text for marker in ("log", "redact", "security", "audit")):
         errors.append(f"{label}: logging_decision.needed=true requires logging_or_security_tests or log/security validation command")
     return errors
+
+
+def _logging_design_errors(
+    label: str,
+    logging_decision: dict[str, Any],
+    tdd: dict[str, Any],
+    validation_commands: Any,
+) -> list[str]:
+    validator = _load_logging_validator()
+    context = {
+        "tests_or_validation": [
+            *_string_list(tdd.get("logging_or_security_tests")),
+            *_string_list(validation_commands),
+        ]
+    }
+    return [
+        f"{label}: {error}"
+        for error in validator.validate_logging_decision(
+            logging_decision,
+            context=context,
+            label="SDD.logging_decision",
+        )
+    ]
+
+
+def _load_logging_validator() -> Any:
+    global _LOGGING_VALIDATOR
+    if _LOGGING_VALIDATOR is not None:
+        return _LOGGING_VALIDATOR
+    spec = importlib.util.spec_from_file_location("validate_logging_design", LOGGING_VALIDATOR_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load {LOGGING_VALIDATOR_PATH}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    _LOGGING_VALIDATOR = module
+    return module
 
 
 def _generic_trace_errors(label: str, trace: dict[str, Any]) -> list[str]:
@@ -284,11 +342,69 @@ def _case_specific_mapping_present(trace: dict[str, Any]) -> bool:
     facts = trace.get("process_facts")
     if not isinstance(facts, dict):
         return False
-    case_id = str(trace.get("case_id", "")).casefold()
-    text = json.dumps(facts, sort_keys=True).casefold()
+    if not _concrete_case_facts_present(trace, facts):
+        return False
     if facts.get("case_specific") is True:
         return True
-    return bool(case_id and case_id in text and "acceptance_to_tests" in text and "public_api_to_tests" in text)
+    return _case_specific_mapping_shape_present(facts)
+
+
+def _concrete_case_facts_present(trace: dict[str, Any], facts: dict[str, Any]) -> bool:
+    case_tokens = _case_domain_tokens(str(trace.get("case_id", "")))
+    pdd = facts.get("pdd") if isinstance(facts.get("pdd"), dict) else {}
+    ddd = facts.get("ddd") if isinstance(facts.get("ddd"), dict) else {}
+    sdd = facts.get("sdd") if isinstance(facts.get("sdd"), dict) else {}
+    tdd = facts.get("tdd") if isinstance(facts.get("tdd"), dict) else {}
+    acceptance = _string_list(pdd.get("acceptance_criteria"))
+    invariants = _string_list(ddd.get("invariants"))
+    public_api = _string_list(sdd.get("public_api"))
+    failure_modes = [*(_string_list(sdd.get("error_contract"))), *(_string_list(sdd.get("failure_modes")))]
+    facts_text = json.dumps(facts, sort_keys=True).casefold()
+    has_domain_term = bool(case_tokens and any(token in facts_text for token in case_tokens))
+    concrete_acceptance = any(_is_concrete_case_text(item, case_tokens) for item in acceptance)
+    concrete_invariant = bool(invariants) and not all(_contains_any(item, GENERIC_DDD_MARKERS) for item in invariants)
+    concrete_public_api = bool(public_api) and not all(_contains_any(item, GENERIC_PUBLIC_API_MARKERS) for item in public_api)
+    concrete_failure = any(_is_concrete_failure_mode(item) for item in failure_modes)
+    tdd_references_validation = _tdd_references_validation(tdd)
+    return all((has_domain_term, concrete_acceptance, concrete_invariant, concrete_public_api, concrete_failure, tdd_references_validation))
+
+
+def _case_specific_mapping_shape_present(facts: dict[str, Any]) -> bool:
+    text = json.dumps(facts.get("tdd", {}), sort_keys=True).casefold()
+    return "acceptance_to_tests" in text and "public_api_to_tests" in text and "failure_mode_tests" in text
+
+
+def _case_domain_tokens(case_id: str) -> set[str]:
+    ignored = {"case", "test", "with", "and", "the", "data", "api"}
+    return {
+        token
+        for token in [part.casefold() for part in re.split(r"[^A-Za-z0-9]+", case_id)]
+        if len(token) >= 3 and token not in ignored
+    }
+
+
+def _is_concrete_case_text(value: str, case_tokens: set[str]) -> bool:
+    lowered = value.casefold()
+    if _contains_any(lowered, GENERIC_TRACE_MARKERS):
+        return False
+    return not case_tokens or any(token in lowered for token in case_tokens) or len(lowered.split()) >= 4
+
+
+def _contains_any(value: str, markers: tuple[str, ...]) -> bool:
+    lowered = value.casefold()
+    return any(marker in lowered for marker in markers)
+
+
+def _is_concrete_failure_mode(value: str) -> bool:
+    lowered = value.casefold()
+    if _contains_any(lowered, ("setup_failed", "test_suite_failed", "security_checks_failed", "codex_exec_failed", "grading result categorizes")):
+        return False
+    return bool(lowered.strip())
+
+
+def _tdd_references_validation(tdd: dict[str, Any]) -> bool:
+    text = json.dumps(tdd, sort_keys=True).casefold()
+    return any(marker in text for marker in ("python", "pytest", "unittest", "test", "assert", "run-codegen-benchmarks", ".py", "validation"))
 
 
 def _non_empty_list_errors(label: str, payload: dict[str, Any], fields: tuple[str, ...], prefix: str) -> list[str]:
@@ -339,8 +455,9 @@ def _rel(root: Path, path: Path) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-dir", type=Path, required=True)
+    parser.add_argument("--require-present", action="store_true")
     args = parser.parse_args(argv)
-    errors = validate_process_traces(args.run_dir)
+    errors = validate_process_traces(args.run_dir, require_present=args.require_present)
     if errors:
         for error in errors:
             print(f"validate-process-traces: ERROR: {error}", file=sys.stderr)

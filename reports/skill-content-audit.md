@@ -15,7 +15,7 @@
 | Heavy domain extensions (> 300 lines) | 0 |
 | Split candidates (score ≥ 60) | 0 |
 | Low-professionalism candidates (< 70) | 0 |
-| Move-to-reference candidates | 3 |
+| Move-to-reference candidates | 2 |
 | Shared duplicated lines (≥ 3 files) | 15 |
 
 Suggested-action distribution:
@@ -23,8 +23,8 @@ Suggested-action distribution:
 | Classification | Count |
 | --- | --- |
 | KEEP_AS_IS | 144 |
-| TIGHTEN_BODY | 8 |
-| MOVE_SECTIONS_TO_REFERENCES | 3 |
+| TIGHTEN_BODY | 9 |
+| MOVE_SECTIONS_TO_REFERENCES | 2 |
 | MERGE_DUPLICATE_CONTENT | 0 |
 | SPLIT_CAPABILITY | 0 |
 | REWRITE_FOR_PROFESSIONALISM | 0 |
@@ -43,9 +43,9 @@ Suggested-action distribution:
 | `quality-test-gate` | professional-skill | 326 | 69 | body 326 lines exceeds review threshold 250 |
 | `reliability-observability-gate` | professional-skill | 280 | 69 | body 280 lines exceeds review threshold 250 |
 | `security-privacy-gate` | professional-skill | 266 | 69 | body 266 lines exceeds review threshold 250 |
-| `change-forge-router` | professional-skill | 340 | 73 | body 340 lines exceeds review threshold 250 |
+| `change-forge-router` | professional-skill | 343 | 73 | body 343 lines exceeds review threshold 250 |
 | `agent-execution-discipline` | foundation-capability | 266 | 75 | description: long (365 chars); keep it to trigger conditions, not a body summary |
-| `development-process-orchestrator` | professional-skill | 305 | 77 | body 305 lines exceeds review threshold 250 |
+| `implementation-structure-design` | foundation-capability | 245 | 82 | section 'Critical Details' is 83 lines (> 80) — reference candidate |
 
 ### 2.2 Lowest Professionalism
 
@@ -81,14 +81,14 @@ Suggested-action distribution:
 
 | Skill | Kind | Lines | Split score | Oversized sections |
 | --- | --- | --- | --- | --- |
-| `development-process-orchestrator` | professional-skill | 305 | 44 | Technical Selection Criteria (186) |
 | `ai-code-review-refactor` | professional-skill | 366 | 35 | - |
 | `agent-execution-discipline` | foundation-capability | 266 | 35 | - |
-| `change-forge-router` | professional-skill | 340 | 32 | Critical Details (88) |
+| `change-forge-router` | professional-skill | 343 | 32 | Critical Details (88) |
 | `concurrency-control` | foundation-capability | 210 | 26 | Industry Benchmarks (81) |
 | `degradation-circuit-breaking` | foundation-capability | 210 | 26 | Industry Benchmarks (101) |
 | `domain-event-modeling` | foundation-capability | 208 | 26 | Industry Benchmarks (86) |
 | `form-validation-design` | foundation-capability | 203 | 26 | Industry Benchmarks (86) |
+| `development-process-orchestrator` | professional-skill | 343 | 18 | - |
 | `quality-test-gate` | professional-skill | 326 | 18 | - |
 | `reliability-observability-gate` | professional-skill | 280 | 18 | - |
 
@@ -120,15 +120,15 @@ Suggested-action distribution:
 | `domain-impact-modeler` | 205 | 3336 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-intake-compiler` | 203 | 3337 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `ai-code-review-refactor` | 366 | 5990 | 100 | 58 | 100 | 35 | TIGHTEN_BODY | P2 | low |
-| `change-forge-router` | 340 | 6714 | 100 | 73 | 100 | 32 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
+| `change-forge-router` | 343 | 6910 | 100 | 73 | 100 | 32 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
+| `development-process-orchestrator` | 343 | 2765 | 100 | 83 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `quality-test-gate` | 326 | 6056 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `development-process-orchestrator` | 305 | 1887 | 100 | 77 | 100 | 44 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
 | `reliability-observability-gate` | 280 | 5083 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `backend-change-builder` | 271 | 4797 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `security-privacy-gate` | 266 | 4563 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `delivery-release-gate` | 262 | 4519 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `architecture-impact-reviewer` | 257 | 4050 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `logging-design-gate` | 207 | 1851 | 100 | 92 | 100 | 14 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
+| `logging-design-gate` | 250 | 2819 | 100 | 90 | 100 | 14 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
 
 #### Detailed findings — Professional Skills
 
@@ -139,17 +139,16 @@ Suggested-action distribution:
 - **`change-forge-router`** (MOVE_SECTIONS_TO_REFERENCES, P2, risk: low)
   - Path: `src/professional-skills/change-forge-router/SKILL.md`
   - Suggested action: Move oversized sections/tables into references/*.md; keep a concise body summary.
-  - Finding: body 340 lines exceeds review threshold 250
+  - Finding: body 343 lines exceeds review threshold 250
   - Finding: section 'Critical Details' is 88 lines (> 80) — reference candidate
+- **`development-process-orchestrator`** (TIGHTEN_BODY, P2, risk: low)
+  - Path: `src/professional-skills/development-process-orchestrator/SKILL.md`
+  - Suggested action: Trim restating prose; keep the decision-critical lines only.
+  - Finding: body 343 lines exceeds review threshold 250
 - **`quality-test-gate`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/quality-test-gate/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
   - Finding: body 326 lines exceeds review threshold 250
-- **`development-process-orchestrator`** (MOVE_SECTIONS_TO_REFERENCES, P2, risk: low)
-  - Path: `src/professional-skills/development-process-orchestrator/SKILL.md`
-  - Suggested action: Move oversized sections/tables into references/*.md; keep a concise body summary.
-  - Finding: body 305 lines exceeds review threshold 250
-  - Finding: section 'Technical Selection Criteria' is 186 lines (> 80) — reference candidate
 - **`reliability-observability-gate`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/reliability-observability-gate/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
@@ -330,8 +329,8 @@ Suggested-action distribution:
 ## 4. Classification Index
 
 - **KEEP_AS_IS** (144): `acceptance-criteria-builder`, `acceptance-standard-definition`, `agent-tool-permission-sandbox`, `agent-workflow-state-machine`, `ai-product-extension`, `algorithm-data-structure-selection`, `api-contract-design`, `architecture-enforcement-tooling`, `architecture-style-selection`, `architecture-tradeoff-analysis`, `async-job-design`, `authentication-authorization`, `authentication-security`, `backup-recovery`, `bigdata-product-extension`, `business-rule-extraction`, `cache-design`, `change-documentation-gate`, `change-impact-analyzer`, `change-intake-compiler`, `ci-cd`, `cleanup-deletion-governance`, `cli-daemon-interface-design`, `code-clarity-maintainability`, `code-review`, `concurrency-control`, `configuration-runtime-policy`, `consumer-impact-analysis`, `containerization`, `context-packaging`, `contract-testing`, `controller-api-implementation`, `cpp-professional-usage`, `data-api-contract-changer`, `data-middleware-change-builder`, `data-migration-design`, `data-model-design`, `data-side-effect-flow-tracing`, `degradation-circuit-breaking`, `dependency-vulnerability-scanning`, `dependency-wiring-lifecycle`, `design-pattern-selection`, `design-system-rules`, `documentation-generation`, `domain-event-modeling`, `domain-impact-modeler`, `domain-logic-implementation`, `domain-object-identification`, `dto-schema-design`, `e2e-testing`, `engineering-stage-professionalism`, `error-code-design`, `event-driven-architecture`, `execution-trajectory-analysis`, `executor-adapter-protocol`, `experience-impact-modeler`, `extensibility-design`, `failure-contract-design`, `failure-diagnosis`, `file-storage-processing`, `form-validation-design`, `frontend-api-integration`, `frontend-change-builder`, `frontend-testing`, `go-professional-usage`, `i18n-timezone-money-safety`, `idempotency-retry-design`, `implementation-structure-design`, `indexing-query-optimization`, `information-architecture`, `input-validation`, `integration-change-builder`, `integration-testing`, `interaction-state-modeling`, `iot-embedded-extension`, `java-jvm-professional-usage`, `kubernetes-gateway`, `language-idiom-enforcement`, `language-performance-safety`, `language-runtime-selection`, `language-testing-strategy`, `layered-architecture-design`, `logging-error-handling`, `low-level-systems-extension`, `message-queue-design`, `microservice-splitting`, `minimal-correct-implementation`, `mobile-product-extension`, `model-boundary-mapping`, `module-boundary-design`, `non-goal-boundary-definition`, `nosql-database`, `observability`, `package-dependency-management`, `page-component-decomposition`, `payment-trading-extension`, `performance-budgeting`, `permission-boundary-modeling`, `plan-execution-consistency`, `profiling`, `project-initialization`, `project-memory-governance`, `prototype-description`, `python-professional-usage`, `refactoring`, `regression-testing`, `relational-database`, `release-rollback`, `repository-context-map`, `repository-graph-analysis`, `repository-persistence`, `requirement-clarification`, `requirement-structuring`, `routing-navigation-design`, `rust-professional-usage`, `scenario-decomposition`, `sdk-library-contract-design`, `search-analytics-design`, `secret-configuration-security`, `service-business-logic`, `shell-cli-professional-usage`, `skill-authoring-expert`, `skill-efficacy-benchmark`, `solution-optimality-evaluation`, `sql-professional-usage`, `state-machine-modeling`, `state-management-design`, `task-dag-decomposition`, `task-dag-planner`, `technology-stack-selection`, `test-data-management`, `test-strategy`, `testability-seam-design`, `threat-modeling`, `transaction-consistency`, `typescript-professional-usage`, `unit-testing`, `use-case-modeling`, `user-flow-modeling`, `user-role-identification`, `validation-broker`, `version-compatibility`, `web-security`, `web3-product-extension`
-- **TIGHTEN_BODY** (8): `agent-execution-discipline`, `ai-code-review-refactor`, `architecture-impact-reviewer`, `backend-change-builder`, `delivery-release-gate`, `quality-test-gate`, `reliability-observability-gate`, `security-privacy-gate`
-- **MOVE_SECTIONS_TO_REFERENCES** (3): `change-forge-router`, `development-process-orchestrator`, `logging-design-gate`
+- **TIGHTEN_BODY** (9): `agent-execution-discipline`, `ai-code-review-refactor`, `architecture-impact-reviewer`, `backend-change-builder`, `delivery-release-gate`, `development-process-orchestrator`, `quality-test-gate`, `reliability-observability-gate`, `security-privacy-gate`
+- **MOVE_SECTIONS_TO_REFERENCES** (2): `change-forge-router`, `logging-design-gate`
 - **SPLIT_CAPABILITY** (0): _none_
 - **MERGE_DUPLICATE_CONTENT** (0): _none_
 - **REWRITE_FOR_PROFESSIONALISM** (0): _none_
@@ -344,15 +343,15 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | Files | Excerpt |
 | --- | --- |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
+| 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 18 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 18 | do not load every reference by default. treat references as targeted support selected by t |
-| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
-| 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
+| 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
+| 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
-| 9 | these triggers are hidden-risk escalators, not ordinary checklist items. |
+| 11 | these triggers are hidden-risk escalators, not ordinary checklist items. |
 | 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
 | 8 | **accepted exceptions** with owner / scope / expiration |
 | 7 | **residual risk**: untested runtime behavior, owner, and next gate. |

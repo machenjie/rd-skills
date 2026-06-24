@@ -18,13 +18,16 @@ PHASES = {"pdd", "ddd", "sdd", "tdd", "implementation", "validation", "review", 
 EVENTS = {
     "phase_started",
     "phase_completed",
+    "process_trace_evaluation_started",
+    "process_trace_evaluation_completed",
+    "process_phase_evaluated",
     "artifact_written",
     "validation_failed",
     "degraded",
     "retry",
     "skipped",
 }
-STATUSES = {"ok", "failed", "degraded", "skipped", "collected", "partial"}
+STATUSES = {"ok", "failed", "degraded", "skipped", "collected", "partial", "inferred", "missing", "present"}
 MAX_EVENT_BYTES = 4096
 
 

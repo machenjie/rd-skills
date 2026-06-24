@@ -1,9 +1,9 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-23T23:33:41.543441+00:00
+- Generated: 2026-06-24T01:18:41.839426+00:00
 - Skills/capabilities checked: 148
-- Warning count: 35
-- Average score: 41.56/60
+- Warning count: 2
+- Average score: 41.85/60
 
 ## Scores
 
@@ -49,7 +49,6 @@
 | `src/foundation/capabilities/state-management-design/SKILL.md` | foundation-capability | 34/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/user-role-identification/SKILL.md` | foundation-capability | 34/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/version-compatibility/SKILL.md` | foundation-capability | 34/60 | acceptable | 0 | 0 |
-| `src/professional-skills/logging-design-gate/SKILL.md` | professional-skill | 34/60 | needs-review | 3 | 16 |
 | `src/foundation/capabilities/backup-recovery/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/domain-event-modeling/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/dto-schema-design/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
@@ -59,7 +58,6 @@
 | `src/foundation/capabilities/microservice-splitting/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/requirement-clarification/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/task-dag-decomposition/SKILL.md` | foundation-capability | 35/60 | acceptable | 0 | 0 |
-| `src/professional-skills/development-process-orchestrator/SKILL.md` | professional-skill | 35/60 | needs-review | 3 | 17 |
 | `src/foundation/capabilities/algorithm-data-structure-selection/SKILL.md` | foundation-capability | 36/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/api-contract-design/SKILL.md` | foundation-capability | 36/60 | acceptable | 0 | 1 |
 | `src/foundation/capabilities/architecture-enforcement-tooling/SKILL.md` | foundation-capability | 36/60 | needs-review | 0 | 0 |
@@ -140,7 +138,9 @@
 | `src/professional-skills/experience-impact-modeler/SKILL.md` | professional-skill | 54/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/data-middleware-change-builder/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/delivery-release-gate/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/development-process-orchestrator/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/domain-impact-modeler/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/logging-design-gate/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/task-dag-planner/SKILL.md` | professional-skill | 56/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/minimal-correct-implementation/SKILL.md` | foundation-capability | 57/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/acceptance-criteria-builder/SKILL.md` | professional-skill | 57/60 | sample-grade | 0 | 0 |
@@ -171,53 +171,3 @@ Recommended fixes:
 
 Recommended fixes:
 - Move low-frequency tables/examples into owned references and remove duplicated template prose.
-
-### `src/professional-skills/development-process-orchestrator/SKILL.md`
-- likely missing sections: Mode Matrix, Proactive Professional Triggers, Evidence Contract
-- message: total score 35/60 is below warning threshold 42 | type: total_score_below_threshold | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Mode Matrix weak: mode_coverage score 0/5 needs review | type: weak_dimension_score | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Proactive Professional Triggers weak: proactive_trigger_quality score 0/5 needs review | type: weak_dimension_score | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract weak: evidence_contract_strength score 0/5 needs review | type: weak_evidence_contract_strength | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Output Contract weak: output_actionability score 2/5 needs review | type: weak_dimension_score | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Output/Evidence/Quality Gate weak: validation_obligation score 2/5 needs review | type: weak_dimension_score | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: professional skill is missing Mode Matrix | type: missing_mode_matrix | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: professional skill is missing Proactive Professional Triggers | type: missing_proactive_professional_triggers | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'behavior preservation' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'boundaries inspected' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'next gate' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'residual risk' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'reuse / placement rationale' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'validation evidence' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'what evidence does not prove' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'what evidence proves' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: long section 'Technical Selection Criteria' in SKILL.md body (184 lines); move deep material to references | type: body_bloat_exception | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-
-Recommended fixes:
-- Add or tighten a domain-specific Mode Matrix with evidence and skip guidance.
-- Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.
-- Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.
-- Move low-frequency tables/examples into owned references and remove duplicated template prose.
-
-### `src/professional-skills/logging-design-gate/SKILL.md`
-- likely missing sections: Mode Matrix, Proactive Professional Triggers, Evidence Contract
-- message: total score 34/60 is below warning threshold 42 | type: total_score_below_threshold | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Mode Matrix weak: mode_coverage score 0/5 needs review | type: weak_dimension_score | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Stage Fit / Mode Matrix weak: stage_fit score 1/5 needs review | type: weak_dimension_score | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Proactive Professional Triggers weak: proactive_trigger_quality score 0/5 needs review | type: weak_dimension_score | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract weak: evidence_contract_strength score 0/5 needs review | type: weak_evidence_contract_strength | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Output Contract weak: output_actionability score 2/5 needs review | type: weak_dimension_score | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: professional skill is missing Mode Matrix | type: missing_mode_matrix | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: professional skill is missing Proactive Professional Triggers | type: missing_proactive_professional_triggers | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'behavior preservation' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'boundaries inspected' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'next gate' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'residual risk' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'reuse / placement rationale' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'validation evidence' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'what evidence does not prove' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-- message: Evidence Contract is missing 'what evidence proves' | type: evidence_contract_missing_term | scope: professional-skill | release_relevance: release-blocking | reason: Professional skills are top-level runtime entries, so their professionalism warnings directly affect selected agent behavior.
-
-Recommended fixes:
-- Add or tighten a domain-specific Mode Matrix with evidence and skip guidance.
-- Rewrite triggers as hidden-risk escalators with Signal, Hidden risk, Action, Route, and Evidence.
-- Strengthen Output/Evidence Contract with boundaries, validation evidence, residual risk, and next gate.

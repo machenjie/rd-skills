@@ -2267,8 +2267,8 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
                 "run_index": 1,
                 "tier": "core",
                 "phase": "pdd",
-                "event": "phase_completed",
-                "status": "ok",
+                "event": "process_phase_evaluated",
+                "status": "present",
                 "duration_ms": 1,
                 "selected_skills": [],
                 "selected_capabilities": [],
@@ -2344,10 +2344,12 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
                         "logging_decision": {
                             "needed": True,
                             "log_types": ["security"],
+                            "placement": ["security boundary"],
                             "events": ["url_denied"],
                             "levels": ["WARN"],
                             "fields": ["operation", "error_category", "policy", "trace_id"],
                             "redaction": ["raw URL query", "token"],
+                            "correlation": ["trace_id", "request_id"],
                             "cardinality_controls": ["policy category instead of raw URL"],
                             "rationale": "Security denial diagnostics must not leak query secrets.",
                         },
@@ -2384,6 +2386,172 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(summary["process_compliance_summary"]["pdd_present_rate"], 1.0)
         self.assertEqual(summary["process_compliance_summary"]["pdd_inferred_rate"], 0.0)
         self.assertEqual(summary["process_compliance_summary"]["validation_command_present_rate"], 1.0)
+
+    def _trace_case(self) -> SimpleNamespace:
+        return SimpleNamespace(
+            id="security/ssrf-url-allowlist",
+            category="security",
+            codegen_case="ssrf-url-allowlist",
+            grading_benchmark="security/ssrf-url-allowlist",
+            tier="core",
+            coverage_dimensions=("security", "ssrf"),
+        )
+
+    def test_process_trace_payload_uses_json_final_trace_before_metadata_fallback(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_json_trace", "scripts/run-codex-live-benchmarks.py")
+        case = self._trace_case()
+        with tempfile.TemporaryDirectory() as tmp:
+            out_dir = Path(tmp) / "run"
+            run_dir = out_dir / "cases" / "security__ssrf-url-allowlist" / "skills_only_clean" / "run-01"
+            run_dir.mkdir(parents=True)
+            run_dir.joinpath("final.md").write_text(
+                """Result
+
+```json
+{
+  "process_trace": {
+    "pdd": {"problem": "Block SSRF metadata URLs", "acceptance_criteria": ["deny metadata URL"]},
+    "ddd": {"invariants": ["unsafe URL is never fetched"]},
+    "sdd": {"public_api": ["URL validation public entrypoint"], "failure_modes": ["metadata URL denial"]},
+    "tdd": {"validation_commands": ["python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"]}
+  }
+}
+```
+""",
+                encoding="utf-8",
+            )
+            trace = runner._process_trace_payload(
+                out_dir,
+                run_dir,
+                case=case,
+                variant="skills_only_clean",
+                run_index=1,
+                result={"status": "collected", "grading_status": "passed"},
+            )
+        self.assertEqual(trace["phase_status"]["pdd"], "present")
+        self.assertEqual(trace["process_facts"]["pdd"]["problem"], "Block SSRF metadata URLs")
+        self.assertEqual(trace["process_facts"]["pdd"]["_evidence_source"], "final.md:process-trace-json")
+        self.assertIn("case_metadata_fallback:missing-fields", trace["evidence_sources"])
+        self.assertIn("pdd_acceptance_to_tdd_tests", trace["required_quality_gates"])
+        self.assertEqual(trace["stage_ownership"]["pdd"], "change-intake-compiler")
+        for skill in (
+            "development-process-orchestrator",
+            "change-intake-compiler",
+            "domain-impact-modeler",
+            "architecture-impact-reviewer",
+            "quality-test-gate",
+        ):
+            self.assertIn(skill, trace["selected_skills"])
+
+    def test_process_trace_payload_parses_multiline_compact_trace(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_multiline_trace", "scripts/run-codex-live-benchmarks.py")
+        case = self._trace_case()
+        with tempfile.TemporaryDirectory() as tmp:
+            out_dir = Path(tmp) / "run"
+            run_dir = out_dir / "cases" / "security__ssrf-url-allowlist" / "skills_only_clean" / "run-01"
+            run_dir.mkdir(parents=True)
+            run_dir.joinpath("final.md").write_text(
+                """Process Trace:
+PDD:
+  problem: Block SSRF metadata URLs
+  acceptance:
+    - deny metadata URL
+  constraints:
+    - preserve harness
+DDD:
+  invariants:
+    - unsafe URL is never fetched
+SDD:
+  public_api:
+    - URL validation public entrypoint
+  logging_decision:
+    needed: true
+    log_types:
+      - security
+    placement:
+      - security boundary
+    events:
+      - url_denied
+    levels:
+      - WARN
+    fields:
+      - operation
+      - error_category
+      - policy
+      - trace_id
+    redaction:
+      - raw URL query
+    correlation:
+      - trace_id
+    cardinality_controls:
+      - policy category instead of raw URL
+TDD:
+  validation_commands:
+    - python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>
+Validation:
+  python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>
+Residual Risk:
+  none
+""",
+                encoding="utf-8",
+            )
+            trace = runner._process_trace_payload(
+                out_dir,
+                run_dir,
+                case=case,
+                variant="skills_only_clean",
+                run_index=1,
+                result={"status": "collected", "grading_status": "passed"},
+            )
+        self.assertEqual(trace["phase_status"]["sdd"], "present")
+        self.assertEqual(trace["process_facts"]["sdd"]["logging_decision"]["needed"], True)
+        self.assertIn("final.md:compact-process-trace", trace["evidence_sources"])
+        self.assertIn("logging_decision_has_type_level_fields_redaction", trace["required_quality_gates"])
+
+    def test_metadata_fallback_is_inferred_and_run_log_is_evidence_aware(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_inferred_trace", "scripts/run-codex-live-benchmarks.py")
+        case = SimpleNamespace(
+            id="experimental/no-final-trace",
+            category="experimental",
+            codegen_case="no-final-trace",
+            grading_benchmark="experimental/no-final-trace",
+            tier="experimental",
+            coverage_dimensions=("experimental",),
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            out_dir = Path(tmp) / "run"
+            run_dir = out_dir / "cases" / "experimental__no-final-trace" / "skills_only_clean" / "run-01"
+            run_dir.mkdir(parents=True)
+            trace = runner._process_trace_payload(
+                out_dir,
+                run_dir,
+                case=case,
+                variant="skills_only_clean",
+                run_index=1,
+                result={"status": "collected", "grading_status": "passed"},
+            )
+            runner._write_process_trace_evaluation_started(out_dir, case=case, variant="skills_only_clean", run_index=1)
+            runner._write_process_phase_events(
+                out_dir,
+                case=case,
+                variant="skills_only_clean",
+                run_index=1,
+                phase_status=trace["phase_status"],
+                evidence_sources=trace["evidence_sources"],
+            )
+            events = [
+                json.loads(line)
+                for line in out_dir.joinpath("run.log.jsonl").read_text(encoding="utf-8").splitlines()
+            ]
+        self.assertEqual(trace["phase_status"]["pdd"], "inferred")
+        self.assertEqual(trace["process_facts"]["pdd"]["_evidence_source"], "inferred")
+        self.assertEqual(trace["evidence_sources"], ["case_metadata_fallback"])
+        self.assertFalse(
+            any(event["event"] == "phase_completed" and event["phase"] in {"pdd", "ddd", "sdd", "tdd"} for event in events)
+        )
+        pdd_event = next(event for event in events if event["event"] == "process_phase_evaluated" and event["phase"] == "pdd")
+        self.assertEqual(pdd_event["status"], "inferred")
+        self.assertEqual(pdd_event["error_category"], "metadata_fallback_only")
 
     def test_publishable_starter_setup_runs_from_candidate_root_with_exported_root(self) -> None:
         helper = _load_script("codex_live_helper_candidate_setup_contract", "scripts/codex_live_benchmark_lib.py")

@@ -41,7 +41,7 @@ Keep code changes traceable from problem definition to domain ownership, system 
 ## Technical Selection Criteria
 Use PDD, DDD, SDD, and TDD as a dependency chain. Later phases must reference earlier facts.
 
-### PDD - Problem / Product / Purpose Definition Discipline
+## PDD - Problem / Product / Purpose Definition Discipline
 PDD defines why the change exists. It is not a long requirements document. It answers:
 1. Current problem.
 2. User, caller, system, or operations impact.
@@ -77,7 +77,7 @@ PDD anti-patterns:
 - Ignoring compatibility or security constraints.
 - Expanding scope because a future feature might need it.
 
-### DDD - Domain-Driven Design Discipline
+## DDD - Domain-Driven Design Discipline
 DDD defines ownership and domain boundaries. It does not force complex tactical DDD. It answers:
 1. Domain terms.
 2. Entities and lifecycle identity.
@@ -126,7 +126,7 @@ DDD anti-patterns:
 - Mixing provider calls into domain objects.
 - Treating DTOs or persistence rows as domain entities.
 
-### SDD - System / Software / Structure Design Discipline
+## SDD - System / Software / Structure Design Discipline
 SDD defines how the change will be implemented. It answers:
 1. Modules and files to change, with rationale.
 2. Public API.
@@ -186,7 +186,7 @@ SDD anti-patterns:
 - Hiding adapter side effects inside mappers or DTOs.
 - Saying "structured logging" without type, level, fields, redaction, and tests.
 
-### TDD - Test-Driven Development Discipline
+## TDD - Test-Driven Development Discipline
 TDD maps the first three phases to validation. It is not formalism that every test must be written first. It answers:
 1. Which tests prove PDD acceptance criteria.
 2. Which tests or code constraints prove DDD invariants.
@@ -223,6 +223,25 @@ TDD anti-patterns:
 - Claiming traceability with booleans while mappings are empty.
 - Treating a linter pass as behavior evidence.
 - Deleting assertion tests or turning failures into telemetry-only cases.
+
+## Mode Matrix
+Select the smallest process orchestration mode that can prove traceability.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities / gates | Skip guidance |
+|---|---|---|---|---|---|
+| Compact code-change trace | Non-documentation code change with acceptance, ownership, design, and validation implications. | Build one PDD/DDD/SDD/TDD trace without expanding into a planning document. | PDD acceptance, DDD invariants, SDD public API/failure modes, TDD mappings, validation commands, residual risk. | `change-intake-compiler`, `domain-impact-modeler`, `architecture-impact-reviewer`, `quality-test-gate` | Skip release, migration, or domain extensions unless surfaced by risk evidence. |
+| Missing process evidence repair | final.md, hook telemetry, or reports claim completion but process facts are missing, generic, or inferred only. | Distinguish present, inferred, degraded, and missing evidence before counting compliance. | Parsed final trace or telemetry source, inferred fallback fields, missing mappings, validator output. | `agent-execution-discipline`, `ai-code-review-refactor`, `validation-broker` | Skip case-metadata fallback as completion evidence. |
+| Logging-sensitive process trace | Logging, audit, security, retry, fallback, degradation, trace_id, request_id, or redaction is part of SDD/TDD. | Ensure the SDD logging decision maps to TDD logging/security validation. | Log type, placement, level, fields, redaction, correlation, cardinality control, tests or no-log rationale. | `logging-design-gate`, `security-privacy-gate`, `reliability-observability-gate` | Skip product logging when metrics/traces/tests are the explicit evidence source. |
+| Coverage/reporting trace audit | Benchmark summary, Level 1 coverage, or professionalism report depends on process completion claims. | Keep registered coverage separate from actual run coverage and present evidence. | Run manifest, process-trace.json, coverage summary, actual run counts, validation command output. | `quality-test-gate`, `validate-report-consistency`, `eval-routing` | Skip live benchmark execution unless explicitly opted in. |
+
+## Proactive Professional Triggers
+These triggers are hidden-risk escalators, not ordinary checklist items.
+
+- **Signal:** A final answer says PDD, DDD, SDD, or TDD was done but provides only generic fallback facts. **Hidden risk:** reports count template text as professional process completion. **Required professional action:** mark fallback fields inferred, require concrete phase content for present status, and validate mappings. **Route to:** `quality-test-gate`, `ai-code-review-refactor`. **Evidence required:** process-trace.json with evidence_sources, phase_status, and TDD mappings to validation commands.
+- **Signal:** A case-specific mapping is accepted because case_id text appears beside mapping keys. **Hidden risk:** generic acceptance, owner-boundary templates, and candidate API placeholders pass as case-specific reasoning. **Required professional action:** require domain terms, concrete failure mode, non-generic invariants, public API evidence, and test/command references. **Route to:** `agent-execution-discipline`, `validation-broker`. **Evidence required:** validator failure or pass output naming concrete process facts.
+- **Signal:** run.log records phase_completed ok for PDD/DDD/SDD/TDD without parsed final trace or telemetry. **Hidden risk:** synthetic logs misrepresent inferred process status as completed work. **Required professional action:** emit process_phase_evaluated with present, inferred, degraded, missing, or not_applicable status. **Route to:** `logging-design-gate`, `quality-test-gate`. **Evidence required:** structured log entries with status and error_category.
+- **Signal:** A logging decision appears inside SDD without redaction, correlation, cardinality control, or tests. **Hidden risk:** operational logging leaks secrets or cannot be verified. **Required professional action:** invoke logging design validation and map logging decisions to TDD evidence or no-log rationale. **Route to:** `logging-design-gate`, `security-privacy-gate`. **Evidence required:** logging_decision object and validator output.
+- **Signal:** Level 1 cases are listed in the registry and then described as actual run coverage. **Hidden risk:** hidden unverified coverage claims make release notes overstate benchmark evidence. **Required professional action:** verify registered cases separately from actual run cases in summaries and handoff. **Route to:** `quality-test-gate`, `change-documentation-gate`. **Evidence required:** cases.yaml registration, run summary actual_run counts, validation command output, and dry-run/live-run status.
 
 ## Risk Escalation Rules
 - Escalate PDD ownership to `change-intake-compiler` when problem, affected party, acceptance, constraints, non-goals, or validation signal are unclear.
@@ -290,6 +309,25 @@ Produce a compact process trace with four phase objects and a TDD mapping:
 ```
 
 Booleans are not proof. The mappings inside `process_facts.tdd` are the proof.
+
+- **Phase status:** return `present`, `inferred`, `degraded`, `missing`, or `not_applicable` for each core phase with evidence source.
+- **PDD fields required:** include problem, impact, acceptance criteria, constraints, non-goals, risk surfaces, and validation signal.
+- **DDD fields required:** include domain terms, ownership decision, invariants, and side-effect boundaries.
+- **SDD fields required:** include modules, files, public API, data flow, error contract, failure modes, and logging decision.
+- **TDD fields required:** include acceptance, invariant, public API, failure-mode, logging/security, and validation command mappings.
+- **Residual risk:** state inferred fields, missing evidence, unsupported final.md formatting, and coverage limits.
+- **Handoff:** name the next gate for mapping gaps, logging gaps, or report consistency gaps.
+
+## Evidence Contract
+Close process orchestration only when the trace answers these evidence questions:
+- **Files and boundaries inspected**: final.md, process-trace.json, hook telemetry, run.log, case metadata, prompt wrapper, and report artifacts inspected or explicitly unavailable.
+- **Reuse / placement rationale**: final trace evidence is used first, hook telemetry second, and case metadata only as inferred fallback for missing fields; process ownership stays with PDD/DDD/SDD/TDD owner skills.
+- **Behavior preservation**: existing benchmark assertions, validation commands, report consistency, and coverage semantics are preserved unless an explicit change request says otherwise.
+- **Validation evidence**: process validator output, logging design validator output when SDD logging is present, deterministic tests, and benchmark dry-run/report validation.
+- **What evidence proves**: present phases have concrete trace content and mapped tests; inferred phases are visible and cannot count as professional completion.
+- **What evidence does not prove**: registered Level 1 cases are not actual run coverage, dry-run output is not live benchmark evidence, and generic fallback is not case-specific reasoning.
+- **Residual risk**: parser support can miss unusual final.md formatting; strict mode should be used when release evidence requires all core phases present.
+- **Next gate**: `quality-test-gate` for mapping gaps, `logging-design-gate` for logging decisions, and `ai-code-review-refactor` for cross-stage trace review.
 
 ## Quality Gate
 - PDD, DDD, SDD, and TDD schemas are populated with case-specific facts.

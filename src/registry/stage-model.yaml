@@ -438,6 +438,49 @@ stages:
       - language-runtime-selection
       - release-rollback
 
+process_stage_ownership:
+  pdd:
+    owner_skill: change-intake-compiler
+    evidence: problem, affected user/system, acceptance criteria, constraints, non-goals, risk surfaces, validation signal
+  ddd:
+    owner_skill: domain-impact-modeler
+    evidence: domain terms, ownership, invariants, side-effect boundaries, code ownership
+  sdd:
+    owner_skill: architecture-impact-reviewer
+    evidence: modules, files, public API, data flow, error contract, compatibility, rollback, structure tradeoffs
+  sdd_logging_decision:
+    owner_skill: logging-design-gate
+    evidence: log type, placement, level, fields, redaction, correlation, cardinality, tests or no-log rationale
+  tdd:
+    owner_skill: quality-test-gate
+    evidence: acceptance-to-test, invariant-to-test, public-API-to-test, failure-mode tests, validation commands
+  cross_stage_review:
+    owner_skill: ai-code-review-refactor
+    evidence: concrete mappings across PDD, DDD, SDD, TDD, actual diff, and final validation
+
+route_manifest_patterns:
+  non_documentation_code_change:
+    selected_skills:
+      - development-process-orchestrator
+      - change-intake-compiler
+      - domain-impact-modeler
+      - architecture-impact-reviewer
+      - quality-test-gate
+    required_quality_gates:
+      - pdd_acceptance_to_tdd_tests
+      - ddd_invariants_to_tdd_tests
+      - sdd_public_api_to_tdd_tests
+      - sdd_failure_modes_to_tdd_tests
+  logging_change:
+    selected_skills:
+      - logging-design-gate
+    selected_capabilities:
+      - logging-error-handling
+    required_quality_gates:
+      - logging_decision_has_type_level_fields_redaction
+      - logging_or_security_tests_present
+      - forbidden_secret_fields_absent
+
 product_surfaces:
   - surface: frontend-product
     signals: [frontend, component, route, form, browser, accessibility, state]

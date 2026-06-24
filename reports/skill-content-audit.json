@@ -226,8 +226,10 @@
       "src/professional-skills/change-forge-router/SKILL.md",
       "src/professional-skills/change-impact-analyzer/SKILL.md",
       "src/professional-skills/change-intake-compiler/SKILL.md",
+      "src/professional-skills/development-process-orchestrator/SKILL.md",
       "src/professional-skills/domain-impact-modeler/SKILL.md",
       "src/professional-skills/experience-impact-modeler/SKILL.md",
+      "src/professional-skills/logging-design-gate/SKILL.md",
       "src/professional-skills/task-dag-planner/SKILL.md"
     ]
   },
@@ -422,7 +424,7 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 3,
-      "bullet_count": 215,
+      "bullet_count": 218,
       "classification": "MOVE_SECTIONS_TO_REFERENCES",
       "code_block_count": 0,
       "context_efficiency_score": 73,
@@ -430,7 +432,7 @@
       "description_findings": [],
       "description_length": 308,
       "findings": [
-        "body 340 lines exceeds review threshold 250",
+        "body 343 lines exceeds review threshold 250",
         "section 'Critical Details' is 88 lines (> 80) \u2014 reference candidate"
       ],
       "has_shared_optimality": false,
@@ -439,7 +441,7 @@
       "largest_section_lines": 88,
       "largest_section_title": "Critical Details",
       "largest_table_rows": 14,
-      "line_count": 340,
+      "line_count": 343,
       "name": "change-forge-router",
       "optimality_section_length": 0,
       "output_contract_length": 40,
@@ -461,7 +463,7 @@
       "suggested_action": "Move oversized sections/tables into references/*.md; keep a concise body summary.",
       "table_count": 2,
       "used_by_count": 0,
-      "word_count": 6714
+      "word_count": 6910
     },
     {
       "anti_example_section_length": 10,
@@ -648,46 +650,40 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 7,
-      "bullet_count": 128,
-      "classification": "MOVE_SECTIONS_TO_REFERENCES",
+      "bullet_count": 148,
+      "classification": "TIGHTEN_BODY",
       "code_block_count": 6,
-      "context_efficiency_score": 77,
+      "context_efficiency_score": 83,
       "critical_details_length": 15,
       "description_findings": [],
       "description_length": 205,
       "findings": [
-        "body 305 lines exceeds review threshold 250",
-        "section 'Technical Selection Criteria' is 186 lines (> 80) \u2014 reference candidate"
+        "body 343 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
-      "heading_count": 19,
+      "heading_count": 22,
       "kind": "professional-skill",
-      "largest_section_lines": 186,
-      "largest_section_title": "Technical Selection Criteria",
-      "largest_table_rows": 0,
-      "line_count": 305,
+      "largest_section_lines": 60,
+      "largest_section_title": "SDD - System / Software / Structure Design Discipline",
+      "largest_table_rows": 5,
+      "line_count": 343,
       "name": "development-process-orchestrator",
       "optimality_section_length": 0,
-      "output_contract_length": 29,
-      "oversized_sections": [
-        {
-          "lines": 186,
-          "title": "Technical Selection Criteria"
-        }
-      ],
+      "output_contract_length": 37,
+      "oversized_sections": [],
       "oversized_tables": [],
       "path": "src/professional-skills/development-process-orchestrator/SKILL.md",
       "professionalism_score": 100,
       "recommended_phase": "P2",
       "reference_link_count": 0,
-      "repeated_phrase_count": 0,
+      "repeated_phrase_count": 1,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
-      "split_candidate_score": 44,
-      "suggested_action": "Move oversized sections/tables into references/*.md; keep a concise body summary.",
-      "table_count": 0,
+      "split_candidate_score": 18,
+      "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
+      "table_count": 1,
       "used_by_count": 0,
-      "word_count": 1887
+      "word_count": 2765
     },
     {
       "anti_example_section_length": 10,
@@ -836,10 +832,10 @@
     {
       "anti_example_section_length": 0,
       "benchmark_section_length": 7,
-      "bullet_count": 127,
+      "bullet_count": 147,
       "classification": "MOVE_SECTIONS_TO_REFERENCES",
       "code_block_count": 2,
-      "context_efficiency_score": 92,
+      "context_efficiency_score": 90,
       "critical_details_length": 18,
       "description_findings": [],
       "description_length": 221,
@@ -847,15 +843,15 @@
         "section 'Technical Selection Criteria' is 83 lines (> 80) \u2014 reference candidate"
       ],
       "has_shared_optimality": false,
-      "heading_count": 21,
+      "heading_count": 25,
       "kind": "professional-skill",
       "largest_section_lines": 83,
       "largest_section_title": "Technical Selection Criteria",
-      "largest_table_rows": 0,
-      "line_count": 207,
+      "largest_table_rows": 5,
+      "line_count": 250,
       "name": "logging-design-gate",
       "optimality_section_length": 0,
-      "output_contract_length": 29,
+      "output_contract_length": 37,
       "oversized_sections": [
         {
           "lines": 83,
@@ -867,14 +863,14 @@
       "professionalism_score": 100,
       "recommended_phase": "P2",
       "reference_link_count": 0,
-      "repeated_phrase_count": 0,
+      "repeated_phrase_count": 1,
       "risk_of_change": "low",
       "routing_clarity_score": 100,
       "split_candidate_score": 14,
       "suggested_action": "Move oversized sections/tables into references/*.md; keep a concise body summary.",
-      "table_count": 0,
+      "table_count": 1,
       "used_by_count": 0,
-      "word_count": 1851
+      "word_count": 2819
     },
     {
       "anti_example_section_length": 10,
@@ -6150,8 +6146,8 @@
   "summary": {
     "classifications": {
       "KEEP_AS_IS": 144,
-      "MOVE_SECTIONS_TO_REFERENCES": 3,
-      "TIGHTEN_BODY": 8
+      "MOVE_SECTIONS_TO_REFERENCES": 2,
+      "TIGHTEN_BODY": 9
     },
     "domain_extensions": 7,
     "foundation_capabilities": 127,
@@ -6159,7 +6155,7 @@
     "heavy_foundation": 1,
     "heavy_professional": 1,
     "low_professionalism": 0,
-    "move_to_reference": 3,
+    "move_to_reference": 2,
     "professional_skills": 21,
     "split_candidates": 0
   },

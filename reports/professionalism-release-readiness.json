@@ -46,7 +46,7 @@
       "blocking": true,
       "evidence_source": "config/skill-content-exceptions.yaml and reports/skill-content-audit.json",
       "item": "content bloat exceptions",
-      "notes": "- classifications: {'KEEP_AS_IS': 144, 'MOVE_SECTIONS_TO_REFERENCES': 3, 'TIGHTEN_BODY': 8}; - domain_extensions: 7; - foundation_capabilities: 127; - heavy_domain: 0; - heavy_foundation: 1; - heavy_professional: 1; - low_professionalism: 0; - move_to_reference: 3; - professional_skills: 21; - split_candidates: 0",
+      "notes": "- classifications: {'KEEP_AS_IS': 144, 'MOVE_SECTIONS_TO_REFERENCES': 2, 'TIGHTEN_BODY': 9}; - domain_extensions: 7; - foundation_capabilities: 127; - heavy_domain: 0; - heavy_foundation: 1; - heavy_professional: 1; - low_professionalism: 0; - move_to_reference: 2; - professional_skills: 21; - split_candidates: 0",
       "status": "pass"
     },
     {
@@ -72,7 +72,7 @@
     "split_candidates": 0
   },
   "default_regression_status": "pass",
-  "generated_at": "2026-06-23T23:33:40.734385+00:00",
+  "generated_at": "2026-06-24T01:20:38.285500+00:00",
   "key_foundation_capability_coverage_summary": {
     "count": 40,
     "statuses": {
@@ -84,13 +84,13 @@
   "known_accepted_warnings": [],
   "latest_results_available": {
     "benchmark_errors": 0,
-    "coverage_rows_checked": 59,
+    "coverage_rows_checked": 61,
     "professional_agent_sample_warnings": 0,
     "professional_agent_samples_checked": 5,
     "promoted_agent_sample_strict_warnings": 0,
     "promoted_agent_samples_strict_checked": 5,
     "release_blocking_professionalism_warnings": 0,
-    "skill_professionalism_average_score": 41.66,
+    "skill_professionalism_average_score": 41.85,
     "skill_professionalism_warnings": 2
   },
   "non_blocking_followups": [
@@ -221,9 +221,9 @@
     ]
   },
   "professional_skill_coverage_summary": {
-    "count": 19,
+    "count": 21,
     "statuses": {
-      "sample-grade": 19
+      "sample-grade": 21
     }
   },
   "promoted_agent_samples_strict_status": "pass",

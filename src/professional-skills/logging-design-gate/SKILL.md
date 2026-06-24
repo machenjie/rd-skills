@@ -11,6 +11,8 @@ changeforge_version: 0.1.0
 ## Mission
 Design code-level logging as an engineering decision, not as benchmark runner output. Use this skill to decide whether logs are needed, where they belong, what type and level they have, which structured fields are safe, how they connect to traces and metrics, and how retry, fallback, degradation, and final failure paths remain diagnosable without exposing secrets or creating noise.
 
+Own the SDD/TDD logging slice for ChangeForge process traces: the SDD logging decision, safe schema, placement, redaction, correlation, cardinality controls, and the TDD evidence that proves required logging or no-log rationale.
+
 ## When To Use
 - A code change adds, removes, or changes logs.
 - Error handling, retries, fallback, degraded mode, dependency calls, workers, queues, or scheduled jobs need diagnosability.
@@ -23,6 +25,9 @@ Design code-level logging as an engineering decision, not as benchmark runner ou
 - The task is only benchmark runner logging, report generation logs, or CLI progress output unrelated to product code behavior.
 - A higher-level reliability design only needs metrics, traces, SLOs, and alerting, with no code log decision.
 - The change is a comment-only or docs-only edit with no runtime behavior or operational evidence impact.
+
+## Stage Fit
+Use this skill during coding, bug-fix, debugging, code-review, refactoring, and testing stages when product log behavior changes or is required evidence. For release handoff, pair it with `reliability-observability-gate` and `security-privacy-gate` when sink, retention, alerting, or audit policy must be validated.
 
 ## Non-Negotiable Rules
 - **Logs are evidence, not decoration**: each added production log must have a diagnostic, audit, business, security, access, integration, or lifecycle purpose.
@@ -126,6 +131,25 @@ Allowed with care:
 - **Queue/worker**: job id hash, attempt, idempotency key hash, lag bucket, retry/final failure, DLQ decision, and correlation propagation.
 - **Security boundary**: denial category, policy, actor/resource hash, result, and audit handoff without raw secret-bearing input.
 
+## Mode Matrix
+Select the logging design mode that matches the operational evidence need.
+
+| Mode | Trigger signals | Professional focus | Required evidence | Companion capabilities / gates | Skip guidance |
+|---|---|---|---|---|---|
+| No-log decision | Code path is already proven by tests, metrics, traces, or public behavior and adding logs would add noise. | State why logs are not needed and what signal replaces them. | No-log rationale, metric/trace/test alternative, validation command, residual risk. | `quality-test-gate`, `reliability-observability-gate` | Skip log schema design when no production log is required. |
+| Diagnostic/error logging | Error, retry, fallback, degradation, dependency call, or lifecycle behavior needs operator diagnosis. | Choose placement, level, fields, correlation, and final-vs-intermediate failure semantics. | Log type, owner layer, event, level, structured fields, redaction, cardinality control, tests. | `logging-error-handling`, `reliability-observability-gate`, `quality-test-gate` | Skip audit retention design unless audit evidence is required. |
+| Security/access/audit logging | Authorization, access, webhook, policy denial, audit evidence, token, cookie, PII, or raw payload risk appears. | Separate audit from diagnostic logs and block secret-bearing fields. | Policy/category fields, actor/resource hash policy, sink/retention decision, redaction tests, trace_id/request_id. | `security-privacy-gate`, `quality-test-gate` | Skip raw request body, raw query, authorization header, cookie, token, signature, and PII fields. |
+| Hot-path signal design | High-frequency INFO, cache miss, loop, async path, worker stream, or per-event logging is proposed. | Prefer metrics, sampling, aggregation, rate limits, or DEBUG-only logs over per-event noise. | Frequency estimate, sampling/rate limit, metric alternative, high-cardinality controls, performance validation. | `reliability-observability-gate`, `performance/event-loop-blocking-async-path` | Skip per-operation INFO unless a bounded business/lifecycle event justifies it. |
+
+## Proactive Professional Triggers
+These triggers are hidden-risk escalators, not ordinary checklist items.
+
+- **Signal:** A change says "add structured logging" without log type, placement, level, fields, or redaction. **Hidden risk:** logs become noisy strings or leak secrets while reviewers assume observability improved. **Required professional action:** require a structured logging decision before implementation. **Route to:** `logging-error-handling`, `quality-test-gate`. **Evidence required:** logging_decision object with type, placement, level, fields, redaction, cardinality controls, and tests or no-log rationale.
+- **Signal:** Retry, fallback, degradation, DLQ, worker, or dependency-call logs use ERROR for intermediate failures. **Hidden risk:** alert fatigue hides terminal failures and operators cannot distinguish retryable from final states. **Required professional action:** split WARN intermediate attempts from ERROR terminal failures. **Route to:** `reliability-observability-gate`, `data-middleware-change-builder`. **Evidence required:** levels, retryable/attempt/final fields, failure-mode tests, and validation output.
+- **Signal:** Security, access, audit, webhook, token, cookie, authorization header, raw request body, raw URL query, or PII appears in a log decision. **Hidden risk:** diagnostic evidence creates a data leak or audit-retention breach. **Required professional action:** route through security logging design and remove forbidden raw/secret fields. **Route to:** `security-privacy-gate`, `quality-test-gate`. **Evidence required:** allowed field list, redaction policy, denial category/policy, and redaction/security tests.
+- **Signal:** Audit and diagnostic logs share the same event, sink, or retention rationale. **Hidden risk:** audit evidence loss and hidden retention collision make compliance review unverified. **Required professional action:** split audit purpose, sink, retention, and diagnostic schema before approval. **Route to:** `security-privacy-gate`, `change-documentation-gate`. **Evidence required:** log sink/retention map, actor/action/resource/result fields, validation command or review note, and residual risk.
+- **Signal:** INFO logging is proposed on a hot path, loop, cache miss, every request, or high-frequency worker event. **Hidden risk:** cost, latency, and high-cardinality labels regress while logs fail to answer incident questions. **Required professional action:** use metrics, traces, sampling, aggregation, or DEBUG-only logs unless bounded lifecycle/business evidence is needed. **Route to:** `reliability-observability-gate`, `quality-test-gate`. **Evidence required:** metric/trace alternative, sampling or rate-limit control, and performance/noise validation.
+
 ## Risk Escalation Rules
 - Escalate to `security-privacy-gate` when logs touch PII, credentials, authorization, audit evidence, access control, or webhook signatures.
 - Escalate to `reliability-observability-gate` when logs must be balanced with metrics, traces, alerts, SLOs, dashboards, recovery, or incident diagnosis.
@@ -194,6 +218,25 @@ When logs are not needed, return:
   "rationale": "specific reason and alternative evidence signal"
 }
 ```
+
+- **Decision status:** return `needed=true` with the complete logging design, or `needed=false` with a concrete metric, trace, test, or public-behavior alternative.
+- **Required fields:** include log_types, placement, events, levels, fields, redaction, correlation, cardinality_controls, tests_or_validation, and rationale when logging is needed.
+- **Forbidden fields:** list raw request body, raw webhook body, raw URL query, authorization header, cookie, token, password, signature, and PII exclusions.
+- **Level decision:** state why expected validation errors, retry attempts, fallback, degradation, and terminal failures use their selected levels.
+- **Validation evidence:** map required fields, redaction, denial category, retry/fallback distinction, and trace propagation to tests or validation commands.
+- **Residual risk:** state any sink, retention, downstream processor, or traffic-volume assumption not proven by local validation.
+- **Handoff:** name the next gate for security, reliability, audit, or test follow-up.
+
+## Evidence Contract
+Close logging design only when these evidence obligations are answered:
+- **Files and boundaries inspected**: entry/controller, domain, application service, adapter, queue/worker, security boundary, existing logger helpers, tests, and config sinks inspected or explicitly unavailable.
+- **Reuse / placement rationale**: existing logger helpers, field names, trace context, redaction utilities, and owner layer conventions reused; new log placement justified by event ownership.
+- **Behavior preservation**: existing API behavior, error contract, retry/fallback semantics, audit retention, and performance on hot paths remain compatible or are explicitly changed.
+- **Validation evidence**: logging design validator output, redaction/security tests, retry/fallback tests, audit sink checks, or no-log metric/trace/test alternative.
+- **What evidence proves**: required logs have safe type, level, placement, fields, redaction, correlation, cardinality controls, and TDD evidence.
+- **What evidence does not prove**: validator output does not prove production sink configuration, retention policy, alert thresholds, or real traffic volume unless those artifacts were inspected.
+- **Residual risk**: unusual logger frameworks, dynamic fields, downstream processors, or external retention policies may require manual review.
+- **Next gate**: `security-privacy-gate` for sensitive/audit/access logs, `reliability-observability-gate` for metrics/traces/alerts, and `quality-test-gate` for logging tests.
 
 ## Quality Gate
 - Log type, placement, level, fields, redaction, correlation, and cardinality controls are explicit when logging is needed.

@@ -92,6 +92,15 @@ risk_escalation_triggers:
   - cost anomaly
   - dependency upgrade with security impact
   - irreversible data operation
+  - raw request body
+  - raw query
+  - authorization header
+  - cookie
+  - token
+  - audit log
+  - security log
+  - access log
+  - structured logging that can expose sensitive data
   - agent claims completion without evidence
   - agent diagnosis without verified cause
   - same agent approach failed twice
@@ -328,6 +337,24 @@ risk_trigger_rules:
     required_skills: [security-privacy-gate]
   - trigger: dependency surface
     required_skills: [security-privacy-gate]
+  - trigger: raw request body
+    required_skills: [logging-design-gate, security-privacy-gate]
+  - trigger: raw query
+    required_skills: [logging-design-gate, security-privacy-gate]
+  - trigger: authorization header
+    required_skills: [logging-design-gate, security-privacy-gate]
+  - trigger: cookie
+    required_skills: [logging-design-gate, security-privacy-gate]
+  - trigger: token
+    required_skills: [logging-design-gate, security-privacy-gate]
+  - trigger: audit log
+    required_skills: [logging-design-gate, security-privacy-gate]
+  - trigger: security log
+    required_skills: [logging-design-gate, security-privacy-gate]
+  - trigger: access log
+    required_skills: [logging-design-gate, security-privacy-gate]
+  - trigger: structured logging that can expose sensitive data
+    required_skills: [logging-design-gate, security-privacy-gate]
     required_capabilities: [package-dependency-management]
     required_quality_gates: [security gate, implementation gate]
   - trigger: database migration

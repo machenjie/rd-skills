@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -859,7 +860,7 @@ def _run_one_case(
     events_redacted_path = run_dir / "events.redacted.jsonl"
     stderr_path = run_dir / "codex-stderr.log"
     final_path = run_dir / "final.md"
-    _write_process_phase_events(out_dir, case=case, variant=variant, run_index=run_index)
+    _write_process_trace_evaluation_started(out_dir, case=case, variant=variant, run_index=run_index)
     artifact_status = "failed"
     codex_returncode: int | None = None
     codex_attempt_count = 0
@@ -1013,6 +1014,14 @@ def _run_one_case(
         result=result,
     )
     write_json(run_dir / "process-trace.json", process_trace)
+    _write_process_phase_events(
+        out_dir,
+        case=case,
+        variant=variant,
+        run_index=run_index,
+        phase_status=process_trace.get("phase_status", {}),
+        evidence_sources=process_trace.get("evidence_sources", []),
+    )
     _write_run_event(
         out_dir,
         case=case,
@@ -1044,23 +1053,91 @@ def _run_relative_artifact(out_dir: Path, path: Path) -> str:
         return "<artifact>"
 
 
-def _write_process_phase_events(
+def _write_process_trace_evaluation_started(
     out_dir: Path,
     *,
     case: CodexLiveCase,
     variant: str,
     run_index: int,
 ) -> None:
-    for phase in PROCESS_PHASES:
+    _write_run_event(
+        out_dir,
+        case=case,
+        variant=variant,
+        run_index=run_index,
+        phase="summary",
+        event="process_trace_evaluation_started",
+        status="collected",
+    )
+
+
+def _write_process_phase_events(
+    out_dir: Path,
+    *,
+    case: CodexLiveCase,
+    variant: str,
+    run_index: int,
+    phase_status: Any,
+    evidence_sources: Any,
+) -> None:
+    statuses = phase_status if isinstance(phase_status, dict) else {}
+    sources = [str(source) for source in evidence_sources] if isinstance(evidence_sources, list) else []
+    for phase in PROCESS_CORE_PHASES:
+        status = str(statuses.get(phase, "missing"))
+        if status not in PROCESS_PHASE_STATUSES:
+            status = "missing"
         _write_run_event(
             out_dir,
             case=case,
             variant=variant,
             run_index=run_index,
             phase=phase,
-            event="phase_completed",
-            status="ok",
+            event="process_phase_evaluated",
+            status=status,
+            error_category=_process_phase_error_category(status, sources),
         )
+    _write_run_event(
+        out_dir,
+        case=case,
+        variant=variant,
+        run_index=run_index,
+        phase="summary",
+        event="process_trace_evaluation_completed",
+        status=_overall_process_trace_status(statuses),
+        error_category=_overall_process_trace_error_category(statuses, sources),
+    )
+
+
+def _process_phase_error_category(status: str, evidence_sources: list[str]) -> str | None:
+    if status == "inferred":
+        return "metadata_fallback_only" if any("case_metadata_fallback" in source for source in evidence_sources) else None
+    if status == "degraded":
+        return "partial_trace"
+    if status == "missing":
+        return "missing_trace"
+    return None
+
+
+def _overall_process_trace_status(phase_status: dict[str, Any]) -> str:
+    core_statuses = [str(phase_status.get(phase, "missing")) for phase in PROCESS_CORE_PHASES]
+    if all(status == "present" for status in core_statuses):
+        return "present"
+    if all(status == "inferred" for status in core_statuses):
+        return "inferred"
+    if all(status == "missing" for status in core_statuses):
+        return "missing"
+    if any(status == "degraded" for status in core_statuses):
+        return "degraded"
+    return "partial"
+
+
+def _overall_process_trace_error_category(phase_status: dict[str, Any], evidence_sources: list[str]) -> str | None:
+    status = _overall_process_trace_status(phase_status)
+    if status == "inferred":
+        return "metadata_fallback_only" if any("case_metadata_fallback" in source for source in evidence_sources) else None
+    if status in {"missing", "degraded", "partial"}:
+        return "partial_trace"
+    return None
 
 
 def _write_run_event(
@@ -1156,6 +1233,8 @@ def _process_trace_payload(
         "evidence_sources": evidence_sources,
         "selected_skills": _selected_skills_for_variant(variant),
         "selected_capabilities": _selected_capabilities_for_variant(variant),
+        "required_quality_gates": _required_quality_gates_for_process_trace(facts),
+        "stage_ownership": _process_stage_ownership(),
         "validation_commands": validation_commands,
         "artifacts": artifacts,
         "result_status": result.get("status"),
@@ -1169,44 +1248,385 @@ def _process_trace_evidence(
     case: CodexLiveCase,
     validation_commands: list[str],
 ) -> tuple[dict[str, Any], dict[str, str], list[str]]:
-    facts = _process_facts(case, validation_commands)
+    fallback_facts = _mark_process_facts_source(_process_facts(case, validation_commands), "inferred")
     phase_status = {phase: "missing" for phase in PROCESS_PHASES}
-    evidence_sources: list[str] = []
-    final_trace = _compact_process_trace(run_dir / "final.md")
-    if final_trace:
-        evidence_sources.append("final.md:compact-process-trace")
+    parsed_trace = _final_process_trace(run_dir / "final.md")
+    if not parsed_trace:
+        parsed_trace = _hook_process_trace(run_dir)
+    if parsed_trace:
+        final_facts = _process_facts_from_trace_payload(parsed_trace)
+        facts, used_fallback = _merge_process_facts(final_facts, fallback_facts, str(parsed_trace.get("_evidence_source")))
+        evidence_sources = [str(parsed_trace.get("_evidence_source"))]
+        if used_fallback:
+            evidence_sources.append("case_metadata_fallback:missing-fields")
         for phase in PROCESS_CORE_PHASES:
-            phase_status[phase] = "present" if final_trace.get(phase) else "degraded"
-        facts.setdefault("evidence", {})["final_compact_trace"] = final_trace
+            phase_status[phase] = "present" if _phase_has_concrete_content(final_facts.get(phase)) else "inferred"
+        facts.setdefault("evidence", {})["parsed_process_trace"] = parsed_trace.get("_trace_kind", "unknown")
     else:
-        evidence_sources.append("case_metadata_fallback")
+        facts = fallback_facts
+        evidence_sources = ["case_metadata_fallback"]
         for phase in PROCESS_CORE_PHASES:
             phase_status[phase] = "inferred"
     return facts, phase_status, evidence_sources
 
 
-def _compact_process_trace(path: Path) -> dict[str, str]:
+def _final_process_trace(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     text = path.read_text(encoding="utf-8", errors="ignore")
+    parsed = _json_process_trace(text)
+    if parsed:
+        parsed["_evidence_source"] = parsed.get("_evidence_source") or "final.md:process-trace-json"
+        parsed["_trace_kind"] = parsed.get("_trace_kind") or "json"
+        return parsed
+    parsed = _compact_process_trace(text)
+    if parsed:
+        parsed["_evidence_source"] = parsed.get("_evidence_source") or "final.md:compact-process-trace"
+        parsed["_trace_kind"] = parsed.get("_trace_kind") or "compact"
+        return parsed
+    return {}
+
+
+def _json_process_trace(text: str) -> dict[str, Any]:
+    candidates: list[str] = []
+    for match in re.finditer(r"```(?:json)?\s*(\{.*?\})\s*```", text, flags=re.IGNORECASE | re.DOTALL):
+        candidates.append(match.group(1))
+    stripped = text.strip()
+    if stripped.startswith("{") and stripped.endswith("}"):
+        candidates.append(stripped)
+    for candidate in candidates:
+        try:
+            payload = json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict) and (
+            "process_trace" in payload
+            or "process_facts" in payload
+            or {"phase_status", "traceability"} & set(payload)
+        ):
+            return _redact_process_trace_payload(payload)
+    return {}
+
+
+def _hook_process_trace(run_dir: Path) -> dict[str, Any]:
+    for name in ("events.redacted.jsonl", "events.jsonl"):
+        path = run_dir / name
+        if not path.exists():
+            continue
+        for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            if not line.strip():
+                continue
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            parsed = _trace_payload_from_event(payload)
+            if parsed:
+                parsed["_evidence_source"] = f"hook_telemetry:{name}"
+                parsed["_trace_kind"] = parsed.get("_trace_kind") or "hook"
+                return parsed
+    return {}
+
+
+def _trace_payload_from_event(payload: Any) -> dict[str, Any]:
+    if isinstance(payload, dict):
+        if "process_trace" in payload or "process_facts" in payload or {"phase_status", "traceability"} & set(payload):
+            return _redact_process_trace_payload(payload)
+        for key in ("message", "content", "text", "output"):
+            value = payload.get(key)
+            if isinstance(value, str):
+                parsed = _json_process_trace(value) or _compact_process_trace(value)
+                if parsed:
+                    return parsed
+        for value in payload.values():
+            parsed = _trace_payload_from_event(value)
+            if parsed:
+                return parsed
+    elif isinstance(payload, list):
+        for item in payload:
+            parsed = _trace_payload_from_event(item)
+            if parsed:
+                return parsed
+    return {}
+
+
+def _compact_process_trace(text: str) -> dict[str, Any]:
     if "Process Trace:" not in text:
         return {}
-    trace: dict[str, str] = {}
+    block = text.split("Process Trace:", 1)[1]
+    sections = _trace_sections(block)
+    if not sections:
+        return {}
+    facts: dict[str, Any] = {}
+    for phase in PROCESS_CORE_PHASES:
+        section = sections.get(phase)
+        if section is None:
+            continue
+        facts[phase] = _section_to_phase_facts(phase, section)
+    return {"process_facts": _redact_process_trace_payload(facts), "_trace_kind": "compact-multiline"}
+
+
+def _trace_sections(block: str) -> dict[str, list[str]]:
+    sections: dict[str, list[str]] = {}
+    current: str | None = None
     labels = {
         "pdd": "PDD:",
         "ddd": "DDD:",
         "sdd": "SDD:",
         "tdd": "TDD:",
+        "validation": "Validation:",
+        "residual_risk": "Residual Risk:",
     }
-    for phase, marker in labels.items():
-        for line in text.splitlines():
-            stripped = line.strip()
-            if stripped.startswith(marker):
+    for line in block.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        matched = None
+        for key, marker in labels.items():
+            if stripped.casefold().startswith(marker.casefold()):
+                matched = key
                 value = stripped[len(marker) :].strip()
+                sections.setdefault(key, [])
                 if value:
-                    trace[phase] = redact_report_text(value)[:800]
+                    sections[key].append(value)
                 break
-    return trace
+        if matched:
+            current = matched
+            continue
+        if current in PROCESS_CORE_PHASES:
+            sections.setdefault(current, []).append(line)
+    return {key: value for key, value in sections.items() if key in PROCESS_CORE_PHASES and value}
+
+
+def _section_to_phase_facts(phase: str, lines: list[str]) -> dict[str, Any]:
+    parsed = _parse_indented_section(lines)
+    if not parsed:
+        summary = redact_report_text(" ".join(line.strip() for line in lines if line.strip()))[:800]
+        return _summary_phase_facts(phase, summary) if summary else {}
+    return _normalize_phase_keys(phase, parsed)
+
+
+def _parse_indented_section(lines: list[str]) -> dict[str, Any]:
+    parsed: dict[str, Any] = {}
+    current_key: str | None = None
+    nested_key: str | None = None
+    for raw_line in lines:
+        stripped = raw_line.strip()
+        if not stripped:
+            continue
+        if current_key and isinstance(parsed.get(current_key), dict) and nested_key and stripped.startswith("- "):
+            target = parsed[current_key].setdefault(nested_key, [])
+            if isinstance(target, list):
+                target.append(_coerce_trace_scalar(stripped[2:].strip()))
+            continue
+        if stripped.startswith("- ") and current_key:
+            target = parsed.setdefault(current_key, [])
+            if isinstance(target, list):
+                target.append(_coerce_trace_scalar(stripped[2:].strip()))
+            continue
+        if ":" in stripped:
+            key, value = stripped.split(":", 1)
+            key = _normalize_trace_key(key)
+            value = value.strip()
+            if current_key and isinstance(parsed.get(current_key), dict) and raw_line.startswith((" ", "\t")):
+                nested_key = key
+                parsed[current_key][nested_key] = _coerce_trace_scalar(value) if value else []
+                continue
+            current_key = key
+            nested_key = None
+            if value:
+                parsed[key] = _coerce_trace_scalar(value)
+            else:
+                parsed[key] = {}
+            continue
+        parsed.setdefault("_summary", []).append(_coerce_trace_scalar(stripped))
+    return parsed
+
+
+def _normalize_trace_key(key: str) -> str:
+    return re.sub(r"[^a-z0-9_]+", "_", key.strip().casefold()).strip("_")
+
+
+def _coerce_trace_scalar(value: str) -> Any:
+    clean = redact_report_text(value).strip()
+    lowered = clean.casefold()
+    if lowered == "true":
+        return True
+    if lowered == "false":
+        return False
+    return clean[:800]
+
+
+def _normalize_phase_keys(phase: str, payload: dict[str, Any]) -> dict[str, Any]:
+    aliases = {
+        "pdd": {
+            "acceptance": "acceptance_criteria",
+            "validation": "validation_signal",
+            "risks": "risk_surfaces",
+        },
+        "ddd": {
+            "ownership": "ownership_decision",
+            "side_effect_boundary": "side_effect_boundaries",
+            "side_effects": "side_effect_boundaries",
+        },
+        "sdd": {
+            "api": "public_api",
+            "failure": "failure_modes",
+            "failures": "failure_modes",
+            "logging": "logging_decision",
+        },
+        "tdd": {
+            "validation": "validation_commands",
+            "tests": "validation_commands",
+        },
+    }
+    normalized: dict[str, Any] = {}
+    for key, value in payload.items():
+        normalized[aliases.get(phase, {}).get(key, key)] = value
+    return normalized
+
+
+def _summary_phase_facts(phase: str, summary: str) -> dict[str, Any]:
+    if phase == "pdd":
+        return {"problem": summary, "_summary": summary}
+    if phase == "ddd":
+        return {"domain_terms": [summary], "_summary": summary}
+    if phase == "sdd":
+        return {"modules": [summary], "_summary": summary}
+    if phase == "tdd":
+        return {"validation_commands": [summary], "_summary": summary}
+    return {"_summary": summary}
+
+
+def _process_facts_from_trace_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    facts = payload.get("process_facts")
+    if isinstance(facts, dict):
+        return _redact_process_trace_payload(facts)
+    process_trace = payload.get("process_trace")
+    if isinstance(process_trace, dict):
+        return _redact_process_trace_payload(process_trace)
+    core = {phase: payload.get(phase) for phase in PROCESS_CORE_PHASES if phase in payload}
+    return _redact_process_trace_payload(core)
+
+
+def _redact_process_trace_payload(payload: Any) -> Any:
+    if isinstance(payload, dict):
+        return {str(key): _redact_process_trace_payload(value) for key, value in payload.items()}
+    if isinstance(payload, list):
+        return [_redact_process_trace_payload(item) for item in payload]
+    if isinstance(payload, str):
+        return redact_report_text(payload)[:1200]
+    return payload
+
+
+def _merge_process_facts(
+    final_facts: dict[str, Any],
+    fallback_facts: dict[str, Any],
+    evidence_source: str,
+) -> tuple[dict[str, Any], bool]:
+    merged: dict[str, Any] = {}
+    used_fallback = False
+    for key, value in fallback_facts.items():
+        if key not in PROCESS_CORE_PHASES:
+            merged[key] = value
+    for key, value in final_facts.items():
+        if key not in PROCESS_CORE_PHASES:
+            merged[key] = value
+    for phase in PROCESS_CORE_PHASES:
+        final_phase = final_facts.get(phase)
+        fallback_phase = fallback_facts.get(phase)
+        if _phase_has_concrete_content(final_phase):
+            phase_payload, phase_used_fallback = _merge_phase_facts(final_phase, fallback_phase, evidence_source)
+            merged[phase] = phase_payload
+            used_fallback = used_fallback or phase_used_fallback
+        else:
+            merged[phase] = fallback_phase
+            used_fallback = True
+    return merged, used_fallback
+
+
+def _merge_phase_facts(final_phase: Any, fallback_phase: Any, evidence_source: str) -> tuple[dict[str, Any], bool]:
+    final_payload = final_phase if isinstance(final_phase, dict) else _summary_phase_facts("", str(final_phase))
+    fallback_payload = fallback_phase if isinstance(fallback_phase, dict) else {}
+    merged = json.loads(json.dumps(fallback_payload))
+    inferred_fields: list[str] = []
+    for key, value in final_payload.items():
+        if _has_trace_value(value):
+            merged[key] = value
+    for key, value in fallback_payload.items():
+        if key.startswith("_"):
+            continue
+        if key not in final_payload or not _has_trace_value(final_payload.get(key)):
+            inferred_fields.append(key)
+            merged.setdefault(key, value)
+    merged["_evidence_source"] = evidence_source
+    if inferred_fields:
+        merged["_inferred_fields"] = sorted(set(inferred_fields))
+    return merged, bool(inferred_fields)
+
+
+def _mark_process_facts_source(facts: dict[str, Any], source: str) -> dict[str, Any]:
+    marked = json.loads(json.dumps(facts))
+    for phase in PROCESS_CORE_PHASES:
+        phase_payload = marked.get(phase)
+        if isinstance(phase_payload, dict):
+            phase_payload.setdefault("_evidence_source", source)
+    if source == "inferred":
+        marked.setdefault("evidence_source", "case_metadata_fallback")
+    return marked
+
+
+def _phase_has_concrete_content(value: Any) -> bool:
+    if not _has_trace_value(value):
+        return False
+    text = json.dumps(value, sort_keys=True).casefold() if not isinstance(value, str) else value.casefold()
+    placeholders = (
+        "problem + acceptance + constraints",
+        "domain ownership + invariants + side-effect boundary",
+        "modules + public api + error/logging decision",
+        "tests/validation mapping",
+    )
+    return not any(placeholder in text for placeholder in placeholders)
+
+
+def _has_trace_value(value: Any) -> bool:
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, list):
+        return any(_has_trace_value(item) for item in value)
+    if isinstance(value, dict):
+        return any(not str(key).startswith("_") and _has_trace_value(item) for key, item in value.items())
+    return value is True or value not in {None, False}
+
+
+def _required_quality_gates_for_process_trace(facts: dict[str, Any]) -> list[str]:
+    gates = [
+        "pdd_acceptance_to_tdd_tests",
+        "ddd_invariants_to_tdd_tests",
+        "sdd_public_api_to_tdd_tests",
+        "sdd_failure_modes_to_tdd_tests",
+    ]
+    logging_decision = facts.get("sdd", {}).get("logging_decision") if isinstance(facts.get("sdd"), dict) else None
+    if isinstance(logging_decision, dict) and logging_decision.get("needed") is True:
+        gates.extend(
+            [
+                "logging_decision_has_type_level_fields_redaction",
+                "logging_or_security_tests_present",
+                "forbidden_secret_fields_absent",
+            ]
+        )
+    return gates
+
+
+def _process_stage_ownership() -> dict[str, str]:
+    return {
+        "pdd": "change-intake-compiler",
+        "ddd": "domain-impact-modeler",
+        "sdd": "architecture-impact-reviewer",
+        "sdd_logging_decision": "logging-design-gate",
+        "tdd": "quality-test-gate",
+        "cross_stage_review": "ai-code-review-refactor",
+    }
 
 
 def _final_mentions_review(run_dir: Path) -> bool:
@@ -1328,10 +1748,12 @@ def _case_specific_process_facts(
             logging_decision={
                 "needed": True,
                 "log_types": ["security", "diagnostic"],
+                "placement": ["security boundary", "service validation boundary"],
                 "events": ["url_denied", "redirect_denied", "redaction_applied"],
                 "levels": ["WARN"],
                 "fields": ["operation", "error_category", "policy", "reason", "trace_id"],
                 "redaction": ["raw URL query", "token", "signature", "session identifiers"],
+                "correlation": ["trace_id", "request_id"],
                 "cardinality_controls": ["route or policy category instead of raw URL", "status/error category instead of full target"],
                 "rationale": "Security denial diagnostics must be explainable without leaking raw secret-bearing URL input.",
             },
@@ -1370,10 +1792,12 @@ def _case_specific_process_facts(
             logging_decision={
                 "needed": True,
                 "log_types": ["diagnostic", "integration/dependency"],
+                "placement": ["cache service", "backend dependency seam"],
                 "events": ["cache_miss_storm", "refresh_fallback", "lock_contention"],
                 "levels": ["WARN"],
-                "fields": ["operation", "entity_id_hash", "attempt", "retryable", "duration_ms", "fallback_used"],
+                "fields": ["operation", "dependency", "status", "error_category", "entity_id_hash", "attempt", "retryable", "duration_ms", "fallback_used"],
                 "redaction": ["raw cache key when it contains user input", "token", "PII"],
+                "correlation": ["trace_id", "request_id"],
                 "cardinality_controls": ["hash or bucket cache key", "aggregate hot-key events", "prefer metrics for high-frequency misses"],
                 "rationale": "Operators need to diagnose stampede, fallback, and lock contention without per-miss noisy INFO logs.",
             },
@@ -1415,6 +1839,224 @@ def _case_specific_process_facts(
             },
             logging_tests=[],
         )
+    case_specs: dict[str, dict[str, Any]] = {
+        "backend/service-method-vs-new-helper": {
+            "problem": "Keep service behavior on the owning service method instead of hiding business logic in an unrelated helper.",
+            "impact": ["preserve service public behavior and owner-boundary clarity"],
+            "acceptance": [
+                "requested behavior is implemented on existing service or owning method rather than unrelated helper",
+                "existing public behavior remains compatible",
+                "changed behavior is validated through service public API or tests",
+            ],
+            "risk_surfaces": ["backend-service-boundary", "implementation-structure"],
+            "domain_terms": ["service method", "business operation", "owner object", "owner service"],
+            "entities": ["service"],
+            "value_objects": [],
+            "invariants": [
+                "business rule remains in owning service",
+                "helper does not own domain decision",
+            ],
+            "ownership": ["owning service method or service facade keeps the business decision"],
+            "side_effects": ["helper code may hold technical mechanics only, not business-rule authority"],
+            "modules": ["service file", "existing helper only if genuinely technical", "service tests"],
+            "public_api": ["existing service method or service facade used by tests"],
+            "data_flow": ["public service call -> owning service method -> technical helper only for reusable mechanics"],
+            "error_contract": ["service behavior remains compatible through the public API"],
+            "failure_modes": ["new helper drift", "duplicate logic", "private API testing"],
+            "logging_decision": {
+                "needed": False,
+                "rationale": "Service public behavior and placement tests are the primary evidence; no product log is required for this benchmark.",
+            },
+            "logging_tests": [],
+        },
+        "devex/helper-reuse-search": {
+            "problem": "Reuse the existing same-pattern helper before adding duplicate implementation.",
+            "impact": ["keep repository naming, placement, and helper behavior consistent"],
+            "acceptance": [
+                "reuse existing same-pattern function before adding new duplicate implementation",
+                "change remains minimal and consistent with repository naming and placement",
+                "regression test proves the fixed behavior",
+            ],
+            "risk_surfaces": ["devex-reuse", "implementation-structure"],
+            "domain_terms": ["existing helper", "same-pattern implementation", "owner module"],
+            "entities": [],
+            "value_objects": [],
+            "invariants": [
+                "reuse preserves behavior and avoids divergent duplicate logic",
+                "owner module remains the source of truth for helper behavior",
+            ],
+            "ownership": ["existing helper owner stays authoritative"],
+            "side_effects": ["caller composes existing helper instead of adding new shared utility behavior"],
+            "modules": ["existing helper owner", "caller module", "regression tests"],
+            "public_api": ["existing helper or owner API used by tests"],
+            "data_flow": ["caller input -> existing helper/owner API -> fixed output"],
+            "error_contract": ["wrong helper placement or duplicate implementation fails review/grading"],
+            "failure_modes": ["duplicate helper", "wrong placement", "unsearched reuse candidate"],
+            "logging_decision": {
+                "needed": False,
+                "rationale": "Reuse-search evidence and regression tests are sufficient; no product logging requirement exists for this devex benchmark.",
+            },
+            "logging_tests": [],
+        },
+        "frontend/accessible-form-error-state": {
+            "problem": "Expose form validation errors through accessible user-visible state.",
+            "impact": ["keyboard and screen reader users receive clear error feedback"],
+            "acceptance": ["invalid submit shows accessible error state", "focus and aria semantics remain usable", "valid submit path still works"],
+            "risk_surfaces": ["frontend-accessibility", "form-validation", "experience-states"],
+            "domain_terms": ["form field", "validation error", "accessible alert"],
+            "entities": ["form"],
+            "value_objects": ["validation message"],
+            "invariants": ["error state is announced through accessible semantics", "valid input does not show stale error"],
+            "ownership": ["form component owns interaction state and accessible error rendering"],
+            "side_effects": ["DOM state updates stay in the component/view boundary"],
+            "modules": ["form component", "validation state", "accessible behavior tests"],
+            "public_api": ["rendered form behavior queried through accessible roles or labels"],
+            "data_flow": ["user input -> validation -> accessible error state -> corrected submit"],
+            "error_contract": ["invalid input maps to visible and announced error"],
+            "failure_modes": ["missing role/aria error", "stale error after correction", "private selector-only test"],
+            "logging_decision": {"needed": False, "rationale": "Accessible UI state tests are primary evidence; no production log is needed."},
+            "logging_tests": [],
+        },
+        "data-api/backward-compatible-api-field": {
+            "problem": "Add an API field without breaking existing consumers or response compatibility.",
+            "impact": ["old and new API consumers can read the response safely"],
+            "acceptance": ["new field is additive and optional or defaulted", "existing response contract remains valid", "compatibility tests cover old and new shapes"],
+            "risk_surfaces": ["api-compatibility", "contract-testing", "data-model"],
+            "domain_terms": ["API response", "backward-compatible field", "consumer contract"],
+            "entities": ["response DTO"],
+            "value_objects": ["optional field"],
+            "invariants": ["existing required fields remain unchanged", "new field does not require old consumers to send or read it"],
+            "ownership": ["API contract owner controls DTO/schema evolution"],
+            "side_effects": ["serialization changes stay at API boundary"],
+            "modules": ["DTO/schema", "API handler", "contract tests"],
+            "public_api": ["public API response contract used by tests"],
+            "data_flow": ["domain data -> DTO/schema -> serialized response -> consumer compatibility check"],
+            "error_contract": ["missing optional field remains accepted for old clients"],
+            "failure_modes": ["breaking required field", "schema validation failure", "old consumer incompatibility"],
+            "logging_decision": {"needed": False, "rationale": "Contract and compatibility tests are sufficient; no product log is required for an additive field."},
+            "logging_tests": [],
+        },
+        "integration/webhook-hmac-raw-body": {
+            "problem": "Verify webhook HMAC signatures against the exact raw request body.",
+            "impact": ["external webhook authenticity is enforced without corrupting payload verification"],
+            "acceptance": ["valid raw-body signature passes", "tampered body or signature fails", "parsed body is not used for HMAC verification"],
+            "risk_surfaces": ["integration-webhook", "secret-verification", "security-authenticity"],
+            "domain_terms": ["webhook", "HMAC signature", "raw body"],
+            "entities": ["webhook event"],
+            "value_objects": ["signature digest"],
+            "invariants": ["signature verification uses raw bytes", "invalid signature cannot reach handler side effects"],
+            "ownership": ["integration boundary owns signature verification before event handling"],
+            "side_effects": ["event handling side effects occur only after signature verification"],
+            "modules": ["webhook entrypoint", "signature verifier", "integration tests"],
+            "public_api": ["webhook handler public entrypoint used by tests"],
+            "data_flow": ["raw body + signature header -> HMAC verifier -> event handler"],
+            "error_contract": ["invalid signature returns denied/authenticity error"],
+            "failure_modes": ["parsed-body HMAC mismatch", "tampered body accepted", "raw body logged"],
+            "logging_decision": {
+                "needed": True,
+                "log_types": ["security", "integration/dependency"],
+                "placement": ["webhook security boundary"],
+                "events": ["webhook_signature_denied"],
+                "levels": ["WARN"],
+                "fields": ["operation", "policy", "error_category", "dependency", "status", "duration_ms", "trace_id"],
+                "redaction": ["raw webhook body", "signature", "authorization header", "token"],
+                "correlation": ["trace_id", "request_id"],
+                "cardinality_controls": ["provider name and denial category only"],
+                "rationale": "Signature denials need security diagnostics without logging raw body or signature secrets.",
+            },
+            "logging_tests": ["invalid signature denied", "raw webhook body not logged"],
+        },
+        "data-middleware/kafka-consumer-offset-dlq": {
+            "problem": "Handle Kafka poison messages with correct offset and DLQ behavior.",
+            "impact": ["consumer progress is preserved without losing failed messages"],
+            "acceptance": ["successful messages commit offsets", "poison messages route to DLQ", "retry/terminal failure is distinguishable"],
+            "risk_surfaces": ["message-queue", "idempotency", "observability"],
+            "domain_terms": ["consumer offset", "DLQ", "poison message"],
+            "entities": ["consumer message"],
+            "value_objects": ["offset"],
+            "invariants": ["message is committed only after successful handling or DLQ handoff", "poison message does not block the partition forever"],
+            "ownership": ["consumer boundary owns offset commit and DLQ routing decisions"],
+            "side_effects": ["DLQ publish and offset commit ordering remain explicit"],
+            "modules": ["Kafka consumer", "DLQ publisher", "consumer tests"],
+            "public_api": ["consumer process/handle entrypoint used by tests"],
+            "data_flow": ["message -> handler -> success commit or DLQ publish -> offset decision"],
+            "error_contract": ["retryable and terminal poison-message failures are categorized"],
+            "failure_modes": ["offset committed before DLQ publish", "poison message loop", "lost message"],
+            "logging_decision": {
+                "needed": True,
+                "log_types": ["diagnostic", "integration/dependency"],
+                "placement": ["queue/worker"],
+                "events": ["message_retry", "message_dlq"],
+                "levels": ["WARN", "ERROR"],
+                "fields": ["operation", "dependency", "status", "error_category", "attempt", "retryable", "duration_ms", "trace_id"],
+                "redaction": ["raw message body", "token", "PII"],
+                "correlation": ["trace_id", "correlation_id"],
+                "cardinality_controls": ["topic and error category only", "message id hash only when allowed"],
+                "rationale": "WARN covers retryable intermediate failures and ERROR is reserved for terminal DLQ handoff.",
+            },
+            "logging_tests": ["retry then DLQ distinction", "raw message body not logged"],
+        },
+        "performance/event-loop-blocking-async-path": {
+            "problem": "Remove blocking work from an async path so the event loop remains responsive.",
+            "impact": ["concurrent async callers avoid latency stalls"],
+            "acceptance": ["blocking operation is moved off the event loop", "async public API remains compatible", "concurrency test proves responsiveness"],
+            "risk_surfaces": ["performance-async", "concurrency-control", "reliability-backpressure"],
+            "domain_terms": ["event loop", "blocking call", "async path"],
+            "entities": ["async service"],
+            "value_objects": [],
+            "invariants": ["async path does not perform blocking IO or CPU work directly", "public coroutine contract is preserved"],
+            "ownership": ["async service owns scheduling and backpressure decision"],
+            "side_effects": ["blocking dependency runs through executor or async adapter boundary"],
+            "modules": ["async service", "blocking dependency adapter", "concurrency tests"],
+            "public_api": ["async public API used by tests"],
+            "data_flow": ["async caller -> nonblocking scheduling -> dependency result -> response"],
+            "error_contract": ["dependency failure remains categorized without blocking the event loop"],
+            "failure_modes": ["event-loop stall", "unbounded executor fanout", "timeout masking"],
+            "logging_decision": {"needed": False, "rationale": "Concurrency and latency tests are primary evidence; metrics/traces are better than per-call logs for hot async paths."},
+            "logging_tests": [],
+        },
+        "performance/lock-held-across-io": {
+            "problem": "Avoid holding a lock across IO so concurrency does not serialize or deadlock.",
+            "impact": ["parallel callers avoid lock contention and deadlock risk"],
+            "acceptance": ["lock guards only shared state mutation", "IO happens outside the critical section", "tests cover contention or ordering"],
+            "risk_surfaces": ["performance-locking", "concurrency-control", "reliability-deadlock"],
+            "domain_terms": ["lock", "critical section", "IO boundary"],
+            "entities": ["shared state"],
+            "value_objects": [],
+            "invariants": ["shared state remains protected", "lock is not held across external IO"],
+            "ownership": ["service or repository boundary owns lock scope"],
+            "side_effects": ["external IO occurs after releasing the lock or before acquiring it"],
+            "modules": ["locked service", "IO dependency", "concurrency tests"],
+            "public_api": ["public operation with lock behavior exercised by tests"],
+            "data_flow": ["read/update shared state under lock -> release lock -> perform IO"],
+            "error_contract": ["IO failure does not leave lock-held state or corrupted shared state"],
+            "failure_modes": ["lock contention stall", "deadlock", "partial state after IO failure"],
+            "logging_decision": {"needed": False, "rationale": "Lock-scope tests and metrics are primary evidence; no per-operation INFO log is needed on the hot path."},
+            "logging_tests": [],
+        },
+        "devex/bugfix-same-pattern-scan": {
+            "problem": "Fix a bug and scan sibling patterns so the same defect is not left behind.",
+            "impact": ["bug fix coverage extends to related occurrences without broad unrelated refactor"],
+            "acceptance": ["verified defect has regression coverage", "same-pattern scan is recorded", "related occurrence decision is explicit"],
+            "risk_surfaces": ["execution-discipline", "same-pattern-scan", "regression-testing"],
+            "domain_terms": ["bugfix", "same-pattern scan", "regression test"],
+            "entities": [],
+            "value_objects": [],
+            "invariants": ["local fix does not leave same defect in sibling path", "unchanged behavior remains compatible"],
+            "ownership": ["owning module for the defect keeps the fix and related scan decisions"],
+            "side_effects": ["scan does not mutate unrelated files unless the same defect is verified"],
+            "modules": ["defect owner module", "sibling pattern files", "regression tests"],
+            "public_api": ["public behavior or command that reproduces the defect"],
+            "data_flow": ["repro input -> failing behavior -> fixed branch -> regression assertion"],
+            "error_contract": ["historical failure mode is named and cannot recur under the regression test"],
+            "failure_modes": ["local-only fix", "missing sibling defect", "unverified diagnosis"],
+            "logging_decision": {"needed": False, "rationale": "Regression test and same-pattern scan are primary evidence; no product log is needed."},
+            "logging_tests": [],
+        },
+    }
+    spec = case_specs.get(case.id)
+    if spec is not None:
+        return _mapped_process_facts(case, validation_commands, **spec)
     return None
 
 
@@ -1580,6 +2222,9 @@ def _selected_skills_for_variant(variant: str | None) -> list[str]:
     return [
         "change-forge-router",
         "development-process-orchestrator",
+        "change-intake-compiler",
+        "domain-impact-modeler",
+        "architecture-impact-reviewer",
         "backend-change-builder",
         "logging-design-gate",
         "quality-test-gate",

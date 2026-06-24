@@ -95,10 +95,12 @@ def _valid_trace(*, logging_needed: bool = True) -> dict[str, Any]:
         logging_decision = {
             "needed": True,
             "log_types": ["security"],
+            "placement": ["security boundary"],
             "events": ["url_denied"],
             "levels": ["WARN"],
             "fields": ["operation", "error_category", "policy", "trace_id"],
             "redaction": ["raw URL query", "token"],
+            "correlation": ["trace_id", "request_id"],
             "cardinality_controls": ["policy category instead of raw URL"],
             "rationale": "Security denial diagnostics must not leak query secrets.",
         }
@@ -185,7 +187,7 @@ def _valid_trace(*, logging_needed: bool = True) -> dict[str, Any]:
     }
 
 
-def _run_trace_errors(trace: dict[str, Any]) -> list[str]:
+def _run_trace_errors(trace: dict[str, Any], *, require_present: bool = False) -> list[str]:
     validator = _load_script("validate_process_traces_unit", "scripts/validate-process-traces.py")
     with tempfile.TemporaryDirectory() as tmp:
         run_dir = Path(tmp)
@@ -196,7 +198,7 @@ def _run_trace_errors(trace: dict[str, Any]) -> list[str]:
             encoding="utf-8",
         )
         result_dir.joinpath("process-trace.json").write_text(json.dumps(trace), encoding="utf-8")
-        return validator.validate_process_traces(run_dir)
+        return validator.validate_process_traces(run_dir, require_present=require_present)
 
 
 def test_generic_synthetic_trace_fails() -> None:
@@ -211,6 +213,34 @@ def test_generic_synthetic_trace_fails() -> None:
     }
     errors = _run_trace_errors(trace)
     assert any("generic template-only process trace" in error for error in errors)
+
+
+def test_case_specific_flag_does_not_rescue_generic_trace() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["case_specific"] = True
+    trace["process_facts"]["pdd"]["acceptance_criteria"] = [
+        "requested benchmark behavior is observable through public API or documented setup/test contract"
+    ]
+    trace["process_facts"]["ddd"]["invariants"] = ["business rules remain in the owning domain"]
+    trace["process_facts"]["sdd"]["public_api"] = ["candidate public API"]
+    trace["process_facts"]["sdd"]["failure_modes"] = ["setup_failed"]
+    trace["process_facts"]["tdd"]["acceptance_to_tests"] = {
+        trace["process_facts"]["pdd"]["acceptance_criteria"][0]: [COMMAND]
+    }
+    trace["process_facts"]["tdd"]["invariant_to_tests_or_code"] = {
+        "business rules remain in the owning domain": [COMMAND]
+    }
+    trace["process_facts"]["tdd"]["public_api_to_tests"] = {"candidate public API": [COMMAND]}
+    trace["process_facts"]["tdd"]["failure_mode_tests"] = [{"failure_mode": "setup_failed", "tests": [COMMAND]}]
+    errors = _run_trace_errors(trace)
+    assert any("generic template-only process trace" in error for error in errors)
+
+
+def test_require_present_rejects_inferred_core_phases() -> None:
+    trace = _valid_trace()
+    trace["phase_status"]["pdd"] = "inferred"
+    errors = _run_trace_errors(trace, require_present=True)
+    assert any("--require-present requires phase pdd to be present" in error for error in errors)
 
 
 def test_pdd_without_tdd_mapping_fails() -> None:
@@ -260,10 +290,21 @@ def test_reliability_case_specific_trace_passes() -> None:
     trace["process_facts"]["sdd"]["logging_decision"] = {
         "needed": True,
         "log_types": ["diagnostic", "integration/dependency"],
+        "placement": ["cache service", "backend dependency seam"],
         "events": ["cache_miss_storm", "refresh_fallback", "lock_contention"],
         "levels": ["WARN"],
-        "fields": ["operation", "entity_id_hash", "attempt", "retryable", "duration_ms"],
+        "fields": [
+            "operation",
+            "dependency",
+            "status",
+            "error_category",
+            "entity_id_hash",
+            "attempt",
+            "retryable",
+            "duration_ms",
+        ],
         "redaction": ["raw cache key when it contains user input", "PII"],
+        "correlation": ["trace_id", "request_id"],
         "cardinality_controls": ["hash cache key", "prefer metrics for high-frequency misses"],
         "rationale": "Stampede/fallback diagnostics need safe cache context.",
     }
@@ -292,6 +333,12 @@ class ProcessMethodologyTests(unittest.TestCase):
 
     def test_generic_synthetic_trace_fails(self) -> None:
         test_generic_synthetic_trace_fails()
+
+    def test_case_specific_flag_does_not_rescue_generic_trace(self) -> None:
+        test_case_specific_flag_does_not_rescue_generic_trace()
+
+    def test_require_present_rejects_inferred_core_phases(self) -> None:
+        test_require_present_rejects_inferred_core_phases()
 
     def test_pdd_without_tdd_mapping_fails(self) -> None:
         test_pdd_without_tdd_mapping_fails()
