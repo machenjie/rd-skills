@@ -146,6 +146,8 @@ def _phase_provenance_errors(label: str, phase_status: Any, facts: dict[str, Any
         if not isinstance(payload, dict):
             errors.append(f"{label}: phase {phase} status {status} requires process_facts.{phase}")
             continue
+        if status == "present":
+            errors.extend(_required_field_shape_errors(label, phase, payload))
         field_sources = payload.get("_field_sources")
         if status in {"present", "degraded"} and not isinstance(field_sources, dict):
             errors.append(f"{label}: phase {phase} status {status} requires process_facts.{phase}._field_sources")
@@ -184,6 +186,37 @@ def _phase_provenance_errors(label: str, phase_status: Any, facts: dict[str, Any
 
 def _required_process_fields(phase: str) -> tuple[str, ...]:
     return REQUIRED_PROCESS_FIELDS.get(phase, ())
+
+
+def _required_field_shape_errors(label: str, phase: str, payload: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    for field in _required_process_fields(phase):
+        value = payload.get(field)
+        if _has_evidence(value) and not _required_field_shape_valid(phase, field, value):
+            errors.append(f"{label}: phase {phase} is present but required field {field} has invalid shape")
+    return errors
+
+
+def _required_field_shape_valid(phase: str, field: str, value: Any) -> bool:
+    if phase == "pdd" and field == "problem":
+        return isinstance(value, str) and bool(value.strip())
+    if phase == "pdd" and field in {"acceptance_criteria", "constraints", "validation_signal"}:
+        return _non_empty_trace_list(value)
+    if phase == "ddd" and field in {"domain_terms", "invariants", "ownership_decision", "side_effect_boundaries"}:
+        return _non_empty_trace_list(value)
+    if phase == "sdd" and field in {"modules", "public_api", "error_contract", "failure_modes"}:
+        return _non_empty_trace_list(value)
+    if phase == "sdd" and field == "logging_decision":
+        return isinstance(value, dict) and _has_evidence(value)
+    if phase == "tdd" and field in {"acceptance_to_tests", "invariant_to_tests_or_code", "public_api_to_tests"}:
+        return isinstance(value, dict) and _has_evidence(value)
+    if phase == "tdd" and field in {"failure_mode_tests", "validation_commands"}:
+        return _non_empty_trace_list(value)
+    return _has_evidence(value)
+
+
+def _non_empty_trace_list(value: Any) -> bool:
+    return isinstance(value, list) and any(_has_evidence(item) for item in value)
 
 
 def _source_is_fallback(source: str) -> bool:

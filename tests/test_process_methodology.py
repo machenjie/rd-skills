@@ -500,6 +500,20 @@ def test_present_status_with_inferred_required_field_fails_validator() -> None:
     assert any("phase pdd is present but required field constraints comes from fallback source" in error for error in errors)
 
 
+def test_present_status_with_invalid_required_field_shape_fails_validator() -> None:
+    trace = _valid_trace()
+    # Regression: forged present status must not hide a scalar required field with a real source.
+    trace["process_facts"]["pdd"]["acceptance_criteria"] = "scalar but source=final.md"
+    trace["process_facts"]["tdd"]["acceptance_to_tests"] = {
+        "scalar but source=final.md": [COMMAND],
+    }
+    errors = _run_trace_errors(trace)
+    assert any(
+        "phase pdd is present but required field acceptance_criteria has invalid shape" in error
+        for error in errors
+    )
+
+
 def test_generic_synthetic_trace_fails() -> None:
     trace = _valid_trace()
     trace["process_facts"].pop("case_specific")
@@ -644,6 +658,9 @@ class ProcessMethodologyTests(unittest.TestCase):
 
     def test_no_final_or_hook_trace_becomes_inferred(self) -> None:
         test_no_final_or_hook_trace_becomes_inferred()
+
+    def test_present_status_with_invalid_required_field_shape_fails_validator(self) -> None:
+        test_present_status_with_invalid_required_field_shape_fails_validator()
 
     def test_generic_synthetic_trace_fails(self) -> None:
         test_generic_synthetic_trace_fails()
