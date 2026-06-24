@@ -654,11 +654,11 @@
       "classification": "TIGHTEN_BODY",
       "code_block_count": 6,
       "context_efficiency_score": 83,
-      "critical_details_length": 15,
+      "critical_details_length": 17,
       "description_findings": [],
       "description_length": 205,
       "findings": [
-        "body 343 lines exceeds review threshold 250"
+        "body 345 lines exceeds review threshold 250"
       ],
       "has_shared_optimality": false,
       "heading_count": 22,
@@ -666,7 +666,7 @@
       "largest_section_lines": 60,
       "largest_section_title": "SDD - System / Software / Structure Design Discipline",
       "largest_table_rows": 5,
-      "line_count": 343,
+      "line_count": 345,
       "name": "development-process-orchestrator",
       "optimality_section_length": 0,
       "output_contract_length": 37,
@@ -683,7 +683,7 @@
       "suggested_action": "Trim restating prose; keep the decision-critical lines only.",
       "table_count": 1,
       "used_by_count": 0,
-      "word_count": 2765
+      "word_count": 2814
     },
     {
       "anti_example_section_length": 10,

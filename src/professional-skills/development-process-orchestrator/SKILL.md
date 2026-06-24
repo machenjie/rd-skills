@@ -266,6 +266,8 @@ Validation:
 Residual Risk:
 ```
 
+The compact trace parser supports a bounded YAML-like subset: `key: value`, `key:` with indented child keys, nested `- item` lists, and simple scalar booleans. It is not a full YAML parser; avoid anchors, flow collections, folded or block scalars, multi-document YAML, and deeply nested structures in final.md process traces.
+
 Use `present` only when concrete evidence exists in final.md compact trace, hook telemetry, explicit trace artifacts, or grading evidence. Use `inferred` for case metadata fallback, `degraded` for partial evidence, `missing` for no evidence, and `not_applicable` only with a specific reason.
 
 ## Failure Modes

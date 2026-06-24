@@ -88,7 +88,7 @@ Suggested-action distribution:
 | `degradation-circuit-breaking` | foundation-capability | 210 | 26 | Industry Benchmarks (101) |
 | `domain-event-modeling` | foundation-capability | 208 | 26 | Industry Benchmarks (86) |
 | `form-validation-design` | foundation-capability | 203 | 26 | Industry Benchmarks (86) |
-| `development-process-orchestrator` | professional-skill | 343 | 18 | - |
+| `development-process-orchestrator` | professional-skill | 345 | 18 | - |
 | `quality-test-gate` | professional-skill | 326 | 18 | - |
 | `reliability-observability-gate` | professional-skill | 280 | 18 | - |
 
@@ -120,8 +120,8 @@ Suggested-action distribution:
 | `domain-impact-modeler` | 205 | 3336 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-intake-compiler` | 203 | 3337 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `ai-code-review-refactor` | 366 | 5990 | 100 | 58 | 100 | 35 | TIGHTEN_BODY | P2 | low |
+| `development-process-orchestrator` | 345 | 2814 | 100 | 83 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `change-forge-router` | 343 | 6910 | 100 | 73 | 100 | 32 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
-| `development-process-orchestrator` | 343 | 2765 | 100 | 83 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `quality-test-gate` | 326 | 6056 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `reliability-observability-gate` | 280 | 5083 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `backend-change-builder` | 271 | 4797 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
@@ -136,15 +136,15 @@ Suggested-action distribution:
   - Path: `src/professional-skills/ai-code-review-refactor/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
   - Finding: body 366 lines exceeds heavy threshold 350
+- **`development-process-orchestrator`** (TIGHTEN_BODY, P2, risk: low)
+  - Path: `src/professional-skills/development-process-orchestrator/SKILL.md`
+  - Suggested action: Trim restating prose; keep the decision-critical lines only.
+  - Finding: body 345 lines exceeds review threshold 250
 - **`change-forge-router`** (MOVE_SECTIONS_TO_REFERENCES, P2, risk: low)
   - Path: `src/professional-skills/change-forge-router/SKILL.md`
   - Suggested action: Move oversized sections/tables into references/*.md; keep a concise body summary.
   - Finding: body 343 lines exceeds review threshold 250
   - Finding: section 'Critical Details' is 88 lines (> 80) — reference candidate
-- **`development-process-orchestrator`** (TIGHTEN_BODY, P2, risk: low)
-  - Path: `src/professional-skills/development-process-orchestrator/SKILL.md`
-  - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 343 lines exceeds review threshold 250
 - **`quality-test-gate`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/quality-test-gate/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
@@ -343,11 +343,11 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | Files | Excerpt |
 | --- | --- |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
-| 18 | do not load every reference by default. treat references as targeted support selected by t |
+| 18 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 18 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
+| 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 18 | do not load every reference by default. treat references as targeted support selected by t |
 | 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |

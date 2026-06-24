@@ -243,7 +243,7 @@ def _trace_case(case_id: str = "security/ssrf-url-allowlist") -> SimpleNamespace
     )
 
 
-def test_json_fenced_process_trace_sets_real_field_sources_and_present_status() -> None:
+def test_final_json_process_trace_populates_process_facts_and_present_status() -> None:
     runner = _load_script("run_codex_live_json_process_trace_unit", "scripts/run-codex-live-benchmarks.py")
     case = _trace_case()
     with tempfile.TemporaryDirectory() as tmp:
@@ -303,7 +303,7 @@ def test_json_fenced_process_trace_sets_real_field_sources_and_present_status() 
             assert field not in trace["process_facts"][phase].get("_inferred_fields", [])
 
 
-def test_multiline_compact_process_trace_is_real_evidence_not_inferred() -> None:
+def test_final_multiline_process_trace_populates_process_facts() -> None:
     runner = _load_script("run_codex_live_compact_process_trace_unit", "scripts/run-codex-live-benchmarks.py")
     case = _trace_case()
     with tempfile.TemporaryDirectory() as tmp:
@@ -346,11 +346,15 @@ TDD:
             result={"status": "collected", "grading_status": "passed"},
         )
     assert all(trace["phase_status"][phase] == "present" for phase in CORE_PHASES)
+    assert trace["process_facts"]["pdd"]["problem"] == "Block SSRF metadata URLs"
+    assert trace["process_facts"]["ddd"]["invariants"] == "unsafe URL is never fetched"
+    assert trace["process_facts"]["sdd"]["public_api"] == "URL validation public entrypoint"
+    assert trace["process_facts"]["tdd"]["validation_commands"] == COMMAND
     assert all(trace["process_facts"][phase]["_field_sources"] for phase in CORE_PHASES)
     assert all(trace["phase_status"][phase] != "inferred" for phase in CORE_PHASES)
 
 
-def test_partial_final_trace_is_degraded_and_require_present_fails() -> None:
+def test_partial_final_trace_with_fallback_required_fields_becomes_degraded() -> None:
     runner = _load_script("run_codex_live_partial_process_trace_unit", "scripts/run-codex-live-benchmarks.py")
     case = _trace_case()
     with tempfile.TemporaryDirectory() as tmp:
@@ -359,10 +363,14 @@ def test_partial_final_trace_is_degraded_and_require_present_fails() -> None:
         run_dir.mkdir(parents=True)
         run_dir.joinpath("final.md").write_text(
             """Process Trace:
-PDD: Block SSRF metadata URLs
-DDD: URL safety policy
-SDD: URL validation module
-TDD: benchmark command
+PDD:
+  problem: Block SSRF metadata URLs
+DDD:
+  invariants: unsafe URL is never fetched
+SDD:
+  public_api: URL validation public entrypoint
+TDD:
+  validation_commands: python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>
 """,
             encoding="utf-8",
         )
@@ -375,15 +383,20 @@ TDD: benchmark command
             result={"status": "collected", "grading_status": "passed"},
         )
     assert all(trace["phase_status"][phase] == "degraded" for phase in CORE_PHASES)
+    assert trace["process_facts"]["pdd"]["_field_sources"]["problem"] == "final.md:compact-process-trace"
+    assert trace["process_facts"]["ddd"]["_field_sources"]["invariants"] == "final.md:compact-process-trace"
+    assert trace["process_facts"]["sdd"]["_field_sources"]["public_api"] == "final.md:compact-process-trace"
+    assert trace["process_facts"]["tdd"]["_field_sources"]["validation_commands"] == "final.md:compact-process-trace"
     assert "constraints" in trace["process_facts"]["pdd"]["_inferred_fields"]
-    assert "invariants" in trace["process_facts"]["ddd"]["_inferred_fields"]
-    assert "public_api" in trace["process_facts"]["sdd"]["_inferred_fields"]
+    assert "ownership_decision" in trace["process_facts"]["ddd"]["_inferred_fields"]
+    assert "error_contract" in trace["process_facts"]["sdd"]["_inferred_fields"]
     assert "acceptance_to_tests" in trace["process_facts"]["tdd"]["_inferred_fields"]
+    assert "case_metadata_fallback:missing-fields" in trace["evidence_sources"]
     errors = _run_trace_errors(trace, require_present=True)
     assert any("--require-present requires phase pdd to be present" in error for error in errors)
 
 
-def test_fallback_only_trace_summary_counts_inferred_not_present() -> None:
+def test_no_final_or_hook_trace_becomes_inferred() -> None:
     runner = _load_script("run_codex_live_fallback_only_process_trace_unit", "scripts/run-codex-live-benchmarks.py")
     summary_module = _load_script("generate_codex_live_summary_fallback_only_unit", "scripts/generate-codex-live-summary.py")
     case = _trace_case("experimental/no-final-trace")
@@ -401,6 +414,9 @@ def test_fallback_only_trace_summary_counts_inferred_not_present() -> None:
         )
         run_dir.joinpath("process-trace.json").write_text(json.dumps(trace), encoding="utf-8")
         summary = summary_module._process_compliance_summary([{"_result_dir": run_dir}])
+    assert all(trace["phase_status"][phase] == "inferred" for phase in CORE_PHASES)
+    assert trace["evidence_sources"] == ["case_metadata_fallback"]
+    assert trace["process_facts"]["pdd"]["_evidence_source"] == "case_metadata_fallback"
     assert summary["pdd_present_rate"] == 0.0
     assert summary["pdd_inferred_rate"] == 1.0
     assert summary["all_core_phases_inferred_only_rate"] == 1.0
@@ -545,6 +561,18 @@ class ProcessMethodologyTests(unittest.TestCase):
 
     def test_stage_ownership_and_prompts_include_professional_process_method(self) -> None:
         test_stage_ownership_and_prompts_include_professional_process_method()
+
+    def test_final_json_process_trace_populates_process_facts_and_present_status(self) -> None:
+        test_final_json_process_trace_populates_process_facts_and_present_status()
+
+    def test_final_multiline_process_trace_populates_process_facts(self) -> None:
+        test_final_multiline_process_trace_populates_process_facts()
+
+    def test_partial_final_trace_with_fallback_required_fields_becomes_degraded(self) -> None:
+        test_partial_final_trace_with_fallback_required_fields_becomes_degraded()
+
+    def test_no_final_or_hook_trace_becomes_inferred(self) -> None:
+        test_no_final_or_hook_trace_becomes_inferred()
 
     def test_generic_synthetic_trace_fails(self) -> None:
         test_generic_synthetic_trace_fails()
