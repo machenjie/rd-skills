@@ -70,6 +70,7 @@ class ClosureContractTests(unittest.TestCase):
             implementation_preflight_complete=True,
             validation_evidence_present=True,
             residual_risk_present=True,
+            stage_route_present=True,
             capabilities=adapter_capabilities_for("codex"),
             validation_broker_outcome="ready",
         )

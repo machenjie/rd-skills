@@ -82,9 +82,12 @@ Runtime-governance evidence must stay bounded:
   normalized event type, lifecycle state, gate result, and closure-contract
   limits;
 - repository graph evidence names only task-relevant graph slices and freshness
-  markers, not a whole-repository dump;
+  markers, not a whole-repository dump; schema-v2 graph validation also checks
+  freshness, confidence, node type, edge type, extractor, and generated
+  source-of-truth semantics;
 - project memory evidence is experience input only and requires human promotion
-  before becoming authored skill, registry, or fixture content;
+  before becoming authored skill, registry, or fixture content; retrieval ranks
+  current closure evidence ahead of stale historical hints by default;
 - validation evidence is fresh only when the Validation Broker can tie the
   command outcome to the latest material edit and changed-path/risk coverage;
 - trajectory evidence is a review view over bounded facts and must not include
@@ -103,6 +106,9 @@ Evidence strength, freshness, and closure readiness are separate dimensions:
 - `current` graph, memory, and validation evidence can support closure only when
   source hashes or event order prove it was produced after the relevant material
   edit. `stale` and `unknown` evidence remain assumptions or residual risk.
+- Non-trivial engineering closure requires `changeforge_stage_route` /
+  `stage_route` evidence unless a documented skip reason applies. Missing stage
+  route evidence is a missing closure item, not a ready condition.
 - Closure may be `ready` only when required evidence is strong/current and
   degraded capabilities are either irrelevant to the current closure or carry a
   specific not-applicable reason. Otherwise the closure is `needs_validation`,

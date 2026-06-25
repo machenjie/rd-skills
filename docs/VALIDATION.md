@@ -52,6 +52,24 @@ ledger and closure sequencing, Project Memory stale-source gates, repository
 graph freshness/confidence/source-of-truth behavior, Validation Broker command
 mapping/freshness policy, and skill-efficacy context-budget fixtures.
 
+Stop closure treats a missing `changeforge_stage_route` / `stage_route` as
+missing evidence for non-trivial engineering tasks; stale, degraded, unknown, or
+missing evidence cannot be counted as ready closure. Project Memory retrieval
+sorts current closure evidence ahead of stale historical hints, and repository
+graph validation checks schema-v2 semantic value domains instead of only field
+presence.
+
+Governance docs are not automatically docs-only. Changes to hook, validation,
+quality, stage, operating-model, professionalism, benchmark, eval, or routing
+reports can change execution or evidence semantics, so Validation Broker routes
+them through skill-efficacy and focused governance checks. Plain usage or typo
+docs can still remain docs-only when no governance behavior surface matches.
+
+Source invariant validation treats runtime governance adapter, event, gate, and
+Validation Broker registry import failures as hard errors. Hook docs matrix,
+adapter consistency, and broker path mappings are not considered checked when a
+required module cannot import.
+
 ## Skill Behavior Evals
 
 Use these deterministic checks for routing, reference-loading, professional

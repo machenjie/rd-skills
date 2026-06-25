@@ -1,7 +1,7 @@
 {
-  "average_score": 41.85,
+  "average_score": 41.86,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-25T08:08:31.270223+00:00",
+  "generated_at": "2026-06-25T11:17:14.793276+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -2905,7 +2905,7 @@
       "warnings": []
     },
     {
-      "body_lines": 96,
+      "body_lines": 99,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -3230,14 +3230,14 @@
       "warnings": []
     },
     {
-      "body_lines": 95,
+      "body_lines": 100,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 1,
         "evidence_contract_strength": 2,
         "failure_mode_coverage": 3,
         "mode_coverage": 4,
-        "output_actionability": 4,
+        "output_actionability": 5,
         "proactive_trigger_quality": 1,
         "professional_depth": 5,
         "reference_precision": 4,
@@ -3251,7 +3251,7 @@
       "path": "src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md",
       "recommended_fixes": [],
       "status": "acceptable",
-      "total": 42,
+      "total": 43,
       "warnings": []
     },
     {

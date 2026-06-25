@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import importlib
 import importlib.util
 import re
 import sys
@@ -122,6 +123,14 @@ class ValidationResult:
 
     errors: list[str]
     warnings: list[str]
+
+
+@dataclass(frozen=True)
+class ImportResult:
+    """Import result that preserves required-module failure details."""
+
+    module: ModuleType | None
+    error: str | None = None
 
 
 def validate_repository(root: Path = ROOT) -> ValidationResult:
@@ -572,24 +581,32 @@ def _validate_hook_runtime_consistency(errors: list[str], warnings: list[str]) -
     if not HOOKS_DOC.is_file():
         errors.append("docs/HOOKS.md: missing hook runtime documentation")
         return
-    runtime_module = _import_module(
+    runtime_module = _import_required_module(
         SRC / "runtime_governance" / "adapters" / "base.py",
         "runtime_adapter_base_src_invariant",
+        "src/runtime_governance/adapters/base.py",
+        errors,
         extra_paths=[SRC],
         package_name="runtime_governance.adapters.base",
     )
-    events_module = _import_module(
+    events_module = _import_required_module(
         SRC / "runtime_governance" / "events.py",
         "runtime_events_src_invariant",
+        "src/runtime_governance/events.py",
+        errors,
         extra_paths=[SRC],
         package_name="runtime_governance.events",
     )
-    gates_module = _import_module(
+    gates_module = _import_required_module(
         SRC / "runtime_governance" / "gates.py",
         "runtime_gates_src_invariant",
+        "src/runtime_governance/gates.py",
+        errors,
         extra_paths=[SRC],
         package_name="runtime_governance.gates",
     )
+    if runtime_module is None or events_module is None or gates_module is None:
+        return
     if runtime_module is not None:
         _compare_docs_adapter_matrix(HOOKS_DOC, runtime_module, errors, warnings)
     if runtime_module is not None and events_module is not None:
@@ -684,9 +701,11 @@ def _matrix_runtime_map() -> dict[str, str]:
 
 
 def _validate_validation_broker_mapping(errors: list[str]) -> None:
-    module = _import_module(
+    module = _import_required_module(
         SRC / "validation_broker" / "command_registry.py",
         "validation_broker_command_registry_src_invariant",
+        "src/validation_broker/command_registry.py",
+        errors,
         extra_paths=[SRC],
         package_name="validation_broker.command_registry",
     )
@@ -767,8 +786,43 @@ def _import_module(
     extra_paths: list[Path] | None = None,
     package_name: str | None = None,
 ) -> ModuleType | None:
+    return _import_module_result(
+        path,
+        name,
+        extra_paths=extra_paths,
+        package_name=package_name,
+    ).module
+
+
+def _import_required_module(
+    path: Path,
+    name: str,
+    context: str,
+    errors: list[str],
+    *,
+    extra_paths: list[Path] | None = None,
+    package_name: str | None = None,
+) -> ModuleType | None:
+    result = _import_module_result(
+        path,
+        name,
+        extra_paths=extra_paths,
+        package_name=package_name,
+    )
+    if result.error:
+        errors.append(f"{context}: import failed: {result.error}")
+    return result.module
+
+
+def _import_module_result(
+    path: Path,
+    name: str,
+    *,
+    extra_paths: list[Path] | None = None,
+    package_name: str | None = None,
+) -> ImportResult:
     if not path.is_file():
-        return None
+        return ImportResult(None, "file not found")
     inserted: list[str] = []
     for extra in extra_paths or []:
         value = str(extra)
@@ -777,15 +831,17 @@ def _import_module(
             inserted.append(value)
     spec_name = package_name or name
     try:
+        if package_name:
+            return ImportResult(importlib.import_module(package_name))
         spec = importlib.util.spec_from_file_location(spec_name, path)
         if spec is None or spec.loader is None:
-            return None
+            return ImportResult(None, "module spec unavailable")
         module = importlib.util.module_from_spec(spec)
         sys.modules[spec.name] = module
         spec.loader.exec_module(module)
-        return module
-    except Exception:
-        return None
+        return ImportResult(module)
+    except Exception as exc:
+        return ImportResult(None, f"{type(exc).__name__}: {exc}")
     finally:
         for value in inserted:
             try:

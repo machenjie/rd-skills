@@ -119,6 +119,41 @@ class CommandResolverTests(unittest.TestCase):
         self.assertTrue(behavior["docs_only"])
         self.assertEqual(behavior["changed_surface"], "docs-only")
 
+    def test_hooks_doc_requires_behavior_benchmark(self) -> None:
+        plan = resolve_validation_plan(["docs/HOOKS.md"])
+        behavior = plan["skill_behavior_change"]
+        self.assertIsInstance(behavior, dict)
+        self.assertTrue(behavior["requires_skill_efficacy_benchmark"])
+        self.assertFalse(behavior["docs_only"])
+        self.assertEqual(behavior["changed_surface"], "hook")
+        selected = commands(plan)
+        self.assertIn("python3 scripts/validate-skill-efficacy-benchmarks.py", selected)
+        self.assertIn("python3 scripts/validate-hooks.py", selected)
+
+    def test_validation_doc_requires_behavior_benchmark(self) -> None:
+        plan = resolve_validation_plan(["docs/VALIDATION.md"])
+        behavior = plan["skill_behavior_change"]
+        self.assertIsInstance(behavior, dict)
+        self.assertTrue(behavior["requires_skill_efficacy_benchmark"])
+        self.assertFalse(behavior["docs_only"])
+        self.assertEqual(behavior["changed_surface"], "validation")
+
+    def test_plain_usage_doc_can_be_docs_only(self) -> None:
+        plan = resolve_validation_plan(["docs/USAGE.md"])
+        behavior = plan["skill_behavior_change"]
+        self.assertIsInstance(behavior, dict)
+        self.assertFalse(behavior["requires_skill_efficacy_benchmark"])
+        self.assertTrue(behavior["docs_only"])
+
+    def test_benchmark_report_requires_report_consistency(self) -> None:
+        plan = resolve_validation_plan(["reports/professional-benchmarks-eval.md"])
+        behavior = plan["skill_behavior_change"]
+        self.assertIsInstance(behavior, dict)
+        self.assertTrue(behavior["requires_skill_efficacy_benchmark"])
+        self.assertFalse(behavior["docs_only"])
+        self.assertEqual(behavior["changed_surface"], "validation")
+        self.assertIn("python3 scripts/validate-report-consistency.py", commands(plan))
+
 
 if __name__ == "__main__":
     unittest.main()

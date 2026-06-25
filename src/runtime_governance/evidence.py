@@ -95,6 +95,7 @@ class EvidenceEntry:
 @dataclass
 class EvidenceLedger:
     route_manifest: EvidenceEntry = field(default_factory=lambda: EvidenceEntry("route_manifest"))
+    stage_route: EvidenceEntry = field(default_factory=lambda: EvidenceEntry("stage_route"))
     read_evidence: EvidenceEntry = field(default_factory=lambda: EvidenceEntry("read_evidence"))
     repository_context: EvidenceEntry = field(default_factory=lambda: EvidenceEntry("repository_context"))
     implementation_preflight: EvidenceEntry = field(
@@ -292,6 +293,7 @@ class EvidenceLedger:
     def from_json_dict(cls, data: Mapping[str, Any]) -> "EvidenceLedger":
         return cls(
             route_manifest=EvidenceEntry.from_json_dict(data.get("route_manifest") or {}, kind="route_manifest"),
+            stage_route=EvidenceEntry.from_json_dict(data.get("stage_route") or {}, kind="stage_route"),
             read_evidence=EvidenceEntry.from_json_dict(data.get("read_evidence") or {}, kind="read_evidence"),
             repository_context=EvidenceEntry.from_json_dict(
                 data.get("repository_context") or {},

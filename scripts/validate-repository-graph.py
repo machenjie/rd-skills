@@ -16,6 +16,43 @@ SECRET_PATTERNS = [
     re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
     re.compile(r"(?i)(password|token|secret|api[_-]?key)\s*[:=]\s*['\"]?[A-Za-z0-9_./+=-]{8,}"),
 ]
+FRESHNESS_VALUES = {"current", "stale", "unknown", "not_applicable"}
+CONFIDENCE_VALUES = {"high", "medium", "low", "unknown"}
+NODE_TYPES = {
+    "file",
+    "module",
+    "class",
+    "function",
+    "method",
+    "config_key",
+    "reference",
+    "test",
+    "generated_artifact",
+    "unknown",
+}
+EDGE_TYPES = {
+    "imports",
+    "calls",
+    "references",
+    "tests",
+    "owns",
+    "generates",
+    "generated_from",
+    "depends_on",
+    "unknown",
+}
+EXTRACTOR_VALUES = {
+    "python_symbol_extractor",
+    "markdown_reference_extractor",
+    "yaml_reference_extractor",
+    "file_heuristic",
+    "import_graph",
+    "test_graph",
+    "generated_artifact_graph",
+    "reference_graph",
+    "validation_broker.command_registry",
+    "unknown",
+}
 
 
 def _payload(document: dict[str, Any]) -> dict[str, Any]:
@@ -76,9 +113,10 @@ def validate_repository_graph(document: dict[str, Any]) -> list[str]:
             if required not in file_node:
                 errors.append(f"files[{index}].{required} is required")
         if schema_version == 2:
-            for field in ("evidence", "source_hash", "freshness", "confidence", "extractor"):
+            for field in ("evidence", "source_hash", "freshness", "confidence", "extractor", "node_type"):
                 if field not in file_node:
                     errors.append(f"files[{index}].{field} is required for schema_version=2")
+            _validate_file_node_v2(file_node, index, errors)
 
     edges = graph.get("edges")
     if not isinstance(edges, list):
@@ -99,6 +137,7 @@ def validate_repository_graph(document: dict[str, Any]) -> list[str]:
             for field in ("edge_type", "evidence", "confidence", "freshness", "extractor"):
                 if field not in edge:
                     errors.append(f"edges[{index}].{field} is required for schema_version=2")
+            _validate_edge_v2(edge, index, errors)
 
     if schema_version == 2:
         for field in (
@@ -125,6 +164,7 @@ def validate_repository_graph(document: dict[str, Any]) -> list[str]:
                     errors.append(f"symbols[{index}].{field} is required for schema_version=2")
             if isinstance(symbol.get("path"), str) and _is_user_absolute_path(symbol["path"]):
                 errors.append(f"symbols[{index}].path must be repository-relative")
+            _validate_symbol_v2(symbol, index, errors)
         for index, item in enumerate(graph.get("generated_artifacts", []) if isinstance(graph.get("generated_artifacts"), list) else []):
             if not isinstance(item, dict):
                 errors.append(f"generated_artifacts[{index}] must be an object")
@@ -132,6 +172,7 @@ def validate_repository_graph(document: dict[str, Any]) -> list[str]:
             for field in ("generated_path", "source_of_truth", "edit_policy", "confidence", "freshness", "extractor"):
                 if field not in item:
                     errors.append(f"generated_artifacts[{index}].{field} is required for schema_version=2")
+            _validate_generated_artifact_v2(item, index, errors)
         candidates = graph.get("validation_candidates", [])
         for index, candidate in enumerate(candidates if isinstance(candidates, list) else []):
             if not isinstance(candidate, dict):
@@ -143,6 +184,101 @@ def validate_repository_graph(document: dict[str, Any]) -> list[str]:
     if _has_secret_like(document):
         errors.append("repository graph contains secret-like content")
     return errors
+
+
+def _validate_file_node_v2(node: dict[str, Any], index: int, errors: list[str]) -> None:
+    _validate_value(f"files[{index}].freshness", node.get("freshness"), FRESHNESS_VALUES, errors)
+    _validate_value(f"files[{index}].confidence", node.get("confidence"), CONFIDENCE_VALUES, errors)
+    _validate_value(f"files[{index}].node_type", node.get("node_type"), NODE_TYPES, errors)
+    _validate_value(f"files[{index}].extractor", node.get("extractor"), EXTRACTOR_VALUES, errors)
+    evidence = node.get("evidence")
+    if isinstance(evidence, dict):
+        _validate_evidence_domains(f"files[{index}].evidence", evidence, errors)
+        _validate_evidence_match(index, "files", node, evidence, ("freshness", "confidence", "node_type"), errors)
+
+
+def _validate_edge_v2(edge: dict[str, Any], index: int, errors: list[str]) -> None:
+    _validate_value(f"edges[{index}].edge_type", edge.get("edge_type"), EDGE_TYPES, errors)
+    _validate_value(f"edges[{index}].freshness", edge.get("freshness"), FRESHNESS_VALUES, errors)
+    _validate_value(f"edges[{index}].confidence", edge.get("confidence"), CONFIDENCE_VALUES, errors)
+    _validate_value(f"edges[{index}].extractor", edge.get("extractor"), EXTRACTOR_VALUES, errors)
+    if edge.get("edge_type") == "unknown" and not _nonempty_text(edge.get("unknown_reason")):
+        errors.append(f"edges[{index}].unknown_reason is required when edge_type is unknown")
+    evidence = edge.get("evidence")
+    if isinstance(evidence, dict):
+        _validate_evidence_domains(f"edges[{index}].evidence", evidence, errors)
+        if "edge_type" in evidence:
+            _validate_value(f"edges[{index}].evidence.edge_type", evidence.get("edge_type"), EDGE_TYPES, errors)
+        _validate_evidence_match(index, "edges", edge, evidence, ("freshness", "confidence", "edge_type"), errors)
+
+
+def _validate_symbol_v2(symbol: dict[str, Any], index: int, errors: list[str]) -> None:
+    _validate_value(f"symbols[{index}].freshness", symbol.get("freshness"), FRESHNESS_VALUES, errors)
+    _validate_value(f"symbols[{index}].confidence", symbol.get("confidence"), CONFIDENCE_VALUES, errors)
+    _validate_value(f"symbols[{index}].extractor", symbol.get("extractor"), EXTRACTOR_VALUES, errors)
+    evidence = symbol.get("evidence")
+    if isinstance(evidence, dict):
+        _validate_evidence_domains(f"symbols[{index}].evidence", evidence, errors)
+        _validate_evidence_match(index, "symbols", symbol, evidence, ("freshness", "confidence"), errors)
+
+
+def _validate_generated_artifact_v2(item: dict[str, Any], index: int, errors: list[str]) -> None:
+    _validate_value(f"generated_artifacts[{index}].freshness", item.get("freshness"), FRESHNESS_VALUES, errors)
+    _validate_value(f"generated_artifacts[{index}].confidence", item.get("confidence"), CONFIDENCE_VALUES, errors)
+    _validate_value(f"generated_artifacts[{index}].extractor", item.get("extractor"), EXTRACTOR_VALUES, errors)
+    source_of_truth = item.get("source_of_truth")
+    has_source_of_truth = bool(source_of_truth)
+    has_source_path = _nonempty_text(item.get("source_path"))
+    confidence = str(item.get("confidence") or "")
+    if not has_source_of_truth or not has_source_path:
+        if confidence not in {"low", "unknown"}:
+            errors.append(
+                f"generated_artifacts[{index}].confidence must be low/unknown when source_of_truth or source_path is missing"
+            )
+        if not _nonempty_text(item.get("unknown_reason")):
+            errors.append(
+                f"generated_artifacts[{index}].unknown_reason is required when source_of_truth or source_path is missing"
+            )
+    if item.get("edit_policy") == "edit source / do not edit generated" and not has_source_of_truth:
+        errors.append(
+            f"generated_artifacts[{index}].source_of_truth is required when edit_policy is edit source / do not edit generated"
+        )
+
+
+def _validate_evidence_domains(context: str, evidence: dict[str, Any], errors: list[str]) -> None:
+    if "freshness" in evidence:
+        _validate_value(f"{context}.freshness", evidence.get("freshness"), FRESHNESS_VALUES, errors)
+    if "confidence" in evidence:
+        _validate_value(f"{context}.confidence", evidence.get("confidence"), CONFIDENCE_VALUES, errors)
+    if "node_type" in evidence:
+        _validate_value(f"{context}.node_type", evidence.get("node_type"), NODE_TYPES, errors)
+    if "extractor" in evidence:
+        _validate_value(f"{context}.extractor", evidence.get("extractor"), EXTRACTOR_VALUES, errors)
+
+
+def _validate_evidence_match(
+    index: int,
+    collection: str,
+    item: dict[str, Any],
+    evidence: dict[str, Any],
+    fields: tuple[str, ...],
+    errors: list[str],
+) -> None:
+    for field in fields:
+        if field in evidence and field in item and evidence.get(field) != item.get(field):
+            errors.append(
+                f"{collection}[{index}].{field} must match evidence.{field}: "
+                f"{item.get(field)!r} != {evidence.get(field)!r}"
+            )
+
+
+def _validate_value(context: str, value: object, allowed: set[str], errors: list[str]) -> None:
+    if str(value or "") not in allowed:
+        errors.append(f"{context} must be one of {sorted(allowed)}")
+
+
+def _nonempty_text(value: object) -> bool:
+    return isinstance(value, str) and bool(value.strip())
 
 
 def main(argv: list[str] | None = None) -> int:

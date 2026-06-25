@@ -6,11 +6,19 @@ from fnmatch import fnmatch
 from typing import Iterable
 
 
+_SRC_ROOT = "src"
+_REGISTRY_SEGMENT = "registry"
+
+
+def _src_pattern(*parts: str) -> str:
+    return "/".join((_SRC_ROOT, *parts))
+
+
 SKILL_BEHAVIOR_CHANGE_PATTERNS: tuple[tuple[str, str], ...] = (
     ("skill", "src/professional-skills/**"),
     ("capability", "src/foundation/capabilities/**"),
     ("skill", "src/domain-extensions/**"),
-    ("router", "src/registry/**"),
+    ("router", _src_pattern(_REGISTRY_SEGMENT, "**")),
     ("hook", "src/hook-runtime/**"),
     ("adapter", "src/runtime_governance/**"),
     ("validation", "src/validation_broker/**"),
@@ -20,6 +28,27 @@ SKILL_BEHAVIOR_CHANGE_PATTERNS: tuple[tuple[str, str], ...] = (
     ("validation", "evals/**"),
     ("validation", "scripts/eval-*.py"),
     ("validation", "scripts/validate-skill-efficacy-benchmarks.py"),
+)
+
+GOVERNANCE_DOC_BEHAVIOR_PATTERNS: tuple[tuple[str, str], ...] = (
+    ("hook", "docs/HOOKS.md"),
+    ("validation", "docs/QUALITY_MODEL.md"),
+    ("trajectory", "docs/TELEMETRY.md"),
+    ("router", "docs/ENGINEERING_STAGE_MODEL.md"),
+    ("validation", "docs/VALIDATION.md"),
+    ("router", "docs/OPERATING_MODEL.md"),
+    ("validation", "docs/PROFESSIONALISM_ENHANCEMENT_STANDARD.md"),
+    ("validation", "reports/*benchmark*.md"),
+    ("validation", "reports/*benchmark*.json"),
+    ("validation", "reports/*eval*.md"),
+    ("validation", "reports/*eval*.json"),
+    ("validation", "reports/*routing*.md"),
+    ("validation", "reports/*routing*.json"),
+)
+
+SKILL_BEHAVIOR_CHANGE_PATTERNS = (
+    *SKILL_BEHAVIOR_CHANGE_PATTERNS,
+    *GOVERNANCE_DOC_BEHAVIOR_PATTERNS,
 )
 
 DOCS_ONLY_PATTERNS: tuple[str, ...] = (
@@ -54,14 +83,21 @@ def classify_skill_behavior_change(changed_paths: Iterable[str]) -> dict[str, ob
             if surface not in matched_surfaces:
                 matched_surfaces.append(surface)
 
+    governance_doc_match = any(
+        any(fnmatch(path, pattern) for _surface, pattern in GOVERNANCE_DOC_BEHAVIOR_PATTERNS)
+        for path in paths
+    )
     docs_only = bool(paths) and not matches and all(_is_docs_only(path) for path in paths)
     requires = bool(matches)
     if requires:
         changed_surface = _primary_surface(matched_surfaces)
-        reason = (
-            "skill, routing, hook, memory, graph, validation, trajectory, or "
-            "adapter behavior changed; skill efficacy benchmark evidence is required"
-        )
+        if governance_doc_match:
+            reason = "governance documentation changes execution or evidence semantics"
+        else:
+            reason = (
+                "skill, routing, hook, memory, graph, validation, trajectory, or "
+                "adapter behavior changed; skill efficacy benchmark evidence is required"
+            )
     elif docs_only:
         changed_surface = "docs-only"
         reason = "changed paths are documentation or generated reports with no behavior surface"

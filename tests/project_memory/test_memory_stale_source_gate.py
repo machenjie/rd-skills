@@ -77,6 +77,76 @@ class MemoryStaleSourceGateTests(unittest.TestCase):
         self.assertEqual(hit["evidence_role"], "warning_only")
         self.assertIn("source_of_truth", hit["reason"])
 
+    def test_current_closure_evidence_ranks_before_stale_failed_memory(self) -> None:
+        with tempfile.TemporaryDirectory() as repo_s:
+            repo = Path(repo_s)
+            source = _write(repo, "src/app.py", "value = 1\n")
+            current = _event(repo, "src/app.py", "success")
+            current["event_id"] = "current"
+            current["created_at"] = "2026-06-01T00:00:00Z"
+            stale = _event(repo, "src/app.py", "failed")
+            stale["event_id"] = "stale"
+            stale["created_at"] = "2026-06-02T00:00:00Z"
+            stale["promotion_status"] = "approved"
+            source.write_text("value = 2\n", encoding="utf-8")
+            _write(repo, "src/app_current.py", "value = 1\n")
+            current["paths"] = ["src/app_current.py"]
+            current["bounded_paths"] = ["src/app_current.py"]
+            current["source_evidence"]["repo_rel_path"] = "src/app_current.py"
+            current["source_evidence"]["source_hash"] = sha256_file(repo / "src/app_current.py")
+
+            ranked = rank_memory_events(
+                [stale, current],
+                {"repo_hash": "repo", "paths": ["src/app.py", "src/app_current.py"]},
+                repo_root=repo,
+            )
+
+        self.assertEqual([item["event_id"] for item in ranked], ["current", "stale"])
+        self.assertEqual(ranked[0]["evidence_role"], "closure_evidence")
+        self.assertEqual(ranked[1]["source_status"], "stale")
+
+    def test_historical_hint_remains_returned_but_marked_after_current_hit(self) -> None:
+        with tempfile.TemporaryDirectory() as repo_s:
+            repo = Path(repo_s)
+            source = _write(repo, "src/app.py", "value = 1\n")
+            stale = _event(repo, "src/app.py", "failed")
+            stale["event_id"] = "stale"
+            source.write_text("value = 2\n", encoding="utf-8")
+            current_source = _write(repo, "src/current.py", "value = 3\n")
+            current = _event(repo, "src/current.py", "success")
+            current["event_id"] = "current"
+
+            ranked = rank_memory_events(
+                [stale, current],
+                {"repo_hash": "repo", "paths": ["src/app.py", "src/current.py"]},
+                repo_root=repo,
+            )
+
+        self.assertEqual(ranked[0]["event_id"], "current")
+        self.assertEqual(ranked[1]["event_id"], "stale")
+        self.assertEqual(ranked[1]["evidence_role"], "historical_hint")
+
+    def test_generated_warning_only_does_not_outrank_current_closure_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as repo_s:
+            repo = Path(repo_s)
+            _write(repo, "src/app.py", "value = 1\n")
+            _write(repo, "dist/app.py", "value = 1\n")
+            current = _event(repo, "src/app.py", "success")
+            current["event_id"] = "current"
+            generated = _event(repo, "dist/app.py", "blocked")
+            generated["event_id"] = "generated"
+            generated["promotion_status"] = "approved"
+
+            ranked = rank_memory_events(
+                [generated, current],
+                {"repo_hash": "repo", "paths": ["src/app.py", "dist/app.py"]},
+                repo_root=repo,
+            )
+
+        self.assertEqual(ranked[0]["event_id"], "current")
+        self.assertEqual(ranked[1]["source_status"], "generated")
+        self.assertEqual(ranked[1]["evidence_role"], "warning_only")
+
 
 def _write(repo: Path, rel_path: str, body: str) -> Path:
     path = repo / rel_path

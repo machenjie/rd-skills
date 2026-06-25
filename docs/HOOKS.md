@@ -76,6 +76,10 @@ Canonical evidence flow:
    not free-form validation claims alone. Free-form final text can satisfy
    handoff wording checks, but structured stale, failed, or unknown validation
    facts control validation closure.
+5. For non-trivial engineering tasks, Stop closure also requires
+   `changeforge_stage_route` / `stage_route` evidence unless the state carries a
+   concrete skip reason. Missing stage route evidence is reported as missing
+   closure evidence and cannot produce a `ready` verdict.
 
 Repository graph and context-pack support are source-evidence helpers. They may
 summarize symbol, import, reference, test, ownership, and generated-artifact
@@ -153,8 +157,9 @@ The first-stage runtime provides these reminder gates:
   paths or commands touch auth, data contracts, cache, queue, Kubernetes, Helm,
   or big-data surfaces.
 - Stop Closure Gate: runs before final handoff and reminds the agent to include
-  skill path, changed files, validation evidence, residual risk, next steps, and
-  the implementation preflight summary plus structure-evidence records (file
+  skill path, `changeforge_stage_route` when engineering work was non-trivial,
+  changed files, validation evidence, residual risk, next steps, and the
+  implementation preflight summary plus structure-evidence records (file
   naming, reuse ladder, extension safety, advanced refactor, comment quality)
   for any structure sub-gate that fired.
 - Subagent Closure Reminder (`SubagentStop`, Codex and Claude): reminds a stopping subagent

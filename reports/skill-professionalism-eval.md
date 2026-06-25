@@ -1,9 +1,9 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-25T08:08:31.270223+00:00
+- Generated: 2026-06-25T11:17:14.793276+00:00
 - Skills/capabilities checked: 148
 - Warning count: 2
-- Average score: 41.85/60
+- Average score: 41.86/60
 
 ## Scores
 
@@ -89,13 +89,13 @@
 | `src/foundation/capabilities/repository-graph-analysis/SKILL.md` | foundation-capability | 41/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/cleanup-deletion-governance/SKILL.md` | foundation-capability | 42/60 | needs-review | 0 | 0 |
 | `src/foundation/capabilities/design-pattern-selection/SKILL.md` | foundation-capability | 42/60 | acceptable | 0 | 1 |
-| `src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md` | foundation-capability | 42/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/execution-trajectory-analysis/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/executor-adapter-protocol/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/message-queue-design/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/observability/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/relational-database/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/release-rollback/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
+| `src/foundation/capabilities/skill-efficacy-benchmark/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/solution-optimality-evaluation/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/validation-broker/SKILL.md` | foundation-capability | 43/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/async-job-design/SKILL.md` | foundation-capability | 44/60 | acceptable | 0 | 0 |

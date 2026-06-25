@@ -58,9 +58,9 @@ Suggested-action distribution:
 | `validation-broker` | foundation-capability | 100 | section 'Validation Broker' is 89 lines (> 80) — reference candidate |
 | `execution-trajectory-analysis` | foundation-capability | 100 | section 'Execution Trajectory Analysis' is 90 lines (> 80) — reference candidate |
 | `executor-adapter-protocol` | foundation-capability | 100 | section 'Executor Adapter Protocol' is 93 lines (> 80) — reference candidate |
-| `skill-efficacy-benchmark` | foundation-capability | 100 | section 'Skill Efficacy Benchmark' is 94 lines (> 80) — reference candidate |
-| `repository-graph-analysis` | foundation-capability | 100 | section 'Repository Graph Analysis' is 95 lines (> 80) — reference candidate |
 | `agent-tool-permission-sandbox` | foundation-capability | 100 | section 'Agent Tool Permission Sandbox' is 96 lines (> 80) — reference candidate |
+| `plan-execution-consistency` | foundation-capability | 100 | section 'Plan Execution Consistency' is 98 lines (> 80) — reference candidate |
+| `repository-graph-analysis` | foundation-capability | 100 | section 'Repository Graph Analysis' is 98 lines (> 80) — reference candidate |
 
 ### 2.3 Weakest Routing Boundaries
 
@@ -73,9 +73,9 @@ Suggested-action distribution:
 | `validation-broker` | foundation-capability | 100 | - |
 | `execution-trajectory-analysis` | foundation-capability | 100 | - |
 | `executor-adapter-protocol` | foundation-capability | 100 | - |
-| `skill-efficacy-benchmark` | foundation-capability | 100 | - |
-| `repository-graph-analysis` | foundation-capability | 100 | - |
 | `agent-tool-permission-sandbox` | foundation-capability | 100 | - |
+| `plan-execution-consistency` | foundation-capability | 100 | - |
+| `repository-graph-analysis` | foundation-capability | 100 | - |
 
 ### 2.4 Strongest Split Candidates
 
@@ -293,10 +293,10 @@ Suggested-action distribution:
 | `architecture-enforcement-tooling` | 113 | 771 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
 | `agent-workflow-state-machine` | 109 | 1162 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `version-compatibility` | 107 | 1866 | 100 | 100 | 100 | 0 | KEEP_AS_IS | - | low |
+| `skill-efficacy-benchmark` | 100 | 974 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `plan-execution-consistency` | 99 | 924 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
+| `repository-graph-analysis` | 99 | 885 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `agent-tool-permission-sandbox` | 97 | 1076 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
-| `repository-graph-analysis` | 96 | 864 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
-| `skill-efficacy-benchmark` | 95 | 894 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `executor-adapter-protocol` | 94 | 970 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `execution-trajectory-analysis` | 91 | 821 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
 | `project-memory-governance` | 90 | 858 | 100 | 92 | 100 | 14 | KEEP_AS_IS | - | low |
@@ -343,11 +343,11 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | Files | Excerpt |
 | --- | --- |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
+| 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
+| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 18 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
 | 18 | do not load every reference by default. treat references as targeted support selected by t |
-| 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
-| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
-| 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
 | 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |

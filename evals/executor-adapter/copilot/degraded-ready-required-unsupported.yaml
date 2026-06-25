@@ -44,6 +44,7 @@ expected_closure_effect:
   verdict: degraded_ready
   unsupported_checks:
     - pre_tool_advisory_context
+    - runtime_adapter_degradation
   degraded_capabilities_contains:
     - copilot_pre_tool_advisory_context_unsupported
 privacy_expectations:

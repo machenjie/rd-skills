@@ -94,6 +94,7 @@ REGISTRY: dict[str, dict[str, object]] = {
             "src/hook-runtime/**",
             "tests/hook_runtime/**",
             "scripts/validate-hooks.py",
+            "docs/HOOKS.md",
         ),
         "risk_surfaces": (
             "hook-runtime",
@@ -391,6 +392,7 @@ REGISTRY: dict[str, dict[str, object]] = {
         "narrow": (
             ("python3 scripts/build.py --profile recommended", "generated artifacts must be reproducible from source"),
             ("python3 scripts/validate-runtime-reference-links.py", "runtime artifact references must resolve"),
+            ("python3 scripts/validate-report-consistency.py", "governance reports must stay consistent with validation evidence"),
         ),
         "module": (),
         "full": (

@@ -124,10 +124,13 @@ class ClosureContract:
             )
 
         engineering = profile == "engineering"
+        requires_stage = _requires_stage_route(state, profile)
         requires_route = engineering
         requires_repo = engineering
         requires_preflight = engineering and bool(
             state.get("changed_paths")
+            or state.get("deleted_paths")
+            or state.get("generated_paths")
             or state.get("implementation_preflight_required")
             or state.get("edit_without_preflight_seen")
             or state.get("post_edit_confirmed_preflight_gap")
@@ -143,7 +146,7 @@ class ClosureContract:
         required_evidence: list[str] = []
         if requires_route:
             required_evidence.append("route_manifest")
-        if engineering and bool(state.get("stage_route_present")):
+        if requires_stage:
             required_evidence.append("stage_route")
         if requires_repo:
             required_evidence.append("repository_context")
@@ -159,6 +162,7 @@ class ClosureContract:
         ledger = _governance_ledger(
             state=state,
             route_manifest_complete=route_manifest_complete,
+            stage_route_present=stage_route_present,
             repository_context_present=repository_context_present,
             implementation_preflight_complete=implementation_preflight_complete,
             validation_evidence_present=validation_evidence_present,
@@ -174,8 +178,6 @@ class ClosureContract:
             required_evidence=required_evidence,
         )
         missing = _compat_missing(governance.missing_evidence)
-        if "stage_route" in required_evidence and not stage_route_present:
-            missing.append("stage_route")
         missing = _unique(missing)
         fail_closed_allowed = "stop_closure" in _list(
             getattr(capabilities, "fail_closed_allowed_checks", ())
@@ -188,7 +190,12 @@ class ClosureContract:
             else "pass"
         )
         verdict = _compat_verdict(governance.verdict, status, validation_broker_outcome)
-        final_residual = _unique([*residual, *governance.residual_risk])
+        stage_route_residual = (
+            ["stage route evidence missing for non-trivial engineering task"]
+            if requires_stage and not stage_route_present
+            else []
+        )
+        final_residual = _unique([*residual, *governance.residual_risk, *stage_route_residual])
         closure_payload = _changeforge_closure(
             governance,
             validation_broker_outcome=validation_broker_outcome,
@@ -206,7 +213,7 @@ class ClosureContract:
             verdict=verdict,
             residual_risk=final_residual,
             requires_route_manifest=requires_route,
-            requires_stage_route=engineering and bool(state.get("stage_route_present")),
+            requires_stage_route=requires_stage,
             requires_repository_context=requires_repo,
             requires_implementation_preflight=requires_preflight,
             requires_validation_evidence=requires_validation,
@@ -244,6 +251,7 @@ def _governance_ledger(
     *,
     state: dict | None = None,
     route_manifest_complete: bool,
+    stage_route_present: bool,
     repository_context_present: bool,
     implementation_preflight_complete: bool,
     validation_evidence_present: bool,
@@ -252,6 +260,7 @@ def _governance_ledger(
 ) -> GovernanceEvidenceLedger:
     ledger = GovernanceEvidenceLedger()
     _mark(ledger.route_manifest, route_manifest_complete)
+    _mark(ledger.stage_route, stage_route_present)
     _mark(ledger.repository_context, repository_context_present)
     _mark(ledger.implementation_preflight, implementation_preflight_complete)
     _mark(ledger.review, review_evidence_present)
@@ -505,6 +514,31 @@ def _profile(state: dict) -> str:
     if stage in {"read", "review", "requirement-intake", "code-review"} and not state.get("changed_paths"):
         return "read_review"
     return "engineering"
+
+
+def _requires_stage_route(state: dict, profile: str) -> bool:
+    if profile != "engineering":
+        return False
+    if _has_stage_route_skip_reason(state):
+        return False
+    return bool(
+        state.get("changed_paths")
+        or state.get("deleted_paths")
+        or state.get("generated_paths")
+        or state.get("implementation_preflight_required")
+        or state.get("edit_without_preflight_seen")
+        or state.get("post_edit_confirmed_preflight_gap")
+    )
+
+
+def _has_stage_route_skip_reason(state: dict) -> bool:
+    reason_keys = ("stage_route_skip_reason", "stage_route_not_required_reason")
+    task_classification_keys = ("non_trivial_engineering_task", "trivial_engineering_task")
+    return any(_nonempty_string(state.get(key)) for key in (*reason_keys, *task_classification_keys))
+
+
+def _nonempty_string(value: object) -> bool:
+    return isinstance(value, str) and bool(value.strip())
 
 
 def _compat_missing(items: list[str]) -> list[str]:

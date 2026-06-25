@@ -14,12 +14,30 @@ claims are not inferred from these checks.
 | --- | --- | --- |
 | Source invariant coverage | Present | `python3 scripts/validate-src-invariants.py` passed and covers registries, capability references, source/runtime boundary, hook runtime, Validation Broker, Project Memory, and repository intelligence invariants. |
 | Evidence ledger sequence coverage | Present | `python3 -m unittest discover -s tests/runtime_governance` passed 87 tests, including evidence ledger and closure-contract sequencing. |
-| Memory stale-source gate coverage | Present | `python3 scripts/validate-project-memory.py` passed; `python3 -m unittest discover -s tests/project_memory` passed 31 tests. |
-| Graph confidence/freshness coverage | Present | Repository graph index/validate passed with 4327 files and 8702 edges; context pack validate passed with 13 relevant files and 11 validation candidates; `tests/repository_intelligence` passed 27 tests. |
-| Adapter parity coverage | Present | `python3 scripts/validate-hooks.py` passed and printed the runtime adapter matrix; `tests/hook_runtime` passed 314 tests; `tests/runtime_governance` passed 87 tests. |
+| Memory stale-source gate coverage | Present | `python3 scripts/validate-project-memory.py` passed; `python3 -m unittest discover -s tests/project_memory` passed 34 tests. |
+| Graph confidence/freshness coverage | Present | Repository graph index/validate passed with 4329 files and 8707 edges; context pack validate passed with 13 relevant files and 13 validation candidates; `tests/repository_intelligence` passed 34 tests. |
+| Adapter parity coverage | Present | `python3 scripts/validate-hooks.py` passed and printed the runtime adapter matrix; `tests/hook_runtime` passed 320 tests; `tests/runtime_governance` passed 87 tests. |
 | Skill efficacy/context budget coverage | Present | `python3 scripts/validate-skill-efficacy-benchmarks.py` passed 3 benchmark fixtures; `tests/skill_efficacy` passed 9 tests; routing coverage passed 118 golden cases and 15 runtime fixtures. |
 | Report evidence consistency | Present | `python3 scripts/validate-report-consistency.py` passed; `tests/reports` passed 5 tests. |
 | Doctor structural status | Present | `python3 installers/doctor.py --agent codex --scope user` passed and printed all governance source statuses as present. |
+
+## Governance Closure Repair Notes
+
+- Stop closure now treats missing `changeforge_stage_route` / `stage_route` as
+  missing evidence for non-trivial engineering tasks; ready closure requires a
+  present stage route or a concrete skip reason.
+- Source invariant validation now treats runtime adapter, event, gate, and
+  Validation Broker registry import failures as hard errors, so hook docs
+  matrix and adapter consistency checks cannot silently skip required modules.
+- Project Memory retrieval now ranks current source closure evidence ahead of
+  stale historical hints while still returning stale hits with their
+  `historical_hint` or warning role.
+- Repository graph validation now checks schema-v2 semantic value domains for
+  freshness, confidence, node type, edge type, extractor, and generated
+  artifact source-of-truth confidence behavior.
+- Governance docs and benchmark/eval/routing reports are no longer treated as
+  plain docs-only when they change hook, validation, quality, stage, operating,
+  professionalism, or evidence semantics.
 
 ## Daily Maintenance Path
 
@@ -58,21 +76,22 @@ reference loading and generated compiled references.
 | `python3 scripts/eval-routing.py` | Passed; 118 golden cases. |
 | `python3 scripts/validate-professional-routing-coverage.py` | Passed; 118 routing cases, 15 runtime fixtures, 0 findings. |
 | `python3 scripts/validate-report-consistency.py` | Passed. |
-| `python3 scripts/index-repository.py --target . --out /tmp/changeforge-repo-graph.json` | Passed; wrote 4327 files and 8702 edges. |
+| `python3 scripts/index-repository.py --target . --out /tmp/changeforge-repo-graph.json` | Passed; wrote 4329 files and 8707 edges. |
 | `python3 scripts/validate-repository-graph.py --graph /tmp/changeforge-repo-graph.json` | Passed. |
-| `python3 scripts/build-context-pack.py --task "release validation" --target . --graph /tmp/changeforge-repo-graph.json --out /tmp/changeforge-context-pack.json` | Passed. |
-| `python3 scripts/validate-context-pack.py --context-pack /tmp/changeforge-context-pack.json` | Passed; 13 relevant files and 11 validation candidates. |
+| `python3 scripts/build-context-pack.py --task "governance validation" --target . --graph /tmp/changeforge-repo-graph.json --out /tmp/changeforge-context-pack.json` | Passed. |
+| `python3 scripts/validate-context-pack.py --context-pack /tmp/changeforge-context-pack.json` | Passed; 13 relevant files and 13 validation candidates. |
 | `python3 installers/doctor.py --agent codex --scope user` | Passed; governance source status present. |
 | `python3 installers/doctor.py --agent codex --scope user --profile recommended` | Failed due local installed profile being `full`, not `recommended`; this is an installation-state mismatch, not a governance status failure. |
 | `python3 -m py_compile installers/doctor.py` | Passed. |
 | `python3 -m unittest discover -s tests/runtime_governance` | Passed; 87 tests. |
-| `python3 -m unittest discover -s tests/hook_runtime` | Passed; 314 tests. |
-| `python3 -m unittest discover -s tests/project_memory` | Passed; 31 tests. |
-| `python3 -m unittest discover -s tests/repository_intelligence` | Passed; 27 tests. |
-| `python3 -m unittest discover -s tests/validation_broker` | Passed; 41 tests. |
+| `python3 -m unittest discover -s tests/hook_runtime` | Passed; 320 tests. |
+| `python3 -m unittest discover -s tests/project_memory` | Passed; 34 tests. |
+| `python3 -m unittest discover -s tests/repository_intelligence` | Passed; 34 tests. |
+| `python3 -m unittest discover -s tests/validation_broker` | Passed; 45 tests. |
 | `python3 -m unittest discover -s tests/skill_efficacy` | Passed; 9 tests. |
 | `python3 -m unittest discover -s tests/reports` | Passed; 5 tests. |
-| `python3 -m unittest discover -s tests` | Passed; 777 tests. |
+| `python3 -m unittest discover -s tests/scripts` | Passed; 203 tests. |
+| `python3 -m unittest discover -s tests` | Passed; 787 tests. |
 | `command -v python` | Not available in this environment. |
 | `python3 -m pytest --version` | Failed; pytest is not installed. |
 

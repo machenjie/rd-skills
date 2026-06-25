@@ -158,6 +158,16 @@ REPOSITORY_CONTEXT_MANIFEST = (
     "```\n"
 )
 
+STAGE_ROUTE_MANIFEST = (
+    "```yaml\n"
+    "changeforge_stage_route:\n"
+    "  current_stage: testing\n"
+    "  selected_capabilities:\n"
+    "    - implementation-structure-design\n"
+    "  next_stage: handoff\n"
+    "```\n"
+)
+
 
 class StopClosureGateTests(unittest.TestCase):
     def test_skill_efficacy_required_uses_behavior_classifier(self) -> None:
@@ -413,6 +423,7 @@ class StopClosureGateTests(unittest.TestCase):
                 "Validation freshness: latest edit covered by the hook validator. Next steps: deploy.\n\n"
                 f"{REPOSITORY_CONTEXT_MANIFEST}\n"
                 f"{PREFLIGHT_MANIFEST}\n"
+                f"{STAGE_ROUTE_MANIFEST}\n"
                 "```yaml\n"
                 "changeforge_route:\n"
                 "  selected_skills:\n"
@@ -455,6 +466,7 @@ class StopClosureGateTests(unittest.TestCase):
                 "Validation freshness: latest edit covered by the hook validator. Next steps: review.\n\n"
                 f"{REPOSITORY_CONTEXT_MANIFEST}\n"
                 f"{PREFLIGHT_MANIFEST}\n"
+                f"{STAGE_ROUTE_MANIFEST}\n"
                 "```yaml\n"
                 "changeforge_route:\n"
                 "  selected_skills:\n"
@@ -615,6 +627,7 @@ class StopClosureGateTests(unittest.TestCase):
             "Residual risk: none. Next action: none.\n\n"
             f"{REPOSITORY_CONTEXT_MANIFEST}\n"
             f"{PREFLIGHT_MANIFEST}\n"
+            f"{STAGE_ROUTE_MANIFEST}\n"
             "```yaml\n"
             "changeforge_route:\n"
             "  selected_skills:\n"

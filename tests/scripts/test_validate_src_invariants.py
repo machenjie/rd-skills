@@ -281,7 +281,7 @@ class ValidateSrcInvariantsTests(unittest.TestCase):
         self.assertTrue(any("Codex supported events differ" in error for error in errors))
 
     def test_validation_broker_missing_runtime_governance_mapping_fails(self) -> None:
-        original_import_module = validator._import_module
+        original_import_required_module = validator._import_required_module
         fake_module = types.SimpleNamespace(
             REGISTRY={
                 "registry": {
@@ -299,14 +299,107 @@ class ValidateSrcInvariantsTests(unittest.TestCase):
                 }
             }
         )
-        validator._import_module = lambda *args, **kwargs: fake_module
+        validator._import_required_module = lambda *args, **kwargs: fake_module
         try:
             errors: list[str] = []
             validator._validate_validation_broker_mapping(errors)
         finally:
-            validator._import_module = original_import_module
+            validator._import_required_module = original_import_required_module
 
         self.assertTrue(any("src/runtime_governance/**" in error for error in errors))
+
+    def test_hook_runtime_adapter_import_failure_is_error(self) -> None:
+        errors = _hook_runtime_import_errors("src/runtime_governance/adapters/base.py")
+
+        self.assertTrue(
+            any("src/runtime_governance/adapters/base.py: import failed:" in error for error in errors),
+            errors,
+        )
+
+    def test_runtime_events_import_failure_is_error(self) -> None:
+        errors = _hook_runtime_import_errors("src/runtime_governance/events.py")
+
+        self.assertTrue(
+            any("src/runtime_governance/events.py: import failed:" in error for error in errors),
+            errors,
+        )
+
+    def test_runtime_gates_import_failure_is_error(self) -> None:
+        errors = _hook_runtime_import_errors("src/runtime_governance/gates.py")
+
+        self.assertTrue(
+            any("src/runtime_governance/gates.py: import failed:" in error for error in errors),
+            errors,
+        )
+
+    def test_validation_broker_registry_import_failure_is_error(self) -> None:
+        original_import_module_result = validator._import_module_result
+        validator._import_module_result = lambda *args, **kwargs: validator.ImportResult(
+            None,
+            "ImportError: registry boom",
+        )
+        try:
+            errors: list[str] = []
+            validator._validate_validation_broker_mapping(errors)
+        finally:
+            validator._import_module_result = original_import_module_result
+
+        self.assertTrue(
+            any("src/validation_broker/command_registry.py: import failed:" in error for error in errors),
+            errors,
+        )
+
+
+def _hook_runtime_import_errors(failing_context: str) -> list[str]:
+    original_import_module_result = validator._import_module_result
+
+    def fake_import(path, *args, **kwargs):
+        normalized = str(path).replace("\\", "/")
+        if normalized.endswith(failing_context):
+            return validator.ImportResult(None, "ImportError: forced failure")
+        if normalized.endswith("adapters/base.py"):
+            return validator.ImportResult(_fake_adapter_module())
+        if normalized.endswith("events.py"):
+            return validator.ImportResult(
+                types.SimpleNamespace(
+                    EventKind=[
+                        types.SimpleNamespace(value="SessionStart"),
+                        types.SimpleNamespace(value="Stop"),
+                    ]
+                )
+            )
+        if normalized.endswith("gates.py"):
+            return validator.ImportResult(
+                types.SimpleNamespace(
+                    GateOutcome=[
+                        types.SimpleNamespace(value="pass"),
+                        types.SimpleNamespace(value="warn"),
+                        types.SimpleNamespace(value="block"),
+                        types.SimpleNamespace(value="fail_open"),
+                        types.SimpleNamespace(value="degraded"),
+                    ]
+                )
+            )
+        return original_import_module_result(path, *args, **kwargs)
+
+    validator._import_module_result = fake_import
+    try:
+        errors: list[str] = []
+        warnings: list[str] = []
+        validator._validate_hook_runtime_consistency(errors, warnings)
+        return errors
+    finally:
+        validator._import_module_result = original_import_module_result
+
+
+def _fake_adapter_module():
+    def adapter_capabilities_for(_runtime: str):
+        return types.SimpleNamespace(supported_events=(), advisory_context_supported=False)
+
+    return types.SimpleNamespace(
+        EVENT_KIND_BY_CANONICAL={},
+        adapter_capabilities_for=adapter_capabilities_for,
+    )
 
 
 if __name__ == "__main__":

@@ -25,6 +25,7 @@ class ClosureContractByAdapterTests(unittest.TestCase):
             implementation_preflight_complete=True,
             validation_evidence_present=True,
             residual_risk_present=True,
+            stage_route_present=True,
             capabilities=adapter_capabilities_for("copilot"),
             validation_broker_outcome="ready",
         )
@@ -45,6 +46,7 @@ class ClosureContractByAdapterTests(unittest.TestCase):
             implementation_preflight_complete=True,
             validation_evidence_present=True,
             residual_risk_present=True,
+            stage_route_present=True,
             capabilities=adapter_capabilities_for("copilot"),
             validation_broker_outcome="ready",
         )

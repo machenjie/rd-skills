@@ -25,6 +25,7 @@ def complete_contract(state: dict, *, runtime: str = "codex") -> ClosureContract
         implementation_preflight_complete=True,
         validation_evidence_present=True,
         residual_risk_present=True,
+        stage_route_present=True,
         capabilities=adapter_capabilities_for(runtime),
         runtime=runtime,
         validation_broker_outcome="ready",
