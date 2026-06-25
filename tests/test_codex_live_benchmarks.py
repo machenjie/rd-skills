@@ -1820,6 +1820,24 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertTrue(any("user_level_install_used=false" in error for error in result_errors))
         self.assertTrue(any("user_level_install_used=false" in error for error in summary_errors))
 
+    def test_summary_schema_and_strict_validator_require_logging_summary(self) -> None:
+        helper = _load_script("codex_live_helper_summary_required_logging", "scripts/codex_live_benchmark_lib.py")
+        validator = _load_script(
+            "validate_codex_live_reports_required_logging_summary",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        payload = _strong_ablation_summary_payload()
+        payload.pop("logging_summary")
+        self.assertIn("logging_summary", helper.schema_required_fields("summary"))
+        required_errors = helper.validate_required_fields(payload, "summary")
+        self.assertTrue(any("missing required field logging_summary" in error for error in required_errors))
+        with tempfile.TemporaryDirectory() as tmp:
+            summary_path = Path(tmp) / "summary.json"
+            summary_path.write_text(json.dumps(payload), encoding="utf-8")
+            errors = validator.validate_summary(summary_path, publishable=True)
+        self.assertTrue(any("missing required field logging_summary" in error for error in errors))
+        self.assertTrue(any("strict summary requires logging_summary" in error for error in errors))
+
     def test_validator_rejects_ablation_summary_without_required_deltas(self) -> None:
         validator = _load_script(
             "validate_codex_live_reports_ablation_delta",
@@ -3710,8 +3728,48 @@ Residual Risk:
             errors = validator.validate_summary(summary_path, publishable=True)
         self.assertTrue(any("logging_summary.redaction_status is fail" in error for error in errors))
         self.assertTrue(any("redaction_error_count must be positive" in error for error in errors))
-        self.assertTrue(any("redaction_error_markers are required" in error for error in errors))
+        self.assertTrue(any("redaction_error_markers or redaction_error_artifacts" in error for error in errors))
         self.assertTrue(any("first_redaction_error_excerpt_hash" in error for error in errors))
+
+    def test_validator_rejects_redaction_pass_with_diagnostics(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_report_consistency_redaction_pass_diagnostics",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        errors = validator._logging_summary_errors(
+            _logging_summary_payload(
+                redaction_status="pass",
+                redaction_error_markers=["/Users/"],
+                redaction_error_artifacts=["run.log.jsonl"],
+                redaction_error_artifact_count=1,
+            )
+        )
+        self.assertTrue(any("redaction_error_markers must be empty" in error for error in errors))
+        self.assertTrue(any("redaction_error_artifacts must be empty" in error for error in errors))
+        self.assertTrue(any("redaction_error_artifact_count must be 0" in error for error in errors))
+
+    def test_validator_accepts_redaction_fail_with_marker_or_artifact(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_report_consistency_redaction_fail_marker_or_artifact",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        marker_only_errors = validator._logging_summary_errors(
+            _logging_summary_payload(
+                redaction_status="fail",
+                redaction_error_artifacts=[],
+                redaction_error_artifact_count=0,
+                first_redaction_error_artifact=None,
+            )
+        )
+        artifact_only_errors = validator._logging_summary_errors(
+            _logging_summary_payload(
+                redaction_status="fail",
+                redaction_error_markers=[],
+                first_redaction_error_marker=None,
+            )
+        )
+        self.assertFalse(marker_only_errors)
+        self.assertFalse(artifact_only_errors)
 
     def test_public_summary_syncs_codex_live_evidence_level_from_live_summary(self) -> None:
         public = _load_script(

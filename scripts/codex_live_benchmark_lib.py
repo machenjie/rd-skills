@@ -1512,6 +1512,7 @@ def schema_required_fields(schema_name: str) -> tuple[str, ...]:
             "cases",
             "cases_summary",
             "coverage_summary",
+            "logging_summary",
             "limitations",
         ),
     }
