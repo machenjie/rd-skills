@@ -107,8 +107,10 @@ Evidence strength, freshness, and closure readiness are separate dimensions:
   source hashes or event order prove it was produced after the relevant material
   edit. `stale` and `unknown` evidence remain assumptions or residual risk.
 - Non-trivial engineering closure requires `changeforge_stage_route` /
-  `stage_route` evidence unless a documented skip reason applies. Missing stage
-  route evidence is a missing closure item, not a ready condition.
+  `stage_route` evidence unless `stage_route_skip_reason` or
+  `stage_route_not_required_reason` carries a documented skip reason. Task
+  classification fields are not skip reasons. Missing stage route evidence is a
+  missing closure item, not a ready condition.
 - Closure may be `ready` only when required evidence is strong/current and
   degraded capabilities are either irrelevant to the current closure or carry a
   specific not-applicable reason. Otherwise the closure is `needs_validation`,

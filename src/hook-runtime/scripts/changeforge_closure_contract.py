@@ -533,8 +533,7 @@ def _requires_stage_route(state: dict, profile: str) -> bool:
 
 def _has_stage_route_skip_reason(state: dict) -> bool:
     reason_keys = ("stage_route_skip_reason", "stage_route_not_required_reason")
-    task_classification_keys = ("non_trivial_engineering_task", "trivial_engineering_task")
-    return any(_nonempty_string(state.get(key)) for key in (*reason_keys, *task_classification_keys))
+    return any(_nonempty_string(state.get(key)) for key in reason_keys)
 
 
 def _nonempty_string(value: object) -> bool:

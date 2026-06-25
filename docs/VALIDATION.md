@@ -54,7 +54,9 @@ mapping/freshness policy, and skill-efficacy context-budget fixtures.
 
 Stop closure treats a missing `changeforge_stage_route` / `stage_route` as
 missing evidence for non-trivial engineering tasks; stale, degraded, unknown, or
-missing evidence cannot be counted as ready closure. Project Memory retrieval
+missing evidence cannot be counted as ready closure. Only
+`stage_route_skip_reason` and `stage_route_not_required_reason` can explain a
+stage-route skip; task classification fields do not. Project Memory retrieval
 sorts current closure evidence ahead of stale historical hints, and repository
 graph validation checks schema-v2 semantic value domains instead of only field
 presence.

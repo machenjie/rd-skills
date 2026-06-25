@@ -78,8 +78,11 @@ Canonical evidence flow:
    facts control validation closure.
 5. For non-trivial engineering tasks, Stop closure also requires
    `changeforge_stage_route` / `stage_route` evidence unless the state carries a
-   concrete skip reason. Missing stage route evidence is reported as missing
-   closure evidence and cannot produce a `ready` verdict.
+   concrete skip reason in `stage_route_skip_reason` or
+   `stage_route_not_required_reason`. Task classification fields such as
+   `trivial_engineering_task` and `non_trivial_engineering_task` are not skip
+   reasons. Missing stage route evidence is reported as missing closure
+   evidence and cannot produce a `ready` verdict.
 
 Repository graph and context-pack support are source-evidence helpers. They may
 summarize symbol, import, reference, test, ownership, and generated-artifact

@@ -74,6 +74,77 @@ class StopClosureContractSequenceTests(unittest.TestCase):
         self.assertNotIn("stage_route", contract.missing_items)
         self.assertTrue(contract.requires_stage_route)
 
+    def test_non_trivial_engineering_task_string_true_does_not_skip_stage_route(self) -> None:
+        contract = ClosureContract.from_state(
+            {
+                "turn_stage": "coding",
+                "changed_paths": ["src/runtime_governance/closure.py"],
+                "validation_results": ["pass:python -m unittest"],
+                "implementation_preflight_required": True,
+                "implementation_preflight_complete": True,
+                "non_trivial_engineering_task": "true",
+            },
+            route_manifest_complete=True,
+            repository_context_present=True,
+            implementation_preflight_complete=True,
+            validation_evidence_present=True,
+            residual_risk_present=True,
+            capabilities=adapter_capabilities_for("codex"),
+            validation_broker_outcome="ready",
+        )
+
+        self.assertTrue(contract.requires_stage_route)
+        self.assertIn("stage_route", contract.missing_items)
+        self.assertNotEqual(contract.verdict, "ready")
+
+    def test_trivial_engineering_task_string_true_does_not_skip_stage_route_without_reason(
+        self,
+    ) -> None:
+        contract = ClosureContract.from_state(
+            {
+                "turn_stage": "coding",
+                "changed_paths": ["docs/USAGE.md"],
+                "validation_results": ["pass:python -m unittest"],
+                "implementation_preflight_required": True,
+                "implementation_preflight_complete": True,
+                "trivial_engineering_task": "true",
+            },
+            route_manifest_complete=True,
+            repository_context_present=True,
+            implementation_preflight_complete=True,
+            validation_evidence_present=True,
+            residual_risk_present=True,
+            capabilities=adapter_capabilities_for("codex"),
+            validation_broker_outcome="ready",
+        )
+
+        self.assertTrue(contract.requires_stage_route)
+        self.assertIn("stage_route", contract.missing_items)
+        self.assertNotEqual(contract.verdict, "ready")
+
+    def test_trivial_engineering_task_boolean_true_still_needs_skip_reason(self) -> None:
+        contract = ClosureContract.from_state(
+            {
+                "turn_stage": "coding",
+                "changed_paths": ["docs/USAGE.md"],
+                "validation_results": ["pass:python -m unittest"],
+                "implementation_preflight_required": True,
+                "implementation_preflight_complete": True,
+                "trivial_engineering_task": True,
+            },
+            route_manifest_complete=True,
+            repository_context_present=True,
+            implementation_preflight_complete=True,
+            validation_evidence_present=True,
+            residual_risk_present=True,
+            capabilities=adapter_capabilities_for("codex"),
+            validation_broker_outcome="ready",
+        )
+
+        self.assertTrue(contract.requires_stage_route)
+        self.assertIn("stage_route", contract.missing_items)
+        self.assertNotEqual(contract.verdict, "ready")
+
     def test_question_stage_does_not_require_stage_route(self) -> None:
         contract = ClosureContract.from_state(
             {"turn_stage": "question"},
@@ -87,6 +158,24 @@ class StopClosureContractSequenceTests(unittest.TestCase):
 
         self.assertFalse(contract.requires_stage_route)
         self.assertNotIn("stage_route", contract.missing_items)
+
+    def test_explicit_stage_route_skip_reason_allows_trivial_docs_change(self) -> None:
+        contract = _complete_contract(
+            {
+                "turn_stage": "coding",
+                "changed_paths": ["docs/USAGE.md"],
+                "validation_results": ["pass:python -m unittest"],
+                "implementation_preflight_required": True,
+                "implementation_preflight_complete": True,
+                "trivial_engineering_task": True,
+                "stage_route_present": False,
+                "stage_route_skip_reason": "single trivial documentation wording correction",
+            }
+        )
+
+        self.assertFalse(contract.requires_stage_route)
+        self.assertNotIn("stage_route", contract.missing_items)
+        self.assertEqual(contract.verdict, "ready")
 
     def test_trivial_engineering_with_explicit_skip_reason_does_not_require_stage_route(self) -> None:
         contract = _complete_contract(
