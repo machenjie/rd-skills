@@ -17,6 +17,7 @@ from project_memory.privacy import (
     repo_hash_for_path,
     sanitize_memory_event,
 )
+from project_memory.gates.fragile_file_gate import evaluate_fragile_file_gate
 from project_memory.store.append_log import append_memory_event, iter_memory_events, memory_root_for_repo
 from project_memory.store.projection import build_memory_projection, build_memory_summary
 
@@ -58,7 +59,7 @@ def pre_edit_advice(
 ) -> dict[str, Any]:
     """Return bounded memory advice for structural pre-edit gates."""
     if not memory_enabled():
-        return {"status": "disabled_by_policy", "fragile_paths": [], "repeat_failure": {}, "missing": []}
+        return _empty_pre_edit("disabled_by_policy")
     state = state if isinstance(state, dict) else {}
     repo_path = Path(repo)
     paths = clean_paths(list(changed_paths), repo=repo_path)
@@ -74,32 +75,42 @@ def pre_edit_advice(
                 "paths": paths,
             },
         ).get("project_memory_summary", {})
-        fragile_paths = _fragile_paths(summary, paths)
         repeat = _repeat_failure(events, repo_hash=repo_hash, task=task, paths=paths, owner=owner)
         evidence = _pre_edit_evidence(state, assistant_text)
+        gate = evaluate_fragile_file_gate(
+            events,
+            paths=paths,
+            evidence=evidence,
+            repo_root=repo_path,
+        ).get("fragile_file_gate", {})
+        fragile_paths = list(gate.get("matched_paths") or [])[:MAX_ITEMS]
+        historical_paths = list(gate.get("historical_hint_paths") or [])[:MAX_ITEMS]
         if repeat.get("repeated") and evidence["failure_diagnosis_route"]:
             repeat = {**repeat, "allowed_to_continue": True}
         missing: list[str] = []
         if fragile_paths:
-            for key in (
-                "read_file_evidence",
-                "owner_source_of_truth_check",
-                "same_pattern_scan",
-                "validator_mapping",
-                "nearby_test_evidence",
-                "memory_summary_evidence",
-                "implementation_preflight",
-            ):
-                if not evidence[key]:
-                    missing.append(key)
+            missing.extend(str(item) for item in gate.get("missing") or [])
         return {
             "status": "available",
             "fragile_paths": fragile_paths,
+            "current_fragile_paths": fragile_paths,
+            "historical_fragile_paths": historical_paths,
+            "warning_only_paths": list(gate.get("warning_only_paths") or [])[:MAX_ITEMS],
+            "source_status_by_path": dict(gate.get("source_status_by_path") or {}),
+            "evidence_role_by_path": dict(gate.get("evidence_role_by_path") or {}),
+            "source_status": _overall_source_status((gate.get("source_status_by_path") or {}).values()),
             "repeat_failure": repeat,
             "missing": _unique(missing),
+            "historical_missing": list(gate.get("missing") or [])[:MAX_ITEMS] if historical_paths else [],
+            "warnings": _pre_edit_warnings(historical_paths),
+            "residual_risk": list(gate.get("residual_risk") or [])[:MAX_ITEMS],
+            "memory_summary_seen": bool(summary),
         }
     except Exception:
-        return {"status": "unavailable_due_error", "fragile_paths": [], "repeat_failure": {}, "missing": []}
+        result = _empty_pre_edit("unavailable_due_error")
+        if paths:
+            result["residual_risk"] = ["project_memory_unavailable"]
+        return result
 
 
 def closure_advice(repo: str | Path, state: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -113,6 +124,8 @@ def closure_advice(repo: str | Path, state: dict[str, Any] | None = None) -> dic
             "projection_key": "",
             "included_events": [],
             "excluded_events": [],
+            "source_status": "not_applicable",
+            "source_statuses": [],
             "stale_context_gate": "not_applicable",
             "residual_risk": [],
         }
@@ -123,18 +136,22 @@ def closure_advice(repo: str | Path, state: dict[str, Any] | None = None) -> dic
             "paths": changed_paths,
             "graph_freshness": _graph_freshness(state),
         }
-        projection = build_memory_projection(_read_events(repo_path), query).get(
-            "project_memory_projection",
-            {},
-        )
+        projection = build_memory_projection(
+            _read_events(repo_path),
+            query,
+            repo_root=repo_path,
+        ).get("project_memory_projection", {})
         included = projection.get("included_events") if isinstance(projection, dict) else []
         excluded = projection.get("excluded_events") if isinstance(projection, dict) else []
+        source_statuses = _source_statuses(included)
         return {
             "available": True,
             "status": "available",
             "projection_key": str(projection.get("retrieval_key") or ""),
             "included_events": _included_event_ids(included),
             "excluded_events": _excluded_event_refs(excluded),
+            "source_status": _overall_source_status(source_statuses),
+            "source_statuses": source_statuses,
             "stale_context_gate": str(projection.get("stale_context_gate") or "pass"),
             "residual_risk": _unique(str(item) for item in projection.get("residual_risk", []) or [])[:MAX_ITEMS],
         }
@@ -145,6 +162,8 @@ def closure_advice(repo: str | Path, state: dict[str, Any] | None = None) -> dic
             "projection_key": "",
             "included_events": [],
             "excluded_events": [],
+            "source_status": "unknown",
+            "source_statuses": [],
             "stale_context_gate": "warn" if changed_paths else "pass",
             "residual_risk": ["project_memory_unavailable"] if changed_paths else [],
         }
@@ -163,6 +182,58 @@ def _fragile_paths(summary: dict[str, Any], paths: list[str]) -> list[str]:
         if isinstance(item, dict) and str(item.get("path") or "").strip()
     }
     return [path for path in paths if path in fragile][:MAX_ITEMS]
+
+
+def _empty_pre_edit(status: str) -> dict[str, Any]:
+    return {
+        "status": status,
+        "fragile_paths": [],
+        "current_fragile_paths": [],
+        "historical_fragile_paths": [],
+        "warning_only_paths": [],
+        "source_status": "not_applicable" if status == "disabled_by_policy" else "unknown",
+        "source_status_by_path": {},
+        "evidence_role_by_path": {},
+        "repeat_failure": {},
+        "missing": [],
+        "historical_missing": [],
+        "warnings": [],
+        "residual_risk": [],
+    }
+
+
+def _pre_edit_warnings(paths: list[str]) -> list[str]:
+    if not paths:
+        return []
+    joined = ", ".join(paths[:MAX_ITEMS])
+    return [
+        "project memory fragile-file hit is historical only; reread current source and nearby tests before editing "
+        + joined
+    ]
+
+
+def _source_statuses(events: object) -> list[str]:
+    if not isinstance(events, list):
+        return []
+    return _unique(
+        str(item.get("source_status") or "")
+        for item in events
+        if isinstance(item, dict)
+    )[:MAX_ITEMS]
+
+
+def _overall_source_status(values: Iterable[str]) -> str:
+    statuses = [str(value).strip() for value in values if str(value).strip()]
+    if not statuses:
+        return "unknown"
+    for status in ("stale", "deleted", "missing", "generated", "unknown"):
+        if status in statuses:
+            return status
+    if all(status == "current" for status in statuses):
+        return "current"
+    if all(status == "not_applicable" for status in statuses):
+        return "not_applicable"
+    return statuses[0]
 
 
 def _repeat_failure(

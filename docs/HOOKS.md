@@ -26,18 +26,23 @@ arguments, prompts, environment variables, or raw command output.
 
 The adapter capability matrix is the single downstream source for runtime
 differences. `scripts/validate-hooks.py` and `installers/doctor.py` print it as
-part of hook validation.
+part of hook validation. The broader developer command set lives in
+[VALIDATION.md](VALIDATION.md); this document stays scoped to hook runtime
+behavior, adapter support, telemetry boundaries, and closure semantics.
 
-| Runtime | Supported events | Unsupported events | Advisory context | Stop block | Visibility |
-| --- | --- | --- | --- | --- | --- |
-| Codex | `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `Stop`, `SubagentStart`, `SubagentStop`, `Compact` | Explicit non-templated canonical events, including `UserPromptExpansion`, `PostToolBatch`, failure, session-end, task, file, config, worktree, `PreCompact`, and `PostCompact` events | yes | yes, only when configured | command/read/validation partial |
-| Claude | `SessionStart`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `Stop`, `StopFailure`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `PreCompact`, `PostCompact`, `Compact` | Explicit non-templated canonical events that remain unsupported, including worktree, checkpoint/rollback, plan/act mode, codebase index, and mode/role-switch checks | yes | yes, only when configured | command/read/validation partial |
-| Copilot | `SessionStart`, `PostToolUse`, `Stop`, `SubagentStart` | Explicit canonical events not listed as supported | only supported events | yes for Stop closure | command/read/validation partial |
-| Generic fallback | `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop` | Explicit canonical events not listed as supported | limited text fallback | no | read partial, command/validation none |
-| Cline staged target | none | all canonical lifecycle events; Plan/Act mode is supported only as a mode signal | no | no | none |
-| Roo staged target | none | all canonical lifecycle events; mode/role switching and tool-policy boundaries are supported only as bounded adapter facts | no | no | none |
-| OpenHands backend target | `SessionStart`, `SessionEnd`, `TaskCreated`, `TaskCompleted`, `PostToolUse`, `PostToolUseFailure`, `FileChanged`, `Stop` from backend protocol events | pre-tool, permission, subagent, config, worktree, compact, codebase-index, and mode-switch events | no | no | paths full, command/validation partial |
-| Future placeholders (`Gemini CLI`, `Goose`) | none | all non-`Unknown` canonical events | no | no | none |
+<!-- changeforge-adapter-capability-matrix:start -->
+| Runtime | Supported events | Unsupported events | Advisory context | Stop block | Visibility | Failure/degraded policy | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Codex | `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `Stop`, `SubagentStart`, `SubagentStop`, `Compact` | `UserPromptExpansion`, `PostToolUseFailure`, `PostToolBatch`, `StopFailure`, `SessionEnd`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact` | yes | yes | read_paths=partial, changed_paths=partial, command_kind=partial, command_risk=partial, validation_outcome=partial, permission_decision=partial, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=stop_closure | bounded adapter facts only; no raw prompt or command output |
+| Claude | `SessionStart`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `Stop`, `StopFailure`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `PreCompact`, `PostCompact`, `Compact` | `WorktreeCreate`, `WorktreeRemove` | yes | yes | read_paths=partial, changed_paths=partial, command_kind=partial, command_risk=partial, validation_outcome=partial, permission_decision=partial, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=stop_closure | bounded adapter facts only; no raw prompt or command output |
+| Copilot | `SessionStart`, `PostToolUse`, `Stop`, `SubagentStart` | `UserPromptSubmit`, `PreToolUse`, `SubagentStop`, `UserPromptExpansion`, `PermissionRequest`, `PostToolUseFailure`, `PostToolBatch`, `StopFailure`, `SessionEnd`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `Compact` | yes | yes | read_paths=partial, changed_paths=partial, command_kind=partial, command_risk=partial, validation_outcome=partial, permission_decision=none, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=stop_closure | bounded adapter facts only; no raw prompt or command output |
+| Generic fallback | `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop` | `UserPromptExpansion`, `PermissionRequest`, `PostToolUseFailure`, `PostToolBatch`, `StopFailure`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `Compact` | yes | no | read_paths=partial, changed_paths=partial, command_kind=none, command_risk=none, validation_outcome=none, permission_decision=none, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=none | bounded adapter facts only; no raw prompt or command output |
+| Cline staged target | none | `SessionStart`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `Stop`, `StopFailure`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `Compact` | no | no | read_paths=none, changed_paths=none, command_kind=none, command_risk=none, validation_outcome=none, permission_decision=none, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=none | staged adapter target; no executable hook lifecycle |
+| Roo staged target | none | `SessionStart`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `Stop`, `StopFailure`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `Compact` | no | no | read_paths=none, changed_paths=none, command_kind=none, command_risk=none, validation_outcome=none, permission_decision=none, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=none | staged adapter target; no executable hook lifecycle |
+| OpenHands backend target | `SessionStart`, `SessionEnd`, `TaskCreated`, `TaskCompleted`, `PostToolUse`, `PostToolUseFailure`, `FileChanged`, `Stop` | `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PostToolBatch`, `StopFailure`, `SubagentStart`, `SubagentStop`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `Compact` | no | no | read_paths=partial, changed_paths=full, command_kind=partial, command_risk=partial, validation_outcome=partial, permission_decision=none, rollback_checkpoint=partial | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=none | bounded adapter facts only; no raw prompt or command output |
+| Gemini CLI placeholder | none | `SessionStart`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `Stop`, `StopFailure`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `Compact` | no | no | read_paths=none, changed_paths=none, command_kind=none, command_risk=none, validation_outcome=none, permission_decision=none, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=none | placeholder only; no executable hook lifecycle |
+| Goose placeholder | none | `SessionStart`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `Stop`, `StopFailure`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `FileChanged`, `ConfigChanged`, `WorktreeCreate`, `WorktreeRemove`, `PreCompact`, `PostCompact`, `Compact` | no | no | read_paths=none, changed_paths=none, command_kind=none, command_risk=none, validation_outcome=none, permission_decision=none, rollback_checkpoint=none | fail_open=degraded_or_unsupported_checks_require_residual_risk; fail_closed_allowed=none | placeholder only; no executable hook lifecycle |
+<!-- changeforge-adapter-capability-matrix:end -->
 
 Unsupported checks in the closure contract stay unsupported. A runtime that
 cannot observe a lifecycle event or inject advisory context records a degraded
@@ -336,10 +341,22 @@ Hook integration is intentionally narrow:
 - Memory never changes skills, routing rules, capabilities, registry files, or
   `dist/`.
 
+Memory hits are experience evidence only. A hit is not current source evidence
+unless the adapter can compare its stored `source_evidence.source_hash` with the
+current repository file and the hit also carries current validation or review
+freshness. Stale, missing, deleted, unknown, legacy hashless, or generated
+artifact hits are returned as `historical_hint` or `warning_only` with
+`source_status` and residual risk; they cannot by themselves satisfy closure or
+justify editing a generated artifact. Generated artifact memory requires an
+explicit source-of-truth reference before it can be considered beyond a warning.
+
 The pre-edit fragile-file warning requires the same evidence expected by the
 offline memory gate: read-file evidence, nearby-test evidence, memory summary
-evidence, and an implementation preflight. If the evidence is incomplete, the
-hook warns; block behavior still depends on the existing pre-edit hook mode.
+evidence, an implementation preflight, and current source freshness. If the
+only matching memory is stale or legacy hashless, the hook emits a warning and
+residual risk but does not add blocking `missing` items. Blocking is reserved
+for current, high-confidence fragile memory plus the existing pre-edit hook
+mode.
 
 ## Why Hooks Do Not Replace change-forge-router
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Iterable
 
 from project_memory.privacy import sanitize_memory_query
@@ -10,6 +11,7 @@ from project_memory.retrieval.freshness_ranker import recency_score
 from project_memory.retrieval.path_matcher import path_match_score
 from project_memory.retrieval.route_matcher import route_match_score
 from project_memory.retrieval.symbol_matcher import symbol_match_score
+from project_memory.source_evidence import memory_hit_from_event
 
 
 OUTCOME_SEVERITY = {"blocked": 14, "failed": 12, "partial": 6, "unknown": 1, "success": 0}
@@ -22,6 +24,7 @@ def rank_memory_events(
     *,
     now: datetime | None = None,
     limit: int | None = None,
+    repo_root: str | Path | None = None,
 ) -> list[dict[str, Any]]:
     """Rank events with explainable, deterministic factors only."""
     clean_query = sanitize_memory_query(query)
@@ -31,8 +34,13 @@ def rank_memory_events(
         score = _score_event(event, clean_query, now=now)
         if score <= 0:
             continue
+        hit = memory_hit_from_event(event, repo_root=repo_root)
         row = dict(event)
         row["retrieval_score"] = score
+        row["memory_hit"] = hit
+        row["source_status"] = hit["source_status"]
+        row["evidence_role"] = hit["evidence_role"]
+        row["retrieval_confidence"] = hit["confidence"]
         ranked.append(row)
     ranked.sort(
         key=lambda event: (
@@ -55,4 +63,3 @@ def _score_event(event: dict[str, Any], query: dict[str, Any], *, now: datetime 
     if query.get("repo_hash") and query.get("repo_hash") != event.get("repo_hash"):
         return 0
     return score
-

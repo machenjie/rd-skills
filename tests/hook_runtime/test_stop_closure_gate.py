@@ -160,6 +160,22 @@ REPOSITORY_CONTEXT_MANIFEST = (
 
 
 class StopClosureGateTests(unittest.TestCase):
+    def test_skill_efficacy_required_uses_behavior_classifier(self) -> None:
+        module = load_stop_gate()
+        self.assertTrue(
+            module._skill_efficacy_required(
+                {"changed_paths": ["src/repository_intelligence/graph/repo_indexer.py"]}
+            )
+        )
+        self.assertTrue(
+            module._skill_efficacy_required(
+                {"changed_paths": ["src/runtime_governance/adapters/base.py"]}
+            )
+        )
+        self.assertFalse(
+            module._skill_efficacy_required({"changed_paths": ["docs/USAGE.md"]})
+        )
+
     def test_empty_state_is_silent(self) -> None:
         event = json.loads((FIXTURE_DIR / "codex_stop_with_changes.json").read_text())
         with tempfile.TemporaryDirectory() as cwd, tempfile.TemporaryDirectory() as cache:

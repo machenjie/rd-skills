@@ -35,17 +35,19 @@ from changeforge_executor_adapter_core import (
 from changeforge_hook_policy import gate_mode, run_gate_with_policy
 
 try:
-    from validation_broker import assess_validation_closure
+    from validation_broker import assess_validation_closure, classify_skill_behavior_change
 except ModuleNotFoundError:  # Source tree layout: hook scripts live under src/hook-runtime.
     _src_root = Path(__file__).resolve().parents[2]
     if str(_src_root) not in sys.path:
         sys.path.insert(0, str(_src_root))
     try:
-        from validation_broker import assess_validation_closure
+        from validation_broker import assess_validation_closure, classify_skill_behavior_change
     except Exception:  # pragma: no cover - hook runtime must fail open.
         assess_validation_closure = None
+        classify_skill_behavior_change = None
 except Exception:  # pragma: no cover - hook runtime must fail open.
     assess_validation_closure = None
+    classify_skill_behavior_change = None
 
 
 MAX_TRANSCRIPT_BYTES = 1_000_000
@@ -1291,7 +1293,15 @@ def _tool_permission_required(state: dict) -> bool:
 
 
 def _skill_efficacy_required(state: dict) -> bool:
-    paths = [str(path).casefold() for path in state.get("changed_paths", [])]
+    raw_paths = state.get("changed_paths", [])
+    if classify_skill_behavior_change is not None:
+        try:
+            result = classify_skill_behavior_change(raw_paths)
+        except Exception:
+            result = {}
+        if isinstance(result, dict) and result.get("requires_skill_efficacy_benchmark") is True:
+            return True
+    paths = [str(path).casefold() for path in raw_paths]
     registry_path_marker = "/".join(("src", "registry")) + "/"
     return any(
         "skill.md" in path

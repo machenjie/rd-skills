@@ -75,6 +75,10 @@ def validate_repository_graph(document: dict[str, Any]) -> list[str]:
         for required in ("kind", "role", "symbols", "references"):
             if required not in file_node:
                 errors.append(f"files[{index}].{required} is required")
+        if schema_version == 2:
+            for field in ("evidence", "source_hash", "freshness", "confidence", "extractor"):
+                if field not in file_node:
+                    errors.append(f"files[{index}].{field} is required for schema_version=2")
 
     edges = graph.get("edges")
     if not isinstance(edges, list):
@@ -91,6 +95,10 @@ def validate_repository_graph(document: dict[str, Any]) -> list[str]:
             value = edge.get(field)
             if isinstance(value, str) and _is_user_absolute_path(value):
                 errors.append(f"edges[{index}].{field} must be repository-relative")
+        if schema_version == 2:
+            for field in ("edge_type", "evidence", "confidence", "freshness", "extractor"):
+                if field not in edge:
+                    errors.append(f"edges[{index}].{field} is required for schema_version=2")
 
     if schema_version == 2:
         for field in (
@@ -112,8 +120,18 @@ def validate_repository_graph(document: dict[str, Any]) -> list[str]:
             for field in ("name", "kind", "path", "line", "visibility", "language", "confidence"):
                 if field not in symbol:
                     errors.append(f"symbols[{index}].{field} is required")
+            for field in ("evidence", "source_hash", "freshness", "extractor"):
+                if field not in symbol:
+                    errors.append(f"symbols[{index}].{field} is required for schema_version=2")
             if isinstance(symbol.get("path"), str) and _is_user_absolute_path(symbol["path"]):
                 errors.append(f"symbols[{index}].path must be repository-relative")
+        for index, item in enumerate(graph.get("generated_artifacts", []) if isinstance(graph.get("generated_artifacts"), list) else []):
+            if not isinstance(item, dict):
+                errors.append(f"generated_artifacts[{index}] must be an object")
+                continue
+            for field in ("generated_path", "source_of_truth", "edit_policy", "confidence", "freshness", "extractor"):
+                if field not in item:
+                    errors.append(f"generated_artifacts[{index}].{field} is required for schema_version=2")
         candidates = graph.get("validation_candidates", [])
         for index, candidate in enumerate(candidates if isinstance(candidates, list) else []):
             if not isinstance(candidate, dict):

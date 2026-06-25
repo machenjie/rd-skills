@@ -4,12 +4,35 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from fnmatch import fnmatch
+import importlib.util
+from pathlib import Path
 from typing import Iterable
+
+try:
+    from .skill_behavior_change import SKILL_BEHAVIOR_CHANGE_PATTERNS
+except ImportError:  # Support file-based validator imports without package context.
+    _skill_behavior_change_path = Path(__file__).with_name("skill_behavior_change.py")
+    _skill_behavior_change_spec = importlib.util.spec_from_file_location(
+        "validation_broker_skill_behavior_change",
+        _skill_behavior_change_path,
+    )
+    if _skill_behavior_change_spec is None or _skill_behavior_change_spec.loader is None:
+        raise
+    _skill_behavior_change_module = importlib.util.module_from_spec(
+        _skill_behavior_change_spec
+    )
+    _skill_behavior_change_spec.loader.exec_module(_skill_behavior_change_module)
+    SKILL_BEHAVIOR_CHANGE_PATTERNS = (
+        _skill_behavior_change_module.SKILL_BEHAVIOR_CHANGE_PATTERNS
+    )
 
 
 LEVELS = {"narrow", "module", "full", "unknown"}
 SRC_PREFIX = "src/"
 REGISTRY_PATH_PATTERN = SRC_PREFIX + "registry/**"
+SKILL_BEHAVIOR_CHANGE_PATH_PATTERNS = tuple(
+    dict.fromkeys(pattern for _surface, pattern in SKILL_BEHAVIOR_CHANGE_PATTERNS)
+)
 
 
 @dataclass(frozen=True)
@@ -31,6 +54,41 @@ class ValidationCommand:
 
 
 REGISTRY: dict[str, dict[str, object]] = {
+    "skill_behavior_change": {
+        "path_patterns": SKILL_BEHAVIOR_CHANGE_PATH_PATTERNS,
+        "risk_surfaces": (
+            "skill-behavior-change",
+            "skill-efficacy-benchmark",
+            "context-budget",
+        ),
+        "narrow": (
+            (
+                "python3 scripts/validate-skill-efficacy-benchmarks.py",
+                "skill/routing/hook/memory/graph/validation/trajectory/adapter behavior requires efficacy benchmark evidence",
+            ),
+            ("python3 scripts/eval-routing.py", "routing context budget and over/under-routing fixtures may change"),
+        ),
+        "module": (
+            (
+                "python3 -m unittest discover -s tests/skill_efficacy",
+                "skill efficacy schema and routing budget tests changed",
+            ),
+            (
+                "python3 -m unittest discover -s tests/reports",
+                "benchmark report consistency tests changed",
+            ),
+        ),
+        "full": (
+            (
+                "python3 scripts/validate-stage-routing-architecture.py",
+                "stage router architecture must remain aligned with efficacy gates",
+            ),
+            (
+                "python3 -m unittest discover -s tests",
+                "behavior changes can affect shared skill/runtime validation",
+            ),
+        ),
+    },
     "hook_runtime": {
         "path_patterns": (
             "src/hook-runtime/**",
@@ -97,6 +155,57 @@ REGISTRY: dict[str, dict[str, object]] = {
                 "professional skill benchmark behavior may change",
             ),
             ("python3 scripts/build.py --profile recommended", "professional skill must build into runtime skills"),
+        ),
+    },
+    "domain_extension": {
+        "path_patterns": ("src/domain-extensions/**",),
+        "risk_surfaces": ("domain-extension", "routing", "skill-authoring"),
+        "narrow": (
+            ("python3 scripts/validate-domain-extensions.py", "domain extension changed"),
+            ("python3 scripts/validate-registry.py", "domain extension registry references may change"),
+        ),
+        "module": (
+            (
+                "python3 scripts/validate-professional-routing-coverage.py",
+                "domain extension routing coverage may change",
+            ),
+        ),
+        "full": (
+            ("python3 scripts/build.py --profile full", "domain extension must build into full profile"),
+            (
+                "python3 scripts/validate-runtime-reference-links.py",
+                "compiled domain extension references must resolve",
+            ),
+        ),
+    },
+    "runtime_governance": {
+        "path_patterns": (
+            "src/runtime_governance/**",
+            "tests/runtime_governance/**",
+        ),
+        "risk_surfaces": ("runtime-governance", "executor-adapter", "agent-workflow-state"),
+        "narrow": (
+            (
+                "python3 -m unittest discover -s tests/runtime_governance",
+                "runtime governance tests changed",
+            ),
+            ("python3 scripts/validate-hooks.py", "hook runtime consumes runtime governance adapters"),
+        ),
+        "module": (
+            (
+                "python3 scripts/eval-executor-adapters.py",
+                "executor adapter behavior may change",
+            ),
+        ),
+        "full": (
+            (
+                "python3 -m unittest discover -s tests",
+                "runtime governance changes can affect shared tests",
+            ),
+            (
+                "python3 scripts/build.py --profile recommended",
+                "runtime governance support must build into hook artifacts",
+            ),
         ),
     },
     "repository_intelligence": {

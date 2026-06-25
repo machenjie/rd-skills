@@ -181,6 +181,7 @@ def validate_report_consistency(
     root = summary_path.parent.parent
     scorecard_report = read_json(scorecard_path) if scorecard_path is not None else None
     public_report = read_json(public_summary_path) if public_summary_path is not None else None
+    errors.extend(_report_evidence_consistency_errors(summary_path, summary))
     if summary_path.name == "codex-live-benchmark-summary.json" and summary.get("evidence_scope") == "smoke":
         errors.append("canonical codex-live-benchmark-summary.json cannot contain a collected smoke artifact")
     if scorecard_path is not None:
@@ -218,6 +219,84 @@ def validate_report_consistency(
         if dashboard.exists():
             errors.extend(_readme_dashboard_summary_errors(readme, dashboard))
     return errors
+
+
+def _report_evidence_consistency_errors(summary_path: Path, summary: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    coverage = summary.get("coverage_summary")
+    if isinstance(coverage, dict):
+        registered_count = coverage.get("registered_live_case_count")
+        actual_count = coverage.get("actual_run_case_count")
+        registered_rate = coverage.get("registered_case_coverage_rate")
+        actual_rate = coverage.get("actual_run_case_coverage_rate")
+        registered_but_not_run = coverage.get("registered_but_not_run_cases")
+        if (
+            isinstance(registered_but_not_run, list)
+            and registered_but_not_run
+            and isinstance(registered_count, int)
+            and isinstance(actual_count, int)
+            and registered_count != actual_count
+            and registered_rate == actual_rate
+        ):
+            errors.append(
+                "coverage_summary registered_case_coverage_rate must not mirror actual_run_case_coverage_rate when registered-but-not-run cases exist"
+            )
+        if (
+            isinstance(registered_but_not_run, list)
+            and registered_but_not_run
+            and registered_count == actual_count
+        ):
+            errors.append(
+                "coverage_summary registered_live_case_count cannot equal actual_run_case_count when registered_but_not_run_cases is non-empty"
+            )
+
+    benchmark_mode = str(summary.get("benchmark_mode") or summary.get("run_mode") or "").casefold()
+    dry_run = bool(summary.get("dry_run")) or "dry" in benchmark_mode
+    if dry_run and summary.get("evidence_level") == LIVE_EVIDENCE_LEVEL:
+        errors.append("dry-run benchmark summaries cannot claim live benchmark evidence_level")
+
+    capability_summary = summary.get("capability_coverage_summary")
+    if isinstance(capability_summary, dict) and capability_summary.get("status") == "pass":
+        items = capability_summary.get("items") if isinstance(capability_summary.get("items"), list) else []
+        failed = [
+            str(item.get("id") or item.get("capability") or "unknown")
+            for item in items
+            if isinstance(item, dict) and item.get("status") in {"fail", "blocked"}
+        ]
+        if failed:
+            errors.append(
+                "capability_coverage_summary.status cannot be pass when capability items failed: "
+                + ", ".join(sorted(failed))
+            )
+
+    improvement = summary.get("quality_improvement_summary")
+    if isinstance(improvement, dict) and _has_improvement_claim(summary, improvement):
+        actual_cases = summary.get("actual_run_cases")
+        if not isinstance(actual_cases, list) or not actual_cases:
+            errors.append("quality improvement claims require actual_run_cases evidence")
+        if not isinstance(summary.get("run_id"), str) or not summary.get("run_id").strip():
+            errors.append("quality improvement claims require a run_id")
+        if not isinstance(summary.get("generated_by"), str) or not summary.get("generated_by").strip():
+            errors.append("quality improvement claims require generated_by command provenance")
+        if isinstance(coverage, dict) and int(coverage.get("actual_run_case_count", 0) or 0) <= 0:
+            errors.append("quality improvement claims require actual_run_case_count > 0")
+
+    if summary_path.name == "codex-live-benchmark-summary.json":
+        generated_by = summary.get("generated_by")
+        if not isinstance(generated_by, str) or not generated_by.startswith("scripts/"):
+            errors.append("canonical codex-live-benchmark-summary.json must include generated_by script provenance")
+    return errors
+
+
+def _has_improvement_claim(summary: dict[str, Any], improvement: dict[str, Any]) -> bool:
+    for key, value in improvement.items():
+        if key.endswith("_claim") and value is True:
+            return True
+    positive_verdicts = {"improved", "positive", "pass", "win"}
+    return (
+        str(summary.get("effect_verdict") or "").casefold() in positive_verdicts
+        or str(summary.get("effect_status") or "").casefold() in positive_verdicts
+    )
 
 
 def _default_existing_derived_report_paths(summary_path: Path) -> tuple[Path | None, Path | None]:

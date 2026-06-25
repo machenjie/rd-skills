@@ -29,6 +29,8 @@ Evaluate whether a ChangeForge skill, capability, routing rule, hook prompt, or 
 - Track token and turn overhead even when not collected; use `not_collected` rather than omitting the fields.
 - Distinguish structural fixture validation from empirical agent performance.
 - Record over-routing and under-routing risk, not only success.
+- Use an explicit required-reference allow-list; never use "all references" as a treatment plan.
+- Treat skill, capability, router, hook, memory, graph, validation, trajectory, and adapter changes as behavior surfaces unless proven docs-only.
 - Do not use benchmark fixtures as a general-purpose source corpus.
 - Keep benchmark inputs bounded, reproducible, and reviewable in repository source.
 
@@ -42,6 +44,7 @@ Evaluate whether a ChangeForge skill, capability, routing rule, hook prompt, or 
 ## Selection Rules
 - Select this capability when a skill authoring change introduces or changes expected agent behavior.
 - Select it when routing, hook runtime, eval fixtures, or professional benchmark scripts are updated.
+- Select it when project memory, repository graph, validation broker, trajectory, or executor adapter semantics affect closure evidence.
 - Select it when documentation says a capability improves safety, review quality, evidence, or validation.
 - Select it with `quality-test-gate` when benchmark validation becomes part of release evidence.
 - Select it with `ai-code-review-refactor` when generated skill content needs spec-first review before quality claims.
@@ -75,6 +78,7 @@ Return a `skill_efficacy_benchmark` record with:
 - **Baseline**: prior route or behavior, result, findings, validation, token cost, and turn count.
 - **Treatment**: new route or behavior, result, findings, validation, token cost, and turn count.
 - **Metrics**: routing correctness, evidence completeness, defect catch rate, validation freshness, over-routing, under-routing, token overhead, and turn overhead.
+- **Context budget**: mode (`minimal`, `single-stage`, `staged-plan`, or `full`), selected/skipped reference counts, proxy token estimate, and over-budget decision.
 - **Verdict**: improved, regressed, no-change, unknown, or not-enough-evidence.
 - **Caveats**: structural-only, not collected, sample size, evaluator limitations, or unmeasured production behavior.
 - **Regression command**: validator or eval command that checks the case.
@@ -84,9 +88,10 @@ Return a `skill_efficacy_benchmark` record with:
 2. Token and turn overhead fields exist, even if set to `not_collected`.
 3. Claims distinguish structural validation from empirical behavior.
 4. Over-routing and under-routing are explicit metrics.
-5. Benchmark data is bounded and contains no raw secrets, raw prompts, user-specific source material, or full command output.
-6. Validation command is stated and reproducible from repository source.
-7. Reports avoid broad claims beyond the collected evidence.
+5. Required references are an allow-list; skipped references have a reason.
+6. Benchmark data is bounded and contains no raw secrets, raw prompts, user-specific source material, or full command output.
+7. Validation command is stated and reproducible from repository source.
+8. Reports avoid broad claims beyond the collected evidence.
 
 ## Used By
 - `change-forge-router`

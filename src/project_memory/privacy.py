@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from project_memory import MEMORY_SCHEMA_VERSION
+from project_memory.source_evidence import FRESHNESS_VALUES, is_sha256, sha256_file
 
 
 MAX_ITEMS = 50
@@ -73,6 +74,7 @@ CONFIDENCES = {"low", "medium", "high"}
 PROMOTION_STATUSES = {"raw", "candidate", "approved", "rejected"}
 PRIVACY_CLASSES = {"safe_bounded", "redacted", "rejected_sensitive"}
 MEMORY_SOURCES = {"telemetry", "trajectory", "human", "validator"}
+HASH_ALGORITHMS = {"sha256"}
 FORBIDDEN_KEY_TOKENS = (
     "prompt",
     "raw_prompt",
@@ -152,7 +154,14 @@ def sanitize_memory_event(raw: dict[str, Any], *, repo: str | Path | None = None
     )
     memory_source = clean_enum(source.get("source"), MEMORY_SOURCES, "telemetry")
     commit_sha = clean_scalar(source.get("commit_sha"), default="")
-    return {
+    source_evidence = sanitize_source_evidence(
+        source.get("source_evidence"),
+        repo=repo,
+        fallback_path=paths[0] if paths else "",
+        event_id=event_id,
+        timestamp=timestamp,
+    )
+    event = {
         "schema_version": MEMORY_SCHEMA_VERSION,
         "event_id": event_id,
         "repo_hash": repo_hash,
@@ -177,6 +186,9 @@ def sanitize_memory_event(raw: dict[str, Any], *, repo: str | Path | None = None
         "promotion_status": promotion_status,
         "created_at": timestamp,
     }
+    if source_evidence:
+        event["source_evidence"] = source_evidence
+    return event
 
 
 def sanitize_memory_query(raw: dict[str, Any], *, repo: str | Path | None = None) -> dict[str, Any]:
@@ -290,6 +302,50 @@ def clean_changed_files(value: object, *, repo: str | Path | None = None) -> lis
         if len(result) >= MAX_ITEMS:
             break
     return result
+
+
+def sanitize_source_evidence(
+    value: object,
+    *,
+    repo: str | Path | None = None,
+    fallback_path: object = "",
+    event_id: object = "",
+    timestamp: object = "",
+) -> dict[str, str]:
+    """Return optional source evidence without storing raw source content."""
+    source = value if isinstance(value, dict) else {}
+    path = clean_path(source.get("repo_rel_path") or fallback_path, repo=repo)
+    if not path:
+        return {}
+    source_hash = clean_scalar(source.get("source_hash"), default="").casefold()
+    if repo is not None:
+        current = Path(repo) / path
+        try:
+            if current.is_file():
+                source_hash = sha256_file(current)
+        except OSError:
+            source_hash = ""
+    if not is_sha256(source_hash):
+        return {}
+    observed_event = clean_scalar(source.get("observed_at_event_id"), default="")
+    observed_timestamp = clean_scalar(source.get("observed_at_timestamp"), default="")
+    return {
+        "repo_rel_path": path,
+        "source_hash": source_hash,
+        "hash_algorithm": clean_enum(source.get("hash_algorithm"), HASH_ALGORITHMS, "sha256"),
+        "observed_at_event_id": observed_event or clean_scalar(event_id, default=""),
+        "observed_at_timestamp": observed_timestamp or clean_scalar(timestamp, default=""),
+        "graph_freshness": clean_enum(
+            source.get("graph_freshness"),
+            FRESHNESS_VALUES,
+            "unknown",
+        ),
+        "validation_freshness": clean_enum(
+            source.get("validation_freshness"),
+            FRESHNESS_VALUES,
+            "unknown",
+        ),
+    }
 
 
 def clean_path(value: object, *, repo: str | Path | None = None) -> str:

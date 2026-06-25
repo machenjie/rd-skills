@@ -22,6 +22,11 @@ routing rules, or capabilities, and nothing in this pipeline edits `SKILL.md`,
 `routing-rules.yaml`, or `capabilities.yaml`. Every improvement is proposed as a
 candidate and only a human decides whether to apply it.
 
+Telemetry, Project Memory, Validation Broker, repository graph, and adapter
+facts are bounded evidence inputs. They are not raw prompt storage and not a
+source-of-truth substitute for current repository files. Validation commands for
+these surfaces are centralized in [VALIDATION.md](VALIDATION.md).
+
 ## Where Telemetry Lives
 
 Telemetry is operational cache, not project source and not runtime skill content:
@@ -387,7 +392,8 @@ Project memory inherits telemetry boundaries:
 - Runtime memory writes only under
   `${XDG_CACHE_HOME:-~/.cache}/changeforge/memory/<repo_hash>/`.
 - It stores repo/workdir hashes, relative paths, bounded symbols, skill names,
-  outcomes, confidence, promotion status, and evidence references.
+  outcomes, confidence, promotion status, evidence references, and optional
+  `source_evidence` hashes for current repository files.
 - It does not store raw prompts, environment variables, secrets, full command
   stdout/stderr, user absolute paths, personal archives, or toolbox mappings.
 
@@ -421,14 +427,21 @@ and adds canonical governed fields:
 - `privacy_class`
 - `retention_policy`
 - `source`
+- optional `source_evidence` containing `repo_rel_path`, full sha256
+  `source_hash`, `hash_algorithm`, `observed_at_event_id`,
+  `observed_at_timestamp`, `graph_freshness`, and `validation_freshness`
 
 Allowed `kind` values are `fragile_file`, `repeat_failure`,
 `validation_pattern`, `review_finding_pattern`, `module_convention`,
 `generated_source_mapping`, `route_correction`, `false_positive_hook`, and
 `false_negative_hook`. The projection records included and excluded event ids,
 the retrieval key, stale-context status, residual risk, and
-`source_check_required: true`. Memory is never source truth; agents must still
-read current repository files before acting.
+`source_check_required: true`. Retrieval hits expose `source_status`,
+`evidence_role`, and retrieval confidence. Memory is never source truth; agents
+must still read current repository files before acting. A memory hit can become
+closure evidence only when the current file hash matches and current
+validation/review freshness exists. Stale, deleted, missing, unknown, generated,
+or legacy hashless memory is historical or warning-only.
 
 ### Memory Review And Promotion
 
@@ -453,7 +466,13 @@ Promotion can generate only candidate skeletons under:
 - `tests/project_memory/fixtures`
 
 Promotion refuses direct skill, registry, routing, capability, `dist/`, or
-runtime skill edits.
+runtime skill edits. Promotion also requires explicit `promotion_type`
+(`success_rule`, `failure_pattern`, `fragile_file`, `anti_pattern`, or
+`routing_hint`), current `source_evidence` hash validation, current
+validation/review evidence, residual-risk classification, and
+`requires_human_review: true`. It refuses raw prompt/output/secret-like data,
+stale memory, unverified success rules, and generated artifacts without an
+explicit source-of-truth reference.
 
 ### Memory Gates
 

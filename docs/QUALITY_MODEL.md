@@ -48,41 +48,18 @@ Reference loading: read all selected capability references and `references/check
 Required gates:
 
 - Pass L2 for each touched module.
-- Run all core validators:
+- Run the fast source invariants and focused governance tests in
+  [VALIDATION.md](VALIDATION.md). That document is the canonical command source
+  for source invariants, hooks, Validation Broker, Project Memory, repository
+  graph/context-pack freshness, skill-efficacy fixtures, and unittest scopes.
 
 ```bash
+python3 scripts/validate-src-invariants.py
 python3 scripts/validate-skills.py
-python3 scripts/validate-capabilities.py
-python3 scripts/validate-domain-extensions.py
-python3 scripts/validate-registry.py
-python3 scripts/index-repository.py --target . --out /tmp/changeforge-repo-graph.json
-python3 scripts/validate-repository-graph.py --graph /tmp/changeforge-repo-graph.json
-python3 scripts/build-context-pack.py --task "release validation" --target . --graph /tmp/changeforge-repo-graph.json --out /tmp/changeforge-context-pack.json
-python3 scripts/validate-context-pack.py --context-pack /tmp/changeforge-context-pack.json
-python3 scripts/validate-project-memory.py
 python3 scripts/validate-validation-broker.py
-python3 scripts/validate-trajectory.py
-python3 scripts/validate-skill-body-links.py
-python3 scripts/validate-skill-content-size.py
-python3 scripts/audit-skill-content.py
-python3 scripts/eval-routing.py
-python3 scripts/eval-agent-behavior.py
-python3 scripts/eval-skill-professionalism.py
-python3 scripts/eval-skill-professionalism.py --coverage-matrix
-python3 scripts/eval-professional-benchmarks.py
-python3 scripts/validate-professionalism-regression.py
-python3 scripts/validate-professional-routing-coverage.py
-python3 scripts/validate-stage-routing-architecture.py
 python3 scripts/validate-hooks.py
-python3 scripts/eval-pressure-behavior.py
-python3 -m unittest discover -s tests
-python3 scripts/validate-codegen-benchmarks.py
-python3 scripts/run-codegen-benchmarks.py --limit 3
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
-python3 scripts/validate-runtime-reference-links.py
-python3 scripts/validate-installation.py
+python3 scripts/validate-project-memory.py
+python3 scripts/validate-skill-efficacy-benchmarks.py
 ```
 
 - Run extended routing fixture comparison when updating or verifying captured actual router outputs:
@@ -113,6 +90,23 @@ Runtime-governance evidence must stay bounded:
 - trajectory evidence is a review view over bounded facts and must not include
   prompts, secrets, environment variables, raw command output, or full command
   arguments.
+
+Evidence strength, freshness, and closure readiness are separate dimensions:
+
+- `strong` evidence has a command outcome or artifact tied to the current
+  material diff and the changed-path/risk surface it claims to cover.
+- `weak` evidence names an action or command without a reliable outcome,
+  coverage mapping, or current source freshness.
+- `negative` evidence includes failed commands, stale validation, explicit
+  not-run disclosures, unsupported adapter facts that affect closure, or
+  generated-artifact source-of-truth gaps.
+- `current` graph, memory, and validation evidence can support closure only when
+  source hashes or event order prove it was produced after the relevant material
+  edit. `stale` and `unknown` evidence remain assumptions or residual risk.
+- Closure may be `ready` only when required evidence is strong/current and
+  degraded capabilities are either irrelevant to the current closure or carry a
+  specific not-applicable reason. Otherwise the closure is `needs_validation`,
+  `needs_review`, `needs_repair`, `degraded_ready`, or `blocked`.
 
 ## L4 Product-Grade High-Risk Change
 

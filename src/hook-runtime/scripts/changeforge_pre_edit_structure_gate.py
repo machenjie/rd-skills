@@ -274,6 +274,10 @@ def evaluate_pre_edit(event: dict, state: dict | None = None, repo: Path | None 
         for item in memory_advice.get("missing", []):
             if item not in missing:
                 missing.append(item)
+    if memory_advice.get("historical_fragile_paths"):
+        for warning in memory_advice.get("warnings", []):
+            if warning:
+                findings.append(str(warning))
     repeat_failure = memory_advice.get("repeat_failure") or {}
     if repeat_failure.get("repeated"):
         if repeat_failure.get("allowed_to_continue", True):

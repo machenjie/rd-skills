@@ -56,6 +56,12 @@ class ValidateProductizationAssetsTests(unittest.TestCase):
             def format_coverage_matrix(self) -> str:
                 return "adapter coverage matrix"
 
+            def docs_capability_matrix_from_text(self, text: str) -> str:
+                return "adapter docs matrix"
+
+            def format_docs_capability_matrix(self) -> str:
+                return "adapter docs matrix"
+
         module._load_adapter_capabilities = lambda errors: DummyCapabilities()
 
         with tempfile.TemporaryDirectory() as tmp:

@@ -119,6 +119,10 @@ def validate_context_pack(document: dict[str, Any]) -> list[str]:
         for field in (
             "graph_source",
             "selected_files",
+            "selected_graph_nodes",
+            "skipped_graph_nodes",
+            "closure_evidence",
+            "assumptions",
             "selected_symbols",
             "caller_callee_edges",
             "imports",
@@ -131,6 +135,7 @@ def validate_context_pack(document: dict[str, Any]) -> list[str]:
             "anti_bloat_decision",
             "omitted_nodes",
             "residual_risk",
+            "graph_validation_candidates",
         ):
             if field not in pack:
                 errors.append(f"task_context_pack.{field} is required for schema_version=2")
@@ -143,6 +148,25 @@ def validate_context_pack(document: dict[str, Any]) -> list[str]:
             for field in ("path", "owner_surface", "owner_module", "public_private_boundary"):
                 if not item.get(field):
                     errors.append(f"ownership[{index}].{field} is required")
+        for index, item in enumerate(pack.get("closure_evidence", []) if isinstance(pack.get("closure_evidence"), list) else []):
+            if not isinstance(item, dict):
+                errors.append(f"closure_evidence[{index}] must be an object")
+                continue
+            if item.get("freshness") != "current":
+                errors.append(f"closure_evidence[{index}] must be current")
+            if item.get("confidence") not in {"high", "medium"}:
+                errors.append(f"closure_evidence[{index}] must be medium/high confidence")
+        for index, item in enumerate(pack.get("graph_validation_candidates", []) if isinstance(pack.get("graph_validation_candidates"), list) else []):
+            if not isinstance(item, dict):
+                errors.append(f"graph_validation_candidates[{index}] must be an object")
+                continue
+            for field in ("changed_path", "candidate_tests", "confidence", "source", "freshness", "reason", "strength"):
+                if field not in item:
+                    errors.append(f"graph_validation_candidates[{index}].{field} is required")
+            if item.get("strength") == "strong" and (
+                item.get("freshness") != "current" or item.get("confidence") not in {"high", "medium"}
+            ):
+                errors.append(f"graph_validation_candidates[{index}] strong candidates must be current medium/high")
     if _has_secret_like(document):
         errors.append("context pack contains secret-like content")
     return errors

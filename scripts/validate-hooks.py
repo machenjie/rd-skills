@@ -44,6 +44,7 @@ COPILOT_USER_TEMPLATE = (
     HOOK_RUNTIME_ROOT / "templates" / "copilot-user" / "changeforge-hooks.json"
 )
 COPILOT_TEMPLATES = (COPILOT_TEMPLATE, COPILOT_USER_TEMPLATE)
+HOOKS_DOC = ROOT / "docs" / "HOOKS.md"
 RICH_EVENT_SCRIPTS = {
     "SessionStart": (
         "changeforge_session_bootstrap",
@@ -208,6 +209,7 @@ def main(argv: list[str] | None = None) -> int:
     _validate_required_files(errors)
     _validate_python_files(errors)
     _validate_adapter_capabilities(errors)
+    _validate_docs_capability_matrix(errors)
     _validate_schema_files(errors)
     _validate_bootstrap_fragment(errors)
     codex = _load_json(CODEX_TEMPLATE, errors)
@@ -402,13 +404,29 @@ def _validate_adapter_capabilities(errors: list[str]) -> None:
             "command_output_visibility",
             "changed_path_visibility",
             "validation_output_visibility",
+            "read_path_visibility",
+            "command_kind_visibility",
+            "command_risk_visibility",
+            "permission_decision_visibility",
+            "rollback_checkpoint_visibility",
         ):
             if data.get(field) not in expected_visibility:
                 errors.append(
                     f"adapter capabilities: {runtime}.{field} must be one of {sorted(expected_visibility)}"
                 )
+        visibility = data.get("visibility")
+        if not isinstance(visibility, dict):
+            errors.append(f"adapter capabilities: {runtime}.visibility must be a dict")
+        else:
+            for field in capabilities.VISIBILITY_FIELDS:
+                if visibility.get(field) not in expected_visibility:
+                    errors.append(
+                        f"adapter capabilities: {runtime}.visibility.{field} must be one of {sorted(expected_visibility)}"
+                    )
         if data.get("default_failure_mode") != "fail_open":
             errors.append(f"adapter capabilities: {runtime} must default to fail_open")
+        if not data.get("fail_open_policy"):
+            errors.append(f"adapter capabilities: {runtime}.fail_open_policy is required")
         if not isinstance(data.get("unsupported_events"), list):
             errors.append(f"adapter capabilities: {runtime}.unsupported_events must be a list")
         for field in (
@@ -417,6 +435,9 @@ def _validate_adapter_capabilities(errors: list[str]) -> None:
             "advisory_context_events",
             "supported_checks",
             "unsupported_checks",
+            "degraded_checks",
+            "fail_closed_allowed_checks",
+            "notes",
         ):
             if not isinstance(data.get(field), list):
                 errors.append(f"adapter capabilities: {runtime}.{field} must be a list")
@@ -465,6 +486,8 @@ def _validate_adapter_capabilities(errors: list[str]) -> None:
                 errors.append(f"adapter capabilities: {runtime} must not claim stop blocking")
             if not data.get("supports_mode_or_role_switch"):
                 errors.append(f"adapter capabilities: {runtime} must expose mode or role switch support")
+            if data.get("fail_closed_allowed_checks"):
+                errors.append(f"adapter capabilities: {runtime} must not allow fail_closed checks")
         if runtime == "cline" and not data.get("supports_plan_act_mode"):
             errors.append("adapter capabilities: cline must expose Plan/Act mode support")
         if runtime == "openhands":
@@ -501,6 +524,25 @@ def _validate_adapter_capabilities(errors: list[str]) -> None:
     ):
         if not claude.supports_event(event):
             errors.append(f"adapter capabilities: Claude must support {event}")
+
+
+def _validate_docs_capability_matrix(errors: list[str]) -> None:
+    capabilities = _load_adapter_capabilities(errors)
+    if capabilities is None:
+        return
+    if not HOOKS_DOC.is_file():
+        errors.append(f"missing hooks documentation: {relpath(ROOT, HOOKS_DOC)}")
+        return
+    actual = capabilities.docs_capability_matrix_from_text(HOOKS_DOC.read_text(encoding="utf-8"))
+    expected = capabilities.format_docs_capability_matrix().strip()
+    if not actual:
+        errors.append(
+            f"{relpath(ROOT, HOOKS_DOC)}: missing adapter capability matrix markers"
+        )
+    elif actual != expected:
+        errors.append(
+            f"{relpath(ROOT, HOOKS_DOC)}: adapter capability matrix is stale; regenerate from runtime_governance.adapters.base.format_docs_capability_matrix()"
+        )
 
 
 def _copilot_unsupported_advisory_events(errors: list[str]) -> tuple[str, ...]:
@@ -774,6 +816,15 @@ def _validate_template(
     if not isinstance(hooks, dict):
         errors.append(f"{relpath(ROOT, path)}: hooks must be a JSON object")
         return
+    capabilities_module = _load_adapter_capabilities(errors)
+    if capabilities_module is not None and (path in CODEX_TEMPLATES or path in CLAUDE_TEMPLATES):
+        runtime = "codex" if path in CODEX_TEMPLATES else "claude"
+        capabilities = capabilities_module.adapter_capabilities_for(runtime)
+        for event in hooks:
+            if not capabilities.supports_event(event):
+                errors.append(
+                    f"{relpath(ROOT, path)}: {runtime} template wires unsupported event {event}"
+                )
     for required_event in ("PostToolUse", "Stop"):
         if required_event not in hooks:
             errors.append(f"{relpath(ROOT, path)}: missing {required_event} hook")

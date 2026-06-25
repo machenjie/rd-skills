@@ -43,6 +43,12 @@ class MemoryEventSchemaTests(unittest.TestCase):
         self.assertIn("route_decision", data["properties"]["type"]["enum"])
         self.assertIn("repeat_failure", data["properties"]["type"]["enum"])
         self.assertIn("validation_pattern", data["properties"]["kind"]["enum"])
+        self.assertNotIn("source_evidence", required)
+        source_evidence = data["properties"]["source_evidence"]
+        source_def = data["$defs"][source_evidence["$ref"].split("/")[-1]]
+        self.assertFalse(source_def["additionalProperties"])
+        self.assertIn("source_hash", source_def["required"])
+        self.assertEqual(source_def["properties"]["hash_algorithm"]["enum"], ["sha256"])
 
     def test_memory_projection_schema_documents_source_check_contract(self) -> None:
         data = json.loads(

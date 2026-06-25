@@ -35,7 +35,7 @@ MAX_STATE_ITEMS = 50
 MAX_STATE_VALUE_LEN = 300
 
 STATE_REDUCERS = {
-    "runtime_adapter": "mapping_replace",
+    "runtime_adapter": "merge_runtime_adapter_facts",
     "normalized_events": "additive_unique",
     "changed_paths": "risk_priority_then_recent",
     "deleted_paths": "additive_unique",
@@ -139,6 +139,9 @@ def reduce_state_update(state: dict, update: dict) -> dict:
         elif reducer == "mapping_replace":
             if isinstance(value, dict) and value:
                 next_state[field] = _clean_mapping(value)
+        elif reducer == "merge_runtime_adapter_facts":
+            if isinstance(value, dict) and value:
+                next_state[field] = _merge_runtime_adapter_facts(next_state.get(field), value)
         elif reducer == "merge_preserve_required_fields":
             if isinstance(value, dict) and value:
                 snapshot = latest_snapshot(next_state.get("compaction_snapshots", []))
@@ -198,6 +201,35 @@ def _clean_mapping(value: dict) -> dict:
         else:
             cleaned[name] = str(raw).strip()[:MAX_STATE_VALUE_LEN]
     return cleaned
+
+
+def _merge_runtime_adapter_facts(existing: Any, incoming: dict) -> dict:
+    current = _mapping_value(existing)
+    update = _clean_mapping(incoming)
+    if not update:
+        return dict(current)
+    merged = dict(current)
+    for key, value in update.items():
+        if key in {
+            "unsupported_checks",
+            "active_unsupported_checks",
+            "required_unsupported_checks",
+            "active_degradation",
+            "degraded_capabilities",
+            "degraded_checks",
+            "fail_closed_allowed_checks",
+        }:
+            merged[key] = _additive_unique(current.get(key, []), value)
+        elif key == "visibility" and isinstance(value, dict):
+            merged[key] = {**_mapping_value(current.get(key)), **value}
+        elif key in {"adapter", "fail_open_policy"}:
+            if str(value).strip():
+                merged[key] = value
+        elif isinstance(value, list):
+            merged[key] = value or current.get(key, [])
+        elif value:
+            merged[key] = value
+    return _clean_mapping(merged)
 
 
 def _mapping_value(value: Any) -> dict:

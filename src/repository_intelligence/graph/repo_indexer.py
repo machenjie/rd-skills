@@ -7,10 +7,20 @@ from typing import Any
 
 from repository_intelligence.cache.freshness import freshness_metadata
 from repository_intelligence.cache.repo_hash import iter_indexed_files
+from repository_intelligence.graph.evidence import (
+    attach_edge_evidence,
+    attach_node_evidence,
+    build_edge_evidence,
+    build_file_node_evidence,
+    build_symbol_node_evidence,
+    confidence_for_file,
+    unknown_reason_for_kind,
+)
 from repository_intelligence.graph.file_classifier import classify_kind, classify_role
 from repository_intelligence.graph.generated_artifact_graph import (
     build_generated_artifact_edges,
     build_generated_artifact_payload,
+    generated_source_of_truth,
 )
 from repository_intelligence.graph.import_graph import build_import_edges
 from repository_intelligence.graph.markdown_reference_extractor import extract_markdown_file
@@ -57,10 +67,12 @@ def _lightweight_node_symbols(relative_path: str, kind: str) -> list[dict[str, o
     ]
 
 
-def _index_file(path: Path, relative_path: str, repo_root: Path) -> dict[str, Any]:
+def _index_file(path: Path, relative_path: str, repo_root: Path, indexed_at: str | None) -> dict[str, Any]:
     kind = classify_kind(relative_path)
     role = classify_role(relative_path)
     node = _empty_node(relative_path, kind, role)
+    source_of_truth = generated_source_of_truth(relative_path, {}) if role == "generated_artifact" else None
+    has_index_error = False
     try:
         if kind == "python":
             extracted = extract_python_file(path, repo_root)
@@ -81,7 +93,21 @@ def _index_file(path: Path, relative_path: str, repo_root: Path) -> dict[str, An
         else:
             node["symbols"] = _lightweight_node_symbols(relative_path, kind)
     except Exception as exc:
+        has_index_error = True
         node["references"] = [{"kind": "index_error", "error_kind": type(exc).__name__, "value": str(exc), "line": 0}]
+    if any(isinstance(ref, dict) and ref.get("kind") == "index_error" for ref in node.get("references", [])):
+        has_index_error = True
+    evidence = build_file_node_evidence(
+        repo_root=repo_root,
+        relative_path=relative_path,
+        kind=kind,
+        role=role,
+        last_indexed_at=indexed_at,
+        source_of_truth=source_of_truth,
+        unknown_reason=unknown_reason_for_kind(kind, has_index_error=has_index_error),
+        confidence=confidence_for_file(kind, has_index_error=has_index_error, generated_artifact=role == "generated_artifact"),
+    )
+    attach_node_evidence(node, evidence)
     return node
 
 
@@ -92,7 +118,7 @@ def _normalize_symbol(symbol: dict[str, object], file_node: dict[str, Any]) -> d
         kind = "unknown"
     language = str(symbol.get("language") or file_node.get("kind") or "unknown")
     line = symbol.get("line") or symbol.get("line_start") or 0
-    return {
+    normalized = {
         "name": str(symbol.get("name") or ""),
         "kind": kind,
         "path": path,
@@ -105,6 +131,22 @@ def _normalize_symbol(symbol: dict[str, object], file_node: dict[str, Any]) -> d
         "language": language,
         "confidence": str(symbol.get("confidence") or _confidence_for_kind(language)),
     }
+    evidence = build_symbol_node_evidence(symbol=normalized, file_node=file_node).to_dict()
+    normalized["evidence"] = evidence
+    for field in (
+        "node_id",
+        "node_type",
+        "extractor",
+        "source_hash",
+        "freshness",
+        "generated_artifact",
+        "source_of_truth",
+        "unknown_reason",
+        "last_indexed_at",
+    ):
+        if field in evidence:
+            normalized[field] = evidence[field]
+    return normalized
 
 
 def _flatten_symbols(files: list[dict[str, Any]]) -> list[dict[str, object]]:
@@ -142,6 +184,9 @@ def _validation_candidates() -> list[dict[str, object]]:
                 "reason": "validation broker command registry could not be imported",
                 "covered_path_patterns": [],
                 "covered_risk_surfaces": ["unknown"],
+                "confidence": "unknown",
+                "freshness": "unknown",
+                "extractor": "validation_broker.command_registry",
             }
         ]
     return [
@@ -152,9 +197,36 @@ def _validation_candidates() -> list[dict[str, object]]:
             "reason": command.reason,
             "covered_path_patterns": list(command.covered_path_patterns),
             "covered_risk_surfaces": list(command.covered_risk_surfaces),
+            "confidence": "medium",
+            "freshness": "not_applicable",
+            "extractor": "validation_broker.command_registry",
         }
         for command in registry_commands()
     ]
+
+
+def _attach_edge_evidence(edges: list[dict[str, str]], files_by_path: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    enriched: list[dict[str, Any]] = []
+    for edge in edges:
+        edge_payload: dict[str, Any] = dict(edge)
+        attach_edge_evidence(edge_payload, build_edge_evidence(edge_payload, files_by_path))
+        enriched.append(edge_payload)
+    return enriched
+
+
+def _refresh_generated_file_evidence(files_by_path: dict[str, dict[str, Any]]) -> None:
+    for path, file_node in files_by_path.items():
+        if file_node.get("role") != "generated_artifact":
+            continue
+        source_of_truth = generated_source_of_truth(path, files_by_path)
+        evidence = dict(file_node.get("evidence") if isinstance(file_node.get("evidence"), dict) else {})
+        evidence["source_of_truth"] = source_of_truth or None
+        evidence["confidence"] = "medium" if source_of_truth else "low"
+        if source_of_truth:
+            evidence.pop("unknown_reason", None)
+        else:
+            evidence["unknown_reason"] = "generated_source_of_truth_unknown"
+        attach_node_evidence(file_node, evidence)
 
 
 def build_repository_graph(repo_root: str | Path) -> dict[str, Any]:
@@ -163,9 +235,10 @@ def build_repository_graph(repo_root: str | Path) -> dict[str, Any]:
     files: list[dict[str, Any]] = []
     for relative in iter_indexed_files(root):
         relative_path = relative.as_posix()
-        files.append(_index_file(root / relative, relative_path, root))
+        files.append(_index_file(root / relative, relative_path, root, str(metadata.get("indexed_at") or "")))
 
     files_by_path = {str(file_node["path"]): file_node for file_node in files}
+    _refresh_generated_file_evidence(files_by_path)
     edges: list[dict[str, str]] = []
     for file_node in files:
         if file_node.get("kind") == "python":
@@ -174,6 +247,7 @@ def build_repository_graph(repo_root: str | Path) -> dict[str, Any]:
     edges.extend(build_test_edges(files_by_path))
     edges.extend(build_ownership_edges(files_by_path))
     edges.extend(build_generated_artifact_edges(files_by_path))
+    enriched_edges = _attach_edge_evidence(dedupe_edges(edges), files_by_path)
     ownership = build_ownership_payload(files_by_path)
     freshness = {
         "status": "current",
@@ -194,7 +268,7 @@ def build_repository_graph(repo_root: str | Path) -> dict[str, Any]:
             "commit_sha": metadata.get("indexed_commit"),
             "files": files,
             "symbols": _flatten_symbols(files),
-            "edges": dedupe_edges(edges),
+            "edges": enriched_edges,
             "module_boundaries": build_module_boundaries(files_by_path),
             "ownership": ownership,
             "generated_artifacts": build_generated_artifact_payload(files_by_path),

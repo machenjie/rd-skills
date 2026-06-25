@@ -172,6 +172,12 @@ Doctor checks supported directories, missing `SKILL.md`, duplicate skill names a
 python3 installers/doctor.py --agent codex --scope project --target /path/to/project --profile full
 ```
 
+Doctor also prints source governance status for the skill and capability
+registries, source/dist boundary, hook adapter matrix, Validation Broker,
+Project Memory, repository graph freshness support, and skill-efficacy fixtures.
+It is structural and does not run expensive test suites. See
+[VALIDATION.md](VALIDATION.md) for the canonical validation tiers.
+
 ## Duplicate Skill Conflicts
 
 Install refuses to overwrite an unmanaged skill directory whose name matches a ChangeForge skill. Review the conflict first, then either move the unmanaged directory, uninstall the managed copy, or rerun install with `--force` when replacing that directory is intentional.
@@ -196,4 +202,4 @@ python3 installers/install.py --agent openai-api --profile recommended --dry-run
 python3 scripts/validate-installation.py
 ```
 
-The Codex recommended user install smoke should report 19 top-level skills. The Codex, Claude Code, and GitHub Copilot full project install smokes should each report 26 top-level skills. Uninstall dry-runs should operate only on manifest-managed names, doctor should report no issues for every installed smoke target, and OpenAI API zip validation should pass profile count and archive-shape checks.
+The Codex recommended user install smoke should report 21 top-level skills. The Codex, Claude Code, and GitHub Copilot full project install smokes should each report 28 top-level skills. Uninstall dry-runs should operate only on manifest-managed names, doctor should report no issues for every installed smoke target, and OpenAI API zip validation should pass profile count and archive-shape checks.

@@ -86,6 +86,12 @@ def state_update_from_snapshot(snapshot: ExecutorAdapterSnapshot) -> dict[str, A
         "unsupported_checks": list(capabilities.unsupported_checks),
         "active_degradation": degraded,
         "degraded_capabilities": degraded,
+        "degraded_checks": list(getattr(capabilities, "degraded_checks", ())),
+        "fail_open_policy": getattr(capabilities, "fail_open_policy", ""),
+        "fail_closed_allowed_checks": list(
+            getattr(capabilities, "fail_closed_allowed_checks", ())
+        ),
+        "visibility": dict(getattr(capabilities, "visibility", {}) or {}),
     }
     validation_results = _validation_results(event)
     return {
@@ -133,6 +139,16 @@ def _degraded_capabilities(
     capabilities: AdapterCapabilities, event: NormalizedEvent
 ) -> list[str]:
     values = [str(item) for item in getattr(event, "capability_degradation", [])]
+    runtime = getattr(capabilities, "runtime", "adapter")
+    if getattr(capabilities, "validation_output_visibility", "") == "none" and (
+        event.validation_candidate or event.tool_category == "test"
+    ):
+        values.append(f"{runtime}_validation_outcome_visibility_none")
+    if getattr(capabilities, "changed_path_visibility", "") == "none" and event.tool_category in {
+        "edit",
+        "write",
+    }:
+        values.append(f"{runtime}_changed_paths_visibility_none")
     return _unique(values)
 
 

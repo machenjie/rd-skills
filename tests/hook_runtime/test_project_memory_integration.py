@@ -86,7 +86,7 @@ class ProjectMemoryIntegrationTests(unittest.TestCase):
         self.assertEqual(records[0]["paths"], ["src/app.py"])
         self.assertEqual(records[0]["outcome"], "success")
 
-    def test_pre_edit_warns_for_fragile_file_without_memory_summary(self) -> None:
+    def test_pre_edit_treats_legacy_fragile_file_memory_as_historical_warning(self) -> None:
         common = load_common()
         gate = load_pre_edit_gate()
         with tempfile.TemporaryDirectory() as cwd_s, tempfile.TemporaryDirectory() as cache_s:
@@ -116,8 +116,8 @@ class ProjectMemoryIntegrationTests(unittest.TestCase):
                     os.environ.pop("XDG_CACHE_HOME", None)
                 else:
                     os.environ["XDG_CACHE_HOME"] = previous_cache
-        self.assertIn("memory_summary_evidence", result["missing"])
-        self.assertIn("fragile file memory gate", " ".join(result["findings"]))
+        self.assertNotIn("memory_summary_evidence", result["missing"])
+        self.assertIn("historical only", " ".join(result["findings"]))
 
     def test_direct_memory_write_drops_external_absolute_paths(self) -> None:
         common = load_common()

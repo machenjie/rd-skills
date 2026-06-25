@@ -81,6 +81,9 @@ HOOK_SUPPORT_PACKAGE_INCLUDE_FILES = {
     "project_memory": (
         "__init__.py",
         "privacy.py",
+        "source_evidence.py",
+        "gates/__init__.py",
+        "gates/fragile_file_gate.py",
         "store/__init__.py",
         "store/append_log.py",
         "store/projection.py",

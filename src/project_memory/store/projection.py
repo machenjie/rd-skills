@@ -5,10 +5,12 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import Counter, defaultdict
+from pathlib import Path
 from typing import Any, Iterable
 
 from project_memory import MEMORY_SCHEMA_VERSION
 from project_memory.privacy import now_utc, sanitize_memory_query
+from project_memory.source_evidence import memory_hit_from_event, residual_risk_for_hit
 from project_memory.store.append_log import parse_iso_datetime
 
 
@@ -139,6 +141,7 @@ def build_memory_projection(
     query: dict[str, Any] | None = None,
     *,
     max_events: int = 50,
+    repo_root: str | Path | None = None,
 ) -> dict[str, Any]:
     """Build the Batch 04 deterministic Project Memory projection.
 
@@ -164,9 +167,13 @@ def build_memory_projection(
             excluded.append(_excluded(event, reason))
             continue
         stale = _event_stale_for_changed_paths(event, changed_times)
-        included.append(_projection_event(event, stale=stale))
+        hit = memory_hit_from_event(event, repo_root=repo_root)
+        included.append(_projection_event(event, stale=stale, hit=hit))
         if stale:
             residual_risk.append(f"stale_memory_event:{event_id}")
+        source_risk = residual_risk_for_hit(hit)
+        if source_risk:
+            residual_risk.append(source_risk)
         if len(included) >= max_events:
             break
 
@@ -349,7 +356,7 @@ def _paths_overlap(query_paths: set[str], event_paths: set[str]) -> bool:
     return False
 
 
-def _projection_event(event: dict[str, Any], *, stale: bool) -> dict[str, Any]:
+def _projection_event(event: dict[str, Any], *, stale: bool, hit: dict[str, str]) -> dict[str, Any]:
     return {
         "event_id": str(event.get("event_id") or ""),
         "kind": _kind(event),
@@ -361,6 +368,11 @@ def _projection_event(event: dict[str, Any], *, stale: bool) -> dict[str, Any]:
         "source": str(event.get("source") or ""),
         "source_check_required": True,
         "stale_relative_to_source": stale,
+        "memory_hit": hit,
+        "source_status": hit["source_status"],
+        "evidence_role": hit["evidence_role"],
+        "retrieval_confidence": hit["confidence"],
+        "source_status_reason": hit["reason"],
     }
 
 
@@ -403,6 +415,8 @@ def _summary_item(event: dict[str, Any]) -> dict[str, Any]:
         "bounded_paths": event.get("bounded_paths", []),
         "summary": event.get("summary", ""),
         "source_check_required": True,
+        "source_status": event.get("source_status", ""),
+        "evidence_role": event.get("evidence_role", ""),
     }
 
 

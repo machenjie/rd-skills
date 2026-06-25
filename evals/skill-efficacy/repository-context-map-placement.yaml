@@ -28,7 +28,40 @@ metrics:
     - Rejects planning from a single visible file name.
   token_overhead_pct: not_collected
   turn_overhead_pct: not_collected
+skill_efficacy_benchmark:
+  changed_surface: router
+  baseline_case:
+    task: Select the correct implementation target for a ChangeForge registry routing update before planning edits.
+    expected_current_behavior: The baseline plans from the named file and can miss sibling registries, generated docs, resolver coupling, or tests.
+    known_gap: Placement evidence is incomplete, so changes may land in generated or partial sources.
+  treatment_case:
+    expected_new_behavior: The treatment selects repository-context-map and skill-authoring-expert, then records target, sibling, caller, tests, generated artifacts, and rejected locations.
+    selected_skills:
+      - change-forge-router
+      - quality-test-gate
+    selected_capabilities:
+      - repository-context-map
+      - skill-authoring-expert
+      - implementation-structure-design
+    required_references:
+      - src/foundation/capabilities/repository-context-map/SKILL.md
+      - src/foundation/capabilities/skill-authoring-expert/SKILL.md
+      - src/foundation/capabilities/implementation-structure-design/SKILL.md
+    skipped_references:
+      - reference: src/foundation/capabilities/release-rollback/SKILL.md
+        reason: build/release readiness is outside this placement-only routing benchmark.
+  metrics:
+    over_routing: No over-routing expected; selected references are limited to authoring, placement, and structure.
+    under_routing: Under-routing occurs if repository-context-map is absent before planning edits.
+    selected_reference_count: 3
+    token_budget_mode: single-stage
+    turn_overhead: not_collected
+    closure_evidence_required: true
+  regression_commands:
+    - python3 scripts/validate-skill-efficacy-benchmarks.py
+    - python3 scripts/eval-routing.py
+  caveats:
+    - Structural fixture only; measured token and turn costs are not collected.
 verdict:
   status: structural_pass
   rationale: The fixture validates routing and evidence shape only; measured token and turn overhead are not collected.
-

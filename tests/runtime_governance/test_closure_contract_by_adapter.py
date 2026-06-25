@@ -49,7 +49,8 @@ class ClosureContractByAdapterTests(unittest.TestCase):
             validation_broker_outcome="ready",
         )
         self.assertEqual(contract.adapter, "copilot")
-        self.assertEqual(contract.unsupported_checks, ["pre_tool_advisory_context"])
+        self.assertIn("pre_tool_advisory_context", contract.unsupported_checks)
+        self.assertIn("runtime_adapter_degradation", contract.unsupported_checks)
         self.assertIn(
             "copilot_pre_tool_advisory_context_unsupported",
             contract.degraded_capabilities,

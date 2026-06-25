@@ -13,6 +13,10 @@
         "graph_source",
         "freshness",
         "selected_files",
+        "selected_graph_nodes",
+        "skipped_graph_nodes",
+        "closure_evidence",
+        "assumptions",
         "selected_symbols",
         "caller_callee_edges",
         "imports",
@@ -26,7 +30,8 @@
         "rejected_locations",
         "anti_bloat_decision",
         "omitted_nodes",
-        "residual_risk"
+        "residual_risk",
+        "graph_validation_candidates"
       ],
       "properties": {
         "schema_version": {"const": 2},
@@ -36,6 +41,10 @@
         "freshness": {"type": "object"},
         "changed_paths": {"type": "array", "items": {"type": "string"}},
         "selected_files": {"type": "array"},
+        "selected_graph_nodes": {"type": "array"},
+        "skipped_graph_nodes": {"type": "array"},
+        "closure_evidence": {"type": "array"},
+        "assumptions": {"type": "array"},
         "selected_symbols": {"type": "array"},
         "caller_callee_edges": {"type": "array"},
         "imports": {"type": "array"},
@@ -49,7 +58,8 @@
         "rejected_locations": {"type": "array"},
         "anti_bloat_decision": {"type": "object"},
         "omitted_nodes": {"type": "array"},
-        "residual_risk": {"type": "array"}
+        "residual_risk": {"type": "array"},
+        "graph_validation_candidates": {"type": "array"}
       }
     }
   }

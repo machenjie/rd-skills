@@ -44,6 +44,41 @@
         "maxLength": 200,
         "not": { "pattern": "^(/|~|\\.\\.)" }
       }
+    },
+    "sourceEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repo_rel_path",
+        "source_hash",
+        "hash_algorithm",
+        "observed_at_event_id",
+        "observed_at_timestamp",
+        "graph_freshness",
+        "validation_freshness"
+      ],
+      "properties": {
+        "repo_rel_path": {
+          "type": "string",
+          "maxLength": 200,
+          "not": { "pattern": "^(/|~|\\.\\.)" }
+        },
+        "source_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "hash_algorithm": { "type": "string", "enum": ["sha256"] },
+        "observed_at_event_id": { "type": "string", "maxLength": 300 },
+        "observed_at_timestamp": { "type": "string", "maxLength": 80 },
+        "graph_freshness": {
+          "type": "string",
+          "enum": ["current", "stale", "unknown", "not_applicable"]
+        },
+        "validation_freshness": {
+          "type": "string",
+          "enum": ["current", "stale", "unknown", "not_applicable"]
+        }
+      }
     }
   },
   "properties": {
@@ -111,6 +146,7 @@
       "type": "string",
       "enum": ["raw", "candidate", "approved", "rejected"]
     },
-    "created_at": { "type": "string", "maxLength": 80 }
+    "created_at": { "type": "string", "maxLength": 80 },
+    "source_evidence": { "$ref": "#/$defs/sourceEvidence" }
   }
 }

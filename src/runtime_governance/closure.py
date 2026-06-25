@@ -54,6 +54,8 @@ class ClosureContract:
         supported = cap_list(supported_checks)
         unsupported = cap_list(unsupported_checks)
         degraded = cap_list(degraded_capabilities)
+        if degraded and "runtime_adapter_degradation" not in unsupported:
+            unsupported = cap_list([*unsupported, "runtime_adapter_degradation"])
         if ledger.adapter_degradation.strength != EvidenceStrength.NONE.value:
             unsupported = cap_list([*unsupported, "runtime_adapter_degradation"])
             degraded = cap_list([*degraded, *ledger.adapter_degradation.refs])
@@ -125,7 +127,8 @@ class ClosureContract:
         )
         preflight_negative = ledger.implementation_preflight.strength == EvidenceStrength.NEGATIVE.value
         preflight_required_missing = (
-            has_material_change
+            "implementation_preflight" in required
+            and has_material_change
             and ledger.implementation_preflight.strength == EvidenceStrength.PARTIAL.value
             and "implementation_preflight" not in present
         )
@@ -159,6 +162,12 @@ class ClosureContract:
             preflight_negative=preflight_negative,
             preflight_required_missing=preflight_required_missing,
         )
+        effective_next_owner = next_owner
+        if next_owner == "agent":
+            if review_has_finding and not repair_present:
+                effective_next_owner = "repair"
+            elif repair_present and not rereview_present:
+                effective_next_owner = "reviewer"
         return cls(
             adapter=redact_sensitive_value(adapter),
             supported_checks=supported,
@@ -182,7 +191,7 @@ class ClosureContract:
             changed_files=changed_files,
             verdict=verdict,
             residual_risk=cap_list(residual),
-            next_owner=redact_sensitive_value(next_owner) or "agent",
+            next_owner=redact_sensitive_value(effective_next_owner) or "agent",
         )
 
     def to_json_dict(self) -> dict[str, Any]:

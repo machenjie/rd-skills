@@ -179,6 +179,12 @@ Proactive Triggers, Evidence Contract, Failure Modes, Quality Gate, Reference
 Loading Hint, Routing Coverage, Benchmark Coverage, and Output Contract
 Strength.
 
+Behavior changes to skills, capabilities, routing, hooks, memory, repository
+graph, validation, trajectory, or adapter semantics also require a
+skill-efficacy benchmark plan. The canonical deterministic command set is
+[VALIDATION.md](VALIDATION.md); this standard defines the quality bar, while the
+validation document defines the runnable tiers.
+
 `scripts/eval-professional-benchmarks.py` supports schema-only validation and
 offline baseline-vs-with-skill comparison. When a benchmark case includes
 `baseline_output.md` and `with_skill_output.md`, comparison mode checks that the

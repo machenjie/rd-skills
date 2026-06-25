@@ -411,13 +411,26 @@ class EvidenceLedger:
                 )
             )
         elif fact.get("route_manifest_detected"):
+            missing_fields = []
+            if not selected:
+                missing_fields.append("selected_skills")
+            if not capabilities:
+                missing_fields.append("selected_capabilities")
+            if not references:
+                missing_fields.append("required_references")
+            if not gates:
+                missing_fields.append("required_quality_gates")
+            missing_text = ", ".join(missing_fields) if missing_fields else "unknown"
             self.route_manifest.merge(
                 EvidenceEntry(
                     "route_manifest",
                     EvidenceStrength.PARTIAL.value,
                     Freshness.CURRENT.value,
                     [ref],
-                    summary="route manifest detected but required closure fields were incomplete",
+                    summary=(
+                        "route manifest detected but required closure fields were incomplete: "
+                        f"{missing_text}"
+                    ),
                     timestamp=timestamp,
                 )
             )

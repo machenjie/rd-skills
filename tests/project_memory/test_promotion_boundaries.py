@@ -12,6 +12,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from project_memory.review.promote_memory_candidate import supported_target, write_candidate
+from project_memory.source_evidence import sha256_file
 
 
 class PromotionBoundaryTests(unittest.TestCase):
@@ -31,10 +32,27 @@ class PromotionBoundaryTests(unittest.TestCase):
         suggestion = {
             "id": "memory-repeat-failure-1",
             "type": "repeat_failure",
+            "promotion_type": "failure_pattern",
             "promotion_target": "tests/project_memory/fixtures",
+            "requires_human_review": True,
+            "failure_evidence": "two failed validation attempts",
+            "validation_evidence": "validation:pytest",
+            "residual_risk": ["memory-derived candidate requires source validation"],
         }
         with tempfile.TemporaryDirectory() as tmp_s:
             tmp = Path(tmp_s)
+            source = tmp / "src" / "app.py"
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_text("value = 1\n", encoding="utf-8")
+            suggestion["source_evidence"] = {
+                "repo_rel_path": "src/app.py",
+                "source_hash": sha256_file(source),
+                "hash_algorithm": "sha256",
+                "observed_at_event_id": "memory-repeat-failure-1",
+                "observed_at_timestamp": "2026-06-01T00:00:00Z",
+                "graph_freshness": "current",
+                "validation_freshness": "current",
+            }
             output = write_candidate(tmp, suggestion, write=True)
             self.assertTrue(output.is_file())
             self.assertIn("requires_human_review", output.read_text(encoding="utf-8"))

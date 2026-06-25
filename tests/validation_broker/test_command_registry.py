@@ -15,10 +15,9 @@ from validation_broker.command_registry import command_kind, matching_categories
 
 class CommandRegistryTests(unittest.TestCase):
     def test_hook_runtime_path_matches_registry_category(self) -> None:
-        self.assertEqual(
-            matching_categories(["src/hook-runtime/scripts/changeforge_common.py"]),
-            ["hook_runtime"],
-        )
+        categories = matching_categories(["src/hook-runtime/scripts/changeforge_common.py"])
+        self.assertIn("hook_runtime", categories)
+        self.assertIn("skill_behavior_change", categories)
 
     def test_runtime_governance_paths_match_registry_categories(self) -> None:
         cases = {

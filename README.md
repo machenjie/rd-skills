@@ -169,56 +169,16 @@ References are a precision mechanism, not a dumping ground. Language capabilitie
 
 ## Validation
 
-Run the authoring contract validators:
+Use [docs/VALIDATION.md](docs/VALIDATION.md) as the canonical command set.
+For fast governance checks, run:
 
 ```bash
+python3 scripts/validate-src-invariants.py
 python3 scripts/validate-skills.py
-python3 scripts/validate-capabilities.py
-python3 scripts/validate-domain-extensions.py
-python3 scripts/validate-registry.py
-python3 scripts/index-repository.py --target . --out /tmp/changeforge-repo-graph.json
-python3 scripts/validate-repository-graph.py --graph /tmp/changeforge-repo-graph.json
-python3 scripts/build-context-pack.py --task "release validation" --target . --graph /tmp/changeforge-repo-graph.json --out /tmp/changeforge-context-pack.json
-python3 scripts/validate-context-pack.py --context-pack /tmp/changeforge-context-pack.json
-python3 scripts/validate-project-memory.py
 python3 scripts/validate-validation-broker.py
-python3 scripts/validate-trajectory.py
-python3 scripts/validate-skill-body-links.py
-python3 scripts/validate-skill-content-size.py
-python3 scripts/validate-examples.py
-python3 scripts/validate-productization-assets.py
-python3 scripts/audit-skill-content.py
-python3 scripts/validate-skill-efficacy-benchmarks.py
-python3 scripts/eval-routing.py
-python3 scripts/eval-agent-behavior.py
-python3 scripts/eval-skill-professionalism.py
-python3 scripts/eval-skill-professionalism.py --coverage-matrix
-python3 scripts/eval-professional-benchmarks.py
-python3 scripts/validate-professionalism-regression.py
-python3 scripts/validate-professionalism-regression.py --strict
-python3 scripts/validate-professional-routing-coverage.py
-python3 scripts/eval-professional-agent-samples.py --promoted-only --strict
-python3 scripts/validate-stage-routing-architecture.py
 python3 scripts/validate-hooks.py
-python3 scripts/eval-pressure-behavior.py
-python3 -m unittest discover -s tests
-python3 scripts/validate-codegen-benchmarks.py
-python3 scripts/run-codegen-benchmarks.py --limit 3
-python3 scripts/run-codex-live-benchmarks.py --list
-python3 scripts/run-codex-live-benchmarks.py --benchmark-mode ablation --auth-policy borrow-current --benchmark security/ssrf-url-allowlist --dry-run --out /tmp/changeforge-codex-live-ablation-dry-run
-python3 scripts/validate-codex-live-benchmark-reports.py --run-dir /tmp/changeforge-codex-live-ablation-dry-run
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
-python3 scripts/validate-runtime-reference-links.py
-python3 scripts/validate-installation.py
-python3 scripts/export-marketplace-index.py --profile recommended --out /tmp/recommended-marketplace-index.json
-python3 scripts/export-marketplace-index.py --profile full --out /tmp/full-marketplace-index.json
-python3 scripts/export-marketplace-index.py --profile dev --out /tmp/dev-marketplace-index.json
-python3 scripts/validate-marketplace-index.py --profile recommended
-python3 scripts/validate-marketplace-index.py --profile full
-python3 scripts/validate-marketplace-index.py --profile dev
-python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out /tmp/professional-scorecard.md --json-out /tmp/professional-scorecard.json
+python3 scripts/validate-project-memory.py
+python3 scripts/validate-skill-efficacy-benchmarks.py
 ```
 
 Real local Codex CLI benchmark runs are opt-in. Strict comparative summaries

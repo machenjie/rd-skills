@@ -10,6 +10,7 @@ from .command_registry import (
     commands_for_categories,
     matching_categories,
 )
+from .skill_behavior_change import classify_skill_behavior_change
 
 
 def resolve_validation_plan(
@@ -23,6 +24,7 @@ def resolve_validation_plan(
     surfaces = _clean_list(risk_surfaces)
     categories = matching_categories(paths)
     context_candidates = _context_validation_candidates(repo_context)
+    skill_behavior_change = classify_skill_behavior_change(paths)
 
     recommended = commands_for_categories(categories, level="narrow")
     full = commands_for_categories(categories, level="full")
@@ -41,7 +43,8 @@ def resolve_validation_plan(
         "full_commands": [command.to_dict() for command in _dedupe(full)],
         "conservative": not bool(categories),
         "unknown_paths": _unknown_paths(paths, categories),
-        "notes": _plan_notes(paths, surfaces, categories, stage),
+        "skill_behavior_change": skill_behavior_change,
+        "notes": _plan_notes(paths, surfaces, categories, stage, skill_behavior_change),
     }
 
 
@@ -55,29 +58,58 @@ def _context_validation_candidates(repo_context: dict | None) -> list[Validation
     for item in pack.get("validation_candidates", []) or []:
         if not isinstance(item, dict):
             continue
+        if _candidate_is_conservative(item):
+            continue
         command = str(item.get("command", "")).strip()
         proves = str(item.get("proves", "")).strip()
         if not command or not proves:
             continue
-        level = str(item.get("scope") or item.get("level") or "module").strip()
-        if level not in {"narrow", "module", "full"}:
-            level = "module"
-        result.append(
-            ValidationCommand(
-                command=command,
-                level=level,
-                reason=f"context pack candidate: {proves}",
-                category=str(item.get("category") or "context_pack"),
-                covered_path_patterns=tuple(
-                    _clean_list(item.get("covered_paths", []))
-                    or _clean_list(item.get("covered_path_patterns", []))
-                    or _clean_list(pack.get("changed_paths", []))
-                )
-                or ("**",),
-                covered_risk_surfaces=tuple(_clean_list(item.get("covered_risk_surfaces", []))) or ("context-pack",),
-            )
-        )
+        result.append(_validation_command_from_context_item(item, pack, proves))
+    for item in pack.get("graph_validation_candidates", []) or []:
+        if not isinstance(item, dict) or _candidate_is_conservative(item):
+            continue
+        command = str(item.get("command", "")).strip()
+        proves = str(item.get("proves") or item.get("reason") or "").strip()
+        if not command or not proves:
+            continue
+        result.append(_validation_command_from_context_item(item, pack, proves))
     return result
+
+
+def _validation_command_from_context_item(
+    item: dict,
+    pack: dict,
+    proves: str,
+) -> ValidationCommand:
+    level = str(item.get("scope") or item.get("level") or "module").strip()
+    if level not in {"narrow", "module", "full"}:
+        level = "module"
+    return ValidationCommand(
+        command=str(item.get("command") or "").strip(),
+        level=level,
+        reason=f"context pack candidate: {proves}",
+        category=str(item.get("category") or "context_pack"),
+        covered_path_patterns=tuple(
+            _clean_list(item.get("covered_paths", []))
+            or _clean_list(item.get("covered_path_patterns", []))
+            or _clean_list(pack.get("changed_paths", []))
+        )
+        or ("**",),
+        covered_risk_surfaces=tuple(_clean_list(item.get("covered_risk_surfaces", []))) or ("context-pack",),
+    )
+
+
+def _candidate_is_conservative(item: dict) -> bool:
+    strength = str(item.get("strength") or "").strip()
+    freshness = str(item.get("freshness") or "").strip()
+    confidence = str(item.get("confidence") or "").strip()
+    if strength == "conservative":
+        return True
+    if freshness in {"stale", "unknown"}:
+        return True
+    if confidence in {"low", "unknown"}:
+        return True
+    return False
 
 
 def _context_pack_payload(repo_context: dict) -> dict | None:
@@ -130,6 +162,7 @@ def _plan_notes(
     surfaces: list[str],
     categories: list[str],
     stage: str,
+    skill_behavior_change: dict[str, object] | None = None,
 ) -> list[str]:
     notes: list[str] = []
     if not paths:
@@ -140,6 +173,13 @@ def _plan_notes(
         notes.append("risk surfaces must be covered by the selected command or called out as residual risk")
     if stage:
         notes.append(f"stage={stage}; use narrow commands for local proof and full commands before release handoff")
+    if (
+        isinstance(skill_behavior_change, dict)
+        and skill_behavior_change.get("requires_skill_efficacy_benchmark") is True
+    ):
+        notes.append(
+            "skill behavior change requires a skill_efficacy_benchmark plan; missing benchmark evidence is not closure evidence"
+        )
     return notes
 
 

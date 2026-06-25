@@ -287,33 +287,18 @@ python3 installers/uninstall.py --agent copilot --scope project --target /path/t
 When changing ChangeForge itself, edit source content under `src/`, then validate, build, and reinstall from `dist/`:
 
 ```bash
+python3 scripts/validate-src-invariants.py
 python3 scripts/validate-skills.py
-python3 scripts/validate-capabilities.py
-python3 scripts/validate-domain-extensions.py
-python3 scripts/validate-registry.py
-python3 scripts/validate-skill-body-links.py
-python3 scripts/audit-skill-content.py
-python3 scripts/audit-professionalism-coverage.py
-python3 scripts/validate-skill-content-size.py
-python3 scripts/eval-routing.py
-python3 scripts/eval-agent-behavior.py
-python3 scripts/eval-skill-professionalism.py
-python3 scripts/eval-skill-professionalism.py --coverage-matrix
-python3 scripts/eval-professional-benchmarks.py
-python3 scripts/validate-professionalism-regression.py
-python3 scripts/validate-professional-routing-coverage.py
-python3 scripts/validate-stage-routing-architecture.py
+python3 scripts/validate-validation-broker.py
 python3 scripts/validate-hooks.py
-python3 scripts/eval-pressure-behavior.py
+python3 scripts/validate-project-memory.py
+python3 scripts/validate-skill-efficacy-benchmarks.py
 python3 -m unittest discover -s tests
-python3 scripts/validate-codegen-benchmarks.py
-python3 scripts/run-codegen-benchmarks.py --limit 3
-python3 scripts/build.py --profile recommended
-python3 scripts/build.py --profile full
-python3 scripts/build.py --profile dev
-python3 scripts/validate-runtime-reference-links.py
-python3 scripts/validate-installation.py
 ```
+
+The full tiered command set lives in [VALIDATION.md](VALIDATION.md). Use that
+document for focused governance tests, repository graph/context-pack validation,
+skill behavior evals, full local release checks, and the live benchmark boundary.
 
 `scripts/audit-skill-content.py` writes the advisory content audit to
 `reports/skill-content-audit.md` and `reports/skill-content-audit.json`; it never

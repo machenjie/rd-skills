@@ -27,7 +27,39 @@ metrics:
     - Forces validation evidence to match the final changed files.
   token_overhead_pct: not_collected
   turn_overhead_pct: not_collected
+skill_efficacy_benchmark:
+  changed_surface: validation
+  baseline_case:
+    task: Detect when an implementation changes files or behavior outside the accepted plan during a skill authoring update.
+    expected_current_behavior: The baseline can close from the original plan and validation without reconciling final changed files against accepted scope.
+    known_gap: Extra files, generated reports, or changed behavior may be omitted from closure evidence.
+  treatment_case:
+    expected_new_behavior: The treatment selects plan-execution-consistency and requires planned files, actual files, validation freshness, and residual drift disposition.
+    selected_skills:
+      - change-forge-router
+      - quality-test-gate
+      - ai-code-review-refactor
+    selected_capabilities:
+      - plan-execution-consistency
+      - agent-execution-discipline
+    required_references:
+      - src/foundation/capabilities/plan-execution-consistency/SKILL.md
+      - src/foundation/capabilities/agent-execution-discipline/SKILL.md
+    skipped_references:
+      - reference: src/foundation/capabilities/secret-configuration-security/SKILL.md
+        reason: no credential, token, or sensitive configuration surface is present in this fixture.
+  metrics:
+    over_routing: No over-routing expected; review/test skills are sufficient for final diff reconciliation.
+    under_routing: Under-routing occurs if plan-execution-consistency is absent from the treatment.
+    selected_reference_count: 2
+    token_budget_mode: single-stage
+    turn_overhead: not_collected
+    closure_evidence_required: true
+  regression_commands:
+    - python3 scripts/validate-skill-efficacy-benchmarks.py
+    - python3 -m unittest discover -s tests/validation_broker
+  caveats:
+    - Structural fixture only; measured token and turn costs are not collected.
 verdict:
   status: structural_pass
   rationale: The fixture confirms the consistency capability is selected and its report fields are required; no measured efficiency claim is made.
-

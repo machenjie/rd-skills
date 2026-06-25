@@ -29,12 +29,18 @@
         "created_at": {"type": "string"},
         "indexed_at": {"type": "string"},
         "indexed_commit": {"type": ["string", "null"]},
-        "files": {"type": "array"},
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "kind", "role", "symbols", "references", "evidence", "source_hash", "freshness", "confidence", "extractor"]
+          }
+        },
         "symbols": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["name", "kind", "path", "line", "visibility", "language", "confidence"],
+            "required": ["name", "kind", "path", "line", "visibility", "language", "confidence", "evidence", "source_hash", "freshness", "extractor"],
             "properties": {
               "name": {"type": "string"},
               "kind": {
@@ -46,11 +52,21 @@
               "owner_object": {},
               "parent_symbol": {},
               "language": {"type": "string"},
-              "confidence": {"type": "string"}
+              "confidence": {"type": "string"},
+              "freshness": {"type": "string"},
+              "extractor": {"type": "string"},
+              "source_hash": {"type": ["string", "null"]},
+              "evidence": {"type": "object"}
             }
           }
         },
-        "edges": {"type": "array"},
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "to", "type", "edge_type", "evidence", "confidence", "freshness", "extractor"]
+          }
+        },
         "module_boundaries": {"type": "array"},
         "ownership": {"type": "array"},
         "generated_artifacts": {"type": "array"},

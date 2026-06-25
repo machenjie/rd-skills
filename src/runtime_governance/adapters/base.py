@@ -121,6 +121,17 @@ CONTEXT_EVENTS_BY_RUNTIME = {
 SUPPORTED_RUNTIMES = ("codex", "claude", "copilot", "generic", "cline", "roo", "openhands")
 PLACEHOLDER_RUNTIMES = ("gemini-cli", "goose")
 COPILOT_UNSUPPORTED_ADVISORY_EVENTS = ("UserPromptSubmit", "PreToolUse", "SubagentStop")
+DOCS_MATRIX_START = "<!-- changeforge-adapter-capability-matrix:start -->"
+DOCS_MATRIX_END = "<!-- changeforge-adapter-capability-matrix:end -->"
+VISIBILITY_FIELDS = (
+    "read_paths",
+    "changed_paths",
+    "command_kind",
+    "command_risk",
+    "validation_outcome",
+    "permission_decision",
+    "rollback_checkpoint",
+)
 
 _PATCH_FILE_RE = re.compile(r"^\*\*\* (?:Add|Update|Delete) File:\s+(.+?)\s*$")
 _DIFF_GIT_RE = re.compile(r"^diff --git a/(.+?) b/(.+?)\s*$")
@@ -384,7 +395,16 @@ class AdapterCapabilities:
     command_output_visibility: str = "none"
     changed_path_visibility: str = "none"
     validation_output_visibility: str = "none"
+    read_path_visibility: str = "none"
+    command_kind_visibility: str = "none"
+    command_risk_visibility: str = "none"
+    permission_decision_visibility: str = "none"
+    rollback_checkpoint_visibility: str = "none"
     unsupported_checks: tuple[str, ...] = field(default_factory=tuple)
+    degraded_checks: tuple[str, ...] = field(default_factory=tuple)
+    fail_open_policy: str = "degraded_or_unsupported_checks_require_residual_risk"
+    fail_closed_allowed_checks: tuple[str, ...] = field(default_factory=tuple)
+    notes: tuple[str, ...] = field(default_factory=tuple)
     default_failure_mode: str = "fail_open"
     placeholder: bool = False
 
@@ -428,6 +448,18 @@ class AdapterCapabilities:
     def supports_tool_result_inspection(self) -> bool:
         return self.command_output_visibility in {"partial", "full"}
 
+    @property
+    def visibility(self) -> dict[str, str]:
+        return {
+            "read_paths": self.read_path_visibility,
+            "changed_paths": self.changed_path_visibility,
+            "command_kind": self.command_kind_visibility,
+            "command_risk": self.command_risk_visibility,
+            "validation_outcome": self.validation_output_visibility,
+            "permission_decision": self.permission_decision_visibility,
+            "rollback_checkpoint": self.rollback_checkpoint_visibility,
+        }
+
     def supports_event(self, event_name: str) -> bool:
         return _canonical_event_name(event_name) in set(self.supported_events)
 
@@ -455,6 +487,7 @@ class AdapterCapabilities:
             "observable_payload_fields": list(self.observable_payload_fields),
             "advisory_context_events": list(self.advisory_context_events),
             "advisory_context_supported": self.advisory_context_supported,
+            "advisory_context_support": self.advisory_context_supported,
             "stop_block_supported": self.stop_block_supported,
             "pre_tool_supported": self.pre_tool_supported,
             "post_tool_supported": self.post_tool_supported,
@@ -466,6 +499,10 @@ class AdapterCapabilities:
             "default_gate_modes": dict(self.default_gate_modes),
             "supported_checks": list(self.supported_checks),
             "unsupported_checks": list(self.unsupported_checks),
+            "degraded_checks": list(self.degraded_checks),
+            "fail_open_policy": self.fail_open_policy,
+            "fail_closed_allowed_checks": list(self.fail_closed_allowed_checks),
+            "notes": list(self.notes),
             "default_failure_mode": self.default_failure_mode,
             "placeholder": self.placeholder,
             "supports_context_injection": self.supports_context_injection,
@@ -488,6 +525,12 @@ class AdapterCapabilities:
             "command_output_visibility": self.command_output_visibility,
             "changed_path_visibility": self.changed_path_visibility,
             "validation_output_visibility": self.validation_output_visibility,
+            "read_path_visibility": self.read_path_visibility,
+            "command_kind_visibility": self.command_kind_visibility,
+            "command_risk_visibility": self.command_risk_visibility,
+            "permission_decision_visibility": self.permission_decision_visibility,
+            "rollback_checkpoint_visibility": self.rollback_checkpoint_visibility,
+            "visibility": self.visibility,
             "supports_session_start": self.supports_session_start,
             "supports_user_prompt_submit": self.supports_user_prompt_submit,
             "supports_pre_tool_use": self.supports_pre_tool_use,
@@ -539,7 +582,27 @@ class BaseRuntimeAdapter:
         if not bounded_paths:
             bounded_paths = _aggregate_path_groups(path_groups, base_path=base_path)
         degradation = self.build_degradation(canonical, source)
+        tool_category = self.classify_tool_category(source)
+        command_outcome = self.extract_command_outcome(source)
         validation_signal = self.extract_validation_signal(source)
+        if self.capabilities.command_output_visibility == "none" and command_outcome in {
+            "pass",
+            "fail",
+            "timeout",
+            "cancelled",
+        }:
+            command_outcome = "not_observable"
+        if self.capabilities.validation_output_visibility == "none" and (
+            validation_signal.get("validation_outcome") or tool_category == "test"
+        ):
+            validation_signal["validation_candidate"] = bool(
+                validation_signal.get("validation_candidate", tool_category == "test")
+            )
+            validation_signal["validation_outcome"] = "unknown"
+            validation_signal["validation_freshness"] = "unknown"
+            degradation.append(f"{self.capabilities.runtime}_validation_outcome_visibility_none")
+        if self.capabilities.changed_path_visibility == "none" and tool_category in {"edit", "write"}:
+            degradation.append(f"{self.capabilities.runtime}_changed_paths_visibility_none")
         checkpoint_signal = self.extract_checkpoint(source)
         stage_signal = self.extract_stage_signal(source, canonical)
         normalized = NormalizedEvent.from_telemetry_fact(
@@ -548,7 +611,7 @@ class BaseRuntimeAdapter:
                 "adapter": self.capabilities.adapter_name,
                 "event_name": canonical,
                 "tool_name": self.extract_tool_name(source),
-                "tool_category": self.classify_tool_category(source),
+                "tool_category": tool_category,
                 "stage_signal": stage_signal,
                 "bounded_paths": bounded_paths,
                 "read_paths": path_groups.get("read_paths", []),
@@ -557,7 +620,7 @@ class BaseRuntimeAdapter:
                 "generated_paths": path_groups.get("generated_paths", []),
                 "command_kind": command_kind,
                 "command_risk": self.classify_command_risk(command_kind, source),
-                "command_outcome": self.extract_command_outcome(source),
+                "command_outcome": command_outcome,
                 "timestamp": _first_text(source, "timestamp_utc", "timestamp", "created_at"),
                 "source": _event_source(source, canonical),
                 "capability_degradation": cap_list(degradation),
@@ -775,6 +838,17 @@ def coverage_matrix() -> list[dict[str, object]]:
                 "command_output_visibility": capabilities.command_output_visibility,
                 "changed_path_visibility": capabilities.changed_path_visibility,
                 "validation_output_visibility": capabilities.validation_output_visibility,
+                "read_path_visibility": capabilities.read_path_visibility,
+                "command_kind_visibility": capabilities.command_kind_visibility,
+                "command_risk_visibility": capabilities.command_risk_visibility,
+                "permission_decision_visibility": capabilities.permission_decision_visibility,
+                "rollback_checkpoint_visibility": capabilities.rollback_checkpoint_visibility,
+                "visibility": capabilities.visibility,
+                "advisory_context_support": capabilities.advisory_context_supported,
+                "degraded_checks": list(capabilities.degraded_checks),
+                "fail_open_policy": capabilities.fail_open_policy,
+                "fail_closed_allowed_checks": list(capabilities.fail_closed_allowed_checks),
+                "notes": list(capabilities.notes),
             }
         )
     return rows
@@ -807,9 +881,13 @@ def format_coverage_matrix() -> str:
                     "yes" if row["stop_block_supported"] else "no",
                     str(row["command_outcome_observable"]),
                     (
-                        f"command={row['command_output_visibility']},"
-                        f"paths={row['changed_path_visibility']},"
-                        f"validation={row['validation_output_visibility']}"
+                        f"read_paths={row['read_path_visibility']},"
+                        f"changed_paths={row['changed_path_visibility']},"
+                        f"command_kind={row['command_kind_visibility']},"
+                        f"command_risk={row['command_risk_visibility']},"
+                        f"validation_outcome={row['validation_output_visibility']},"
+                        f"permission_decision={row['permission_decision_visibility']},"
+                        f"rollback_checkpoint={row['rollback_checkpoint_visibility']}"
                     ),
                     mode_text,
                     ",".join(str(item) for item in row["unsupported_checks"]) or "none",
@@ -817,6 +895,90 @@ def format_coverage_matrix() -> str:
             )
         )
     return "\n".join(lines)
+
+
+def format_docs_capability_matrix() -> str:
+    headers = (
+        "Runtime",
+        "Supported events",
+        "Unsupported events",
+        "Advisory context",
+        "Stop block",
+        "Visibility",
+        "Failure/degraded policy",
+        "Notes",
+    )
+    lines = [DOCS_MATRIX_START, "| " + " | ".join(headers) + " |"]
+    lines.append("| " + " | ".join("---" for _ in headers) + " |")
+    for row in coverage_matrix():
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    _docs_runtime_label(str(row["adapter"])),
+                    _docs_event_list(row["supported_events"]),
+                    _docs_event_list(row["unsupported_events"]),
+                    "yes" if row["advisory_context_supported"] else "no",
+                    "yes" if row["stop_block_supported"] else "no",
+                    _docs_visibility(row["visibility"]),
+                    _docs_policy(row),
+                    _docs_notes(row),
+                ]
+            )
+            + " |"
+        )
+    lines.append(DOCS_MATRIX_END)
+    return "\n".join(lines)
+
+
+def docs_capability_matrix_from_text(text: str) -> str:
+    start = text.find(DOCS_MATRIX_START)
+    end = text.find(DOCS_MATRIX_END)
+    if start < 0 or end < 0 or end < start:
+        return ""
+    return text[start : end + len(DOCS_MATRIX_END)].strip()
+
+
+def _docs_runtime_label(runtime: str) -> str:
+    return {
+        "codex": "Codex",
+        "claude": "Claude",
+        "copilot": "Copilot",
+        "generic": "Generic fallback",
+        "cline": "Cline staged target",
+        "roo": "Roo staged target",
+        "openhands": "OpenHands backend target",
+        "gemini-cli": "Gemini CLI placeholder",
+        "goose": "Goose placeholder",
+    }.get(runtime, runtime)
+
+
+def _docs_event_list(value: object) -> str:
+    items = value if isinstance(value, list) else []
+    return ", ".join(f"`{item}`" for item in items) if items else "none"
+
+
+def _docs_visibility(value: object) -> str:
+    visibility = value if isinstance(value, Mapping) else {}
+    return ", ".join(f"{field}={visibility.get(field, 'none')}" for field in VISIBILITY_FIELDS)
+
+
+def _docs_policy(row: Mapping[str, object]) -> str:
+    allowed = row.get("fail_closed_allowed_checks")
+    allowed_text = ",".join(str(item) for item in allowed) if isinstance(allowed, list) else ""
+    fail_closed = allowed_text or "none"
+    return f"fail_open={row.get('fail_open_policy')}; fail_closed_allowed={fail_closed}"
+
+
+def _docs_notes(row: Mapping[str, object]) -> str:
+    notes = row.get("notes")
+    if isinstance(notes, list) and notes:
+        return "; ".join(str(item) for item in notes)
+    if row.get("placeholder"):
+        return "placeholder only; no executable hook lifecycle"
+    if not row.get("supported_events"):
+        return "staged adapter target; no executable hook lifecycle"
+    return "bounded adapter facts only; no raw prompt or command output"
 
 
 def _canonical_event_name(name: object) -> str:
@@ -881,6 +1043,15 @@ def _capabilities(
     command_output_visibility: str | None = None,
     changed_path_visibility: str | None = None,
     validation_output_visibility: str | None = None,
+    read_path_visibility: str | None = None,
+    command_kind_visibility: str | None = None,
+    command_risk_visibility: str | None = None,
+    permission_decision_visibility: str | None = None,
+    rollback_checkpoint_visibility: str | None = None,
+    degraded_checks: Iterable[str] = (),
+    fail_open_policy: str = "degraded_or_unsupported_checks_require_residual_risk",
+    fail_closed_allowed_checks: Iterable[str] = (),
+    notes: Iterable[str] = (),
 ) -> AdapterCapabilities:
     supported = tuple(
         event
@@ -908,6 +1079,19 @@ def _capabilities(
     output_visibility = _visibility(command_output_visibility or command_outcome_observable)
     path_visibility = _visibility(changed_path_visibility or ("partial" if path_observable else "none"))
     validation_visibility = _visibility(validation_output_visibility or output_visibility)
+    read_visibility = _visibility(read_path_visibility or ("partial" if path_observable else "none"))
+    kind_visibility = _visibility(command_kind_visibility or ("partial" if output_visibility != "none" else "none"))
+    risk_visibility = _visibility(command_risk_visibility or kind_visibility)
+    permission_visibility = _visibility(
+        permission_decision_visibility or ("partial" if permission_signal_observable else "none")
+    )
+    rollback_visibility = _visibility(
+        rollback_checkpoint_visibility or ("partial" if supports_checkpoint_or_rollback else "none")
+    )
+    allowed_fail_closed = tuple(fail_closed_allowed_checks)
+    if stop_block_supported and not allowed_fail_closed:
+        allowed_fail_closed = ("stop_closure",)
+    degraded = tuple(degraded_checks) or tuple(unsupported_checks)
     return AdapterCapabilities(
         adapter_name=adapter_name,
         supported_events=supported,
@@ -946,7 +1130,16 @@ def _capabilities(
         command_output_visibility=output_visibility,
         changed_path_visibility=path_visibility,
         validation_output_visibility=validation_visibility,
+        read_path_visibility=read_visibility,
+        command_kind_visibility=kind_visibility,
+        command_risk_visibility=risk_visibility,
+        permission_decision_visibility=permission_visibility,
+        rollback_checkpoint_visibility=rollback_visibility,
         unsupported_checks=tuple(unsupported_checks),
+        degraded_checks=degraded,
+        fail_open_policy=str(fail_open_policy or "degraded_or_unsupported_checks_require_residual_risk"),
+        fail_closed_allowed_checks=allowed_fail_closed,
+        notes=tuple(str(note) for note in notes if str(note).strip()),
         placeholder=placeholder,
     )
 

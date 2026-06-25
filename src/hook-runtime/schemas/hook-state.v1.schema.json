@@ -36,19 +36,37 @@
       "properties": {
         "adapter": {
           "type": "string",
-          "enum": ["codex", "claude", "copilot", "generic", "unknown"]
+          "enum": ["codex", "claude", "copilot", "generic", "unknown", "cline", "roo", "openhands", "gemini-cli", "goose"]
         },
         "supported_checks": { "$ref": "#/$defs/stringList" },
         "unsupported_checks": { "$ref": "#/$defs/stringList" },
+        "active_unsupported_checks": { "$ref": "#/$defs/stringList" },
+        "required_unsupported_checks": { "$ref": "#/$defs/stringList" },
         "active_degradation": { "$ref": "#/$defs/stringList" },
-        "degraded_capabilities": { "$ref": "#/$defs/stringList" }
+        "degraded_capabilities": { "$ref": "#/$defs/stringList" },
+        "degraded_checks": { "$ref": "#/$defs/stringList" },
+        "fail_open_policy": { "type": "string", "maxLength": 300 },
+        "fail_closed_allowed_checks": { "$ref": "#/$defs/stringList" },
+        "visibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "read_paths": { "type": "string", "enum": ["none", "partial", "full"] },
+            "changed_paths": { "type": "string", "enum": ["none", "partial", "full"] },
+            "command_kind": { "type": "string", "enum": ["none", "partial", "full"] },
+            "command_risk": { "type": "string", "enum": ["none", "partial", "full"] },
+            "validation_outcome": { "type": "string", "enum": ["none", "partial", "full"] },
+            "permission_decision": { "type": "string", "enum": ["none", "partial", "full"] },
+            "rollback_checkpoint": { "type": "string", "enum": ["none", "partial", "full"] }
+          }
+        }
       }
     }
   },
   "properties": {
     "runtime": {
       "type": "string",
-      "enum": ["codex", "claude", "copilot", "generic", "unknown"]
+      "enum": ["codex", "claude", "copilot", "generic", "unknown", "cline", "roo", "openhands", "gemini-cli", "goose"]
     },
     "runtime_adapter": { "$ref": "#/$defs/runtimeAdapter" },
     "normalized_events": { "$ref": "#/$defs/stringList" },

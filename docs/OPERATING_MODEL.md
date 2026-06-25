@@ -6,7 +6,7 @@ ChangeForge Skill Mesh is a skill-authoring repository. Its source content, regi
 
 The source repo contains authored material:
 
-- `src/professional-skills`: 19 top-level professional skills.
+- `src/professional-skills`: 21 top-level professional skills.
 - `src/foundation/capabilities`: 127 implemented foundation capabilities plus `_template`.
 - `src/domain-extensions`: 7 optional domain extension skills.
 - `src/registry`: `skills.yaml`, `capabilities.yaml`, `domain-extensions.yaml`, and `routing-rules.yaml`.
@@ -76,6 +76,28 @@ It is a foundation capability, not a top-level professional skill. The router se
 The optional ChangeForge Hook Runtime is a project-level support artifact, not a skill and not a replacement for `change-forge-router`. Codex and Claude hooks may emit warning-only reminders after tool use or before handoff. Copilot local hooks use advisory context where Copilot consumes it and a strict Stop closure gate for missing evidence. The runtime must not select a complete route, read every compiled reference, ingest personal content, or install raw `src/hook-runtime`.
 
 Hook runtime state is operational cache stored outside the project source tree under the user's cache directory. It is not a PUA state file, not runtime skill content, and not a user-specific corpus mapping. Hooks are built into `dist/` and may be placed into Codex, Claude, or Copilot project/user scopes with `installers/install.py --with-hooks`, which preserves existing hook configuration and never auto-trusts hooks.
+
+## System Governance Coupling
+
+Skill routing, Project Memory, repository intelligence, Validation Broker, hook
+execution facts, and trajectory review form one evidence chain:
+
+- skills and capabilities define the professional route and reference-loading
+  budget;
+- repository graph and context packs select source-of-truth files, generated
+  artifact policy, affected-test candidates, freshness, and confidence;
+- Project Memory contributes bounded historical hints only after current-source
+  freshness is checked;
+- Validation Broker maps changed paths and risk surfaces to commands and rejects
+  stale, failed, or no-outcome validation as closure evidence;
+- hook adapters normalize executor facts and record unsupported/degraded
+  capability limits instead of treating them as ready;
+- trajectory review checks stage order, repair/re-review, validation freshness,
+  and residual-risk closure from bounded facts.
+
+The shared maintenance path is [VALIDATION.md](VALIDATION.md). `doctor` reports
+the structural status of these seams; live behavior claims are not inferred from
+structural fixtures or dry runs.
 
 ## Telemetry, Review, And Human Promotion
 

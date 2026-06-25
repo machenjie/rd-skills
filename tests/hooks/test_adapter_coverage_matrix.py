@@ -42,6 +42,8 @@ class AdapterCoverageMatrixTests(unittest.TestCase):
         )
         self.assertIn("doctor: runtime coverage matrix", result.stdout)
         self.assertIn("runtime coverage matrix:", result.stdout)
+        self.assertIn("doctor: governance source status", result.stdout)
+        self.assertIn("hook adapter matrix status", result.stdout)
 
 
 if __name__ == "__main__":

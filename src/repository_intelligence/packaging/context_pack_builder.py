@@ -8,11 +8,26 @@ from typing import Any
 
 from repository_intelligence.cache.freshness import indexed_commit
 from repository_intelligence.cache.repo_hash import stable_artifact_hash, stable_repo_hash
+from repository_intelligence.graph.evidence import (
+    attach_edge_evidence,
+    build_edge_evidence,
+    closure_eligible,
+    confidence_score,
+    evidence_from_node,
+    freshness_score,
+    refresh_node_evidence,
+)
 from repository_intelligence.graph.file_classifier import classify_role, normalize_repo_path
+from repository_intelligence.graph.generated_artifact_graph import (
+    generated_edit_policy,
+    generated_reason,
+    generated_source_of_truth,
+    is_generated_artifact_path,
+)
 from repository_intelligence.graph.ownership_graph import owner_for_path
 from repository_intelligence.ranking.graph_walk import walk_related_paths
 from repository_intelligence.ranking.relevance_ranker import rank_files
-from repository_intelligence.ranking.token_budget import trim_items_by_budget
+from repository_intelligence.ranking.token_budget import apply_budget_mode, trim_items_by_budget
 
 
 MAX_RELEVANT_FILES = 36
@@ -28,7 +43,7 @@ def _normal_changed_paths(changed_paths: list[str], repo_root: str | Path | None
     return [normalize_repo_path(path, repo_root) for path in changed_paths]
 
 
-def _edge_reason(path: str, seed_paths: set[str], edges: list[dict[str, str]]) -> str:
+def _edge_reason(path: str, seed_paths: set[str], edges: list[dict[str, Any]]) -> str:
     if path in seed_paths:
         return "direct_owner"
     for edge in edges:
@@ -66,6 +81,8 @@ def _validation_candidates(
     *,
     graph_path: str | Path | None = None,
     context_pack_path: str | Path | None = None,
+    graph_freshness: str = "unknown",
+    graph_validation_candidates: list[dict[str, object]] | None = None,
 ) -> list[dict[str, object]]:
     paths = set(relevant_paths) | set(changed_paths)
     graph_arg = _command_path(graph_path, "<repository_graph_json>")
@@ -78,6 +95,9 @@ def _validation_candidates(
             "source": "repository_intelligence",
             "covered_paths": sorted(paths),
             "covered_risk_surfaces": ["repository-graph", "source-freshness"],
+            "confidence": "medium",
+            "freshness": graph_freshness,
+            "strength": "strong" if graph_freshness == "current" else "conservative",
         },
         {
             "command": f"python3 scripts/validate-context-pack.py --context-pack {context_pack_arg}",
@@ -86,8 +106,14 @@ def _validation_candidates(
             "source": "repository_intelligence",
             "covered_paths": sorted(paths),
             "covered_risk_surfaces": ["context-pack", "source-freshness"],
+            "confidence": "medium",
+            "freshness": graph_freshness,
+            "strength": "strong" if graph_freshness == "current" else "conservative",
         },
     ]
+    for candidate in graph_validation_candidates or []:
+        if candidate.get("command") and candidate.get("proves"):
+            candidates.append(candidate)
     candidates.extend(_broker_validation_candidates(changed_paths or relevant_paths))
     return _dedupe_candidates(candidates)
 
@@ -124,6 +150,9 @@ def _broker_validation_candidates(paths: list[str]) -> list[dict[str, object]]:
                     "category": str(item.get("category") or "unknown"),
                     "covered_paths": list(item.get("covered_path_patterns", []) or []),
                     "covered_risk_surfaces": list(item.get("covered_risk_surfaces", []) or []),
+                    "confidence": "medium",
+                    "freshness": "not_applicable",
+                    "strength": "strong",
                 }
             )
     return candidates
@@ -207,7 +236,7 @@ def _freshness(payload: dict[str, Any], repo_root: str | Path | None) -> dict[st
     return markers
 
 
-def _selected_edges(edges: list[dict[str, str]], selected_paths: list[str]) -> list[dict[str, str]]:
+def _selected_edges(edges: list[dict[str, Any]], selected_paths: list[str]) -> list[dict[str, Any]]:
     selected = set(selected_paths)
     return [
         edge
@@ -216,7 +245,7 @@ def _selected_edges(edges: list[dict[str, str]], selected_paths: list[str]) -> l
     ][:MAX_SELECTED_EDGES]
 
 
-def _edge_bucket(edges: list[dict[str, str]], selected_paths: list[str], edge_types: set[str]) -> list[dict[str, str]]:
+def _edge_bucket(edges: list[dict[str, Any]], selected_paths: list[str], edge_types: set[str]) -> list[dict[str, Any]]:
     selected = set(selected_paths)
     return [
         edge
@@ -255,24 +284,46 @@ def _ownership_for_paths(payload: dict[str, Any], paths: list[str]) -> list[dict
     return [owner_for_path(path) for path in paths]
 
 
-def _generated_for_paths(payload: dict[str, Any], changed_paths: list[str]) -> list[dict[str, object]]:
+def _generated_for_paths(
+    payload: dict[str, Any],
+    changed_paths: list[str],
+    files_by_path: dict[str, dict[str, Any]],
+) -> list[dict[str, object]]:
     generated = [item for item in payload.get("generated_artifacts", []) or [] if isinstance(item, dict)]
     result: list[dict[str, object]] = []
     for path in changed_paths:
+        matched = False
         for item in generated:
             prefix = str(item.get("generated_path") or "")
-            if prefix and (path == prefix.rstrip("/") or path.startswith(prefix)):
+            if prefix and (path == prefix.rstrip("/") or path == prefix or path.startswith(prefix)):
                 result.append(item)
+                matched = True
+        if is_generated_artifact_path(path) and not matched:
+            source_of_truth = generated_source_of_truth(path, files_by_path)
+            result.append(
+                {
+                    "generated_path": path,
+                    "source_path": source_of_truth[0] if source_of_truth else None,
+                    "source_of_truth": source_of_truth,
+                    "reason": generated_reason(path, files_by_path),
+                    "edit_policy": generated_edit_policy(path, files_by_path),
+                    "editable": False,
+                    "confidence": "medium" if source_of_truth else "low",
+                    "freshness": "not_applicable",
+                    "extractor": "generated_artifact_graph",
+                    **({"unknown_reason": "generated_source_of_truth_unknown"} if not source_of_truth else {}),
+                }
+            )
     return result
 
 
 def _related_tests(
     files_by_path: dict[str, dict[str, Any]],
-    edges: list[dict[str, str]],
+    edges: list[dict[str, Any]],
     relevant_paths: list[str],
-) -> list[dict[str, str]]:
+) -> list[dict[str, object]]:
     relevant = set(relevant_paths)
-    tests: list[dict[str, str]] = []
+    tests: list[dict[str, object]] = []
     for edge in edges:
         if edge.get("type") != "test_reference":
             continue
@@ -281,15 +332,34 @@ def _related_tests(
         if source in relevant or target in relevant:
             test_path = source if files_by_path.get(source, {}).get("role") == "test" else target
             if files_by_path.get(test_path, {}).get("role") == "test":
-                tests.append({"path": test_path, "reason": "FACT: test_reference edge from repository graph"})
+                tests.append(
+                    {
+                        "path": test_path,
+                        "reason": "FACT: test_reference edge from repository graph",
+                        "confidence": edge.get("confidence", "unknown"),
+                        "freshness": edge.get("freshness", "unknown"),
+                        "source": "repository_graph.test_graph",
+                        "strength": _candidate_strength(edge.get("confidence"), edge.get("freshness")),
+                    }
+                )
     for path in relevant_paths:
         if files_by_path.get(path, {}).get("role") == "test":
-            tests.append({"path": path, "reason": "FACT: selected path is a test file"})
+            evidence = evidence_from_node(files_by_path[path])
+            tests.append(
+                {
+                    "path": path,
+                    "reason": "FACT: selected path is a test file",
+                    "confidence": evidence.get("confidence", "unknown"),
+                    "freshness": evidence.get("freshness", "unknown"),
+                    "source": "repository_graph.file_role",
+                    "strength": _candidate_strength(evidence.get("confidence"), evidence.get("freshness")),
+                }
+            )
     return _dedupe_path_items(tests)
 
 
-def _dedupe_path_items(items: list[dict[str, str]]) -> list[dict[str, str]]:
-    result: list[dict[str, str]] = []
+def _dedupe_path_items(items: list[dict[str, object]]) -> list[dict[str, object]]:
+    result: list[dict[str, object]] = []
     seen: set[str] = set()
     for item in items:
         path = item.get("path", "")
@@ -298,6 +368,219 @@ def _dedupe_path_items(items: list[dict[str, str]]) -> list[dict[str, str]]:
         seen.add(path)
         result.append(item)
     return result
+
+
+def _candidate_strength(confidence: object, freshness: object) -> str:
+    if freshness == "current" and confidence in {"high", "medium"}:
+        return "strong"
+    return "conservative"
+
+
+def _refresh_files(
+    files: list[Any],
+    repo_root: str | Path | None,
+) -> list[dict[str, Any]]:
+    refreshed: list[dict[str, Any]] = []
+    for file_node in files:
+        if isinstance(file_node, dict):
+            refreshed.append(refresh_node_evidence(file_node, repo_root))
+    return refreshed
+
+
+def _refresh_edges(
+    edges: list[Any],
+    files_by_path: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    refreshed: list[dict[str, Any]] = []
+    for edge in edges:
+        if not isinstance(edge, dict):
+            continue
+        edge_payload = dict(edge)
+        attach_edge_evidence(edge_payload, build_edge_evidence(edge_payload, files_by_path))
+        refreshed.append(edge_payload)
+    return refreshed
+
+
+def _order_paths_by_evidence(
+    paths: list[str],
+    files_by_path: dict[str, dict[str, Any]],
+    seed_paths: set[str],
+) -> list[str]:
+    return sorted(
+        paths,
+        key=lambda path: (
+            0 if path in seed_paths else 1,
+            -freshness_score(evidence_from_node(files_by_path.get(path, {})).get("freshness")),
+            -confidence_score(evidence_from_node(files_by_path.get(path, {})).get("confidence")),
+            path,
+        ),
+    )
+
+
+def _graph_node_item(path: str, node: dict[str, Any], reason: str) -> dict[str, object]:
+    evidence = evidence_from_node(node)
+    return {
+        "path": path,
+        "reason": reason,
+        "node_type": evidence.get("node_type", "unknown"),
+        "confidence": evidence.get("confidence", "unknown"),
+        "freshness": evidence.get("freshness", "unknown"),
+        "extractor": evidence.get("extractor", "unknown"),
+        "source_hash": evidence.get("source_hash"),
+        "generated_artifact": evidence.get("generated_artifact", False),
+        "source_of_truth": evidence.get("source_of_truth"),
+        **({"unknown_reason": evidence.get("unknown_reason")} if evidence.get("unknown_reason") else {}),
+    }
+
+
+def _selected_graph_nodes(
+    files_by_path: dict[str, dict[str, Any]],
+    relevant_paths: list[str],
+    graph_freshness: str,
+) -> list[dict[str, object]]:
+    if graph_freshness != "current":
+        return []
+    selected: list[dict[str, object]] = []
+    for path in relevant_paths:
+        node = files_by_path.get(path)
+        if node and closure_eligible(evidence_from_node(node)):
+            selected.append(_graph_node_item(path, node, "current medium/high confidence graph evidence"))
+    return selected
+
+
+def _skipped_graph_nodes(
+    files_by_path: dict[str, dict[str, Any]],
+    relevant_paths: list[str],
+    graph_freshness: str,
+) -> list[dict[str, object]]:
+    skipped: list[dict[str, object]] = []
+    for path in relevant_paths:
+        node = files_by_path.get(path)
+        if not node:
+            continue
+        evidence = evidence_from_node(node)
+        if graph_freshness != "current":
+            reason = "graph_freshness_not_current"
+        elif not closure_eligible(evidence):
+            reason = "freshness_or_confidence_not_closure_eligible"
+        else:
+            continue
+        skipped.append(_graph_node_item(path, node, reason))
+    return skipped
+
+
+def _graph_assumptions(
+    *,
+    graph_freshness: dict[str, object],
+    skipped_graph_nodes: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    assumptions: list[dict[str, object]] = []
+    if graph_freshness.get("status") != "current":
+        assumptions.append(
+            {
+                "kind": "graph_freshness",
+                "freshness": graph_freshness.get("status", "unknown"),
+                "reason": "graph freshness is not current; selected graph facts are selectors, not closure evidence",
+            }
+        )
+    for node in skipped_graph_nodes[:24]:
+        assumptions.append(
+            {
+                "kind": "graph_node",
+                "path": node.get("path"),
+                "freshness": node.get("freshness", "unknown"),
+                "confidence": node.get("confidence", "unknown"),
+                "reason": node.get("reason", "not_closure_eligible"),
+            }
+        )
+    return assumptions
+
+
+def _validation_command_for_tests(candidate_tests: list[str]) -> str:
+    if not candidate_tests:
+        return "python3 -m unittest discover -s tests"
+    directories = {str(Path(path).parent) for path in candidate_tests}
+    if len(directories) == 1:
+        return f"python3 -m unittest discover -s {next(iter(directories))}"
+    return "python3 -m unittest discover -s tests"
+
+
+def _graph_validation_candidates(
+    *,
+    changed_paths: list[str],
+    related_tests: list[dict[str, object]],
+    files_by_path: dict[str, dict[str, Any]],
+    graph_freshness: str,
+) -> list[dict[str, object]]:
+    candidates: list[dict[str, object]] = []
+    tests_by_changed: dict[str, list[dict[str, object]]] = {path: [] for path in changed_paths}
+    for test in related_tests:
+        for changed_path in changed_paths:
+            if changed_path == test.get("path"):
+                tests_by_changed.setdefault(changed_path, []).append(test)
+                continue
+            if _test_matches_changed_path(str(test.get("path") or ""), changed_path):
+                tests_by_changed.setdefault(changed_path, []).append(test)
+
+    for changed_path in changed_paths:
+        node = files_by_path.get(changed_path)
+        evidence = evidence_from_node(node) if node else {}
+        related = tests_by_changed.get(changed_path, [])
+        candidate_tests = sorted({str(item.get("path")) for item in related if item.get("path")})
+        confidence = _combined_confidence(evidence, related)
+        freshness = _combined_freshness(evidence, related, graph_freshness)
+        strength = _candidate_strength(confidence, freshness) if candidate_tests else "conservative"
+        reason = (
+            "current test graph candidate"
+            if candidate_tests and strength == "strong"
+            else "conservative suggestion; graph evidence is stale, unknown, low confidence, or has no direct test edge"
+        )
+        command = _validation_command_for_tests(candidate_tests)
+        candidates.append(
+            {
+                "changed_path": changed_path,
+                "candidate_tests": candidate_tests,
+                "confidence": confidence,
+                "source": "repository_graph.test_mapping",
+                "freshness": freshness,
+                "reason": reason,
+                "strength": strength,
+                "command": command,
+                "proves": reason,
+                "scope": "module" if candidate_tests else "full",
+                "category": "repository_intelligence_graph_candidate" if strength == "strong" else "unknown",
+                "covered_paths": [changed_path, *candidate_tests],
+                "covered_risk_surfaces": ["affected-tests", "repository-graph"],
+            }
+        )
+    return candidates
+
+
+def _test_matches_changed_path(test_path: str, changed_path: str) -> bool:
+    if not test_path or not changed_path:
+        return False
+    return Path(test_path).stem.removeprefix("test_") == Path(changed_path).stem
+
+
+def _combined_confidence(evidence: dict[str, object], related_tests: list[dict[str, object]]) -> str:
+    values = [str(evidence.get("confidence") or "unknown")]
+    values.extend(str(item.get("confidence") or "unknown") for item in related_tests)
+    best = max(values, key=confidence_score)
+    return best if best in {"high", "medium", "low"} else "unknown"
+
+
+def _combined_freshness(
+    evidence: dict[str, object],
+    related_tests: list[dict[str, object]],
+    graph_freshness: str,
+) -> str:
+    values = [graph_freshness, str(evidence.get("freshness") or "unknown")]
+    values.extend(str(item.get("freshness") or "unknown") for item in related_tests)
+    if "stale" in values:
+        return "stale"
+    if values and all(value in {"current", "not_applicable"} for value in values):
+        return "current"
+    return "unknown"
 
 
 def _reuse_candidates(
@@ -343,6 +626,7 @@ def _residual_risk(
     normalized_changed: list[str],
     present_changed: list[str],
     validation_candidates: list[dict[str, object]],
+    graph_validation_candidates: list[dict[str, object]],
     generated_artifacts: list[dict[str, object]],
     selected_paths: list[str],
     files_by_path: dict[str, dict[str, Any]],
@@ -350,11 +634,13 @@ def _residual_risk(
     residual: list[dict[str, str]] = []
     if freshness.get("status") == "stale":
         residual.append({"kind": "stale_graph", "detail": ",".join(str(item) for item in freshness.get("drift", []) or [])})
-    missing = [path for path in normalized_changed if path not in present_changed and not path.startswith(("dist/", "reports/"))]
+    missing = [path for path in normalized_changed if path not in present_changed and not is_generated_artifact_path(path)]
     for path in missing:
         residual.append({"kind": "changed_path_not_indexed", "path": path})
     if any(str(candidate.get("category")) == "unknown" for candidate in validation_candidates):
         residual.append({"kind": "unknown_validation_mapping", "detail": "validation broker returned conservative unknown fallback"})
+    if any(str(candidate.get("strength")) == "conservative" for candidate in graph_validation_candidates):
+        residual.append({"kind": "conservative_graph_validation_mapping", "detail": "graph validation candidates include stale, unknown, low-confidence, or missing test mappings"})
     for item in generated_artifacts:
         residual.append({"kind": "generated_artifact_changed", "path": str(item.get("generated_path") or "")})
     for path in selected_paths:
@@ -374,12 +660,19 @@ def build_context_pack(
     context_budget_tokens: int = 1200,
     graph_path: str | Path | None = None,
     context_pack_path: str | Path | None = None,
+    budget_mode: str = "single-stage",
 ) -> dict[str, Any]:
     """Build a bounded AI-agent task context pack from a repository graph."""
     payload = _graph_payload(graph)
-    files = payload.get("files", [])
-    edges = payload.get("edges", [])
+    max_files, max_symbols, context_budget_tokens, budget_mode = apply_budget_mode(
+        budget_mode=budget_mode,
+        max_files=max_files,
+        max_symbols=max_symbols,
+        context_budget_tokens=context_budget_tokens,
+    )
+    files = _refresh_files(payload.get("files", []), repo_root)
     files_by_path = {str(file_node.get("path")): file_node for file_node in files if isinstance(file_node, dict)}
+    edges = _refresh_edges(payload.get("edges", []), files_by_path)
     normalized_changed = _normal_changed_paths(changed_paths, repo_root)
     present_changed = [path for path in normalized_changed if path in files_by_path]
 
@@ -394,10 +687,11 @@ def build_context_pack(
     for path in [*seed_paths, *[path for path, _score in ranked]]:
         if path not in ordered_paths and path in files_by_path:
             ordered_paths.append(path)
-    selected_paths = ordered_paths[:max_files]
     seed_set = set(seed_paths)
     freshness = _freshness(payload, repo_root)
-    generated_artifacts = _generated_for_paths(payload, normalized_changed)
+    ordered_paths = _order_paths_by_evidence(ordered_paths, files_by_path, seed_set)
+    selected_paths = ordered_paths[:max_files]
+    generated_artifacts = _generated_for_paths(payload, normalized_changed, files_by_path)
 
     source_of_truth: list[dict[str, str]] = []
     evidence_limits: list[str] = [
@@ -405,8 +699,8 @@ def build_context_pack(
         "FACT: `dist/` is treated as generated output and is not indexed as source-of-truth.",
     ]
     for path in normalized_changed:
-        if path.startswith(("dist/", "reports/")):
-            matched_generated = _generated_for_paths(payload, [path])
+        if is_generated_artifact_path(path):
+            matched_generated = _generated_for_paths(payload, [path], files_by_path)
             if matched_generated:
                 for item in matched_generated:
                     for source in item.get("source_of_truth", []) or []:
@@ -431,6 +725,13 @@ def build_context_pack(
             "reason": _edge_reason(path, seed_set, edges),
             "role": str(files_by_path.get(path, {}).get("role") or "unknown"),
             "owner_module": str(owner_for_path(path).get("owner_module") or "unknown"),
+            "confidence": evidence_from_node(files_by_path.get(path, {})).get("confidence", "unknown"),
+            "freshness": evidence_from_node(files_by_path.get(path, {})).get("freshness", "unknown"),
+            "extractor": evidence_from_node(files_by_path.get(path, {})).get("extractor", "unknown"),
+            "source_hash": evidence_from_node(files_by_path.get(path, {})).get("source_hash"),
+            "evidence_role": "evidence"
+            if freshness.get("status") == "current" and closure_eligible(evidence_from_node(files_by_path.get(path, {})))
+            else "assumption",
         }
         for path in selected_paths
     ]
@@ -439,18 +740,30 @@ def build_context_pack(
     ownership = _ownership_for_paths(payload, relevant_paths)
 
     related_tests = _related_tests(files_by_path, edges, relevant_paths)
+    graph_validation_candidates = _graph_validation_candidates(
+        changed_paths=normalized_changed,
+        related_tests=related_tests,
+        files_by_path=files_by_path,
+        graph_freshness=str(freshness.get("status") or "unknown"),
+    )
 
     validation_candidates = _validation_candidates(
         relevant_paths,
         normalized_changed,
         graph_path=graph_path,
         context_pack_path=context_pack_path,
+        graph_freshness=str(freshness.get("status") or "unknown"),
+        graph_validation_candidates=graph_validation_candidates,
     )
+    selected_graph_nodes = _selected_graph_nodes(files_by_path, relevant_paths, str(freshness.get("status") or "unknown"))
+    skipped_graph_nodes = _skipped_graph_nodes(files_by_path, relevant_paths, str(freshness.get("status") or "unknown"))
+    graph_assumptions = _graph_assumptions(graph_freshness=freshness, skipped_graph_nodes=skipped_graph_nodes)
     residual_risk = _residual_risk(
         freshness=freshness,
         normalized_changed=normalized_changed,
         present_changed=present_changed,
         validation_candidates=validation_candidates,
+        graph_validation_candidates=graph_validation_candidates,
         generated_artifacts=generated_artifacts,
         selected_paths=relevant_paths,
         files_by_path=files_by_path,
@@ -475,6 +788,10 @@ def build_context_pack(
             "freshness": freshness,
             "source_of_truth": source_of_truth,
             "selected_files": selected_files,
+            "selected_graph_nodes": selected_graph_nodes,
+            "skipped_graph_nodes": skipped_graph_nodes,
+            "closure_evidence": selected_graph_nodes,
+            "assumptions": graph_assumptions,
             "selected_symbols": _relevant_symbols(files_by_path, relevant_paths, max_symbols=max_symbols),
             "caller_callee_edges": _edge_bucket(selected_edges, relevant_paths, {"import"}),
             "imports": _imports(files_by_path, relevant_paths),
@@ -485,6 +802,7 @@ def build_context_pack(
             "reuse_candidates": reuse_candidates,
             "rejected_locations": rejected_locations,
             "anti_bloat_decision": {
+                "budget_mode": budget_mode,
                 "max_files": max_files,
                 "max_symbols": max_symbols,
                 "context_budget_tokens": context_budget_tokens,
@@ -492,7 +810,9 @@ def build_context_pack(
                 "selected_symbol_count": len(_relevant_symbols(files_by_path, relevant_paths, max_symbols=max_symbols)),
                 "total_indexed_files": len(files_by_path),
                 "omitted_node_count": max(0, len(files_by_path) - len(selected_files)),
-                "decision": "bounded graph slice selected by changed paths, graph distance, and task relevance",
+                "selected_graph_node_count": len(selected_graph_nodes),
+                "skipped_graph_node_count": len(skipped_graph_nodes),
+                "decision": "bounded graph slice selected by changed paths, graph distance, freshness, confidence, and task relevance",
             },
             "omitted_nodes": omitted_nodes,
             "residual_risk": residual_risk,
@@ -506,6 +826,7 @@ def build_context_pack(
                 "OPEN QUESTION: Dynamic imports, reflection, generated reports, and external CI behavior require separate verification.",
             ],
             "affected_tests": related_tests,
+            "graph_validation_candidates": graph_validation_candidates,
             "validation_candidates": validation_candidates,
             "non_goals": [
                 "Do not index or package personal archives, prompts, secrets, environment variables, or user-specific technical corpora.",

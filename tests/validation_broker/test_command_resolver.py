@@ -94,6 +94,31 @@ class CommandResolverTests(unittest.TestCase):
         self.assertIn("validation_broker", plan["matched_categories"])
         self.assertIn("unknown/file.bin", plan["unknown_paths"])
 
+    def test_skill_behavior_change_requires_efficacy_benchmark(self) -> None:
+        plan = resolve_validation_plan(["src/project_memory/privacy.py"])
+        behavior = plan["skill_behavior_change"]
+        self.assertIsInstance(behavior, dict)
+        self.assertTrue(behavior["requires_skill_efficacy_benchmark"])
+        self.assertIn("memory", behavior["matched_surfaces"])
+        self.assertIn("skill_behavior_change", plan["matched_categories"])
+        self.assertIn(
+            "python3 scripts/validate-skill-efficacy-benchmarks.py",
+            commands(plan),
+        )
+        self.assertIn("python3 scripts/eval-routing.py", commands(plan))
+        self.assertTrue(
+            any("skill_efficacy_benchmark" in note for note in plan["notes"]),
+            plan["notes"],
+        )
+
+    def test_docs_only_change_does_not_require_efficacy_benchmark(self) -> None:
+        plan = resolve_validation_plan(["docs/USAGE.md"])
+        behavior = plan["skill_behavior_change"]
+        self.assertIsInstance(behavior, dict)
+        self.assertFalse(behavior["requires_skill_efficacy_benchmark"])
+        self.assertTrue(behavior["docs_only"])
+        self.assertEqual(behavior["changed_surface"], "docs-only")
+
 
 if __name__ == "__main__":
     unittest.main()

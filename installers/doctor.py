@@ -102,6 +102,7 @@ def main() -> int:
         _inspect_skill_dirs(label, path, duplicate_index, issues)
 
     _inspect_duplicates(duplicate_index, issues)
+    _print_governance_source_status()
     _print_runtime_coverage_matrix()
 
     if args.telemetry_report is not None or args.telemetry_root is not None:
@@ -521,6 +522,110 @@ def _print_remediation(issues: list[str]) -> None:
         if message not in printed:
             print(f"- {message}")
             printed.add(message)
+
+
+def _print_governance_source_status() -> None:
+    """Print structural governance status without running validators or tests."""
+    print("doctor: governance source status")
+    _print_structural_status(
+        "skill registry status",
+        (
+            ROOT / "src" / "registry" / "skills.yaml",
+            ROOT / "src" / "professional-skills",
+            ROOT / "scripts" / "validate-skills.py",
+        ),
+    )
+    _print_structural_status(
+        "capability registry status",
+        (
+            ROOT / "src" / "registry" / "capabilities.yaml",
+            ROOT / "src" / "foundation" / "capabilities",
+            ROOT / "scripts" / "validate-capabilities.py",
+        ),
+    )
+    _print_source_dist_boundary_status()
+    _print_structural_status(
+        "hook adapter matrix status",
+        (
+            ROOT / "src" / "hook-runtime" / "scripts" / "changeforge_adapter_capabilities.py",
+            ROOT / "docs" / "HOOKS.md",
+            ROOT / "scripts" / "validate-hooks.py",
+        ),
+    )
+    _print_structural_status(
+        "validation broker mapping status",
+        (
+            ROOT / "src" / "validation_broker" / "command_resolver.py",
+            ROOT / "src" / "validation_broker" / "skill_behavior_change.py",
+            ROOT / "scripts" / "validate-validation-broker.py",
+        ),
+    )
+    _print_structural_status(
+        "memory schema/gate status",
+        (
+            ROOT / "src" / "project_memory" / "schemas" / "memory-event.v1.schema.json",
+            ROOT / "src" / "project_memory" / "gates" / "fragile_file_gate.py",
+            ROOT / "scripts" / "validate-project-memory.py",
+        ),
+    )
+    _print_structural_status(
+        "repository graph freshness support status",
+        (
+            ROOT / "src" / "repository_intelligence" / "graph" / "evidence.py",
+            ROOT / "src" / "repository_intelligence" / "graph" / "repo_indexer.py",
+            ROOT / "src" / "repository_intelligence" / "packaging" / "context_pack_builder.py",
+            ROOT / "scripts" / "validate-repository-graph.py",
+            ROOT / "scripts" / "validate-context-pack.py",
+        ),
+    )
+    _print_structural_status(
+        "skill efficacy fixture status",
+        (
+            ROOT / "evals" / "skill-efficacy",
+            ROOT / "evals" / "skill-efficacy" / "fixtures" / "over-under-routing.yaml",
+            ROOT / "scripts" / "validate-skill-efficacy-benchmarks.py",
+        ),
+    )
+
+
+def _print_structural_status(label: str, required_paths: tuple[Path, ...]) -> None:
+    missing = [relpath for relpath in (_display_path(path) for path in required_paths) if relpath]
+    if missing:
+        print(f"- {label}: partial (missing {', '.join(missing)})")
+    else:
+        print(f"- {label}: present")
+
+
+def _display_path(path: Path) -> str | None:
+    if path.exists():
+        return None
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
+def _print_source_dist_boundary_status() -> None:
+    missing = []
+    for path in (ROOT / "src", ROOT / "dist", ROOT / "scripts" / "validate-src-invariants.py"):
+        if not path.exists():
+            missing.append(_display_path(path) or str(path))
+    forbidden = [
+        path
+        for path in (
+            ROOT / "src" / "toolbox",
+            ROOT / "registry" / "toolbox.yaml",
+            ROOT / "src" / "registry" / "toolbox.yaml",
+        )
+        if path.exists()
+    ]
+    if forbidden:
+        names = ", ".join(_display_path(path) or str(path.relative_to(ROOT)) for path in forbidden)
+        print(f"- source/dist boundary status: fail (forbidden path present: {names})")
+    elif missing:
+        print(f"- source/dist boundary status: partial (missing {', '.join(missing)})")
+    else:
+        print("- source/dist boundary status: present")
 
 
 def _print_runtime_coverage_matrix() -> None:

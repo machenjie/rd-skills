@@ -180,6 +180,13 @@ concerns. The full per-stage checklist lives in the language capability body, no
 - When both apply, select `engineering-stage-professionalism` before `agent-execution-discipline`: pick the stage first (routing priority 89), then apply execution discipline (priority 88) within that stage.
 - The matrices above are referenced, not copied into individual skills.
 
+Action ownership and review ownership are deliberately split. The active stage
+selects the owner skill or capability for the action being performed; closure
+then requires a different reviewer skill or capability when review evidence is
+needed. Empty compaction or reinjection context must not overwrite the active
+stage or owner/reviewer split. Repairs return to the action owner and then back
+to the reviewer before the stage can close.
+
 ## 5. Stage Resolution
 
 When stage signals conflict, resolve the active stage in this order:

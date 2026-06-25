@@ -84,6 +84,7 @@
             "generic",
             "unknown",
             "cline",
+            "roo",
             "openhands",
             "gemini-cli",
             "goose"
@@ -178,7 +179,7 @@
     },
     "runtime": {
       "type": "string",
-      "enum": ["codex", "claude", "copilot", "generic", "unknown"]
+      "enum": ["codex", "claude", "copilot", "generic", "unknown", "cline", "roo", "openhands", "gemini-cli", "goose"]
     },
     "hook_name": {
       "type": "string",
@@ -319,6 +320,7 @@
         "generic",
         "unknown",
         "cline",
+        "roo",
         "openhands",
         "gemini-cli",
         "goose"

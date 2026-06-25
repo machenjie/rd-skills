@@ -79,7 +79,17 @@ class ClosureContract:
         unsupported_catalog = _list(getattr(capabilities, "unsupported_checks", ()))
         unsupported_checks = _active_unsupported_checks(state, unsupported_catalog)
         degraded_capabilities = _active_degraded_capabilities(state, capabilities, unsupported_checks)
+        degraded_capabilities = _unique(
+            [
+                *degraded_capabilities,
+                *_visibility_degraded_capabilities(state, capabilities, profile),
+            ]
+        )
+        if degraded_capabilities and "runtime_adapter_degradation" not in unsupported_checks:
+            unsupported_checks = _unique([*unsupported_checks, "runtime_adapter_degradation"])
         residual = _list(validation_broker_residual_risk or [])
+        if degraded_capabilities and getattr(capabilities, "default_failure_mode", "") == "fail_open":
+            residual.append("adapter fail_open policy active for degraded capabilities")
         if profile == "silent":
             governance = GovernanceClosureContract.from_ledger(
                 GovernanceEvidenceLedger(),
@@ -89,25 +99,28 @@ class ClosureContract:
                 adapter=capabilities.runtime,
                 required_evidence=[],
             )
+            final_residual = _unique([*residual, *governance.residual_risk])
+            closure_payload = _changeforge_closure(
+                governance,
+                validation_broker_outcome=validation_broker_outcome,
+                validation_result_outcome=validation_result_outcome,
+                validation_result_freshness=validation_result_freshness,
+                validation_result_scope=validation_result_scope,
+                validation_result_command_kind=validation_result_command_kind,
+                extra_residual_risk=final_residual,
+            )
             return cls(
                 adapter=capabilities.runtime,
                 supported_checks=supported_checks,
                 unsupported_checks=unsupported_checks,
                 degraded_capabilities=degraded_capabilities,
                 verdict=governance.verdict,
-                residual_risk=_unique([*residual, *governance.residual_risk]),
+                residual_risk=final_residual,
                 requires_route_manifest=False,
                 requires_validation_evidence=False,
                 requires_residual_risk=False,
                 adapter_supports_blocking=capabilities.supports_blocking,
-                changeforge_closure=_changeforge_closure(
-                    governance,
-                    validation_broker_outcome=validation_broker_outcome,
-                    validation_result_outcome=validation_result_outcome,
-                    validation_result_freshness=validation_result_freshness,
-                    validation_result_scope=validation_result_scope,
-                    validation_result_command_kind=validation_result_command_kind,
-                ),
+                changeforge_closure=closure_payload,
             )
 
         engineering = profile == "engineering"
@@ -164,15 +177,34 @@ class ClosureContract:
         if "stage_route" in required_evidence and not stage_route_present:
             missing.append("stage_route")
         missing = _unique(missing)
-        status = "block" if missing and block_mode and capabilities.supports_blocking else "warn" if missing else "pass"
+        fail_closed_allowed = "stop_closure" in _list(
+            getattr(capabilities, "fail_closed_allowed_checks", ())
+        )
+        status = (
+            "block"
+            if missing and block_mode and capabilities.supports_blocking and fail_closed_allowed
+            else "warn"
+            if missing
+            else "pass"
+        )
         verdict = _compat_verdict(governance.verdict, status, validation_broker_outcome)
+        final_residual = _unique([*residual, *governance.residual_risk])
+        closure_payload = _changeforge_closure(
+            governance,
+            validation_broker_outcome=validation_broker_outcome,
+            validation_result_outcome=validation_result_outcome,
+            validation_result_freshness=validation_result_freshness,
+            validation_result_scope=validation_result_scope,
+            validation_result_command_kind=validation_result_command_kind,
+            extra_residual_risk=final_residual,
+        )
         return cls(
             adapter=capabilities.runtime,
             supported_checks=supported_checks,
             unsupported_checks=unsupported_checks,
             degraded_capabilities=governance.degraded_capabilities or degraded_capabilities,
             verdict=verdict,
-            residual_risk=_unique([*residual, *governance.residual_risk]),
+            residual_risk=final_residual,
             requires_route_manifest=requires_route,
             requires_stage_route=engineering and bool(state.get("stage_route_present")),
             requires_repository_context=requires_repo,
@@ -183,14 +215,7 @@ class ClosureContract:
             adapter_supports_blocking=capabilities.supports_blocking,
             closure_status=status,
             missing_items=missing,
-            changeforge_closure=_changeforge_closure(
-                governance,
-                validation_broker_outcome=validation_broker_outcome,
-                validation_result_outcome=validation_result_outcome,
-                validation_result_freshness=validation_result_freshness,
-                validation_result_scope=validation_result_scope,
-                validation_result_command_kind=validation_result_command_kind,
-            ),
+            changeforge_closure=closure_payload,
         )
 
     def to_dict(self) -> dict[str, object]:
@@ -331,6 +356,11 @@ def _governance_ledger(
                 summary="external file change observed by adapter",
             )
         )
+        _mark_validation_stale(
+            ledger,
+            "external file change after validation",
+            "hook-compat",
+        )
     if _list(state.get("config_changes")):
         ledger.config_change.merge(
             EvidenceEntry(
@@ -341,17 +371,30 @@ def _governance_ledger(
                 summary="configuration change observed by adapter",
             )
         )
-    if _list(state.get("permission_decisions")):
+        _mark_validation_stale(
+            ledger,
+            "configuration change after validation",
+            "hook-compat",
+        )
+    permission_decisions = _list(state.get("permission_decisions"))
+    if permission_decisions:
+        permission_denied = _has_permission_denial(permission_decisions)
         ledger.permission.merge(
             EvidenceEntry(
                 "permission",
-                EvidenceStrength.PARTIAL.value,
+                EvidenceStrength.NEGATIVE.value
+                if permission_denied
+                else EvidenceStrength.PARTIAL.value,
                 Freshness.CURRENT.value,
                 ["hook-compat"],
-                summary="permission decision recorded",
+                summary="permission denied by runtime"
+                if permission_denied
+                else "permission decision recorded",
+                outcome="deny" if permission_denied else None,
             )
         )
-    if _list(state.get("command_risks")):
+    command_risks = _list(state.get("command_risks"))
+    if command_risks:
         ledger.command_risk.merge(
             EvidenceEntry(
                 "command_risk",
@@ -359,6 +402,7 @@ def _governance_ledger(
                 Freshness.CURRENT.value,
                 ["hook-compat"],
                 summary="command risk recorded",
+                outcome=_first_risk(command_risks) or None,
             )
         )
     if _list(state.get("rollback_points")):
@@ -398,6 +442,22 @@ def _mark(entry: EvidenceEntry, present: bool) -> None:
         )
 
 
+def _mark_validation_stale(
+    ledger: GovernanceEvidenceLedger,
+    reason: str,
+    ref: str,
+) -> None:
+    if ledger.validation.strength == EvidenceStrength.NONE.value:
+        return
+    if ledger.validation.freshness == Freshness.STALE.value:
+        return
+    ledger.validation.strength = EvidenceStrength.NEGATIVE.value
+    ledger.validation.freshness = Freshness.STALE.value
+    ledger.validation.outcome = "stale"
+    ledger.validation.summary = reason
+    ledger.validation.refs = _unique([*ledger.validation.refs, ref])
+
+
 def _changeforge_closure(
     governance: GovernanceClosureContract,
     *,
@@ -406,6 +466,7 @@ def _changeforge_closure(
     validation_result_freshness: str = "",
     validation_result_scope: str = "",
     validation_result_command_kind: str = "",
+    extra_residual_risk: list[str] | None = None,
 ) -> dict[str, object]:
     validation = dict(governance.validation_status)
     if validation_result_outcome:
@@ -430,7 +491,7 @@ def _changeforge_closure(
         "validation": validation,
         "review": dict(governance.review_status),
         "changed_files": dict(governance.changed_files),
-        "residual_risk": list(governance.residual_risk),
+        "residual_risk": _unique([*governance.residual_risk, *(_list(extra_residual_risk) or [])]),
         "next_owner": governance.next_owner,
     }
 
@@ -500,7 +561,35 @@ def _runtime_active_degradation(state: dict) -> list[str]:
     adapter = state.get("runtime_adapter")
     if isinstance(adapter, dict):
         values.extend(_list(adapter.get("active_degradation")))
+        values.extend(_list(adapter.get("degraded_capabilities")))
     return _unique(values)
+
+
+def _visibility_degraded_capabilities(
+    state: dict,
+    capabilities: AdapterCapabilities,
+    profile: str,
+) -> list[str]:
+    if profile == "silent":
+        return []
+    visibility = dict(getattr(capabilities, "visibility", {}) or {})
+    adapter = state.get("runtime_adapter")
+    if isinstance(adapter, dict) and isinstance(adapter.get("visibility"), dict):
+        visibility.update(adapter.get("visibility") or {})
+    degraded: list[str] = []
+    runtime = str(getattr(capabilities, "runtime", "adapter") or "adapter")
+    if visibility.get("validation_outcome") == "none" and (
+        state.get("validation_command_seen") or state.get("validation_results")
+    ):
+        degraded.append(f"{runtime}_validation_outcome_visibility_none")
+    if visibility.get("changed_paths") == "none" and (
+        state.get("changed_paths")
+        or state.get("deleted_paths")
+        or state.get("generated_paths")
+        or state.get("implementation_preflight_required")
+    ):
+        degraded.append(f"{runtime}_changed_paths_visibility_none")
+    return _unique(degraded)
 
 
 def _active_requirement_text(state: dict) -> list[str]:
@@ -563,6 +652,16 @@ def _validation_status_from_results(values: object) -> str:
     if "unknown" in results or "candidate" in results:
         return "unknown"
     return ""
+
+
+def _has_permission_denial(values: list[str]) -> bool:
+    return any("deny" in value.casefold() or "denied" in value.casefold() for value in values)
+
+
+def _first_risk(values: list[str]) -> str:
+    if not values:
+        return ""
+    return values[0].split(":", 1)[0].strip()
 
 
 def _unique(values: list[str]) -> list[str]:

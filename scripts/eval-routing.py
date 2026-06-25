@@ -54,7 +54,13 @@ ROUTING_RULES_REGISTRY = REGISTRY_DIR / "routing-rules.yaml"
 
 VALID_COMPLEXITIES = {"L1", "L2", "L3", "L4", "L5"}
 VALID_RISK_LEVELS = {"low", "medium", "high", "critical"}
-VALID_CONTEXT_BUDGET_MODES = {"minimal", "single-stage", "staged-plan"}
+VALID_CONTEXT_BUDGET_MODES = {"minimal", "single-stage", "staged-plan", "full"}
+CONTEXT_BUDGET_REFERENCE_LIMITS = {
+    "minimal": 4,
+    "single-stage": 8,
+    "staged-plan": 16,
+    "full": 64,
+}
 MIN_ROUTING_CASES = 30
 MIN_L1_ANTI_OVER_ROUTING_CASES = 8
 MIN_DOMAIN_EXTENSION_CASES = 2
@@ -360,6 +366,57 @@ def _as_string_list(value: Any) -> list[str] | None:
         if not isinstance(item, str):
             return None
         out.append(item.strip())
+    return out
+
+
+def context_budget_for_route(
+    *,
+    mode: str,
+    selected_skills: Iterable[str],
+    selected_capabilities: Iterable[str],
+    required_references: Iterable[str],
+    skipped_references: Iterable[Any] = (),
+    rationale: str = "",
+) -> dict[str, Any]:
+    """Return deterministic context budget metrics for a route selection.
+
+    The token value is a proxy, not tokenizer output. It uses path text length
+    and fixed route item weights so offline routing fixtures stay reproducible.
+    """
+    if mode not in VALID_CONTEXT_BUDGET_MODES:
+        raise ValueError(f"unknown context budget mode: {mode}")
+    skill_count = len(_unique_strings(selected_skills))
+    capability_count = len(_unique_strings(selected_capabilities))
+    reference_paths = _unique_strings(required_references)
+    skipped_count = len(list(skipped_references or ()))
+    estimated = (
+        sum(max(1, len(reference)) // 4 for reference in reference_paths)
+        + skill_count * 120
+        + capability_count * 80
+    )
+    selected_reference_count = len(reference_paths)
+    return {
+        "mode": mode,
+        "selected_skill_count": skill_count,
+        "selected_capability_count": capability_count,
+        "selected_reference_count": selected_reference_count,
+        "skipped_reference_count": skipped_count,
+        "estimated_token_cost": estimated,
+        "estimate_method": "deterministic_proxy:path_chars_div_4_plus_fixed_skill_capability_weights",
+        "over_budget": selected_reference_count > CONTEXT_BUDGET_REFERENCE_LIMITS[mode],
+        "rationale": str(rationale or "").strip(),
+    }
+
+
+def _unique_strings(values: Iterable[str]) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for value in values or ():
+        text = str(value).strip()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        out.append(text)
     return out
 
 
@@ -1414,7 +1471,9 @@ def _stage_manifest_required_schema_errors(rel: str, manifest: dict[str, Any]) -
         "language_surfaces",
         "skipped_skills",
         "skipped_routes",
+        "skipped_references",
     )
+    optional_mapping_fields = ("context_budget",)
     if manifest.get("schema_version") != 1:
         errors.append(f"{rel}: changeforge_stage_route.schema_version must be 1")
     for field in required_string_fields:
@@ -1432,6 +1491,48 @@ def _stage_manifest_required_schema_errors(rel: str, manifest: dict[str, Any]) -
         value = manifest.get(field)
         if value is not None and not isinstance(value, list):
             errors.append(f"{rel}: changeforge_stage_route.{field} must be a list")
+    for field in optional_mapping_fields:
+        value = manifest.get(field)
+        if value is not None and not isinstance(value, dict):
+            errors.append(f"{rel}: changeforge_stage_route.{field} must be an object")
+    return errors
+
+
+def _stage_context_budget_errors(rel: str, manifest: dict[str, Any]) -> list[str]:
+    payload = manifest.get("context_budget")
+    if payload is None:
+        return []
+    if not isinstance(payload, dict):
+        return [f"{rel}: changeforge_stage_route.context_budget must be an object"]
+    errors: list[str] = []
+    mode = payload.get("mode")
+    if mode not in VALID_CONTEXT_BUDGET_MODES:
+        errors.append(
+            f"{rel}: changeforge_stage_route.context_budget.mode must be one of {sorted(VALID_CONTEXT_BUDGET_MODES)}"
+        )
+    if mode != manifest.get("context_budget_mode"):
+        errors.append(
+            f"{rel}: changeforge_stage_route.context_budget.mode must match context_budget_mode"
+        )
+    for field in (
+        "selected_skill_count",
+        "selected_capability_count",
+        "selected_reference_count",
+        "skipped_reference_count",
+        "estimated_token_cost",
+    ):
+        value = payload.get(field)
+        if not isinstance(value, int) or value < 0:
+            errors.append(f"{rel}: changeforge_stage_route.context_budget.{field} must be a non-negative integer")
+    if not isinstance(payload.get("over_budget"), bool):
+        errors.append(f"{rel}: changeforge_stage_route.context_budget.over_budget must be boolean")
+    if not isinstance(payload.get("rationale"), str) or not payload.get("rationale").strip():
+        errors.append(f"{rel}: changeforge_stage_route.context_budget.rationale is required")
+    method = payload.get("estimate_method")
+    if not isinstance(method, str) or "proxy" not in method.casefold():
+        errors.append(
+            f"{rel}: changeforge_stage_route.context_budget.estimate_method must identify the estimate as a proxy"
+        )
     return errors
 
 
@@ -1575,6 +1676,7 @@ def _enforce_actual_stage_route(  # noqa: C901 - manifest schema is intentionall
         return
 
     errors.extend(_stage_manifest_required_schema_errors(rel, manifest))
+    errors.extend(_stage_context_budget_errors(rel, manifest))
 
     stages = _stage_model_stages(stage_model)
     surfaces = _stage_model_surfaces(stage_model)
