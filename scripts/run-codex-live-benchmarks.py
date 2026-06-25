@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import importlib.util
 import json
 import os
@@ -12,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from datetime import datetime
 from pathlib import Path
@@ -133,6 +135,8 @@ PROCESS_MAPPING_FIELDS = {
     "tdd": ("acceptance_to_tests", "invariant_to_tests_or_code", "public_api_to_tests"),
 }
 MAX_STRUCTURED_EVENT_BYTES = 4096
+RUN_EVENT_LOCK = threading.Lock()
+BUILD_PROFILE_LOCK = threading.Lock()
 
 
 def live_execution_allowed(args: argparse.Namespace, env: dict[str, str]) -> bool:
@@ -231,7 +235,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--parallel-cases",
         type=int,
         default=1,
-        help="Record requested case parallelism. Current runner executes serially; use shards for external parallelism.",
+        help=(
+            "Run independent case/variant/run cells concurrently in-process. "
+            "Each cell uses isolated workdirs and Codex homes; use shards for multi-process parallelism."
+        ),
     )
     parser.add_argument("--resume-run", type=Path, help="Reuse an existing run directory and skip completed cells.")
     parser.add_argument("--timeout-seconds", type=int, default=3600)
@@ -310,8 +317,11 @@ def apply_runtime_selection(
         "max_runtime_minutes": args.max_runtime_minutes,
         "case_shard": str(args.case_shard or ""),
         "parallel_cases_requested": int(args.parallel_cases or 1),
-        "parallel_cases_effective": 1,
-        "parallel_cases_policy": "serial_in_process; use --case-shard for external parallelism",
+        "parallel_cases_effective": int(args.parallel_cases or 1),
+        "parallel_cases_policy": (
+            "parallel_cells_in_process; each cell uses isolated run/candidate/HOME/CODEX_HOME; "
+            "shared build and run-event writes are locked"
+        ),
         "resume_run": _run_source_label(args.resume_run) if args.resume_run else "",
         "baseline_reuse_policy": "none",
         "reused_baseline_run_id": None,
@@ -869,12 +879,14 @@ def _clear_codex_exec_artifacts(*paths: Path) -> None:
             path.unlink()
 
 
-def run_live(args: argparse.Namespace, out_dir: Path, cases: list[CodexLiveCase], variants: list[str]) -> dict[str, Any]:
-    """Execute selected live benchmark cases."""
-    built_profiles: set[str] = set()
-    results: list[dict[str, Any]] = []
-    started = time.monotonic()
-    _write_run_event(out_dir, phase="summary", event="phase_started", status="ok")
+def _runnable_cells(
+    args: argparse.Namespace,
+    out_dir: Path,
+    cases: list[CodexLiveCase],
+    variants: list[str],
+    started: float,
+) -> list[tuple[CodexLiveCase, str, int]]:
+    cells: list[tuple[CodexLiveCase, str, int]] = []
     for case in cases:
         for variant in variants:
             if variant not in case.variants:
@@ -903,7 +915,41 @@ def run_live(args: argparse.Namespace, out_dir: Path, cases: list[CodexLiveCase]
                         status="skipped",
                     )
                     continue
-                results.append(_run_one_case(args, out_dir, case, variant, run_index, built_profiles))
+                cells.append((case, variant, run_index))
+    return cells
+
+
+def _execute_run_cells(
+    args: argparse.Namespace,
+    out_dir: Path,
+    cells: list[tuple[CodexLiveCase, str, int]],
+    built_profiles: set[str],
+) -> list[dict[str, Any]]:
+    parallel_cases = max(1, int(getattr(args, "parallel_cases", 1) or 1))
+    if parallel_cases == 1 or len(cells) <= 1:
+        return [
+            _run_one_case(args, out_dir, case, variant, run_index, built_profiles)
+            for case, variant, run_index in cells
+        ]
+
+    results: list[dict[str, Any] | None] = [None] * len(cells)
+    with ThreadPoolExecutor(max_workers=parallel_cases) as executor:
+        futures = {
+            executor.submit(_run_one_case, args, out_dir, case, variant, run_index, built_profiles): index
+            for index, (case, variant, run_index) in enumerate(cells)
+        }
+        for future in as_completed(futures):
+            results[futures[future]] = future.result()
+    return [result for result in results if result is not None]
+
+
+def run_live(args: argparse.Namespace, out_dir: Path, cases: list[CodexLiveCase], variants: list[str]) -> dict[str, Any]:
+    """Execute selected live benchmark cases."""
+    built_profiles: set[str] = set()
+    started = time.monotonic()
+    _write_run_event(out_dir, phase="summary", event="phase_started", status="ok")
+    cells = _runnable_cells(args, out_dir, cases, variants, started)
+    results = _execute_run_cells(args, out_dir, cells, built_profiles)
 
     if not results:
         status = "failed"
@@ -1028,7 +1074,7 @@ def _run_one_case(
         if not final_path.exists():
             final_path.touch()
     except Exception as exc:  # live run should preserve artifacts for diagnosis
-        failure = f"{type(exc).__name__}: {exc}"
+        failure = redact_report_text(f"{type(exc).__name__}: {exc}")
         failure_stage = stage
         artifact_status = "partial"
         events_path.touch()
@@ -1317,8 +1363,9 @@ def _write_run_event(
 def _append_jsonl(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     clean_payload = _bounded_event_payload(payload)
-    with path.open("a", encoding="utf-8") as stream:
-        stream.write(json.dumps(clean_payload, sort_keys=True) + "\n")
+    with RUN_EVENT_LOCK:
+        with path.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(clean_payload, sort_keys=True) + "\n")
 
 
 def _bounded_event_payload(payload: dict[str, Any]) -> dict[str, Any]:
@@ -1403,40 +1450,86 @@ def _process_trace_evidence(
 ) -> tuple[dict[str, Any], dict[str, str], list[str]]:
     fallback_facts = _mark_process_facts_source(_process_facts(case, validation_commands), PROCESS_FALLBACK_FIELD_SOURCE)
     phase_status = {phase: "missing" for phase in PROCESS_PHASES}
-    parsed_trace = _final_process_trace(run_dir / "final.md")
-    if not parsed_trace:
-        parsed_trace = _hook_process_trace(run_dir)
-    if parsed_trace:
-        final_facts = _process_facts_from_trace_payload(parsed_trace)
-        source = str(parsed_trace.get("_evidence_source") or "unknown")
-        facts, used_fallback = _merge_process_facts(final_facts, fallback_facts, source)
-        evidence_sources = [source]
-        if used_fallback:
-            evidence_sources.append(f"{PROCESS_FALLBACK_FIELD_SOURCE}:missing-fields")
-        for phase in PROCESS_CORE_PHASES:
-            phase_status[phase] = _phase_status_from_sources(phase, facts.get(phase))
-        facts["evidence_source"] = source
-        facts.setdefault("evidence", {})["parsed_process_trace"] = parsed_trace.get("_trace_kind", "unknown")
+    parsed_sources = _process_trace_sources(run_dir)
+    if parsed_sources:
+        facts = fallback_facts
+        evidence_sources: list[str] = []
+        parsed_kinds: list[str] = []
+        for parsed_trace in parsed_sources:
+            source = str(parsed_trace.get("_evidence_source") or "unknown")
+            final_facts = _process_facts_from_trace_payload(parsed_trace)
+            if not _phase_has_concrete_content(final_facts):
+                continue
+            facts, _source_used_fallback = _merge_process_facts(final_facts, facts, source)
+            evidence_sources.append(source)
+            parsed_kinds.append(str(parsed_trace.get("_trace_kind") or "unknown"))
+        if evidence_sources:
+            if _has_required_process_field_fallback(facts):
+                evidence_sources.append(f"{PROCESS_FALLBACK_FIELD_SOURCE}:missing-fields")
+            for phase in PROCESS_CORE_PHASES:
+                phase_status[phase] = _phase_status_from_sources(phase, facts.get(phase))
+            facts["evidence_source"] = evidence_sources[-1]
+            facts.setdefault("evidence", {})["parsed_process_trace"] = parsed_kinds
+            return facts, phase_status, evidence_sources
+
+        facts = fallback_facts
+        evidence_sources = [PROCESS_FALLBACK_FIELD_SOURCE]
     else:
         facts = fallback_facts
         evidence_sources = [PROCESS_FALLBACK_FIELD_SOURCE]
-        for phase in PROCESS_CORE_PHASES:
-            phase_status[phase] = _phase_status_from_sources(phase, facts.get(phase))
+    for phase in PROCESS_CORE_PHASES:
+        phase_status[phase] = _phase_status_from_sources(phase, facts.get(phase))
     return facts, phase_status, evidence_sources
 
 
+def _has_required_process_field_fallback(facts: dict[str, Any]) -> bool:
+    for phase in PROCESS_CORE_PHASES:
+        phase_payload = facts.get(phase)
+        if not isinstance(phase_payload, dict):
+            return True
+        field_sources = phase_payload.get("_field_sources")
+        sources = field_sources if isinstance(field_sources, dict) else {}
+        inferred = phase_payload.get("_inferred_fields")
+        inferred_fields = {str(field) for field in inferred} if isinstance(inferred, list) else set()
+        for field in _required_process_fields(phase):
+            if field in inferred_fields or _source_is_fallback(str(sources.get(field) or "")):
+                return True
+    return False
+
+
+def _process_trace_sources(run_dir: Path) -> list[dict[str, Any]]:
+    parsed: list[dict[str, Any]] = []
+    for trace in (
+        _hook_process_trace(run_dir),
+        _final_process_trace(run_dir / "final.md"),
+        _artifact_process_trace(run_dir / "candidate-artifacts" / "CAPABILITY_EVIDENCE.md"),
+        _artifact_process_trace(run_dir / "candidate-artifacts" / "process-trace.json"),
+    ):
+        if trace:
+            parsed.append(trace)
+    return parsed
+
+
 def _final_process_trace(path: Path) -> dict[str, Any]:
+    return _process_trace_from_path(path, "final.md")
+
+
+def _artifact_process_trace(path: Path) -> dict[str, Any]:
+    return _process_trace_from_path(path, f"candidate-artifacts/{path.name}")
+
+
+def _process_trace_from_path(path: Path, evidence_prefix: str) -> dict[str, Any]:
     if not path.exists():
         return {}
     text = path.read_text(encoding="utf-8", errors="ignore")
     parsed = _json_process_trace(text)
     if parsed:
-        parsed["_evidence_source"] = parsed.get("_evidence_source") or "final.md:process-trace-json"
+        parsed["_evidence_source"] = parsed.get("_evidence_source") or f"{evidence_prefix}:process-trace-json"
         parsed["_trace_kind"] = parsed.get("_trace_kind") or "json"
         return parsed
     parsed = _compact_process_trace(text)
     if parsed:
-        parsed["_evidence_source"] = parsed.get("_evidence_source") or "final.md:compact-process-trace"
+        parsed["_evidence_source"] = parsed.get("_evidence_source") or f"{evidence_prefix}:compact-process-trace"
         parsed["_trace_kind"] = parsed.get("_trace_kind") or "compact"
         return parsed
     return {}
@@ -1763,9 +1856,13 @@ def _merge_phase_facts(
     fallback_payload = fallback_phase if isinstance(fallback_phase, dict) else {}
     merged = json.loads(json.dumps(fallback_payload))
     field_sources = _field_sources_for_payload(fallback_payload, default_source=PROCESS_FALLBACK_FIELD_SOURCE)
-    inferred_fields = {
-        key for key, value in fallback_payload.items() if not key.startswith("_") and _has_trace_value(value)
-    }
+    existing_inferred = fallback_payload.get("_inferred_fields")
+    inferred_fields = set(str(field) for field in existing_inferred) if isinstance(existing_inferred, list) else set()
+    for key, value in fallback_payload.items():
+        if key.startswith("_") or not _has_trace_value(value):
+            continue
+        if key in inferred_fields or _source_is_fallback(str(field_sources.get(key) or PROCESS_FALLBACK_FIELD_SOURCE)):
+            inferred_fields.add(key)
     for key, value in final_payload.items():
         if key.startswith("_"):
             if key not in {"_evidence_source", "_field_sources", "_inferred_fields"} and _has_trace_value(value):
@@ -1781,7 +1878,8 @@ def _merge_phase_facts(
         merged["_inferred_fields"] = sorted(inferred_fields)
     else:
         merged.pop("_inferred_fields", None)
-    return merged, bool(inferred_fields)
+    required_fallback = any(field in inferred_fields for field in _required_process_fields(phase))
+    return merged, required_fallback
 
 
 def _mark_process_facts_source(facts: dict[str, Any], source: str) -> dict[str, Any]:
@@ -2502,8 +2600,8 @@ def _failure_modes_mapped(failure_modes: Any, tests: Any) -> bool:
     for entry in tests:
         if isinstance(entry, dict) and entry.get("tests"):
             mapped.add(str(entry.get("failure_mode")))
-        elif isinstance(entry, str):
-            mapped.add(entry)
+        elif isinstance(entry, str) and entry.strip():
+            return True
     return all(str(mode) in mapped for mode in failure_modes)
 
 
@@ -2905,16 +3003,18 @@ def _install_changeforge(
     with_hooks: bool,
 ) -> None:
     if args.profile not in built_profiles:
-        subprocess.run(
-            [sys.executable, str(ROOT / "scripts" / "build.py"), "--profile", args.profile],
-            cwd=ROOT,
-            env=_subprocess_env(env),
-            text=True,
-            capture_output=True,
-            shell=False,
-            check=True,
-        )
-        built_profiles.add(args.profile)
+        with BUILD_PROFILE_LOCK:
+            if args.profile not in built_profiles:
+                subprocess.run(
+                    [sys.executable, str(ROOT / "scripts" / "build.py"), "--profile", args.profile],
+                    cwd=ROOT,
+                    env=_subprocess_env(env),
+                    text=True,
+                    capture_output=True,
+                    shell=False,
+                    check=True,
+                )
+                built_profiles.add(args.profile)
     command = [
         sys.executable,
         str(ROOT / "installers" / "install.py"),
@@ -2972,6 +3072,7 @@ def _copy_candidate_evidence_artifacts(candidate_dir: Path, run_dir: Path) -> di
     artifact_names = {
         "candidate_capability_evidence": "CAPABILITY_EVIDENCE.md",
         "candidate_compaction_context": "COMPACTION_CONTEXT.json",
+        "candidate_process_trace": "process-trace.json",
     }
     copied: dict[str, Path] = {}
     target_dir = run_dir / "candidate-artifacts"

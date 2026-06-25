@@ -88,7 +88,7 @@ Suggested-action distribution:
 | `degradation-circuit-breaking` | foundation-capability | 210 | 26 | Industry Benchmarks (101) |
 | `domain-event-modeling` | foundation-capability | 208 | 26 | Industry Benchmarks (86) |
 | `form-validation-design` | foundation-capability | 203 | 26 | Industry Benchmarks (86) |
-| `development-process-orchestrator` | professional-skill | 345 | 18 | - |
+| `development-process-orchestrator` | professional-skill | 349 | 18 | - |
 | `quality-test-gate` | professional-skill | 326 | 18 | - |
 | `reliability-observability-gate` | professional-skill | 280 | 18 | - |
 
@@ -120,7 +120,7 @@ Suggested-action distribution:
 | `domain-impact-modeler` | 205 | 3336 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `change-intake-compiler` | 203 | 3337 | 100 | 82 | 100 | 0 | KEEP_AS_IS | - | low |
 | `ai-code-review-refactor` | 366 | 5990 | 100 | 58 | 100 | 35 | TIGHTEN_BODY | P2 | low |
-| `development-process-orchestrator` | 345 | 2814 | 100 | 83 | 100 | 18 | TIGHTEN_BODY | P2 | low |
+| `development-process-orchestrator` | 349 | 2851 | 100 | 83 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `change-forge-router` | 343 | 6910 | 100 | 73 | 100 | 32 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
 | `quality-test-gate` | 326 | 6056 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `reliability-observability-gate` | 280 | 5083 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
@@ -128,7 +128,7 @@ Suggested-action distribution:
 | `security-privacy-gate` | 266 | 4563 | 100 | 69 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `delivery-release-gate` | 262 | 4519 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
 | `architecture-impact-reviewer` | 257 | 4050 | 100 | 67 | 100 | 18 | TIGHTEN_BODY | P2 | low |
-| `logging-design-gate` | 250 | 2819 | 100 | 90 | 100 | 14 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
+| `logging-design-gate` | 250 | 2821 | 100 | 90 | 100 | 14 | MOVE_SECTIONS_TO_REFERENCES | P2 | low |
 
 #### Detailed findings — Professional Skills
 
@@ -139,7 +139,7 @@ Suggested-action distribution:
 - **`development-process-orchestrator`** (TIGHTEN_BODY, P2, risk: low)
   - Path: `src/professional-skills/development-process-orchestrator/SKILL.md`
   - Suggested action: Trim restating prose; keep the decision-critical lines only.
-  - Finding: body 345 lines exceeds review threshold 250
+  - Finding: body 349 lines exceeds review threshold 250
 - **`change-forge-router`** (MOVE_SECTIONS_TO_REFERENCES, P2, risk: low)
   - Path: `src/professional-skills/change-forge-router/SKILL.md`
   - Suggested action: Move oversized sections/tables into references/*.md; keep a concise body summary.
@@ -343,17 +343,17 @@ Lines that appear in ≥ 3 skills (top 25 by fan-out):
 | Files | Excerpt |
 | --- | --- |
 | 19 | selected capability reference path format: `references/capabilities/<capability-id>-<capab |
-| 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
-| 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
-| 18 | do not load every reference by default. treat references as targeted support selected by t |
-| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
 | 18 | l2 changes: read `references/capabilities/index.md` and only capability files explicitly s |
+| 18 | l1 changes: do not read references unless the task touches security, data, auth, external  |
+| 18 | l4/l5 changes: read all selected capability references, `references/checklist.md` when pre |
+| 18 | l3 changes: read all selected capability references and `references/checklist.md` when pre |
+| 18 | do not load every reference by default. treat references as targeted support selected by t |
 | 17 | `82 solution-optimality-evaluation` -> `references/capabilities/82-solution-optimality-eva |
 | 17 | `42 idempotency-retry-design` -> `references/capabilities/42-idempotency-retry-design.md` |
 | 12 | pinned versions are review baselines, not permanent recommendations. if a pinned baseline  |
 | 11 | these triggers are hidden-risk escalators, not ordinary checklist items. |
-| 8 | **accepted exceptions** with owner / scope / expiration |
 | 8 | launched in coding, bug-fix, code-review, refactoring, and testing. per-stage focus: |
+| 8 | **accepted exceptions** with owner / scope / expiration |
 | 7 | **residual risk**: untested runtime behavior, owner, and next gate. |
 | 7 | **block/pass decision** with required conditions for approval. |
 | 6 | non-trivial direct use still requires `repository-context-map` before planning when affect |

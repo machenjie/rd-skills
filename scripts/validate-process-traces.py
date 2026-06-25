@@ -31,7 +31,13 @@ REQUIRED_PROCESS_FIELDS = {
         "validation_commands",
     ),
 }
-FORBIDDEN_TEXT = ("/Users/", "/home/", "C:\\Users\\", "auth.json", "CODEX_API_KEY", "OPENAI_API_KEY", "sk-")
+FORBIDDEN_TEXT_MARKERS = ("auth.json", "CODEX_API_KEY", "OPENAI_API_KEY")
+FORBIDDEN_TEXT_PATTERNS = (
+    re.compile(r"/Users/[^\s\"'<>]+"),
+    re.compile(r"/home/[^\s\"'<>]+"),
+    re.compile(r"C:\\Users\\[^\s\"'<>]+"),
+    re.compile(r"sk-(?=[A-Za-z0-9_-]{10,})(?=[A-Za-z0-9_-]*[A-Z0-9])[A-Za-z0-9_-]+"),
+)
 GENERIC_TRACE_MARKERS = (
     "requested benchmark behavior is observable through public api",
     "requested benchmark behavior is observable through public api or documented setup/test contract",
@@ -327,7 +333,7 @@ def _mapping_errors(
         )
     )
     errors.extend(_failure_mode_mapping_errors(label, sdd, tdd))
-    errors.extend(_logging_mapping_errors(label, sdd.get("logging_decision"), tdd, trace.get("validation_commands")))
+    errors.extend(_logging_mapping_errors(label, sdd.get("logging_decision"), ddd, sdd, tdd, trace.get("validation_commands")))
     return errors
 
 
@@ -376,10 +382,17 @@ def _failure_mode_mapping_errors(label: str, sdd: dict[str, Any], tdd: dict[str,
     return errors
 
 
-def _logging_mapping_errors(label: str, logging_decision: Any, tdd: dict[str, Any], validation_commands: Any) -> list[str]:
+def _logging_mapping_errors(
+    label: str,
+    logging_decision: Any,
+    ddd: dict[str, Any],
+    sdd: dict[str, Any],
+    tdd: dict[str, Any],
+    validation_commands: Any,
+) -> list[str]:
     if not isinstance(logging_decision, dict):
         return [f"{label}: SDD.logging_decision must be an object"]
-    validator_errors = _logging_design_errors(label, logging_decision, tdd, validation_commands)
+    validator_errors = _logging_design_errors(label, logging_decision, ddd, sdd, tdd, validation_commands)
     if logging_decision.get("needed") is False:
         if not str(logging_decision.get("rationale", "")).strip():
             return [f"{label}: SDD.logging_decision.needed=false requires rationale"]
@@ -400,6 +413,8 @@ def _logging_mapping_errors(label: str, logging_decision: Any, tdd: dict[str, An
 def _logging_design_errors(
     label: str,
     logging_decision: dict[str, Any],
+    ddd: dict[str, Any],
+    sdd: dict[str, Any],
     tdd: dict[str, Any],
     validation_commands: Any,
 ) -> list[str]:
@@ -408,7 +423,10 @@ def _logging_design_errors(
         "tests_or_validation": [
             *_string_list(tdd.get("logging_or_security_tests")),
             *_string_list(validation_commands),
-        ]
+        ],
+        "ddd": ddd,
+        "sdd": sdd,
+        "tdd": tdd,
     }
     return [
         f"{label}: {error}"
@@ -547,7 +565,13 @@ def _has_evidence(value: Any) -> bool:
 
 
 def _forbidden_text_errors(label: str, text: str) -> list[str]:
-    return [f"{label}: contains forbidden marker {marker}" for marker in FORBIDDEN_TEXT if marker in text]
+    errors = [f"{label}: contains forbidden marker {marker}" for marker in FORBIDDEN_TEXT_MARKERS if marker in text]
+    errors.extend(
+        f"{label}: contains forbidden pattern {pattern.pattern}"
+        for pattern in FORBIDDEN_TEXT_PATTERNS
+        if pattern.search(text)
+    )
+    return errors
 
 
 def _rel(root: Path, path: Path) -> str:

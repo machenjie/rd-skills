@@ -132,8 +132,10 @@ Selection and recovery flags:
   variants remain balanced within each selected case.
 - `--resume-run <run-dir>` reuses a run directory and skips cells that already
   have `result.json`.
-- `--parallel-cases N` is recorded for governance, but this runner executes
-  serially in-process; use shards for external parallel execution.
+- `--parallel-cases N` runs independent case/variant/run cells concurrently
+  in-process. Each cell uses isolated run, candidate, `HOME`, and `CODEX_HOME`
+  paths; shared build and run-event writes are locked. Use shards for
+  multi-process host-level parallel execution.
 
 Final strict runs do not reuse baselines. Diagnostic runs may record
 `baseline_reuse_policy`, but the default and current final policy is `none`.

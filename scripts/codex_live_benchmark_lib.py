@@ -1058,6 +1058,10 @@ def _capability_artifact_status(
             if route_count < runs:
                 status = "partial"
                 reasons.append(f"{variant}: explicit route/process evidence missing")
+            strict_count = int(variant_evidence.get("strict_process_trace_valid_count", 0) or 0)
+            if strict_count < runs:
+                status = "partial"
+                reasons.append(f"{variant}: strict process trace validation failed")
         if variant == "skills_with_hooks_clean":
             hook_count = int(variant_evidence.get("hook_bounded_evidence_count", 0) or 0)
             if hook_count < runs:

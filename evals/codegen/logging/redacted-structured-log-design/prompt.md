@@ -10,11 +10,13 @@ The benchmark verifies that logging-design and security-privacy gates trigger fo
 
 ## Requirements
 
-- Record log type, level, fields, redaction, correlation id, cardinality, and no-log rationale.
+- Record log type, event, level, fields, redaction, correlation id, cardinality, and no-log rationale.
 - Trigger logging-design-gate and security-privacy-gate evidence.
 - Avoid logging raw request body, query, token, cookie, auth header, secret, or PII.
 - Add or describe tests that cover redaction or no-log rationale.
 - Use structured fields with bounded cardinality and an audit versus diagnostic boundary.
+- When audit and diagnostic logs are both present, state separate sink and separate retention rationale.
+- Security logs must include policy plus denial category, reason, or error category fields.
 
 ## Constraints
 

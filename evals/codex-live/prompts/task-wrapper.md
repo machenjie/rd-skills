@@ -6,24 +6,64 @@ Read the task below, modify only the candidate repository, and leave a concise
 final answer that includes:
 
 - files changed;
-- this compact trace block when the task changes behavior, tests, structure, or
-  operational evidence:
+- this field-level process trace when the task changes behavior, tests,
+  structure, or operational evidence:
 
-```text
-Process Trace:
-PDD: problem + acceptance + constraints
-DDD: domain ownership + invariants + side-effect boundary
-SDD: modules + public API + error/logging decision
-TDD: tests/validation mapping
-Validation:
-Residual Risk:
+```json
+{
+  "process_trace": {
+    "pdd": {
+      "problem": "specific problem solved",
+      "acceptance_criteria": ["observable acceptance criterion"],
+      "constraints": ["harness or dependency constraint"],
+      "validation_signal": ["exact command or check"]
+    },
+    "ddd": {
+      "domain_terms": ["domain term"],
+      "invariants": ["business or system invariant"],
+      "ownership_decision": ["module or service that owns the rule"],
+      "side_effect_boundaries": ["where side effects are allowed or forbidden"]
+    },
+    "sdd": {
+      "modules": ["file, module, or component changed"],
+      "public_api": ["public function, endpoint, command, or UI behavior"],
+      "error_contract": ["expected error or failure behavior"],
+      "failure_modes": ["failure mode covered"],
+      "logging_decision": {"needed": false, "rationale": "why logs are or are not required"}
+    },
+    "tdd": {
+      "acceptance_to_tests": {"observable acceptance criterion": ["exact command or test"]},
+      "invariant_to_tests_or_code": {"business or system invariant": ["exact command, test, or code path"]},
+      "public_api_to_tests": {"public API or behavior": ["exact command or test"]},
+      "failure_mode_tests": ["failure mode -> exact command or test"],
+      "validation_commands": ["exact command and result"]
+    }
+  }
+}
 ```
 
 - the compact Process Trace parser supports a bounded YAML-like subset:
   `key: value`, `key:` with indented child keys, nested `- item` lists, and
   simple scalar booleans. Do not use anchors, flow collections, folded or block
   scalars, multi-document YAML, or deeply nested structures. Prefer a fenced
-  JSON `process_trace` block when exact structure matters;
+  JSON `process_trace` block when exact structure matters. Do not leave generic
+  placeholders such as "problem + acceptance + constraints"; every required
+  field must map to this specific candidate change;
+- strict traceability is required: every exact string in
+  `pdd.acceptance_criteria` must be an exact key in `tdd.acceptance_to_tests`,
+  every exact string in `ddd.invariants` must be an exact key in
+  `tdd.invariant_to_tests_or_code`, every exact string in `sdd.public_api`
+  must be an exact key in `tdd.public_api_to_tests`, and each
+  `sdd.error_contract` or `sdd.failure_modes` item must be mapped by
+  `tdd.failure_mode_tests`. If `sdd.logging_decision.needed` is `false`, the
+  rationale must name the validation, test, public-behavior, metric, or trace
+  evidence that replaces runtime logging. If `sdd.logging_decision.needed` is
+  `true`, include non-empty `log_types`, `placement`, `events`, `levels`,
+  `fields`, `redaction`, `correlation`, `cardinality_controls`, and
+  `tests_or_validation` fields, or map equivalent checks in
+  `tdd.logging_or_security_tests`. Event names must be specific operational
+  events, not generic log descriptions. When `log_types` includes both `audit`
+  and `diagnostic`, state separate sink and retention rationale explicitly;
 - validation commands run and their result;
 - reuse or placement evidence when relevant;
 - residual risk.

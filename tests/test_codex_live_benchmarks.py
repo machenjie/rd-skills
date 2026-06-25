@@ -788,6 +788,7 @@ def _capability_artifact_evidence_payload(
     session_compact_count: int = 3,
     compact_runtime: bool = True,
     candidate_context_status: str = "pass",
+    strict_process_trace: bool = True,
 ) -> dict[str, object]:
     def variant_payload(variant: str) -> dict[str, object]:
         route_count = runs if route_process and variant != "baseline_clean" else 0
@@ -836,6 +837,9 @@ def _capability_artifact_evidence_payload(
             "runs": runs,
             "artifact_backed_run_count": 0 if self_report_only else runs,
             "route_process_evidence_count": route_count,
+            "strict_process_trace_valid_count": runs if strict_process_trace else 0,
+            "strict_process_trace_error_count": 0 if strict_process_trace else runs,
+            "strict_process_trace_error_examples": [] if strict_process_trace else ["TDD mapping incomplete"],
             "hook_bounded_evidence_count": hook_count,
             "self_report_only_count": runs if self_report_only else 0,
             "privacy_redaction_status": privacy,
@@ -1725,6 +1729,10 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         helper = _load_script("codex_live_helper_report_redaction", "scripts/codex_live_benchmark_lib.py")
         text = "path=/private/var/folders/x/codex-live-borrowed-auth-abc/.tmp/plugin.json"
         self.assertNotIn("/private/var/", helper.redact_report_text(text))
+        timeout = "TimeoutExpired: Command '['codex', '--output-last-message', '/Users/raw/run/final.md']' timed out"
+        redacted = helper.redact_report_text(timeout)
+        self.assertNotIn("/Users/raw", redacted)
+        self.assertIn("<local-path>", redacted)
 
     def test_publish_summary_rejects_current_home_full_and_contamination(self) -> None:
         summary_module = _load_script("generate_codex_live_summary_publish_rules", "scripts/generate-codex-live-summary.py")
@@ -2703,6 +2711,7 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual([case.id for case in selected], ["security/ssrf-url-allowlist"])
         self.assertEqual(metadata["rerun_cell_count"], 1)
         self.assertIn(("security/ssrf-url-allowlist", "baseline_clean", 2), args._changeforge_rerun_cells)
+        self.assertEqual(metadata["parallel_cases_effective"], 1)
 
         shard_args = SimpleNamespace(
             tier=[],
@@ -2719,6 +2728,60 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertTrue(shard)
         self.assertEqual(shard_metadata["case_shard_index"], 1)
         self.assertTrue(all(case.id in shard_metadata["selected_cases"] for case in shard))
+
+        parallel_args = SimpleNamespace(
+            tier=[],
+            changed_only=False,
+            failed_only=None,
+            rerun_failures_from=None,
+            max_cases=None,
+            max_runtime_minutes=None,
+            case_shard=None,
+            parallel_cases=3,
+            resume_run=None,
+        )
+        _parallel, parallel_metadata = runner.apply_runtime_selection(parallel_args, cases[:2], ["baseline_clean"])
+        self.assertEqual(parallel_metadata["parallel_cases_effective"], 3)
+        self.assertIn("parallel_cells_in_process", parallel_metadata["parallel_cases_policy"])
+
+    def test_execute_run_cells_uses_parallel_workers_and_preserves_result_order(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_parallel_cells", "scripts/run-codex-live-benchmarks.py")
+        args = SimpleNamespace(parallel_cases=3)
+        out_dir = Path(tempfile.mkdtemp())
+        cells = [
+            (SimpleNamespace(id=f"case/{index}", variants=("baseline_clean",), tier="core"), "baseline_clean", 1)
+            for index in range(4)
+        ]
+        active = 0
+        max_active = 0
+        built_profiles: set[str] = set()
+        import threading
+        import time
+
+        lock = threading.Lock()
+
+        def fake_run_one_case(_args, _out_dir, case, variant, run_index, _built_profiles):
+            nonlocal active, max_active
+            with lock:
+                active += 1
+                max_active = max(max_active, active)
+            time.sleep(0.02)
+            with lock:
+                active -= 1
+            return {
+                "case_id": case.id,
+                "variant": variant,
+                "run_index": run_index,
+                "artifact_status": "collected",
+            }
+
+        try:
+            with patch.object(runner, "_run_one_case", side_effect=fake_run_one_case):
+                results = runner._execute_run_cells(args, out_dir, cells, built_profiles)
+        finally:
+            shutil.rmtree(out_dir, ignore_errors=True)
+        self.assertGreater(max_active, 1)
+        self.assertEqual([result["case_id"] for result in results], [cell[0].id for cell in cells])
 
     def test_rerun_failures_overrides_resume_completed_skip(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_rerun_skip", "scripts/run-codex-live-benchmarks.py")
@@ -3021,6 +3084,68 @@ Residual Risk:
         self.assertEqual(trace["process_facts"]["sdd"]["logging_decision"]["needed"], True)
         self.assertIn("final.md:compact-process-trace", trace["evidence_sources"])
         self.assertIn("logging_decision_has_type_level_fields_redaction", trace["required_quality_gates"])
+
+    def test_candidate_process_trace_artifact_is_copied_and_used_as_process_evidence(self) -> None:
+        runner = _load_script("run_codex_live_benchmarks_candidate_artifact_trace", "scripts/run-codex-live-benchmarks.py")
+        case = self._trace_case()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out_dir = root / "run"
+            candidate_dir = root / "candidate"
+            run_dir = out_dir / "cases" / "security__ssrf-url-allowlist" / "skills_only_clean" / "run-01"
+            candidate_dir.mkdir()
+            run_dir.mkdir(parents=True)
+            candidate_dir.joinpath("process-trace.json").write_text(
+                json.dumps(
+                    {
+                        "process_trace": {
+                            "pdd": {
+                                "problem": "Block SSRF metadata URLs",
+                                "acceptance_criteria": ["deny metadata URL"],
+                                "constraints": ["preserve harness"],
+                                "validation_signal": ["benchmark command"],
+                            },
+                            "ddd": {
+                                "domain_terms": ["URL candidate"],
+                                "invariants": ["unsafe URL is never fetched"],
+                                "ownership_decision": ["URL safety boundary owns denial"],
+                                "side_effect_boundaries": ["no fetch before allowlist"],
+                            },
+                            "sdd": {
+                                "modules": ["URL validation module"],
+                                "public_api": ["URL validation public entrypoint"],
+                                "error_contract": ["stable denial"],
+                                "failure_modes": ["metadata URL denial"],
+                                "logging_decision": {
+                                    "needed": False,
+                                    "rationale": "public behavior tests cover denial",
+                                },
+                            },
+                            "tdd": {
+                                "acceptance_to_tests": {"deny metadata URL": ["benchmark command"]},
+                                "invariant_to_tests_or_code": {"unsafe URL is never fetched": ["benchmark command"]},
+                                "public_api_to_tests": {"URL validation public entrypoint": ["benchmark command"]},
+                                "failure_mode_tests": ["metadata URL denial covered"],
+                                "validation_commands": ["benchmark command"],
+                            },
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            copied = runner._copy_candidate_evidence_artifacts(candidate_dir, run_dir)
+            trace = runner._process_trace_payload(
+                out_dir,
+                run_dir,
+                case=case,
+                variant="skills_only_clean",
+                run_index=1,
+                result={"status": "collected", "grading_status": "passed"},
+            )
+        self.assertIn("candidate_process_trace", copied)
+        self.assertEqual(trace["phase_status"]["pdd"], "present")
+        self.assertIn("candidate-artifacts/process-trace.json:process-trace-json", trace["evidence_sources"])
+        self.assertNotIn("case_metadata_fallback:missing-fields", trace["evidence_sources"])
 
     def test_metadata_fallback_is_inferred_and_run_log_is_evidence_aware(self) -> None:
         runner = _load_script("run_codex_live_benchmarks_inferred_trace", "scripts/run-codex-live-benchmarks.py")
@@ -4034,6 +4159,31 @@ Residual Risk:
         self.assertNotEqual(item["status"], "pass")
         self.assertTrue(any("process_trace_count is 0" in reason for reason in item["reasons"]))
 
+    def test_strict_process_trace_failures_block_process_capability(self) -> None:
+        lib = _load_script("codex_live_lib_strict_process_trace", "scripts/codex_live_benchmark_lib.py")
+        summary = _strong_ablation_summary_payload(
+            cases_summary={
+                "process/full-pdd-ddd-sdd-tdd-review-repair": _case_summary_payload(),
+            },
+            process_compliance_summary=_process_summary(
+                process_trace_count=3,
+                pdd_present_rate=1.0,
+                ddd_present_rate=1.0,
+                sdd_present_rate=1.0,
+                tdd_present_rate=1.0,
+                required_field_fallback_rate=0.0,
+            ),
+            capability_artifact_evidence={
+                "process/full-pdd-ddd-sdd-tdd-review-repair": _capability_artifact_evidence_payload(
+                    strict_process_trace=False
+                )
+            },
+        )
+        coverage = lib.codex_live_capability_coverage_summary(summary)
+        item = next(row for row in coverage["items"] if row["id"] == "pdd_ddd_sdd_tdd_review_flow")
+        self.assertNotEqual(item["status"], "pass")
+        self.assertTrue(any("strict process trace validation failed" in reason for reason in item["reasons"]))
+
     def test_inferred_only_not_explicit_compliance(self) -> None:
         lib = _load_script("codex_live_lib_inferred_only", "scripts/codex_live_benchmark_lib.py")
         summary = _strong_ablation_summary_payload(
@@ -4637,6 +4787,19 @@ Residual Risk:
         item = next(row for row in coverage["items"] if row["id"] == "context_compaction_retention")
         self.assertEqual(item["status"], "pass")
 
+    def test_compact_candidate_context_status_accepts_descriptive_pass_values(self) -> None:
+        summary_module = _load_script(
+            "generate_codex_live_summary_compact_status",
+            "scripts/generate-codex-live-summary.py",
+        )
+        accepts = summary_module._compact_status_allows_pass
+        self.assertTrue(accepts("passed: context retained", default=True))
+        self.assertTrue(accepts({"status": "passed"}, default=True))
+        self.assertTrue(accepts("pre_compact_checkpoint_and_post_compact_reinjection_recorded", default=True))
+        self.assertFalse(accepts("fail: missing required fields", default=True))
+        self.assertFalse(accepts("stale validation", default=True))
+        self.assertFalse(accepts({"status": "partial"}, default=True))
+
     def test_public_summary_capability_rows_not_empty(self) -> None:
         lib = _load_script("codex_live_lib_public_rows", "scripts/codex_live_benchmark_lib.py")
         public = _load_script("public_summary_capability_rows", "scripts/generate-public-benchmark-summary.py")
@@ -4763,6 +4926,54 @@ Residual Risk:
         self.assertTrue(quality["skill_quality_improved"])
         self.assertTrue(quality["hook_quality_increment_positive"])
         self.assertFalse(quality["large_quality_improvement_claim"])
+
+    def test_quality_improvement_uses_capability_evidence_when_pass_rate_is_saturated(self) -> None:
+        generator = _load_script("codex_live_summary_saturated_quality", "scripts/generate-codex-live-summary.py")
+        covered = sorted(generator.CAPABILITY_QUALITY_READY_REQUIRED_IDS)
+        quality = generator._quality_improvement_summary(
+            {
+                "baseline_clean": {"pass_rate": 1.0},
+                "skills_only_clean": {"pass_rate": 1.0},
+                "skills_with_hooks_clean": {"pass_rate": 1.0},
+            },
+            {"compact/context-retention-after-compaction": {}},
+            {"skills_with_hooks_below_skills_only_cases": [], "regressed_cases": []},
+            {
+                "assertion_backed_coverage_count": len(covered),
+                "assertion_backed_covered_capabilities": covered,
+            },
+            {
+                "compact/context-retention-after-compaction": _capability_artifact_evidence_payload()
+            },
+        )
+        self.assertTrue(quality["capability_quality_ready"])
+        self.assertTrue(quality["skill_quality_improved"])
+        self.assertFalse(quality["skill_pass_rate_improved"])
+        self.assertTrue(quality["skill_capability_evidence_improved"])
+        self.assertEqual(quality["baseline_route_process_evidence_rate"], 0.0)
+        self.assertEqual(quality["skills_only_route_process_evidence_rate"], 1.0)
+        self.assertTrue(quality["hook_capability_evidence_non_regressing"])
+
+    def test_saturated_pass_rate_does_not_claim_skill_improvement_without_evidence_delta(self) -> None:
+        generator = _load_script("codex_live_summary_saturated_quality_no_delta", "scripts/generate-codex-live-summary.py")
+        covered = sorted(generator.CAPABILITY_QUALITY_READY_REQUIRED_IDS)
+        evidence = _capability_artifact_evidence_payload(route_process=False)
+        quality = generator._quality_improvement_summary(
+            {
+                "baseline_clean": {"pass_rate": 1.0},
+                "skills_only_clean": {"pass_rate": 1.0},
+                "skills_with_hooks_clean": {"pass_rate": 1.0},
+            },
+            {"compact/context-retention-after-compaction": {}},
+            {"skills_with_hooks_below_skills_only_cases": [], "regressed_cases": []},
+            {
+                "assertion_backed_coverage_count": len(covered),
+                "assertion_backed_covered_capabilities": covered,
+            },
+            {"compact/context-retention-after-compaction": evidence},
+        )
+        self.assertFalse(quality["skill_quality_improved"])
+        self.assertFalse(quality["skill_capability_evidence_improved"])
 
     def test_reliability_no_improvement_visible(self) -> None:
         generator = _load_script("codex_live_summary_reliability_no_improvement", "scripts/generate-codex-live-summary.py")

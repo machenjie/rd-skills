@@ -78,7 +78,7 @@ def validate_logging_decision(
         errors.append(f"{label}: security logs require denial category/reason and policy fields")
     if _is_integration_log(log_types, text) and not _integration_fields_present(fields):
         errors.append(f"{label}: integration logs require dependency, status, duration, and error_category/error_code fields")
-    if _cross_boundary_path(text) and not (fields | {item.casefold() for item in _string_list(decision.get("correlation"))}) & CORRELATION_FIELDS:
+    if _cross_boundary_path(text) and not _has_correlation_field(fields, decision):
         errors.append(f"{label}: cross-service/request/job paths require trace_id, span_id, request_id, or correlation_id")
     if not _string_list(decision.get("tests_or_validation")) and not _string_list(context.get("tests_or_validation")):
         errors.append(f"{label}: needed=true requires tests_or_validation or process TDD logging/security tests")
@@ -90,7 +90,7 @@ def _no_log_errors(label: str, decision: dict[str, Any]) -> list[str]:
     if not rationale:
         return [f"{label}: needed=false requires rationale"]
     text = _decision_text(decision, {})
-    alternatives = ("metric", "trace", "validation", "test", "assertion", "public behavior", "grading")
+    alternatives = ("metric", "trace", "validation", "validated", "check", "test", "assertion", "public behavior", "grading")
     if not any(marker in text for marker in alternatives):
         return [f"{label}: needed=false requires metric, trace, validation, test, or public-behavior alternative"]
     return []
@@ -124,8 +124,14 @@ def _has_final_failure_distinction(decision: dict[str, Any]) -> bool:
 
 
 def _audit_diagnostic_separated(text: str) -> bool:
-    return any(marker in text for marker in ("separate sink", "separate retention", "separated sink", "separated retention")) or (
-        "separate" in text and "retention" in text
+    normalized = text.replace("_", " ").replace("-", " ")
+    return (
+        any(
+            marker in normalized
+            for marker in ("separate sink", "separate retention", "separated sink", "separated retention")
+        )
+        or ("separate" in normalized and "retention" in normalized)
+        or ("audit sink" in normalized and "diagnostic sink" in normalized and "retention" in normalized)
     )
 
 
@@ -138,7 +144,7 @@ def _has_hot_path_control(text: str) -> bool:
 
 
 def _security_fields_present(fields: set[str]) -> bool:
-    has_policy = "policy" in fields
+    has_policy = any(field == "policy" or field.endswith("_policy") for field in fields)
     has_category = bool(fields & {"denial_category", "category", "error_category", "reason"})
     return has_policy and has_category
 
@@ -155,6 +161,16 @@ def _integration_fields_present(fields: set[str]) -> bool:
 
 def _cross_boundary_path(text: str) -> bool:
     return any(marker in text for marker in ("cross-service", "request", "job", "queue", "worker", "retry", "dependency", "webhook"))
+
+
+def _has_correlation_field(fields: set[str], decision: dict[str, Any]) -> bool:
+    if fields & CORRELATION_FIELDS:
+        return True
+    return any(
+        marker in item.casefold()
+        for item in _string_list(decision.get("correlation"))
+        for marker in CORRELATION_FIELDS
+    )
 
 
 def _decision_text(*values: Any) -> str:

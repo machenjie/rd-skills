@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import re
 import sys
 from pathlib import Path
@@ -38,6 +39,7 @@ METRIC_KEYS = ("event_count", "command_execution_count", "file_change_count", "p
 USAGE_KEYS = ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_output_tokens")
 PROCESS_CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
 PROCESS_REVIEW_PHASES = ("review", "repair", "rereview")
+_PROCESS_TRACE_VALIDATOR: Any = None
 PROCESS_FALLBACK_FIELD_SOURCE = "case_metadata_fallback"
 PROCESS_FALLBACK_SOURCE_ALIASES = {PROCESS_FALLBACK_FIELD_SOURCE, "inferred"}
 KNOWN_UNRESOLVED_RELIABILITY_CASES = (
@@ -268,6 +270,7 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         cases_summary,
         summary["case_result_summary"],
         summary["capability_coverage_summary"],
+        capability_artifact_evidence,
     )
     return summary
 
@@ -1070,6 +1073,7 @@ def _quality_improvement_summary(
     cases_summary: dict[str, Any],
     case_result_summary: dict[str, Any],
     capability_coverage_summary: dict[str, Any],
+    capability_artifact_evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     baseline_rate = _summary_variant_rate(variants, "baseline_clean")
     skills_rate = _summary_variant_rate(variants, "skills_only_clean")
@@ -1090,8 +1094,49 @@ def _quality_improvement_summary(
     assertion_backed_coverage_count = int(
         capability_coverage_summary.get("assertion_backed_coverage_count", 0) or 0
     )
+    artifact_evidence = capability_artifact_evidence if isinstance(capability_artifact_evidence, dict) else {}
+    baseline_artifacts = _variant_artifact_totals(artifact_evidence, "baseline_clean")
+    skills_artifacts = _variant_artifact_totals(artifact_evidence, "skills_only_clean")
+    hooks_artifacts = _variant_artifact_totals(artifact_evidence, "skills_with_hooks_clean")
+    baseline_route_rate = _rate(baseline_artifacts["route"], baseline_artifacts["runs"])
+    skills_route_rate = _rate(skills_artifacts["route"], skills_artifacts["runs"])
+    skills_strict_rate = _rate(skills_artifacts["strict"], skills_artifacts["runs"])
+    skills_artifact_rate = _rate(skills_artifacts["artifact"], skills_artifacts["runs"])
+    hooks_route_rate = _rate(hooks_artifacts["route"], hooks_artifacts["runs"])
+    hooks_strict_rate = _rate(hooks_artifacts["strict"], hooks_artifacts["runs"])
+    hooks_hook_rate = _rate(hooks_artifacts["hook"], hooks_artifacts["runs"])
+    pass_rate_saturated = (
+        isinstance(baseline_rate, int | float)
+        and isinstance(skills_rate, int | float)
+        and float(baseline_rate) >= 1.0
+        and float(skills_rate) >= float(baseline_rate)
+    )
+    skill_capability_evidence_improved = bool(
+        pass_rate_saturated
+        and capability_quality_ready
+        and no_quality_regression
+        and isinstance(skills_route_rate, int | float)
+        and isinstance(baseline_route_rate, int | float)
+        and isinstance(skills_strict_rate, int | float)
+        and isinstance(skills_artifact_rate, int | float)
+        and skills_route_rate > baseline_route_rate
+        and skills_strict_rate >= 1.0
+        and skills_artifact_rate >= 1.0
+    )
+    hook_capability_evidence_non_regressing = bool(
+        no_quality_regression
+        and isinstance(hooks_route_rate, int | float)
+        and isinstance(skills_route_rate, int | float)
+        and isinstance(hooks_strict_rate, int | float)
+        and isinstance(skills_strict_rate, int | float)
+        and isinstance(hooks_hook_rate, int | float)
+        and hooks_route_rate >= skills_route_rate
+        and hooks_strict_rate >= skills_strict_rate
+        and hooks_hook_rate >= 1.0
+    )
     baseline_quality_improved = isinstance(hooks_vs_baseline, int | float) and hooks_vs_baseline >= 0.20
-    skill_quality_improved = isinstance(skills_vs_baseline, int | float) and skills_vs_baseline >= 0.15
+    skill_pass_rate_improved = isinstance(skills_vs_baseline, int | float) and skills_vs_baseline >= 0.15
+    skill_quality_improved = bool(skill_pass_rate_improved or skill_capability_evidence_improved)
     hook_quality_increment_positive = isinstance(hooks_vs_skills, int | float) and hooks_vs_skills >= 0.05
     large_quality_improvement_claim = bool(
         baseline_quality_improved
@@ -1109,6 +1154,15 @@ def _quality_improvement_summary(
         "skills_with_hooks_vs_baseline_delta": hooks_vs_baseline,
         "baseline_quality_improved": baseline_quality_improved,
         "skill_quality_improved": skill_quality_improved,
+        "skill_pass_rate_improved": skill_pass_rate_improved,
+        "skill_capability_evidence_improved": skill_capability_evidence_improved,
+        "hook_capability_evidence_non_regressing": hook_capability_evidence_non_regressing,
+        "baseline_route_process_evidence_rate": baseline_route_rate,
+        "skills_only_route_process_evidence_rate": skills_route_rate,
+        "skills_only_strict_process_trace_rate": skills_strict_rate,
+        "skills_with_hooks_route_process_evidence_rate": hooks_route_rate,
+        "skills_with_hooks_strict_process_trace_rate": hooks_strict_rate,
+        "skills_with_hooks_hook_bounded_evidence_rate": hooks_hook_rate,
         "hook_quality_increment_positive": hook_quality_increment_positive,
         "no_quality_regression": no_quality_regression,
         "capability_quality_ready": capability_quality_ready,
@@ -1124,6 +1178,22 @@ def _quality_improvement_summary(
         ),
         "case_count": len(cases_summary),
     }
+
+
+def _variant_artifact_totals(evidence: dict[str, Any], variant: str) -> dict[str, int]:
+    totals = {"runs": 0, "route": 0, "strict": 0, "hook": 0, "artifact": 0}
+    for case_payload in evidence.values():
+        if not isinstance(case_payload, dict):
+            continue
+        payload = case_payload.get(variant)
+        if not isinstance(payload, dict):
+            continue
+        totals["runs"] += int(payload.get("runs", 0) or 0)
+        totals["route"] += int(payload.get("route_process_evidence_count", 0) or 0)
+        totals["strict"] += int(payload.get("strict_process_trace_valid_count", 0) or 0)
+        totals["hook"] += int(payload.get("hook_bounded_evidence_count", 0) or 0)
+        totals["artifact"] += int(payload.get("artifact_backed_run_count", 0) or 0)
+    return totals
 
 
 def _case_variant_rate(variants: dict[str, Any], variant: str) -> Any:
@@ -1255,6 +1325,9 @@ def _capability_artifact_evidence(results: list[dict[str, Any]]) -> dict[str, An
                 "runs": 0,
                 "artifact_backed_run_count": 0,
                 "route_process_evidence_count": 0,
+                "strict_process_trace_valid_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
                 "hook_bounded_evidence_count": 0,
                 "self_report_only_count": 0,
                 "privacy_redaction_status": "pass",
@@ -1283,6 +1356,15 @@ def _capability_artifact_evidence(results: list[dict[str, Any]]) -> dict[str, An
             variant_bucket["artifact_backed_run_count"] += 1
         if run_evidence["route_process_evidence"]:
             variant_bucket["route_process_evidence_count"] += 1
+        if run_evidence["strict_process_trace_valid"]:
+            variant_bucket["strict_process_trace_valid_count"] += 1
+        else:
+            variant_bucket["strict_process_trace_error_count"] += 1
+            examples = variant_bucket["strict_process_trace_error_examples"]
+            for error in run_evidence.get("strict_process_trace_errors", []):
+                if len(examples) >= 5:
+                    break
+                examples.append(str(error)[:240])
         if run_evidence["hook_bounded_evidence"]:
             variant_bucket["hook_bounded_evidence_count"] += 1
         if run_evidence["self_report_only"]:
@@ -1301,6 +1383,7 @@ def _run_artifact_evidence(result: dict[str, Any], result_dir: Path) -> dict[str
     process_trace = read_json(result_dir / "process-trace.json")
     process_trace = process_trace if isinstance(process_trace, dict) else {}
     route_process = _route_process_evidence(process_trace)
+    strict_trace_errors = _strict_process_trace_errors(result_dir, process_trace)
     privacy_status = "fail" if _privacy_findings(result_dir) else "pass"
     candidate_evidence = (result_dir / "candidate-artifacts" / "CAPABILITY_EVIDENCE.md").is_file()
     compact = _compact_run_evidence(result_dir, process_trace)
@@ -1308,6 +1391,8 @@ def _run_artifact_evidence(result: dict[str, Any], result_dir: Path) -> dict[str
         "artifact_backed": not missing,
         "missing_required_artifacts": missing,
         "route_process_evidence": route_process,
+        "strict_process_trace_valid": bool(process_trace and not strict_trace_errors),
+        "strict_process_trace_errors": strict_trace_errors[:5],
         "hook_bounded_evidence": bool(
             result.get("changeforge_hooks_enabled") is True
             and not missing
@@ -1330,6 +1415,37 @@ def _route_process_evidence(process_trace: dict[str, Any]) -> bool:
     route_manifest = process_trace.get("route_manifest_present") is True
     selected = bool(process_trace.get("selected_skills") and process_trace.get("selected_capabilities"))
     return bool((route_manifest or selected) and core_present and explicit_source)
+
+
+def _strict_process_trace_errors(result_dir: Path, process_trace: dict[str, Any]) -> list[str]:
+    if not process_trace:
+        return ["process-trace.json missing or invalid"]
+    validator = _load_process_trace_validator()
+    if validator is None:
+        return ["process trace validator unavailable"]
+    try:
+        run_dir = result_dir.parents[3]
+    except IndexError:
+        run_dir = result_dir
+    trace_path = result_dir / "process-trace.json"
+    return [
+        str(error)
+        for error in validator._trace_errors(trace_path, run_dir, process_trace, require_present=True)
+    ]
+
+
+def _load_process_trace_validator() -> Any:
+    global _PROCESS_TRACE_VALIDATOR
+    if _PROCESS_TRACE_VALIDATOR is not None:
+        return _PROCESS_TRACE_VALIDATOR
+    path = ROOT / "scripts" / "validate-process-traces.py"
+    spec = importlib.util.spec_from_file_location("changeforge_process_trace_validator", path)
+    if spec is None or spec.loader is None:
+        return None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    _PROCESS_TRACE_VALIDATOR = module
+    return module
 
 
 def _privacy_findings(result_dir: Path) -> list[str]:
@@ -1375,8 +1491,9 @@ def _compact_run_evidence(result_dir: Path, process_trace: dict[str, Any]) -> di
         "pass"
         if candidate_context
         and not candidate_missing
-        and str(candidate_context.get("context_retention_status") or "pass") == "pass"
-        and str(candidate_context.get("privacy_redaction_status") or "pass") == "pass"
+        and _compact_status_allows_pass(candidate_context.get("context_retention_status"), default=True)
+        and _compact_status_allows_pass(candidate_context.get("privacy_redaction_status"), default=True)
+        and _compact_status_allows_pass(candidate_context.get("context_usable_status"), default=True)
         else ("fail" if candidate_context else "not_collected")
     )
     if isinstance(context.get("missing_required_context_fields"), list):
@@ -1524,6 +1641,25 @@ def _compact_context_summary(evidence: dict[str, Any]) -> dict[str, Any]:
             if value in {"fail", "partial", "not_collected"}:
                 combined[field] = value
     return combined
+
+
+def _compact_status_allows_pass(value: Any, *, default: bool = False) -> bool:
+    if value is None or value == "":
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, dict):
+        for key in ("status", "result", "value"):
+            if key in value:
+                return _compact_status_allows_pass(value.get(key), default=default)
+        text = json.dumps(value, sort_keys=True)
+    else:
+        text = str(value)
+    normalized = text.strip().casefold()
+    if not normalized:
+        return default
+    failure_markers = ("fail", "partial", "not_collected", "not collected", "missing", "stale", "unusable", "leak")
+    return not any(marker in normalized for marker in failure_markers)
 
 
 def _coverage_summary(

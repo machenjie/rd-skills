@@ -109,12 +109,35 @@ class LoggingDesignValidatorTests(unittest.TestCase):
         )
         self.assertTrue(any("cross-service/request/job paths" in error for error in errors))
 
+    def test_cross_boundary_correlation_phrase_passes(self) -> None:
+        self.assertEqual(
+            self.errors(
+                _valid_decision(
+                    fields=["operation", "error_category"],
+                    correlation=["correlation_id is required and bounded to safe characters"],
+                    rationale="Request boundary logging uses correlation for diagnosis.",
+                )
+            ),
+            [],
+        )
+
     def test_no_log_rationale_with_metric_or_trace_alternative_passes(self) -> None:
         self.assertEqual(
             self.errors(
                 {
                     "needed": False,
                     "rationale": "No product log is needed because metrics, traces, and public behavior tests cover the path.",
+                }
+            ),
+            [],
+        )
+
+    def test_no_log_rationale_with_validated_checks_passes(self) -> None:
+        self.assertEqual(
+            self.errors(
+                {
+                    "needed": False,
+                    "rationale": "Runtime logging is not required because behavior is validated by JSON parsing and evidence checks.",
                 }
             ),
             [],
@@ -158,6 +181,37 @@ class LoggingDesignValidatorTests(unittest.TestCase):
                     levels=["WARN"],
                     fields=["operation", "result", "error_category", "trace_id"],
                     rationale="Audit and diagnostic records use separate sink and separate retention.",
+                )
+            ),
+            [],
+        )
+
+    def test_audit_and_diagnostic_structured_sink_retention_fields_pass(self) -> None:
+        self.assertEqual(
+            self.errors(
+                _valid_decision(
+                    log_types=["audit", "diagnostic"],
+                    events=["sensitive_request_denied", "terminal_failure"],
+                    levels=["WARN"],
+                    fields=["operation", "result", "error_category", "trace_id"],
+                    audit_sink_retention_rationale="Audit logs use audit-sink and audit-365-days.",
+                    diagnostic_sink_retention_rationale="Diagnostic logs use diagnostic-sink and diagnostic-30-days.",
+                )
+            ),
+            [],
+        )
+
+    def test_security_policy_field_alias_passes(self) -> None:
+        self.assertEqual(
+            self.errors(
+                _valid_decision(
+                    log_types=["security"],
+                    placement=["security boundary"],
+                    events=["access_denied"],
+                    levels=["WARN"],
+                    fields=["operation", "security_policy", "denial_category", "trace_id"],
+                    redaction=["authorization header", "cookie", "token"],
+                    rationale="Policy denial is diagnosable without raw credentials.",
                 )
             ),
             [],

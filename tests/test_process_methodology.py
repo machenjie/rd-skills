@@ -16,6 +16,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 PROCESS_SKILL = ROOT / "src" / "professional-skills" / "development-process-orchestrator" / "SKILL.md"
+LOGGING_SKILL = ROOT / "src" / "professional-skills" / "logging-design-gate" / "SKILL.md"
 COMMAND = "python3 scripts/run-codegen-benchmarks.py --benchmark security/ssrf-url-allowlist --candidate-dir <candidate>"
 CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
 
@@ -97,11 +98,16 @@ def test_stage_ownership_and_prompts_include_professional_process_method() -> No
     wrapper = _text(ROOT / "evals" / "codex-live" / "prompts" / "task-wrapper.md")
     system = _text(ROOT / "evals" / "codex-live" / "prompts" / "changeforge-system.md")
     for phrase in (
-        "Process Trace:",
-        "PDD: problem + acceptance + constraints",
-        "DDD: domain ownership + invariants + side-effect boundary",
-        "SDD: modules + public API + error/logging decision",
-        "TDD: tests/validation mapping",
+        '"process_trace"',
+        '"acceptance_criteria"',
+        '"ownership_decision"',
+        '"logging_decision"',
+        '"validation_commands"',
+        "placeholders such as",
+        "strict traceability is required",
+        "`log_types`, `placement`, `events`, `levels`",
+        "`tdd.logging_or_security_tests`",
+        "separate sink and retention rationale",
     ):
         assert phrase in wrapper
     for phrase in (
@@ -111,6 +117,26 @@ def test_stage_ownership_and_prompts_include_professional_process_method() -> No
         "Test-Driven Development Discipline",
     ):
         assert phrase in system
+
+
+def test_process_and_logging_skills_match_strict_logging_trace_contract() -> None:
+    process_text = _text(PROCESS_SKILL)
+    logging_text = _text(LOGGING_SKILL)
+    for phrase in (
+        '"placement": []',
+        '"events": []',
+        '"correlation": []',
+        '"tests_or_validation": []',
+        "`log_types`, `placement`, `events`, `levels`, `fields`",
+        "separate sink and",
+    ):
+        assert phrase in process_text
+    for phrase in (
+        "without log type, placement, event, level, fields, or redaction",
+        "placement, events, level, fields, redaction",
+        "separate audit from diagnostic logs",
+    ):
+        assert phrase in logging_text
 
 
 def _valid_trace(*, logging_needed: bool = True) -> dict[str, Any]:
@@ -357,6 +383,7 @@ TDD:
     }
     assert trace["process_facts"]["tdd"]["acceptance_to_tests"] == {"deny metadata URL": ["benchmark command"]}
     assert trace["process_facts"]["tdd"]["validation_commands"] == [COMMAND]
+    assert trace["traceability"]["sdd_failure_modes_to_tdd_tests"] is True
     assert all(trace["process_facts"][phase]["_field_sources"] for phase in CORE_PHASES)
     assert all(trace["phase_status"][phase] != "inferred" for phase in CORE_PHASES)
     assert _run_trace_errors(trace) == []
@@ -462,6 +489,43 @@ TDD:
     assert "case_metadata_fallback:missing-fields" in trace["evidence_sources"]
     errors = _run_trace_errors(trace, require_present=True)
     assert any("--require-present requires phase pdd to be present" in error for error in errors)
+
+
+def test_candidate_process_trace_artifact_overrides_partial_final_trace() -> None:
+    runner = _load_script("run_codex_live_candidate_artifact_trace_unit", "scripts/run-codex-live-benchmarks.py")
+    case = _trace_case()
+    with tempfile.TemporaryDirectory() as tmp:
+        out_dir = Path(tmp) / "run"
+        run_dir = out_dir / "cases" / "security__ssrf-url-allowlist" / "skills_only_clean" / "run-01"
+        run_dir.mkdir(parents=True)
+        run_dir.joinpath("final.md").write_text(
+            """Process Trace:
+PDD:
+  problem: Block SSRF metadata URLs
+""",
+            encoding="utf-8",
+        )
+        artifact_dir = run_dir / "candidate-artifacts"
+        artifact_dir.mkdir()
+        artifact_dir.joinpath("process-trace.json").write_text(
+            json.dumps({"process_trace": _valid_trace()["process_facts"]}),
+            encoding="utf-8",
+        )
+        trace = runner._process_trace_payload(
+            out_dir,
+            run_dir,
+            case=case,
+            variant="skills_only_clean",
+            run_index=1,
+            result={"status": "collected", "grading_status": "passed"},
+        )
+    assert all(trace["phase_status"][phase] == "present" for phase in CORE_PHASES)
+    assert "candidate-artifacts/process-trace.json:process-trace-json" in trace["evidence_sources"]
+    assert "case_metadata_fallback:missing-fields" not in trace["evidence_sources"]
+    assert (
+        trace["process_facts"]["pdd"]["_field_sources"]["acceptance_criteria"]
+        == "candidate-artifacts/process-trace.json:process-trace-json"
+    )
 
 
 def test_no_final_or_hook_trace_becomes_inferred() -> None:
@@ -581,6 +645,48 @@ def test_sdd_logging_needed_without_redaction_or_tests_fails() -> None:
     assert any("logging_or_security_tests" in error for error in errors)
 
 
+def test_process_trace_context_can_back_audit_diagnostic_separation() -> None:
+    trace = _valid_trace()
+    separation = "Audit logs and diagnostic logs have separate sinks and separate retention rationale."
+    trace["process_facts"]["ddd"]["invariants"].append(separation)
+    trace["process_facts"]["tdd"]["invariant_to_tests_or_code"][separation] = [
+        "python3 tests/test_logging.py::test_audit_diagnostic_separation"
+    ]
+    trace["process_facts"]["sdd"]["logging_decision"] = {
+        "needed": True,
+        "log_types": ["audit", "diagnostic"],
+        "placement": ["audit sink boundary", "diagnostic failure boundary"],
+        "events": ["security_audit_decision", "terminal_diagnostic_failure"],
+        "levels": ["INFO", "ERROR"],
+        "fields": ["operation", "result", "error_category", "trace_id"],
+        "redaction": ["raw request body", "token"],
+        "correlation": ["trace_id"],
+        "cardinality_controls": ["route_template"],
+        "tests_or_validation": ["python3 tests/test_logging.py::test_audit_diagnostic_separation"],
+        "rationale": "Audit and diagnostic events are both required for this case.",
+    }
+    trace["process_facts"]["tdd"]["logging_or_security_tests"] = [
+        "python3 tests/test_logging.py::test_audit_diagnostic_separation"
+    ]
+    assert _run_trace_errors(trace) == []
+
+
+def test_forbidden_text_scan_allows_safety_terms_but_rejects_real_leaks() -> None:
+    trace = _valid_trace()
+    trace["process_facts"]["ddd"]["ownership_decision"].append(
+        "compaction_workflow.py owns task-state counting and tests reject /Users/ and /home/ path fragments"
+    )
+    assert _run_trace_errors(trace) == []
+
+    trace["process_facts"]["ddd"]["ownership_decision"].append("/Users/example/private/auth.json")
+    trace["process_facts"]["sdd"]["failure_modes"].append("secret token sk-Abcdef12345 leaked")
+    trace["process_facts"]["tdd"]["failure_mode_tests"].append(
+        "secret token sk-Abcdef12345 leaked -> python3 tests/test_privacy.py"
+    )
+    errors = _run_trace_errors(trace)
+    assert any("forbidden pattern" in error for error in errors)
+
+
 def test_no_log_rationale_allows_logging_decision_false() -> None:
     trace = _valid_trace(logging_needed=False)
     assert _run_trace_errors(trace) == []
@@ -655,6 +761,9 @@ class ProcessMethodologyTests(unittest.TestCase):
 
     def test_partial_final_trace_with_fallback_required_fields_becomes_degraded(self) -> None:
         test_partial_final_trace_with_fallback_required_fields_becomes_degraded()
+
+    def test_candidate_process_trace_artifact_overrides_partial_final_trace(self) -> None:
+        test_candidate_process_trace_artifact_overrides_partial_final_trace()
 
     def test_no_final_or_hook_trace_becomes_inferred(self) -> None:
         test_no_final_or_hook_trace_becomes_inferred()

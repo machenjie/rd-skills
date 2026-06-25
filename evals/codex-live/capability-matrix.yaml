@@ -234,13 +234,15 @@ core_capabilities:
   - id: professional_logging_decision
     title: Professional Logging Decision
     description: Verify logging design gate and security/privacy gate when raw requests, query strings, tokens, cookies, auth headers, audit logs, or security logs are in scope.
-    expected_runtime_signal: logging-design-gate plus security-privacy-gate with log type, level, fields, redaction, correlation, cardinality, no-log rationale, and tests.
+    expected_runtime_signal: logging-design-gate plus security-privacy-gate with log type, event, level, fields, redaction, correlation, cardinality, no-log rationale, audit/diagnostic sink and retention separation, security policy/category fields, and tests.
     linked_live_cases:
       - logging/redacted-structured-log-design
     linked_assertions:
       - logging_design_gate_selected
       - security_privacy_gate_selected
       - log_type_level_fields_redaction_correlation_cardinality_present
+      - audit_diagnostic_sink_retention_separated
+      - security_policy_category_fields_present
       - no_log_rationale_present_when_applicable
       - secret_pii_token_cookie_auth_header_absent
       - redaction_or_no_log_tests_present

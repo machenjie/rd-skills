@@ -150,11 +150,14 @@ Output schema:
   "logging_decision": {
     "needed": true,
     "log_types": [],
+    "placement": [],
     "events": [],
     "levels": [],
     "fields": [],
     "redaction": [],
+    "correlation": [],
     "cardinality_controls": [],
+    "tests_or_validation": [],
     "rationale": ""
   },
   "metrics_traces_alerts": [],
@@ -167,7 +170,8 @@ Output schema:
 SDD logging decision rules:
 - Retry, fallback, and degradation paths must distinguish retryable, intermediate, and final failure.
 - Security boundaries log denial category and policy, never raw secret-bearing input.
-- Audit action logs are separate from diagnostic logs.
+- When logging is needed, `log_types`, `placement`, `events`, `levels`, `fields`, `redaction`, `cardinality_controls`, and tests or validation evidence are mandatory.
+- Audit action logs are separate from diagnostic logs, with separate sink and retention rationale when both log types are present.
 - High-frequency paths prefer metrics, sampling, or rate limiting over per-event INFO.
 - Production error logs include error_code or error_category plus correlation identifiers.
 - Raw payload, query, body, token, password, cookie, authorization header, signature, code, and session identifiers are forbidden.

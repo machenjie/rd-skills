@@ -26,6 +26,8 @@ route_hints:
 expected_outcomes:
   - Sensitive values are redacted or excluded.
   - Correlation and cardinality choices are explicit.
+  - Audit and diagnostic logs have separate sink and retention rationale.
+  - Security logs include policy and denial category, reason, or error category fields.
   - Security and logging gates are both named.
   - Tests cover redaction or no-log behavior.
 required_qualities:
