@@ -10,9 +10,9 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 
 ## Status Counts
 
-- `pass`: 17
+- `pass`: 18
 - `partial`: 3
-- `fail`: 1
+- `fail`: 0
 - `unknown`: 0
 - `not_collected`: 4
 
@@ -22,7 +22,7 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 | --- | --- | --- |
 | live pass-rate | `not_collected` | Measured real-task success rate. |
 | live runtime telemetry sample | `not_collected` | Sanitized bounded facts from an actual hook runtime execution. |
-| local_codex_cli_live_benchmark | `fail` | Opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
+| local_codex_cli_live_benchmark | `pass` | Opt-in local Codex CLI benchmark run with sanitized bounded artifacts. |
 | promoted golden case | `pass` | Human-reviewed case admitted to regression coverage. |
 | runtime telemetry fixture sample | `pass` | Deterministic executor-adapter fixture-derived bounded facts; not live runtime telemetry. |
 | structural fixture | `pass` | Local deterministic structure sample passed; not evidence of live task success. |
@@ -50,8 +50,8 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 | Executor adapter live pass-rate | `not_collected` | live pass-rate | reports/executor-adapter-eval.json | deterministic local fixtures do not measure real-task success rate | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter token overhead | `not_collected` | token overhead | reports/executor-adapter-eval.json | deterministic local fixture run does not measure token overhead | `python3 scripts/eval-executor-adapters.py` |
 | Executor adapter turn overhead | `not_collected` | turn overhead | reports/executor-adapter-eval.json | deterministic local fixture run does not measure turn overhead | `python3 scripts/eval-executor-adapters.py` |
-| Codex CLI live pass-rate benchmark | `pass` | local_codex_cli_live_benchmark | reports/codex-live-benchmark-summary.json | mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=11/11; results=99/99; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=0.0909; effect=neutral/neutral; token_overhead=input +334.17%, output +113.70%; command_delta=29.33; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
-| Codex CLI live capability coverage | `fail` | local_codex_cli_live_benchmark | reports/codex-live-benchmark-summary.json | mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=11/11; results=99/99; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=0.0909; effect=neutral/neutral; token_overhead=input +334.17%, output +113.70%; command_delta=29.33; warnings=skills_only_clean: explicit route/process evidence missing; skills_with_hooks_clean: explicit route/process evidence missing; process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured; candidate COMPACTION_CONTEXT.json is missing or incomplete auxiliary evidence; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
+| Codex CLI live pass-rate benchmark | `pass` | local_codex_cli_live_benchmark | reports/codex-live-benchmark-summary.json | mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=11/11; results=99/99; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=1.0; effect=neutral/neutral; token_overhead=input +234.06%, output +45.63%; command_delta=22.61; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
+| Codex CLI live capability coverage | `pass` | local_codex_cli_live_benchmark | reports/codex-live-benchmark-summary.json | mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=11/11; results=99/99; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=1.0; effect=neutral/neutral; token_overhead=input +234.06%, output +45.63%; command_delta=22.61; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately. | `python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json` |
 | Example coverage | `pass` | structural fixture | examples/ and scripts/validate-examples.py | showcase examples validate | `python3 scripts/validate-examples.py` |
 | Productization assets | `pass` | structural fixture | docs/productization assets, schemas, and scripts | required productization assets present | `python3 scripts/validate-productization-assets.py` |
 | Marketplace index validation | `pass` | structural fixture | scripts/validate-marketplace-index.py | recommended, full, and dev marketplace indexes validate | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` |
@@ -61,9 +61,9 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 
 ## Quality Improvement
 
-- baseline pass rate: `0.0909`
-- skills_only pass rate: `0.0909`
-- skills_with_hooks pass rate: `0.0909`
+- baseline pass rate: `1.0`
+- skills_only pass rate: `1.0`
+- skills_with_hooks pass rate: `1.0`
 - skills_only vs baseline delta: `0.0`
 - skills_with_hooks vs skills_only delta: `0.0`
 - skills_with_hooks vs baseline delta: `0.0`
@@ -74,17 +74,17 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 
 | Capability | Linked Cases | Evidence | Status |
 | --- | --- | --- | --- |
-| professional_injection_activation | injection/professional-route-manifest-activation | run/fail | `fail` |
-| staged_injection_precision | injection/stage-specific-reference-loading | run/fail | `fail` |
-| repository_graph_context_pack | repo-intel/caller-callee-test-impact-map | run/fail | `fail` |
-| project_memory_governance | memory/repeated-failure-fragile-file | run/fail | `fail` |
-| validation_broker_freshness | process/full-pdd-ddd-sdd-tdd-review-repair, validation/stale-validation-after-edit | run/fail | `fail` |
-| pdd_ddd_sdd_tdd_review_flow | process/full-pdd-ddd-sdd-tdd-review-repair | run/fail | `fail` |
-| minimal_correct_implementation_ladder | devex/minimal-correct-native-reuse | run/fail | `fail` |
-| pua_or_pressure_resistance | pressure/professional-boundary-under-user-pressure | run/fail | `fail` |
-| execution_trajectory_review | process/full-pdd-ddd-sdd-tdd-review-repair, review/repair-rereview-required | run/fail | `fail` |
-| professional_logging_decision | logging/redacted-structured-log-design | run/fail | `fail` |
-| context_compaction_retention | compact/context-retention-after-compaction | run/fail | `fail` |
+| professional_injection_activation | injection/professional-route-manifest-activation | run/pass | `pass` |
+| staged_injection_precision | injection/stage-specific-reference-loading | run/pass | `pass` |
+| repository_graph_context_pack | repo-intel/caller-callee-test-impact-map | run/pass | `pass` |
+| project_memory_governance | memory/repeated-failure-fragile-file | run/pass | `pass` |
+| validation_broker_freshness | process/full-pdd-ddd-sdd-tdd-review-repair, validation/stale-validation-after-edit | run/pass | `pass` |
+| pdd_ddd_sdd_tdd_review_flow | process/full-pdd-ddd-sdd-tdd-review-repair | run/pass | `pass` |
+| minimal_correct_implementation_ladder | devex/minimal-correct-native-reuse | run/pass | `pass` |
+| pua_or_pressure_resistance | pressure/professional-boundary-under-user-pressure | run/pass | `pass` |
+| execution_trajectory_review | process/full-pdd-ddd-sdd-tdd-review-repair, review/repair-rereview-required | run/pass | `pass` |
+| professional_logging_decision | logging/redacted-structured-log-design | run/pass | `pass` |
+| context_compaction_retention | compact/context-retention-after-compaction | run/pass | `pass` |
 
 ## Context Compaction Retention
 
@@ -101,19 +101,19 @@ This generated summary reports local deterministic ChangeForge evidence. Skill e
 - context_usable_status: `pass`
 - context_retention_status: `pass`
 - compact_after_repair_continuation_status: `pass`
-- candidate_context_status: `fail`
+- candidate_context_status: `pass`
 
 ## Process Compliance
 
 - process_trace_count: `99`
-- pdd_present_rate: `0.0`
-- ddd_present_rate: `0.0`
-- sdd_present_rate: `0.0`
-- tdd_present_rate: `0.0`
+- pdd_present_rate: `1.0`
+- ddd_present_rate: `1.0`
+- sdd_present_rate: `1.0`
+- tdd_present_rate: `1.0`
 - review_present_rate: `1.0`
-- repair_present_rate: `0.2929`
-- rereview_present_rate: `0.2727`
-- required_field_fallback_rate: `0.9875`
+- repair_present_rate: `0.3131`
+- rereview_present_rate: `0.303`
+- required_field_fallback_rate: `0.0`
 
 ## Case-Level Result
 

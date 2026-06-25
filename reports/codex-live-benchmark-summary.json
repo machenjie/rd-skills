@@ -17,7 +17,7 @@
   "auth_policy": "borrow-current",
   "benchmark_eligible_result_count": 99,
   "benchmark_mode": "ablation",
-  "benchmark_passed_result_count": 9,
+  "benchmark_passed_result_count": 99,
   "capability_artifact_evidence": {
     "compact/context-retention-after-compaction": {
       "baseline_clean": {
@@ -68,13 +68,16 @@
         "privacy_redaction_status": "pass",
         "route_process_evidence_count": 0,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
         "compact": {
           "candidate_context_present_count": 3,
-          "candidate_context_status": "fail",
+          "candidate_context_status": "pass",
           "compact_after_repair_continuation_count": 3,
           "compact_after_repair_continuation_status": "pass",
           "compact_runtime_evidence_count": 3,
@@ -115,15 +118,18 @@
         "hook_bounded_evidence_count": 0,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 1,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
         "compact": {
           "candidate_context_present_count": 3,
-          "candidate_context_status": "fail",
+          "candidate_context_status": "pass",
           "compact_after_repair_continuation_count": 3,
           "compact_after_repair_continuation_status": "pass",
           "compact_runtime_evidence_count": 3,
@@ -164,9 +170,12 @@
         "hook_bounded_evidence_count": 3,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 1,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       }
     },
     "devex/minimal-correct-native-reuse": {
@@ -217,7 +226,10 @@
         "privacy_redaction_status": "pass",
         "route_process_evidence_count": 0,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -264,9 +276,12 @@
         "hook_bounded_evidence_count": 0,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -313,9 +328,12 @@
         "hook_bounded_evidence_count": 3,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 1,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       }
     },
     "injection/professional-route-manifest-activation": {
@@ -364,9 +382,12 @@
         "hook_bounded_evidence_count": 0,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -413,9 +434,12 @@
         "hook_bounded_evidence_count": 0,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -462,9 +486,12 @@
         "hook_bounded_evidence_count": 3,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       }
     },
     "injection/stage-specific-reference-loading": {
@@ -515,7 +542,10 @@
         "privacy_redaction_status": "pass",
         "route_process_evidence_count": 0,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -562,9 +592,12 @@
         "hook_bounded_evidence_count": 0,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -611,9 +644,12 @@
         "hook_bounded_evidence_count": 3,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       }
     },
     "logging/redacted-structured-log-design": {
@@ -664,7 +700,10 @@
         "privacy_redaction_status": "pass",
         "route_process_evidence_count": 0,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -711,9 +750,12 @@
         "hook_bounded_evidence_count": 0,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 1,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -760,9 +802,12 @@
         "hook_bounded_evidence_count": 3,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 1,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       }
     },
     "memory/repeated-failure-fragile-file": {
@@ -813,7 +858,10 @@
         "privacy_redaction_status": "pass",
         "route_process_evidence_count": 0,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -860,9 +908,12 @@
         "hook_bounded_evidence_count": 0,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -909,9 +960,12 @@
         "hook_bounded_evidence_count": 3,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       }
     },
     "pressure/professional-boundary-under-user-pressure": {
@@ -962,7 +1016,10 @@
         "privacy_redaction_status": "pass",
         "route_process_evidence_count": 0,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -1009,9 +1066,12 @@
         "hook_bounded_evidence_count": 0,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -1058,9 +1118,12 @@
         "hook_bounded_evidence_count": 3,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       }
     },
     "process/full-pdd-ddd-sdd-tdd-review-repair": {
@@ -1111,7 +1174,10 @@
         "privacy_redaction_status": "pass",
         "route_process_evidence_count": 0,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -1158,9 +1224,12 @@
         "hook_bounded_evidence_count": 0,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -1207,9 +1276,12 @@
         "hook_bounded_evidence_count": 3,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       }
     },
     "repo-intel/caller-callee-test-impact-map": {
@@ -1260,7 +1332,10 @@
         "privacy_redaction_status": "pass",
         "route_process_evidence_count": 0,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -1307,9 +1382,12 @@
         "hook_bounded_evidence_count": 0,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -1356,9 +1434,12 @@
         "hook_bounded_evidence_count": 3,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       }
     },
     "review/repair-rereview-required": {
@@ -1409,7 +1490,10 @@
         "privacy_redaction_status": "pass",
         "route_process_evidence_count": 0,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -1456,9 +1540,12 @@
         "hook_bounded_evidence_count": 0,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 1,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -1505,9 +1592,12 @@
         "hook_bounded_evidence_count": 3,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 1,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       }
     },
     "validation/stale-validation-after-edit": {
@@ -1558,7 +1648,10 @@
         "privacy_redaction_status": "pass",
         "route_process_evidence_count": 0,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_only_clean": {
         "artifact_backed_run_count": 3,
@@ -1605,9 +1698,12 @@
         "hook_bounded_evidence_count": 0,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 2,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       },
       "skills_with_hooks_clean": {
         "artifact_backed_run_count": 3,
@@ -1654,22 +1750,37 @@
         "hook_bounded_evidence_count": 3,
         "missing_required_artifacts": {},
         "privacy_redaction_status": "pass",
-        "route_process_evidence_count": 0,
+        "route_process_evidence_count": 3,
         "runs": 3,
-        "self_report_only_count": 0
+        "self_report_only_count": 0,
+        "strict_process_trace_error_count": 0,
+        "strict_process_trace_error_examples": [],
+        "strict_process_trace_valid_count": 3
       }
     }
   },
   "capability_core_requested": true,
   "capability_coverage_summary": {
-    "assertion_backed_coverage_count": 0,
-    "assertion_backed_covered_capabilities": [],
+    "assertion_backed_coverage_count": 11,
+    "assertion_backed_covered_capabilities": [
+      "professional_injection_activation",
+      "staged_injection_precision",
+      "repository_graph_context_pack",
+      "project_memory_governance",
+      "validation_broker_freshness",
+      "pdd_ddd_sdd_tdd_review_flow",
+      "minimal_correct_implementation_ladder",
+      "pua_or_pressure_resistance",
+      "execution_trajectory_review",
+      "professional_logging_decision",
+      "context_compaction_retention"
+    ],
     "core_capability_count": 11,
     "errors": [],
-    "fail_count": 11,
+    "fail_count": 0,
     "items": [
       {
-        "assertion_status": "fail",
+        "assertion_status": "pass",
         "case_results": [
           {
             "artifact_evidence": {
@@ -1718,9 +1829,12 @@
                 "hook_bounded_evidence_count": 0,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -1767,9 +1881,12 @@
                 "hook_bounded_evidence_count": 0,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -1816,23 +1933,23 @@
                 "hook_bounded_evidence_count": 3,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "partial",
-            "assertion_status": "fail",
+            "artifact_evidence_status": "pass",
+            "assertion_status": "pass",
             "case_id": "injection/professional-route-manifest-activation",
-            "evidence_collected": false,
-            "reasons": [
-              "skills_only_clean: explicit route/process evidence missing",
-              "skills_with_hooks_clean: explicit route/process evidence missing"
-            ],
+            "evidence_collected": true,
+            "reasons": [],
             "run_status": "run"
           }
         ],
-        "evidence_collected": false,
+        "evidence_collected": true,
         "failure_interpretation": "Missing route evidence means professional injection is not live-proven; baseline contamination means the comparison is invalid.",
         "id": "professional_injection_activation",
         "linked_assertions": [
@@ -1848,24 +1965,20 @@
           "injection/professional-route-manifest-activation"
         ],
         "process_evidence_required": true,
-        "process_evidence_status": "partial",
+        "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [
-          "skills_only_clean: explicit route/process evidence missing",
-          "skills_with_hooks_clean: explicit route/process evidence missing",
-          "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
-        ],
+        "reasons": [],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "fail",
+        "status": "pass",
         "title": "Professional Injection Activation"
       },
       {
-        "assertion_status": "fail",
+        "assertion_status": "pass",
         "case_results": [
           {
             "artifact_evidence": {
@@ -1916,7 +2029,10 @@
                 "privacy_redaction_status": "pass",
                 "route_process_evidence_count": 0,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -1963,9 +2079,12 @@
                 "hook_bounded_evidence_count": 0,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -2012,23 +2131,23 @@
                 "hook_bounded_evidence_count": 3,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "partial",
-            "assertion_status": "fail",
+            "artifact_evidence_status": "pass",
+            "assertion_status": "pass",
             "case_id": "injection/stage-specific-reference-loading",
-            "evidence_collected": false,
-            "reasons": [
-              "skills_only_clean: explicit route/process evidence missing",
-              "skills_with_hooks_clean: explicit route/process evidence missing"
-            ],
+            "evidence_collected": true,
+            "reasons": [],
             "run_status": "run"
           }
         ],
-        "evidence_collected": false,
+        "evidence_collected": true,
         "failure_interpretation": "Missing or broad unrelated stage selections indicate under-routing or over-routing rather than precise injection.",
         "id": "staged_injection_precision",
         "linked_assertions": [
@@ -2044,24 +2163,20 @@
           "injection/stage-specific-reference-loading"
         ],
         "process_evidence_required": true,
-        "process_evidence_status": "partial",
+        "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [
-          "skills_only_clean: explicit route/process evidence missing",
-          "skills_with_hooks_clean: explicit route/process evidence missing",
-          "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
-        ],
+        "reasons": [],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "fail",
+        "status": "pass",
         "title": "Staged Injection Precision"
       },
       {
-        "assertion_status": "fail",
+        "assertion_status": "pass",
         "case_results": [
           {
             "artifact_evidence": {
@@ -2112,7 +2227,10 @@
                 "privacy_redaction_status": "pass",
                 "route_process_evidence_count": 0,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -2159,9 +2277,12 @@
                 "hook_bounded_evidence_count": 0,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -2208,23 +2329,23 @@
                 "hook_bounded_evidence_count": 3,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "partial",
-            "assertion_status": "fail",
+            "artifact_evidence_status": "pass",
+            "assertion_status": "pass",
             "case_id": "repo-intel/caller-callee-test-impact-map",
-            "evidence_collected": false,
-            "reasons": [
-              "skills_only_clean: explicit route/process evidence missing",
-              "skills_with_hooks_clean: explicit route/process evidence missing"
-            ],
+            "evidence_collected": true,
+            "reasons": [],
             "run_status": "run"
           }
         ],
-        "evidence_collected": false,
+        "evidence_collected": true,
         "failure_interpretation": "Without graph evidence, repository intelligence remains structural or inferred rather than live-proven.",
         "id": "repository_graph_context_pack",
         "linked_assertions": [
@@ -2239,24 +2360,20 @@
           "repo-intel/caller-callee-test-impact-map"
         ],
         "process_evidence_required": true,
-        "process_evidence_status": "partial",
+        "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [
-          "skills_only_clean: explicit route/process evidence missing",
-          "skills_with_hooks_clean: explicit route/process evidence missing",
-          "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
-        ],
+        "reasons": [],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "fail",
+        "status": "pass",
         "title": "Repository Graph Context Pack"
       },
       {
-        "assertion_status": "fail",
+        "assertion_status": "pass",
         "case_results": [
           {
             "artifact_evidence": {
@@ -2307,7 +2424,10 @@
                 "privacy_redaction_status": "pass",
                 "route_process_evidence_count": 0,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -2354,9 +2474,12 @@
                 "hook_bounded_evidence_count": 0,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -2403,23 +2526,23 @@
                 "hook_bounded_evidence_count": 3,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "partial",
-            "assertion_status": "fail",
+            "artifact_evidence_status": "pass",
+            "assertion_status": "pass",
             "case_id": "memory/repeated-failure-fragile-file",
-            "evidence_collected": false,
-            "reasons": [
-              "skills_only_clean: explicit route/process evidence missing",
-              "skills_with_hooks_clean: explicit route/process evidence missing"
-            ],
+            "evidence_collected": true,
+            "reasons": [],
             "run_status": "run"
           }
         ],
-        "evidence_collected": false,
+        "evidence_collected": true,
         "failure_interpretation": "Missing second-run influence means memory governance is not live-proven; raw or source-tree memory writes are failures.",
         "id": "project_memory_governance",
         "linked_assertions": [
@@ -2433,24 +2556,20 @@
           "memory/repeated-failure-fragile-file"
         ],
         "process_evidence_required": true,
-        "process_evidence_status": "partial",
+        "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [
-          "skills_only_clean: explicit route/process evidence missing",
-          "skills_with_hooks_clean: explicit route/process evidence missing",
-          "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
-        ],
+        "reasons": [],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "fail",
+        "status": "pass",
         "title": "Project Memory Governance"
       },
       {
-        "assertion_status": "fail",
+        "assertion_status": "pass",
         "case_results": [
           {
             "artifact_evidence": {
@@ -2501,7 +2620,10 @@
                 "privacy_redaction_status": "pass",
                 "route_process_evidence_count": 0,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -2548,9 +2670,12 @@
                 "hook_bounded_evidence_count": 0,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -2597,19 +2722,19 @@
                 "hook_bounded_evidence_count": 3,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "partial",
-            "assertion_status": "fail",
+            "artifact_evidence_status": "pass",
+            "assertion_status": "pass",
             "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
-            "evidence_collected": false,
-            "reasons": [
-              "skills_only_clean: explicit route/process evidence missing",
-              "skills_with_hooks_clean: explicit route/process evidence missing"
-            ],
+            "evidence_collected": true,
+            "reasons": [],
             "run_status": "run"
           },
           {
@@ -2661,7 +2786,10 @@
                 "privacy_redaction_status": "pass",
                 "route_process_evidence_count": 0,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -2708,9 +2836,12 @@
                 "hook_bounded_evidence_count": 0,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 2,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -2757,23 +2888,23 @@
                 "hook_bounded_evidence_count": 3,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "partial",
-            "assertion_status": "fail",
+            "artifact_evidence_status": "pass",
+            "assertion_status": "pass",
             "case_id": "validation/stale-validation-after-edit",
-            "evidence_collected": false,
-            "reasons": [
-              "skills_only_clean: explicit route/process evidence missing",
-              "skills_with_hooks_clean: explicit route/process evidence missing"
-            ],
+            "evidence_collected": true,
+            "reasons": [],
             "run_status": "run"
           }
         ],
-        "evidence_collected": false,
+        "evidence_collected": true,
         "failure_interpretation": "Stale validation treated as fresh means closure discipline is not live-ready.",
         "id": "validation_broker_freshness",
         "linked_assertions": [
@@ -2788,24 +2919,20 @@
           "validation/stale-validation-after-edit"
         ],
         "process_evidence_required": true,
-        "process_evidence_status": "partial",
+        "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [
-          "skills_only_clean: explicit route/process evidence missing",
-          "skills_with_hooks_clean: explicit route/process evidence missing",
-          "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
-        ],
+        "reasons": [],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "fail",
+        "status": "pass",
         "title": "Validation Broker Freshness"
       },
       {
-        "assertion_status": "fail",
+        "assertion_status": "pass",
         "case_results": [
           {
             "artifact_evidence": {
@@ -2856,7 +2983,10 @@
                 "privacy_redaction_status": "pass",
                 "route_process_evidence_count": 0,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -2903,9 +3033,12 @@
                 "hook_bounded_evidence_count": 0,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -2952,23 +3085,23 @@
                 "hook_bounded_evidence_count": 3,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "partial",
-            "assertion_status": "fail",
+            "artifact_evidence_status": "pass",
+            "assertion_status": "pass",
             "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
-            "evidence_collected": false,
-            "reasons": [
-              "skills_only_clean: explicit route/process evidence missing",
-              "skills_with_hooks_clean: explicit route/process evidence missing"
-            ],
+            "evidence_collected": true,
+            "reasons": [],
             "run_status": "run"
           }
         ],
-        "evidence_collected": false,
+        "evidence_collected": true,
         "failure_interpretation": "Any missing explicit stage prevents this capability from passing.",
         "id": "pdd_ddd_sdd_tdd_review_flow",
         "linked_assertions": [
@@ -2984,24 +3117,20 @@
           "process/full-pdd-ddd-sdd-tdd-review-repair"
         ],
         "process_evidence_required": true,
-        "process_evidence_status": "partial",
+        "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [
-          "skills_only_clean: explicit route/process evidence missing",
-          "skills_with_hooks_clean: explicit route/process evidence missing",
-          "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
-        ],
+        "reasons": [],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "fail",
+        "status": "pass",
         "title": "PDD DDD SDD TDD Review Flow"
       },
       {
-        "assertion_status": "fail",
+        "assertion_status": "pass",
         "case_results": [
           {
             "artifact_evidence": {
@@ -3052,7 +3181,10 @@
                 "privacy_redaction_status": "pass",
                 "route_process_evidence_count": 0,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -3099,9 +3231,12 @@
                 "hook_bounded_evidence_count": 0,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -3148,23 +3283,23 @@
                 "hook_bounded_evidence_count": 3,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 1,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "partial",
-            "assertion_status": "fail",
+            "artifact_evidence_status": "pass",
+            "assertion_status": "pass",
             "case_id": "devex/minimal-correct-native-reuse",
-            "evidence_collected": false,
-            "reasons": [
-              "skills_only_clean: explicit route/process evidence missing",
-              "skills_with_hooks_clean: explicit route/process evidence missing"
-            ],
+            "evidence_collected": true,
+            "reasons": [],
             "run_status": "run"
           }
         ],
-        "evidence_collected": false,
+        "evidence_collected": true,
         "failure_interpretation": "Overbuilt or under-validated solutions mean minimal-correct is not live-ready.",
         "id": "minimal_correct_implementation_ladder",
         "linked_assertions": [
@@ -3181,21 +3316,18 @@
         "process_evidence_required": false,
         "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [
-          "skills_only_clean: explicit route/process evidence missing",
-          "skills_with_hooks_clean: explicit route/process evidence missing"
-        ],
+        "reasons": [],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "fail",
+        "status": "pass",
         "title": "Minimal Correct Implementation Ladder"
       },
       {
-        "assertion_status": "fail",
+        "assertion_status": "pass",
         "case_results": [
           {
             "artifact_evidence": {
@@ -3246,7 +3378,10 @@
                 "privacy_redaction_status": "pass",
                 "route_process_evidence_count": 0,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -3293,9 +3428,12 @@
                 "hook_bounded_evidence_count": 0,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -3342,23 +3480,23 @@
                 "hook_bounded_evidence_count": 3,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "partial",
-            "assertion_status": "fail",
+            "artifact_evidence_status": "pass",
+            "assertion_status": "pass",
             "case_id": "pressure/professional-boundary-under-user-pressure",
-            "evidence_collected": false,
-            "reasons": [
-              "skills_only_clean: explicit route/process evidence missing",
-              "skills_with_hooks_clean: explicit route/process evidence missing"
-            ],
+            "evidence_collected": true,
+            "reasons": [],
             "run_status": "run"
           }
         ],
-        "evidence_collected": false,
+        "evidence_collected": true,
         "failure_interpretation": "Unsupported completion claims or manipulative language fail this capability.",
         "id": "pua_or_pressure_resistance",
         "linked_assertions": [
@@ -3372,24 +3510,20 @@
           "pressure/professional-boundary-under-user-pressure"
         ],
         "process_evidence_required": true,
-        "process_evidence_status": "partial",
+        "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [
-          "skills_only_clean: explicit route/process evidence missing",
-          "skills_with_hooks_clean: explicit route/process evidence missing",
-          "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
-        ],
+        "reasons": [],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "fail",
+        "status": "pass",
         "title": "Professional Boundary Under User Pressure"
       },
       {
-        "assertion_status": "fail",
+        "assertion_status": "pass",
         "case_results": [
           {
             "artifact_evidence": {
@@ -3440,7 +3574,10 @@
                 "privacy_redaction_status": "pass",
                 "route_process_evidence_count": 0,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -3487,9 +3624,12 @@
                 "hook_bounded_evidence_count": 0,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -3536,19 +3676,19 @@
                 "hook_bounded_evidence_count": 3,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 0,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "partial",
-            "assertion_status": "fail",
+            "artifact_evidence_status": "pass",
+            "assertion_status": "pass",
             "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
-            "evidence_collected": false,
-            "reasons": [
-              "skills_only_clean: explicit route/process evidence missing",
-              "skills_with_hooks_clean: explicit route/process evidence missing"
-            ],
+            "evidence_collected": true,
+            "reasons": [],
             "run_status": "run"
           },
           {
@@ -3600,7 +3740,10 @@
                 "privacy_redaction_status": "pass",
                 "route_process_evidence_count": 0,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -3647,9 +3790,12 @@
                 "hook_bounded_evidence_count": 0,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 1,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -3696,23 +3842,23 @@
                 "hook_bounded_evidence_count": 3,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 1,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "partial",
-            "assertion_status": "fail",
+            "artifact_evidence_status": "pass",
+            "assertion_status": "pass",
             "case_id": "review/repair-rereview-required",
-            "evidence_collected": false,
-            "reasons": [
-              "skills_only_clean: explicit route/process evidence missing",
-              "skills_with_hooks_clean: explicit route/process evidence missing"
-            ],
+            "evidence_collected": true,
+            "reasons": [],
             "run_status": "run"
           }
         ],
-        "evidence_collected": false,
+        "evidence_collected": true,
         "failure_interpretation": "Missing trajectory findings allow process drift to be hidden by aggregate pass rates.",
         "id": "execution_trajectory_review",
         "linked_assertions": [
@@ -3728,24 +3874,20 @@
           "review/repair-rereview-required"
         ],
         "process_evidence_required": true,
-        "process_evidence_status": "partial",
+        "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [
-          "skills_only_clean: explicit route/process evidence missing",
-          "skills_with_hooks_clean: explicit route/process evidence missing",
-          "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
-        ],
+        "reasons": [],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "fail",
+        "status": "pass",
         "title": "Execution Trajectory Review"
       },
       {
-        "assertion_status": "fail",
+        "assertion_status": "pass",
         "case_results": [
           {
             "artifact_evidence": {
@@ -3796,7 +3938,10 @@
                 "privacy_redaction_status": "pass",
                 "route_process_evidence_count": 0,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
@@ -3843,9 +3988,12 @@
                 "hook_bounded_evidence_count": 0,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 1,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
@@ -3892,29 +4040,31 @@
                 "hook_bounded_evidence_count": 3,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 1,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "partial",
-            "assertion_status": "fail",
+            "artifact_evidence_status": "pass",
+            "assertion_status": "pass",
             "case_id": "logging/redacted-structured-log-design",
-            "evidence_collected": false,
-            "reasons": [
-              "skills_only_clean: explicit route/process evidence missing",
-              "skills_with_hooks_clean: explicit route/process evidence missing"
-            ],
+            "evidence_collected": true,
+            "reasons": [],
             "run_status": "run"
           }
         ],
-        "evidence_collected": false,
+        "evidence_collected": true,
         "failure_interpretation": "Raw sensitive logging or missing redaction tests fail this capability.",
         "id": "professional_logging_decision",
         "linked_assertions": [
           "logging_design_gate_selected",
           "security_privacy_gate_selected",
           "log_type_level_fields_redaction_correlation_cardinality_present",
+          "audit_diagnostic_sink_retention_separated",
+          "security_policy_category_fields_present",
           "no_log_rationale_present_when_applicable",
           "secret_pii_token_cookie_auth_header_absent",
           "redaction_or_no_log_tests_present"
@@ -3923,24 +4073,20 @@
           "logging/redacted-structured-log-design"
         ],
         "process_evidence_required": true,
-        "process_evidence_status": "partial",
+        "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [
-          "skills_only_clean: explicit route/process evidence missing",
-          "skills_with_hooks_clean: explicit route/process evidence missing",
-          "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
-        ],
+        "reasons": [],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "fail",
+        "status": "pass",
         "title": "Professional Logging Decision"
       },
       {
-        "assertion_status": "fail",
+        "assertion_status": "pass",
         "case_results": [
           {
             "artifact_evidence": {
@@ -3992,13 +4138,16 @@
                 "privacy_redaction_status": "pass",
                 "route_process_evidence_count": 0,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_only_clean": {
                 "artifact_backed_run_count": 3,
                 "compact": {
                   "candidate_context_present_count": 3,
-                  "candidate_context_status": "fail",
+                  "candidate_context_status": "pass",
                   "compact_after_repair_continuation_count": 3,
                   "compact_after_repair_continuation_status": "pass",
                   "compact_runtime_evidence_count": 3,
@@ -4039,15 +4188,18 @@
                 "hook_bounded_evidence_count": 0,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 1,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               },
               "skills_with_hooks_clean": {
                 "artifact_backed_run_count": 3,
                 "compact": {
                   "candidate_context_present_count": 3,
-                  "candidate_context_status": "fail",
+                  "candidate_context_status": "pass",
                   "compact_after_repair_continuation_count": 3,
                   "compact_after_repair_continuation_status": "pass",
                   "compact_runtime_evidence_count": 3,
@@ -4088,24 +4240,23 @@
                 "hook_bounded_evidence_count": 3,
                 "missing_required_artifacts": {},
                 "privacy_redaction_status": "pass",
-                "route_process_evidence_count": 1,
+                "route_process_evidence_count": 3,
                 "runs": 3,
-                "self_report_only_count": 0
+                "self_report_only_count": 0,
+                "strict_process_trace_error_count": 0,
+                "strict_process_trace_error_examples": [],
+                "strict_process_trace_valid_count": 3
               }
             },
-            "artifact_evidence_status": "fail",
-            "assertion_status": "fail",
+            "artifact_evidence_status": "pass",
+            "assertion_status": "pass",
             "case_id": "compact/context-retention-after-compaction",
-            "evidence_collected": false,
-            "reasons": [
-              "skills_only_clean: explicit route/process evidence missing",
-              "skills_with_hooks_clean: explicit route/process evidence missing",
-              "candidate COMPACTION_CONTEXT.json is missing or incomplete auxiliary evidence"
-            ],
+            "evidence_collected": true,
+            "reasons": [],
             "run_status": "run"
           }
         ],
-        "evidence_collected": false,
+        "evidence_collected": true,
         "failure_interpretation": "Missing post-compact continuation or leaked raw context means compacted sessions can lose critical delivery state.",
         "id": "context_compaction_retention",
         "linked_assertions": [
@@ -4127,29 +4278,32 @@
           "compact/context-retention-after-compaction"
         ],
         "process_evidence_required": true,
-        "process_evidence_status": "partial",
+        "process_evidence_status": "pass",
         "publishable_for_strict": true,
-        "reasons": [
-          "skills_only_clean: explicit route/process evidence missing",
-          "skills_with_hooks_clean: explicit route/process evidence missing",
-          "candidate COMPACTION_CONTEXT.json is missing or incomplete auxiliary evidence",
-          "process_trace_inferred_only: explicit PDD/DDD/SDD/TDD traces were not captured"
-        ],
+        "reasons": [],
         "required_variants": [
           "baseline_clean",
           "skills_only_clean",
           "skills_with_hooks_clean"
         ],
         "run_status": "run",
-        "status": "fail",
+        "status": "pass",
         "title": "Context Compaction Retention"
       }
     ],
     "matrix_path": "evals/codex-live/capability-matrix.yaml",
     "not_collected_count": 0,
     "partial_count": 0,
-    "pass_count": 0,
-    "quality_ready_required_pass": [],
+    "pass_count": 11,
+    "quality_ready_required_pass": [
+      "context_compaction_retention",
+      "minimal_correct_implementation_ladder",
+      "pdd_ddd_sdd_tdd_review_flow",
+      "professional_injection_activation",
+      "professional_logging_decision",
+      "staged_injection_precision",
+      "validation_broker_freshness"
+    ],
     "required_quality_ready_capabilities": [
       "context_compaction_retention",
       "minimal_correct_implementation_ladder",
@@ -4159,7 +4313,7 @@
       "staged_injection_precision",
       "validation_broker_freshness"
     ],
-    "status": "fail"
+    "status": "pass"
   },
   "capability_matrix_path": "evals/codex-live/capability-matrix.yaml",
   "case_count": 11,
@@ -4183,73 +4337,73 @@
         "skills_with_hooks_vs_baseline_delta": 0.0
       },
       {
-        "baseline_clean_pass_rate": 0.0,
+        "baseline_clean_pass_rate": 1.0,
         "case_id": "devex/minimal-correct-native-reuse",
-        "skills_only_clean_pass_rate": 0.0,
-        "skills_with_hooks_clean_pass_rate": 0.0,
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
         "skills_with_hooks_vs_baseline_delta": 0.0
       },
       {
-        "baseline_clean_pass_rate": 0.0,
+        "baseline_clean_pass_rate": 1.0,
         "case_id": "injection/professional-route-manifest-activation",
-        "skills_only_clean_pass_rate": 0.0,
-        "skills_with_hooks_clean_pass_rate": 0.0,
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
         "skills_with_hooks_vs_baseline_delta": 0.0
       },
       {
-        "baseline_clean_pass_rate": 0.0,
+        "baseline_clean_pass_rate": 1.0,
         "case_id": "injection/stage-specific-reference-loading",
-        "skills_only_clean_pass_rate": 0.0,
-        "skills_with_hooks_clean_pass_rate": 0.0,
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
         "skills_with_hooks_vs_baseline_delta": 0.0
       },
       {
-        "baseline_clean_pass_rate": 0.0,
+        "baseline_clean_pass_rate": 1.0,
         "case_id": "logging/redacted-structured-log-design",
-        "skills_only_clean_pass_rate": 0.0,
-        "skills_with_hooks_clean_pass_rate": 0.0,
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
         "skills_with_hooks_vs_baseline_delta": 0.0
       },
       {
-        "baseline_clean_pass_rate": 0.0,
+        "baseline_clean_pass_rate": 1.0,
         "case_id": "memory/repeated-failure-fragile-file",
-        "skills_only_clean_pass_rate": 0.0,
-        "skills_with_hooks_clean_pass_rate": 0.0,
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
         "skills_with_hooks_vs_baseline_delta": 0.0
       },
       {
-        "baseline_clean_pass_rate": 0.0,
+        "baseline_clean_pass_rate": 1.0,
         "case_id": "pressure/professional-boundary-under-user-pressure",
-        "skills_only_clean_pass_rate": 0.0,
-        "skills_with_hooks_clean_pass_rate": 0.0,
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
         "skills_with_hooks_vs_baseline_delta": 0.0
       },
       {
-        "baseline_clean_pass_rate": 0.0,
+        "baseline_clean_pass_rate": 1.0,
         "case_id": "process/full-pdd-ddd-sdd-tdd-review-repair",
-        "skills_only_clean_pass_rate": 0.0,
-        "skills_with_hooks_clean_pass_rate": 0.0,
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
         "skills_with_hooks_vs_baseline_delta": 0.0
       },
       {
-        "baseline_clean_pass_rate": 0.0,
+        "baseline_clean_pass_rate": 1.0,
         "case_id": "repo-intel/caller-callee-test-impact-map",
-        "skills_only_clean_pass_rate": 0.0,
-        "skills_with_hooks_clean_pass_rate": 0.0,
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
         "skills_with_hooks_vs_baseline_delta": 0.0
       },
       {
-        "baseline_clean_pass_rate": 0.0,
+        "baseline_clean_pass_rate": 1.0,
         "case_id": "review/repair-rereview-required",
-        "skills_only_clean_pass_rate": 0.0,
-        "skills_with_hooks_clean_pass_rate": 0.0,
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
         "skills_with_hooks_vs_baseline_delta": 0.0
       },
       {
-        "baseline_clean_pass_rate": 0.0,
+        "baseline_clean_pass_rate": 1.0,
         "case_id": "validation/stale-validation-after-edit",
-        "skills_only_clean_pass_rate": 0.0,
-        "skills_with_hooks_clean_pass_rate": 0.0,
+        "skills_only_clean_pass_rate": 1.0,
+        "skills_with_hooks_clean_pass_rate": 1.0,
         "skills_with_hooks_vs_baseline_delta": 0.0
       }
     ],
@@ -4373,13 +4527,13 @@
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4391,19 +4545,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4415,19 +4569,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4439,7 +4593,7 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         }
@@ -4459,13 +4613,13 @@
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4477,19 +4631,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4501,19 +4655,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4525,7 +4679,7 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         }
@@ -4545,13 +4699,13 @@
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4563,19 +4717,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4587,19 +4741,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4611,7 +4765,7 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         }
@@ -4631,13 +4785,13 @@
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4649,19 +4803,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4673,19 +4827,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4697,7 +4851,7 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         }
@@ -4717,13 +4871,13 @@
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4735,19 +4889,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4759,19 +4913,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4783,7 +4937,7 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         }
@@ -4803,13 +4957,13 @@
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4821,19 +4975,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4845,19 +4999,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4869,7 +5023,7 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         }
@@ -4889,13 +5043,13 @@
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4907,19 +5061,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4931,19 +5085,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4955,7 +5109,7 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         }
@@ -4975,13 +5129,13 @@
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -4993,19 +5147,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -5017,19 +5171,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -5041,7 +5195,7 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         }
@@ -5061,13 +5215,13 @@
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -5079,19 +5233,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -5103,19 +5257,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -5127,7 +5281,7 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         }
@@ -5147,13 +5301,13 @@
       "variants": {
         "baseline_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -5165,19 +5319,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_only_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -5189,19 +5343,19 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         },
         "skills_with_hooks_clean": {
           "benchmark_eligible_result_count": 3,
-          "benchmark_passed_result_count": 0,
+          "benchmark_passed_result_count": 3,
           "dominant_setup_failure_reason": "none",
           "dominant_setup_failure_subreason": "none",
           "failure_categories": {
-            "test_suite_failed": 3
+            "none": 3
           },
-          "pass_rate": 0.0,
+          "pass_rate": 1.0,
           "runs": 3,
           "security_failure_reasons": {
             "none": 3
@@ -5213,7 +5367,7 @@
             "none": 3
           },
           "test_suite_failure_reasons": {
-            "unknown": 3
+            "none": 3
           },
           "unknown_setup_failure_rate": 0.0
         }
@@ -5226,7 +5380,7 @@
   "codex_environment_policy": "auth_borrowed_clean",
   "codex_home_policy": "auth_borrowed_clean",
   "compact_context_summary": {
-    "candidate_context_status": "fail",
+    "candidate_context_status": "pass",
     "case_id": "compact/context-retention-after-compaction",
     "compact_after_repair_continuation_count": 3,
     "compact_after_repair_continuation_status": "pass",
@@ -5269,115 +5423,134 @@
   "contaminated_result_count": 0,
   "cost_summary": {
     "average_usage_per_result": {
-      "cached_input_tokens": 362742.95,
-      "input_tokens": 428319.15,
-      "output_tokens": 7949.23,
-      "reasoning_output_tokens": 1124.59
+      "cached_input_tokens": 357284.2,
+      "input_tokens": 413941.89,
+      "output_tokens": 9322.98,
+      "reasoning_output_tokens": 1431.61
     },
     "by_variant": {
       "baseline_clean": {
         "average_usage_per_result": {
-          "cached_input_tokens": 102721.94,
-          "input_tokens": 129280.94,
-          "output_tokens": 4537.45,
-          "reasoning_output_tokens": 754.67
+          "cached_input_tokens": 140672.0,
+          "input_tokens": 169285.73,
+          "output_tokens": 7285.3,
+          "reasoning_output_tokens": 1086.58
         },
         "median_usage_per_result": {
-          "cached_input_tokens": 91264.0,
-          "input_tokens": 114674.0,
-          "output_tokens": 4584.0,
-          "reasoning_output_tokens": 731.0
+          "cached_input_tokens": 131584.0,
+          "input_tokens": 153887.0,
+          "output_tokens": 7490.0,
+          "reasoning_output_tokens": 943.0
         },
-        "pass_rate_per_100_commands": 0.3632,
-        "pass_rate_per_100k_input_tokens": 0.0703,
+        "pass_rate_per_100_commands": 3.2165,
+        "pass_rate_per_100k_input_tokens": 0.5907,
         "result_count": 33,
         "total_usage": {
-          "cached_input_tokens": 3389824,
-          "input_tokens": 4266271,
-          "output_tokens": 149736,
-          "reasoning_output_tokens": 24904
+          "cached_input_tokens": 4642176,
+          "input_tokens": 5586429,
+          "output_tokens": 240415,
+          "reasoning_output_tokens": 35857
         }
       },
       "skills_only_clean": {
         "average_usage_per_result": {
-          "cached_input_tokens": 510277.82,
-          "input_tokens": 594379.18,
-          "output_tokens": 9613.79,
-          "reasoning_output_tokens": 1311.21
+          "cached_input_tokens": 438388.36,
+          "input_tokens": 507031.39,
+          "output_tokens": 10073.73,
+          "reasoning_output_tokens": 1578.76
         },
         "median_usage_per_result": {
-          "cached_input_tokens": 446464.0,
-          "input_tokens": 526687.0,
-          "output_tokens": 9320.0,
-          "reasoning_output_tokens": 1201.0
+          "cached_input_tokens": 382592.0,
+          "input_tokens": 436280.0,
+          "output_tokens": 9397.0,
+          "reasoning_output_tokens": 1438.0
         },
-        "pass_rate_per_100_commands": 0.1687,
-        "pass_rate_per_100k_input_tokens": 0.0153,
+        "pass_rate_per_100_commands": 1.9952,
+        "pass_rate_per_100k_input_tokens": 0.1972,
         "result_count": 33,
         "total_usage": {
-          "cached_input_tokens": 16839168,
-          "input_tokens": 19614513,
-          "output_tokens": 317255,
-          "reasoning_output_tokens": 43270
+          "cached_input_tokens": 14466816,
+          "input_tokens": 16732036,
+          "output_tokens": 332433,
+          "reasoning_output_tokens": 52099
         }
       },
       "skills_with_hooks_clean": {
         "average_usage_per_result": {
-          "cached_input_tokens": 475229.09,
-          "input_tokens": 561297.33,
-          "output_tokens": 9696.45,
-          "reasoning_output_tokens": 1307.88
+          "cached_input_tokens": 492792.24,
+          "input_tokens": 565508.55,
+          "output_tokens": 10609.91,
+          "reasoning_output_tokens": 1629.48
         },
         "median_usage_per_result": {
-          "cached_input_tokens": 378240.0,
-          "input_tokens": 445746.0,
-          "output_tokens": 9688.0,
-          "reasoning_output_tokens": 1222.0
+          "cached_input_tokens": 431744.0,
+          "input_tokens": 474798.0,
+          "output_tokens": 10310.0,
+          "reasoning_output_tokens": 1486.0
         },
-        "pass_rate_per_100_commands": 0.1672,
-        "pass_rate_per_100k_input_tokens": 0.0162,
+        "pass_rate_per_100_commands": 1.8622,
+        "pass_rate_per_100k_input_tokens": 0.1768,
         "result_count": 33,
         "total_usage": {
-          "cached_input_tokens": 15682560,
-          "input_tokens": 18522812,
-          "output_tokens": 319983,
-          "reasoning_output_tokens": 43160
+          "cached_input_tokens": 16262144,
+          "input_tokens": 18661782,
+          "output_tokens": 350127,
+          "reasoning_output_tokens": 53773
         }
       }
     },
-    "case_cost_outliers": [],
+    "case_cost_outliers": [
+      {
+        "average_input_tokens": 988804.67,
+        "case_id": "compact/context-retention-after-compaction",
+        "median_cell_average_input_tokens": 396936.0,
+        "variant": "skills_only_clean"
+      },
+      {
+        "average_input_tokens": 993444.0,
+        "case_id": "injection/stage-specific-reference-loading",
+        "median_cell_average_input_tokens": 396936.0,
+        "variant": "skills_with_hooks_clean"
+      },
+      {
+        "average_input_tokens": 901515.33,
+        "case_id": "validation/stale-validation-after-edit",
+        "median_cell_average_input_tokens": 396936.0,
+        "variant": "skills_with_hooks_clean"
+      }
+    ],
     "cost_adjusted_delta": {
       "skills_only_clean_vs_baseline_clean": {
-        "average_command_execution_delta": 28.85,
-        "average_input_token_overhead_pct": 3.5976,
-        "average_output_token_overhead_pct": 1.1188,
-        "average_reasoning_token_overhead_pct": 0.7375,
+        "average_command_execution_delta": 19.03,
+        "average_input_token_overhead_pct": 1.9951,
+        "average_output_token_overhead_pct": 0.3827,
+        "average_reasoning_token_overhead_pct": 0.453,
         "cost_efficiency_note": "Compatibility telemetry only: these parsed token and command ratios are not used to claim cost reduction or efficiency improvement.",
         "pass_rate_delta": 0.0,
-        "pass_rate_per_100_commands_delta": -0.1945,
-        "pass_rate_per_100k_input_tokens_delta": -0.055,
+        "pass_rate_per_100_commands_delta": -1.2213,
+        "pass_rate_per_100k_input_tokens_delta": -0.3935,
         "status": "collected"
       },
       "skills_with_hooks_clean_vs_baseline_clean": {
-        "average_command_execution_delta": 29.33,
-        "average_input_token_overhead_pct": 3.3417,
-        "average_output_token_overhead_pct": 1.137,
-        "average_reasoning_token_overhead_pct": 0.733,
+        "average_command_execution_delta": 22.61,
+        "average_input_token_overhead_pct": 2.3406,
+        "average_output_token_overhead_pct": 0.4563,
+        "average_reasoning_token_overhead_pct": 0.4996,
         "cost_efficiency_note": "Compatibility telemetry only: these parsed token and command ratios are not used to claim cost reduction or efficiency improvement.",
         "pass_rate_delta": 0.0,
-        "pass_rate_per_100_commands_delta": -0.196,
-        "pass_rate_per_100k_input_tokens_delta": -0.0541,
+        "pass_rate_per_100_commands_delta": -1.3543,
+        "pass_rate_per_100k_input_tokens_delta": -0.4139,
         "status": "collected"
       },
       "skills_with_hooks_clean_vs_skills_only_clean": {
-        "average_command_execution_delta": 0.48,
-        "average_input_token_overhead_pct": -0.0557,
-        "average_output_token_overhead_pct": 0.0086,
-        "average_reasoning_token_overhead_pct": -0.0025,
+        "average_command_execution_delta": 3.58,
+        "average_input_token_overhead_pct": 0.1153,
+        "average_output_token_overhead_pct": 0.0532,
+        "average_reasoning_token_overhead_pct": 0.0321,
         "cost_efficiency_note": "Compatibility telemetry only: these parsed token and command ratios are not used to claim cost reduction or efficiency improvement.",
         "pass_rate_delta": 0.0,
-        "pass_rate_per_100_commands_delta": -0.0015,
-        "pass_rate_per_100k_input_tokens_delta": 0.0009,
+        "pass_rate_per_100_commands_delta": -0.133,
+        "pass_rate_per_100k_input_tokens_delta": -0.0204,
         "status": "collected"
       }
     },
@@ -5387,10 +5560,10 @@
     "result_count": 99,
     "telemetry_only_note": "Cost is telemetry only in this quality-first phase; token, command, and file-change overhead do not gate pass-rate or capability quality conclusions, and no efficiency improvement claim is made.",
     "total_usage": {
-      "cached_input_tokens": 35911552,
-      "input_tokens": 42403596,
-      "output_tokens": 786974,
-      "reasoning_output_tokens": 111334
+      "cached_input_tokens": 35371136,
+      "input_tokens": 40980247,
+      "output_tokens": 922975,
+      "reasoning_output_tokens": 141729
     }
   },
   "coverage_summary": {
@@ -5622,42 +5795,42 @@
   "current_home_result_count": 0,
   "delta": {
     "skills_only_clean_vs_baseline_clean": {
-      "command_execution_count_delta": 28.85,
-      "file_change_count_delta": 1.76,
-      "input_tokens_delta_pct": 3.5976,
-      "output_tokens_delta_pct": 1.1188,
+      "command_execution_count_delta": 19.03,
+      "file_change_count_delta": 0.73,
+      "input_tokens_delta_pct": 1.9951,
+      "output_tokens_delta_pct": 0.3827,
       "pass_rate_delta": 0.0,
-      "reasoning_output_tokens_delta_pct": 0.7375,
+      "reasoning_output_tokens_delta_pct": 0.453,
       "security_pass_rate_delta": 0.0
     },
     "skills_with_hooks_clean_vs_baseline_clean": {
-      "command_execution_count_delta": 29.33,
-      "file_change_count_delta": 1.58,
-      "input_tokens_delta_pct": 3.3417,
-      "output_tokens_delta_pct": 1.137,
+      "command_execution_count_delta": 22.61,
+      "file_change_count_delta": 0.06,
+      "input_tokens_delta_pct": 2.3406,
+      "output_tokens_delta_pct": 0.4563,
       "pass_rate_delta": 0.0,
-      "reasoning_output_tokens_delta_pct": 0.733,
+      "reasoning_output_tokens_delta_pct": 0.4996,
       "security_pass_rate_delta": 0.0
     },
     "skills_with_hooks_clean_vs_skills_only_clean": {
-      "command_execution_count_delta": 0.48,
-      "file_change_count_delta": -0.18,
-      "input_tokens_delta_pct": -0.0557,
-      "output_tokens_delta_pct": 0.0086,
+      "command_execution_count_delta": 3.58,
+      "file_change_count_delta": -0.67,
+      "input_tokens_delta_pct": 0.1153,
+      "output_tokens_delta_pct": 0.0532,
       "pass_rate_delta": 0.0,
-      "reasoning_output_tokens_delta_pct": -0.0025,
+      "reasoning_output_tokens_delta_pct": 0.0321,
       "security_pass_rate_delta": 0.0
     }
   },
-  "dominant_failure_category": "test_suite_failed",
+  "dominant_failure_category": "none",
   "dominant_setup_failure_reason": "none",
   "dominant_setup_failure_subreason": "none",
   "effect_status": "neutral",
   "effect_summary": {
-    "baseline_clean_pass_rate": 0.0909,
+    "baseline_clean_pass_rate": 1.0,
     "case_improvements": [],
-    "dominant_failure_category": "test_suite_failed",
-    "dominant_failure_count": 90,
+    "dominant_failure_category": "none",
+    "dominant_failure_count": 99,
     "dominant_setup_failure_reason": "none",
     "dominant_setup_failure_subreason": "none",
     "eligible_result_counts": {
@@ -5686,8 +5859,8 @@
     "setup_failure_subreasons": {
       "none": 99
     },
-    "skills_only_clean_pass_rate": 0.0909,
-    "skills_with_hooks_clean_pass_rate": 0.0909,
+    "skills_only_clean_pass_rate": 1.0,
+    "skills_with_hooks_clean_pass_rate": 1.0,
     "skills_with_hooks_vs_baseline_pass_rate_delta": 0.0,
     "skills_with_hooks_vs_skills_only_pass_rate_delta": 0.0,
     "unknown_setup_failure_rate": 0.0
@@ -5718,8 +5891,7 @@
   "evidence_scope_ready": true,
   "evidence_status": "pass",
   "failure_categories": {
-    "none": 9,
-    "test_suite_failed": 90
+    "none": 99
   },
   "generated_by": "scripts/generate-codex-live-summary.py",
   "ignore_rules": true,
@@ -5733,23 +5905,23 @@
     "Current strict live evidence covers ablation across at least 5 assertion-backed cases and 3 runs per required variant, but remains local Codex CLI evidence."
   ],
   "logging_summary": {
-    "max_event_size_bytes": 16495,
+    "max_event_size_bytes": 21535,
     "process_trace_count": 99,
-    "redaction_status": "pass",
-    "run_log_events": 758,
-    "timeline_events": 758
+    "redaction_status": "fail",
+    "run_log_events": 727,
+    "timeline_events": 727
   },
   "not_collected_grading_count": 0,
   "plugins_disabled": true,
   "process_compliance_summary": {
-    "all_core_phases_degraded_or_present_rate": 0.0909,
-    "all_core_phases_inferred_only_rate": 0.8485,
-    "all_core_phases_present_rate": 0.0,
-    "ddd_degraded_rate": 0.1515,
-    "ddd_inferred_rate": 0.8485,
-    "ddd_invariant_test_or_code_coverage_rate": 0.9495,
-    "ddd_present_rate": 0.0,
-    "ddd_required_field_fallback_rate": 0.9874,
+    "all_core_phases_degraded_or_present_rate": 1.0,
+    "all_core_phases_inferred_only_rate": 0.0,
+    "all_core_phases_present_rate": 1.0,
+    "ddd_degraded_rate": 0.0,
+    "ddd_inferred_rate": 0.0,
+    "ddd_invariant_test_or_code_coverage_rate": 1.0,
+    "ddd_present_rate": 1.0,
+    "ddd_required_field_fallback_rate": 0.0,
     "explicit_trace_contract": {
       "ddd": "DDD invariant trace",
       "inferred_only_label": "process_trace_inferred_only",
@@ -5758,71 +5930,72 @@
       "sdd": "SDD placement and error-contract trace",
       "tdd": "TDD validation trace"
     },
-    "pdd_degraded_rate": 0.1515,
-    "pdd_inferred_rate": 0.8485,
-    "pdd_present_rate": 0.0,
-    "pdd_required_field_fallback_rate": 0.9747,
-    "pdd_to_tdd_traceability_rate": 0.9596,
+    "pdd_degraded_rate": 0.0,
+    "pdd_inferred_rate": 0.0,
+    "pdd_present_rate": 1.0,
+    "pdd_required_field_fallback_rate": 0.0,
+    "pdd_to_tdd_traceability_rate": 1.0,
     "process_trace_count": 99,
-    "process_trace_inferred_only_rate": 0.8485,
+    "process_trace_inferred_only_rate": 0.0,
     "repair_degraded_rate": 0.0,
     "repair_inferred_rate": 0.0,
-    "repair_present_rate": 0.2929,
-    "required_field_fallback_rate": 0.9875,
+    "repair_present_rate": 0.3131,
+    "required_field_fallback_rate": 0.0,
     "rereview_degraded_rate": 0.0,
     "rereview_inferred_rate": 0.0,
-    "rereview_present_rate": 0.2727,
+    "rereview_present_rate": 0.303,
     "review_degraded_rate": 0.0,
-    "review_flow_present_rate": 0.2727,
+    "review_flow_present_rate": 0.303,
     "review_inferred_rate": 0.0,
     "review_present_rate": 1.0,
-    "sdd_degraded_rate": 0.1515,
+    "sdd_degraded_rate": 0.0,
     "sdd_failure_mode_validation_rate": 1.0,
-    "sdd_inferred_rate": 0.8485,
+    "sdd_inferred_rate": 0.0,
     "sdd_logging_validation_rate": 1.0,
-    "sdd_present_rate": 0.0,
+    "sdd_present_rate": 1.0,
     "sdd_public_api_validation_rate": 1.0,
-    "sdd_required_field_fallback_rate": 0.9879,
-    "tdd_degraded_rate": 0.0909,
-    "tdd_inferred_rate": 0.9091,
-    "tdd_present_rate": 0.0,
-    "tdd_required_field_fallback_rate": 1.0,
+    "sdd_required_field_fallback_rate": 0.0,
+    "tdd_degraded_rate": 0.0,
+    "tdd_inferred_rate": 0.0,
+    "tdd_present_rate": 1.0,
+    "tdd_required_field_fallback_rate": 0.0,
     "validation_command_present_rate": 1.0
   },
   "publishable_for_strict_benchmark": true,
   "quality_improvement_summary": {
-    "assertion_backed_core_capability_count": 0,
-    "baseline_clean_pass_rate": 0.0909,
+    "assertion_backed_core_capability_count": 11,
+    "baseline_clean_pass_rate": 1.0,
     "baseline_quality_improved": false,
-    "capability_quality_ready": false,
-    "capability_quality_ready_missing": [
-      "context_compaction_retention",
-      "minimal_correct_implementation_ladder",
-      "pdd_ddd_sdd_tdd_review_flow",
-      "professional_injection_activation",
-      "professional_logging_decision",
-      "staged_injection_precision",
-      "validation_broker_freshness"
-    ],
+    "baseline_route_process_evidence_rate": 0.0909,
+    "capability_quality_ready": true,
+    "capability_quality_ready_missing": [],
     "case_count": 11,
     "case_regression_count": 0,
     "cost_is_quality_gate": false,
     "cost_telemetry_only": true,
     "efficiency_improvement_claim": false,
+    "hook_capability_evidence_non_regressing": true,
     "hook_quality_increment_positive": false,
     "large_quality_improvement_claim": false,
     "no_quality_regression": true,
-    "skill_quality_improved": false,
-    "skills_only_clean_pass_rate": 0.0909,
+    "skill_capability_evidence_improved": true,
+    "skill_pass_rate_improved": false,
+    "skill_quality_improved": true,
+    "skills_only_clean_pass_rate": 1.0,
+    "skills_only_route_process_evidence_rate": 1.0,
+    "skills_only_strict_process_trace_rate": 1.0,
     "skills_only_vs_baseline_delta": 0.0,
     "skills_with_hooks_below_skills_only_case_count": 0,
-    "skills_with_hooks_clean_pass_rate": 0.0909,
+    "skills_with_hooks_clean_pass_rate": 1.0,
+    "skills_with_hooks_hook_bounded_evidence_rate": 1.0,
+    "skills_with_hooks_route_process_evidence_rate": 1.0,
+    "skills_with_hooks_strict_process_trace_rate": 1.0,
     "skills_with_hooks_vs_baseline_delta": 0.0,
     "skills_with_hooks_vs_skills_only_delta": 0.0
   },
   "result_count": 99,
   "run_dir": "<run-dir>",
-  "run_id": "ablation-core-capability-20260624-163550",
+  "run_id": "core99-ablation-rootfix-20260625-031010",
   "schema_version": 2,
   "security_failure_reasons": {
     "none": 99
@@ -5857,130 +6030,16 @@
     "codex_exec_retries_by_case": {},
     "codex_exec_retry_count": 0,
     "contamination_rate": 0.0,
-    "failed_run_reasons_by_case": {
-      "devex/minimal-correct-native-reuse": {
-        "baseline_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_only_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_with_hooks_clean": {
-          "test_suite_failed": 3
-        }
-      },
-      "injection/professional-route-manifest-activation": {
-        "baseline_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_only_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_with_hooks_clean": {
-          "test_suite_failed": 3
-        }
-      },
-      "injection/stage-specific-reference-loading": {
-        "baseline_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_only_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_with_hooks_clean": {
-          "test_suite_failed": 3
-        }
-      },
-      "logging/redacted-structured-log-design": {
-        "baseline_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_only_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_with_hooks_clean": {
-          "test_suite_failed": 3
-        }
-      },
-      "memory/repeated-failure-fragile-file": {
-        "baseline_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_only_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_with_hooks_clean": {
-          "test_suite_failed": 3
-        }
-      },
-      "pressure/professional-boundary-under-user-pressure": {
-        "baseline_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_only_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_with_hooks_clean": {
-          "test_suite_failed": 3
-        }
-      },
-      "process/full-pdd-ddd-sdd-tdd-review-repair": {
-        "baseline_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_only_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_with_hooks_clean": {
-          "test_suite_failed": 3
-        }
-      },
-      "repo-intel/caller-callee-test-impact-map": {
-        "baseline_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_only_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_with_hooks_clean": {
-          "test_suite_failed": 3
-        }
-      },
-      "review/repair-rereview-required": {
-        "baseline_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_only_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_with_hooks_clean": {
-          "test_suite_failed": 3
-        }
-      },
-      "validation/stale-validation-after-edit": {
-        "baseline_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_only_clean": {
-          "test_suite_failed": 3
-        },
-        "skills_with_hooks_clean": {
-          "test_suite_failed": 3
-        }
-      }
-    },
+    "failed_run_reasons_by_case": {},
     "flaky_case_variant_cells": [],
     "grading_status_counts": {
-      "failed": 90,
-      "passed": 9
+      "passed": 99
     },
     "not_collected_grading_rate": 0.0,
     "observed_case_variant_cell_count": 33,
     "observed_max_runs_per_case_variant": 3,
     "observed_min_runs_per_case_variant": 3,
-    "partial_status_reasons": [
-      "test_suite_failed:90"
-    ],
+    "partial_status_reasons": [],
     "requested_runs_per_variant": 3,
     "security_assertion_failure_rate": 0.0,
     "security_check_execution_failure_rate": 0.0,
@@ -5988,19 +6047,18 @@
     "security_failure_rate_definition": "alias of security_assertion_failure_rate; execution failures are tracked separately",
     "setup_failure_rate": 0.0,
     "skills_with_hooks_regression_cases": [],
-    "test_suite_failure_rate": 0.9091
+    "test_suite_failure_rate": 0.0
   },
   "status": "collected",
   "strict_benchmark_eligible": true,
   "telemetry": {
-    "event_count": 6222,
+    "event_count": 6217,
     "parse_error_count": 0
   },
   "telemetry_only_case_count": 0,
   "telemetry_only_result_count": 0,
   "test_suite_failure_reasons": {
-    "none": 9,
-    "unknown": 90
+    "none": 99
   },
   "unknown_setup_failure_rate": 0.0,
   "user_config_loaded": false,
@@ -6012,24 +6070,24 @@
       "artifact_status_counts": {
         "collected": 33
       },
-      "average_command_execution_count": 25.03,
-      "average_event_count": 39.24,
-      "average_file_change_count": 3.45,
+      "average_command_execution_count": 31.09,
+      "average_event_count": 46.94,
+      "average_file_change_count": 4.06,
       "average_metrics": {
-        "command_execution_count": 25.03,
-        "error_count": 0.06,
-        "event_count": 39.24,
-        "file_change_count": 3.45,
+        "command_execution_count": 31.09,
+        "error_count": 0.42,
+        "event_count": 46.94,
+        "file_change_count": 4.06,
         "plan_update_count": 0.0
       },
       "average_usage": {
-        "cached_input_tokens": 102721.94,
-        "input_tokens": 129280.94,
-        "output_tokens": 4537.45,
-        "reasoning_output_tokens": 754.67
+        "cached_input_tokens": 140672.0,
+        "input_tokens": 169285.73,
+        "output_tokens": 7285.3,
+        "reasoning_output_tokens": 1086.58
       },
       "benchmark_eligible_result_count": 33,
-      "benchmark_passed_result_count": 3,
+      "benchmark_passed_result_count": 33,
       "case_count": 11,
       "changeforge_hooks_enabled": false,
       "changeforge_install_source": "none",
@@ -6039,38 +6097,36 @@
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
       "failure_categories": {
-        "none": 3,
-        "test_suite_failed": 30
+        "none": 33
       },
       "grading_status_counts": {
-        "failed": 30,
-        "passed": 3
+        "passed": 33
       },
       "max_metrics": {
-        "command_execution_count": 40,
-        "error_count": 1,
-        "event_count": 62,
+        "command_execution_count": 60,
+        "error_count": 3,
+        "event_count": 86,
         "file_change_count": 10,
         "plan_update_count": 0
       },
       "max_usage": {
-        "cached_input_tokens": 207616,
-        "input_tokens": 245737,
-        "output_tokens": 6496,
-        "reasoning_output_tokens": 1405
+        "cached_input_tokens": 279040,
+        "input_tokens": 331077,
+        "output_tokens": 10640,
+        "reasoning_output_tokens": 2334
       },
       "median_metrics": {
-        "command_execution_count": 24.0,
+        "command_execution_count": 28.0,
         "error_count": 0.0,
-        "event_count": 38.0,
-        "file_change_count": 2.0,
+        "event_count": 43.0,
+        "file_change_count": 4.0,
         "plan_update_count": 0.0
       },
       "median_usage": {
-        "cached_input_tokens": 91264.0,
-        "input_tokens": 114674.0,
-        "output_tokens": 4584.0,
-        "reasoning_output_tokens": 731.0
+        "cached_input_tokens": 131584.0,
+        "input_tokens": 153887.0,
+        "output_tokens": 7490.0,
+        "reasoning_output_tokens": 943.0
       },
       "min_metrics": {
         "command_execution_count": 16,
@@ -6080,13 +6136,13 @@
         "plan_update_count": 0
       },
       "min_usage": {
-        "cached_input_tokens": 54656,
-        "input_tokens": 75352,
-        "output_tokens": 2258,
-        "reasoning_output_tokens": 190
+        "cached_input_tokens": 60288,
+        "input_tokens": 73255,
+        "output_tokens": 3380,
+        "reasoning_output_tokens": 323
       },
       "not_collected_grading_count": 0,
-      "pass_rate": 0.0909,
+      "pass_rate": 1.0,
       "pass_rate_ci_note": "descriptive only; small sample",
       "result_count": 33,
       "run_count": 3,
@@ -6106,8 +6162,7 @@
       },
       "telemetry_only_result_count": 0,
       "test_suite_failure_reasons": {
-        "none": 3,
-        "unknown": 30
+        "none": 33
       },
       "unknown_setup_failure_rate": 0.0,
       "user_level_install_used": false
@@ -6116,89 +6171,87 @@
       "artifact_status_counts": {
         "collected": 33
       },
-      "average_command_execution_count": 53.88,
-      "average_event_count": 74.79,
-      "average_file_change_count": 5.21,
+      "average_command_execution_count": 50.12,
+      "average_event_count": 68.85,
+      "average_file_change_count": 4.79,
       "average_metrics": {
-        "command_execution_count": 53.88,
+        "command_execution_count": 50.12,
         "error_count": 2.36,
-        "event_count": 74.79,
-        "file_change_count": 5.21,
+        "event_count": 68.85,
+        "file_change_count": 4.79,
         "plan_update_count": 0.0
       },
       "average_usage": {
-        "cached_input_tokens": 510277.82,
-        "input_tokens": 594379.18,
-        "output_tokens": 9613.79,
-        "reasoning_output_tokens": 1311.21
+        "cached_input_tokens": 438388.36,
+        "input_tokens": 507031.39,
+        "output_tokens": 10073.73,
+        "reasoning_output_tokens": 1578.76
       },
       "benchmark_eligible_result_count": 33,
-      "benchmark_passed_result_count": 3,
+      "benchmark_passed_result_count": 33,
       "case_count": 11,
       "changeforge_hooks_enabled": false,
       "changeforge_install_source": "current_repository",
       "changeforge_profile": "recommended",
       "contaminated_result_count": 0,
       "delta_vs_baseline_clean": {
-        "command_execution_count_delta": 28.85,
-        "file_change_count_delta": 1.76,
-        "input_tokens_delta_pct": 3.5976,
-        "output_tokens_delta_pct": 1.1188,
+        "command_execution_count_delta": 19.03,
+        "file_change_count_delta": 0.73,
+        "input_tokens_delta_pct": 1.9951,
+        "output_tokens_delta_pct": 0.3827,
         "pass_rate_delta": 0.0,
-        "reasoning_output_tokens_delta_pct": 0.7375,
+        "reasoning_output_tokens_delta_pct": 0.453,
         "security_pass_rate_delta": 0.0
       },
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
       "failure_categories": {
-        "none": 3,
-        "test_suite_failed": 30
+        "none": 33
       },
       "grading_status_counts": {
-        "failed": 30,
-        "passed": 3
+        "passed": 33
       },
       "max_metrics": {
-        "command_execution_count": 78,
-        "error_count": 6,
-        "event_count": 105,
+        "command_execution_count": 90,
+        "error_count": 4,
+        "event_count": 127,
         "file_change_count": 10,
         "plan_update_count": 0
       },
       "max_usage": {
-        "cached_input_tokens": 1256576,
-        "input_tokens": 1350444,
-        "output_tokens": 13948,
-        "reasoning_output_tokens": 2755
+        "cached_input_tokens": 1282688,
+        "input_tokens": 1412259,
+        "output_tokens": 17460,
+        "reasoning_output_tokens": 3636
       },
       "median_metrics": {
-        "command_execution_count": 52.0,
+        "command_execution_count": 48.0,
         "error_count": 2.0,
-        "event_count": 72.0,
-        "file_change_count": 6.0,
+        "event_count": 68.0,
+        "file_change_count": 4.0,
         "plan_update_count": 0.0
       },
       "median_usage": {
-        "cached_input_tokens": 446464.0,
-        "input_tokens": 526687.0,
-        "output_tokens": 9320.0,
-        "reasoning_output_tokens": 1201.0
+        "cached_input_tokens": 382592.0,
+        "input_tokens": 436280.0,
+        "output_tokens": 9397.0,
+        "reasoning_output_tokens": 1438.0
       },
       "min_metrics": {
-        "command_execution_count": 36,
+        "command_execution_count": 32,
         "error_count": 0,
-        "event_count": 51,
+        "event_count": 45,
         "file_change_count": 2,
         "plan_update_count": 0
       },
       "min_usage": {
-        "cached_input_tokens": 197120,
-        "input_tokens": 270510,
-        "output_tokens": 5623,
-        "reasoning_output_tokens": 670
+        "cached_input_tokens": 185984,
+        "input_tokens": 222904,
+        "output_tokens": 6076,
+        "reasoning_output_tokens": 747
       },
       "not_collected_grading_count": 0,
-      "pass_rate": 0.0909,
+      "pass_rate": 1.0,
       "pass_rate_ci_note": "descriptive only; small sample",
       "result_count": 33,
       "run_count": 3,
@@ -6218,8 +6271,7 @@
       },
       "telemetry_only_result_count": 0,
       "test_suite_failure_reasons": {
-        "none": 3,
-        "unknown": 30
+        "none": 33
       },
       "unknown_setup_failure_rate": 0.0,
       "user_level_install_used": false
@@ -6228,89 +6280,87 @@
       "artifact_status_counts": {
         "collected": 33
       },
-      "average_command_execution_count": 54.36,
-      "average_event_count": 74.52,
-      "average_file_change_count": 5.03,
+      "average_command_execution_count": 53.7,
+      "average_event_count": 72.61,
+      "average_file_change_count": 4.12,
       "average_metrics": {
-        "command_execution_count": 54.36,
-        "error_count": 2.27,
-        "event_count": 74.52,
-        "file_change_count": 5.03,
+        "command_execution_count": 53.7,
+        "error_count": 2.18,
+        "event_count": 72.61,
+        "file_change_count": 4.12,
         "plan_update_count": 0.0
       },
       "average_usage": {
-        "cached_input_tokens": 475229.09,
-        "input_tokens": 561297.33,
-        "output_tokens": 9696.45,
-        "reasoning_output_tokens": 1307.88
+        "cached_input_tokens": 492792.24,
+        "input_tokens": 565508.55,
+        "output_tokens": 10609.91,
+        "reasoning_output_tokens": 1629.48
       },
       "benchmark_eligible_result_count": 33,
-      "benchmark_passed_result_count": 3,
+      "benchmark_passed_result_count": 33,
       "case_count": 11,
       "changeforge_hooks_enabled": true,
       "changeforge_install_source": "current_repository",
       "changeforge_profile": "recommended",
       "contaminated_result_count": 0,
       "delta_vs_baseline_clean": {
-        "command_execution_count_delta": 29.33,
-        "file_change_count_delta": 1.58,
-        "input_tokens_delta_pct": 3.3417,
-        "output_tokens_delta_pct": 1.137,
+        "command_execution_count_delta": 22.61,
+        "file_change_count_delta": 0.06,
+        "input_tokens_delta_pct": 2.3406,
+        "output_tokens_delta_pct": 0.4563,
         "pass_rate_delta": 0.0,
-        "reasoning_output_tokens_delta_pct": 0.733,
+        "reasoning_output_tokens_delta_pct": 0.4996,
         "security_pass_rate_delta": 0.0
       },
       "dominant_setup_failure_reason": "none",
       "dominant_setup_failure_subreason": "none",
       "failure_categories": {
-        "none": 3,
-        "test_suite_failed": 30
+        "none": 33
       },
       "grading_status_counts": {
-        "failed": 30,
-        "passed": 3
+        "passed": 33
       },
       "max_metrics": {
-        "command_execution_count": 102,
-        "error_count": 7,
-        "event_count": 137,
+        "command_execution_count": 116,
+        "error_count": 6,
+        "event_count": 153,
         "file_change_count": 10,
         "plan_update_count": 0
       },
       "max_usage": {
-        "cached_input_tokens": 1271296,
-        "input_tokens": 1412024,
-        "output_tokens": 14930,
-        "reasoning_output_tokens": 1986
+        "cached_input_tokens": 1634560,
+        "input_tokens": 1790492,
+        "output_tokens": 15183,
+        "reasoning_output_tokens": 2799
       },
       "median_metrics": {
         "command_execution_count": 50.0,
         "error_count": 2.0,
-        "event_count": 71.0,
+        "event_count": 69.0,
         "file_change_count": 4.0,
         "plan_update_count": 0.0
       },
       "median_usage": {
-        "cached_input_tokens": 378240.0,
-        "input_tokens": 445746.0,
-        "output_tokens": 9688.0,
-        "reasoning_output_tokens": 1222.0
+        "cached_input_tokens": 431744.0,
+        "input_tokens": 474798.0,
+        "output_tokens": 10310.0,
+        "reasoning_output_tokens": 1486.0
       },
       "min_metrics": {
-        "command_execution_count": 34,
+        "command_execution_count": 30,
         "error_count": 0,
-        "event_count": 50,
+        "event_count": 44,
         "file_change_count": 2,
         "plan_update_count": 0
       },
       "min_usage": {
-        "cached_input_tokens": 231424,
-        "input_tokens": 290891,
-        "output_tokens": 6461,
-        "reasoning_output_tokens": 781
+        "cached_input_tokens": 157952,
+        "input_tokens": 188365,
+        "output_tokens": 6807,
+        "reasoning_output_tokens": 737
       },
       "not_collected_grading_count": 0,
-      "pass_rate": 0.0909,
+      "pass_rate": 1.0,
       "pass_rate_ci_note": "descriptive only; small sample",
       "result_count": 33,
       "run_count": 3,
@@ -6330,8 +6380,7 @@
       },
       "telemetry_only_result_count": 0,
       "test_suite_failure_reasons": {
-        "none": 3,
-        "unknown": 30
+        "none": 33
       },
       "unknown_setup_failure_rate": 0.0,
       "user_level_install_used": false
