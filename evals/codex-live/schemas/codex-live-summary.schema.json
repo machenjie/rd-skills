@@ -265,7 +265,73 @@
       "type": "object"
     },
     "logging_summary": {
-      "type": "object"
+      "type": "object",
+      "required": [
+        "run_log_events",
+        "timeline_events",
+        "process_trace_count",
+        "redaction_status",
+        "redaction_error_count",
+        "redaction_error_markers",
+        "redaction_error_artifact_count",
+        "redaction_error_artifacts",
+        "redaction_error_artifacts_truncated",
+        "max_event_size_bytes"
+      ],
+      "properties": {
+        "run_log_events": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "timeline_events": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "process_trace_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "redaction_status": {
+          "enum": ["pass", "fail"]
+        },
+        "redaction_error_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "redaction_error_markers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "redaction_error_artifact_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "redaction_error_artifacts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "redaction_error_artifacts_truncated": {
+          "type": "boolean"
+        },
+        "first_redaction_error_artifact": {
+          "type": ["string", "null"]
+        },
+        "first_redaction_error_marker": {
+          "type": ["string", "null"]
+        },
+        "first_redaction_error_excerpt_hash": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "max_event_size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     },
     "process_compliance_summary": {
       "type": "object"

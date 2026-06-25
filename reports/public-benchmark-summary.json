@@ -191,7 +191,7 @@
     },
     {
       "command": "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json",
-      "detail": "mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=11/11; results=99/99; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=1.0; effect=neutral/neutral; token_overhead=input +234.06%, output +45.63%; command_delta=22.61; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately.",
+      "detail": "mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=11/11; results=99/99; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=1.0; effect=neutral/neutral; logging_redaction=pass; token_overhead=input +234.06%, output +45.63%; command_delta=22.61; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately.",
       "detail_data": {
         "assertion_case_count": 11,
         "auth_policy": "borrow-current",
@@ -574,45 +574,16 @@
           "Baseline contamination blocks publishing, and pass rates include assertion-backed eligible results only.",
           "Current strict live evidence covers ablation across at least 5 assertion-backed cases and 3 runs per required variant, but remains local Codex CLI evidence."
         ],
-        "previous_current_comparison": {
-          "current_run_id": "core99-ablation-rootfix-20260625-031010",
-          "previous_run_id": "ablation-core-capability-20260624-163550",
-          "setup_failed_by_variant": {
-            "after": {
-              "baseline_clean": 0,
-              "skills_only_clean": 0,
-              "skills_with_hooks_clean": 0
-            },
-            "before": {
-              "baseline_clean": 0,
-              "skills_only_clean": 0,
-              "skills_with_hooks_clean": 0
-            }
-          },
-          "setup_script_modified_bad_path": {
-            "after": 0,
-            "before": 0
-          },
-          "skills_with_hooks_vs_baseline": {
-            "after": {
-              "baseline_clean_pass_rate": 1.0,
-              "pass_rate_delta": 0.0,
-              "skills_with_hooks_clean_pass_rate": 1.0
-            },
-            "before": {
-              "baseline_clean_pass_rate": 0.0909,
-              "pass_rate_delta": 0.0,
-              "skills_with_hooks_clean_pass_rate": 0.0909
-            }
-          },
-          "starter_fragile_path": {
-            "after": 0,
-            "before": 0
-          },
-          "unknown_setup_failure_rate": {
-            "after": 0.0,
-            "before": 0.0
-          }
+        "logging_summary": {
+          "first_redaction_error_artifact": null,
+          "first_redaction_error_excerpt_hash": null,
+          "first_redaction_error_marker": null,
+          "redaction_error_artifact_count": 0,
+          "redaction_error_artifacts": [],
+          "redaction_error_artifacts_truncated": false,
+          "redaction_error_count": 0,
+          "redaction_error_markers": [],
+          "redaction_status": "pass"
         },
         "process_compliance_summary": {
           "all_core_phases_degraded_or_present_rate": 1.0,
@@ -778,7 +749,7 @@
     },
     {
       "command": "python3 scripts/validate-codex-live-benchmark-reports.py --summary reports/codex-live-benchmark-summary.json",
-      "detail": "mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=11/11; results=99/99; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=1.0; effect=neutral/neutral; token_overhead=input +234.06%, output +45.63%; command_delta=22.61; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately.",
+      "detail": "mode=ablation; scope=multi_case_ablation_3_run; ready=True; cases=11/11; results=99/99; runs=baseline_clean:3, skills_only_clean:3, skills_with_hooks_clean:3; variants=baseline_clean, skills_only_clean, skills_with_hooks_clean; skills_with_hooks_clean.pass_rate=1.0; effect=neutral/neutral; logging_redaction=pass; token_overhead=input +234.06%, output +45.63%; command_delta=22.61; limitations=Local Codex CLI runs depend on the installed CLI, configured model, account access, and local machine state.; Parsed telemetry excludes raw command bodies and assistant/user message content.; Pass rates include only benchmark_eligible assertion-backed results; telemetry-only cases are counted separately.",
       "detail_data": {
         "assertion_case_count": 11,
         "auth_policy": "borrow-current",
@@ -1161,45 +1132,16 @@
           "Baseline contamination blocks publishing, and pass rates include assertion-backed eligible results only.",
           "Current strict live evidence covers ablation across at least 5 assertion-backed cases and 3 runs per required variant, but remains local Codex CLI evidence."
         ],
-        "previous_current_comparison": {
-          "current_run_id": "core99-ablation-rootfix-20260625-031010",
-          "previous_run_id": "ablation-core-capability-20260624-163550",
-          "setup_failed_by_variant": {
-            "after": {
-              "baseline_clean": 0,
-              "skills_only_clean": 0,
-              "skills_with_hooks_clean": 0
-            },
-            "before": {
-              "baseline_clean": 0,
-              "skills_only_clean": 0,
-              "skills_with_hooks_clean": 0
-            }
-          },
-          "setup_script_modified_bad_path": {
-            "after": 0,
-            "before": 0
-          },
-          "skills_with_hooks_vs_baseline": {
-            "after": {
-              "baseline_clean_pass_rate": 1.0,
-              "pass_rate_delta": 0.0,
-              "skills_with_hooks_clean_pass_rate": 1.0
-            },
-            "before": {
-              "baseline_clean_pass_rate": 0.0909,
-              "pass_rate_delta": 0.0,
-              "skills_with_hooks_clean_pass_rate": 0.0909
-            }
-          },
-          "starter_fragile_path": {
-            "after": 0,
-            "before": 0
-          },
-          "unknown_setup_failure_rate": {
-            "after": 0.0,
-            "before": 0.0
-          }
+        "logging_summary": {
+          "first_redaction_error_artifact": null,
+          "first_redaction_error_excerpt_hash": null,
+          "first_redaction_error_marker": null,
+          "redaction_error_artifact_count": 0,
+          "redaction_error_artifacts": [],
+          "redaction_error_artifacts_truncated": false,
+          "redaction_error_count": 0,
+          "redaction_error_markers": [],
+          "redaction_status": "pass"
         },
         "process_compliance_summary": {
           "all_core_phases_degraded_or_present_rate": 1.0,

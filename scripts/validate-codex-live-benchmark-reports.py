@@ -34,6 +34,7 @@ from codex_live_benchmark_lib import (
     TEST_SUITE_FAILURE_REASONS,
     codex_live_capability_coverage_status,
     codex_live_evidence_scope_ready,
+    codex_live_logging_redaction_errors,
     codex_live_pass_rate_status,
     load_case_registry,
     print_errors,
@@ -648,6 +649,7 @@ def _strict_summary_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("strict summary cannot claim positive effect while unknown setup failures dominate")
     if summary.get("dominant_setup_failure_subreason") not in SETUP_FAILURE_SUBREASONS:
         errors.append("dominant_setup_failure_subreason is required")
+    errors.extend(codex_live_logging_redaction_errors(summary))
     variants = summary.get("variants")
     delta = summary.get("delta")
     if not isinstance(variants, dict) or not variants:
@@ -1175,12 +1177,48 @@ def _logging_summary_errors(payload: Any) -> list[str]:
     if not isinstance(payload, dict):
         return ["summary logging_summary must be an object"]
     errors: list[str] = []
-    for field in ("run_log_events", "timeline_events", "process_trace_count", "max_event_size_bytes"):
+    for field in (
+        "run_log_events",
+        "timeline_events",
+        "process_trace_count",
+        "redaction_error_count",
+        "redaction_error_artifact_count",
+        "max_event_size_bytes",
+    ):
         value = payload.get(field)
         if not isinstance(value, int) or value < 0:
             errors.append(f"summary logging_summary.{field} must be a non-negative integer")
-    if payload.get("redaction_status") not in {"pass", "fail"}:
+    redaction_status = payload.get("redaction_status")
+    if redaction_status not in {"pass", "fail"}:
         errors.append("summary logging_summary.redaction_status must be pass or fail")
+    for field in ("redaction_error_markers", "redaction_error_artifacts"):
+        value = payload.get(field)
+        if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+            errors.append(f"summary logging_summary.{field} must be a list of strings")
+    if not isinstance(payload.get("redaction_error_artifacts_truncated"), bool):
+        errors.append("summary logging_summary.redaction_error_artifacts_truncated must be a boolean")
+    for field in (
+        "first_redaction_error_artifact",
+        "first_redaction_error_marker",
+        "first_redaction_error_excerpt_hash",
+    ):
+        value = payload.get(field)
+        if value is not None and not isinstance(value, str):
+            errors.append(f"summary logging_summary.{field} must be a string or null")
+    if redaction_status == "pass" and payload.get("redaction_error_count") != 0:
+        errors.append("summary logging_summary.redaction_error_count must be 0 when redaction_status is pass")
+    if redaction_status == "fail":
+        if int(payload.get("redaction_error_count", 0) or 0) <= 0:
+            errors.append("summary logging_summary.redaction_error_count must be positive when redaction_status is fail")
+        if not payload.get("redaction_error_markers"):
+            errors.append("summary logging_summary.redaction_error_markers are required when redaction_status is fail")
+        if not payload.get("redaction_error_artifacts"):
+            errors.append("summary logging_summary.redaction_error_artifacts are required when redaction_status is fail")
+        excerpt_hash = payload.get("first_redaction_error_excerpt_hash")
+        if not isinstance(excerpt_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", excerpt_hash):
+            errors.append(
+                "summary logging_summary.first_redaction_error_excerpt_hash must be a sha256 hex string when redaction_status is fail"
+            )
     return errors
 
 

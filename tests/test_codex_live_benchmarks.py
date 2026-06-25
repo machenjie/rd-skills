@@ -147,6 +147,38 @@ def _process_summary(**overrides: object) -> dict[str, object]:
     return payload
 
 
+def _logging_summary_payload(*, redaction_status: str = "pass", **overrides: object) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "run_log_events": 1,
+        "timeline_events": 1,
+        "process_trace_count": 1,
+        "redaction_status": redaction_status,
+        "redaction_error_count": 0,
+        "redaction_error_markers": [],
+        "redaction_error_artifact_count": 0,
+        "redaction_error_artifacts": [],
+        "redaction_error_artifacts_truncated": False,
+        "first_redaction_error_artifact": None,
+        "first_redaction_error_marker": None,
+        "first_redaction_error_excerpt_hash": None,
+        "max_event_size_bytes": 10,
+    }
+    if redaction_status == "fail":
+        payload.update(
+            {
+                "redaction_error_count": 1,
+                "redaction_error_markers": ["/Users/"],
+                "redaction_error_artifact_count": 1,
+                "redaction_error_artifacts": ["run.log.jsonl"],
+                "first_redaction_error_artifact": "run.log.jsonl",
+                "first_redaction_error_marker": "/Users/",
+                "first_redaction_error_excerpt_hash": "a" * 64,
+            }
+        )
+    payload.update(overrides)
+    return payload
+
+
 def _strict_summary_payload(**overrides: object) -> dict[str, object]:
     usage = {
         "input_tokens": 10,
@@ -393,6 +425,7 @@ def _strict_summary_payload(**overrides: object) -> dict[str, object]:
             "skills_with_hooks_regression_cases": [],
             "partial_status_reasons": [],
         },
+        "logging_summary": _logging_summary_payload(),
         "process_compliance_summary": _process_summary(),
         "telemetry": {"event_count": 2, "parse_error_count": 0},
         "limitations": ["strict local evidence"],
@@ -2955,6 +2988,71 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         self.assertEqual(summary["process_compliance_summary"]["pdd_inferred_rate"], 0.0)
         self.assertEqual(summary["process_compliance_summary"]["validation_command_present_rate"], 1.0)
 
+    def test_logging_summary_records_bounded_redaction_diagnostics(self) -> None:
+        summary_module = _load_script(
+            "generate_codex_live_summary_redaction_diagnostics",
+            "scripts/generate-codex-live-summary.py",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            run_dir.joinpath("run.log.jsonl").write_text(
+                json.dumps({"message": "synthetic path /" + "Users/example/project"}) + "\n",
+                encoding="utf-8",
+            )
+            run_dir.joinpath("timeline.jsonl").write_text(
+                json.dumps({"message": "synthetic path /" + "home/example/project"}) + "\n",
+                encoding="utf-8",
+            )
+            trace_dir = run_dir / "cases" / "security__ssrf-url-allowlist" / "baseline_clean" / "run-01"
+            trace_dir.mkdir(parents=True)
+            trace_dir.joinpath("process-trace.json").write_text(
+                json.dumps({"note": "synthetic token " + "sk-" + "TESTTOKEN123456"}),
+                encoding="utf-8",
+            )
+            logging_summary = summary_module._logging_summary(run_dir)
+        self.assertEqual(logging_summary["redaction_status"], "fail")
+        self.assertGreaterEqual(logging_summary["redaction_error_count"], 3)
+        self.assertEqual(
+            logging_summary["redaction_error_artifacts"],
+            [
+                "cases/security__ssrf-url-allowlist/baseline_clean/run-01/process-trace.json",
+                "run.log.jsonl",
+                "timeline.jsonl",
+            ],
+        )
+        self.assertIn("/Users/", logging_summary["redaction_error_markers"])
+        self.assertIn("/home/", logging_summary["redaction_error_markers"])
+        self.assertIn("sk-", logging_summary["redaction_error_markers"])
+        self.assertRegex(logging_summary["first_redaction_error_excerpt_hash"], r"^[0-9a-f]{64}$")
+        self.assertNotIn("example/project", json.dumps(logging_summary))
+
+    def test_logging_summary_ignores_documented_marker_fragments(self) -> None:
+        summary_module = _load_script(
+            "generate_codex_live_summary_redaction_false_positive",
+            "scripts/generate-codex-live-summary.py",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            run_dir.joinpath("run.log.jsonl").write_text(
+                json.dumps({"message": "validator rejects /Users/ and /home/ path fragments"}) + "\n",
+                encoding="utf-8",
+            )
+            run_dir.joinpath("timeline.jsonl").write_text(
+                json.dumps({"message": "compaction_workflow.py owns task-state summarization"}) + "\n",
+                encoding="utf-8",
+            )
+            trace_dir = run_dir / "cases" / "compact__context-retention-after-compaction" / "skills_only_clean" / "run-01"
+            trace_dir.mkdir(parents=True)
+            trace_dir.joinpath("process-trace.json").write_text(
+                json.dumps({"ownership_decision": ["task-state remains bounded"]}),
+                encoding="utf-8",
+            )
+            logging_summary = summary_module._logging_summary(run_dir)
+        self.assertEqual(logging_summary["redaction_status"], "pass")
+        self.assertEqual(logging_summary["redaction_error_count"], 0)
+        self.assertEqual(logging_summary["redaction_error_markers"], [])
+        self.assertIsNone(logging_summary["first_redaction_error_excerpt_hash"])
+
     def _trace_case(self) -> SimpleNamespace:
         return SimpleNamespace(
             id="security/ssrf-url-allowlist",
@@ -3559,6 +3657,61 @@ Residual Risk:
         self.assertIn("mode=ablation", item.detail)
         self.assertIn("ready=True", item.detail)
         self.assertEqual(capability_item.status, "partial")
+
+    def test_scorecard_and_public_summary_reject_logging_redaction_failure(self) -> None:
+        scorecard = _load_script(
+            "generate_professional_scorecard_codex_live_redaction_failure",
+            "scripts/generate-professional-scorecard.py",
+        )
+        public = _load_script(
+            "generate_public_summary_codex_live_redaction_failure",
+            "scripts/generate-public-benchmark-summary.py",
+        )
+        logging_summary = _logging_summary_payload(redaction_status="fail")
+        summary = _strong_ablation_summary_payload(logging_summary=logging_summary)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            (reports / "codex-live-benchmark-summary.json").write_text(json.dumps(summary), encoding="utf-8")
+            pass_status, pass_detail = scorecard.codex_live_pass_rate_benchmark_status(root)
+            capability_status, capability_detail = scorecard.codex_live_capability_coverage_benchmark_status(root)
+            aggregate_status, aggregate_detail = scorecard.codex_live_benchmark_status(root)
+            item = public._codex_live_pass_rate_benchmark_item(root)
+            capability_item = public._codex_live_capability_coverage_item(root)
+        self.assertEqual(pass_status, "fail")
+        self.assertIn("logging_summary.redaction_status is fail", pass_detail)
+        self.assertIn("logging_summary.first_redaction_error_excerpt_hash", pass_detail)
+        self.assertEqual(capability_status, "fail")
+        self.assertIn("logging_summary.redaction_status is fail", capability_detail)
+        self.assertEqual(aggregate_status, "fail")
+        self.assertIn("logging_summary.redaction_status is fail", aggregate_detail)
+        self.assertEqual(item.status, "fail")
+        self.assertIn("logging_redaction=fail", item.detail)
+        self.assertEqual(capability_item.status, "fail")
+
+    def test_validator_rejects_redaction_fail_without_diagnostics(self) -> None:
+        validator = _load_script(
+            "validate_codex_live_report_consistency_redaction_diagnostics",
+            "scripts/validate-codex-live-benchmark-reports.py",
+        )
+        summary = _strong_ablation_summary_payload(
+            logging_summary={
+                "run_log_events": 1,
+                "timeline_events": 1,
+                "process_trace_count": 1,
+                "redaction_status": "fail",
+                "max_event_size_bytes": 10,
+            }
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            summary_path = Path(tmp) / "summary.json"
+            summary_path.write_text(json.dumps(summary), encoding="utf-8")
+            errors = validator.validate_summary(summary_path, publishable=True)
+        self.assertTrue(any("logging_summary.redaction_status is fail" in error for error in errors))
+        self.assertTrue(any("redaction_error_count must be positive" in error for error in errors))
+        self.assertTrue(any("redaction_error_markers are required" in error for error in errors))
+        self.assertTrue(any("first_redaction_error_excerpt_hash" in error for error in errors))
 
     def test_public_summary_syncs_codex_live_evidence_level_from_live_summary(self) -> None:
         public = _load_script(

@@ -5905,9 +5905,17 @@
     "Current strict live evidence covers ablation across at least 5 assertion-backed cases and 3 runs per required variant, but remains local Codex CLI evidence."
   ],
   "logging_summary": {
+    "first_redaction_error_artifact": null,
+    "first_redaction_error_excerpt_hash": null,
+    "first_redaction_error_marker": null,
     "max_event_size_bytes": 21535,
     "process_trace_count": 99,
-    "redaction_status": "fail",
+    "redaction_error_artifact_count": 0,
+    "redaction_error_artifacts": [],
+    "redaction_error_artifacts_truncated": false,
+    "redaction_error_count": 0,
+    "redaction_error_markers": [],
+    "redaction_status": "pass",
     "run_log_events": 727,
     "timeline_events": 727
   },

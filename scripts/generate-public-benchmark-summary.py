@@ -385,6 +385,7 @@ def _codex_live_public_detail(summary: dict[str, Any], detail: dict[str, Any]) -
     limitations = detail.get("limitations") if isinstance(detail.get("limitations"), list) else []
     warnings = detail.get("readiness_warnings") if isinstance(detail.get("readiness_warnings"), list) else []
     strict_errors = detail.get("strict_errors") if isinstance(detail.get("strict_errors"), list) else []
+    logging_summary = detail.get("logging_summary") if isinstance(detail.get("logging_summary"), dict) else {}
     overhead_warning = _codex_live_overhead_warning(summary, delta if isinstance(delta, dict) else {})
     if overhead_warning:
         warnings = [*warnings, overhead_warning]
@@ -398,6 +399,7 @@ def _codex_live_public_detail(summary: dict[str, Any], detail: dict[str, Any]) -
         f"variants={variant_names}",
         f"skills_with_hooks_clean.pass_rate={hooks_pass_rate}",
         f"effect={detail.get('effect_status')}/{detail.get('effect_verdict')}",
+        f"logging_redaction={logging_summary.get('redaction_status', 'not_collected')}",
         f"token_overhead=input {input_overhead}, output {output_overhead}",
         f"command_delta={command_delta}",
     ]

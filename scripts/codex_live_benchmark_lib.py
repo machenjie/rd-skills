@@ -691,6 +691,7 @@ def codex_live_strict_artifact_errors(summary: dict[str, Any]) -> list[str]:
         errors.append("effect_verdict is required")
     if summary.get("effect_status") not in EFFECT_STATUSES:
         errors.append("effect_status is required")
+    errors.extend(codex_live_logging_redaction_errors(summary))
 
     variants = summary.get("variants") if isinstance(summary.get("variants"), dict) else {}
     for variant in MODE_DEFAULT_VARIANTS.get(str(benchmark_mode), ()):
@@ -720,6 +721,27 @@ def codex_live_strict_artifact_errors(summary: dict[str, Any]) -> list[str]:
         for key in REQUIRED_ABLATION_DELTAS:
             if key not in delta:
                 errors.append(f"ablation delta.{key} is required")
+    return errors
+
+
+def codex_live_logging_redaction_errors(summary: dict[str, Any]) -> list[str]:
+    """Return strict artifact errors from bounded logging redaction diagnostics."""
+    logging_summary = summary.get("logging_summary")
+    if not isinstance(logging_summary, dict):
+        return []
+    redaction_status = logging_summary.get("redaction_status")
+    if redaction_status != "fail":
+        return []
+    errors = ["logging_summary.redaction_status is fail"]
+    markers = logging_summary.get("redaction_error_markers")
+    if isinstance(markers, list) and markers:
+        errors.append("logging_summary.redaction_error_markers=" + ", ".join(str(marker) for marker in markers[:8]))
+    artifacts = logging_summary.get("redaction_error_artifacts")
+    if isinstance(artifacts, list) and artifacts:
+        errors.append("logging_summary.redaction_error_artifacts=" + ", ".join(str(path) for path in artifacts[:8]))
+    excerpt_hash = logging_summary.get("first_redaction_error_excerpt_hash")
+    if isinstance(excerpt_hash, str) and excerpt_hash:
+        errors.append(f"logging_summary.first_redaction_error_excerpt_hash={excerpt_hash}")
     return errors
 
 
@@ -809,6 +831,9 @@ def codex_live_capability_coverage_status(summary: dict[str, Any] | None) -> tup
     """Return core capability coverage status plus errors and warnings."""
     if not isinstance(summary, dict):
         return "not_collected", [], ["summary missing"]
+    strict_errors = codex_live_strict_artifact_errors(summary)
+    if strict_errors:
+        return "fail", strict_errors, []
     coverage = codex_live_capability_coverage_summary(summary)
     status = str(coverage.get("status") or "not_collected")
     errors = [str(error) for error in coverage.get("errors", [])] if isinstance(coverage.get("errors"), list) else []
@@ -1203,6 +1228,7 @@ def codex_live_compact_detail(
     coverage = summary.get("coverage_summary") if isinstance(summary.get("coverage_summary"), dict) else {}
     cost = summary.get("cost_summary") if isinstance(summary.get("cost_summary"), dict) else {}
     capability = codex_live_capability_coverage_summary(summary)
+    logging_summary = summary.get("logging_summary") if isinstance(summary.get("logging_summary"), dict) else {}
     return {
         "evidence_status": status,
         "evidence_level": summary.get("evidence_level"),
@@ -1275,6 +1301,17 @@ def codex_live_compact_detail(
             "cost_caveat": cost.get("cost_caveat"),
             "cost_is_telemetry_only": cost.get("cost_is_telemetry_only"),
             "telemetry_only_note": cost.get("telemetry_only_note"),
+        },
+        "logging_summary": {
+            "redaction_status": logging_summary.get("redaction_status"),
+            "redaction_error_count": logging_summary.get("redaction_error_count"),
+            "redaction_error_markers": logging_summary.get("redaction_error_markers"),
+            "redaction_error_artifact_count": logging_summary.get("redaction_error_artifact_count"),
+            "redaction_error_artifacts": logging_summary.get("redaction_error_artifacts"),
+            "redaction_error_artifacts_truncated": logging_summary.get("redaction_error_artifacts_truncated"),
+            "first_redaction_error_artifact": logging_summary.get("first_redaction_error_artifact"),
+            "first_redaction_error_marker": logging_summary.get("first_redaction_error_marker"),
+            "first_redaction_error_excerpt_hash": logging_summary.get("first_redaction_error_excerpt_hash"),
         },
         "process_compliance_summary": summary.get("process_compliance_summary"),
         "limitations": summary.get("limitations"),

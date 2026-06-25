@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import re
 import sys
@@ -37,6 +38,17 @@ from codex_live_benchmark_lib import (
 
 METRIC_KEYS = ("event_count", "command_execution_count", "file_change_count", "plan_update_count", "error_count")
 USAGE_KEYS = ("input_tokens", "cached_input_tokens", "output_tokens", "reasoning_output_tokens")
+REDACTION_ARTIFACT_LABEL_LIMIT = 50
+FORBIDDEN_REDACTION_MARKERS = ("/Users/", "/home/", "C:\\Users\\", "auth.json", "CODEX_API_KEY", "OPENAI_API_KEY", "sk-")
+REDACTION_MARKER_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("/Users/", re.compile(r"/Users/[^\s\"'<>]+")),
+    ("/home/", re.compile(r"/home/[^\s\"'<>]+")),
+    ("C:\\Users\\", re.compile(r"[A-Za-z]:\\Users\\[^\s\"'<>]+")),
+    ("auth.json", re.compile(r"auth\.json")),
+    ("CODEX_API_KEY", re.compile(r"CODEX_API_KEY")),
+    ("OPENAI_API_KEY", re.compile(r"OPENAI_API_KEY")),
+    ("sk-", re.compile(r"sk-(?=[A-Za-z0-9_-]{10,})(?=[A-Za-z0-9_-]*[A-Z0-9])[A-Za-z0-9_-]+")),
+)
 PROCESS_CORE_PHASES = ("pdd", "ddd", "sdd", "tdd")
 PROCESS_REVIEW_PHASES = ("review", "repair", "rereview")
 _PROCESS_TRACE_VALIDATOR: Any = None
@@ -118,6 +130,7 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
     ]
     benchmark_mode = str(manifest.get("benchmark_mode") or "clean-paired")
     status = _summary_status(manifest, real_results)
+    logging_summary = _logging_summary(run_dir)
     variant_order = _variant_order(manifest, real_results, benchmark_mode)
     variants = {variant: _variant_summary(_results_for_variant(real_results, variant)) for variant in variant_order}
     deltas = _variant_deltas(variants)
@@ -180,7 +193,7 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         "evidence_scope": evidence_scope,
         "evidence_scope_ready": evidence_scope_detail["evidence_scope_ready"],
         "evidence_scope_detail": evidence_scope_detail,
-        "evidence_status": _evidence_status(status),
+        "evidence_status": _summary_evidence_status(status, logging_summary),
         "effect_verdict": effect["verdict"],
         "effect_status": effect["status"],
         "effect_summary": effect["summary"],
@@ -249,7 +262,7 @@ def generate_summary(run_dir: Path) -> dict[str, Any]:
         "coverage_summary": _coverage_summary(cases, cases_summary, case_metadata),
         "cost_summary": _cost_summary(real_results, variants),
         "stability_summary": _stability_summary(real_results, variants, cases_summary, manifest),
-        "logging_summary": _logging_summary(run_dir),
+        "logging_summary": logging_summary,
         "process_compliance_summary": _process_compliance_summary(real_results),
         "telemetry": {
             "event_count": sum(int((result.get("metrics") or {}).get("event_count", 0) or 0) for result in real_results),
@@ -295,9 +308,15 @@ def _case_metadata_by_id() -> dict[str, dict[str, Any]]:
 def _logging_summary(run_dir: Path) -> dict[str, Any]:
     log_paths = [run_dir / "run.log.jsonl", run_dir / "timeline.jsonl"]
     process_traces = sorted(run_dir.glob("cases/*/*/run-*/process-trace.json"))
-    redaction_errors: list[str] = []
+    redaction_errors: list[dict[str, str]] = []
     max_event_size = 0
     counts = {"run.log.jsonl": 0, "timeline.jsonl": 0}
+
+    def record_redaction_errors(path: Path, text: str) -> None:
+        artifact = _bounded_redaction_artifact_label(run_dir, path)
+        for error in _redaction_errors(text):
+            redaction_errors.append({"artifact": artifact, **error})
+
     for path in log_paths:
         if not path.exists():
             continue
@@ -306,16 +325,27 @@ def _logging_summary(run_dir: Path) -> dict[str, Any]:
                 continue
             counts[path.name] += 1
             max_event_size = max(max_event_size, len(line.encode("utf-8")))
-            redaction_errors.extend(_redaction_errors(line))
+            record_redaction_errors(path, line)
     for path in process_traces:
         text = path.read_text(encoding="utf-8", errors="ignore")
         max_event_size = max(max_event_size, len(text.encode("utf-8")))
-        redaction_errors.extend(_redaction_errors(text))
+        record_redaction_errors(path, text)
+    redaction_artifacts = sorted({error["artifact"] for error in redaction_errors})
+    redaction_markers = sorted({error["marker"] for error in redaction_errors})
+    first_error = redaction_errors[0] if redaction_errors else {}
     return {
         "run_log_events": counts["run.log.jsonl"],
         "timeline_events": counts["timeline.jsonl"],
         "process_trace_count": len(process_traces),
         "redaction_status": "pass" if not redaction_errors else "fail",
+        "redaction_error_count": len(redaction_errors),
+        "redaction_error_markers": redaction_markers,
+        "redaction_error_artifact_count": len(redaction_artifacts),
+        "redaction_error_artifacts": redaction_artifacts[:REDACTION_ARTIFACT_LABEL_LIMIT],
+        "redaction_error_artifacts_truncated": len(redaction_artifacts) > REDACTION_ARTIFACT_LABEL_LIMIT,
+        "first_redaction_error_artifact": first_error.get("artifact"),
+        "first_redaction_error_marker": first_error.get("marker"),
+        "first_redaction_error_excerpt_hash": first_error.get("excerpt_hash"),
         "max_event_size_bytes": max_event_size,
     }
 
@@ -454,9 +484,29 @@ def _source_is_fallback(source: str) -> bool:
     return normalized in PROCESS_FALLBACK_SOURCE_ALIASES
 
 
-def _redaction_errors(text: str) -> list[str]:
-    forbidden = ("/Users/", "/home/", "C:\\Users\\", "auth.json", "CODEX_API_KEY", "OPENAI_API_KEY", "sk-")
-    return [marker for marker in forbidden if marker in text]
+def _redaction_errors(text: str) -> list[dict[str, str]]:
+    errors: list[dict[str, str]] = []
+    for marker, pattern in REDACTION_MARKER_PATTERNS:
+        match = pattern.search(text)
+        if match is None:
+            continue
+        start = max(0, match.start() - 64)
+        end = min(len(text), match.end() + 64)
+        excerpt = text[start:end]
+        errors.append(
+            {
+                "marker": marker,
+                "excerpt_hash": hashlib.sha256(excerpt.encode("utf-8", errors="ignore")).hexdigest(),
+            }
+        )
+    return errors
+
+
+def _bounded_redaction_artifact_label(run_dir: Path, path: Path) -> str:
+    try:
+        return path.resolve().relative_to(run_dir.resolve()).as_posix()
+    except ValueError:
+        return path.name
 
 
 def _summary_status(manifest: dict[str, Any], results: list[dict[str, Any]]) -> str:
@@ -879,6 +929,12 @@ def _evidence_status(status: str) -> str:
     if status == "failed":
         return "fail"
     return "not_collected"
+
+
+def _summary_evidence_status(status: str, logging_summary: dict[str, Any]) -> str:
+    if logging_summary.get("redaction_status") == "fail":
+        return "fail"
+    return _evidence_status(status)
 
 
 def _effect_evaluation(
