@@ -49,6 +49,7 @@
     "delta",
     "cases",
     "cases_summary",
+    "logging_summary",
     "limitations"
   ],
   "properties": {

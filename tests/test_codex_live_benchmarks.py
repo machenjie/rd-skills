@@ -1828,6 +1828,10 @@ class CodexLiveBenchmarkTests(unittest.TestCase):
         )
         payload = _strong_ablation_summary_payload()
         payload.pop("logging_summary")
+        schema = json.loads(
+            (ROOT / "evals/codex-live/schemas/codex-live-summary.schema.json").read_text()
+        )
+        self.assertIn("logging_summary", schema["required"])
         self.assertIn("logging_summary", helper.schema_required_fields("summary"))
         required_errors = helper.validate_required_fields(payload, "summary")
         self.assertTrue(any("missing required field logging_summary" in error for error in required_errors))
