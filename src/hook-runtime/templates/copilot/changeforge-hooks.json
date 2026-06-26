@@ -36,6 +36,11 @@
       },
       {
         "type": "command",
+        "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_tool_output_boundary_gate.py\"",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
         "command": "CHANGEFORGE_AGENT=copilot /usr/bin/env python3 \"$(git rev-parse --show-toplevel)/.github/hooks/changeforge/changeforge_review_gate.py\"",
         "timeoutSec": 10
       },

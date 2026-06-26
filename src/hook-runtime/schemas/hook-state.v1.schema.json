@@ -30,6 +30,139 @@
       "maxItems": 50,
       "items": { "type": "string", "maxLength": 300 }
     },
+    "contextControlRecords": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "not": {
+          "anyOf": [
+            { "required": ["prompt"] },
+            { "required": ["prompt_text"] },
+            { "required": ["raw_prompt"] },
+            { "required": ["raw_command_output"] },
+            { "required": ["full_output"] },
+            { "required": ["full_diff"] },
+            { "required": ["full_file"] },
+            { "required": ["file_contents"] },
+            { "required": ["environment"] },
+            { "required": ["secrets"] },
+            { "required": ["credentials"] }
+          ]
+        }
+      }
+    },
+    "toolOutputBoundaryRecords": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": { "type": "integer", "const": 1 },
+          "tool_name": { "type": "string", "maxLength": 300 },
+          "event_name": { "type": "string", "maxLength": 300 },
+          "output_size_class": {
+            "type": "string",
+            "enum": ["none", "small", "large", "unknown", "unsupported"]
+          },
+          "output_bytes": { "type": ["integer", "null"], "minimum": 0 },
+          "output_lines": { "type": ["integer", "null"], "minimum": 0 },
+          "artifact_path": { "type": "string", "maxLength": 300 },
+          "artifact_path_source": {
+            "type": "string",
+            "enum": ["explicit_tool_result", "user_created", "not_available"]
+          },
+          "digest": { "type": ["string", "null"], "maxLength": 300 },
+          "bounded_summary": { "$ref": "#/$defs/stringList" },
+          "truncation_advice": { "type": "string", "maxLength": 300 },
+          "llm_context_policy": {
+            "type": "string",
+            "enum": [
+              "inline_bounded",
+              "artifact_reference_only",
+              "rerun_with_redirect",
+              "unsupported_runtime"
+            ]
+          },
+          "privacy_status": { "type": "string", "enum": ["pass", "fail"] },
+          "unsupported_reason": { "type": ["string", "null"], "maxLength": 300 }
+        },
+        "not": {
+          "anyOf": [
+            { "required": ["stdout"] },
+            { "required": ["stderr"] },
+            { "required": ["command_output"] },
+            { "required": ["full_diff"] },
+            { "required": ["file_contents"] },
+            { "required": ["raw_prompt"] },
+            { "required": ["env"] },
+            { "required": ["secrets"] }
+          ]
+        }
+      }
+    },
+    "branchRouteRepairSummaryRecords": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": { "type": "integer", "const": 1 },
+          "summary_id": { "type": "string", "maxLength": 300 },
+          "trigger": {
+            "type": "string",
+            "enum": [
+              "repeated_same_path_retry",
+              "repair_after_review",
+              "route_repair",
+              "branch_switch",
+              "compaction_recovery"
+            ]
+          },
+          "abandoned_or_repaired_route": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "owner_skill": { "type": "string", "maxLength": 300 },
+              "reviewer_skill": { "type": "string", "maxLength": 300 },
+              "hypothesis": { "type": "string", "maxLength": 300 },
+              "files_touched": { "$ref": "#/$defs/stringList" },
+              "validation_result": { "type": "string", "maxLength": 300 },
+              "failure_reason": { "type": "string", "maxLength": 300 }
+            }
+          },
+          "reusable_findings": { "$ref": "#/$defs/stringList" },
+          "forbidden_retries": { "$ref": "#/$defs/stringList" },
+          "new_route": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "owner_skill": { "type": "string", "maxLength": 300 },
+              "selected_capabilities": { "$ref": "#/$defs/stringList" },
+              "validation_plan": { "$ref": "#/$defs/stringList" }
+            }
+          },
+          "residual_risk": { "$ref": "#/$defs/stringList" },
+          "privacy_status": { "type": "string", "enum": ["pass", "fail"] }
+        },
+        "not": {
+          "anyOf": [
+            { "required": ["prompt"] },
+            { "required": ["raw_prompt"] },
+            { "required": ["stdout"] },
+            { "required": ["stderr"] },
+            { "required": ["command_output"] },
+            { "required": ["full_diff"] },
+            { "required": ["file_contents"] },
+            { "required": ["env"] },
+            { "required": ["secrets"] }
+          ]
+        }
+      }
+    },
     "runtimeAdapter": {
       "type": "object",
       "additionalProperties": false,
@@ -120,6 +253,28 @@
     "suggested_capabilities": { "$ref": "#/$defs/stringList" },
     "suggested_domain_extensions": { "$ref": "#/$defs/stringList" },
     "suggested_gates": { "$ref": "#/$defs/stringList" },
+    "context_control_records": {
+      "description": "Bounded context budget records; never raw prompts, full outputs, full diffs, full files, environment, or secrets.",
+      "$ref": "#/$defs/contextControlRecords"
+    },
+    "tool_output_boundaries": {
+      "description": "Bounded tool-output records; never raw stdout, stderr, prompts, environment, full diffs, full files, or secrets.",
+      "$ref": "#/$defs/toolOutputBoundaryRecords"
+    },
+    "artifact_references": {
+      "description": "Repo-relative or cache-scoped artifact references created explicitly by a tool or user.",
+      "$ref": "#/$defs/stringList"
+    },
+    "branch_route_repair_summaries": {
+      "description": "Bounded branch/route-repair summaries; never raw prompts, full outputs, full diffs, full files, environment, or secrets.",
+      "$ref": "#/$defs/branchRouteRepairSummaryRecords"
+    },
+    "route_repair_forbidden_retries": {
+      "description": "Bounded retry warnings that prevent repeating failed same-path repair attempts.",
+      "$ref": "#/$defs/stringList"
+    },
+    "context_budget_findings": { "$ref": "#/$defs/stringList" },
+    "skipped_references": { "$ref": "#/$defs/stringList" },
     "implementation_preflights": {
       "description": "Bounded summaries of implementation preflight manifests seen this turn; never raw assistant messages.",
       "$ref": "#/$defs/stringList"

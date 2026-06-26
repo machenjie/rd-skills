@@ -99,6 +99,7 @@ class HookTemplateTests(unittest.TestCase):
             ("SessionStart", "changeforge_session_bootstrap"),
             ("UserPromptSubmit", "changeforge_user_prompt_route_reminder"),
             ("PreToolUse", "changeforge_pre_tool_risk_preview"),
+            ("PostToolUse", "changeforge_tool_output_boundary_gate"),
             ("SubagentStart", "changeforge_session_bootstrap"),
             ("SubagentStop", "changeforge_subagent_stop_reminder"),
         ):
@@ -175,7 +176,7 @@ class HookTemplateTests(unittest.TestCase):
         hooks = data["hooks"]
         for event, script in (
             ("SessionStart", "changeforge_session_bootstrap"),
-            ("PostToolUse", "changeforge_post_edit_structure_gate"),
+            ("PostToolUse", "changeforge_tool_output_boundary_gate"),
             ("SubagentStart", "changeforge_session_bootstrap"),
             ("Stop", "changeforge_stop_closure_gate"),
         ):
@@ -220,7 +221,17 @@ class HookTemplateTests(unittest.TestCase):
             batch_commands = json.dumps(data["hooks"]["PostToolBatch"])
             self.assertIn("changeforge_professional_injector", batch_commands)
             self.assertIn("changeforge_read_context_gate", batch_commands)
+            self.assertIn("changeforge_tool_output_boundary_gate", batch_commands)
             self.assertIn("changeforge_review_gate", batch_commands)
+
+    def test_claude_post_tool_failure_invokes_tool_output_boundary_gate(self) -> None:
+        for template in (
+            HOOK_ROOT / "templates" / "claude" / "settings.changeforge-hooks.fragment.json",
+            HOOK_ROOT / "templates" / "claude-user" / "settings.changeforge-hooks.fragment.json",
+        ):
+            data = json.loads(template.read_text())
+            failure_commands = json.dumps(data["hooks"]["PostToolUseFailure"])
+            self.assertIn("changeforge_tool_output_boundary_gate", failure_commands)
 
     def test_post_tool_use_matchers_include_lowercase_mcp_read_tools(self) -> None:
         # Regression: real MCP tool names are lowercase and may be matched case-sensitively.
@@ -290,6 +301,9 @@ class HookTemplateTests(unittest.TestCase):
             "changeforge_hook_policy",
             "changeforge_state_reducer",
             "changeforge_pre_edit_structure_gate",
+            "changeforge_tool_output_boundary",
+            "changeforge_branch_route_summary",
+            "changeforge_tool_output_boundary_gate",
         ):
             self.assertIn(script, build_text)
 

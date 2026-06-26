@@ -50,6 +50,7 @@ RUNTIME_GOVERNANCE_FIXTURE_SUITES = {
     "validation-broker": "validation-broker",
     "trajectory": "execution-trajectory-analysis",
 }
+CONTEXT_CONTROL_OVERHEAD_DIMENSION = "context_control_overhead"
 STRICT_PROFILE_BUILD_DIMENSIONS = (
     "Registry source counts",
     "Profile build reproducibility",
@@ -81,9 +82,12 @@ PRODUCTIZATION_ASSETS = (
     "reports/installation-validation.json",
     "reports/public-benchmark-summary.md",
     "reports/public-benchmark-summary.json",
+    "reports/context-control-plane-eval.md",
+    "reports/context-control-plane-eval.json",
     "config/open-source-release.yaml",
     "schemas/marketplace-index.schema.json",
     "scripts/generate-professional-scorecard.py",
+    "scripts/eval-context-control-plane.py",
     "scripts/eval-executor-adapters.py",
     "scripts/eval-activation-precision.py",
     "scripts/generate-public-benchmark-summary.py",
@@ -106,6 +110,7 @@ VALIDATION_COMMANDS = [
     "python3 scripts/validate-skill-body-links.py",
     "python3 scripts/validate-skill-content-size.py",
     "python3 scripts/validate-skill-efficacy-benchmarks.py",
+    "python3 scripts/eval-context-control-plane.py",
     "python3 scripts/eval-executor-adapters.py",
     "python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks",
     "python3 scripts/audit-skill-content.py",
@@ -432,6 +437,61 @@ def runtime_governance_fixture_status(root: Path) -> tuple[str, str]:
         detail["invalid"] = invalid
         return "fail", json.dumps(detail, sort_keys=True)
     return "pass", json.dumps(detail, sort_keys=True)
+
+
+def context_control_overhead_status(root: Path) -> tuple[str, str]:
+    """Return the context-control fixture and overhead policy status."""
+    report = _read_json(root / "reports" / "context-control-plane-eval.json")
+    if not isinstance(report, dict):
+        return "not_collected", "reports/context-control-plane-eval.json missing or invalid"
+    overhead = report.get("context_control_overhead")
+    detail = {
+        "eval_status": report.get("status", "unknown"),
+        "fixture_status": (report.get("summary") or {}).get("failed", "unknown"),
+        "status": "fail",
+        "input_token_overhead_pct": None,
+        "output_token_overhead_pct": None,
+        "turn_overhead": None,
+        "command_delta": None,
+        "pass_rate_delta": None,
+        "overhead_policy_verdict": "context_control_overhead missing",
+        "evidence_boundary": "missing",
+    }
+    if isinstance(overhead, dict):
+        detail.update(
+            {
+                "status": overhead.get("status", "unknown"),
+                "input_token_overhead_pct": overhead.get("input_token_overhead_pct"),
+                "output_token_overhead_pct": overhead.get("output_token_overhead_pct"),
+                "turn_overhead": overhead.get("turn_overhead"),
+                "command_delta": overhead.get("command_delta"),
+                "pass_rate_delta": overhead.get("pass_rate_delta"),
+                "overhead_policy_verdict": overhead.get("overhead_policy_verdict"),
+                "evidence_boundary": overhead.get("evidence_boundary"),
+            }
+        )
+    if report.get("status") != "pass":
+        return "fail", json.dumps(detail, sort_keys=True)
+    status = str(detail.get("status") or "unknown")
+    if status not in STATUSES:
+        detail["invalid_status"] = status
+        return "fail", json.dumps(detail, sort_keys=True)
+    if _context_control_high_neutral_overhead(detail) and status == "pass":
+        detail["invalid_status"] = "pass_with_high_overhead_neutral_pass_rate"
+        return "fail", json.dumps(detail, sort_keys=True)
+    return status, json.dumps(detail, sort_keys=True)
+
+
+def _context_control_high_neutral_overhead(detail: dict[str, Any]) -> bool:
+    input_overhead = detail.get("input_token_overhead_pct")
+    output_overhead = detail.get("output_token_overhead_pct")
+    pass_rate_delta = detail.get("pass_rate_delta")
+    high_overhead = (
+        (isinstance(input_overhead, int | float) and float(input_overhead) > 100)
+        or (isinstance(output_overhead, int | float) and float(output_overhead) > 75)
+    )
+    neutral = not isinstance(pass_rate_delta, int | float) or float(pass_rate_delta) <= 0
+    return high_overhead and neutral
 
 
 def executor_adapter_eval_status(root: Path) -> tuple[str, str]:
@@ -908,6 +968,18 @@ def collect_dimensions(root: Path, reports_dir: Path) -> tuple[list[Dimension], 
             "python3 scripts/validate-professional-routing-coverage.py",
             "Repair runtime-governance fixture structure; do not treat structural fixtures as live runtime pass-rate evidence.",
             runtime_fixture_detail,
+        )
+    )
+
+    context_control_status, context_control_detail = context_control_overhead_status(root)
+    dimensions.append(
+        Dimension(
+            CONTEXT_CONTROL_OVERHEAD_DIMENSION,
+            context_control_status,
+            "reports/context-control-plane-eval.json",
+            "python3 scripts/eval-context-control-plane.py",
+            "Repair context-control fixtures or collect lower-overhead live evidence before claiming context-control quality improvement.",
+            context_control_detail,
         )
     )
 

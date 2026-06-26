@@ -27,7 +27,7 @@ from repository_intelligence.graph.generated_artifact_graph import (
 from repository_intelligence.graph.ownership_graph import owner_for_path
 from repository_intelligence.ranking.graph_walk import walk_related_paths
 from repository_intelligence.ranking.relevance_ranker import rank_files
-from repository_intelligence.ranking.token_budget import apply_budget_mode, trim_items_by_budget
+from repository_intelligence.ranking.token_budget import apply_budget_mode, normalize_budget_profile, trim_items_by_budget
 
 
 MAX_RELEVANT_FILES = 36
@@ -191,6 +191,8 @@ def _relevant_symbols(
                     "file": path,
                     "kind": symbol.get("kind", "registry_entry"),
                     "line": symbol.get("line") or symbol.get("line_start") or 0,
+                    "line_start": symbol.get("line_start") or symbol.get("line") or 0,
+                    "line_end": symbol.get("line_end") or symbol.get("line_start") or symbol.get("line") or 0,
                     "visibility": symbol.get("visibility", "public"),
                     "owner_object": symbol.get("owner_object"),
                     "parent_symbol": symbol.get("parent_symbol"),
@@ -620,6 +622,139 @@ def _omitted_nodes(files_by_path: dict[str, dict[str, Any]], selected_paths: lis
     return nodes
 
 
+def _int_line(value: object) -> int | None:
+    try:
+        line = int(value or 0)
+    except (TypeError, ValueError):
+        return None
+    return line if line > 0 else None
+
+
+def _line_hint_for_node(node: dict[str, Any]) -> str | None:
+    kind = str(node.get("kind") or "")
+    for symbol in node.get("symbols", []) or []:
+        if not isinstance(symbol, dict):
+            continue
+        line_start = _int_line(symbol.get("line_start") or symbol.get("line"))
+        line_end = _int_line(symbol.get("line_end") or symbol.get("line_start") or symbol.get("line"))
+        if kind == "python" and line_start and line_end:
+            return f"{line_start}-{line_end}"
+        if kind == "markdown" and str(symbol.get("kind") or "") == "heading" and line_start:
+            return f"line {line_start}"
+        if kind in {"yaml", "json"} and str(symbol.get("kind") or "") == "config_key" and line_start:
+            return f"line {line_start}"
+    return None
+
+
+def _read_policy_for_node(node: dict[str, Any], line_hint: str | None) -> str:
+    if str(node.get("kind") or "") == "markdown" and line_hint:
+        return "read_heading_only"
+    if line_hint:
+        return "read_slice"
+    return "read_full_if_small"
+
+
+def _source_truth_status(
+    path: str,
+    files_by_path: dict[str, dict[str, Any]],
+    source_paths: set[str],
+) -> str:
+    node = files_by_path.get(path)
+    if is_generated_artifact_path(path) or (node and node.get("role") == "generated_artifact"):
+        return "generated"
+    if path in source_paths or node:
+        return "source"
+    return "unknown"
+
+
+def _jit_discovery_plan(
+    *,
+    graph_path: str | Path | None,
+    context_pack_path: str | Path | None,
+) -> list[dict[str, str]]:
+    graph_arg = _command_path(graph_path, "<repository_graph_json>")
+    context_pack_arg = _command_path(context_pack_path, "<task_context_pack_json>")
+    return [
+        {
+            "command": f"python3 scripts/validate-repository-graph.py --graph {graph_arg}",
+            "purpose": "verify repository graph schema, freshness, path safety, generated boundaries, and secret-safety before using graph selectors",
+            "expected_output_policy": "bounded_summary",
+        },
+        {
+            "command": f"python3 scripts/validate-context-pack.py --context-pack {context_pack_arg}",
+            "purpose": "verify TaskContextPack schema, context-control counts, JIT read plan, path safety, artifact policy, and secret-safety",
+            "expected_output_policy": "bounded_summary",
+        },
+    ]
+
+
+def _targeted_reads(
+    *,
+    selected_files: list[dict[str, object]],
+    files_by_path: dict[str, dict[str, Any]],
+    source_paths: set[str],
+) -> list[dict[str, object]]:
+    reads: list[dict[str, object]] = []
+    for item in selected_files:
+        path = str(item.get("path") or "")
+        if not path:
+            continue
+        node = files_by_path.get(path, {})
+        line_hint = _line_hint_for_node(node)
+        reads.append(
+            {
+                "path": path,
+                "reason": str(item.get("reason") or "selected by task relevance and graph evidence"),
+                "line_hint": line_hint,
+                "read_policy": _read_policy_for_node(node, line_hint),
+                "source_truth_status": _source_truth_status(path, files_by_path, source_paths),
+            }
+        )
+    return reads
+
+
+def _deferred_reads(
+    *,
+    reuse_candidates: list[dict[str, str]],
+    omitted_nodes: list[dict[str, object]],
+    selected_paths: set[str],
+) -> list[dict[str, str]]:
+    deferred: list[dict[str, str]] = []
+    seen: set[str] = set(selected_paths)
+    for item in reuse_candidates[:8]:
+        path = str(item.get("path") or "")
+        if path and path not in seen:
+            seen.add(path)
+            deferred.append({"path": path, "reason": str(item.get("reason") or "reuse candidate")})
+    for item in omitted_nodes[:8]:
+        path = str(item.get("path") or "")
+        if path and not path.startswith("<") and path not in seen:
+            seen.add(path)
+            deferred.append({"path": path, "reason": str(item.get("reason") or "omitted by context budget")})
+    return deferred
+
+
+def _forbidden_reads(
+    *,
+    excluded_context: list[dict[str, str]],
+    generated_artifacts: list[dict[str, object]],
+) -> list[dict[str, str]]:
+    forbidden: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for item in excluded_context:
+        path = str(item.get("path") or "")
+        reason = str(item.get("reason") or "excluded context")
+        if path and path not in seen:
+            seen.add(path)
+            forbidden.append({"path": path, "reason": reason})
+    for item in generated_artifacts:
+        path = str(item.get("generated_path") or "")
+        if path and path not in seen:
+            seen.add(path)
+            forbidden.append({"path": path, "reason": "generated output; inspect source_of_truth instead"})
+    return forbidden
+
+
 def _residual_risk(
     *,
     freshness: dict[str, object],
@@ -661,14 +796,17 @@ def build_context_pack(
     graph_path: str | Path | None = None,
     context_pack_path: str | Path | None = None,
     budget_mode: str = "single-stage",
+    budget_profile: str = "authoring",
 ) -> dict[str, Any]:
     """Build a bounded AI-agent task context pack from a repository graph."""
     payload = _graph_payload(graph)
+    budget_profile = normalize_budget_profile(budget_profile)
     max_files, max_symbols, context_budget_tokens, budget_mode = apply_budget_mode(
         budget_mode=budget_mode,
         max_files=max_files,
         max_symbols=max_symbols,
         context_budget_tokens=context_budget_tokens,
+        budget_profile=budget_profile,
     )
     files = _refresh_files(payload.get("files", []), repo_root)
     files_by_path = {str(file_node.get("path")): file_node for file_node in files if isinstance(file_node, dict)}
@@ -738,6 +876,7 @@ def build_context_pack(
     selected_files = trim_items_by_budget(selected_files, context_budget_tokens)
     relevant_paths = [str(item["path"]) for item in selected_files]
     ownership = _ownership_for_paths(payload, relevant_paths)
+    selected_symbols = _relevant_symbols(files_by_path, relevant_paths, max_symbols=max_symbols)
 
     related_tests = _related_tests(files_by_path, edges, relevant_paths)
     graph_validation_candidates = _graph_validation_candidates(
@@ -772,10 +911,52 @@ def build_context_pack(
     omitted_nodes = _omitted_nodes(files_by_path, relevant_paths)
     rejected_locations = _rejected_locations(ownership)
     reuse_candidates = _reuse_candidates(files_by_path, relevant_paths, ownership)
+    source_paths = {str(item.get("path")) for item in source_of_truth if item.get("path")}
+    excluded_context = [
+        {"path": "dist/", "reason": "generated_only"},
+        {"path": ".git/", "reason": "unsafe"},
+        {"path": "node_modules/", "reason": "too_broad"},
+        {"path": ".venv/", "reason": "too_broad"},
+    ]
+    context_control = {
+        "budget_mode": budget_mode,
+        "budget_profile": budget_profile,
+        "context_budget_tokens": context_budget_tokens,
+        "max_file_count": max_files,
+        "max_symbol_count": max_symbols,
+        "selected_file_count": len(selected_files),
+        "omitted_file_count": max(0, len(files_by_path) - len(selected_files)),
+        "selected_symbol_count": len(selected_symbols),
+        "selected_graph_node_count": len(selected_graph_nodes),
+        "skipped_graph_node_count": len(skipped_graph_nodes),
+        "signal_density_rationale": (
+            "selected files are bounded by changed paths, graph distance, task relevance, "
+            "freshness, confidence, and token budget; omitted graph nodes remain deferred reads"
+        ),
+    }
+    jit_retrieval_plan = {
+        "discovery": _jit_discovery_plan(graph_path=graph_path, context_pack_path=context_pack_path),
+        "targeted_reads": _targeted_reads(
+            selected_files=selected_files,
+            files_by_path=files_by_path,
+            source_paths=source_paths,
+        ),
+        "deferred_reads": _deferred_reads(
+            reuse_candidates=reuse_candidates,
+            omitted_nodes=omitted_nodes,
+            selected_paths=set(relevant_paths),
+        ),
+        "forbidden_reads": _forbidden_reads(excluded_context=excluded_context, generated_artifacts=generated_artifacts),
+    }
+    artifact_policy = {
+        "large_outputs": "artifact_reference_only",
+        "full_graph_dump": "forbidden",
+        "full_test_log_dump": "forbidden",
+    }
 
     pack = {
         "task_context_pack": {
-            "schema_version": 2,
+            "schema_version": 3,
             "task": task_goal,
             "task_goal": task_goal,
             "graph_source": {
@@ -786,13 +967,16 @@ def build_context_pack(
             },
             "changed_paths": normalized_changed,
             "freshness": freshness,
+            "context_control": context_control,
+            "jit_retrieval_plan": jit_retrieval_plan,
+            "artifact_policy": artifact_policy,
             "source_of_truth": source_of_truth,
             "selected_files": selected_files,
             "selected_graph_nodes": selected_graph_nodes,
             "skipped_graph_nodes": skipped_graph_nodes,
             "closure_evidence": selected_graph_nodes,
             "assumptions": graph_assumptions,
-            "selected_symbols": _relevant_symbols(files_by_path, relevant_paths, max_symbols=max_symbols),
+            "selected_symbols": selected_symbols,
             "caller_callee_edges": _edge_bucket(selected_edges, relevant_paths, {"import"}),
             "imports": _imports(files_by_path, relevant_paths),
             "references": _references(files_by_path, relevant_paths),
@@ -803,11 +987,12 @@ def build_context_pack(
             "rejected_locations": rejected_locations,
             "anti_bloat_decision": {
                 "budget_mode": budget_mode,
+                "budget_profile": budget_profile,
                 "max_files": max_files,
                 "max_symbols": max_symbols,
                 "context_budget_tokens": context_budget_tokens,
                 "selected_file_count": len(selected_files),
-                "selected_symbol_count": len(_relevant_symbols(files_by_path, relevant_paths, max_symbols=max_symbols)),
+                "selected_symbol_count": len(selected_symbols),
                 "total_indexed_files": len(files_by_path),
                 "omitted_node_count": max(0, len(files_by_path) - len(selected_files)),
                 "selected_graph_node_count": len(selected_graph_nodes),
@@ -817,7 +1002,7 @@ def build_context_pack(
             "omitted_nodes": omitted_nodes,
             "residual_risk": residual_risk,
             "relevant_files": selected_files,
-            "relevant_symbols": _relevant_symbols(files_by_path, relevant_paths, max_symbols=max_symbols),
+            "relevant_symbols": selected_symbols,
             "local_conventions": [
                 "FACT: Source skills and capabilities live under `src/`; installable runtime artifacts are built into `dist/`.",
                 "FACT: Registry YAML files are source-of-truth for skill, capability, domain-extension, and routing relationships.",
@@ -833,12 +1018,7 @@ def build_context_pack(
                 "Do not treat `dist/` as source-of-truth.",
                 "Do not expand context by dumping every repository file.",
             ],
-            "excluded_context": [
-                {"path": "dist/", "reason": "generated_only"},
-                {"path": ".git/", "reason": "unsafe"},
-                {"path": "node_modules/", "reason": "too_broad"},
-                {"path": ".venv/", "reason": "too_broad"},
-            ],
+            "excluded_context": excluded_context,
             "freshness_markers": {
                 "repo_hash": payload.get("repo_hash"),
                 "artifact_hash": payload.get("artifact_hash"),

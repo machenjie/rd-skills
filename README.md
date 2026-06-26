@@ -97,7 +97,7 @@ These signals are generated or validator-backed local evidence, not external pop
 | Open-source readiness | `partial` | [docs/OPEN_SOURCE_READINESS.md](docs/OPEN_SOURCE_READINESS.md) |
 <!-- changeforge-scorecard-summary:end -->
 
-Stable profile counts are `recommended=21`, `full=28`, and `dev=155`; these generated manifests are the authoritative runtime profile count source. Local install starts with `python3 scripts/quickstart.py --agent codex --scope user`; official Codex/Claude marketplace publishing is intentionally not implemented.
+Stable profile counts are `recommended=21`, `full=28`, and `dev=156`; these generated manifests are the authoritative runtime profile count source. Local install starts with `python3 scripts/quickstart.py --agent codex --scope user`; official Codex/Claude marketplace publishing is intentionally not implemented.
 
 Optional hook artifacts are also built for Codex, Claude Code, and GitHub
 Copilot. They are execution reminders, not skills and not a replacement for
@@ -141,13 +141,13 @@ Build outputs are written to `dist/`:
 
 ## Runtime Profiles
 
-- `recommended`: installs 21 professional skills as top-level runtime skills, with 127 foundation capabilities compiled into professional skill `references/`.
-- `full`: installs 21 professional skills plus 7 eligible domain extensions as top-level runtime skills, with 127 foundation capabilities compiled into professional skill `references/`.
-- `dev`: installs 21 professional skills plus 127 foundation capabilities plus 7 domain extensions as top-level runtime skills for authoring and validation work.
+- `recommended`: installs 21 professional skills as top-level runtime skills, with 128 foundation capabilities compiled into professional skill `references/`.
+- `full`: installs 21 professional skills plus 7 eligible domain extensions as top-level runtime skills, with 128 foundation capabilities compiled into professional skill `references/`.
+- `dev`: installs 21 professional skills plus 128 foundation capabilities plus 7 domain extensions as top-level runtime skills for authoring and validation work.
 
 Recommended and full profiles must not install all foundation capabilities as top-level global skills. Foundation capabilities are compiled into professional skill references unless the `dev` profile is explicitly selected.
 
-Runtime top-level counts are 21 for `recommended`, 28 for `full`, and 155 for `dev`.
+Runtime top-level counts are 21 for `recommended`, 28 for `full`, and 156 for `dev`.
 
 ## Reference Loading
 

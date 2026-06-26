@@ -30,6 +30,6 @@ actual:
         reason: Redis TTL/invalidation evidence has no Kafka or queue signal
     context_budget_mode: single-stage
     context_budget_rationale: L2 Redis change selects cache and reliability only
-    required_evidence: [target boundaries inspected before plan, repository context map with owning surface and caller/callee evidence, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal]
-    required_quality_gates: [implementation gate, reliability gate, test gate]
+    required_evidence: [SDD public API and module placement, target boundaries inspected before plan, repository context map with owning surface and caller/callee evidence, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal]
+    required_quality_gates: [SDD gate, implementation gate, reliability gate, test gate]
     handoff_target: coding

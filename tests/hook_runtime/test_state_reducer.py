@@ -100,6 +100,84 @@ class StateReducerTests(unittest.TestCase):
         self.assertEqual(result["validation_results"], ["pass:current:pytest"])
         self.assertEqual(result["post_edit_structure_findings"], ["file_naming:count=0"])
 
+    def test_context_control_records_latest_by_route_stage_and_redacted(self) -> None:
+        result = self.reducer.reduce_state_update(
+            {
+                "context_control_records": [
+                    {
+                        "route_id": "route-a",
+                        "current_stage": "coding",
+                        "budget_mode": "minimal",
+                        "skipped_reference_count": 0,
+                    }
+                ]
+            },
+            {
+                "context_control_records": [
+                    {
+                        "route_id": "route-a",
+                        "current_stage": "coding",
+                        "budget_mode": "staged-plan",
+                        "skipped_reference_count": 2,
+                        "raw_prompt": "must not persist",
+                        "skipped_references": [
+                            {
+                                "reference": "references/capabilities/122-plan-execution-consistency.md",
+                                "reason": "omitted by budget",
+                            }
+                        ],
+                    }
+                ],
+                "context_budget_findings": ["skipped_references 2 require JIT retrieval rationale"],
+                "skipped_references": ["references/capabilities/122-plan-execution-consistency.md: omitted"],
+            },
+        )
+        records = result["context_control_records"]
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["budget_mode"], "staged-plan")
+        self.assertEqual(records[0]["skipped_reference_count"], 2)
+        self.assertNotIn("raw_prompt", records[0])
+        self.assertEqual(
+            result["context_budget_findings"],
+            ["skipped_references 2 require JIT retrieval rationale"],
+        )
+        self.assertEqual(
+            result["skipped_references"],
+            ["references/capabilities/122-plan-execution-consistency.md: omitted"],
+        )
+
+    def test_tool_output_boundaries_are_bounded_and_redacted(self) -> None:
+        result = self.reducer.reduce_state_update(
+            {},
+            {
+                "tool_output_boundaries": [
+                    {
+                        "schema_version": 1,
+                        "tool_name": "Bash",
+                        "event_name": "PostToolUse",
+                        "output_size_class": "large",
+                        "output_bytes": 32000,
+                        "output_lines": 500,
+                        "artifact_path": "/Users/example/project/output.log",
+                        "artifact_path_source": "explicit_tool_result",
+                        "digest": "sha256:abcdef1234567890abcdef12",
+                        "bounded_summary": ["output_size_class=large"],
+                        "truncation_advice": "rerun with redirect",
+                        "llm_context_policy": "rerun_with_redirect",
+                        "privacy_status": "pass",
+                        "stdout": "must not persist",
+                    }
+                ],
+                "artifact_references": ["/Users/example/project/output.log"],
+            },
+        )
+        record = result["tool_output_boundaries"][0]
+        self.assertEqual(record["output_bytes"], 32000)
+        self.assertEqual(record["privacy_status"], "fail")
+        self.assertNotIn("stdout", record)
+        self.assertEqual(record["artifact_path"], "<local-artifact-path-redacted>")
+        self.assertEqual(result["artifact_references"], ["<local-artifact-path-redacted>"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -12,7 +12,7 @@ expected:
   expected_language_surface: none
   risk_triggers: []
   skills: [change-forge-router, quality-test-gate]
-  capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency]
+  capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency, context-control-plane]
   domain_extensions: []
   quality_gates: [documentation gate, test gate]
 forbidden:

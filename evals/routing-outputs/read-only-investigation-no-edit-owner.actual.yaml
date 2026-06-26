@@ -27,6 +27,6 @@ actual:
         reason: user explicitly requested read-only investigation
     context_budget_mode: single-stage
     context_budget_rationale: L2 read-only investigation stays in intake/impact context
-    required_evidence: [clarified scope, explicit non-goals, testable acceptance signal, clarification status before action]
-    required_quality_gates: [requirement gate]
+    required_evidence: [PDD acceptance criteria, clarified scope, explicit non-goals, testable acceptance signal, clarification status before action]
+    required_quality_gates: [PDD gate, requirement gate]
     handoff_target: implementation-planning

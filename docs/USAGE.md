@@ -25,7 +25,7 @@ Use the smallest profile that fits the target runtime:
 | --- | --- | --- |
 | `recommended` | Default for global/user installs. | 21 professional skills |
 | `full` | Project installs where domain extensions should be visible as top-level skills. | 21 professional skills plus 7 domain extensions |
-| `dev` | ChangeForge authoring, validation, or debugging only. | 21 professional skills plus 127 foundation capabilities plus 7 domain extensions |
+| `dev` | ChangeForge authoring, validation, or debugging only. | 21 professional skills plus 128 foundation capabilities plus 7 domain extensions |
 
 In `recommended` and `full`, foundation capabilities are compiled into professional skill `references/` and loaded selectively by the selected skill route. They are not installed as top-level global skills.
 

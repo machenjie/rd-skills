@@ -34,6 +34,6 @@ actual:
         reason: migration file is SQL and no frontend path is affected
     context_budget_mode: single-stage
     context_budget_rationale: L2 SQL migration validation selects data/API and SQL testing only
-    required_evidence: [risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected, validation freshness after final material edits]
+    required_evidence: [validation commands mapped to PDD/DDD/SDD, risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected, validation freshness after final material edits]
     required_quality_gates: [API/data gate, delivery gate, test gate]
     handoff_target: code-review

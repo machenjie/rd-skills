@@ -67,6 +67,7 @@ RICH_EVENT_SCRIPTS = {
     "PostToolUse": (
         "changeforge_professional_injector",
         "changeforge_read_context_gate",
+        "changeforge_tool_output_boundary_gate",
         "changeforge_review_gate",
         "changeforge_post_edit_structure_gate",
         "changeforge_risk_surface_gate",
@@ -90,6 +91,7 @@ COPILOT_EVENT_SCRIPTS = {
     "PostToolUse": (
         "changeforge_professional_injector",
         "changeforge_read_context_gate",
+        "changeforge_tool_output_boundary_gate",
         "changeforge_review_gate",
         "changeforge_post_edit_structure_gate",
         "changeforge_risk_surface_gate",
@@ -126,6 +128,9 @@ REQUIRED_HOOK_SCRIPTS = (
     "changeforge_closure_contract.py",
     "changeforge_executor_adapter_core.py",
     "changeforge_action_classifier.py",
+    "changeforge_context_control_policy.py",
+    "changeforge_tool_output_boundary.py",
+    "changeforge_branch_route_summary.py",
     "changeforge_runtime_route_resolver.py",
     "changeforge_skill_index.py",
     "changeforge_session_bootstrap.py",
@@ -134,6 +139,7 @@ REQUIRED_HOOK_SCRIPTS = (
     "changeforge_pre_tool_risk_preview.py",
     "changeforge_professional_injector.py",
     "changeforge_read_context_gate.py",
+    "changeforge_tool_output_boundary_gate.py",
     "changeforge_review_gate.py",
     "changeforge_permission_policy_gate.py",
     "changeforge_compaction_snapshot.py",
@@ -169,6 +175,7 @@ ADAPTER_SNAPSHOT_SCRIPTS = (
     "changeforge_pre_edit_structure_gate.py",
     "changeforge_post_edit_structure_gate.py",
     "changeforge_permission_policy_gate.py",
+    "changeforge_tool_output_boundary_gate.py",
     "changeforge_risk_surface_gate.py",
     "changeforge_read_context_gate.py",
     "changeforge_review_gate.py",
@@ -728,6 +735,11 @@ def _validate_python_files(errors: list[str]) -> None:
             "rereview_events",
             "command_risks",
             "rollback_points",
+            "context_control_records",
+            "tool_output_boundaries",
+            "artifact_references",
+            "context_budget_findings",
+            "skipped_references",
         ):
             if f'"{field}"' not in common_text:
                 errors.append(f"changeforge_common.py: hook state must track {field}")
@@ -1260,9 +1272,12 @@ def _validate_hook_behavior(errors: list[str]) -> None:
     telemetry_schema = (HOOK_SCHEMAS_DIR / "telemetry-event.v1.schema.json").read_text(
         encoding="utf-8"
     )
-    if '"prompt"' in state_schema or '"prompt_text"' in state_schema:
+    state_schema_payload = json.loads(state_schema)
+    telemetry_schema_payload = json.loads(telemetry_schema)
+    raw_prompt_fields = {"prompt", "prompt_text", "raw_prompt"}
+    if raw_prompt_fields & set(state_schema_payload.get("properties", {})):
         errors.append("hook state schema must not store raw prompt fields")
-    if '"prompt"' in telemetry_schema or '"prompt_text"' in telemetry_schema:
+    if raw_prompt_fields & set(telemetry_schema_payload.get("properties", {})):
         errors.append("telemetry schema must not store raw prompt fields")
     if '"prompt_signals"' not in common_text:
         errors.append("hook state must store compact prompt_signals instead of prompt text")
@@ -1285,6 +1300,9 @@ def _validate_hook_behavior(errors: list[str]) -> None:
         "command_risks",
         "rollback_points",
         "post_edit_structure_findings",
+        "context_control_records",
+        "context_budget_findings",
+        "skipped_references",
     ):
         if f'"{field}"' not in state_schema:
             errors.append(f"hook state schema must include {field}")
@@ -1306,6 +1324,9 @@ def _validate_hook_behavior(errors: list[str]) -> None:
         "command_risk",
         "permission_decision",
         "post_edit_structure_findings",
+        "context_control_records",
+        "context_budget_findings",
+        "skipped_references",
     ):
         if f'"{field}"' not in telemetry_schema:
             errors.append(f"telemetry schema must include {field}")
@@ -1323,6 +1344,7 @@ def _validate_runtime_route_resolver(errors: list[str]) -> None:
     pre_edit_path = HOOK_SCRIPTS_DIR / "changeforge_pre_edit_structure_gate.py"
     post_edit_path = HOOK_SCRIPTS_DIR / "changeforge_post_edit_structure_gate.py"
     common_path = HOOK_SCRIPTS_DIR / "changeforge_common.py"
+    policy_path = HOOK_SCRIPTS_DIR / "changeforge_context_control_policy.py"
     if not resolver_path.is_file():
         errors.append("missing runtime route resolver")
         return
@@ -1332,6 +1354,7 @@ def _validate_runtime_route_resolver(errors: list[str]) -> None:
     injector_text = injector_path.read_text(encoding="utf-8") if injector_path.is_file() else ""
     classifier_text = classifier_path.read_text(encoding="utf-8") if classifier_path.is_file() else ""
     common_text = common_path.read_text(encoding="utf-8") if common_path.is_file() else ""
+    policy_text = policy_path.read_text(encoding="utf-8") if policy_path.is_file() else ""
 
     if "SKILL_INDEX" in skill_index_text:
         errors.append("changeforge_skill_index.py: must not keep a static SKILL_INDEX")
@@ -1355,6 +1378,15 @@ def _validate_runtime_route_resolver(errors: list[str]) -> None:
         errors.append("changeforge_action_classifier.py: must use runtime resolver surface detectors")
     if "def reset_state_for_new_prompt" not in common_text or "FOLLOW_UP_PROMPT_RE" not in common_text:
         errors.append("changeforge_common.py: must support prompt-turn state isolation")
+    if not policy_path.is_file():
+        errors.append("missing context control policy module")
+    if any(
+        token in policy_text
+        for token in ("requests.", "httpx.", "urllib.", "socket.", "subprocess.", "open(", "read_text(", "write_text(")
+    ):
+        errors.append("changeforge_context_control_policy.py: must stay pure and avoid IO/network/process operations")
+    if "context_control_records" not in common_text or "skipped_references" not in common_text:
+        errors.append("changeforge_common.py: must track bounded context control state")
     for stage in (
         "requirement-intake",
         "architecture-design",
@@ -1385,7 +1417,9 @@ def _validate_runtime_route_resolver(errors: list[str]) -> None:
             CAPABILITY_IDS,
             LANGUAGE_FILE_EXTENSIONS,
             build_active_skill_context,
+            context_lines,
         )
+        from changeforge_context_control_policy import context_budget_limits
     except Exception as exc:
         errors.append(f"runtime resolver import failed: {exc}")
         return
@@ -1429,6 +1463,16 @@ def _validate_runtime_route_resolver(errors: list[str]) -> None:
         errors.append("runtime resolver: .tsx edit must route to frontend-change-builder")
     if "backend-change-builder" in frontend_context.get("selected_skills", []):
         errors.append("runtime resolver: frontend edit must not select backend-change-builder")
+    if "context_control" not in frontend_context:
+        errors.append("runtime resolver: active context must include context_control")
+    if len("\n".join(context_lines(frontend_context))) > 6000:
+        errors.append("runtime resolver: context_lines must remain under MAX_HOOK_OUTPUT_CHARS")
+    control = frontend_context.get("context_control") if isinstance(frontend_context.get("context_control"), dict) else {}
+    limit = context_budget_limits(str(control.get("budget_mode") or "minimal"))["max_required_references"]
+    if len(frontend_context.get("required_references", [])) > limit:
+        errors.append("runtime resolver: required references exceed context budget")
+    if any(key in str(control) for key in ("raw_prompt", "raw_command_output", "full_diff", "file_contents")):
+        errors.append("runtime resolver: context_control must not emit raw prompt/output/diff/content fields")
 
     unknown = classify_event({"hook_event_name": "UserPromptSubmit", "prompt": "what is this?"})
     if unknown.get("should_inject"):
@@ -1562,6 +1606,25 @@ def _validate_runtime_route_resolver(errors: list[str]) -> None:
         errors.append("runtime resolver: Web3 SDK coding owner must come from product surface")
     if "web3-product-extension" not in web3_sdk_context.get("selected_domain_extensions", []):
         errors.append("runtime resolver: Web3 SDK route must preserve web3 domain extension")
+
+    context_risk = build_active_skill_context(
+        runtime="codex",
+        stage="edit",
+        surfaces=["skill-authoring"],
+        event_name="UserPromptSubmit",
+        classification={
+            "stage": "skill_authoring",
+            "product_surfaces": ["skill-authoring"],
+            "language_surfaces": [],
+            "risk_surfaces": [],
+            "conditional_capabilities": ["context-control-plane"],
+        },
+    )
+    risk_control = context_risk.get("context_control", {})
+    if risk_control.get("budget_mode") not in {"single-stage", "staged-plan"}:
+        errors.append("runtime resolver: skill-authoring context risk must use bounded non-minimal budget")
+    if "context-control-plane" not in context_risk.get("selected_capabilities", []):
+        errors.append("runtime resolver: skill-authoring context risk must select context-control-plane")
 
 
 def _timeouts(value: Any, context: str = "hooks") -> list[tuple[int, str]]:

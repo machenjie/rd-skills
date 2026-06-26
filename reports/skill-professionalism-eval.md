@@ -1,7 +1,7 @@
 # Skill Professionalism Evaluation
 
-- Generated: 2026-06-26T15:00:27.389381+00:00
-- Skills/capabilities checked: 148
+- Generated: 2026-06-26T17:41:15.406509+00:00
+- Skills/capabilities checked: 149
 - Warning count: 0
 - Average score: 55.62/60
 
@@ -33,6 +33,7 @@
 | `src/foundation/capabilities/architecture-enforcement-tooling/SKILL.md` | foundation-capability | 54/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/architecture-style-selection/SKILL.md` | foundation-capability | 54/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/configuration-runtime-policy/SKILL.md` | foundation-capability | 54/60 | sample-grade | 0 | 0 |
+| `src/foundation/capabilities/context-control-plane/SKILL.md` | foundation-capability | 54/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/degradation-circuit-breaking/SKILL.md` | foundation-capability | 54/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/dependency-wiring-lifecycle/SKILL.md` | foundation-capability | 54/60 | sample-grade | 0 | 0 |
 | `src/foundation/capabilities/domain-logic-implementation/SKILL.md` | foundation-capability | 54/60 | acceptable | 0 | 0 |
@@ -155,8 +156,8 @@
 | `src/foundation/capabilities/repository-graph-analysis/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/foundation/capabilities/validation-broker/SKILL.md` | foundation-capability | 59/60 | acceptable | 0 | 0 |
 | `src/professional-skills/backend-change-builder/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
-| `src/professional-skills/change-forge-router/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
 | `src/professional-skills/quality-test-gate/SKILL.md` | professional-skill | 59/60 | sample-grade | 0 | 0 |
+| `src/professional-skills/change-forge-router/SKILL.md` | professional-skill | 60/60 | sample-grade | 0 | 0 |
 
 ## Warnings
 

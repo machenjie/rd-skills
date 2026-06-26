@@ -42,6 +42,30 @@ changeforge_route:
     - <question that blocks safe execution, or omit when none>
   assumptions:
     - <explicit assumption used in place of a missing answer>
+  context_control:
+    budget_mode: <minimal|single-stage|staged-plan|full>
+    budget_rationale: <why this budget fits the route>
+    max_selected_capabilities: <integer cap or not_collected>
+    max_required_references: <integer cap or not_collected>
+    selected_reference_count: <integer>
+    skipped_reference_count: <integer>
+    selected_references:
+      - reference: <reference path or source selector>
+        reason: <why it is needed now>
+    skipped_references:
+      - reference: <reference path or source selector>
+        reason: <why it is safe to skip or remains residual risk>
+    jit_retrieval_required: <true|false>
+    jit_retrieval_plan:
+      - <source path, graph selector, or artifact to retrieve just in time>
+    tool_output_boundary_required: <true|false>
+    tool_output_boundary: <retained fields and excluded raw output>
+    compaction_snapshot_required: <true|false>
+    branch_route_repair_summary_required: <true|false>
+    overhead_evidence_required: <true|false>
+    overhead_evidence: <selected/skipped counts, token or turn fields, or not_collected>
+    residual_context_risk:
+      - <remaining context risk or omission>
   runtime_prompt_flow:
     schema_version: 1
     closure_mode: <plan|action-handoff|final-handoff>
@@ -111,6 +135,8 @@ Manifest rules:
 - `selected_capabilities` must each map to a `selected_skills` entry through the capability `used_by` relationship, unless the capability is explicitly marked as a route-level capability in the registry. Do not list an ordinary capability whose owning skill is absent.
 - `required_references` must include the four router self-use references above plus the deterministic `references/capabilities/<capability-id>-<capability-name>.md` path for every selected capability.
 - `skipped_quality_gates` must give a `reason` for each skipped gate; never drop a gate silently. A gate is either in `required_quality_gates` or in `skipped_quality_gates` with a reason.
+- `context_control` is required whenever `context-control-plane` is selected or when the route has context budget, reference bloat, selected/skipped reference, JIT retrieval, tool-output boundary, compaction, branch route-repair, or overhead-evidence risk. It must include selected and skipped reference rationale; do not emit a bare budget mode without reasons.
+- `context_control` must not include raw prompts, secrets, environment values, full command output, full diffs, full files, personal archives, or private mapping artifacts.
 - `runtime_prompt_flow` is required for target-project engineering changes and for direct specialist-skill invocation. Direct invocation may skip router reclassification when scope is known, but this nested manifest records that requirement clarification, read-before-plan evidence, TDD/validation signal, independent review, repair/re-review, validation evidence, and residual risk were not skipped.
 - Each `runtime_prompt_flow.actions[]` entry must name an `owner_skill` and a different `review_skill`. A review finding requires `repair_route_if_review_fails`, `re_review_required: true`, and a concrete `re_review_result` before handoff can close.
 - `runtime_prompt_flow.closure_mode` separates planning from closure. `plan` may carry `re_review_result: pending` and `validation_evidence.outcome: planned`. `action-handoff` and `final-handoff` may close re-review only with `passed`, `blocked-with-residual-risk`, or `not-verified-with-owner`, and may close validation only with `passed`, `failed`, `not-run` plus disclosure, or `not-verified` plus residual risk.

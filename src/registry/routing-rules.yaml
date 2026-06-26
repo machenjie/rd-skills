@@ -33,14 +33,14 @@ supported_change_types:
 runtime_profiles:
   - name: recommended
     top_level: 21 professional skills
-    foundation_mode: 127 foundation capabilities compiled into professional references
+    foundation_mode: 128 foundation capabilities compiled into professional references
     domain_extension_mode: router index only
   - name: full
     top_level: 21 professional skills and 7 domain extensions
-    foundation_mode: 127 foundation capabilities compiled into professional references
+    foundation_mode: 128 foundation capabilities compiled into professional references
     domain_extension_mode: top-level runtime skills
   - name: dev
-    top_level: 21 professional skills, 127 foundation capabilities, and 7 domain extensions
+    top_level: 21 professional skills, 128 foundation capabilities, and 7 domain extensions
     foundation_mode: top-level and compiled professional references
     domain_extension_mode: top-level runtime skills
 complexity_rules:
@@ -286,6 +286,14 @@ risk_escalation_triggers:
   - validation without outcome
   - affected tests
   - changed path validation
+  - context budget exceeded
+  - reference bloat
+  - selected references missing rationale
+  - skipped references missing rationale
+  - tool output too large
+  - compaction snapshot
+  - branch route repair summary
+  - context control plane
   - trajectory
   - edit before read
   - stop without residual risk
@@ -512,8 +520,32 @@ risk_trigger_rules:
     required_quality_gates: [test gate, AI review gate]
   - trigger: skill benchmark overhead unknown
     required_skills: [quality-test-gate]
-    required_capabilities: [skill-efficacy-benchmark]
+    required_capabilities: [skill-efficacy-benchmark, context-control-plane]
     required_quality_gates: [test gate]
+  - trigger: context budget exceeded
+    required_capabilities: [context-control-plane, engineering-stage-professionalism, plan-execution-consistency]
+    required_quality_gates: [execution discipline gate]
+  - trigger: reference bloat
+    required_capabilities: [context-control-plane, repository-context-map]
+    required_quality_gates: [impact gate]
+  - trigger: selected references missing rationale
+    required_capabilities: [context-control-plane, plan-execution-consistency]
+    required_quality_gates: [execution discipline gate]
+  - trigger: skipped references missing rationale
+    required_capabilities: [context-control-plane, plan-execution-consistency]
+    required_quality_gates: [execution discipline gate]
+  - trigger: tool output too large
+    required_capabilities: [context-control-plane, agent-tool-permission-sandbox, validation-broker]
+    required_quality_gates: [security gate, test gate]
+  - trigger: compaction snapshot
+    required_capabilities: [context-control-plane, agent-workflow-state-machine, execution-trajectory-analysis]
+    required_quality_gates: [execution discipline gate]
+  - trigger: branch route repair summary
+    required_capabilities: [context-control-plane, agent-execution-discipline, plan-execution-consistency]
+    required_quality_gates: [execution discipline gate]
+  - trigger: context control plane
+    required_capabilities: [context-control-plane]
+    required_quality_gates: [execution discipline gate]
   - trigger: executor adapter
     required_skills: [security-privacy-gate]
     required_capabilities: [executor-adapter-protocol, agent-tool-permission-sandbox]
@@ -556,7 +588,7 @@ risk_trigger_rules:
     required_capabilities: [repository-graph-analysis, validation-broker]
     required_quality_gates: [test gate]
   - trigger: context pack
-    required_capabilities: [repository-graph-analysis, context-packaging]
+    required_capabilities: [repository-graph-analysis, context-packaging, context-control-plane]
     required_quality_gates: [impact gate]
   - trigger: source of truth unknown
     required_skills: [change-impact-analyzer]
@@ -572,7 +604,7 @@ risk_trigger_rules:
     required_capabilities: [project-memory-governance, repository-context-map, plan-execution-consistency]
     required_quality_gates: [execution discipline gate]
   - trigger: stale context
-    required_capabilities: [project-memory-governance, repository-graph-analysis, context-packaging]
+    required_capabilities: [project-memory-governance, repository-graph-analysis, context-packaging, context-control-plane]
     required_quality_gates: [execution discipline gate]
   - trigger: previous fix failed
     required_skills: [quality-test-gate]
@@ -1274,7 +1306,7 @@ engineering_stage_signals:
   - stage: documentation-handoff
     signals: documentation handoff change boundary validation evidence residual risk runbook changelog next action workflow state lifecycle state trajectory closure contract validation broker plan execution consistency route manifest repository context
   - stage: skill-authoring
-    signals: SKILL.md capability reference registry routing rule stage model skill authoring repository context map repo graph context pack executor adapter project memory validation broker trajectory skill efficacy benchmark plan execution consistency
+    signals: SKILL.md capability reference registry routing rule stage model skill authoring repository context map repo graph context pack context control plane context budget selected references skipped references executor adapter project memory validation broker trajectory skill efficacy benchmark plan execution consistency
 routing_rules:
   - route_to: change-forge-router
     triggers:
@@ -1892,6 +1924,12 @@ routing_rules:
       - prevent context drift stale summaries secret exposure irrelevant context and unverified generated claims
       - package repository intelligence context pack without treating memory summary as source fact
     priority: 60
+  - route_to: context-control-plane
+    triggers:
+      - context control plane context budget token overhead reference bloat selected references skipped references
+      - just in time retrieval JIT retrieval graph as selector tool output boundary artifact reference compaction snapshot branch summary route repair summary
+      - context lost after compaction stale context over routing under routing context bloat output truncation live benchmark overhead
+    priority: 70
   - route_to: task-dag-decomposition
     triggers:
       - decompose work into dependency aware reviewable testable rollback aware AI executable tasks

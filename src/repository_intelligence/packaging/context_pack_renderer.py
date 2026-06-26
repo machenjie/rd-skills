@@ -9,13 +9,70 @@ def _pack_payload(context_pack: dict[str, Any]) -> dict[str, Any]:
     return context_pack.get("task_context_pack", context_pack)
 
 
-def _lines_for_items(title: str, items: list[dict[str, object]], fields: list[str]) -> list[str]:
+def _lines_for_items(
+    title: str,
+    items: list[dict[str, object]],
+    fields: list[str],
+    *,
+    max_items: int | None = None,
+) -> list[str]:
     lines = [f"## {title}"]
     if not items:
         return [*lines, "- None"]
-    for item in items:
+    visible_items = items[:max_items] if max_items is not None else items
+    for item in visible_items:
         parts = [f"{field}={item.get(field)}" for field in fields if item.get(field) is not None]
         lines.append(f"- {'; '.join(parts)}")
+    if max_items is not None and len(items) > max_items:
+        lines.append(f"- additional_omitted_count={len(items) - max_items}")
+    return lines
+
+
+def _context_control_lines(pack: dict[str, Any]) -> list[str]:
+    control = pack.get("context_control")
+    if not isinstance(control, dict):
+        return ["## Context Control", "- None"]
+    fields = (
+        "budget_mode",
+        "budget_profile",
+        "context_budget_tokens",
+        "selected_file_count",
+        "omitted_file_count",
+        "selected_symbol_count",
+        "selected_graph_node_count",
+        "skipped_graph_node_count",
+        "signal_density_rationale",
+    )
+    lines = ["## Context Control"]
+    for field in fields:
+        if field in control:
+            lines.append(f"- {field}: {control.get(field)}")
+    return lines
+
+
+def _jit_plan_lines(pack: dict[str, Any]) -> list[str]:
+    plan = pack.get("jit_retrieval_plan")
+    lines = ["## JIT Retrieval Plan"]
+    if not isinstance(plan, dict):
+        return [*lines, "- None"]
+    for title, fields in (
+        ("Discovery", ["command", "purpose", "expected_output_policy"]),
+        ("Targeted Reads", ["path", "line_hint", "read_policy", "source_truth_status", "reason"]),
+        ("Deferred Reads", ["path", "reason"]),
+        ("Forbidden Reads", ["path", "reason"]),
+    ):
+        key = title.lower().replace(" ", "_")
+        lines.extend(_lines_for_items(title, plan.get(key, []), fields, max_items=12))
+    return lines
+
+
+def _artifact_policy_lines(pack: dict[str, Any]) -> list[str]:
+    policy = pack.get("artifact_policy")
+    lines = ["## Artifact Policy"]
+    if not isinstance(policy, dict):
+        return [*lines, "- None"]
+    for key in ("large_outputs", "full_graph_dump", "full_test_log_dump"):
+        lines.append(f"- {key}: {policy.get(key)}")
     return lines
 
 
@@ -34,6 +91,9 @@ def render_context_pack_markdown(context_pack: dict[str, Any]) -> str:
         f"- indexed_commit: {(pack.get('freshness') or pack.get('freshness_markers', {})).get('indexed_commit')}",
         "",
     ]
+    for section_lines in (_context_control_lines(pack), _jit_plan_lines(pack), _artifact_policy_lines(pack)):
+        lines.extend(section_lines)
+        lines.append("")
     sections = [
         ("Source Of Truth", pack.get("source_of_truth", []), ["path", "reason"]),
         ("Selected Files", pack.get("selected_files", pack.get("relevant_files", [])), ["path", "permitted_changes", "reason", "owner_module"]),
@@ -47,13 +107,21 @@ def render_context_pack_markdown(context_pack: dict[str, Any]) -> str:
         ("Ownership", pack.get("ownership", []), ["path", "owner_surface", "owner_module", "public_private_boundary"]),
         ("Reuse Candidates", pack.get("reuse_candidates", []), ["path", "reason"]),
         ("Rejected Locations", pack.get("rejected_locations", []), ["path", "reason"]),
-        ("Omitted Nodes", pack.get("omitted_nodes", []), ["path", "count", "reason"]),
         ("Residual Risk", pack.get("residual_risk", []), ["kind", "path", "detail"]),
         ("Excluded Context", pack.get("excluded_context", []), ["path", "reason"]),
     ]
     for title, items, fields in sections:
         lines.extend(_lines_for_items(title, items, fields))
         lines.append("")
+
+    omitted_nodes = pack.get("omitted_nodes", [])
+    lines.append("## Omitted Nodes")
+    if not omitted_nodes:
+        lines.append("- None")
+    else:
+        lines.append(f"- total_count: {len(omitted_nodes)}")
+        lines.extend(_lines_for_items("Omitted Node Examples", omitted_nodes, ["path", "count", "reason"], max_items=8)[1:])
+    lines.append("")
 
     lines.append("## Anti Bloat Decision")
     anti_bloat = pack.get("anti_bloat_decision", {})

@@ -5,7 +5,7 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 ## Summary
 
 - `pass`: 18
-- `partial`: 3
+- `partial`: 4
 - `fail`: 0
 - `unknown`: 0
 - `not_collected`: 4
@@ -37,6 +37,7 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 | Promoted agent samples | `pass` | reports/professionalism-release-readiness.json | `python3 scripts/eval-professional-agent-samples.py --promoted-only --strict` |
 | Skill efficacy structural fixtures | `pass` | evals/skill-efficacy and scripts/validate-skill-efficacy-benchmarks.py | `python3 scripts/validate-skill-efficacy-benchmarks.py` |
 | Runtime governance structural fixtures | `pass` | evals/executor-adapters, evals/repository-intelligence, evals/project-memory, evals/validation-broker, evals/trajectory | `python3 scripts/validate-professional-routing-coverage.py` |
+| context_control_overhead | `partial` | reports/context-control-plane-eval.json | `python3 scripts/eval-context-control-plane.py` |
 | Executor adapter structural fixtures | `pass` | evals/executor-adapter and reports/executor-adapter-eval.json | `python3 scripts/eval-executor-adapters.py` |
 | Activation precision benchmark | `pass` | evals/activation and reports/activation-precision.json | `python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks` |
 | Runtime telemetry fixture sample | `pass` | reports/runtime-telemetry-sample.json | `python3 scripts/eval-executor-adapters.py` |
@@ -57,12 +58,13 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 
 - `recommended`: `pass` - recommended top-level count is 21
 - `full`: `pass` - full top-level count is 28
-- `dev`: `pass` - dev top-level count is 155
+- `dev`: `pass` - dev top-level count is 156
 
 ## Repair Hints
 
 - Professional skill coverage: Repair weak professional skill sections without keyword stuffing.
 - Foundation capability coverage: Improve selected capability evidence contracts and references.
+- context_control_overhead: Repair context-control fixtures or collect lower-overhead live evidence before claiming context-control quality improvement.
 - Live runtime telemetry sample: Collect a real hook-runtime sample before changing this status from not_collected; do not use executor adapter fixtures for this dimension.
 - Executor adapter live pass-rate: Collect a real measured run before changing this status from not_collected.
 - Executor adapter token overhead: Collect a real measured run before changing this status from not_collected.

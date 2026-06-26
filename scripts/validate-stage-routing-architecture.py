@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import importlib.util
 import re
+import sys
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -522,7 +523,19 @@ def _load_runtime_resolver(errors: list[str]) -> ModuleType | None:
         errors.append(f"{relpath(ROOT, RUNTIME_ROUTE_RESOLVER)}: cannot load module spec")
         return None
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    script_dir = str(RUNTIME_ROUTE_RESOLVER.parent)
+    inserted = False
+    if script_dir not in sys.path:
+        sys.path.insert(0, script_dir)
+        inserted = True
+    try:
+        spec.loader.exec_module(module)
+    finally:
+        if inserted:
+            try:
+                sys.path.remove(script_dir)
+            except ValueError:
+                pass
     return module
 
 

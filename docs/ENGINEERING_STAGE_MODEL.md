@@ -147,12 +147,12 @@ common risks, and gates likely needed. Launch only the matching set for the surf
 | sdk-library | `data-api-contract-changer` | `sdk-library-contract-design`, `version-compatibility`, `package-dependency-management` | API break, provenance | API/data, test |
 | cli-daemon | `backend-change-builder` | `cli-daemon-interface-design`, `logging-error-handling` | exit-code/IO contract | test |
 | documentation-only | `change-documentation-gate` | `documentation-generation` | stale or wrong docs | documentation |
-| skill-authoring | `change-forge-router` | `repository-context-map`, `skill-authoring-expert`, `engineering-stage-professionalism`, `skill-efficacy-benchmark`, `plan-execution-consistency`, `minimal-correct-implementation` | over/under routing, context bloat | documentation, test |
-| agent-runtime-governance | `change-forge-router` | `executor-adapter-protocol`, `agent-tool-permission-sandbox`, `agent-workflow-state-machine` | unsupported runtime event, overclaimed closure | security, execution discipline |
-| repository-intelligence | `change-impact-analyzer` | `repository-graph-analysis`, `repository-context-map`, `context-packaging` | stale graph, source-of-truth drift | impact, test |
-| project-memory | `change-forge-router` | `project-memory-governance`, `agent-execution-discipline`, `plan-execution-consistency` | unsafe auto-learning, stale context | execution discipline |
-| validation-broker | `quality-test-gate` | `validation-broker`, `repository-graph-analysis`, `plan-execution-consistency` | stale validation, wrong validator depth | test |
-| execution-trajectory | `ai-code-review-refactor` | `execution-trajectory-analysis`, `agent-workflow-state-machine`, `validation-broker` | edit-before-read, repair without re-review | AI review, test |
+| skill-authoring | `change-forge-router` | `repository-context-map`, `skill-authoring-expert`, `engineering-stage-professionalism`, `skill-efficacy-benchmark`, `plan-execution-consistency`, `context-control-plane`, `minimal-correct-implementation` | over/under routing, context bloat | documentation, test |
+| agent-runtime-governance | `change-forge-router` | `executor-adapter-protocol`, `agent-tool-permission-sandbox`, `agent-workflow-state-machine`, `context-control-plane` | unsupported runtime event, overclaimed closure | security, execution discipline |
+| repository-intelligence | `change-impact-analyzer` | `repository-graph-analysis`, `repository-context-map`, `context-packaging`, `context-control-plane` | stale graph, source-of-truth drift | impact, test |
+| project-memory | `change-forge-router` | `project-memory-governance`, `agent-execution-discipline`, `plan-execution-consistency`, `context-control-plane` | unsafe auto-learning, stale context | execution discipline |
+| validation-broker | `quality-test-gate` | `validation-broker`, `repository-graph-analysis`, `plan-execution-consistency`, `context-control-plane` | stale validation, wrong validator depth | test |
+| execution-trajectory | `ai-code-review-refactor` | `execution-trajectory-analysis`, `agent-workflow-state-machine`, `validation-broker`, `context-control-plane` | edit-before-read, repair without re-review | AI review, test |
 
 ## 3. Language Surface Selector
 

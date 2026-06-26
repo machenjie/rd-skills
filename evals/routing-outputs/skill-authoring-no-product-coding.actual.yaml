@@ -4,7 +4,7 @@ actual:
   complexity: L2
   risk_level: medium
   skills: [change-forge-router, quality-test-gate]
-  capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency]
+  capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency, context-control-plane]
   domain_extensions: []
   quality_gates: [documentation gate, test gate]
   required_references:
@@ -17,6 +17,28 @@ actual:
     - references/capabilities/104-engineering-stage-professionalism.md
     - references/capabilities/121-skill-efficacy-benchmark.md
     - references/capabilities/122-plan-execution-consistency.md
+    - references/capabilities/128-context-control-plane.md
+  context_control:
+    budget_mode: single-stage
+    budget_rationale: L2 skill-authoring route keeps router and context-control references bounded.
+    max_selected_capabilities: 8
+    max_required_references: 12
+    selected_reference_count: 1
+    skipped_reference_count: 0
+    selected_references:
+      - reference: references/capabilities/128-context-control-plane.md
+        reason: Owns selected and skipped reference budget evidence.
+    skipped_references: []
+    jit_retrieval_required: false
+    jit_retrieval_plan: not required
+    tool_output_boundary_required: false
+    tool_output_boundary: bounded routing fixture summary only
+    compaction_snapshot_required: false
+    branch_route_repair_summary_required: false
+    overhead_evidence_required: true
+    overhead_evidence: selected=1 skipped=0 token_estimate=not_collected turn_count=not_collected structural fixture only
+    residual_context_risk:
+      - Live Codex overhead benchmark is not run without explicit maintainer flag.
   stage_route_manifest:
     schema_version: 1
     current_stage: skill-authoring
@@ -24,7 +46,7 @@ actual:
     product_surface: skill-authoring
     language_surface: none
     selected_skills: [change-forge-router, quality-test-gate]
-    selected_capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency]
+    selected_capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency, context-control-plane]
     selected_domain_extensions: []
     skipped_capabilities:
       - capability: implementation-structure-design

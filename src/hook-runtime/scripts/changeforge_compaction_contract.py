@@ -9,12 +9,14 @@ import re
 from datetime import datetime, timezone
 from typing import Any, Iterable
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+LEGACY_SCHEMA_VERSION = 1
 MAX_ITEMS = 20
 MAX_TEXT = 240
 MAX_MAPPING_KEYS = 40
 MAX_SNAPSHOTS = 5
 OPERATIONAL_CONTEXT_FIELDS = ("changed_paths", "read_paths")
+OMITTED_CONTEXT_KINDS = {"reference", "file", "graph_node", "tool_output"}
 
 REQUIRED_CONTEXT_FIELDS = (
     "route_id",
@@ -100,6 +102,9 @@ def snapshot_from_state(
     last_edit = _safe_int(state.get("last_material_edit_index"))
     last_validation = _safe_int(state.get("last_validation_command_index"))
     kind = snapshot_kind or compaction_event_phase(event)
+    context_control = _context_control_snapshot(state, active)
+    tokens_before = _runtime_tokens_before(state, event, active)
+    first_kept_entry_id = _runtime_first_kept_entry_id(state, event, active)
     snapshot = {
         "schema_version": SCHEMA_VERSION,
         "snapshot_id": _snapshot_id(state, event, kind),
@@ -130,10 +135,22 @@ def snapshot_from_state(
         "residual_risk": _clean_list(state.get("closure_risk_surfaces") or active.get("residual_risk")),
         "memory_references": _clean_list(state.get("reference_loads") or active.get("memory_references"), max_items=10),
         "repo_graph_references": _clean_list(state.get("reuse_findings") or active.get("repo_graph_references"), max_items=10),
+        "context_control": context_control,
+        "selected_reference_policy": _selected_reference_policy(state, active, context_control),
+        "tool_output_boundaries": _clean_tool_output_boundaries(state.get("tool_output_boundaries")),
+        "artifact_references": _artifact_reference_list(state.get("artifact_references")),
+        "omitted_context": _omitted_context(state),
+        "branch_route_repair_summaries": _clean_branch_route_repair_summaries(
+            state.get("branch_route_repair_summaries")
+        ),
+        "tokens_before": tokens_before,
+        "first_kept_entry_id": first_kept_entry_id,
+        "snapshot_source": _snapshot_source(kind),
         "active_skill_context": _clean_mapping(active),
         "last_material_edit_index": last_edit,
         "last_validation_command_index": last_validation,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "warnings": _runtime_metadata_warnings(tokens_before, first_kept_entry_id),
     }
     snapshot = sanitize_compaction_snapshot(snapshot)
     missing = missing_required_fields(snapshot)
@@ -144,7 +161,8 @@ def snapshot_from_state(
     snapshot["context_unusable_fields"] = context_unusable_fields(snapshot)
     snapshot["context_usable_status"] = "pass" if not snapshot["context_unusable_fields"] else "fail"
     snapshot["context_retention_status"] = _context_retention_status(snapshot)
-    warnings = [f"missing_required_field:{field}" for field in missing]
+    warnings = _clean_list(snapshot.get("warnings"), max_items=MAX_ITEMS)
+    warnings.extend(f"missing_required_field:{field}" for field in missing)
     warnings.extend(f"redacted_required_field:{field}" for field in snapshot["redacted_required_fields"])
     warnings.extend(f"context_unusable_field:{field}" for field in snapshot["context_unusable_fields"])
     snapshot["warnings"] = warnings[:20]
@@ -161,8 +179,9 @@ def sanitize_compaction_snapshot(snapshot: Any) -> dict[str, Any]:
         snapshot = parsed
     if not isinstance(snapshot, dict):
         snapshot = {}
+    schema_version = _schema_version(snapshot.get("schema_version"))
     clean: dict[str, Any] = {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": schema_version,
         "snapshot_id": _clean_text(snapshot.get("snapshot_id") or _hash_text(json.dumps(snapshot, sort_keys=True))),
         "snapshot_kind": _snapshot_kind(snapshot.get("snapshot_kind")),
         "event_name": _clean_text(snapshot.get("event_name"), limit=80),
@@ -185,10 +204,30 @@ def sanitize_compaction_snapshot(snapshot: Any) -> dict[str, Any]:
         "residual_risk": _clean_list(snapshot.get("residual_risk"), max_items=10),
         "memory_references": _clean_list(snapshot.get("memory_references"), max_items=10),
         "repo_graph_references": _clean_list(snapshot.get("repo_graph_references"), max_items=10),
+        "context_control": _clean_context_control(snapshot.get("context_control"))
+        if schema_version >= 2
+        else _clean_mapping(snapshot.get("context_control")),
+        "tool_output_boundaries": _clean_tool_output_boundaries(snapshot.get("tool_output_boundaries")),
+        "artifact_references": _artifact_reference_list(snapshot.get("artifact_references")),
         "active_skill_context": _clean_mapping(snapshot.get("active_skill_context")),
         "last_material_edit_index": _safe_int(snapshot.get("last_material_edit_index")),
         "last_validation_command_index": _safe_int(snapshot.get("last_validation_command_index")),
     }
+    if schema_version >= 2:
+        clean.update(
+            {
+                "selected_reference_policy": _clean_selected_reference_policy(
+                    snapshot.get("selected_reference_policy")
+                ),
+                "omitted_context": _clean_omitted_context(snapshot.get("omitted_context")),
+                "branch_route_repair_summaries": _clean_branch_route_repair_summaries(
+                    snapshot.get("branch_route_repair_summaries")
+                ),
+                "tokens_before": _safe_optional_int(snapshot.get("tokens_before")),
+                "first_kept_entry_id": _clean_optional_text(snapshot.get("first_kept_entry_id"), limit=120),
+                "snapshot_source": _clean_snapshot_source(snapshot.get("snapshot_source")),
+            }
+        )
     clean["missing_required_fields"] = missing_required_fields(clean)
     clean["privacy_redaction_status"] = "pass" if not privacy_findings(clean) else "fail"
     clean["redacted_required_fields"] = redacted_required_fields(clean)
@@ -376,6 +415,15 @@ def merge_active_context(existing: Any, snapshot: dict[str, Any]) -> dict[str, A
         ("residual_risk", "residual_risk"),
         ("memory_references", "memory_references"),
         ("repo_graph_references", "repo_graph_references"),
+        ("context_control", "context_control"),
+        ("selected_reference_policy", "selected_reference_policy"),
+        ("tool_output_boundaries", "tool_output_boundaries"),
+        ("artifact_references", "artifact_references"),
+        ("omitted_context", "omitted_context"),
+        ("branch_route_repair_summaries", "branch_route_repair_summaries"),
+        ("snapshot_source", "snapshot_source"),
+        ("tokens_before", "tokens_before"),
+        ("first_kept_entry_id", "first_kept_entry_id"),
         ("last_material_edit_index", "last_material_edit_index"),
         ("last_validation_command_index", "last_validation_command_index"),
     ):
@@ -389,6 +437,315 @@ def merge_active_context(existing: Any, snapshot: dict[str, Any]) -> dict[str, A
         if not _has_value(base.get(context_key)) and _has_value(value):
             base[context_key] = snapshot[snapshot_key]
     return _clean_mapping(base)
+
+
+def _latest_context_control_record(state: dict[str, Any]) -> dict[str, Any]:
+    records = state.get("context_control_records")
+    if not isinstance(records, list):
+        return {}
+    for record in reversed(records):
+        if isinstance(record, dict):
+            return record
+    return {}
+
+
+def _context_control_snapshot(state: dict[str, Any], active: dict[str, Any]) -> dict[str, Any]:
+    source = active.get("context_control")
+    source = source if isinstance(source, dict) else _latest_context_control_record(state)
+    source = source if isinstance(source, dict) else {}
+    selected_references = _clean_list(
+        source.get("selected_references") or active.get("selected_references") or state.get("reference_loads"),
+        max_items=MAX_ITEMS,
+    )
+    skipped_references = _clean_list(
+        source.get("skipped_references") or active.get("skipped_references") or state.get("skipped_references"),
+        max_items=MAX_ITEMS,
+    )
+    over_budget = _clean_list(
+        source.get("over_budget_findings") or state.get("context_budget_findings"),
+        max_items=MAX_ITEMS,
+    )
+    selected_count = _safe_int(source.get("selected_reference_count") or len(selected_references))
+    skipped_count = _safe_int(source.get("skipped_reference_count") or len(skipped_references))
+    tool_boundary_required = bool(
+        source.get("tool_output_boundary_required")
+        or state.get("tool_output_boundaries")
+        or state.get("artifact_references")
+    )
+    return {
+        "budget_mode": _clean_text(source.get("budget_mode"), limit=80) or "staged-plan",
+        "selected_reference_count": selected_count,
+        "skipped_reference_count": skipped_count,
+        "over_budget_findings": over_budget,
+        "jit_retrieval_required": bool(source.get("jit_retrieval_required") or skipped_count or over_budget),
+        "tool_output_boundary_required": tool_boundary_required,
+    }
+
+
+def _selected_reference_policy(
+    state: dict[str, Any],
+    active: dict[str, Any],
+    context_control: dict[str, Any],
+) -> dict[str, list[str]]:
+    source = active.get("selected_reference_policy")
+    source = source if isinstance(source, dict) else {}
+    selected = _clean_list(
+        source.get("selected_references")
+        or active.get("selected_references")
+        or state.get("reference_loads"),
+        max_items=MAX_ITEMS,
+    )
+    skipped = _clean_list(
+        source.get("skipped_references")
+        or active.get("skipped_references")
+        or state.get("skipped_references"),
+        max_items=MAX_ITEMS,
+    )
+    if not selected and _safe_int(context_control.get("selected_reference_count")):
+        selected = [f"selected_reference_count:{context_control.get('selected_reference_count')}"]
+    if not skipped and _safe_int(context_control.get("skipped_reference_count")):
+        skipped = [f"skipped_reference_count:{context_control.get('skipped_reference_count')}"]
+    return {"selected_references": selected, "skipped_references": skipped}
+
+
+def _omitted_context(state: dict[str, Any]) -> list[dict[str, str]]:
+    omitted: list[dict[str, str]] = []
+    for ref in _clean_list(state.get("skipped_references"), max_items=MAX_ITEMS):
+        omitted.append({"kind": "reference", "reason": ref})
+    for field in OPERATIONAL_CONTEXT_FIELDS:
+        try:
+            raw_text = json.dumps(state.get(field), sort_keys=True)
+        except TypeError:
+            raw_text = str(state.get(field) or "")
+        if _has_local_path_redaction(state.get(field)) or ABSOLUTE_PATH_RE.search(raw_text):
+            omitted.append({"kind": "file", "reason": f"{field}:local_absolute_path_redacted"})
+    for record in _clean_tool_output_boundaries(state.get("tool_output_boundaries")):
+        if record.get("output_size_class") == "unsupported" or record.get("llm_context_policy") == "unsupported_runtime":
+            omitted.append(
+                {
+                    "kind": "tool_output",
+                    "reason": _clean_text(record.get("unsupported_reason"), limit=160)
+                    or "tool_output_metadata_unsupported",
+                }
+            )
+    return _clean_omitted_context(omitted)
+
+
+def _runtime_tokens_before(
+    state: dict[str, Any],
+    event: dict[str, Any],
+    active: dict[str, Any],
+) -> int | None:
+    for source in (event, active, state):
+        for key in ("tokens_before", "tokensBefore", "pre_compact_tokens", "preCompactTokens"):
+            value = _safe_optional_int(source.get(key))
+            if value is not None:
+                return value
+    return None
+
+
+def _runtime_first_kept_entry_id(
+    state: dict[str, Any],
+    event: dict[str, Any],
+    active: dict[str, Any],
+) -> str | None:
+    for source in (event, active, state):
+        for key in ("first_kept_entry_id", "firstKeptEntryId", "first_retained_entry_id", "firstRetainedEntryId"):
+            value = _clean_optional_text(source.get(key), limit=120)
+            if value is not None:
+                return value
+    return None
+
+
+def _runtime_metadata_warnings(tokens_before: int | None, first_kept_entry_id: str | None) -> list[str]:
+    warnings: list[str] = []
+    if tokens_before is None:
+        warnings.append("runtime_tokens_before_not_exposed")
+    if first_kept_entry_id is None:
+        warnings.append("runtime_first_kept_entry_id_not_exposed")
+    return warnings
+
+
+def _schema_version(value: Any) -> int:
+    try:
+        version = int(value)
+    except (TypeError, ValueError):
+        return SCHEMA_VERSION
+    return LEGACY_SCHEMA_VERSION if version == LEGACY_SCHEMA_VERSION else SCHEMA_VERSION
+
+
+def _clean_context_control(value: Any) -> dict[str, Any]:
+    source = value if isinstance(value, dict) else {}
+    return {
+        "budget_mode": _clean_text(source.get("budget_mode"), limit=80) or "staged-plan",
+        "selected_reference_count": _safe_int(source.get("selected_reference_count")),
+        "skipped_reference_count": _safe_int(source.get("skipped_reference_count")),
+        "over_budget_findings": _clean_list(source.get("over_budget_findings"), max_items=MAX_ITEMS),
+        "jit_retrieval_required": bool(source.get("jit_retrieval_required")),
+        "tool_output_boundary_required": bool(source.get("tool_output_boundary_required")),
+    }
+
+
+def _clean_selected_reference_policy(value: Any) -> dict[str, list[str]]:
+    source = value if isinstance(value, dict) else {}
+    return {
+        "selected_references": _clean_list(source.get("selected_references"), max_items=MAX_ITEMS),
+        "skipped_references": _clean_list(source.get("skipped_references"), max_items=MAX_ITEMS),
+    }
+
+
+def _clean_omitted_context(value: Any) -> list[dict[str, str]]:
+    records: list[dict[str, str]] = []
+    for raw in _as_list(value):
+        if isinstance(raw, dict):
+            kind = _clean_text(raw.get("kind"), limit=40)
+            reason = _clean_text(raw.get("reason"), limit=160)
+        else:
+            kind = "reference"
+            reason = _clean_text(raw, limit=160)
+        if kind not in OMITTED_CONTEXT_KINDS or not reason:
+            continue
+        record = {"kind": kind, "reason": reason}
+        if record not in records:
+            records.append(record)
+        if len(records) >= MAX_ITEMS:
+            break
+    return records
+
+
+def _clean_branch_route_repair_summaries(value: Any) -> list[dict[str, Any]]:
+    summaries: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for raw in _as_list(value):
+        if not isinstance(raw, dict):
+            continue
+        route = raw.get("abandoned_or_repaired_route")
+        route = route if isinstance(route, dict) else {}
+        new_route = raw.get("new_route")
+        new_route = new_route if isinstance(new_route, dict) else {}
+        summary = {
+            "schema_version": 1,
+            "summary_id": _clean_text(raw.get("summary_id"), limit=80)
+            or _hash_text(json.dumps(_clean_mapping(raw), sort_keys=True)),
+            "trigger": _clean_route_trigger(raw.get("trigger")),
+            "abandoned_or_repaired_route": {
+                "owner_skill": _clean_text(route.get("owner_skill")),
+                "reviewer_skill": _clean_text(route.get("reviewer_skill")),
+                "hypothesis": _clean_text(route.get("hypothesis")),
+                "files_touched": _path_list(route.get("files_touched")),
+                "validation_result": _clean_text(route.get("validation_result")),
+                "failure_reason": _clean_text(route.get("failure_reason")),
+            },
+            "reusable_findings": _clean_list(raw.get("reusable_findings"), max_items=MAX_ITEMS),
+            "forbidden_retries": _clean_list(raw.get("forbidden_retries"), max_items=MAX_ITEMS),
+            "new_route": {
+                "owner_skill": _clean_text(new_route.get("owner_skill")),
+                "selected_capabilities": _clean_list(new_route.get("selected_capabilities"), max_items=MAX_ITEMS),
+                "validation_plan": _clean_list(new_route.get("validation_plan"), max_items=MAX_ITEMS),
+            },
+            "residual_risk": _clean_list(raw.get("residual_risk"), max_items=MAX_ITEMS),
+            "privacy_status": "fail" if str(raw.get("privacy_status") or "").strip() == "fail" else "pass",
+        }
+        key = str(summary.get("summary_id") or "")
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        summaries.append(summary)
+        if len(summaries) >= MAX_ITEMS:
+            break
+    return summaries
+
+
+def _clean_route_trigger(value: Any) -> str:
+    text = _clean_text(value, limit=80)
+    allowed = {
+        "repeated_same_path_retry",
+        "repair_after_review",
+        "route_repair",
+        "branch_switch",
+        "compaction_recovery",
+    }
+    return text if text in allowed else "route_repair"
+
+
+def _safe_optional_int(value: Any) -> int | None:
+    if value is None or value == "":
+        return None
+    try:
+        return max(0, int(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def _clean_optional_text(value: Any, *, limit: int = MAX_TEXT) -> str | None:
+    if value is None:
+        return None
+    text = _clean_text(value, limit=limit)
+    return text or None
+
+
+def _snapshot_source(kind: str) -> str:
+    if kind == "pre_compact":
+        return "pre_compact"
+    if kind == "session_compact":
+        return "session_compact"
+    if kind == "manual":
+        return "manual"
+    return "unsupported"
+
+
+def _clean_snapshot_source(value: Any) -> str:
+    text = _clean_text(value, limit=40)
+    return text if text in {"pre_compact", "session_compact", "manual", "unsupported"} else "unsupported"
+
+
+def _clean_tool_output_boundaries(value: Any) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for raw in _as_list(value):
+        if not isinstance(raw, dict):
+            continue
+        cleaned = _clean_mapping(raw)
+        if not cleaned:
+            continue
+        artifact_path = _clean_artifact_reference(cleaned.get("artifact_path"))
+        if artifact_path:
+            cleaned["artifact_path"] = artifact_path
+        else:
+            cleaned.pop("artifact_path", None)
+            cleaned["artifact_path_source"] = "not_available"
+        if cleaned.get("privacy_status") not in {"pass", "fail"}:
+            cleaned["privacy_status"] = "fail" if privacy_findings(cleaned) else "pass"
+        records.append(cleaned)
+        if len(records) >= 10:
+            break
+    return records
+
+
+def _artifact_reference_list(value: Any) -> list[str]:
+    refs: list[str] = []
+    for raw in _as_list(value):
+        ref = _clean_artifact_reference(raw)
+        if ref and ref not in refs:
+            refs.append(ref)
+        if len(refs) >= MAX_ITEMS:
+            break
+    return refs
+
+
+def _clean_artifact_reference(value: Any) -> str:
+    text = _clean_text(value, limit=200).replace("\\", "/")
+    if not text or "://" in text:
+        return ""
+    if text.startswith("./"):
+        text = text[2:]
+    if _is_repo_relative_path(text):
+        return text[:200]
+    for marker in ("/.cache/changeforge/", "/Library/Caches/changeforge/"):
+        if marker in text:
+            return ("${CACHE}/changeforge/" + text.split(marker, 1)[1].lstrip("/"))[:200]
+    if ABSOLUTE_PATH_RE.search(text) or text.startswith(("~", "/")):
+        return "<local-path>"
+    return ""
 
 
 def format_compaction_lines(snapshot: dict[str, Any], state: dict[str, Any] | None = None) -> list[str]:
@@ -410,6 +767,8 @@ def format_compaction_lines(snapshot: dict[str, Any], state: dict[str, Any] | No
         "- P1 tdd_validation_plan: " + _display(snapshot.get("tdd_validation_plan")),
         "- P1 memory_references: " + _display(snapshot.get("memory_references")),
         "- P1 repo_graph_references: " + _display(snapshot.get("repo_graph_references")),
+        "- P1 tool_output_boundaries: " + _display(snapshot.get("tool_output_boundaries")),
+        "- P1 artifact_references: " + _display(snapshot.get("artifact_references")),
         "- P1 residual_risk: " + _display(snapshot.get("residual_risk")),
     ]
     adapter = state.get("runtime_adapter") if isinstance(state.get("runtime_adapter"), dict) else {}
@@ -458,7 +817,7 @@ def _event_name(event: dict[str, Any]) -> str:
 
 def _snapshot_kind(value: Any) -> str:
     text = str(value or "compact").strip()
-    return text if text in {"pre_compact", "post_compact", "session_compact", "compact"} else "compact"
+    return text if text in {"pre_compact", "post_compact", "session_compact", "compact", "manual"} else "compact"
 
 
 def _validation_freshness(last_edit: int, last_validation: int, state: dict[str, Any]) -> str:

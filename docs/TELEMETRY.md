@@ -53,6 +53,7 @@ Telemetry deliberately omits sensitive content:
 - no environment variables;
 - no secrets;
 - no full command output (stdout or stderr);
+- no raw tool result output captured by hooks;
 - only the leading program name of an observed command (for example `kubectl`),
   truncated, never full arguments;
 - repository and working-directory identifiers are hashed, not absolute paths;
@@ -110,6 +111,25 @@ Project memory facts are append-only and human-governed. Memory can report repea
 failure, fragile-file, and stale-context signals, but it never modifies skills,
 routes, capabilities, or registry data without a human promotion flow.
 
+Tool-output boundary facts are telemetry-safe. Post-tool hooks may record
+`tool_output_boundaries` and `artifact_references`, but those fields contain only
+tool/event name, output size class, byte/line counts, digest, bounded summary,
+truncation advice, context policy, privacy status, unsupported reason, and a
+repo-relative or cache-scoped artifact reference. Hooks do not store raw
+`stdout`, `stderr`, full command output, prompts, environment values, full diffs,
+full files, secrets, or personal archives. If a full log is needed, the user or
+agent must explicitly create an artifact by redirecting output or writing a
+slice/report, then cite that path and validation status separately.
+
+Branch route-repair facts are telemetry-safe. Hooks may record
+`branch_route_repair_summaries` and `route_repair_forbidden_retries` when a
+route is abandoned, repaired, switched, or blocked from repeating the same path.
+Those fields contain only summary ids, trigger names, bounded route/validation
+facts, file path references, reusable findings, forbidden retry labels,
+replacement-route facts, residual risk, and privacy status. They do not contain
+raw prompts, raw output, full diffs, full file contents, environment values, or
+secrets.
+
 Validation Broker facts classify validation command selection and freshness. A
 command without outcome, a failed command, a negative validation disclosure, or a
 command that finished before the last material edit remains non-closure evidence.
@@ -127,10 +147,12 @@ full command arguments.
 ## Hooks Record, They Do Not Route
 
 The Pre-Edit Implementation Structure Gate, Post-Edit Structure Gate, Risk
-Surface Gate, and Stop Closure Gate write telemetry in addition to their
-warning-only reminders. The pre-edit gate records only bounded facts such as
+Surface Gate, Tool Output Boundary Gate, and Stop Closure Gate write telemetry
+in addition to their warning-only reminders. The pre-edit gate records only bounded facts such as
 changed paths, added paths, missing preflight fields, and whether read evidence
 was seen. It does not record the assistant message or raw manifest body. The
+tool-output gate records bounded output facts only and degrades to
+`unsupported_runtime` when a runtime does not expose output metadata. The
 Stop Closure Gate records completeness facts only: whether a complete parseable
 `changeforge_route` manifest, changed files, validation evidence, residual risk,
 required references, and implementation preflight evidence were present.
@@ -520,7 +542,11 @@ The v1 telemetry schema is extended compatibly with action-aware hook facts:
   `changed_path_risk_surfaces`, `command_risk_surfaces`, and
   `closure_risk_surfaces` separate path matches, command matches, and
   closure-relevant engineering risk. Read-only command matches are retained in
-  telemetry for review but excluded from closure risk and runtime route warnings.
+  telemetry for review but excluded from code-change closure risk.
+- Context-control state is stored in bounded `context_control_records`,
+  `tool_output_boundaries`, `artifact_references`,
+  `branch_route_repair_summaries`, `route_repair_forbidden_retries`,
+  `context_budget_findings`, and `skipped_references` fields.
 - `validation_command_detected` records that a validation-looking command was
   observed; it is separate from `validation_evidence_detected`, which requires a
   stop-closure outcome or artifact signal.

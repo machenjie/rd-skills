@@ -30,6 +30,6 @@ actual:
         reason: no backend path, service, controller, or server evidence
     context_budget_mode: single-stage
     context_budget_rationale: L2 TSX component edit needs frontend planning and TypeScript only
-    required_evidence: [target boundaries inspected before plan, repository context map with owning surface and caller/callee evidence, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal]
-    required_quality_gates: [implementation gate, test gate]
+    required_evidence: [SDD public API and module placement, target boundaries inspected before plan, repository context map with owning surface and caller/callee evidence, reuse candidates, simplicity ladder result, deleted or rejected complexity, placement rationale, visibility decisions, test placement, TDD or validation signal]
+    required_quality_gates: [SDD gate, implementation gate, test gate]
     handoff_target: coding

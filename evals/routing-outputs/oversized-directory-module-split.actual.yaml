@@ -22,6 +22,6 @@ actual:
         reason: test authoring waits until architecture boundary is selected
     context_budget_mode: staged-plan
     context_budget_rationale: L3 module split needs architecture stage before refactoring work
-    required_evidence: [boundary owners, dependency direction, simplicity ladder result when extensibility or stack complexity is proposed, rejected alternatives, reversibility classification]
-    required_quality_gates: [architecture gate, implementation gate, test gate]
+    required_evidence: [DDD domain invariants, boundary owners, dependency direction, simplicity ladder result when extensibility or stack complexity is proposed, rejected alternatives, reversibility classification]
+    required_quality_gates: [DDD gate, architecture gate, implementation gate, test gate]
     handoff_target: implementation-planning

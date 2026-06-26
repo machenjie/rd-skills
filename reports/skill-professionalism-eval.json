@@ -1,7 +1,7 @@
 {
   "average_score": 55.62,
   "duplicate_template_warnings": [],
-  "generated_at": "2026-06-26T15:00:27.389381+00:00",
+  "generated_at": "2026-06-26T17:41:15.406509+00:00",
   "items": [
     {
       "body_lines": 217,
@@ -129,13 +129,13 @@
       "warnings": []
     },
     {
-      "body_lines": 240,
+      "body_lines": 242,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
         "evidence_contract_strength": 5,
         "failure_mode_coverage": 5,
-        "mode_coverage": 4,
+        "mode_coverage": 5,
         "output_actionability": 5,
         "proactive_trigger_quality": 5,
         "professional_depth": 5,
@@ -150,7 +150,7 @@
       "path": "src/professional-skills/change-forge-router/SKILL.md",
       "recommended_fixes": [],
       "status": "sample-grade",
-      "total": 59,
+      "total": 60,
       "warnings": []
     },
     {
@@ -1129,7 +1129,32 @@
       "warnings": []
     },
     {
-      "body_lines": 190,
+      "body_lines": 147,
+      "dimensions": {
+        "anti_bloat_control": 5,
+        "boundary_clarity": 5,
+        "evidence_contract_strength": 5,
+        "failure_mode_coverage": 3,
+        "mode_coverage": 4,
+        "output_actionability": 5,
+        "proactive_trigger_quality": 3,
+        "professional_depth": 5,
+        "reference_precision": 5,
+        "stage_fit": 4,
+        "trigger_accuracy": 5,
+        "validation_obligation": 5
+      },
+      "kind": "foundation-capability",
+      "likely_missing_sections": [],
+      "name": "context-control-plane",
+      "path": "src/foundation/capabilities/context-control-plane/SKILL.md",
+      "recommended_fixes": [],
+      "status": "acceptable",
+      "total": 54,
+      "warnings": []
+    },
+    {
+      "body_lines": 196,
       "dimensions": {
         "anti_bloat_control": 5,
         "boundary_clarity": 5,
@@ -3704,6 +3729,6 @@
       "warnings": []
     }
   ],
-  "skills_checked": 148,
+  "skills_checked": 149,
   "warning_count": 0
 }

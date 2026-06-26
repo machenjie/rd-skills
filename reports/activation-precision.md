@@ -7,8 +7,8 @@ This generated report uses deterministic route activation fixtures. It measures 
 - Status: `pass`
 - Mode: `built`
 - Runtime root: `dist/codex/project/.codex/hooks`
-- Cases: 24
-- Passed: 24
+- Cases: 29
+- Passed: 29
 - Failed: 0
 
 | Metric | Value |
@@ -39,6 +39,11 @@ This generated report uses deterministic route activation fixtures. It measures 
 | `frontend-ui-state-does-not-trigger-agent-workflow` | `pass` | `implementation-planning` | frontend-product | typescript | none |
 | `docs-api-mention-does-not-trigger-api-implementation` | `pass` | `documentation-handoff` | documentation-only | none | data-api, documentation |
 | `business-registry-does-not-trigger-skill-authoring` | `pass` | `implementation-planning` | backend-product, cache, sdk-library | none | none |
+| `l1-typo-fix-minimal-budget` | `pass` | `documentation-handoff` | documentation-only | none | documentation |
+| `skill-authoring-context-risk-selects-control-plane` | `pass` | `skill-authoring` | skill-authoring | go | none |
+| `broad-system-audit-has-skipped-references` | `pass` | `code-review` | skill-authoring, project-memory, validation-broker, execution-trajectory | go | none |
+| `compaction-event-minimal-context-control` | `pass` | `requirement-intake` | none | none | none |
+| `generated-artifact-path-needs-jit-context-control` | `pass` | `skill-authoring` | skill-authoring | none | none |
 | `sql-migration-distinct-from-query` | `pass` | `implementation-planning` | database-migration | sql | data-api, delivery |
 | `sql-query-does-not-trigger-migration` | `pass` | `implementation-planning` | none | sql | data-api |
 | `c-header-routes-cpp-only` | `pass` | `refactoring` | none | cpp | none |

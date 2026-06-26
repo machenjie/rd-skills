@@ -555,6 +555,7 @@
         "degraded_capabilities": [
           "cline_user_prompt_submit_unsupported",
           "cline_plan_mode_edit_evidence_unsupported",
+          "cline_changed_paths_visibility_none",
           "cline-plan-mode-edit-degradation"
         ],
         "freshness": {
@@ -620,7 +621,8 @@
         "reason": "unsupported runtime event for cline: UserPromptSubmit",
         "residual_risk": [
           "cline_user_prompt_submit_unsupported",
-          "cline_plan_mode_edit_evidence_unsupported"
+          "cline_plan_mode_edit_evidence_unsupported",
+          "cline_changed_paths_visibility_none"
         ],
         "severity": "warning"
       },
@@ -633,7 +635,8 @@
         ],
         "capability_degradation": [
           "cline_user_prompt_submit_unsupported",
-          "cline_plan_mode_edit_evidence_unsupported"
+          "cline_plan_mode_edit_evidence_unsupported",
+          "cline_changed_paths_visibility_none"
         ],
         "changed_paths": [],
         "checkpoint_id": null,
@@ -1586,7 +1589,8 @@
           "review_outcome": ""
         },
         "unsupported_checks": [
-          "pre_tool_advisory_context"
+          "pre_tool_advisory_context",
+          "runtime_adapter_degradation"
         ],
         "validation_status": {
           "freshness": "current",
@@ -2218,6 +2222,7 @@
         "degraded_capabilities": [
           "roo_post_tool_use_unsupported",
           "roo_review_mode_edit_tools_unsupported",
+          "roo_changed_paths_visibility_none",
           "roo-unsupported-runtime-event"
         ],
         "freshness": {
@@ -2283,7 +2288,8 @@
         "reason": "unsupported runtime event for roo: PostToolUse",
         "residual_risk": [
           "roo_post_tool_use_unsupported",
-          "roo_review_mode_edit_tools_unsupported"
+          "roo_review_mode_edit_tools_unsupported",
+          "roo_changed_paths_visibility_none"
         ],
         "severity": "warning"
       },
@@ -2296,7 +2302,8 @@
         ],
         "capability_degradation": [
           "roo_post_tool_use_unsupported",
-          "roo_review_mode_edit_tools_unsupported"
+          "roo_review_mode_edit_tools_unsupported",
+          "roo_changed_paths_visibility_none"
         ],
         "changed_paths": [],
         "checkpoint_id": null,

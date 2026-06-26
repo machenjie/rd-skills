@@ -38,6 +38,7 @@ COMMITTED_SOURCE_COMMIT = "provided by release artifact / CI metadata"
 MARKETPLACE_DIMENSION = "Marketplace index validation"
 SKILL_EFFICACY_DIMENSION = "Skill efficacy structural fixtures"
 RUNTIME_GOVERNANCE_DIMENSION = "Runtime governance structural fixtures"
+CONTEXT_CONTROL_OVERHEAD_DIMENSION = "context_control_overhead"
 EXECUTOR_ADAPTER_DIMENSION = "Executor adapter structural fixtures"
 ACTIVATION_PRECISION_DIMENSION = "Activation precision benchmark"
 RUNTIME_TELEMETRY_FIXTURE_DIMENSION = "Runtime telemetry fixture sample"
@@ -60,6 +61,7 @@ REFRESH_COMMANDS = [
     "python3 scripts/eval-skill-professionalism.py --coverage-matrix",
     "python3 scripts/eval-professional-benchmarks.py",
     "python3 scripts/validate-skill-efficacy-benchmarks.py",
+    "python3 scripts/eval-context-control-plane.py",
     "python3 scripts/eval-executor-adapters.py",
     "python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks",
     "python3 scripts/run-codex-live-benchmarks.py --list",
@@ -645,6 +647,14 @@ def _additional_status_items(root: Path, scorecard_path: Path | None = None) -> 
         ),
         _scorecard_dimension_item(root, SKILL_EFFICACY_DIMENSION, SKILL_EFFICACY_DIMENSION, scorecard_path),
         _scorecard_dimension_item(root, RUNTIME_GOVERNANCE_DIMENSION, RUNTIME_GOVERNANCE_DIMENSION, scorecard_path),
+        _scorecard_dimension_item(
+            root,
+            CONTEXT_CONTROL_OVERHEAD_DIMENSION,
+            CONTEXT_CONTROL_OVERHEAD_DIMENSION,
+            scorecard_path,
+            "structural fixture",
+            missing_status="not_collected",
+        ),
         _scorecard_dimension_item(root, EXECUTOR_ADAPTER_DIMENSION, EXECUTOR_ADAPTER_DIMENSION, scorecard_path),
         _scorecard_dimension_item(root, ACTIVATION_PRECISION_DIMENSION, ACTIVATION_PRECISION_DIMENSION, scorecard_path),
         _scorecard_dimension_item(
@@ -809,6 +819,7 @@ def _known_unknown_name(name: str) -> str:
         EXECUTOR_TOKEN_OVERHEAD_DIMENSION: "Token overhead",
         "turn overhead": "Turn overhead",
         EXECUTOR_TURN_OVERHEAD_DIMENSION: "Turn overhead",
+        CONTEXT_CONTROL_OVERHEAD_DIMENSION: "Context Control Plane overhead",
         "local_codex_cli_live_benchmark": "Codex CLI live benchmark",
         CODEX_LIVE_PASS_RATE_DIMENSION: "Codex CLI live pass-rate benchmark",
         CODEX_LIVE_CAPABILITY_COVERAGE_DIMENSION: "Codex CLI live capability coverage",
@@ -890,6 +901,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
             f"{item['source']} | {item['detail']} | `{item['command']}` |"
         )
     _append_codex_live_sections(lines, payload)
+    _append_context_control_overhead_section(lines, payload)
     lines.extend(["", "## Known Unknowns / Not Collected", ""])
     if payload["known_unknowns"]:
         for name in payload["known_unknowns"]:
@@ -1011,13 +1023,56 @@ def _append_codex_live_sections(lines: list[str], payload: dict[str, Any]) -> No
         lines.append(f"- {field}: `{total_usage.get(field, 'not_collected')}`")
 
 
+def _append_context_control_overhead_section(lines: list[str], payload: dict[str, Any]) -> None:
+    item = _public_item(payload, CONTEXT_CONTROL_OVERHEAD_DIMENSION)
+    if not isinstance(item, dict):
+        return
+    detail = _json_detail_object(item.get("detail"))
+    lines.extend(["", "## Context Control Overhead", ""])
+    for field in (
+        "status",
+        "input_token_overhead_pct",
+        "output_token_overhead_pct",
+        "turn_overhead",
+        "command_delta",
+        "pass_rate_delta",
+        "overhead_policy_verdict",
+        "evidence_boundary",
+    ):
+        value = detail.get(field, item.get("status") if field == "status" else "not_collected")
+        lines.append(f"- {field}: `{value}`")
+    lines.append(
+        "- evidence split: structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead are separate evidence types"
+    )
+    lines.append("- high overhead without pass-rate improvement is not success")
+    lines.append("- live benchmark commands are opt-in and not default validation")
+
+
 def _public_codex_live_detail(payload: dict[str, Any]) -> dict[str, Any] | None:
-    for item in payload.get("items", []):
-        if not isinstance(item, dict) or item.get("name") != CODEX_LIVE_PASS_RATE_DIMENSION:
-            continue
+    item = _public_item(payload, CODEX_LIVE_PASS_RATE_DIMENSION)
+    if isinstance(item, dict):
         detail = item.get("detail_data")
         return detail if isinstance(detail, dict) else None
     return None
+
+
+def _public_item(payload: dict[str, Any], name: str) -> dict[str, Any] | None:
+    for item in payload.get("items", []):
+        if isinstance(item, dict) and item.get("name") == name:
+            return item
+    return None
+
+
+def _json_detail_object(value: Any) -> dict[str, Any]:
+    if isinstance(value, dict):
+        return value
+    if not isinstance(value, str):
+        return {}
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
 
 
 def _scorecard_evidence_levels(root: Path, scorecard_path: Path | None) -> dict[str, dict[str, str]]:

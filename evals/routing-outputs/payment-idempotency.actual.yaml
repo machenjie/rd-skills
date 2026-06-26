@@ -69,6 +69,7 @@ actual:
     context_budget_mode: staged-plan
     context_budget_rationale: L4 payment coding needs staged risk gates while coding stays minimal
     required_evidence:
+      - PDD/DDD/SDD/TDD traceability
       - inspected implementation context
       - TDD or validation signal before code
       - idiomatic implementation
@@ -78,6 +79,7 @@ actual:
       - deleted or rejected complexity
       - tool permission and sandbox classification when risky tools or commands are used
     required_quality_gates:
+      - TDD gate
       - requirement gate
       - domain gate
       - API/data gate

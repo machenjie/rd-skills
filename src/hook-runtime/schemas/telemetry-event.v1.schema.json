@@ -190,6 +190,7 @@
         "pre_edit_structure_gate",
         "professional_injector",
         "read_context_gate",
+        "tool_output_boundary_gate",
         "review_gate",
         "permission_policy_gate",
         "compaction_snapshot",
@@ -245,6 +246,25 @@
       "additionalProperties": { "$ref": "#/$defs/stringList" }
     },
     "post_edit_structure_findings": { "$ref": "#/$defs/stringList" },
+    "context_control_records": { "$ref": "#/$defs/stringList" },
+    "tool_output_boundaries": {
+      "description": "JSON strings for bounded tool-output records. Raw stdout, stderr, prompts, environment, full diffs, full files, and secrets are excluded.",
+      "$ref": "#/$defs/stringList"
+    },
+    "artifact_references": {
+      "description": "Repo-relative or cache-scoped artifact references only.",
+      "$ref": "#/$defs/stringList"
+    },
+    "branch_route_repair_summaries": {
+      "description": "JSON strings for bounded branch/route-repair summaries. Raw prompts, output, environment, full diffs, full files, and secrets are excluded.",
+      "$ref": "#/$defs/stringList"
+    },
+    "route_repair_forbidden_retries": {
+      "description": "Bounded retry warnings that prevent repeated same-path repair attempts.",
+      "$ref": "#/$defs/stringList"
+    },
+    "context_budget_findings": { "$ref": "#/$defs/stringList" },
+    "skipped_references": { "$ref": "#/$defs/stringList" },
     "suggested_skills": { "$ref": "#/$defs/stringList" },
     "suggested_capabilities": { "$ref": "#/$defs/stringList" },
     "suggested_gates": { "$ref": "#/$defs/stringList" },

@@ -77,6 +77,13 @@ def _main() -> int:
         suggested_capabilities=context.get("selected_capabilities", []),
         suggested_domain_extensions=context.get("selected_domain_extensions", []),
         suggested_gates=context.get("required_quality_gates", []),
+        context_control_records=[context.get("context_control", {})],
+        context_budget_findings=context.get("context_control", {}).get("over_budget_findings", []),
+        skipped_references=[
+            f"{item.get('reference')}: {item.get('reason')}"
+            for item in context.get("skipped_references", [])
+            if isinstance(item, dict)
+        ],
         reference_loads=context.get("required_references", []),
         risk_surfaces=context.get("risk_surfaces", []),
         turn_stage=context["current_stage"],

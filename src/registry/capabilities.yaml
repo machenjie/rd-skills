@@ -1239,3 +1239,16 @@ capabilities:
       - repair re-review ledger validation freshness timeline pressure behavior candidate generation lifecycle trajectory review
     risk_notes: [Final diff review can miss illegal stage transitions stale validation edit-before-read behavior and repair without re-review]
     expected_outputs: [Execution Trajectory Analysis with ordered lifecycle events illegal transition findings repair re-review ledger validation freshness timeline pressure behavior candidates closure advice and residual risk]
+  - id: "128"
+    name: context-control-plane
+    group: engineering-workflow
+    path: src/foundation/capabilities/context-control-plane
+    status: implemented
+    route_level_capability: true
+    used_by: [change-forge-router, quality-test-gate, ai-code-review-refactor, change-documentation-gate, skill-authoring-expert, agent-execution-discipline]
+    triggers:
+      - context control plane context budget token overhead reference bloat selected references skipped references
+      - just in time retrieval JIT retrieval graph as selector tool output boundary artifact reference compaction snapshot branch summary route repair summary
+      - context lost after compaction stale context over routing under routing context bloat output truncation live benchmark overhead
+    risk_notes: [Context-control changes can reduce signal hide required evidence leak private data or increase token overhead without improving agent behavior]
+    expected_outputs: [Context Control Record with budget mode selected skipped references JIT retrieval plan tool-output boundary snapshot requirements branch summary requirements overhead evidence residual context risk and validation commands]

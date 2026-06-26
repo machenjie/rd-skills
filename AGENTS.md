@@ -37,6 +37,7 @@ python3 scripts/validate-professionalism-regression.py
 python3 scripts/validate-professionalism-regression.py --strict
 python3 scripts/validate-professional-routing-coverage.py
 python3 scripts/validate-stage-routing-architecture.py
+python3 scripts/eval-context-control-plane.py
 python3 scripts/validate-hooks.py
 python3 scripts/eval-agent-behavior.py
 python3 scripts/eval-professional-agent-samples.py --promoted-only --strict

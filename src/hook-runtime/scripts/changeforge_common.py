@@ -102,6 +102,13 @@ STATE_LIST_FIELDS = (
     "suggested_capabilities",
     "suggested_domain_extensions",
     "suggested_gates",
+    "context_control_records",
+    "tool_output_boundaries",
+    "artifact_references",
+    "branch_route_repair_summaries",
+    "route_repair_forbidden_retries",
+    "context_budget_findings",
+    "skipped_references",
     "implementation_preflights",
     "pre_edit_structure_findings",
 )
@@ -274,6 +281,15 @@ FOLLOW_UP_PROMPT_RE = re.compile(
     r"\b(continue|follow up|re-review|latest fix|same pr|latest commit)\b"
     r"|继续|上面|上述|最新提交|修复已经提交|再审查",
     re.IGNORECASE,
+)
+STATE_LOCAL_PATH_RE = re.compile(
+    r"(/Users/[^\s\"'<>]+|/home/[^\s\"'<>]+|/private/var/[^\s\"'<>]+|"
+    r"/var/folders/[^\s\"'<>]+|/tmp/[^\s\"'<>]+|[A-Za-z]:\\Users\\[^\s\"'<>]+)"
+)
+STATE_SECRET_RE = re.compile(
+    r"(sk-(?=[A-Za-z0-9_-]{10,})(?=[A-Za-z0-9_-]*[A-Z0-9])[A-Za-z0-9_-]+|"
+    r"(?i:api[_-]?key|access[_-]?token|bearer[_-]?token|password|secret)"
+    r"\s*[:=]\s*[A-Za-z0-9_./+=-]{8,})"
 )
 
 
@@ -489,6 +505,16 @@ def save_state(repo: Path, state: dict) -> None:
     for key in STATE_LIST_FIELDS:
         if key == "compaction_snapshots":
             next_state[key] = _capped_compaction_snapshots(next_state.get(key, []))
+        elif key == "context_control_records":
+            next_state[key] = _capped_context_control_records(next_state.get(key, []))
+        elif key == "tool_output_boundaries":
+            next_state[key] = _capped_tool_output_boundaries(next_state.get(key, []))
+        elif key == "artifact_references":
+            next_state[key] = _capped_artifact_references(next_state.get(key, []))
+        elif key == "branch_route_repair_summaries":
+            next_state[key] = _capped_branch_route_repair_summaries(next_state.get(key, []))
+        elif key == "route_repair_forbidden_retries":
+            next_state[key] = _capped_state_items(next_state.get(key, []))[:10]
         else:
             next_state[key] = _capped_state_items(next_state.get(key, []))
     for key in ("active_skill_context", "runtime_adapter"):
@@ -753,6 +779,13 @@ def merge_state(
     suggested_capabilities: Iterable[str] = (),
     suggested_domain_extensions: Iterable[str] = (),
     suggested_gates: Iterable[str] = (),
+    context_control_records: Iterable[object] = (),
+    tool_output_boundaries: Iterable[object] = (),
+    artifact_references: Iterable[str] = (),
+    branch_route_repair_summaries: Iterable[object] = (),
+    route_repair_forbidden_retries: Iterable[str] = (),
+    context_budget_findings: Iterable[str] = (),
+    skipped_references: Iterable[str] = (),
     implementation_preflights: Iterable[str] = (),
     pre_edit_structure_findings: Iterable[str] = (),
     validation_command_seen: bool | None = None,
@@ -841,6 +874,13 @@ def merge_state(
         "suggested_capabilities": suggested_capabilities,
         "suggested_domain_extensions": suggested_domain_extensions,
         "suggested_gates": suggested_gates,
+        "context_control_records": context_control_records,
+        "tool_output_boundaries": tool_output_boundaries,
+        "artifact_references": artifact_references,
+        "branch_route_repair_summaries": branch_route_repair_summaries,
+        "route_repair_forbidden_retries": route_repair_forbidden_retries,
+        "context_budget_findings": context_budget_findings,
+        "skipped_references": skipped_references,
         "implementation_preflights": implementation_preflights,
         "pre_edit_structure_findings": pre_edit_structure_findings,
         "active_skill_context": active_skill_context,
@@ -1007,6 +1047,13 @@ def write_telemetry_event(
     permission_decision: str = "",
     hook_findings: dict[str, Iterable[str]] | None = None,
     post_edit_structure_findings: Iterable[str] = (),
+    context_control_records: Iterable[object] = (),
+    tool_output_boundaries: Iterable[object] = (),
+    artifact_references: Iterable[str] = (),
+    branch_route_repair_summaries: Iterable[object] = (),
+    route_repair_forbidden_retries: Iterable[str] = (),
+    context_budget_findings: Iterable[str] = (),
+    skipped_references: Iterable[str] = (),
     suggested_skills: Iterable[str] = (),
     suggested_capabilities: Iterable[str] = (),
     suggested_gates: Iterable[str] = (),
@@ -1119,6 +1166,22 @@ def write_telemetry_event(
             ),
             "hook_findings": _clean_findings(hook_findings),
             "post_edit_structure_findings": _capped_items(post_edit_structure_findings),
+            "context_control_records": _capped_items(
+                json.dumps(record, sort_keys=True)
+                for record in _capped_context_control_records(context_control_records)
+            ),
+            "tool_output_boundaries": _capped_items(
+                json.dumps(record, sort_keys=True)
+                for record in _capped_tool_output_boundaries(tool_output_boundaries)
+            ),
+            "artifact_references": _capped_artifact_references(artifact_references),
+            "branch_route_repair_summaries": _capped_items(
+                json.dumps(record, sort_keys=True)
+                for record in _capped_branch_route_repair_summaries(branch_route_repair_summaries)
+            ),
+            "route_repair_forbidden_retries": _capped_items(route_repair_forbidden_retries),
+            "context_budget_findings": _capped_items(context_budget_findings),
+            "skipped_references": _capped_items(skipped_references),
             "suggested_skills": _capped_items(suggested_skills),
             "suggested_capabilities": _capped_items(suggested_capabilities),
             "suggested_gates": _capped_items(suggested_gates),
@@ -2577,6 +2640,13 @@ def _empty_state() -> dict:
         "suggested_capabilities": [],
         "suggested_domain_extensions": [],
         "suggested_gates": [],
+        "context_control_records": [],
+        "tool_output_boundaries": [],
+        "artifact_references": [],
+        "branch_route_repair_summaries": [],
+        "route_repair_forbidden_retries": [],
+        "context_budget_findings": [],
+        "skipped_references": [],
         "implementation_preflights": [],
         "pre_edit_structure_findings": [],
         "active_skill_context": {},
@@ -2699,6 +2769,265 @@ def _capped_state_items(values: Iterable[str]) -> list[str]:
 def _capped_compaction_snapshots(values: Iterable[object]) -> list[dict[str, Any]]:
     """Preserve the latest bounded compaction checkpoints without string truncation."""
     return preserve_required_snapshots(list(values), (), limit=5)
+
+
+def _capped_context_control_records(values: Iterable[object]) -> list[dict[str, Any]]:
+    """Preserve bounded context-control records without raw prompt/output fields."""
+    forbidden = {
+        "prompt",
+        "prompt_text",
+        "raw_prompt",
+        "raw_output",
+        "raw_command_output",
+        "full_output",
+        "full_diff",
+        "full_file",
+        "file_contents",
+        "environment",
+        "env",
+        "secret",
+        "secrets",
+        "credential",
+        "credentials",
+    }
+    out: list[dict[str, Any]] = []
+    for raw in values:
+        if not isinstance(raw, dict):
+            continue
+        cleaned = _clean_state_mapping(_strip_forbidden_context_record(raw, forbidden))
+        if cleaned:
+            out.append(cleaned)
+        if len(out) >= 10:
+            break
+    return out
+
+
+def _capped_tool_output_boundaries(values: Iterable[object]) -> list[dict[str, Any]]:
+    """Preserve bounded tool-output records without raw output or prompt fields."""
+    forbidden = {
+        "stdout",
+        "stderr",
+        "command_output",
+        "raw_output",
+        "full_output",
+        "full_diff",
+        "file_contents",
+        "raw_prompt",
+        "prompt",
+        "environment",
+        "env",
+        "secret",
+        "secrets",
+        "credential",
+        "credentials",
+        "password",
+        "api_key",
+        "apikey",
+        "token",
+    }
+    out: list[dict[str, Any]] = []
+    for raw in values:
+        if not isinstance(raw, dict):
+            continue
+        cleaned = _clean_tool_output_boundary_record(raw, forbidden)
+        if cleaned:
+            out.append(cleaned)
+        if len(out) >= 10:
+            break
+    return out
+
+
+def _capped_artifact_references(values: Iterable[str]) -> list[str]:
+    """Keep artifact references repo-relative or cache-scoped."""
+    return _capped_state_items(
+        ref for ref in (_sanitize_artifact_reference(value) for value in values) if ref
+    )
+
+
+def _capped_branch_route_repair_summaries(values: Iterable[object]) -> list[dict[str, Any]]:
+    """Preserve bounded route-repair summaries without raw prompt/output fields."""
+    forbidden = {
+        "prompt",
+        "raw_prompt",
+        "raw_output",
+        "full_output",
+        "command_output",
+        "stdout",
+        "stderr",
+        "full_diff",
+        "file_contents",
+        "environment",
+        "env",
+        "secret",
+        "secrets",
+        "credential",
+        "credentials",
+        "password",
+        "api_key",
+        "apikey",
+        "token",
+    }
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for raw in values:
+        if not isinstance(raw, dict):
+            continue
+        privacy_failed = _state_summary_privacy_failed(raw, forbidden)
+        stripped = _strip_forbidden_context_record(raw, forbidden)
+        route = stripped.get("abandoned_or_repaired_route")
+        route = route if isinstance(route, dict) else {}
+        new_route = stripped.get("new_route")
+        new_route = new_route if isinstance(new_route, dict) else {}
+        record = {
+            "schema_version": 1,
+            "summary_id": _state_summary_text(stripped.get("summary_id")),
+            "trigger": _state_summary_text(stripped.get("trigger") or "route_repair"),
+            "abandoned_or_repaired_route": {
+                "owner_skill": _state_summary_text(route.get("owner_skill")),
+                "reviewer_skill": _state_summary_text(route.get("reviewer_skill")),
+                "hypothesis": _state_summary_text(route.get("hypothesis")),
+                "files_touched": _state_summary_items(route.get("files_touched", [])),
+                "validation_result": _state_summary_text(route.get("validation_result")),
+                "failure_reason": _state_summary_text(route.get("failure_reason")),
+            },
+            "reusable_findings": _state_summary_items(stripped.get("reusable_findings", [])),
+            "forbidden_retries": _state_summary_items(stripped.get("forbidden_retries", [])),
+            "new_route": {
+                "owner_skill": _state_summary_text(new_route.get("owner_skill")),
+                "selected_capabilities": _state_summary_items(new_route.get("selected_capabilities", [])),
+                "validation_plan": _state_summary_items(new_route.get("validation_plan", [])),
+            },
+            "residual_risk": _state_summary_items(stripped.get("residual_risk", [])),
+            "privacy_status": "fail"
+            if privacy_failed or str(stripped.get("privacy_status") or "").strip() == "fail"
+            else "pass",
+        }
+        if not record["summary_id"]:
+            record["summary_id"] = _hash_text(json.dumps(record, sort_keys=True))
+        if record["summary_id"] in seen:
+            continue
+        seen.add(record["summary_id"])
+        out.append(record)
+        if len(out) >= 10:
+            break
+    return out
+
+
+def _state_summary_text(value: object) -> str:
+    text = str(value or "").replace("\x00", "").replace("\r", " ").replace("\n", " ").strip()
+    if not text:
+        return ""
+    text = STATE_SECRET_RE.sub("<redacted-secret>", text)
+    text = STATE_LOCAL_PATH_RE.sub("<local-path>", text)
+    return text[:MAX_STATE_VALUE_LEN]
+
+
+def _state_summary_items(values: object) -> list[str]:
+    if not isinstance(values, (list, tuple, set)):
+        return []
+    return _capped_state_items(_state_summary_text(value) for value in values)
+
+
+def _state_summary_privacy_failed(value: object, forbidden: set[str]) -> bool:
+    if _state_record_has_forbidden_key(value, forbidden):
+        return True
+    try:
+        text = json.dumps(value, sort_keys=True, ensure_ascii=False)
+    except TypeError:
+        text = str(value)
+    return bool(STATE_SECRET_RE.search(text) or STATE_LOCAL_PATH_RE.search(text))
+
+
+def _state_record_has_forbidden_key(value: object, forbidden: set[str]) -> bool:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            lowered = str(key).casefold()
+            if lowered in forbidden or any(token in lowered for token in forbidden):
+                return True
+            if _state_record_has_forbidden_key(child, forbidden):
+                return True
+    if isinstance(value, (list, tuple, set)):
+        return any(_state_record_has_forbidden_key(item, forbidden) for item in value)
+    return False
+
+
+def _sanitize_artifact_reference(value: object) -> str:
+    text = str(value or "").strip().strip("'\"").replace("\\", "/")
+    if not text or "\n" in text or "\0" in text or "://" in text:
+        return ""
+    if text.startswith("./"):
+        text = text[2:]
+    if not text.startswith(("/", "~")) and not re.match(r"^[A-Za-z]:/", text):
+        if text.startswith("../") or "/../" in text or text == "..":
+            return ""
+        return text[:MAX_STATE_VALUE_LEN]
+    for marker in ("/.cache/changeforge/", "/Library/Caches/changeforge/"):
+        if marker in text:
+            return ("${CACHE}/changeforge/" + text.split(marker, 1)[1].lstrip("/"))[
+                :MAX_STATE_VALUE_LEN
+            ]
+    return "<local-artifact-path-redacted>"
+
+
+def _clean_tool_output_boundary_record(raw: dict[str, Any], forbidden: set[str]) -> dict[str, Any]:
+    allowed = {
+        "schema_version",
+        "tool_name",
+        "event_name",
+        "output_size_class",
+        "output_bytes",
+        "output_lines",
+        "artifact_path",
+        "artifact_path_source",
+        "digest",
+        "bounded_summary",
+        "truncation_advice",
+        "llm_context_policy",
+        "privacy_status",
+        "unsupported_reason",
+    }
+    stripped = _strip_forbidden_context_record(raw, forbidden)
+    cleaned: dict[str, Any] = {}
+    for key, value in stripped.items():
+        name = str(key).strip()[:80]
+        if name not in allowed:
+            continue
+        if name in {"schema_version", "output_bytes", "output_lines"}:
+            try:
+                cleaned[name] = max(0, int(value)) if value is not None else None
+            except (TypeError, ValueError):
+                cleaned[name] = None
+        elif name == "bounded_summary":
+            cleaned[name] = _capped_state_items(str(item) for item in value) if isinstance(value, (list, tuple)) else []
+        elif name == "artifact_path":
+            cleaned[name] = _sanitize_artifact_reference(value)
+        else:
+            cleaned[name] = str(value or "").strip()[:MAX_STATE_VALUE_LEN]
+    if not cleaned.get("artifact_path"):
+        cleaned["artifact_path"] = ""
+        cleaned["artifact_path_source"] = "not_available"
+    return cleaned
+
+
+def _strip_forbidden_context_record(value: Any, forbidden: set[str]) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    cleaned: dict[str, Any] = {}
+    for key, raw in value.items():
+        name = str(key).strip()
+        lowered = name.casefold()
+        if not name or lowered in forbidden or any(token in lowered for token in forbidden):
+            continue
+        if isinstance(raw, dict):
+            cleaned[name] = _strip_forbidden_context_record(raw, forbidden)
+        elif isinstance(raw, (list, tuple)):
+            cleaned[name] = [
+                _strip_forbidden_context_record(item, forbidden) if isinstance(item, dict) else item
+                for item in raw
+            ]
+        else:
+            cleaned[name] = raw
+    return cleaned
 
 
 def _clean_state_mapping(value: dict) -> dict:

@@ -30,6 +30,22 @@ except (ImportError, ModuleNotFoundError):  # pragma: no cover - importlib test 
     preserve_required_snapshots = _contract_module.preserve_required_snapshots
     sanitize_compaction_snapshot = _contract_module.sanitize_compaction_snapshot
 
+try:
+    from changeforge_branch_route_summary import sanitize_route_repair_summary
+except (ImportError, ModuleNotFoundError):  # pragma: no cover - importlib test loading fallback
+    import importlib.util
+    from pathlib import Path
+
+    _summary_path = Path(__file__).with_name("changeforge_branch_route_summary.py")
+    _summary_spec = importlib.util.spec_from_file_location(
+        "changeforge_branch_route_summary", _summary_path
+    )
+    if _summary_spec is None or _summary_spec.loader is None:
+        raise
+    _summary_module = importlib.util.module_from_spec(_summary_spec)
+    _summary_spec.loader.exec_module(_summary_module)
+    sanitize_route_repair_summary = _summary_module.sanitize_route_repair_summary
+
 
 MAX_STATE_ITEMS = 50
 MAX_STATE_VALUE_LEN = 300
@@ -75,6 +91,13 @@ STATE_REDUCERS = {
     "suggested_capabilities": "additive_unique",
     "suggested_domain_extensions": "additive_unique",
     "suggested_gates": "additive_unique",
+    "context_control_records": "latest_context_control_records",
+    "tool_output_boundaries": "latest_tool_output_boundaries",
+    "artifact_references": "artifact_references",
+    "branch_route_repair_summaries": "latest_branch_route_repair_summaries",
+    "route_repair_forbidden_retries": "route_repair_forbidden_retries",
+    "context_budget_findings": "additive_unique",
+    "skipped_references": "additive_unique",
     "implementation_preflights": "additive_unique",
     "pre_edit_structure_findings": "additive_unique",
     "stage_route_present": "bool_or",
@@ -159,6 +182,19 @@ def reduce_state_update(state: dict, update: dict) -> dict:
             next_state[field] = _latest_by_key(next_state.get(field, []), value)
         elif reducer == "risk_priority_then_recent":
             next_state[field] = _risk_priority_then_recent(next_state.get(field, []), value)
+        elif reducer == "latest_context_control_records":
+            next_state[field] = _latest_context_control_records(next_state.get(field, []), value)
+        elif reducer == "latest_tool_output_boundaries":
+            next_state[field] = _latest_tool_output_boundaries(next_state.get(field, []), value)
+        elif reducer == "artifact_references":
+            next_state[field] = _artifact_references(next_state.get(field, []), value)
+        elif reducer == "latest_branch_route_repair_summaries":
+            next_state[field] = _latest_branch_route_repair_summaries(
+                next_state.get(field, []),
+                value,
+            )
+        elif reducer == "route_repair_forbidden_retries":
+            next_state[field] = _route_repair_forbidden_retries(next_state.get(field, []), value)
     return next_state
 
 
@@ -201,6 +237,265 @@ def _clean_mapping(value: dict) -> dict:
         else:
             cleaned[name] = str(raw).strip()[:MAX_STATE_VALUE_LEN]
     return cleaned
+
+
+def _latest_context_control_records(existing: Any, incoming: Any) -> list[dict]:
+    records: dict[tuple[str, str], dict] = {}
+    order: list[tuple[str, str]] = []
+    for raw in [*_as_iterable(existing), *_as_iterable(incoming)]:
+        if not isinstance(raw, dict):
+            continue
+        record = _clean_context_control_record(raw)
+        if not record:
+            continue
+        key = (
+            str(record.get("route_id") or "active-runtime-route"),
+            str(record.get("current_stage") or record.get("stage") or ""),
+        )
+        if key not in records:
+            order.append(key)
+        records[key] = record
+    ordered = [records[key] for key in order if key in records]
+    ordered.sort(key=_context_record_priority)
+    return ordered[:10]
+
+
+def _latest_tool_output_boundaries(existing: Any, incoming: Any) -> list[dict]:
+    records: dict[tuple[str, str, str], dict] = {}
+    order: list[tuple[str, str, str]] = []
+    for raw in [*_as_iterable(existing), *_as_iterable(incoming)]:
+        if not isinstance(raw, dict):
+            continue
+        record = _clean_tool_output_record(raw)
+        if not record:
+            continue
+        key = (
+            str(record.get("event_name") or "unknown"),
+            str(record.get("tool_name") or "unknown"),
+            str(record.get("digest") or len(order)),
+        )
+        if key not in records:
+            order.append(key)
+        records[key] = record
+    return [records[key] for key in order[-10:] if key in records]
+
+
+def _artifact_references(existing: Any, incoming: Any) -> list[str]:
+    return _additive_unique(
+        [],
+        [
+            ref
+            for ref in (
+                _clean_artifact_reference(item)
+                for item in [*_as_iterable(existing), *_as_iterable(incoming)]
+            )
+            if ref
+        ],
+    )
+
+
+def _latest_branch_route_repair_summaries(existing: Any, incoming: Any) -> list[dict]:
+    records: dict[str, dict] = {}
+    order: list[str] = []
+    for raw in [*_as_iterable(existing), *_as_iterable(incoming)]:
+        if not isinstance(raw, dict):
+            continue
+        record = sanitize_route_repair_summary(raw)
+        summary_id = str(record.get("summary_id") or "").strip()
+        if not summary_id:
+            continue
+        if summary_id not in records:
+            order.append(summary_id)
+        records[summary_id] = record
+    ordered = [records[key] for key in order if key in records]
+    ordered.sort(key=_route_repair_summary_priority)
+    return ordered[:10]
+
+
+def _route_repair_forbidden_retries(existing: Any, incoming: Any) -> list[str]:
+    values = _additive_unique(existing, incoming)
+    values.sort(key=_forbidden_retry_priority)
+    return values[:10]
+
+
+def _clean_context_control_record(raw: dict) -> dict:
+    forbidden = {
+        "prompt",
+        "prompt_text",
+        "raw_prompt",
+        "raw_output",
+        "raw_command_output",
+        "full_output",
+        "full_diff",
+        "full_file",
+        "file_contents",
+        "environment",
+        "env",
+        "secret",
+        "secrets",
+        "credential",
+        "credentials",
+    }
+    cleaned: dict[str, Any] = {}
+    for key, value in raw.items():
+        name = str(key).strip()[:80]
+        if not name or name.casefold() in forbidden:
+            continue
+        if isinstance(value, bool) or isinstance(value, int):
+            cleaned[name] = value
+        elif isinstance(value, dict):
+            cleaned[name] = _clean_mapping(value)
+        elif isinstance(value, (list, tuple)):
+            items: list[Any] = []
+            for item in list(value)[:20]:
+                if isinstance(item, dict):
+                    items.append(_clean_mapping(item))
+                else:
+                    items.append(str(item).strip()[:MAX_STATE_VALUE_LEN])
+            cleaned[name] = items
+        else:
+            cleaned[name] = str(value).strip()[:MAX_STATE_VALUE_LEN]
+    return cleaned
+
+
+def _clean_tool_output_record(raw: dict) -> dict:
+    forbidden = {
+        "stdout",
+        "stderr",
+        "command_output",
+        "raw_output",
+        "full_output",
+        "full_diff",
+        "file_contents",
+        "raw_prompt",
+        "prompt",
+        "environment",
+        "env",
+        "secret",
+        "secrets",
+        "credential",
+        "credentials",
+        "password",
+        "api_key",
+        "apikey",
+        "token",
+    }
+    allowed = {
+        "schema_version",
+        "tool_name",
+        "event_name",
+        "output_size_class",
+        "output_bytes",
+        "output_lines",
+        "artifact_path",
+        "artifact_path_source",
+        "digest",
+        "bounded_summary",
+        "truncation_advice",
+        "llm_context_policy",
+        "privacy_status",
+        "unsupported_reason",
+    }
+    cleaned: dict[str, Any] = {}
+    privacy_failed = _record_has_forbidden_key(raw, forbidden)
+    for key, value in raw.items():
+        name = str(key).strip()[:80]
+        if not name or name not in allowed or _forbidden_key_name(name, forbidden):
+            continue
+        if name in {"schema_version", "output_bytes", "output_lines"}:
+            try:
+                cleaned[name] = max(0, int(value)) if value is not None else None
+            except (TypeError, ValueError):
+                cleaned[name] = None
+        elif name == "bounded_summary":
+            cleaned[name] = _additive_unique([], value)[:10]
+        elif name == "artifact_path":
+            cleaned[name] = _clean_artifact_reference(value)
+            if not cleaned[name]:
+                cleaned[name] = ""
+        else:
+            cleaned[name] = str(value).strip()[:MAX_STATE_VALUE_LEN]
+    if privacy_failed or cleaned.get("privacy_status") == "fail":
+        cleaned["privacy_status"] = "fail"
+    elif cleaned:
+        cleaned.setdefault("privacy_status", "pass")
+    if not cleaned.get("artifact_path"):
+        cleaned["artifact_path"] = ""
+        cleaned["artifact_path_source"] = "not_available"
+    return cleaned
+
+
+def _clean_artifact_reference(value: Any) -> str:
+    text = str(value or "").strip().strip("'\"").replace("\\", "/")
+    if not text or "\n" in text or "\0" in text or "://" in text:
+        return ""
+    if text.startswith("./"):
+        text = text[2:]
+    if not text.startswith(("/", "~")) and not _windows_absolute(text):
+        if text.startswith("../") or "/../" in text or text == "..":
+            return ""
+        return text[:MAX_STATE_VALUE_LEN]
+    for marker in ("/.cache/changeforge/", "/Library/Caches/changeforge/"):
+        if marker in text:
+            return ("${CACHE}/changeforge/" + text.split(marker, 1)[1].lstrip("/"))[
+                :MAX_STATE_VALUE_LEN
+            ]
+    return "<local-artifact-path-redacted>"
+
+
+def _record_has_forbidden_key(value: Any, forbidden: set[str]) -> bool:
+    if not isinstance(value, dict):
+        return False
+    for key, child in value.items():
+        if _forbidden_key_name(str(key), forbidden):
+            return True
+        if isinstance(child, dict) and _record_has_forbidden_key(child, forbidden):
+            return True
+        if isinstance(child, (list, tuple)) and any(
+            _record_has_forbidden_key(item, forbidden) for item in child
+        ):
+            return True
+    return False
+
+
+def _forbidden_key_name(key: str, forbidden: set[str]) -> bool:
+    lowered = key.casefold()
+    return lowered in forbidden or any(token in lowered for token in forbidden)
+
+
+def _windows_absolute(text: str) -> bool:
+    return len(text) >= 3 and text[1:3] == ":/"
+
+
+def _context_record_priority(record: dict) -> tuple[int, int]:
+    findings = record.get("over_budget_findings")
+    skipped = record.get("skipped_reference_count")
+    finding_count = len(findings) if isinstance(findings, list) else 0
+    try:
+        skipped_count = int(skipped or 0)
+    except (TypeError, ValueError):
+        skipped_count = 0
+    return (0 if finding_count or skipped_count else 1, -finding_count - skipped_count)
+
+
+def _route_repair_summary_priority(record: dict) -> tuple[int, int, str]:
+    text = json.dumps(record, sort_keys=True).casefold()
+    severe = any(term in text for term in ("p0", "critical", "security", "data loss"))
+    unresolved = not any(term in text for term in ("resolved", "fixed", "closed", "rereview passed"))
+    forbidden = bool(record.get("forbidden_retries"))
+    privacy_fail = str(record.get("privacy_status") or "") == "fail"
+    residual = bool(record.get("residual_risk"))
+    return (
+        0 if severe or unresolved or forbidden or privacy_fail or residual else 1,
+        -len(_as_iterable(record.get("forbidden_retries"))) - len(_as_iterable(record.get("residual_risk"))),
+        str(record.get("summary_id") or ""),
+    )
+
+
+def _forbidden_retry_priority(value: str) -> tuple[int, str]:
+    lowered = value.casefold()
+    severe = any(term in lowered for term in ("p0", "critical", "security", "data loss", "same-path"))
+    return (0 if severe else 1, lowered)
 
 
 def _merge_runtime_adapter_facts(existing: Any, incoming: dict) -> dict:

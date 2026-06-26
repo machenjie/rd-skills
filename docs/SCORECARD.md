@@ -39,6 +39,7 @@ python3 scripts/generate-professional-scorecard.py --strict-profile-builds --out
 | Installation reproducibility | Build manifests and installer validation. | `python3 scripts/validate-installation.py` | Rebuild profiles, repair manifest/install mismatches, rerun doctor. |
 | Marketplace index validation | Source-derived marketplace exporter and profile validator. | `python3 scripts/validate-marketplace-index.py --profile recommended && python3 scripts/validate-marketplace-index.py --profile full && python3 scripts/validate-marketplace-index.py --profile dev` | Rebuild profiles and repair schema, visibility, or runtime path mismatches. |
 | Runtime governance structural fixtures | Local structural fixtures for executor adapters, repository intelligence, project memory, validation broker, and trajectory. | `python3 scripts/validate-professional-routing-coverage.py` | Add or repair fixture YAML under `evals/executor-adapters`, `evals/repository-intelligence`, `evals/project-memory`, `evals/validation-broker`, and `evals/trajectory`; do not treat structural fixtures as live empirical pass-rate evidence. |
+| context_control_overhead | Deterministic context-control fixtures plus bounded overhead-policy verdict from the existing live benchmark summary when present. | `python3 scripts/eval-context-control-plane.py` | Repair context-control fixtures or collect lower-overhead live evidence before claiming Context Control Plane quality improvement. |
 | Executor adapter structural fixtures | Deterministic fixture report for runtime adapter normalization, degradation, privacy, validation freshness, and closure behavior. | `python3 scripts/eval-executor-adapters.py` | Repair fixture expectations or adapter normalization until deterministic cases pass; do not treat structural fixtures as live runtime pass-rate evidence. |
 | Activation precision benchmark | Deterministic route activation precision/recall report for stage, skill, capability, reference, language, risk, and overroute metrics against the built hook runtime. | `python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks` | Repair fixture expectations or built resolver precision until all activation metrics pass. |
 | Runtime telemetry fixture sample | Sanitized bounded sample generated from executor adapter fixture facts. | `python3 scripts/eval-executor-adapters.py` | Regenerate the sample and keep it clearly labeled as fixture-derived evidence. |
@@ -111,6 +112,14 @@ Cost telemetry is reported for later optimization only. Token usage, command
 executions, and file changes do not gate the quality result in this phase, and
 the scorecard must not claim cost reduction or efficiency improvement from the
 current quality-first benchmark.
+
+Context Control Plane overhead is a separate scorecard row. The row separates
+structural fixture pass, live pass-rate, live runtime telemetry, token overhead,
+and turn overhead. A structural fixture pass is not proof of live quality
+improvement. High overhead without pass-rate improvement is not success, and
+the generated reports must keep that case `partial` or `fail` rather than
+`pass`. Live Codex benchmark commands are opt-in and are not default scorecard
+validation.
 
 For this dimension, artifact validity and evidence readiness are separate.
 `clean-paired` smoke can be a valid diagnostic artifact, but it remains

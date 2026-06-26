@@ -15,7 +15,7 @@ actual:
     product_surface: backend-product
     language_surface: none
     selected_skills: [ai-code-review-refactor, backend-change-builder, security-privacy-gate, quality-test-gate]
-    selected_capabilities: [agent-execution-discipline, implementation-structure-design, package-dependency-management]
+    selected_capabilities: [agent-execution-discipline, implementation-structure-design]
     selected_domain_extensions: []
     skipped_capabilities:
       - capability: release-rollback

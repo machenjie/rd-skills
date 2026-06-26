@@ -63,6 +63,7 @@ actual:
     context_budget_mode: staged-plan
     context_budget_rationale: L4 API compatibility work needs a staged plan while executing implementation-planning first
     required_evidence:
+      - SDD public API and module placement
       - target boundaries inspected before plan
       - repository context map with owning surface and caller/callee evidence
       - reuse candidates
@@ -73,6 +74,7 @@ actual:
       - test placement
       - TDD or validation signal
     required_quality_gates:
+      - SDD gate
       - requirement gate
       - impact gate
       - API/data gate

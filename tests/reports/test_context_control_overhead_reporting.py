@@ -1,0 +1,169 @@
+from __future__ import annotations
+
+import importlib.util
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from types import ModuleType
+
+
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPTS_DIR = ROOT / "scripts"
+
+
+def _load_script(name: str, filename: str) -> ModuleType:
+    if str(SCRIPTS_DIR) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS_DIR))
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS_DIR / filename)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"could not import {filename}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+SCORECARD = _load_script("generate_professional_scorecard", "generate-professional-scorecard.py")
+PUBLIC_SUMMARY = _load_script("generate_public_benchmark_summary", "generate-public-benchmark-summary.py")
+CONTEXT_EVAL = _load_script("eval_context_control_plane", "eval-context-control-plane.py")
+REPORT_CONSISTENCY = _load_script("validate_report_consistency", "validate-report-consistency.py")
+
+
+def _context_report(status: str = "pass", overhead_status: str = "partial") -> dict[str, object]:
+    return {
+        "schema_version": 1,
+        "status": status,
+        "summary": {"failed": 0 if status == "pass" else 1},
+        "context_control_overhead": {
+            "status": overhead_status,
+            "input_token_overhead_pct": 234.06,
+            "output_token_overhead_pct": 45.63,
+            "turn_overhead": None,
+            "command_delta": 22.61,
+            "pass_rate_delta": 0.0,
+            "overhead_policy_verdict": "partial: high overhead without pass-rate improvement is not success",
+            "evidence_boundary": "Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead.",
+        },
+    }
+
+
+class ContextControlOverheadReportingTests(unittest.TestCase):
+    def test_public_summary_includes_context_control_row_when_report_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            (reports / "context-control-plane-eval.json").write_text(
+                json.dumps(_context_report()),
+                encoding="utf-8",
+            )
+            status, detail = SCORECARD.context_control_overhead_status(root)
+            self.assertEqual(status, "partial")
+            scorecard_path = reports / "professional-scorecard.json"
+            scorecard_path.write_text(
+                json.dumps(
+                    {
+                        "status_summary": {"partial": 1},
+                        "evidence_levels": {},
+                        "dimensions": [
+                            {
+                                "name": "context_control_overhead",
+                                "status": status,
+                                "source": "reports/context-control-plane-eval.json",
+                                "detail": detail,
+                                "verification_command": "python3 scripts/eval-context-control-plane.py",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            payload = PUBLIC_SUMMARY.generate_summary(root, scorecard_path=scorecard_path)
+            row = next(item for item in payload["items"] if item["name"] == "context_control_overhead")
+
+        self.assertEqual(row["status"], "partial")
+        self.assertIn("input_token_overhead_pct", row["detail"])
+
+    def test_high_overhead_neutral_pass_rate_does_not_become_success_wording(self) -> None:
+        summary = {
+            "cost_summary": {
+                "cost_adjusted_delta": {
+                    "skills_with_hooks_clean_vs_baseline_clean": {
+                        "average_input_token_overhead_pct": 2.3406,
+                        "average_output_token_overhead_pct": 0.4563,
+                        "average_command_execution_delta": 22.61,
+                        "pass_rate_delta": 0.0,
+                    }
+                }
+            },
+            "quality_improvement_summary": {
+                "large_quality_improvement_claim": False,
+                "efficiency_improvement_claim": False,
+            },
+            "effect_status": "neutral",
+            "effect_verdict": "neutral",
+        }
+        overhead = CONTEXT_EVAL._context_control_overhead(
+            fixtures_pass=True,
+            raw_leak_count=0,
+            live_summary=summary,
+        )
+        self.assertEqual(overhead["status"], "partial")
+        self.assertNotEqual(overhead["status"], "pass")
+
+        markdown = PUBLIC_SUMMARY.render_markdown(
+            {
+                "repository": {"name": "test/repo", "version": "0", "source_commit": "test"},
+                "status_counts": {"pass": 0, "partial": 1, "fail": 0, "unknown": 0, "not_collected": 0},
+                "evidence_levels": {},
+                "items": [
+                    {
+                        "name": "context_control_overhead",
+                        "status": "partial",
+                        "evidence_level": "structural fixture",
+                        "source": "reports/context-control-plane-eval.json",
+                        "detail": json.dumps(overhead, sort_keys=True),
+                        "command": "python3 scripts/eval-context-control-plane.py",
+                    }
+                ],
+                "known_unknowns": [],
+                "refresh_commands": [],
+            }
+        )
+        self.assertIn("high overhead without pass-rate improvement is not success", markdown)
+        self.assertIn("live benchmark commands are opt-in and not default validation", markdown)
+
+    def test_missing_overhead_is_not_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            status, _detail = SCORECARD.context_control_overhead_status(Path(tmp))
+        self.assertEqual(status, "not_collected")
+
+        overhead = CONTEXT_EVAL._context_control_overhead(
+            fixtures_pass=True,
+            raw_leak_count=0,
+            live_summary=None,
+        )
+        self.assertEqual(overhead["status"], "partial")
+
+    def test_context_control_eval_failure_blocks_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reports = root / "reports"
+            reports.mkdir()
+            report_path = reports / "context-control-plane-eval.json"
+            report_path.write_text(json.dumps(_context_report(status="fail", overhead_status="pass")), encoding="utf-8")
+
+            status, _detail = SCORECARD.context_control_overhead_status(root)
+            errors = REPORT_CONSISTENCY.context_control_report_consistency_errors(
+                context_report_path=report_path,
+            )
+
+        self.assertEqual(status, "fail")
+        self.assertTrue(any("blocks pass" in error for error in errors), errors)
+
+
+if __name__ == "__main__":
+    unittest.main()

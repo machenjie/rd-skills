@@ -41,11 +41,11 @@ cases:
         - references/capabilities/107-testability-seam-design.md
         - references/capabilities/108-dependency-wiring-lifecycle.md
         - references/capabilities/124-repository-graph-analysis.md
+      context_budget_mode: single-stage
+      context_control_required: true
+      context_control_skipped_reference_min: 5
+      skipped_references_contains:
         - references/capabilities/38-service-business-logic.md
-        - references/capabilities/41-authentication-authorization.md
-        - references/capabilities/42-idempotency-retry-design.md
-        - references/capabilities/44-logging-error-handling.md
-        - references/capabilities/92-python-professional-usage.md
 
   - id: frontend-tsx-no-backend
     event:
@@ -83,8 +83,11 @@ cases:
         - references/capabilities/31-page-component-decomposition.md
         - references/capabilities/33-state-management-design.md
         - references/capabilities/34-form-validation-design.md
+      context_budget_mode: single-stage
+      context_control_required: true
+      context_control_skipped_reference_min: 2
+      skipped_references_contains:
         - references/capabilities/35-frontend-api-integration.md
-        - references/capabilities/91-typescript-professional-usage.md
 
   - id: webhook-review-no-web3
     event:
@@ -122,6 +125,10 @@ cases:
         - references/capabilities/68-degradation-circuit-breaking.md
         - references/capabilities/42-idempotency-retry-design.md
         - references/capabilities/55-authentication-security.md
+      context_budget_mode: single-stage
+      context_control_required: true
+      context_control_skipped_reference_min: 1
+      skipped_references_contains:
         - references/capabilities/92-python-professional-usage.md
 
   - id: backend-security-risk
@@ -161,8 +168,10 @@ cases:
         - references/capabilities/38-service-business-logic.md
         - references/capabilities/41-authentication-authorization.md
         - references/capabilities/42-idempotency-retry-design.md
-        - references/capabilities/44-logging-error-handling.md
-        - references/capabilities/92-python-professional-usage.md
+      context_budget_mode: single-stage
+      context_control_required: true
+      context_control_skipped_reference_min: 3
+      skipped_references_contains:
         - references/capabilities/52-threat-modeling.md
 
   - id: docs-release-handoff
@@ -264,6 +273,84 @@ cases:
       product_surfaces_not_contains: [skill-authoring]
       selected_capabilities_not_contains:
         - skill-authoring-expert
+        - context-control-plane
+      context_budget_mode: staged-plan
+
+  - id: l1-typo-fix-minimal-budget
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Fix typo in docs/QUICKSTART.md.
+    expected:
+      stage: documentation-handoff
+      product_surfaces_contains: [documentation-only]
+      context_budget_mode: minimal
+      context_control_required: true
+      context_control_skipped_reference_min: 0
+      context_control_jit_required: false
+      context_control_tool_output_boundary_required: false
+      selected_capabilities_not_contains:
+        - context-control-plane
+      skipped_references_not_contains:
+        - references/capabilities/128-context-control-plane.md
+
+  - id: skill-authoring-context-risk-selects-control-plane
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update src/registry/routing-rules.yaml for context budget, skipped references, and JIT retrieval behavior.
+    expected:
+      stage: skill-authoring
+      product_surfaces_contains: [skill-authoring]
+      selected_capabilities_contains:
+        - context-control-plane
+      required_references_contains:
+        - references/capabilities/128-context-control-plane.md
+      context_budget_mode: staged-plan
+      context_control_required: true
+      context_control_jit_required: true
+
+  - id: broad-system-audit-has-skipped-references
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Perform a broad system audit of hook runtime context budget, validation broker, repository graph, execution trajectory, and project memory behavior.
+    expected:
+      stage: code-review
+      selected_capabilities_contains:
+        - context-control-plane
+        - validation-broker
+        - repository-graph-analysis
+      context_budget_mode: staged-plan
+      context_control_required: true
+      context_control_skipped_reference_min: 1
+      context_control_jit_required: true
+      context_control_tool_output_boundary_required: true
+      skipped_references_contains:
+        - references/capabilities/126-validation-broker.md
+
+  - id: compaction-event-minimal-context-control
+    event:
+      hook_event_name: Compact
+      prompt: compact
+    expected:
+      stage: requirement-intake
+      context_budget_mode: minimal
+      context_control_required: true
+      context_control_skipped_reference_min: 1
+      context_control_compaction_snapshot_required: true
+      skipped_references_contains:
+        - references/capabilities/04-scenario-decomposition.md
+
+  - id: generated-artifact-path-needs-jit-context-control
+    event:
+      hook_event_name: UserPromptSubmit
+      prompt: Update generated artifact source-of-truth mapping and tool output boundary for dist hook runtime reports.
+    expected:
+      stage: skill-authoring
+      selected_capabilities_contains:
+        - context-control-plane
+      context_budget_mode: staged-plan
+      context_control_required: true
+      context_control_jit_required: true
+      context_control_tool_output_boundary_required: true
 
   - id: sql-migration-distinct-from-query
     event:

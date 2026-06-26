@@ -115,7 +115,10 @@ def _display_path(path: Path) -> str:
 
 def _runtime_root(mode: str, runtime_root: Path | None = None) -> Path:
     if runtime_root is not None:
-        return runtime_root
+        root = runtime_root
+        if (root / "scripts").is_dir() and not (root / "changeforge_action_classifier.py").is_file():
+            return root / "scripts"
+        return root
     if mode == "source":
         return SOURCE_RUNTIME_ROOT
     return DEFAULT_BUILT_RUNTIME_ROOT
@@ -214,6 +217,13 @@ def _actual_for_case(case: Mapping[str, Any], runtime_modules: RuntimeModules) -
         "risk_surfaces": _unique_strings(context.get("risk_surfaces")),
         "product_surfaces": _unique_strings(context.get("product_surfaces")),
         "selected_domain_extensions": _unique_strings(context.get("selected_domain_extensions")),
+        "context_budget_mode": str(context.get("context_budget_mode") or ""),
+        "context_control": context.get("context_control") if isinstance(context.get("context_control"), dict) else {},
+        "skipped_references": [
+            str(item.get("reference"))
+            for item in context.get("skipped_references", [])
+            if isinstance(item, dict) and item.get("reference")
+        ],
         "classification": classification,
     }
 
@@ -387,6 +397,49 @@ def evaluate_activation_precision(
             )
         ) or any(deltas[field].get("forbidden") for field in SET_FIELDS):
             overroute_cases += 1
+
+        expected_budget_mode = expected.get("context_budget_mode")
+        if isinstance(expected_budget_mode, str) and expected_budget_mode:
+            if actual.get("context_budget_mode") != expected_budget_mode:
+                case_errors.append(
+                    f"context_budget_mode expected {expected_budget_mode!r}, got {actual.get('context_budget_mode')!r}"
+                )
+        contains_missing = sorted(
+            set(_unique_strings(expected.get("skipped_references_contains")))
+            - set(_unique_strings(actual.get("skipped_references")))
+        )
+        forbidden_present = sorted(
+            set(_unique_strings(expected.get("skipped_references_not_contains")))
+            & set(_unique_strings(actual.get("skipped_references")))
+        )
+        if contains_missing:
+            case_errors.append(f"skipped_references required by contains missing: {', '.join(contains_missing)}")
+        if forbidden_present:
+            case_errors.append(f"skipped_references forbidden by not_contains present: {', '.join(forbidden_present)}")
+        if expected.get("context_control_required") is True and not actual.get("context_control"):
+            case_errors.append("context_control required but missing")
+        if "context_control_skipped_reference_min" in expected:
+            minimum = int(expected.get("context_control_skipped_reference_min") or 0)
+            control = actual.get("context_control") if isinstance(actual.get("context_control"), dict) else {}
+            observed = int(control.get("skipped_reference_count") or 0)
+            if observed < minimum:
+                case_errors.append(
+                    f"context_control skipped_reference_count expected >= {minimum}, got {observed}"
+                )
+        control = actual.get("context_control") if isinstance(actual.get("context_control"), dict) else {}
+        for expected_key, control_key in (
+            ("context_control_jit_required", "jit_retrieval_required"),
+            ("context_control_tool_output_boundary_required", "tool_output_boundary_required"),
+            ("context_control_compaction_snapshot_required", "compaction_snapshot_required"),
+        ):
+            if expected_key not in expected:
+                continue
+            expected_value = bool(expected.get(expected_key))
+            observed_value = bool(control.get(control_key))
+            if observed_value != expected_value:
+                case_errors.append(
+                    f"{control_key} expected {expected_value!r}, got {observed_value!r}"
+                )
 
         if case_errors:
             errors.extend(f"{case_id}: {error}" for error in case_errors)

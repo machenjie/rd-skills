@@ -30,6 +30,6 @@ actual:
         reason: no release or deployment action is requested
     context_budget_mode: single-stage
     context_budget_rationale: L2 test-only TS route uses test gate and language test capability only
-    required_evidence: [risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected, validation freshness after final material edits]
+    required_evidence: [validation commands mapped to PDD/DDD/SDD, risk-based layer selection, deterministic data, observable-behavior assertions, evidence of gaps, minimal check rationale when lower-depth validation is selected, validation freshness after final material edits]
     required_quality_gates: [test gate]
     handoff_target: code-review

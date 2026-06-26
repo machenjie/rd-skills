@@ -1536,6 +1536,109 @@ def _stage_context_budget_errors(rel: str, manifest: dict[str, Any]) -> list[str
     return errors
 
 
+def _actual_context_control(
+    output_data: dict[str, Any],
+    actual: dict[str, Any],
+) -> dict[str, Any] | None:
+    for container in (actual, output_data):
+        value = container.get("context_control")
+        if isinstance(value, dict):
+            return value
+        if value is not None:
+            return {}
+    return None
+
+
+def _context_control_schema_errors(
+    rel: str,
+    output_data: dict[str, Any],
+    actual: dict[str, Any],
+    actual_sets: dict[str, list[str]],
+) -> list[str]:
+    payload = _actual_context_control(output_data, actual)
+    if "context-control-plane" not in actual_sets["capabilities"] and payload is None:
+        return []
+    if payload is None:
+        return [f"{rel}: actual.context_control is required when context-control-plane is selected"]
+    if not payload:
+        return [f"{rel}: actual.context_control must be an object"]
+
+    errors: list[str] = []
+    mode = payload.get("budget_mode")
+    if mode not in VALID_CONTEXT_BUDGET_MODES:
+        errors.append(
+            f"{rel}: actual.context_control.budget_mode must be one of {sorted(VALID_CONTEXT_BUDGET_MODES)}"
+        )
+    if not isinstance(payload.get("budget_rationale"), str) or not payload.get("budget_rationale").strip():
+        errors.append(f"{rel}: actual.context_control.budget_rationale is required")
+
+    for field in (
+        "max_selected_capabilities",
+        "max_required_references",
+        "selected_reference_count",
+        "skipped_reference_count",
+    ):
+        value = payload.get(field)
+        if not isinstance(value, int) or value < 0:
+            errors.append(f"{rel}: actual.context_control.{field} must be a non-negative integer")
+
+    for field in (
+        "jit_retrieval_required",
+        "tool_output_boundary_required",
+        "compaction_snapshot_required",
+        "branch_route_repair_summary_required",
+        "overhead_evidence_required",
+    ):
+        if not isinstance(payload.get(field), bool):
+            errors.append(f"{rel}: actual.context_control.{field} must be boolean")
+
+    selected_refs = payload.get("selected_references")
+    skipped_refs = payload.get("skipped_references")
+    for field, value in (
+        ("selected_references", selected_refs),
+        ("skipped_references", skipped_refs),
+    ):
+        if not isinstance(value, list):
+            errors.append(f"{rel}: actual.context_control.{field} must be a list")
+            continue
+        for index, item in enumerate(value):
+            if not isinstance(item, dict):
+                errors.append(f"{rel}: actual.context_control.{field}[{index}] must be an object")
+                continue
+            for key in ("reference", "reason"):
+                if not isinstance(item.get(key), str) or not item.get(key).strip():
+                    errors.append(f"{rel}: actual.context_control.{field}[{index}].{key} is required")
+
+    if isinstance(selected_refs, list) and isinstance(payload.get("selected_reference_count"), int):
+        if payload["selected_reference_count"] != len(selected_refs):
+            errors.append(
+                f"{rel}: actual.context_control.selected_reference_count must match selected_references length"
+            )
+    if isinstance(skipped_refs, list) and isinstance(payload.get("skipped_reference_count"), int):
+        if payload["skipped_reference_count"] != len(skipped_refs):
+            errors.append(
+                f"{rel}: actual.context_control.skipped_reference_count must match skipped_references length"
+            )
+
+    if payload.get("jit_retrieval_required") is True and not payload.get("jit_retrieval_plan"):
+        errors.append(f"{rel}: actual.context_control.jit_retrieval_plan is required when JIT retrieval is required")
+    if payload.get("tool_output_boundary_required") is True:
+        value = payload.get("tool_output_boundary")
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"{rel}: actual.context_control.tool_output_boundary is required")
+    if payload.get("overhead_evidence_required") is True:
+        value = payload.get("overhead_evidence")
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"{rel}: actual.context_control.overhead_evidence is required")
+    residual = payload.get("residual_context_risk")
+    if not isinstance(residual, list) or not residual:
+        errors.append(f"{rel}: actual.context_control.residual_context_risk must be a non-empty list")
+    elif not all(isinstance(item, str) and item.strip() for item in residual):
+        errors.append(f"{rel}: actual.context_control.residual_context_risk must contain strings")
+
+    return errors
+
+
 def _folded_items(values: Iterable[str]) -> set[str]:
     return {value.strip().casefold() for value in values if value.strip()}
 
@@ -2134,6 +2237,10 @@ def _compare_candidate_output(  # noqa: C901 - schema comparison is branchy.
             capability_metadata,
             errors,
         )
+
+    errors.extend(
+        _context_control_schema_errors(rel, output_data, actual, actual_sets)
+    )
 
     _enforce_l1_actual_anti_over_routing(
         rel,

@@ -34,6 +34,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-files", type=int, default=36, help="Maximum selected files in the context pack.")
     parser.add_argument("--max-symbols", type=int, default=80, help="Maximum selected symbols in the context pack.")
     parser.add_argument(
+        "--budget-mode",
+        choices=("minimal", "single-stage", "staged-plan", "full"),
+        default="single-stage",
+        help="Named context budget mode.",
+    )
+    parser.add_argument(
+        "--budget-profile",
+        choices=("authoring", "runtime"),
+        default="authoring",
+        help="Budget limit profile. Use runtime for hook or route-generated active-context packs.",
+    )
+    parser.add_argument(
         "--context-budget-tokens",
         type=int,
         default=1200,
@@ -55,6 +67,8 @@ def main(argv: list[str] | None = None) -> int:
         context_budget_tokens=args.context_budget_tokens,
         graph_path=args.graph,
         context_pack_path=args.out,
+        budget_mode=args.budget_mode,
+        budget_profile=args.budget_profile,
     )
     json_payload = json.dumps(context_pack, indent=2, sort_keys=True)
 

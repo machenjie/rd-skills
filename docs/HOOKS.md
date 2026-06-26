@@ -310,7 +310,12 @@ In addition to their reminders, runtime gates append a small telemetry record
 to the user cache after each watched event. Telemetry is a runtime fact log used
 for offline review; it is never written into project source or `dist/`, and it
 records no prompts, environment variables, secrets, or full command output. The
-Stop Closure Gate records closure-completeness facts only: whether a complete
+Tool Output Boundary Gate records only bounded tool-output metadata and
+repo-relative/cache-scoped artifact references. It never stores raw stdout,
+stderr, prompts, environment values, full diffs, full files, secrets, or personal
+archives; full logs must be explicitly redirected or sliced by the user/agent and
+then cited as artifacts.
+The Stop Closure Gate records closure-completeness facts only: whether a complete
 parseable `changeforge_route` manifest, changed files, validation evidence,
 residual risk, and required references were present. A prose mention of
 `changeforge_route`, or a YAML block missing `selected_skills`,
@@ -488,9 +493,13 @@ Runtime support:
   route id, selected skills/capabilities/gates, current stage, PDD/DDD/SDD/TDD
   summaries, changed/read paths, validation freshness, review/repair/re-review
   state, residual risk, memory references, repo graph references, and active
-  skill context. The snapshot rejects or redacts raw prompts, raw assistant
-  messages, raw command output, environment variables, secrets, API keys, local
-  absolute paths, full file contents, and full diff bodies.
+  skill context. Snapshot v2 also records typed context-control fields,
+  selected/skipped reference policy, omitted-context reasons, branch route-repair
+  summaries, and nullable runtime metadata (`tokens_before`,
+  `first_kept_entry_id`) when the runtime exposes it. The snapshot rejects or
+  redacts raw prompts, raw assistant messages, raw command output, environment
+  variables, secrets, API keys, local absolute paths, full file contents, and
+  full diff bodies.
 - Compaction event responsibilities are split deliberately:
   `PreCompact` is the only snapshot-writing phase; `PostCompact` and
   `SessionStart` with `source=compact` re-inject from the latest snapshot; an
@@ -523,8 +532,10 @@ events whose advisory output Copilot actually consumes:
   and runs the Permission Policy Gate for Bash warnings. Copilot templates omit
   the event because Copilot `preToolUse` does not consume advisory
   `additionalContext`; PostToolUse and Stop report any preflight gap.
-- `PostToolUse` runs the structure and risk-surface gates after edits and
-  commands.
+- `PostToolUse` runs the read-context, tool-output-boundary, structure, and
+  risk-surface gates after edits and commands. Claude also wires the
+  tool-output-boundary gate for `PostToolUseFailure` and `PostToolBatch`; Copilot
+  uses only its supported `PostToolUse` event.
 - `Stop` runs the closure gate. Copilot Stop is strict by default and emits
   top-level `decision`/`reason` only when evidence is missing. `SubagentStop`
   emits an advisory reminder only where supported by Codex and Claude.
@@ -864,7 +875,7 @@ original reminder gates.
 | Professional context | `changeforge_professional_injector.py` | Emit compact active skill context for engineering stages only and record selected gates/references without marking a route manifest present. |
 | Read/review evidence | `changeforge_read_context_gate.py`, `changeforge_review_gate.py` | Preserve read/search, MCP/GitHub/Fetch/PR diff evidence, and separate review intent from artifact evidence. |
 | Permission policy | `changeforge_permission_policy_gate.py` | Warn on Bash `PreToolUse` and warn/block permission events for high-risk destructive, release, migration, and dependency commands according to hook mode. |
-| Compaction/subagent | `changeforge_compaction_snapshot.py`, `changeforge_compaction_reinject.py`, `changeforge_subagent_skill_contract.py` | Preserve active context across compaction and subagent starts. |
+| Compaction/subagent | `changeforge_compaction_snapshot.py`, `changeforge_compaction_reinject.py`, `changeforge_branch_route_summary.py`, `changeforge_subagent_skill_contract.py` | Preserve active context across compaction and subagent starts, and preserve bounded branch/route-repair summaries for abandoned repair paths. |
 
 Codex and Claude templates wire `PermissionRequest`, prompt, pre-tool,
 post-tool, subagent, stop, and session events. Claude templates also include

@@ -116,6 +116,12 @@
           },
           {
             "type": "command",
+            "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"${CODEX_HOME:-$HOME/.codex}/hooks/changeforge_tool_output_boundary_gate.py\"",
+            "timeout": 10,
+            "statusMessage": "Recording ChangeForge tool output boundary"
+          },
+          {
+            "type": "command",
             "command": "CHANGEFORGE_AGENT=codex /usr/bin/env python3 \"${CODEX_HOME:-$HOME/.codex}/hooks/changeforge_review_gate.py\"",
             "timeout": 10,
             "statusMessage": "Checking ChangeForge review closure"

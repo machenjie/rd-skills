@@ -1,8 +1,8 @@
 # Professional Routing Coverage
 
-- Generated: 2026-06-26T15:00:29.945398+00:00
+- Generated: 2026-06-26T17:39:19.646015+00:00
 - Status: pass
-- Routing cases checked: 118
+- Routing cases checked: 123
 - Benchmark cases checked: 30
 - Hidden risks checked: 91
 - Strongly covered: 87
@@ -11,7 +11,7 @@
 - Expected-route-only supplemental: 7
 - Uncovered: 0
 - Manual review: 0
-- L1 anti-over-routing cases: 9
+- L1 anti-over-routing cases: 10
 - Runtime fixture suites checked: 5
 - Runtime fixture cases checked: 15
 - Findings: 0

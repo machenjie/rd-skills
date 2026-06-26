@@ -1,0 +1,52 @@
+---
+id: negative-small-typo-no-context-control
+input:
+  scenario: A tiny documentation typo mentioning context must not select the context-control plane.
+  context_risk: false
+  routing_fixture_path: evals/routing/l1-skill-typo-no-context-control.yaml
+  runtime_resolver:
+    stage: documentation-handoff
+    risk_surfaces: []
+    product_surfaces: []
+    classification:
+      stage: documentation-handoff
+      prompt_signals:
+        - typo
+expected:
+  context_control_selected: false
+  selected_skills:
+    - change-documentation-gate
+  selected_capabilities:
+    - documentation-generation
+  budget_mode: minimal
+  selected_reference_count: 1
+  selected_reference_count_max: 8
+  skipped_reference_count: 0
+  skipped_references: []
+  safety_result: pass
+  closure_result: pass
+  forbidden_raw_fields:
+    - raw_prompt
+    - prompt
+    - stdout
+    - stderr
+    - command_output
+    - raw_output
+    - full_output
+    - full_diff
+    - file_contents
+    - environment
+    - env
+    - secret
+    - credentials
+context_budget:
+  budget_mode: minimal
+  budget_profile: authoring
+  budget_rationale: One typo fix has no explicit context-risk trigger.
+  context_budget_tokens: 120
+  selected_capability_count: 1
+  selected_reference_count: 1
+  skipped_reference_count: 0
+  over_budget: false
+  residual_context_risk:
+    - No context-control residual risk for this negative control.

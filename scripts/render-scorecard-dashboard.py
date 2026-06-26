@@ -103,6 +103,8 @@ def render_dashboard(payload: dict[str, Any]) -> str:
         "",
         "This generated dashboard makes conservative scorecard results easier to scan. Missing evidence remains `unknown` or `not_collected`; it is never rendered as pass.",
         "",
+        "Context-control overhead evidence separates structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead. High overhead without pass-rate improvement is not success, and live benchmark commands are opt-in rather than default validation.",
+        "",
         "## Status Summary",
         "",
     ]
@@ -126,6 +128,7 @@ def render_dashboard(payload: dict[str, Any]) -> str:
         "Example coverage",
         "Executor adapter structural fixtures",
         "Activation precision benchmark",
+        "context_control_overhead",
         "Runtime telemetry fixture sample",
         "Live runtime telemetry sample",
         "Codex CLI live pass-rate benchmark",

@@ -1,0 +1,135 @@
+---
+id: jit-context-pack-runtime-budget
+input:
+  scenario: A runtime TaskContextPack v3 must act as a selector with JIT reads, not as a broad source payload.
+  context_risk: true
+  runtime_resolver:
+    stage: implementation-planning
+    risk_surfaces:
+      - repository-intelligence
+    product_surfaces:
+      - repository-intelligence
+    classification:
+      stage: implementation-planning
+      prompt_signals:
+        - JIT retrieval
+        - context pack
+        - source of truth
+expected:
+  context_control_selected: true
+  selected_skills:
+    - change-impact-analyzer
+    - quality-test-gate
+  selected_capabilities:
+    - repository-graph-analysis
+    - repository-context-map
+    - context-packaging
+    - context-control-plane
+  budget_mode: staged-plan
+  selected_reference_count: 4
+  selected_reference_count_max: 16
+  skipped_reference_count: 2
+  skipped_references:
+    - reference: dist/
+      reason: Generated output is forbidden active context.
+    - reference: full repository graph dump
+      reason: Graph output is an artifact reference and selector only.
+  safety_result: pass
+  closure_result: pass
+  forbidden_raw_fields:
+    - raw_prompt
+    - prompt
+    - stdout
+    - stderr
+    - command_output
+    - raw_output
+    - full_output
+    - full_diff
+    - file_contents
+    - environment
+    - env
+    - secret
+    - credentials
+context_budget:
+  budget_mode: staged-plan
+  budget_profile: runtime
+  budget_rationale: Runtime pack keeps graph-selected reads and defers adjacent files instead of embedding source payloads.
+  context_budget_tokens: 900
+  selected_capability_count: 4
+  selected_reference_count: 4
+  skipped_reference_count: 2
+  over_budget: false
+  residual_context_risk:
+    - Deferred reads must be inspected before using them as source truth.
+jit_context_pack:
+  required: true
+  budget_max_tokens: 900
+  record:
+    task_context_pack:
+      schema_version: 3
+      task: runtime context-control fixture
+      graph_source:
+        path: artifacts/repository-graph.json
+        freshness: current
+      freshness:
+        status: current
+      context_control:
+        budget_mode: staged-plan
+        budget_profile: runtime
+        context_budget_tokens: 900
+        max_file_count: 16
+        selected_file_count: 2
+        omitted_file_count: 2
+        max_symbol_count: 48
+        selected_symbol_count: 2
+        selected_graph_node_count: 3
+        skipped_graph_node_count: 2
+        signal_density_rationale: selected files cover the changed path and nearest test only
+      jit_retrieval_plan:
+        discovery:
+          - command: rg --files src tests
+            expected_output: bounded path list
+        targeted_reads:
+          - path: src/hook-runtime/scripts/changeforge_context_control_policy.py
+            reason: current source truth for budget limits
+            line_hint: 1-120
+            read_policy: read_slice
+            source_truth_status: source
+          - path: tests/repository_intelligence/test_context_pack_v3.py
+            reason: validator expectations for runtime pack fields
+            line_hint: 1-90
+            read_policy: read_slice
+            source_truth_status: source
+        deferred_reads:
+          - path: scripts/validate-context-pack.py
+            reason: read only if schema validation fails
+        forbidden_reads:
+          - path: dist/
+            reason: generated output must not be used as source truth
+          - path: .git/
+            reason: private VCS internals are not active context
+      artifact_policy:
+        full_graph_dump: forbidden
+        full_file_payloads: forbidden
+        artifact_references_only: true
+      selected_files: []
+      selected_graph_nodes: []
+      skipped_graph_nodes: []
+      closure_evidence: []
+      assumptions: []
+      selected_symbols: []
+      caller_callee_edges: []
+      imports: []
+      references: []
+      related_tests: []
+      validation_candidates: []
+      source_of_truth: []
+      generated_artifacts: []
+      ownership: []
+      reuse_candidates: []
+      rejected_locations: []
+      anti_bloat_decision:
+        status: pass
+      omitted_nodes: []
+      residual_risk: []
+      graph_validation_candidates: []

@@ -13,6 +13,14 @@ import re
 from pathlib import Path
 from typing import Any, Iterable
 
+from changeforge_context_control_policy import (
+    ROUTER_SELF_REFERENCES as CONTEXT_CONTROL_ROUTER_REFERENCES,
+    apply_reference_budget,
+    build_context_control_record,
+    context_budget_limits,
+    context_budget_mode,
+)
+
 
 ROUTER_SELF_REFERENCES = (
     "references/routing-rules.md",
@@ -238,6 +246,11 @@ PRODUCT_SURFACE_SIGNALS = {
         "routing rule",
         "stage model",
         "hook runtime",
+        "context control plane",
+        "context budget",
+        "reference bloat",
+        "selected references",
+        "skipped references",
     ),
     "agent-runtime-governance": (
         "executor adapter",
@@ -345,31 +358,37 @@ SURFACE_CAPABILITIES = {
         "engineering-stage-professionalism",
         "skill-efficacy-benchmark",
         "plan-execution-consistency",
+        "context-control-plane",
     ),
     "agent-runtime-governance": (
         "executor-adapter-protocol",
         "agent-tool-permission-sandbox",
         "agent-workflow-state-machine",
+        "context-control-plane",
     ),
     "repository-intelligence": (
         "repository-graph-analysis",
         "repository-context-map",
         "context-packaging",
+        "context-control-plane",
     ),
     "project-memory": (
         "project-memory-governance",
         "agent-execution-discipline",
         "plan-execution-consistency",
+        "context-control-plane",
     ),
     "validation-broker": (
         "validation-broker",
         "repository-graph-analysis",
         "plan-execution-consistency",
+        "context-control-plane",
     ),
     "execution-trajectory": (
         "execution-trajectory-analysis",
         "agent-workflow-state-machine",
         "validation-broker",
+        "context-control-plane",
     ),
 }
 
@@ -529,6 +548,7 @@ STAGE_CONDITIONAL_CAPABILITIES = {
         "project-memory-governance",
         "validation-broker",
         "execution-trajectory-analysis",
+        "context-control-plane",
     ),
 }
 
@@ -555,6 +575,24 @@ CAPABILITY_TRIGGERS: dict[str, tuple[str, ...]] = {
         "stale validation",
         "validation without outcome",
         "changed path validation",
+    ),
+    "context-control-plane": (
+        "context control plane",
+        "context budget",
+        "token overhead",
+        "reference bloat",
+        "selected references",
+        "skipped references",
+        "jit retrieval",
+        "just in time retrieval",
+        "graph as selector",
+        "tool output boundary",
+        "compaction snapshot",
+        "branch route repair",
+        "route repair summary",
+        "output truncation",
+        "over routing",
+        "under routing",
     ),
 }
 
@@ -686,6 +724,7 @@ CAPABILITY_IDS = {
     "project-memory-governance": "125",
     "validation-broker": "126",
     "execution-trajectory-analysis": "127",
+    "context-control-plane": "128",
 }
 
 
@@ -952,14 +991,20 @@ def build_active_skill_context(
     )
     selected_skills = _selected_skills(owner, reviewer, product_surfaces, risk_surfaces)
     quality_gates = _quality_gates(current_stage, product_surfaces, risk_surfaces, selected_skills)
-    references = _required_references(capabilities)
+    raw_references = _required_references(capabilities)
+    budget_mode = context_budget_mode(current_stage, risk_surfaces, product_surfaces, classification)
+    references, skipped_references = apply_reference_budget(
+        raw_references,
+        budget_mode,
+        always_keep=_always_keep_references(capabilities),
+    )
     skipped_capabilities = _skipped_capabilities(capabilities, action_stage, current_stage)
     skipped_skills = _skipped_skills(selected_skills, product_surfaces, current_stage)
     skipped_routes = _skipped_routes(action_stage, current_stage)
     skipped_domain_extensions = _skipped_domain_extensions(domain_extensions)
     primary_surface = product_surfaces[0] if product_surfaces else "none"
     primary_language = language_surfaces[0] if language_surfaces else "none"
-    return {
+    context = {
         "runtime": runtime,
         "event": event_name,
         "stage": current_stage,
@@ -975,10 +1020,19 @@ def build_active_skill_context(
         "selected_domain_extensions": domain_extensions,
         "required_quality_gates": quality_gates,
         "required_references": references,
+        "raw_required_references": raw_references,
         "skipped_capabilities": skipped_capabilities,
+        "skipped_references": skipped_references,
         "skipped_skills": skipped_skills,
         "skipped_routes": skipped_routes,
         "skipped_domain_extensions": skipped_domain_extensions,
+        "context_budget_mode": budget_mode,
+        "context_budget_rationale": _context_budget_rationale(
+            budget_mode,
+            current_stage,
+            product_surfaces,
+            risk_surfaces,
+        ),
         "owner_skill": owner,
         "reviewer_skill": reviewer,
         "next_gate": quality_gates[0] if quality_gates else "quality-test-gate",
@@ -987,6 +1041,12 @@ def build_active_skill_context(
         "primary_language_surface": primary_language,
         "prior_stage": state.get("turn_stage", ""),
     }
+    context["context_control"] = build_context_control_record(
+        {**context, "required_references": raw_references},
+        state,
+        classification,
+    )
+    return context
 
 
 def context_lines(context: dict[str, Any]) -> list[str]:
@@ -1004,15 +1064,42 @@ def context_lines(context: dict[str, Any]) -> list[str]:
         f"- product_surfaces: {joined('product_surfaces') or 'none'}",
         f"- language_surfaces: {joined('language_surfaces') or 'none'}",
         f"- risk_surfaces: {joined('risk_surfaces') or 'none'}",
-        f"- selected_skills: {joined('selected_skills')}",
-        f"- selected_capabilities: {joined('selected_capabilities')}",
+        f"- selected_skills: {_summary_count(context, 'selected_skills')}",
+        f"- selected_capabilities: {_summary_count(context, 'selected_capabilities')}",
         f"- selected_domain_extensions: {joined('selected_domain_extensions') or 'none'}",
         f"- required_quality_gates: {joined('required_quality_gates')}",
         "- privacy: prompt text, environment variables, secrets, and full command output are not stored",
     ]
+    control = context.get("context_control") if isinstance(context.get("context_control"), dict) else {}
+    if control:
+        mode = str(control.get("budget_mode") or context.get("context_budget_mode") or "minimal")
+        limits = context_budget_limits(mode)
+        lines.append(f"- context_budget_mode: {mode}")
+        lines.append(
+            "- context_control: "
+            f"selected_capabilities={control.get('selected_capability_count', len(_as_list(context.get('selected_capabilities'))))}/"
+            f"{control.get('max_selected_capabilities', limits['max_selected_capabilities'])}, "
+            f"required_references={control.get('selected_reference_count', len(_as_list(context.get('required_references'))))}/"
+            f"{control.get('max_required_references', limits['max_required_references'])}, "
+            f"skipped_references={control.get('skipped_reference_count', 0)}"
+        )
     refs = context.get("required_references", [])
     if isinstance(refs, list) and refs:
-        lines.append(f"- required_references: {', '.join(refs[:8])}")
+        shown = refs[:6]
+        more = len(refs) - len(shown)
+        suffix = f", +{more} more" if more > 0 else ""
+        lines.append(f"- required_references: {', '.join(shown)}{suffix}")
+    skipped_refs = control.get("skipped_references") if isinstance(control, dict) else []
+    if isinstance(skipped_refs, list) and skipped_refs:
+        rendered = [
+            str(item.get("reference") or "unknown")
+            for item in skipped_refs[:3]
+            if isinstance(item, dict)
+        ]
+        more = len(skipped_refs) - len(rendered)
+        suffix = f"; +{more} more" if more > 0 else ""
+        if rendered:
+            lines.append(f"- skipped_references: {'; '.join(rendered)}{suffix}")
     skipped = context.get("skipped_capabilities", [])
     if isinstance(skipped, list) and skipped:
         rendered = [
@@ -1042,6 +1129,15 @@ def context_lines(context: dict[str, Any]) -> list[str]:
             lines.append(f"- skipped_routes: {'; '.join(rendered)}")
     lines.extend(_professional_focus_lines(context))
     return lines
+
+
+def _summary_count(context: dict[str, Any], name: str) -> str:
+    values = context.get(name, [])
+    if not isinstance(values, list):
+        return str(values or "")
+    if len(values) <= 4:
+        return ", ".join(str(value) for value in values)
+    return f"{len(values)} selected"
 
 
 def _professional_focus_lines(context: dict[str, Any]) -> list[str]:
@@ -1333,6 +1429,16 @@ def _required_references(capabilities: list[str]) -> list[str]:
     return _unique(refs)
 
 
+def _always_keep_references(capabilities: list[str]) -> list[str]:
+    refs = list(CONTEXT_CONTROL_ROUTER_REFERENCES)
+    for capability in ("agent-tool-permission-sandbox", "context-control-plane"):
+        if capability in capabilities:
+            cap_id = CAPABILITY_IDS.get(capability)
+            if cap_id:
+                refs.append(f"references/capabilities/{cap_id}-{capability}.md")
+    return _unique(refs)
+
+
 def _skipped_capabilities(capabilities: list[str], action_stage: str, current_stage: str) -> list[dict[str, str]]:
     selected = set(capabilities)
     skipped: list[dict[str, str]] = []
@@ -1415,6 +1521,21 @@ def _route_reason(
         f"resolved from action evidence to canonical stage {current_stage}, "
         f"surface={primary_surface}, language={primary_language}{domain}"
     )
+
+
+def _context_budget_rationale(
+    mode: str,
+    current_stage: str,
+    product_surfaces: list[str],
+    risk_surfaces: list[str],
+) -> str:
+    if mode == "minimal":
+        return "minimal context budget for route without context-risk expansion"
+    if mode == "single-stage":
+        return f"single-stage budget for {current_stage} with bounded required references"
+    surfaces = ", ".join(product_surfaces[:4]) or "no product surface"
+    risks = ", ".join(risk_surfaces[:4]) or "no risk surface"
+    return f"{mode} budget for {current_stage}; surfaces={surfaces}; risks={risks}"
 
 
 def _domain_owner(domain_extensions: list[str]) -> str:

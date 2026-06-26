@@ -64,6 +64,8 @@ Select this capability when **task context transfer to an AI coding agent** is p
 - Use **with** `acceptance-standard-definition` so completion criteria are acceptance-criteria-grade, not informal.
 - Use **with** `repository-graph-analysis` when the package should be generated from a graph/context pack rather than a hand-built file list.
 - Use **with** `project-memory-governance` when memory-derived repeat-failure, fragile-file, or stale-context signals influence risk, while keeping them out of source-fact sections.
+- Use **with** `context-control-plane` when a context package is built, compacted, reused after edits, or included in route closure. This capability owns the package artifact; `context-control-plane` owns budget mode, selected/skipped references, JIT retrieval, tool-output boundary, compaction snapshot, branch route-repair summary, and overhead evidence.
+- For TaskContextPack v3, treat the pack as an index, selector, and handoff artifact. The `jit_retrieval_plan` controls actual source reads; the pack itself must not become a large active-context payload.
 
 # Risk Escalation Rules
 
@@ -93,6 +95,7 @@ A context package is both a **knowledge transfer artifact and a commitment about
 - **Redaction of sensitive references.** Instead of a real DB connection string, use `$DB_URL (env var, see secret-configuration-security capability)`. Instead of a real user record, use a synthetic test fixture. Real production data in context = GDPR/compliance exposure.
 - **Versioned context packages.** For long-running tasks, version the package itself: `context-v1.md` → `context-v2.md` (after schema bump). Enables rollback understanding and handoff audit trail.
 - **Generated graph is a selector, not a payload.** Use graph walks and relevance ranking to choose source-of-truth files, callers, tests, validators, docs, and generated-artifact references. Do not paste the entire graph or repository inventory into an AI-agent handoff.
+- **JIT retrieval owns actual reads.** A context pack may identify targeted, deferred, and forbidden reads, but source facts used for implementation, review, validation, or final closure require the selected current-source read. Runtime-oriented packs should prefer tighter budgets plus JIT reads over larger selected-file payloads.
 
 # Failure Modes
 
@@ -138,6 +141,9 @@ Return a context package with:
 - `freshness_markers` (per major element: commit SHA, date, source snapshot)
 - `memory_experience_inputs` (optional repeat-failure, fragile-file, or stale-context signals, clearly labeled as non-source facts)
 - `graph_memory_execution_coupling` (graph, memory, prior summary, and trajectory claims accepted, rejected, stale, partial, or not verified)
+- `context_control` (budget mode/profile, context budget tokens, selected/omitted file counts, selected symbol count, selected/skipped graph node counts, and signal-density rationale)
+- `jit_retrieval_plan` (bounded discovery commands, targeted reads with line hints and source-truth status, deferred reads, and forbidden reads)
+- `artifact_policy` (large outputs by artifact reference only; full graph dumps and full test-log dumps forbidden)
 - `validation_freshness` (commands, tests, validators, reports, artifacts, exit code or not-run status, covered paths, and whether each ran after final material edits)
 - `tool_permission_boundary` (read/write command classes, sandbox and approval status, sensitive output boundary, and excluded raw logs or secrets)
 - `drift_triggers` (specific events that invalidate this package)

@@ -1,0 +1,24 @@
+---
+id: context-control-hook-runtime-bloat
+description: Hook runtime context bloat must route to the context control plane with budget and overhead evidence.
+prompt: |
+  Review rd-skills hook runtime context bloat and reduce token overhead without losing selected reference rationale.
+expected:
+  complexity: L3
+  risk_level: medium
+  expected_stage: skill-authoring
+  expected_context_budget_mode: staged-plan
+  expected_product_surface: skill-authoring
+  expected_language_surface: none
+  risk_triggers: [context budget exceeded, reference bloat, skill benchmark overhead unknown]
+  skills: [change-forge-router, quality-test-gate, ai-code-review-refactor, change-documentation-gate]
+  capabilities: [repository-context-map, skill-authoring-expert, engineering-stage-professionalism, skill-efficacy-benchmark, plan-execution-consistency, context-control-plane, validation-broker]
+  domain_extensions: []
+  quality_gates: [impact gate, documentation gate, test gate, AI review gate, execution discipline gate]
+forbidden:
+  skills: [backend-change-builder, frontend-change-builder, data-api-contract-changer]
+  capabilities: [release-rollback, project-initialization]
+  domain_extensions: [ai-product-extension, web3-product-extension, payment-trading-extension]
+  quality_gates: [delivery gate]
+notes: |
+  The behavior claim is routing/reference efficiency, not a product runtime change.

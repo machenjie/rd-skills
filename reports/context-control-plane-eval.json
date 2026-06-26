@@ -1,0 +1,125 @@
+{
+  "cases": [
+    {
+      "budget_mode": "minimal",
+      "closure_result": "pass",
+      "context_control_selected": true,
+      "errors": [],
+      "fixture": "evals/context-control/routing-budget-minimal.yaml",
+      "id": "routing-budget-minimal",
+      "safety_result": "pass",
+      "selected_reference_count": 2,
+      "skipped_reference_count": 1,
+      "status": "pass"
+    },
+    {
+      "budget_mode": "staged-plan",
+      "closure_result": "partial",
+      "context_control_selected": true,
+      "errors": [],
+      "fixture": "evals/context-control/routing-budget-broad-audit.yaml",
+      "id": "routing-budget-broad-audit",
+      "safety_result": "pass",
+      "selected_reference_count": 7,
+      "skipped_reference_count": 2,
+      "status": "pass"
+    },
+    {
+      "budget_mode": "staged-plan",
+      "closure_result": "partial",
+      "context_control_selected": true,
+      "errors": [],
+      "fixture": "evals/context-control/reference-signal-density.yaml",
+      "id": "reference-signal-density",
+      "safety_result": "pass",
+      "selected_reference_count": 5,
+      "skipped_reference_count": 3,
+      "status": "pass"
+    },
+    {
+      "budget_mode": "staged-plan",
+      "closure_result": "pass",
+      "context_control_selected": true,
+      "errors": [],
+      "fixture": "evals/context-control/jit-context-pack-runtime-budget.yaml",
+      "id": "jit-context-pack-runtime-budget",
+      "safety_result": "pass",
+      "selected_reference_count": 4,
+      "skipped_reference_count": 2,
+      "status": "pass"
+    },
+    {
+      "budget_mode": "single-stage",
+      "closure_result": "partial",
+      "context_control_selected": true,
+      "errors": [],
+      "fixture": "evals/context-control/tool-output-boundary-large-output.yaml",
+      "id": "tool-output-boundary-large-output",
+      "safety_result": "pass",
+      "selected_reference_count": 4,
+      "skipped_reference_count": 2,
+      "status": "pass"
+    },
+    {
+      "budget_mode": "single-stage",
+      "closure_result": "pass",
+      "context_control_selected": true,
+      "errors": [],
+      "fixture": "evals/context-control/compaction-snapshot-v2.yaml",
+      "id": "compaction-snapshot-v2",
+      "safety_result": "pass",
+      "selected_reference_count": 6,
+      "skipped_reference_count": 2,
+      "status": "pass"
+    },
+    {
+      "budget_mode": "staged-plan",
+      "closure_result": "partial",
+      "context_control_selected": true,
+      "errors": [],
+      "fixture": "evals/context-control/branch-route-repair-summary.yaml",
+      "id": "branch-route-repair-summary",
+      "safety_result": "pass",
+      "selected_reference_count": 4,
+      "skipped_reference_count": 1,
+      "status": "pass"
+    },
+    {
+      "budget_mode": "minimal",
+      "closure_result": "pass",
+      "context_control_selected": false,
+      "errors": [],
+      "fixture": "evals/context-control/negative-small-typo-no-context-control.yaml",
+      "id": "negative-small-typo-no-context-control",
+      "safety_result": "pass",
+      "selected_reference_count": 1,
+      "skipped_reference_count": 0,
+      "status": "pass"
+    }
+  ],
+  "context_control_overhead": {
+    "command_delta": 22.61,
+    "evidence_boundary": "Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead. High overhead without pass-rate improvement is not success.",
+    "input_token_overhead_pct": 234.06,
+    "output_token_overhead_pct": 45.63,
+    "overhead_policy_verdict": "partial: structural fixtures pass, but live input/output overhead is high without pass-rate improvement; do not claim Context Control Plane quality improvement",
+    "pass_rate_delta": 0.0,
+    "status": "partial",
+    "turn_overhead": null
+  },
+  "generated_by": "scripts/eval-context-control-plane.py",
+  "global_errors": [],
+  "schema_version": 1,
+  "status": "pass",
+  "summary": {
+    "capability": "context-control-plane",
+    "capability_id": "128",
+    "case_count": 8,
+    "failed": 0,
+    "fixture_directory": "evals/context-control",
+    "global_error_count": 0,
+    "live_codex_executed": false,
+    "passed": 8,
+    "raw_leak_count": 0
+  }
+}

@@ -448,6 +448,8 @@ def _main() -> int:
         command_risk_surfaces=state.get("command_risk_surfaces", []),
         closure_risk_surfaces=state.get("closure_risk_surfaces", [])
         or state.get("risk_surfaces", []),
+        branch_route_repair_summaries=state.get("branch_route_repair_summaries", []),
+        route_repair_forbidden_retries=state.get("route_repair_forbidden_retries", []),
         route_manifest_detected=signals["route_manifest"],
         required_references_detected=signals["references"],
         validation_command_detected=bool(
@@ -603,6 +605,8 @@ def _has_closure_surface(state: dict) -> bool:
         or explicit_engineering_stage
         or state.get("subagent_contracts")
         or state.get("compaction_snapshots")
+        or state.get("branch_route_repair_summaries")
+        or state.get("route_repair_forbidden_retries")
     )
 
 
@@ -700,6 +704,8 @@ def _stop_findings(state: dict) -> dict[str, list[str]]:
             "reference_loads",
             "subagent_contracts",
             "compaction_snapshots",
+            "branch_route_repair_summaries",
+            "route_repair_forbidden_retries",
             "implementation_preflights",
             "pre_edit_structure_findings",
         )

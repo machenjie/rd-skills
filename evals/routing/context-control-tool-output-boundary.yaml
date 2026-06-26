@@ -1,0 +1,24 @@
+---
+id: context-control-tool-output-boundary
+description: Large validation output must be summarized through a context-control tool-output boundary.
+prompt: |
+  A test command produced huge output; keep the useful evidence and negative result without polluting route context with the full log.
+expected:
+  complexity: L2
+  risk_level: medium
+  expected_stage: testing
+  expected_context_budget_mode: single-stage
+  expected_product_surface: validation-broker
+  expected_language_surface: none
+  risk_triggers: [tool output too large, validation without outcome]
+  skills: [quality-test-gate]
+  capabilities: [context-control-plane, agent-tool-permission-sandbox, validation-broker, repository-graph-analysis, plan-execution-consistency, agent-execution-discipline]
+  domain_extensions: []
+  quality_gates: [security gate, test gate, execution discipline gate]
+forbidden:
+  skills: [backend-change-builder, frontend-change-builder, delivery-release-gate]
+  capabilities: [release-rollback, service-business-logic]
+  domain_extensions: [ai-product-extension, web3-product-extension, payment-trading-extension]
+  quality_gates: [delivery gate]
+notes: |
+  The raw output boundary is a security and validation-evidence concern, not a release route.

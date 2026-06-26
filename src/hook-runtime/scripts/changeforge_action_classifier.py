@@ -298,6 +298,18 @@ def _prompt_signals(text: str) -> list[str]:
     ):
         if pattern.search(text):
             signals.append(name)
+    lowered = text.casefold()
+    for signal, terms in (
+        ("context budget", ("context budget", "reference bloat", "skipped references")),
+        ("jit retrieval", ("jit retrieval", "just in time retrieval")),
+        ("tool output boundary", ("tool output boundary", "output truncation")),
+        ("compaction snapshot", ("compaction snapshot", "compaction contract")),
+        ("source of truth", ("source of truth", "source-of-truth")),
+        ("generated artifact", ("generated artifact", "generated source")),
+        ("broad system audit", ("broad system audit", "system-wide audit")),
+    ):
+        if any(term in lowered for term in terms):
+            signals.append(signal)
     risk_surfaces = detect_risk_surfaces([], "", text)
     if "data-api" in risk_surfaces:
         signals.append("schema_or_api")

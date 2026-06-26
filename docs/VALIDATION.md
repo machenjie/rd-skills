@@ -20,6 +20,7 @@ python3 scripts/validate-validation-broker.py
 python3 scripts/validate-hooks.py
 python3 scripts/validate-project-memory.py
 python3 scripts/validate-skill-efficacy-benchmarks.py
+python3 scripts/eval-context-control-plane.py
 ```
 
 When repository graph or context-pack behavior changes, build temporary
@@ -79,6 +80,7 @@ quality, and behavior-fixture regressions:
 
 ```bash
 python3 scripts/eval-routing.py
+python3 scripts/eval-context-control-plane.py
 python3 scripts/validate-stage-routing-architecture.py
 python3 scripts/eval-skill-professionalism.py
 python3 scripts/eval-skill-professionalism.py --coverage-matrix
@@ -111,6 +113,7 @@ python3 scripts/audit-skill-content.py
 python3 scripts/validate-examples.py
 python3 scripts/validate-productization-assets.py
 python3 scripts/validate-open-source-readiness.py
+python3 scripts/eval-context-control-plane.py
 python3 scripts/validate-report-consistency.py
 python3 -m unittest discover -s tests
 python3 scripts/validate-codegen-benchmarks.py

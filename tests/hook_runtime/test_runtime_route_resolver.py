@@ -17,6 +17,7 @@ from changeforge_runtime_route_resolver import (  # noqa: E402
     CAPABILITY_IDS,
     _merge_nonempty_tuple_mapping,
     build_active_skill_context,
+    context_lines,
 )
 
 
@@ -48,6 +49,8 @@ class RuntimeRouteResolverTests(unittest.TestCase):
         self.assertIn("frontend-product", context["product_surfaces"])
         self.assertIn("typescript", context["language_surfaces"])
         self.assertNotIn("backend-change-builder", context["selected_skills"])
+        self.assertIn("context_control", context)
+        self.assertIn(context["context_budget_mode"], {"minimal", "single-stage"})
 
     def test_backend_service_edit_routes_backend(self) -> None:
         context = _context_for(_edit_event("src/services/order_service.py"))
@@ -239,6 +242,94 @@ class RuntimeRouteResolverTests(unittest.TestCase):
         self.assertIn("skill-authoring-expert", context["selected_capabilities"])
         self.assertIn("engineering-stage-professionalism", context["selected_capabilities"])
         self.assertNotIn("implementation-structure-design", context["selected_capabilities"])
+
+    def test_context_budget_prompt_selects_context_control_plane(self) -> None:
+        event = {
+            "hook_event_name": "UserPromptSubmit",
+            "prompt": "Update rd-skills hook runtime context budget, reference bloat, and skipped references.",
+        }
+        context = _context_for(event)
+        self.assertEqual(context["current_stage"], "skill-authoring")
+        self.assertIn("context-control-plane", context["selected_capabilities"])
+        self.assertIn(
+            "references/capabilities/128-context-control-plane.md",
+            context["required_references"],
+        )
+        self.assertEqual(context["context_control"]["budget_mode"], "staged-plan")
+
+    def test_reference_budget_keeps_router_refs_and_skips_overflow(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product", "api-contract", "validation-broker", "repository-intelligence"],
+            event_name="UserPromptSubmit",
+            classification={
+                "stage": "edit",
+                "product_surfaces": [
+                    "backend-product",
+                    "api-contract",
+                    "validation-broker",
+                    "repository-intelligence",
+                ],
+                "language_surfaces": ["python"],
+                "risk_surfaces": ["data-api"],
+                "conditional_capabilities": [
+                    "repository-graph-analysis",
+                    "plan-execution-consistency",
+                ],
+            },
+        )
+        control = context["context_control"]
+        self.assertEqual(control["budget_mode"], "staged-plan")
+        self.assertLessEqual(len(context["required_references"]), control["max_required_references"])
+        for reference in (
+            "references/routing-rules.md",
+            "references/skill-registry.md",
+            "references/capability-index.md",
+            "references/domain-extension-index.md",
+        ):
+            self.assertIn(reference, context["required_references"])
+        self.assertGreater(control["skipped_reference_count"], 0)
+        self.assertEqual(control["skipped_reference_count"], len(context["skipped_references"]))
+
+    def test_context_lines_are_summarized_and_bounded(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="edit",
+            surfaces=["backend-product", "api-contract", "validation-broker", "repository-intelligence"],
+            event_name="UserPromptSubmit",
+            classification={
+                "stage": "edit",
+                "product_surfaces": [
+                    "backend-product",
+                    "api-contract",
+                    "validation-broker",
+                    "repository-intelligence",
+                ],
+                "language_surfaces": ["python"],
+                "risk_surfaces": ["data-api"],
+            },
+        )
+        rendered = "\n".join(context_lines(context))
+        self.assertLess(len(rendered), 6000)
+        self.assertIn("context_budget_mode: staged-plan", rendered)
+        self.assertIn("context_control: selected_capabilities=", rendered)
+        self.assertNotIn("raw_prompt", rendered)
+
+    def test_compaction_stage_keeps_minimal_context_control(self) -> None:
+        context = build_active_skill_context(
+            runtime="codex",
+            stage="compaction",
+            surfaces=[],
+            event_name="Compact",
+            classification={"stage": "compaction", "product_surfaces": [], "risk_surfaces": []},
+        )
+        self.assertEqual(context["context_control"]["budget_mode"], "minimal")
+        self.assertTrue(context["context_control"]["compaction_snapshot_required"])
+        self.assertLessEqual(
+            len(context["required_references"]),
+            context["context_control"]["max_required_references"],
+        )
 
     def test_bare_business_registry_prompt_does_not_route_skill_authoring(self) -> None:
         prompts = (

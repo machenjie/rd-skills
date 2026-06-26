@@ -8,6 +8,28 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from changeforge_adapter_capabilities import AdapterCapabilities, adapter_capabilities_for
+from changeforge_compaction_contract import (
+    context_unusable_fields,
+    latest_snapshot,
+    missing_required_fields,
+    privacy_findings,
+    redacted_required_fields,
+)
+
+try:
+    from changeforge_branch_route_summary import route_repair_summary_required
+except (ImportError, ModuleNotFoundError):  # pragma: no cover - importlib test loading fallback
+    import importlib.util
+
+    _summary_path = Path(__file__).with_name("changeforge_branch_route_summary.py")
+    _summary_spec = importlib.util.spec_from_file_location(
+        "changeforge_branch_route_summary", _summary_path
+    )
+    if _summary_spec is None or _summary_spec.loader is None:
+        raise
+    _summary_module = importlib.util.module_from_spec(_summary_spec)
+    _summary_spec.loader.exec_module(_summary_module)
+    route_repair_summary_required = _summary_module.route_repair_summary_required
 
 try:
     from runtime_governance.closure import ClosureContract as GovernanceClosureContract
@@ -178,6 +200,11 @@ class ClosureContract:
             required_evidence=required_evidence,
         )
         missing = _compat_missing(governance.missing_evidence)
+        extra_missing, extra_residual = _extra_closure_findings(
+            state,
+            residual_risk_present=residual_risk_present,
+        )
+        missing.extend(extra_missing)
         missing = _unique(missing)
         fail_closed_allowed = "stop_closure" in _list(
             getattr(capabilities, "fail_closed_allowed_checks", ())
@@ -195,7 +222,9 @@ class ClosureContract:
             if requires_stage and not stage_route_present
             else []
         )
-        final_residual = _unique([*residual, *governance.residual_risk, *stage_route_residual])
+        final_residual = _unique(
+            [*residual, *governance.residual_risk, *stage_route_residual, *extra_residual]
+        )
         closure_payload = _changeforge_closure(
             governance,
             validation_broker_outcome=validation_broker_outcome,
@@ -205,6 +234,12 @@ class ClosureContract:
             validation_result_command_kind=validation_result_command_kind,
             extra_residual_risk=final_residual,
         )
+        verdict = _closure_verdict_with_extra_findings(verdict, extra_missing)
+        closure_payload["verdict"] = verdict
+        closure_payload["missing_evidence"] = _unique(
+            [*_list(closure_payload.get("missing_evidence")), *missing]
+        )
+        closure_payload["residual_risk"] = final_residual
         return cls(
             adapter=capabilities.runtime,
             supported_checks=supported_checks,
@@ -437,6 +472,76 @@ def _governance_ledger(
             )
         )
     return ledger
+
+
+def _extra_closure_findings(
+    state: dict,
+    *,
+    residual_risk_present: bool,
+) -> tuple[list[str], list[str]]:
+    missing: list[str] = []
+    residual: list[str] = []
+    compaction_missing, compaction_residual = _compaction_closure_findings(
+        state,
+        residual_risk_present=residual_risk_present,
+    )
+    missing.extend(compaction_missing)
+    residual.extend(compaction_residual)
+    if route_repair_summary_required(state) and not _list(state.get("branch_route_repair_summaries")):
+        missing.append("branch_route_repair_summary")
+        residual.append("route repair happened without a bounded branch/route-repair summary")
+    return _unique(missing), _unique(residual)
+
+
+def _compaction_closure_findings(
+    state: dict,
+    *,
+    residual_risk_present: bool,
+) -> tuple[list[str], list[str]]:
+    if not _compaction_happened(state):
+        return [], []
+    snapshot = latest_snapshot(state.get("compaction_snapshots", []))
+    if not snapshot:
+        residual = ["compaction happened but no complete snapshot was available to restore context"]
+        return ([] if residual_risk_present else ["compaction_snapshot"]), residual
+    missing = missing_required_fields(snapshot)
+    redacted = redacted_required_fields(snapshot)
+    unusable = context_unusable_fields(snapshot)
+    privacy = privacy_findings(snapshot)
+    if not (missing or redacted or unusable or privacy):
+        return [], []
+    details: list[str] = []
+    if missing:
+        details.append("missing=" + ",".join(missing[:8]))
+    if redacted:
+        details.append("redacted=" + ",".join(redacted[:8]))
+    if unusable:
+        details.append("unusable=" + ",".join(unusable[:8]))
+    if privacy:
+        details.append("privacy=" + ",".join(privacy[:8]))
+    residual = ["compaction snapshot incomplete: " + "; ".join(details)]
+    return ([] if residual_risk_present else ["compaction_snapshot_residual_risk"]), residual
+
+
+def _compaction_happened(state: dict) -> bool:
+    if state.get("compaction_snapshots"):
+        return True
+    text = " ".join(
+        [
+            *_list(state.get("closure_risk_surfaces")),
+            *_list(state.get("risk_surfaces")),
+            *_runtime_active_degradation(state),
+        ]
+    ).casefold()
+    return "compaction" in text
+
+
+def _closure_verdict_with_extra_findings(verdict: str, missing: list[str]) -> str:
+    if "branch_route_repair_summary" in missing:
+        return "needs_repair"
+    if any(item.startswith("compaction_snapshot") for item in missing):
+        return "needs_validation"
+    return verdict
 
 
 def _mark(entry: EvidenceEntry, present: bool) -> None:

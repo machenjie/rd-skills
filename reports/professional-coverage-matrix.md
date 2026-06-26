@@ -1,6 +1,6 @@
 # Professional Coverage Matrix
 
-- Generated: 2026-06-26T15:00:28.508887+00:00
+- Generated: 2026-06-26T17:41:15.528694+00:00
 - Rows checked: 61
 
 | Item | Kind | Mode Matrix | Proactive Triggers | Evidence Contract | Output Contract | Failure Modes | Quality Gate | Reference Loading Hint | Routing Coverage | Benchmark Coverage | Anti-bloat Status | Status |
@@ -46,12 +46,12 @@
 | `typescript-professional-usage` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (3) | yes (1) | ok | sample-grade |
 | `unit-testing` | foundation-capability | n/a | n/a | yes | yes | yes | yes | yes | yes (17) | yes (2) | ok | sample-grade |
 | `acceptance-criteria-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (6) | no | ok | sample-grade |
-| `ai-code-review-refactor` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (25) | yes (6) | ok | sample-grade |
+| `ai-code-review-refactor` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (27) | yes (6) | ok | sample-grade |
 | `architecture-impact-reviewer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (15) | no | ok | sample-grade |
 | `backend-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (49) | yes (8) | ok | sample-grade |
-| `change-documentation-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (38) | no | ok | sample-grade |
-| `change-forge-router` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a (router owns routing fixture corpus; eval-routing cases=118) | n/a (covered by eval-routing and agent-behavior) | ok | sample-grade |
-| `change-impact-analyzer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (16) | no | ok | sample-grade |
+| `change-documentation-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (41) | no | ok | sample-grade |
+| `change-forge-router` | professional-skill | yes | yes | yes | yes | yes | yes | yes | n/a (router owns routing fixture corpus; eval-routing cases=123) | n/a (covered by eval-routing and agent-behavior) | ok | sample-grade |
+| `change-impact-analyzer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (17) | no | ok | sample-grade |
 | `change-intake-compiler` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (18) | no | ok | sample-grade |
 | `data-api-contract-changer` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (15) | yes (1) | ok | sample-grade |
 | `data-middleware-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (16) | yes (4) | ok | sample-grade |
@@ -62,7 +62,7 @@
 | `frontend-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (14) | yes (2) | ok | sample-grade |
 | `integration-change-builder` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (12) | yes (1) | ok | sample-grade |
 | `logging-design-gate` | professional-skill | yes | yes | yes | partial | yes | yes | yes | no | no | ok | sample-grade |
-| `quality-test-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (103) | yes (5) | ok | sample-grade |
+| `quality-test-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (107) | yes (5) | ok | sample-grade |
 | `reliability-observability-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (33) | no | ok | sample-grade |
 | `security-privacy-gate` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (28) | no | ok | sample-grade |
-| `task-dag-planner` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (2) | no | ok | sample-grade |
+| `task-dag-planner` | professional-skill | yes | yes | yes | yes | yes | yes | yes | yes (3) | no | ok | sample-grade |

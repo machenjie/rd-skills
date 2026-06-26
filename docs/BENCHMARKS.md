@@ -14,6 +14,7 @@ ChangeForge benchmarks are release evidence, not marketing claims. They are loca
 | Profile build reproducibility | Build manifests for `recommended`, `full`, and `dev`. | `python3 scripts/build.py --profile recommended && python3 scripts/build.py --profile full && python3 scripts/build.py --profile dev` |
 | Installation validation | Installer/doctor validation. | `python3 scripts/validate-installation.py` |
 | Skill efficacy structural fixtures | evals/skill-efficacy | `python3 scripts/validate-skill-efficacy-benchmarks.py` |
+| Context Control Plane overhead | Deterministic fixtures for context budget, selected/skipped references, JIT packs, tool-output boundaries, compaction snapshots, route repair summaries, and overhead policy. | `python3 scripts/eval-context-control-plane.py` |
 | Executor adapter structural fixtures | Deterministic adapter fixtures and sanitized telemetry sample under `evals/executor-adapter` and `reports/`. | `python3 scripts/eval-executor-adapters.py` |
 | Activation precision benchmark | Deterministic activation fixtures for stage, skill, capability, reference, language, risk, and overroute precision against the built hook runtime. | `python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks` |
 | Codegen benchmark smoke | Codegen benchmark manifest and limited run. | `python3 scripts/validate-codegen-benchmarks.py` and `python3 scripts/run-codegen-benchmarks.py --limit 3` |
@@ -61,6 +62,14 @@ freshness, and closure effects across supported executor runtimes. The generated
 runtime telemetry fixture sample is bounded and sanitized, but it is not live
 runtime telemetry; live runtime telemetry, live pass-rate, token overhead, and
 turn overhead remain `not_collected` unless separately measured or collected.
+
+Context Control Plane evidence is split deliberately: structural fixture pass,
+live pass-rate, live runtime telemetry, token overhead, and turn overhead are
+separate evidence types. A passing structural context-control eval does not
+make high token overhead a success. High overhead without pass-rate improvement
+is reported as `partial` and must not be described as Context Control Plane
+quality improvement. Live benchmark commands remain opt-in and are not default
+validation.
 
 Codex CLI live benchmarks are optional local evidence. They are disabled by
 default because they may use local credentials, network access, model quota, and
@@ -229,6 +238,7 @@ python3 scripts/eval-skill-professionalism.py
 python3 scripts/eval-skill-professionalism.py --coverage-matrix
 python3 scripts/eval-professional-benchmarks.py
 python3 scripts/validate-skill-efficacy-benchmarks.py
+python3 scripts/eval-context-control-plane.py
 python3 scripts/eval-executor-adapters.py
 python3 scripts/eval-activation-precision.py --mode built --runtime-root dist/codex/project/.codex/hooks
 python3 scripts/run-codex-live-benchmarks.py --list
@@ -265,6 +275,8 @@ Release snapshot artifacts are committed for reader context but are not guarante
 
 - `reports/public-benchmark-summary.md`
 - `reports/public-benchmark-summary.json`
+- `reports/context-control-plane-eval.md`
+- `reports/context-control-plane-eval.json`
 - `reports/professional-scorecard.md`
 - `reports/professional-scorecard.json`
 - `docs/SCORECARD_DASHBOARD.md`
@@ -279,6 +291,6 @@ Release snapshot artifacts are committed for reader context but are not guarante
 - `reports/codex-current-home-smoke-summary.md`
 - `reports/codex-current-home-smoke-summary.json`
 
-When updating release snapshots, refresh executor adapter and activation precision evidence, rebuild all three profiles, refresh the scorecard, render the dashboard and README block, then regenerate the public benchmark summary. The public benchmark summary reuses scorecard dimensions for marketplace, activation precision, and executor adapter status so those artifacts do not disagree about generated evidence.
+When updating release snapshots, refresh context-control, executor adapter, and activation precision evidence, rebuild all three profiles, refresh the scorecard, render the dashboard and README block, then regenerate the public benchmark summary. The public benchmark summary reuses scorecard dimensions for marketplace, context-control overhead, activation precision, and executor adapter status so those artifacts do not disagree about generated evidence.
 
 See [SCORECARD.md](SCORECARD.md) and [SCORECARD_DASHBOARD.md](SCORECARD_DASHBOARD.md) for the reader-facing scorecard interpretation.

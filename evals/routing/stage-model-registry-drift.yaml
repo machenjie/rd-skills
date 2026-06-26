@@ -26,6 +26,7 @@ expected:
     - documentation-generation
     - agent-execution-discipline
     - plan-execution-consistency
+    - context-control-plane
   domain_extensions: []
   quality_gates:
     - documentation gate

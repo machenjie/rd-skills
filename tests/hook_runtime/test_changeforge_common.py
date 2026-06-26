@@ -51,6 +51,15 @@ NEW_FINDING_FIELDS = (
     "comment_findings",
     "structure_quality_findings",
 )
+CONTEXT_CONTROL_FIELDS = (
+    "context_control_records",
+    "tool_output_boundaries",
+    "artifact_references",
+    "branch_route_repair_summaries",
+    "route_repair_forbidden_retries",
+    "context_budget_findings",
+    "skipped_references",
+)
 
 
 @contextlib.contextmanager
@@ -159,9 +168,11 @@ class ChangeForgeCommonTests(unittest.TestCase):
     def test_new_state_fields_initialized(self) -> None:
         common = load_common()
         state = common._empty_state()
-        for field in NEW_FINDING_FIELDS:
+        for field in (*NEW_FINDING_FIELDS, *CONTEXT_CONTROL_FIELDS):
             self.assertEqual(state[field], [])
-        self.assertTrue(all(field in common.STATE_LIST_FIELDS for field in NEW_FINDING_FIELDS))
+        self.assertTrue(
+            all(field in common.STATE_LIST_FIELDS for field in (*NEW_FINDING_FIELDS, *CONTEXT_CONTROL_FIELDS))
+        )
 
     def test_new_state_fields_round_trip(self) -> None:
         common = load_common()
@@ -174,12 +185,89 @@ class ChangeForgeCommonTests(unittest.TestCase):
                         "file_naming_findings": ["a.go: mismatch"],
                         "comment_findings": ["a.go: uncommented"],
                         "structure_quality_findings": ["a.go: weak signature"],
+                        "context_control_records": [
+                            {
+                                "route_id": "route-a",
+                                "budget_mode": "single-stage",
+                                "raw_prompt": "must not persist",
+                                "overhead_evidence": {
+                                    "selected_references": 3,
+                                    "environment": "must not persist",
+                                },
+                            }
+                        ],
+                        "tool_output_boundaries": [
+                            {
+                                "schema_version": 1,
+                                "tool_name": "Bash",
+                                "event_name": "PostToolUse",
+                                "output_size_class": "large",
+                                "output_bytes": 64000,
+                                "output_lines": 700,
+                                "artifact_path": "artifacts/validation/pytest.log",
+                                "artifact_path_source": "explicit_tool_result",
+                                "digest": "sha256:" + "a" * 24,
+                                "bounded_summary": ["size=large"],
+                                "truncation_advice": "use artifact",
+                                "llm_context_policy": "artifact_reference_only",
+                                "privacy_status": "pass",
+                                "stdout": "must not persist",
+                            }
+                        ],
+                        "artifact_references": ["artifacts/validation/pytest.log"],
+                        "branch_route_repair_summaries": [
+                            {
+                                "schema_version": 1,
+                                "summary_id": "route-repair-common",
+                                "trigger": "repeated_same_path_retry",
+                                "abandoned_or_repaired_route": {
+                                    "owner_skill": "quality-test-gate",
+                                    "reviewer_skill": "ai-code-review-refactor",
+                                    "hypothesis": "same-path retry",
+                                    "files_touched": ["a.go"],
+                                    "validation_result": "fail:pytest",
+                                    "failure_reason": "same-path retry",
+                                },
+                                "reusable_findings": ["P1 unresolved"],
+                                "forbidden_retries": ["same-path retry"],
+                                "new_route": {
+                                    "owner_skill": "quality-test-gate",
+                                    "selected_capabilities": ["context-control-plane"],
+                                    "validation_plan": ["rerun tests"],
+                                },
+                                "residual_risk": ["none"],
+                                "privacy_status": "pass",
+                                "stdout": "must not persist",
+                            }
+                        ],
+                        "route_repair_forbidden_retries": ["same-path retry"],
+                        "context_budget_findings": ["skipped_references 1 require JIT retrieval rationale"],
+                        "skipped_references": [
+                            "references/capabilities/105-code-clarity-maintainability.md: omitted by budget"
+                        ],
                     },
                 )
                 loaded = common.load_state(Path(cwd))
         self.assertEqual(loaded["file_naming_findings"], ["a.go: mismatch"])
         self.assertEqual(loaded["comment_findings"], ["a.go: uncommented"])
         self.assertEqual(loaded["structure_quality_findings"], ["a.go: weak signature"])
+        self.assertEqual(loaded["context_control_records"][0]["budget_mode"], "single-stage")
+        self.assertNotIn("raw_prompt", loaded["context_control_records"][0])
+        self.assertNotIn("environment", loaded["context_control_records"][0]["overhead_evidence"])
+        self.assertEqual(loaded["tool_output_boundaries"][0]["output_bytes"], 64000)
+        self.assertNotIn("stdout", loaded["tool_output_boundaries"][0])
+        self.assertEqual(loaded["artifact_references"], ["artifacts/validation/pytest.log"])
+        self.assertEqual(loaded["branch_route_repair_summaries"][0]["summary_id"], "route-repair-common")
+        self.assertNotIn("stdout", loaded["branch_route_repair_summaries"][0])
+        self.assertEqual(loaded["route_repair_forbidden_retries"], ["same-path retry"])
+        self.assertEqual(
+            loaded["context_budget_findings"],
+            ["skipped_references 1 require JIT retrieval rationale"],
+        )
+        self.assertEqual(
+            loaded["skipped_references"],
+            ["references/capabilities/105-code-clarity-maintainability.md: omitted by budget"],
+        )
 
     def test_merge_state_supports_finding_fields(self) -> None:
         common = load_common()
@@ -194,6 +282,46 @@ class ChangeForgeCommonTests(unittest.TestCase):
                     advanced_refactor_findings=["w"],
                     comment_findings=["c"],
                     structure_quality_findings=["q"],
+                    context_control_records=[
+                        {
+                            "route_id": "active-runtime-route",
+                            "current_stage": "coding",
+                            "budget_mode": "minimal",
+                            "full_output": "must not persist",
+                        }
+                    ],
+                    tool_output_boundaries=[
+                        {
+                            "schema_version": 1,
+                            "tool_name": "Bash",
+                            "event_name": "PostToolUse",
+                            "output_size_class": "large",
+                            "artifact_path": "/Users/example/private.log",
+                            "artifact_path_source": "explicit_tool_result",
+                            "llm_context_policy": "rerun_with_redirect",
+                            "privacy_status": "pass",
+                            "stderr": "must not persist",
+                        }
+                    ],
+                    artifact_references=["/Users/example/private.log"],
+                    branch_route_repair_summaries=[
+                        {
+                            "schema_version": 1,
+                            "summary_id": "route-repair-merge",
+                            "trigger": "repeated_same_path_retry",
+                            "abandoned_or_repaired_route": {
+                                "files_touched": ["/Users/example/private/a.go"],
+                                "failure_reason": "same-path retry",
+                            },
+                            "forbidden_retries": ["same-path retry"],
+                            "new_route": {},
+                            "privacy_status": "pass",
+                            "raw_output": "must not persist",
+                        }
+                    ],
+                    route_repair_forbidden_retries=["same-path retry"],
+                    context_budget_findings=["selected_capabilities 9/8 over budget"],
+                    skipped_references=["references/capabilities/122-plan-execution-consistency.md: omitted"],
                 )
                 state = common.load_state(Path(cwd))
         self.assertEqual(state["file_naming_findings"], ["x"])
@@ -202,6 +330,24 @@ class ChangeForgeCommonTests(unittest.TestCase):
         self.assertEqual(state["advanced_refactor_findings"], ["w"])
         self.assertEqual(state["comment_findings"], ["c"])
         self.assertEqual(state["structure_quality_findings"], ["q"])
+        self.assertEqual(state["context_control_records"][0]["budget_mode"], "minimal")
+        self.assertNotIn("full_output", state["context_control_records"][0])
+        self.assertNotIn("stderr", state["tool_output_boundaries"][0])
+        self.assertEqual(state["tool_output_boundaries"][0]["artifact_path"], "<local-artifact-path-redacted>")
+        self.assertEqual(state["artifact_references"], ["<local-artifact-path-redacted>"])
+        self.assertEqual(state["branch_route_repair_summaries"][0]["summary_id"], "route-repair-merge")
+        self.assertNotIn("raw_output", state["branch_route_repair_summaries"][0])
+        self.assertEqual(
+            state["branch_route_repair_summaries"][0]["abandoned_or_repaired_route"]["files_touched"],
+            ["<local-path>"],
+        )
+        self.assertEqual(state["branch_route_repair_summaries"][0]["privacy_status"], "fail")
+        self.assertEqual(state["route_repair_forbidden_retries"], ["same-path retry"])
+        self.assertEqual(state["context_budget_findings"], ["selected_capabilities 9/8 over budget"])
+        self.assertEqual(
+            state["skipped_references"],
+            ["references/capabilities/122-plan-execution-consistency.md: omitted"],
+        )
 
     def test_legacy_state_file_missing_fields_is_compatible(self) -> None:
         common = load_common()
@@ -215,7 +361,7 @@ class ChangeForgeCommonTests(unittest.TestCase):
                 )
                 loaded = common.load_state(Path(cwd))
         self.assertEqual(loaded["changed_paths"], ["a.py"])
-        for field in NEW_FINDING_FIELDS:
+        for field in (*NEW_FINDING_FIELDS, *CONTEXT_CONTROL_FIELDS):
             self.assertEqual(loaded[field], [])
 
     def test_state_written_to_cache_not_project_source(self) -> None:

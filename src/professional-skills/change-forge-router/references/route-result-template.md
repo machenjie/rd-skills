@@ -87,6 +87,19 @@ fields so the router body can stay compact.
 | Skill | Reference | Why | Required/Optional |
 | --- | --- | --- | --- |
 
+### Context Control
+- Budget mode:
+- Budget rationale:
+- Selected capability/reference count:
+- Selected references with rationale:
+- Skipped references with rationale:
+- JIT retrieval plan:
+- Tool-output boundary:
+- Compaction snapshot required:
+- Branch route-repair summary required:
+- Overhead evidence:
+- Residual context risk:
+
 ### Task DAG
 Each task:
 - id

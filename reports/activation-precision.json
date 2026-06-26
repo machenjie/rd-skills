@@ -2,6 +2,126 @@
   "cases": [
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage implementation-planning with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "implementation-planning",
+          "jit_retrieval_plan": "read current source paths selected by route/graph only",
+          "jit_retrieval_required": true,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [
+            "selected_capabilities 13/8 over budget",
+            "skipped_references 5 require JIT retrieval rationale"
+          ],
+          "overhead_evidence": {
+            "selected_capabilities": 13,
+            "selected_references": 12,
+            "selected_skills": 2,
+            "skipped_references": 5,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 17,
+          "residual_context_risk": [
+            "skipped references require JIT retrieval before use",
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 13,
+          "selected_reference_count": 12,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/19-module-boundary-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/107-testability-seam-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/108-dependency-wiring-lifecycle.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/124-repository-graph-analysis.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 5,
+          "skipped_references": [
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/38-service-business-logic.md"
+            },
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/41-authentication-authorization.md"
+            },
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/42-idempotency-retry-design.md"
+            },
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/44-logging-error-handling.md"
+            },
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/92-python-professional-usage.md"
+            }
+          ],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [
           "python"
         ],
@@ -20,12 +140,7 @@
           "references/capabilities/85-language-idiom-enforcement.md",
           "references/capabilities/107-testability-seam-design.md",
           "references/capabilities/108-dependency-wiring-lifecycle.md",
-          "references/capabilities/124-repository-graph-analysis.md",
-          "references/capabilities/38-service-business-logic.md",
-          "references/capabilities/41-authentication-authorization.md",
-          "references/capabilities/42-idempotency-retry-design.md",
-          "references/capabilities/44-logging-error-handling.md",
-          "references/capabilities/92-python-professional-usage.md"
+          "references/capabilities/124-repository-graph-analysis.md"
         ],
         "risk_surfaces": [],
         "selected_capabilities": [
@@ -47,6 +162,13 @@
         "selected_skills": [
           "backend-change-builder",
           "ai-code-review-refactor"
+        ],
+        "skipped_references": [
+          "references/capabilities/38-service-business-logic.md",
+          "references/capabilities/41-authentication-authorization.md",
+          "references/capabilities/42-idempotency-retry-design.md",
+          "references/capabilities/44-logging-error-handling.md",
+          "references/capabilities/92-python-professional-usage.md"
         ],
         "stage": "implementation-planning"
       },
@@ -106,6 +228,9 @@
       },
       "errors": [],
       "expected": {
+        "context_budget_mode": "single-stage",
+        "context_control_required": true,
+        "context_control_skipped_reference_min": 5,
         "language_surfaces": [
           "python"
         ],
@@ -124,12 +249,7 @@
           "references/capabilities/85-language-idiom-enforcement.md",
           "references/capabilities/107-testability-seam-design.md",
           "references/capabilities/108-dependency-wiring-lifecycle.md",
-          "references/capabilities/124-repository-graph-analysis.md",
-          "references/capabilities/38-service-business-logic.md",
-          "references/capabilities/41-authentication-authorization.md",
-          "references/capabilities/42-idempotency-retry-design.md",
-          "references/capabilities/44-logging-error-handling.md",
-          "references/capabilities/92-python-professional-usage.md"
+          "references/capabilities/124-repository-graph-analysis.md"
         ],
         "risk_surfaces": [],
         "selected_capabilities": [
@@ -151,6 +271,9 @@
           "backend-change-builder",
           "ai-code-review-refactor"
         ],
+        "skipped_references_contains": [
+          "references/capabilities/38-service-business-logic.md"
+        ],
         "stage": "implementation-planning"
       },
       "id": "backend-conditional-planning",
@@ -159,6 +282,114 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage implementation-planning with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "implementation-planning",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [
+            "selected_capabilities 10/8 over budget",
+            "skipped_references 2 require JIT retrieval rationale"
+          ],
+          "overhead_evidence": {
+            "selected_capabilities": 10,
+            "selected_references": 12,
+            "selected_skills": 2,
+            "skipped_references": 2,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 14,
+          "residual_context_risk": [
+            "skipped references require JIT retrieval before use",
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 10,
+          "selected_reference_count": 12,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/19-module-boundary-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/31-page-component-decomposition.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/33-state-management-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/34-form-validation-design.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 2,
+          "skipped_references": [
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/35-frontend-api-integration.md"
+            },
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/91-typescript-professional-usage.md"
+            }
+          ],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [
           "typescript"
         ],
@@ -177,9 +408,7 @@
           "references/capabilities/85-language-idiom-enforcement.md",
           "references/capabilities/31-page-component-decomposition.md",
           "references/capabilities/33-state-management-design.md",
-          "references/capabilities/34-form-validation-design.md",
-          "references/capabilities/35-frontend-api-integration.md",
-          "references/capabilities/91-typescript-professional-usage.md"
+          "references/capabilities/34-form-validation-design.md"
         ],
         "risk_surfaces": [],
         "selected_capabilities": [
@@ -198,6 +427,10 @@
         "selected_skills": [
           "frontend-change-builder",
           "ai-code-review-refactor"
+        ],
+        "skipped_references": [
+          "references/capabilities/35-frontend-api-integration.md",
+          "references/capabilities/91-typescript-professional-usage.md"
         ],
         "stage": "implementation-planning"
       },
@@ -253,6 +486,9 @@
       },
       "errors": [],
       "expected": {
+        "context_budget_mode": "single-stage",
+        "context_control_required": true,
+        "context_control_skipped_reference_min": 2,
         "language_surfaces": [
           "typescript"
         ],
@@ -271,9 +507,7 @@
           "references/capabilities/85-language-idiom-enforcement.md",
           "references/capabilities/31-page-component-decomposition.md",
           "references/capabilities/33-state-management-design.md",
-          "references/capabilities/34-form-validation-design.md",
-          "references/capabilities/35-frontend-api-integration.md",
-          "references/capabilities/91-typescript-professional-usage.md"
+          "references/capabilities/34-form-validation-design.md"
         ],
         "risk_surfaces": [],
         "selected_capabilities": [
@@ -292,6 +526,9 @@
           "frontend-change-builder",
           "ai-code-review-refactor"
         ],
+        "skipped_references_contains": [
+          "references/capabilities/35-frontend-api-integration.md"
+        ],
         "stage": "implementation-planning"
       },
       "id": "frontend-tsx-no-backend",
@@ -300,6 +537,110 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage code-review with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "code-review",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [
+            "selected_capabilities 9/8 over budget",
+            "skipped_references 1 require JIT retrieval rationale"
+          ],
+          "overhead_evidence": {
+            "selected_capabilities": 9,
+            "selected_references": 12,
+            "selected_skills": 3,
+            "skipped_references": 1,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 13,
+          "residual_context_risk": [
+            "skipped references require JIT retrieval before use",
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 9,
+          "selected_reference_count": 12,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/78-code-review.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/122-plan-execution-consistency.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/68-degradation-circuit-breaking.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/42-idempotency-retry-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/55-authentication-security.md"
+            }
+          ],
+          "selected_skill_count": 3,
+          "skipped_reference_count": 1,
+          "skipped_references": [
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/92-python-professional-usage.md"
+            }
+          ],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [
           "python"
         ],
@@ -319,8 +660,7 @@
           "references/capabilities/85-language-idiom-enforcement.md",
           "references/capabilities/68-degradation-circuit-breaking.md",
           "references/capabilities/42-idempotency-retry-design.md",
-          "references/capabilities/55-authentication-security.md",
-          "references/capabilities/92-python-professional-usage.md"
+          "references/capabilities/55-authentication-security.md"
         ],
         "risk_surfaces": [],
         "selected_capabilities": [
@@ -339,6 +679,9 @@
           "ai-code-review-refactor",
           "quality-test-gate",
           "integration-change-builder"
+        ],
+        "skipped_references": [
+          "references/capabilities/92-python-professional-usage.md"
         ],
         "stage": "code-review"
       },
@@ -398,6 +741,9 @@
       },
       "errors": [],
       "expected": {
+        "context_budget_mode": "single-stage",
+        "context_control_required": true,
+        "context_control_skipped_reference_min": 1,
         "language_surfaces": [
           "python"
         ],
@@ -417,8 +763,7 @@
           "references/capabilities/85-language-idiom-enforcement.md",
           "references/capabilities/68-degradation-circuit-breaking.md",
           "references/capabilities/42-idempotency-retry-design.md",
-          "references/capabilities/55-authentication-security.md",
-          "references/capabilities/92-python-professional-usage.md"
+          "references/capabilities/55-authentication-security.md"
         ],
         "risk_surfaces": [],
         "selected_capabilities": [
@@ -437,6 +782,9 @@
           "quality-test-gate",
           "integration-change-builder"
         ],
+        "skipped_references_contains": [
+          "references/capabilities/92-python-professional-usage.md"
+        ],
         "stage": "code-review"
       },
       "id": "webhook-review-no-web3",
@@ -445,6 +793,118 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage implementation-planning with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "implementation-planning",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [
+            "selected_capabilities 11/8 over budget",
+            "skipped_references 3 require JIT retrieval rationale"
+          ],
+          "overhead_evidence": {
+            "selected_capabilities": 11,
+            "selected_references": 12,
+            "selected_skills": 2,
+            "skipped_references": 3,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 15,
+          "residual_context_risk": [
+            "skipped references require JIT retrieval before use",
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 11,
+          "selected_reference_count": 12,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/19-module-boundary-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/38-service-business-logic.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/41-authentication-authorization.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/42-idempotency-retry-design.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 3,
+          "skipped_references": [
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/44-logging-error-handling.md"
+            },
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/92-python-professional-usage.md"
+            },
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/52-threat-modeling.md"
+            }
+          ],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [
           "python"
         ],
@@ -463,10 +923,7 @@
           "references/capabilities/85-language-idiom-enforcement.md",
           "references/capabilities/38-service-business-logic.md",
           "references/capabilities/41-authentication-authorization.md",
-          "references/capabilities/42-idempotency-retry-design.md",
-          "references/capabilities/44-logging-error-handling.md",
-          "references/capabilities/92-python-professional-usage.md",
-          "references/capabilities/52-threat-modeling.md"
+          "references/capabilities/42-idempotency-retry-design.md"
         ],
         "risk_surfaces": [
           "security"
@@ -488,6 +945,11 @@
         "selected_skills": [
           "backend-change-builder",
           "security-privacy-gate"
+        ],
+        "skipped_references": [
+          "references/capabilities/44-logging-error-handling.md",
+          "references/capabilities/92-python-professional-usage.md",
+          "references/capabilities/52-threat-modeling.md"
         ],
         "stage": "implementation-planning"
       },
@@ -547,6 +1009,9 @@
       },
       "errors": [],
       "expected": {
+        "context_budget_mode": "single-stage",
+        "context_control_required": true,
+        "context_control_skipped_reference_min": 3,
         "language_surfaces": [
           "python"
         ],
@@ -565,10 +1030,7 @@
           "references/capabilities/85-language-idiom-enforcement.md",
           "references/capabilities/38-service-business-logic.md",
           "references/capabilities/41-authentication-authorization.md",
-          "references/capabilities/42-idempotency-retry-design.md",
-          "references/capabilities/44-logging-error-handling.md",
-          "references/capabilities/92-python-professional-usage.md",
-          "references/capabilities/52-threat-modeling.md"
+          "references/capabilities/42-idempotency-retry-design.md"
         ],
         "risk_surfaces": [
           "security"
@@ -590,6 +1052,9 @@
           "backend-change-builder",
           "security-privacy-gate"
         ],
+        "skipped_references_contains": [
+          "references/capabilities/52-threat-modeling.md"
+        ],
         "stage": "implementation-planning"
       },
       "id": "backend-security-risk",
@@ -598,6 +1063,85 @@
     },
     {
       "actual": {
+        "context_budget_mode": "staged-plan",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "staged-plan",
+          "budget_rationale": "context-risk product surfaces require staged context: documentation-only",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "documentation-handoff",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 16,
+          "max_selected_capabilities": 12,
+          "max_selected_skills": 4,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 4,
+            "selected_references": 8,
+            "selected_skills": 3,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": false,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 8,
+          "residual_context_risk": [
+            "no residual context budget risk detected"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 4,
+          "selected_reference_count": 8,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/119-agent-workflow-state-machine.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/122-plan-execution-consistency.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/80-documentation-generation.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/102-agent-execution-discipline.md"
+            }
+          ],
+          "selected_skill_count": 3,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [],
         "product_surfaces": [
           "documentation-only"
@@ -628,6 +1172,7 @@
           "change-forge-router",
           "delivery-release-gate"
         ],
+        "skipped_references": [],
         "stage": "documentation-handoff"
       },
       "classification": {
@@ -722,6 +1267,97 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage implementation-planning with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "implementation-planning",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 7,
+            "selected_references": 11,
+            "selected_skills": 2,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": false,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 11,
+          "residual_context_risk": [
+            "no residual context budget risk detected"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 7,
+          "selected_reference_count": 11,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/19-module-boundary-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/55-authentication-security.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/52-threat-modeling.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [],
         "product_surfaces": [
           "web3"
@@ -756,6 +1392,7 @@
           "security-privacy-gate",
           "quality-test-gate"
         ],
+        "skipped_references": [],
         "stage": "implementation-planning"
       },
       "classification": {
@@ -849,6 +1486,114 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage implementation-planning with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "implementation-planning",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [
+            "selected_capabilities 10/8 over budget",
+            "skipped_references 2 require JIT retrieval rationale"
+          ],
+          "overhead_evidence": {
+            "selected_capabilities": 10,
+            "selected_references": 12,
+            "selected_skills": 2,
+            "skipped_references": 2,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 14,
+          "residual_context_risk": [
+            "skipped references require JIT retrieval before use",
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 10,
+          "selected_reference_count": 12,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/19-module-boundary-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/31-page-component-decomposition.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/33-state-management-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/34-form-validation-design.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 2,
+          "skipped_references": [
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/35-frontend-api-integration.md"
+            },
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/91-typescript-professional-usage.md"
+            }
+          ],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [
           "typescript"
         ],
@@ -867,9 +1612,7 @@
           "references/capabilities/85-language-idiom-enforcement.md",
           "references/capabilities/31-page-component-decomposition.md",
           "references/capabilities/33-state-management-design.md",
-          "references/capabilities/34-form-validation-design.md",
-          "references/capabilities/35-frontend-api-integration.md",
-          "references/capabilities/91-typescript-professional-usage.md"
+          "references/capabilities/34-form-validation-design.md"
         ],
         "risk_surfaces": [],
         "selected_capabilities": [
@@ -888,6 +1631,10 @@
         "selected_skills": [
           "frontend-change-builder",
           "ai-code-review-refactor"
+        ],
+        "skipped_references": [
+          "references/capabilities/35-frontend-api-integration.md",
+          "references/capabilities/91-typescript-professional-usage.md"
         ],
         "stage": "implementation-planning"
       },
@@ -966,6 +1713,85 @@
     },
     {
       "actual": {
+        "context_budget_mode": "staged-plan",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "staged-plan",
+          "budget_rationale": "context-risk product surfaces require staged context: documentation-only",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "documentation-handoff",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 16,
+          "max_selected_capabilities": 12,
+          "max_selected_skills": 4,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 4,
+            "selected_references": 8,
+            "selected_skills": 2,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": false,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 8,
+          "residual_context_risk": [
+            "no residual context budget risk detected"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 4,
+          "selected_reference_count": 8,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/119-agent-workflow-state-machine.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/122-plan-execution-consistency.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/80-documentation-generation.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/102-agent-execution-discipline.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [],
         "product_surfaces": [
           "documentation-only"
@@ -995,6 +1821,7 @@
           "change-documentation-gate",
           "change-forge-router"
         ],
+        "skipped_references": [],
         "stage": "documentation-handoff"
       },
       "classification": {
@@ -1073,6 +1900,130 @@
     },
     {
       "actual": {
+        "context_budget_mode": "staged-plan",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "staged-plan",
+          "budget_rationale": "context-risk product surfaces require staged context: backend-product, cache, sdk-library",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "implementation-planning",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 16,
+          "max_selected_capabilities": 12,
+          "max_selected_skills": 4,
+          "over_budget_findings": [
+            "selected_capabilities 14/12 over budget",
+            "skipped_references 2 require JIT retrieval rationale"
+          ],
+          "overhead_evidence": {
+            "selected_capabilities": 14,
+            "selected_references": 16,
+            "selected_skills": 4,
+            "skipped_references": 2,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 18,
+          "residual_context_risk": [
+            "skipped references require JIT retrieval before use",
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 14,
+          "selected_reference_count": 16,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/19-module-boundary-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/38-service-business-logic.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/41-authentication-authorization.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/42-idempotency-retry-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/44-logging-error-handling.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/49-cache-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/67-concurrency-control.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/97-sdk-library-contract-design.md"
+            }
+          ],
+          "selected_skill_count": 4,
+          "skipped_reference_count": 2,
+          "skipped_references": [
+            {
+              "reason": "omitted by staged-plan max_required_references=16; use JIT retrieval if needed",
+              "reference": "references/capabilities/29-version-compatibility.md"
+            },
+            {
+              "reason": "omitted by staged-plan max_required_references=16; use JIT retrieval if needed",
+              "reference": "references/capabilities/88-package-dependency-management.md"
+            }
+          ],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [],
         "product_surfaces": [
           "backend-product",
@@ -1095,9 +2046,7 @@
           "references/capabilities/44-logging-error-handling.md",
           "references/capabilities/49-cache-design.md",
           "references/capabilities/67-concurrency-control.md",
-          "references/capabilities/97-sdk-library-contract-design.md",
-          "references/capabilities/29-version-compatibility.md",
-          "references/capabilities/88-package-dependency-management.md"
+          "references/capabilities/97-sdk-library-contract-design.md"
         ],
         "risk_surfaces": [],
         "selected_capabilities": [
@@ -1122,6 +2071,10 @@
           "ai-code-review-refactor",
           "data-middleware-change-builder",
           "data-api-contract-changer"
+        ],
+        "skipped_references": [
+          "references/capabilities/29-version-compatibility.md",
+          "references/capabilities/88-package-dependency-management.md"
         ],
         "stage": "implementation-planning"
       },
@@ -1181,11 +2134,13 @@
       },
       "errors": [],
       "expected": {
+        "context_budget_mode": "staged-plan",
         "product_surfaces_not_contains": [
           "skill-authoring"
         ],
         "selected_capabilities_not_contains": [
-          "skill-authoring-expert"
+          "skill-authoring-expert",
+          "context-control-plane"
         ],
         "stage": "implementation-planning"
       },
@@ -1195,6 +2150,1169 @@
     },
     {
       "actual": {
+        "context_budget_mode": "minimal",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "minimal",
+          "budget_rationale": "minimal route or no-injection event with no context-risk expansion",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "documentation-handoff",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 8,
+          "max_selected_capabilities": 5,
+          "max_selected_skills": 2,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 4,
+            "selected_references": 8,
+            "selected_skills": 2,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": false,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 8,
+          "residual_context_risk": [
+            "no residual context budget risk detected"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 4,
+          "selected_reference_count": 8,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/119-agent-workflow-state-machine.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/122-plan-execution-consistency.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/80-documentation-generation.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/102-agent-execution-discipline.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
+        "language_surfaces": [],
+        "product_surfaces": [
+          "documentation-only"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/119-agent-workflow-state-machine.md",
+          "references/capabilities/122-plan-execution-consistency.md",
+          "references/capabilities/80-documentation-generation.md",
+          "references/capabilities/102-agent-execution-discipline.md"
+        ],
+        "risk_surfaces": [
+          "documentation"
+        ],
+        "selected_capabilities": [
+          "agent-workflow-state-machine",
+          "plan-execution-consistency",
+          "documentation-generation",
+          "agent-execution-discipline"
+        ],
+        "selected_domain_extensions": [],
+        "selected_skills": [
+          "change-documentation-gate",
+          "change-forge-router"
+        ],
+        "skipped_references": [],
+        "stage": "documentation-handoff"
+      },
+      "classification": {
+        "command_program": "",
+        "conditional_capabilities": [],
+        "domain_extensions": [],
+        "language_surfaces": [],
+        "paths": [],
+        "product_surfaces": [
+          "documentation-only"
+        ],
+        "prompt_signals": [
+          "repair_intent"
+        ],
+        "risk_surfaces": [
+          "documentation"
+        ],
+        "should_inject": true,
+        "stage": "repair",
+        "surfaces": [
+          "documentation-only"
+        ],
+        "tool": ""
+      },
+      "deltas": {
+        "language_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "product_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "required_references": {
+          "extra": [],
+          "missing": []
+        },
+        "risk_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_capabilities": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_domain_extensions": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_skills": {
+          "extra": [],
+          "missing": []
+        }
+      },
+      "errors": [],
+      "expected": {
+        "context_budget_mode": "minimal",
+        "context_control_jit_required": false,
+        "context_control_required": true,
+        "context_control_skipped_reference_min": 0,
+        "context_control_tool_output_boundary_required": false,
+        "product_surfaces_contains": [
+          "documentation-only"
+        ],
+        "selected_capabilities_not_contains": [
+          "context-control-plane"
+        ],
+        "skipped_references_not_contains": [
+          "references/capabilities/128-context-control-plane.md"
+        ],
+        "stage": "documentation-handoff"
+      },
+      "id": "l1-typo-fix-minimal-budget",
+      "path": "evals/activation/cases.yaml",
+      "status": "pass"
+    },
+    {
+      "actual": {
+        "context_budget_mode": "staged-plan",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "staged-plan",
+          "budget_rationale": "context-risk product surfaces require staged context: skill-authoring",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "skill-authoring",
+          "jit_retrieval_plan": "read current source paths selected by route/graph only",
+          "jit_retrieval_required": true,
+          "max_required_references": 16,
+          "max_selected_capabilities": 12,
+          "max_selected_skills": 4,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 8,
+            "selected_references": 12,
+            "selected_skills": 2,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 12,
+          "residual_context_risk": [
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 8,
+          "selected_reference_count": 12,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/103-skill-authoring-expert.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/121-skill-efficacy-benchmark.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/80-documentation-generation.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/102-agent-execution-discipline.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/122-plan-execution-consistency.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/104-engineering-stage-professionalism.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/128-context-control-plane.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
+        "language_surfaces": [
+          "go"
+        ],
+        "product_surfaces": [
+          "skill-authoring"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/128-context-control-plane.md",
+          "references/capabilities/118-repository-context-map.md",
+          "references/capabilities/103-skill-authoring-expert.md",
+          "references/capabilities/121-skill-efficacy-benchmark.md",
+          "references/capabilities/80-documentation-generation.md",
+          "references/capabilities/102-agent-execution-discipline.md",
+          "references/capabilities/122-plan-execution-consistency.md",
+          "references/capabilities/104-engineering-stage-professionalism.md"
+        ],
+        "risk_surfaces": [],
+        "selected_capabilities": [
+          "repository-context-map",
+          "skill-authoring-expert",
+          "skill-efficacy-benchmark",
+          "documentation-generation",
+          "agent-execution-discipline",
+          "plan-execution-consistency",
+          "engineering-stage-professionalism",
+          "context-control-plane"
+        ],
+        "selected_domain_extensions": [],
+        "selected_skills": [
+          "change-forge-router",
+          "quality-test-gate"
+        ],
+        "skipped_references": [],
+        "stage": "skill-authoring"
+      },
+      "classification": {
+        "command_program": "",
+        "conditional_capabilities": [],
+        "domain_extensions": [],
+        "language_surfaces": [
+          "go"
+        ],
+        "paths": [],
+        "product_surfaces": [
+          "skill-authoring"
+        ],
+        "prompt_signals": [
+          "context budget",
+          "jit retrieval"
+        ],
+        "risk_surfaces": [],
+        "should_inject": true,
+        "stage": "skill_authoring",
+        "surfaces": [
+          "skill-authoring"
+        ],
+        "tool": ""
+      },
+      "deltas": {
+        "language_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "product_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "required_references": {
+          "extra": [],
+          "missing": []
+        },
+        "risk_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_capabilities": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_domain_extensions": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_skills": {
+          "extra": [],
+          "missing": []
+        }
+      },
+      "errors": [],
+      "expected": {
+        "context_budget_mode": "staged-plan",
+        "context_control_jit_required": true,
+        "context_control_required": true,
+        "product_surfaces_contains": [
+          "skill-authoring"
+        ],
+        "required_references_contains": [
+          "references/capabilities/128-context-control-plane.md"
+        ],
+        "selected_capabilities_contains": [
+          "context-control-plane"
+        ],
+        "stage": "skill-authoring"
+      },
+      "id": "skill-authoring-context-risk-selects-control-plane",
+      "path": "evals/activation/cases.yaml",
+      "status": "pass"
+    },
+    {
+      "actual": {
+        "context_budget_mode": "staged-plan",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "staged-plan",
+          "budget_rationale": "broad system audit requires staged context with skipped-reference rationale",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "code-review",
+          "jit_retrieval_plan": "read current source paths selected by route/graph only",
+          "jit_retrieval_required": true,
+          "max_required_references": 16,
+          "max_selected_capabilities": 12,
+          "max_selected_skills": 4,
+          "over_budget_findings": [
+            "selected_capabilities 17/12 over budget",
+            "skipped_references 5 require JIT retrieval rationale"
+          ],
+          "overhead_evidence": {
+            "selected_capabilities": 17,
+            "selected_references": 16,
+            "selected_skills": 3,
+            "skipped_references": 5,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 21,
+          "residual_context_risk": [
+            "skipped references require JIT retrieval before use",
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 17,
+          "selected_reference_count": 16,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/78-code-review.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/122-plan-execution-consistency.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/103-skill-authoring-expert.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/104-engineering-stage-professionalism.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/121-skill-efficacy-benchmark.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/128-context-control-plane.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/125-project-memory-governance.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/102-agent-execution-discipline.md"
+            }
+          ],
+          "selected_skill_count": 3,
+          "skipped_reference_count": 5,
+          "skipped_references": [
+            {
+              "reason": "omitted by staged-plan max_required_references=16; use JIT retrieval if needed",
+              "reference": "references/capabilities/126-validation-broker.md"
+            },
+            {
+              "reason": "omitted by staged-plan max_required_references=16; use JIT retrieval if needed",
+              "reference": "references/capabilities/124-repository-graph-analysis.md"
+            },
+            {
+              "reason": "omitted by staged-plan max_required_references=16; use JIT retrieval if needed",
+              "reference": "references/capabilities/127-execution-trajectory-analysis.md"
+            },
+            {
+              "reason": "omitted by staged-plan max_required_references=16; use JIT retrieval if needed",
+              "reference": "references/capabilities/119-agent-workflow-state-machine.md"
+            },
+            {
+              "reason": "omitted by staged-plan max_required_references=16; use JIT retrieval if needed",
+              "reference": "references/capabilities/89-go-professional-usage.md"
+            }
+          ],
+          "tool_output_boundary": "summarize command, outcome, relevant excerpt, artifact path, and excluded-output rationale",
+          "tool_output_boundary_required": true
+        },
+        "language_surfaces": [
+          "go"
+        ],
+        "product_surfaces": [
+          "skill-authoring",
+          "project-memory",
+          "validation-broker",
+          "execution-trajectory"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/128-context-control-plane.md",
+          "references/capabilities/78-code-review.md",
+          "references/capabilities/122-plan-execution-consistency.md",
+          "references/capabilities/101-implementation-structure-design.md",
+          "references/capabilities/105-code-clarity-maintainability.md",
+          "references/capabilities/85-language-idiom-enforcement.md",
+          "references/capabilities/118-repository-context-map.md",
+          "references/capabilities/103-skill-authoring-expert.md",
+          "references/capabilities/104-engineering-stage-professionalism.md",
+          "references/capabilities/121-skill-efficacy-benchmark.md",
+          "references/capabilities/125-project-memory-governance.md",
+          "references/capabilities/102-agent-execution-discipline.md"
+        ],
+        "risk_surfaces": [],
+        "selected_capabilities": [
+          "code-review",
+          "plan-execution-consistency",
+          "implementation-structure-design",
+          "code-clarity-maintainability",
+          "language-idiom-enforcement",
+          "repository-context-map",
+          "skill-authoring-expert",
+          "engineering-stage-professionalism",
+          "skill-efficacy-benchmark",
+          "context-control-plane",
+          "project-memory-governance",
+          "agent-execution-discipline",
+          "validation-broker",
+          "repository-graph-analysis",
+          "execution-trajectory-analysis",
+          "agent-workflow-state-machine",
+          "go-professional-usage"
+        ],
+        "selected_domain_extensions": [],
+        "selected_skills": [
+          "ai-code-review-refactor",
+          "quality-test-gate",
+          "change-forge-router"
+        ],
+        "skipped_references": [
+          "references/capabilities/126-validation-broker.md",
+          "references/capabilities/124-repository-graph-analysis.md",
+          "references/capabilities/127-execution-trajectory-analysis.md",
+          "references/capabilities/119-agent-workflow-state-machine.md",
+          "references/capabilities/89-go-professional-usage.md"
+        ],
+        "stage": "code-review"
+      },
+      "classification": {
+        "command_program": "",
+        "conditional_capabilities": [
+          "repository-graph-analysis"
+        ],
+        "domain_extensions": [],
+        "language_surfaces": [
+          "go"
+        ],
+        "paths": [],
+        "product_surfaces": [
+          "skill-authoring",
+          "project-memory",
+          "validation-broker",
+          "execution-trajectory"
+        ],
+        "prompt_signals": [
+          "context budget",
+          "broad system audit",
+          "review_intent"
+        ],
+        "risk_surfaces": [],
+        "should_inject": true,
+        "stage": "review",
+        "surfaces": [
+          "skill-authoring",
+          "project-memory",
+          "validation-broker",
+          "execution-trajectory"
+        ],
+        "tool": ""
+      },
+      "deltas": {
+        "language_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "product_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "required_references": {
+          "extra": [],
+          "missing": []
+        },
+        "risk_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_capabilities": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_domain_extensions": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_skills": {
+          "extra": [],
+          "missing": []
+        }
+      },
+      "errors": [],
+      "expected": {
+        "context_budget_mode": "staged-plan",
+        "context_control_jit_required": true,
+        "context_control_required": true,
+        "context_control_skipped_reference_min": 1,
+        "context_control_tool_output_boundary_required": true,
+        "selected_capabilities_contains": [
+          "context-control-plane",
+          "validation-broker",
+          "repository-graph-analysis"
+        ],
+        "skipped_references_contains": [
+          "references/capabilities/126-validation-broker.md"
+        ],
+        "stage": "code-review"
+      },
+      "id": "broad-system-audit-has-skipped-references",
+      "path": "evals/activation/cases.yaml",
+      "status": "pass"
+    },
+    {
+      "actual": {
+        "context_budget_mode": "minimal",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "minimal",
+          "budget_rationale": "minimal route or no-injection event with no context-risk expansion",
+          "compaction_snapshot_fields": [
+            "route",
+            "stage",
+            "selected references",
+            "skipped references",
+            "validation",
+            "residual risk"
+          ],
+          "compaction_snapshot_required": true,
+          "current_stage": "requirement-intake",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 8,
+          "max_selected_capabilities": 5,
+          "max_selected_skills": 2,
+          "over_budget_findings": [
+            "skipped_references 1 require JIT retrieval rationale"
+          ],
+          "overhead_evidence": {
+            "selected_capabilities": 5,
+            "selected_references": 8,
+            "selected_skills": 2,
+            "skipped_references": 1,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 9,
+          "residual_context_risk": [
+            "skipped references require JIT retrieval before use",
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 5,
+          "selected_reference_count": 8,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/01-requirement-clarification.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/02-requirement-structuring.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/06-non-goal-boundary-definition.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/05-acceptance-standard-definition.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 1,
+          "skipped_references": [
+            {
+              "reason": "omitted by minimal max_required_references=8; use JIT retrieval if needed",
+              "reference": "references/capabilities/04-scenario-decomposition.md"
+            }
+          ],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
+        "language_surfaces": [],
+        "product_surfaces": [],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/01-requirement-clarification.md",
+          "references/capabilities/02-requirement-structuring.md",
+          "references/capabilities/06-non-goal-boundary-definition.md",
+          "references/capabilities/05-acceptance-standard-definition.md"
+        ],
+        "risk_surfaces": [],
+        "selected_capabilities": [
+          "requirement-clarification",
+          "requirement-structuring",
+          "non-goal-boundary-definition",
+          "acceptance-standard-definition",
+          "scenario-decomposition"
+        ],
+        "selected_domain_extensions": [],
+        "selected_skills": [
+          "change-forge-router",
+          "change-impact-analyzer"
+        ],
+        "skipped_references": [
+          "references/capabilities/04-scenario-decomposition.md"
+        ],
+        "stage": "requirement-intake"
+      },
+      "classification": {
+        "command_program": "",
+        "conditional_capabilities": [],
+        "domain_extensions": [],
+        "language_surfaces": [],
+        "paths": [],
+        "product_surfaces": [],
+        "prompt_signals": [],
+        "risk_surfaces": [],
+        "should_inject": false,
+        "stage": "compaction",
+        "surfaces": [],
+        "tool": ""
+      },
+      "deltas": {
+        "language_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "product_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "required_references": {
+          "extra": [],
+          "missing": []
+        },
+        "risk_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_capabilities": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_domain_extensions": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_skills": {
+          "extra": [],
+          "missing": []
+        }
+      },
+      "errors": [],
+      "expected": {
+        "context_budget_mode": "minimal",
+        "context_control_compaction_snapshot_required": true,
+        "context_control_required": true,
+        "context_control_skipped_reference_min": 1,
+        "skipped_references_contains": [
+          "references/capabilities/04-scenario-decomposition.md"
+        ],
+        "stage": "requirement-intake"
+      },
+      "id": "compaction-event-minimal-context-control",
+      "path": "evals/activation/cases.yaml",
+      "status": "pass"
+    },
+    {
+      "actual": {
+        "context_budget_mode": "staged-plan",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "staged-plan",
+          "budget_rationale": "context-risk product surfaces require staged context: skill-authoring",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "skill-authoring",
+          "jit_retrieval_plan": "read current source paths selected by route/graph only",
+          "jit_retrieval_required": true,
+          "max_required_references": 16,
+          "max_selected_capabilities": 12,
+          "max_selected_skills": 4,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 8,
+            "selected_references": 12,
+            "selected_skills": 2,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 12,
+          "residual_context_risk": [
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 8,
+          "selected_reference_count": 12,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/103-skill-authoring-expert.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/121-skill-efficacy-benchmark.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/80-documentation-generation.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/102-agent-execution-discipline.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/122-plan-execution-consistency.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/104-engineering-stage-professionalism.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/128-context-control-plane.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "summarize command, outcome, relevant excerpt, artifact path, and excluded-output rationale",
+          "tool_output_boundary_required": true
+        },
+        "language_surfaces": [],
+        "product_surfaces": [
+          "skill-authoring"
+        ],
+        "required_references": [
+          "references/routing-rules.md",
+          "references/skill-registry.md",
+          "references/capability-index.md",
+          "references/domain-extension-index.md",
+          "references/capabilities/128-context-control-plane.md",
+          "references/capabilities/118-repository-context-map.md",
+          "references/capabilities/103-skill-authoring-expert.md",
+          "references/capabilities/121-skill-efficacy-benchmark.md",
+          "references/capabilities/80-documentation-generation.md",
+          "references/capabilities/102-agent-execution-discipline.md",
+          "references/capabilities/122-plan-execution-consistency.md",
+          "references/capabilities/104-engineering-stage-professionalism.md"
+        ],
+        "risk_surfaces": [],
+        "selected_capabilities": [
+          "repository-context-map",
+          "skill-authoring-expert",
+          "skill-efficacy-benchmark",
+          "documentation-generation",
+          "agent-execution-discipline",
+          "plan-execution-consistency",
+          "engineering-stage-professionalism",
+          "context-control-plane"
+        ],
+        "selected_domain_extensions": [],
+        "selected_skills": [
+          "change-forge-router",
+          "quality-test-gate"
+        ],
+        "skipped_references": [],
+        "stage": "skill-authoring"
+      },
+      "classification": {
+        "command_program": "",
+        "conditional_capabilities": [],
+        "domain_extensions": [],
+        "language_surfaces": [],
+        "paths": [],
+        "product_surfaces": [
+          "skill-authoring"
+        ],
+        "prompt_signals": [
+          "tool output boundary",
+          "source of truth",
+          "generated artifact"
+        ],
+        "risk_surfaces": [],
+        "should_inject": true,
+        "stage": "skill_authoring",
+        "surfaces": [
+          "skill-authoring"
+        ],
+        "tool": ""
+      },
+      "deltas": {
+        "language_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "product_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "required_references": {
+          "extra": [],
+          "missing": []
+        },
+        "risk_surfaces": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_capabilities": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_domain_extensions": {
+          "extra": [],
+          "missing": []
+        },
+        "selected_skills": {
+          "extra": [],
+          "missing": []
+        }
+      },
+      "errors": [],
+      "expected": {
+        "context_budget_mode": "staged-plan",
+        "context_control_jit_required": true,
+        "context_control_required": true,
+        "context_control_tool_output_boundary_required": true,
+        "selected_capabilities_contains": [
+          "context-control-plane"
+        ],
+        "stage": "skill-authoring"
+      },
+      "id": "generated-artifact-path-needs-jit-context-control",
+      "path": "evals/activation/cases.yaml",
+      "status": "pass"
+    },
+    {
+      "actual": {
+        "context_budget_mode": "staged-plan",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "staged-plan",
+          "budget_rationale": "context-risk product surfaces require staged context: database-migration",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "implementation-planning",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 16,
+          "max_selected_capabilities": 12,
+          "max_selected_skills": 4,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 9,
+            "selected_references": 13,
+            "selected_skills": 3,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": false,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 13,
+          "residual_context_risk": [
+            "no residual context budget risk detected"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 9,
+          "selected_reference_count": 13,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/19-module-boundary-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/30-data-migration-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/48-transaction-consistency.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/75-release-rollback.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/96-sql-professional-usage.md"
+            }
+          ],
+          "selected_skill_count": 3,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [
           "sql"
         ],
@@ -1237,6 +3355,7 @@
           "ai-code-review-refactor",
           "delivery-release-gate"
         ],
+        "skipped_references": [],
         "stage": "implementation-planning"
       },
       "classification": {
@@ -1318,6 +3437,93 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage implementation-planning with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "implementation-planning",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 6,
+            "selected_references": 10,
+            "selected_skills": 2,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": false,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 10,
+          "residual_context_risk": [
+            "no residual context budget risk detected"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 6,
+          "selected_reference_count": 10,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/19-module-boundary-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/96-sql-professional-usage.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [
           "sql"
         ],
@@ -1350,6 +3556,7 @@
           "change-forge-router",
           "change-impact-analyzer"
         ],
+        "skipped_references": [],
         "stage": "implementation-planning"
       },
       "classification": {
@@ -1422,6 +3629,93 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage refactoring with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "refactoring",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 6,
+            "selected_references": 10,
+            "selected_skills": 1,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": false,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 10,
+          "residual_context_risk": [
+            "no residual context budget risk detected"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 6,
+          "selected_reference_count": 10,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/79-refactoring.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/78-code-review.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/64-regression-testing.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/94-cpp-professional-usage.md"
+            }
+          ],
+          "selected_skill_count": 1,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [
           "cpp"
         ],
@@ -1451,6 +3745,7 @@
         "selected_skills": [
           "ai-code-review-refactor"
         ],
+        "skipped_references": [],
         "stage": "refactoring"
       },
       "classification": {
@@ -1519,6 +3814,114 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage implementation-planning with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "implementation-planning",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [
+            "selected_capabilities 10/8 over budget",
+            "skipped_references 2 require JIT retrieval rationale"
+          ],
+          "overhead_evidence": {
+            "selected_capabilities": 10,
+            "selected_references": 12,
+            "selected_skills": 2,
+            "skipped_references": 2,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 14,
+          "residual_context_risk": [
+            "skipped references require JIT retrieval before use",
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 10,
+          "selected_reference_count": 12,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/19-module-boundary-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/31-page-component-decomposition.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/33-state-management-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/34-form-validation-design.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 2,
+          "skipped_references": [
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/35-frontend-api-integration.md"
+            },
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/91-typescript-professional-usage.md"
+            }
+          ],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [
           "typescript"
         ],
@@ -1537,9 +3940,7 @@
           "references/capabilities/85-language-idiom-enforcement.md",
           "references/capabilities/31-page-component-decomposition.md",
           "references/capabilities/33-state-management-design.md",
-          "references/capabilities/34-form-validation-design.md",
-          "references/capabilities/35-frontend-api-integration.md",
-          "references/capabilities/91-typescript-professional-usage.md"
+          "references/capabilities/34-form-validation-design.md"
         ],
         "risk_surfaces": [],
         "selected_capabilities": [
@@ -1558,6 +3959,10 @@
         "selected_skills": [
           "frontend-change-builder",
           "ai-code-review-refactor"
+        ],
+        "skipped_references": [
+          "references/capabilities/35-frontend-api-integration.md",
+          "references/capabilities/91-typescript-professional-usage.md"
         ],
         "stage": "implementation-planning"
       },
@@ -1633,6 +4038,114 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage implementation-planning with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "implementation-planning",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [
+            "selected_capabilities 10/8 over budget",
+            "skipped_references 2 require JIT retrieval rationale"
+          ],
+          "overhead_evidence": {
+            "selected_capabilities": 10,
+            "selected_references": 12,
+            "selected_skills": 2,
+            "skipped_references": 2,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 14,
+          "residual_context_risk": [
+            "skipped references require JIT retrieval before use",
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 10,
+          "selected_reference_count": 12,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/19-module-boundary-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/38-service-business-logic.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/41-authentication-authorization.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/42-idempotency-retry-design.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 2,
+          "skipped_references": [
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/44-logging-error-handling.md"
+            },
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/91-typescript-professional-usage.md"
+            }
+          ],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [
           "typescript"
         ],
@@ -1651,9 +4164,7 @@
           "references/capabilities/85-language-idiom-enforcement.md",
           "references/capabilities/38-service-business-logic.md",
           "references/capabilities/41-authentication-authorization.md",
-          "references/capabilities/42-idempotency-retry-design.md",
-          "references/capabilities/44-logging-error-handling.md",
-          "references/capabilities/91-typescript-professional-usage.md"
+          "references/capabilities/42-idempotency-retry-design.md"
         ],
         "risk_surfaces": [],
         "selected_capabilities": [
@@ -1672,6 +4183,10 @@
         "selected_skills": [
           "backend-change-builder",
           "ai-code-review-refactor"
+        ],
+        "skipped_references": [
+          "references/capabilities/44-logging-error-handling.md",
+          "references/capabilities/91-typescript-professional-usage.md"
         ],
         "stage": "implementation-planning"
       },
@@ -1756,6 +4271,101 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage implementation-planning with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "implementation-planning",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 8,
+            "selected_references": 12,
+            "selected_skills": 2,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": false,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 12,
+          "residual_context_risk": [
+            "no residual context budget risk detected"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 8,
+          "selected_reference_count": 12,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/19-module-boundary-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/49-cache-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/67-concurrency-control.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/92-python-professional-usage.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [
           "python"
         ],
@@ -1792,6 +4402,7 @@
           "data-middleware-change-builder",
           "ai-code-review-refactor"
         ],
+        "skipped_references": [],
         "stage": "implementation-planning"
       },
       "classification": {
@@ -1866,6 +4477,101 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage implementation-planning with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "implementation-planning",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 8,
+            "selected_references": 12,
+            "selected_skills": 2,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": false,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 12,
+          "residual_context_risk": [
+            "no residual context budget risk detected"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 8,
+          "selected_reference_count": 12,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/19-module-boundary-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/50-message-queue-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/42-idempotency-retry-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/92-python-professional-usage.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [
           "python"
         ],
@@ -1902,6 +4608,7 @@
           "data-middleware-change-builder",
           "ai-code-review-refactor"
         ],
+        "skipped_references": [],
         "stage": "implementation-planning"
       },
       "classification": {
@@ -1976,6 +4683,97 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage implementation-planning with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "implementation-planning",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 7,
+            "selected_references": 11,
+            "selected_skills": 2,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": false,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 11,
+          "residual_context_risk": [
+            "no residual context budget risk detected"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 7,
+          "selected_reference_count": 11,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/118-repository-context-map.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/19-module-boundary-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/55-authentication-security.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/52-threat-modeling.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [],
         "product_surfaces": [
           "web3"
@@ -2010,6 +4808,7 @@
           "security-privacy-gate",
           "quality-test-gate"
         ],
+        "skipped_references": [],
         "stage": "implementation-planning"
       },
       "classification": {
@@ -2084,6 +4883,97 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage code-review with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "code-review",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 7,
+            "selected_references": 11,
+            "selected_skills": 3,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": false,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 11,
+          "residual_context_risk": [
+            "no residual context budget risk detected"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 7,
+          "selected_reference_count": 11,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/78-code-review.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/122-plan-execution-consistency.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/55-authentication-security.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/42-idempotency-retry-design.md"
+            }
+          ],
+          "selected_skill_count": 3,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [],
         "product_surfaces": [
           "webhook"
@@ -2117,6 +5007,7 @@
           "quality-test-gate",
           "integration-change-builder"
         ],
+        "skipped_references": [],
         "stage": "code-review"
       },
       "classification": {
@@ -2188,6 +5079,85 @@
     },
     {
       "actual": {
+        "context_budget_mode": "staged-plan",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "staged-plan",
+          "budget_rationale": "context-risk product surfaces require staged context: documentation-only",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "documentation-handoff",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 16,
+          "max_selected_capabilities": 12,
+          "max_selected_skills": 4,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 4,
+            "selected_references": 8,
+            "selected_skills": 3,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": false,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 8,
+          "residual_context_risk": [
+            "no residual context budget risk detected"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 4,
+          "selected_reference_count": 8,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/119-agent-workflow-state-machine.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/122-plan-execution-consistency.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/80-documentation-generation.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/102-agent-execution-discipline.md"
+            }
+          ],
+          "selected_skill_count": 3,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [],
         "product_surfaces": [
           "documentation-only"
@@ -2218,6 +5188,7 @@
           "change-forge-router",
           "delivery-release-gate"
         ],
+        "skipped_references": [],
         "stage": "documentation-handoff"
       },
       "classification": {
@@ -2293,6 +5264,101 @@
     },
     {
       "actual": {
+        "context_budget_mode": "staged-plan",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "staged-plan",
+          "budget_rationale": "context-risk product surfaces require staged context: infrastructure-deployment, kubernetes-helm",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "release-delivery",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 16,
+          "max_selected_capabilities": 12,
+          "max_selected_skills": 4,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 8,
+            "selected_references": 12,
+            "selected_skills": 2,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": false,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 12,
+          "residual_context_risk": [
+            "no residual context budget risk detected"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 8,
+          "selected_reference_count": 12,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/73-ci-cd.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/75-release-rollback.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/72-containerization.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/74-kubernetes-gateway.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/69-observability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/70-backup-recovery.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/56-secret-configuration-security.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/120-agent-tool-permission-sandbox.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [],
         "product_surfaces": [
           "infrastructure-deployment",
@@ -2303,14 +5369,14 @@
           "references/skill-registry.md",
           "references/capability-index.md",
           "references/domain-extension-index.md",
+          "references/capabilities/120-agent-tool-permission-sandbox.md",
           "references/capabilities/73-ci-cd.md",
           "references/capabilities/75-release-rollback.md",
           "references/capabilities/72-containerization.md",
           "references/capabilities/74-kubernetes-gateway.md",
           "references/capabilities/69-observability.md",
           "references/capabilities/70-backup-recovery.md",
-          "references/capabilities/56-secret-configuration-security.md",
-          "references/capabilities/120-agent-tool-permission-sandbox.md"
+          "references/capabilities/56-secret-configuration-security.md"
         ],
         "risk_surfaces": [
           "delivery"
@@ -2330,6 +5396,7 @@
           "delivery-release-gate",
           "quality-test-gate"
         ],
+        "skipped_references": [],
         "stage": "release-delivery"
       },
       "classification": {
@@ -2404,6 +5471,114 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage refactoring with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "refactoring",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [
+            "selected_capabilities 10/8 over budget",
+            "skipped_references 2 require JIT retrieval rationale"
+          ],
+          "overhead_evidence": {
+            "selected_capabilities": 10,
+            "selected_references": 12,
+            "selected_skills": 2,
+            "skipped_references": 2,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 14,
+          "residual_context_risk": [
+            "skipped references require JIT retrieval before use",
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 10,
+          "selected_reference_count": 12,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/79-refactoring.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/78-code-review.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/64-regression-testing.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/38-service-business-logic.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/41-authentication-authorization.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/42-idempotency-retry-design.md"
+            }
+          ],
+          "selected_skill_count": 2,
+          "skipped_reference_count": 2,
+          "skipped_references": [
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/44-logging-error-handling.md"
+            },
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/92-python-professional-usage.md"
+            }
+          ],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [
           "python"
         ],
@@ -2422,9 +5597,7 @@
           "references/capabilities/64-regression-testing.md",
           "references/capabilities/38-service-business-logic.md",
           "references/capabilities/41-authentication-authorization.md",
-          "references/capabilities/42-idempotency-retry-design.md",
-          "references/capabilities/44-logging-error-handling.md",
-          "references/capabilities/92-python-professional-usage.md"
+          "references/capabilities/42-idempotency-retry-design.md"
         ],
         "risk_surfaces": [],
         "selected_capabilities": [
@@ -2443,6 +5616,10 @@
         "selected_skills": [
           "ai-code-review-refactor",
           "backend-change-builder"
+        ],
+        "skipped_references": [
+          "references/capabilities/44-logging-error-handling.md",
+          "references/capabilities/92-python-professional-usage.md"
         ],
         "stage": "refactoring"
       },
@@ -2514,6 +5691,114 @@
     },
     {
       "actual": {
+        "context_budget_mode": "single-stage",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "single-stage",
+          "budget_rationale": "single active stage code-review with bounded route references",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "code-review",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 12,
+          "max_selected_capabilities": 8,
+          "max_selected_skills": 3,
+          "over_budget_findings": [
+            "selected_capabilities 10/8 over budget",
+            "skipped_references 2 require JIT retrieval rationale"
+          ],
+          "overhead_evidence": {
+            "selected_capabilities": 10,
+            "selected_references": 12,
+            "selected_skills": 3,
+            "skipped_references": 2,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 14,
+          "residual_context_risk": [
+            "skipped references require JIT retrieval before use",
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 10,
+          "selected_reference_count": 12,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/78-code-review.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/122-plan-execution-consistency.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/38-service-business-logic.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/41-authentication-authorization.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/42-idempotency-retry-design.md"
+            }
+          ],
+          "selected_skill_count": 3,
+          "skipped_reference_count": 2,
+          "skipped_references": [
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/44-logging-error-handling.md"
+            },
+            {
+              "reason": "omitted by single-stage max_required_references=12; use JIT retrieval if needed",
+              "reference": "references/capabilities/92-python-professional-usage.md"
+            }
+          ],
+          "tool_output_boundary": "bounded hook context only",
+          "tool_output_boundary_required": false
+        },
         "language_surfaces": [
           "python"
         ],
@@ -2532,9 +5817,7 @@
           "references/capabilities/85-language-idiom-enforcement.md",
           "references/capabilities/38-service-business-logic.md",
           "references/capabilities/41-authentication-authorization.md",
-          "references/capabilities/42-idempotency-retry-design.md",
-          "references/capabilities/44-logging-error-handling.md",
-          "references/capabilities/92-python-professional-usage.md"
+          "references/capabilities/42-idempotency-retry-design.md"
         ],
         "risk_surfaces": [],
         "selected_capabilities": [
@@ -2554,6 +5837,10 @@
           "ai-code-review-refactor",
           "quality-test-gate",
           "backend-change-builder"
+        ],
+        "skipped_references": [
+          "references/capabilities/44-logging-error-handling.md",
+          "references/capabilities/92-python-professional-usage.md"
         ],
         "stage": "code-review"
       },
@@ -2632,6 +5919,117 @@
     },
     {
       "actual": {
+        "context_budget_mode": "staged-plan",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "staged-plan",
+          "budget_rationale": "context-risk product surfaces require staged context: backend-product, validation-broker",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "testing",
+          "jit_retrieval_plan": "read current source paths selected by route/graph only",
+          "jit_retrieval_required": true,
+          "max_required_references": 16,
+          "max_selected_capabilities": 12,
+          "max_selected_skills": 4,
+          "over_budget_findings": [],
+          "overhead_evidence": {
+            "selected_capabilities": 12,
+            "selected_references": 16,
+            "selected_skills": 3,
+            "skipped_references": 0,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 16,
+          "residual_context_risk": [
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 12,
+          "selected_reference_count": 16,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/58-test-strategy.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/122-plan-execution-consistency.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/86-language-testing-strategy.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/63-test-data-management.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/38-service-business-logic.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/41-authentication-authorization.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/42-idempotency-retry-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/44-logging-error-handling.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/126-validation-broker.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/124-repository-graph-analysis.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/128-context-control-plane.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/92-python-professional-usage.md"
+            }
+          ],
+          "selected_skill_count": 3,
+          "skipped_reference_count": 0,
+          "skipped_references": [],
+          "tool_output_boundary": "summarize command, outcome, relevant excerpt, artifact path, and excluded-output rationale",
+          "tool_output_boundary_required": true
+        },
         "language_surfaces": [
           "python"
         ],
@@ -2644,6 +6042,7 @@
           "references/skill-registry.md",
           "references/capability-index.md",
           "references/domain-extension-index.md",
+          "references/capabilities/128-context-control-plane.md",
           "references/capabilities/58-test-strategy.md",
           "references/capabilities/122-plan-execution-consistency.md",
           "references/capabilities/86-language-testing-strategy.md",
@@ -2668,6 +6067,7 @@
           "logging-error-handling",
           "validation-broker",
           "repository-graph-analysis",
+          "context-control-plane",
           "python-professional-usage"
         ],
         "selected_domain_extensions": [],
@@ -2676,6 +6076,7 @@
           "ai-code-review-refactor",
           "backend-change-builder"
         ],
+        "skipped_references": [],
         "stage": "testing"
       },
       "classification": {
@@ -2749,6 +6150,130 @@
     },
     {
       "actual": {
+        "context_budget_mode": "staged-plan",
+        "context_control": {
+          "branch_route_repair_summary_required": false,
+          "budget_mode": "staged-plan",
+          "budget_rationale": "context-risk product surfaces require staged context: backend-product, execution-trajectory",
+          "compaction_snapshot_fields": [],
+          "compaction_snapshot_required": false,
+          "current_stage": "code-review",
+          "jit_retrieval_plan": "not required",
+          "jit_retrieval_required": false,
+          "max_required_references": 16,
+          "max_selected_capabilities": 12,
+          "max_selected_skills": 4,
+          "over_budget_findings": [
+            "selected_capabilities 14/12 over budget",
+            "skipped_references 2 require JIT retrieval rationale"
+          ],
+          "overhead_evidence": {
+            "selected_capabilities": 14,
+            "selected_references": 16,
+            "selected_skills": 3,
+            "skipped_references": 2,
+            "token_overhead": "not_collected",
+            "turn_overhead": "not_collected"
+          },
+          "overhead_evidence_required": true,
+          "privacy_exclusions": [
+            "raw prompts",
+            "secrets",
+            "environment variables",
+            "full command output",
+            "full diffs",
+            "full file contents"
+          ],
+          "raw_required_reference_count": 18,
+          "residual_context_risk": [
+            "skipped references require JIT retrieval before use",
+            "live token and turn overhead not collected by deterministic runtime policy"
+          ],
+          "route_id": "active-runtime-route",
+          "schema_version": 1,
+          "selected_capability_count": 14,
+          "selected_reference_count": 16,
+          "selected_references": [
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/routing-rules.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/skill-registry.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/capability-index.md"
+            },
+            {
+              "reason": "router self-reference kept",
+              "reference": "references/domain-extension-index.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/78-code-review.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/122-plan-execution-consistency.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/101-implementation-structure-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/105-code-clarity-maintainability.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/85-language-idiom-enforcement.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/38-service-business-logic.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/41-authentication-authorization.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/42-idempotency-retry-design.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/44-logging-error-handling.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/127-execution-trajectory-analysis.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/119-agent-workflow-state-machine.md"
+            },
+            {
+              "reason": "selected capability reference within budget",
+              "reference": "references/capabilities/126-validation-broker.md"
+            }
+          ],
+          "selected_skill_count": 3,
+          "skipped_reference_count": 2,
+          "skipped_references": [
+            {
+              "reason": "omitted by staged-plan max_required_references=16; use JIT retrieval if needed",
+              "reference": "references/capabilities/128-context-control-plane.md"
+            },
+            {
+              "reason": "omitted by staged-plan max_required_references=16; use JIT retrieval if needed",
+              "reference": "references/capabilities/92-python-professional-usage.md"
+            }
+          ],
+          "tool_output_boundary": "summarize command, outcome, relevant excerpt, artifact path, and excluded-output rationale",
+          "tool_output_boundary_required": true
+        },
         "language_surfaces": [
           "python"
         ],
@@ -2761,6 +6286,7 @@
           "references/skill-registry.md",
           "references/capability-index.md",
           "references/domain-extension-index.md",
+          "references/capabilities/128-context-control-plane.md",
           "references/capabilities/78-code-review.md",
           "references/capabilities/122-plan-execution-consistency.md",
           "references/capabilities/101-implementation-structure-design.md",
@@ -2771,9 +6297,7 @@
           "references/capabilities/42-idempotency-retry-design.md",
           "references/capabilities/44-logging-error-handling.md",
           "references/capabilities/127-execution-trajectory-analysis.md",
-          "references/capabilities/119-agent-workflow-state-machine.md",
-          "references/capabilities/126-validation-broker.md",
-          "references/capabilities/92-python-professional-usage.md"
+          "references/capabilities/119-agent-workflow-state-machine.md"
         ],
         "risk_surfaces": [],
         "selected_capabilities": [
@@ -2789,6 +6313,7 @@
           "execution-trajectory-analysis",
           "agent-workflow-state-machine",
           "validation-broker",
+          "context-control-plane",
           "python-professional-usage"
         ],
         "selected_domain_extensions": [],
@@ -2796,6 +6321,10 @@
           "ai-code-review-refactor",
           "quality-test-gate",
           "backend-change-builder"
+        ],
+        "skipped_references": [
+          "references/capabilities/126-validation-broker.md",
+          "references/capabilities/92-python-professional-usage.md"
         ],
         "stage": "code-review"
       },
@@ -2880,7 +6409,7 @@
   "summary": {
     "capability_precision": 1.0,
     "capability_recall": 1.0,
-    "case_count": 24,
+    "case_count": 29,
     "failed": 0,
     "language_fn_rate": 0.0,
     "language_fp_rate": 0.0,
@@ -2893,7 +6422,7 @@
       "risk_surface_fp_rate": "Share of cases with at least one unexpected risk surface."
     },
     "overroute_rate": 0.0,
-    "passed": 24,
+    "passed": 29,
     "reference_precision": 1.0,
     "reference_recall": 1.0,
     "risk_surface_fn_rate": 0.0,
