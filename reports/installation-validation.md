@@ -8,9 +8,9 @@
 
 - `dist_exists`: `True`
 - `runtime_roots`: `10`
-- `built_skill_directories`: `2040`
-- `required_hook_runtime_files`: `396`
-- `zip_count`: `204`
+- `built_skill_directories`: `2050`
+- `required_hook_runtime_files`: `420`
+- `zip_count`: `205`
 - `error_count`: `0`
 
 ## Errors

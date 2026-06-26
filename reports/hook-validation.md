@@ -7,7 +7,7 @@
 ## Summary
 
 - `hook_runtime_root`: `src/hook-runtime`
-- `required_hook_scripts`: `29`
+- `required_hook_scripts`: `34`
 - `codex_templates`: `2`
 - `claude_templates`: `2`
 - `copilot_templates`: `2`

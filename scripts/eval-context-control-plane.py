@@ -61,6 +61,27 @@ FORBIDDEN_RAW_FIELDS = {
     "apikey",
     "token",
 }
+FORBIDDEN_RAW_FIELD_TOKENS = (
+    "raw_prompt",
+    "prompt_text",
+    "raw_output",
+    "raw_command_output",
+    "command_output",
+    "stdout",
+    "stderr",
+    "full_output",
+    "full_diff",
+    "full_file",
+    "file_contents",
+    "environment",
+    "access_token",
+    "bearer_token",
+    "api_key",
+    "apikey",
+    "password",
+    "secret",
+    "credential",
+)
 SECRET_VALUE_RE = re.compile(
     r"(sk-(?=[A-Za-z0-9_-]{10,})(?=[A-Za-z0-9_-]*[A-Z0-9])[A-Za-z0-9_-]+|"
     r"(?i:(api[_-]?key|access[_-]?token|bearer[_-]?token|password|secret)"
@@ -392,7 +413,7 @@ def _forbidden_key_errors(value: Any, label: str) -> list[str]:
         if isinstance(node, dict):
             for key, child in node.items():
                 key_text = str(key)
-                if key_text.casefold() in FORBIDDEN_RAW_FIELDS:
+                if _forbidden_raw_key(key_text):
                     errors.append(f"{path}: forbidden raw field {key_text!r}")
                 walk(child, f"{path}.{key_text}")
         elif isinstance(node, list):
@@ -401,6 +422,11 @@ def _forbidden_key_errors(value: Any, label: str) -> list[str]:
 
     walk(value, label)
     return errors
+
+
+def _forbidden_raw_key(key: str) -> bool:
+    lowered = str(key).casefold()
+    return lowered in FORBIDDEN_RAW_FIELDS or any(token in lowered for token in FORBIDDEN_RAW_FIELD_TOKENS)
 
 
 def _secret_like_errors(path: Path, data: dict[str, Any]) -> list[str]:
@@ -423,13 +449,24 @@ def _context_control_overhead(
     raw_leak_count: int,
     live_summary: dict[str, Any] | None,
 ) -> dict[str, Any]:
+    structural_status = "pass" if fixtures_pass else "fail"
     base = {
         "status": "partial" if fixtures_pass else "fail",
+        "structural_fixture_status": structural_status,
+        "overhead_status": "partial" if fixtures_pass else "fail",
         "input_token_overhead_pct": None,
         "output_token_overhead_pct": None,
         "turn_overhead": None,
         "command_delta": None,
         "pass_rate_delta": None,
+        "live_pass_rate": {"status": "not_collected", "pass_rate_delta": None},
+        "token_overhead": {"status": "not_collected", "input_pct": None, "output_pct": None},
+        "turn_overhead_detail": {"status": "not_collected", "turn_overhead": None},
+        "runtime_telemetry": {
+            "status": "not_collected",
+            "source": "reports/codex-live-benchmark-summary.json",
+            "live_codex_executed": False,
+        },
         "overhead_policy_verdict": "",
         "evidence_boundary": (
             "Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, "
@@ -441,10 +478,12 @@ def _context_control_overhead(
         return base
     if raw_leak_count:
         base["status"] = "fail"
+        base["overhead_status"] = "fail"
         base["overhead_policy_verdict"] = "fail: raw content leak detected"
         return base
     if not isinstance(live_summary, dict):
         base["status"] = "partial"
+        base["overhead_status"] = "partial"
         base["overhead_policy_verdict"] = "partial: structural fixtures pass but live overhead is not collected"
         return base
 
@@ -463,6 +502,29 @@ def _context_control_overhead(
             "output_token_overhead_pct": output_overhead,
             "command_delta": command_delta if isinstance(command_delta, int | float) else None,
             "pass_rate_delta": pass_rate_delta if isinstance(pass_rate_delta, int | float) else None,
+            "live_pass_rate": {
+                "status": "collected" if isinstance(pass_rate_delta, int | float) else "not_collected",
+                "pass_rate_delta": pass_rate_delta if isinstance(pass_rate_delta, int | float) else None,
+            },
+            "token_overhead": {
+                "status": "collected"
+                if any(isinstance(value, int | float) for value in (input_overhead, output_overhead))
+                else "not_collected",
+                "input_pct": input_overhead,
+                "output_pct": output_overhead,
+            },
+            "turn_overhead_detail": {
+                "status": "collected" if isinstance(base.get("turn_overhead"), int | float) else "not_collected",
+                "turn_overhead": base.get("turn_overhead"),
+            },
+            "runtime_telemetry": {
+                "status": "existing_report"
+                if any(isinstance(value, int | float) for value in (command_delta, pass_rate_delta, input_overhead, output_overhead))
+                else "not_collected",
+                "source": "reports/codex-live-benchmark-summary.json",
+                "live_codex_executed": False,
+                "command_delta": command_delta if isinstance(command_delta, int | float) else None,
+            },
         }
     )
     quality = live_summary.get("quality_improvement_summary") if isinstance(live_summary.get("quality_improvement_summary"), dict) else {}
@@ -475,20 +537,24 @@ def _context_control_overhead(
     collected = any(isinstance(value, int | float) for value in (input_overhead, output_overhead, command_delta, pass_rate_delta))
     if improvement_claim and neutral_or_worse and (high_input or high_output):
         base["status"] = "fail"
+        base["overhead_status"] = "fail"
         base["overhead_policy_verdict"] = (
             "fail: live report claims improvement while pass-rate delta is neutral or negative and overhead is high"
         )
     elif collected and (high_input or high_output) and neutral_or_worse:
         base["status"] = "partial"
+        base["overhead_status"] = "partial"
         base["overhead_policy_verdict"] = (
             "partial: structural fixtures pass, but live input/output overhead is high without pass-rate improvement; "
             "do not claim Context Control Plane quality improvement"
         )
     elif collected:
         base["status"] = "pass"
+        base["overhead_status"] = "pass"
         base["overhead_policy_verdict"] = "pass: structural fixtures pass and collected overhead is within policy threshold"
     else:
         base["status"] = "partial"
+        base["overhead_status"] = "partial"
         base["overhead_policy_verdict"] = "partial: structural fixtures pass but live overhead is not collected"
     return base
 
@@ -590,6 +656,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         "# Context Control Plane Eval",
         "",
         f"- status: `{report.get('status')}`",
+        f"- structural_fixture_status: `{overhead.get('structural_fixture_status')}`",
         f"- cases: `{summary.get('passed')}/{summary.get('case_count')}`",
         f"- raw_leak_count: `{summary.get('raw_leak_count')}`",
         f"- live_codex_executed: `{summary.get('live_codex_executed')}`",
@@ -604,10 +671,14 @@ def render_markdown(report: dict[str, Any]) -> str:
         "turn_overhead",
         "command_delta",
         "pass_rate_delta",
+        "live_pass_rate",
+        "token_overhead",
+        "turn_overhead_detail",
+        "runtime_telemetry",
         "overhead_policy_verdict",
         "evidence_boundary",
     ):
-        lines.append(f"- {field}: `{overhead.get(field)}`")
+        lines.append(f"- {field}: `{_markdown_value(overhead.get(field))}`")
     lines.extend(["", "## Cases", "", "| Case | Status | Budget | Selected refs | Skipped refs |", "| --- | --- | --- | --- | --- |"])
     for case in report.get("cases", []):
         lines.append(
@@ -618,6 +689,12 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.extend(["", "## Global Errors", ""])
         lines.extend(f"- {error}" for error in report["global_errors"])
     return "\n".join(lines) + "\n"
+
+
+def _markdown_value(value: Any) -> str:
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, sort_keys=True)
+    return str(value)
 
 
 def main(argv: list[str] | None = None) -> int:

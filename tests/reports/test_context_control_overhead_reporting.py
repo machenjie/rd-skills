@@ -38,11 +38,22 @@ def _context_report(status: str = "pass", overhead_status: str = "partial") -> d
         "summary": {"failed": 0 if status == "pass" else 1},
         "context_control_overhead": {
             "status": overhead_status,
+            "structural_fixture_status": "pass" if status == "pass" else "fail",
+            "overhead_status": overhead_status,
             "input_token_overhead_pct": 234.06,
             "output_token_overhead_pct": 45.63,
             "turn_overhead": None,
             "command_delta": 22.61,
             "pass_rate_delta": 0.0,
+            "live_pass_rate": {"status": "collected", "pass_rate_delta": 0.0},
+            "token_overhead": {"status": "collected", "input_pct": 234.06, "output_pct": 45.63},
+            "turn_overhead_detail": {"status": "not_collected", "turn_overhead": None},
+            "runtime_telemetry": {
+                "status": "existing_report",
+                "source": "reports/codex-live-benchmark-summary.json",
+                "live_codex_executed": False,
+                "command_delta": 22.61,
+            },
             "overhead_policy_verdict": "partial: high overhead without pass-rate improvement is not success",
             "evidence_boundary": "Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead.",
         },
@@ -86,6 +97,13 @@ class ContextControlOverheadReportingTests(unittest.TestCase):
 
         self.assertEqual(row["status"], "partial")
         self.assertIn("input_token_overhead_pct", row["detail"])
+        detail = json.loads(row["detail"])
+        self.assertEqual(detail["structural_fixture_status"], "pass")
+        self.assertEqual(detail["overhead_status"], "partial")
+        self.assertEqual(detail["live_pass_rate"]["status"], "collected")
+        self.assertEqual(detail["token_overhead"]["status"], "collected")
+        self.assertEqual(detail["turn_overhead_detail"]["status"], "not_collected")
+        self.assertEqual(detail["runtime_telemetry"]["status"], "existing_report")
 
     def test_high_overhead_neutral_pass_rate_does_not_become_success_wording(self) -> None:
         summary = {
@@ -113,6 +131,12 @@ class ContextControlOverheadReportingTests(unittest.TestCase):
         )
         self.assertEqual(overhead["status"], "partial")
         self.assertNotEqual(overhead["status"], "pass")
+        self.assertEqual(overhead["structural_fixture_status"], "pass")
+        self.assertEqual(overhead["overhead_status"], "partial")
+        self.assertEqual(overhead["live_pass_rate"], {"status": "collected", "pass_rate_delta": 0.0})
+        self.assertEqual(overhead["token_overhead"]["status"], "collected")
+        self.assertEqual(overhead["turn_overhead_detail"]["status"], "not_collected")
+        self.assertEqual(overhead["runtime_telemetry"]["status"], "existing_report")
 
         markdown = PUBLIC_SUMMARY.render_markdown(
             {
@@ -135,6 +159,36 @@ class ContextControlOverheadReportingTests(unittest.TestCase):
         )
         self.assertIn("high overhead without pass-rate improvement is not success", markdown)
         self.assertIn("live benchmark commands are opt-in and not default validation", markdown)
+        self.assertIn("- structural_fixture_status: `pass`", markdown)
+        self.assertIn("- overhead_status: `partial`", markdown)
+        self.assertIn('"live_codex_executed": false', markdown)
+
+    def test_professional_scorecard_markdown_renders_context_control_evidence_split(self) -> None:
+        markdown = SCORECARD.render_markdown(
+            {
+                "status_summary": {"pass": 0, "partial": 1, "fail": 0, "unknown": 0, "not_collected": 0},
+                "evidence_levels": {},
+                "dimensions": [
+                    {
+                        "name": "context_control_overhead",
+                        "status": "partial",
+                        "source": "reports/context-control-plane-eval.json",
+                        "verification_command": "python3 scripts/eval-context-control-plane.py",
+                        "fix_hint": "repair overhead",
+                        "detail": json.dumps(_context_report()["context_control_overhead"], sort_keys=True),
+                    }
+                ],
+                "profile_counts": {},
+            }
+        )
+
+        self.assertIn("## Context Control Overhead", markdown)
+        self.assertIn("- structural_fixture_status: `pass`", markdown)
+        self.assertIn("- overhead_status: `partial`", markdown)
+        self.assertIn("- live_pass_rate: `", markdown)
+        self.assertIn("- token_overhead: `", markdown)
+        self.assertIn("- turn_overhead_detail: `", markdown)
+        self.assertIn("- runtime_telemetry: `", markdown)
 
     def test_missing_overhead_is_not_pass(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -147,6 +201,23 @@ class ContextControlOverheadReportingTests(unittest.TestCase):
             live_summary=None,
         )
         self.assertEqual(overhead["status"], "partial")
+        self.assertEqual(overhead["structural_fixture_status"], "pass")
+        self.assertEqual(overhead["token_overhead"]["status"], "not_collected")
+        self.assertEqual(overhead["turn_overhead_detail"]["status"], "not_collected")
+
+    def test_forbidden_raw_key_variants_are_detected_without_token_metric_false_positive(self) -> None:
+        record = {
+            "context_budget_tokens": 1200,
+            "input_token_overhead_pct": 234.06,
+            "safe": {"raw_output_excerpt": "must not be retained"},
+            "nested": [{"stdout_text": "must not be retained"}],
+        }
+        errors = CONTEXT_EVAL._forbidden_key_errors(record, "fixture")
+
+        self.assertTrue(any("raw_output_excerpt" in error for error in errors), errors)
+        self.assertTrue(any("stdout_text" in error for error in errors), errors)
+        self.assertFalse(any("context_budget_tokens" in error for error in errors), errors)
+        self.assertFalse(any("input_token_overhead_pct" in error for error in errors), errors)
 
     def test_context_control_eval_failure_blocks_pass(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

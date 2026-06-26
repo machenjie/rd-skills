@@ -1030,17 +1030,23 @@ def _append_context_control_overhead_section(lines: list[str], payload: dict[str
     detail = _json_detail_object(item.get("detail"))
     lines.extend(["", "## Context Control Overhead", ""])
     for field in (
+        "structural_fixture_status",
+        "overhead_status",
         "status",
         "input_token_overhead_pct",
         "output_token_overhead_pct",
         "turn_overhead",
         "command_delta",
         "pass_rate_delta",
+        "live_pass_rate",
+        "token_overhead",
+        "turn_overhead_detail",
+        "runtime_telemetry",
         "overhead_policy_verdict",
         "evidence_boundary",
     ):
         value = detail.get(field, item.get("status") if field == "status" else "not_collected")
-        lines.append(f"- {field}: `{value}`")
+        lines.append(f"- {field}: `{_markdown_detail_value(value)}`")
     lines.append(
         "- evidence split: structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead are separate evidence types"
     )
@@ -1054,6 +1060,12 @@ def _public_codex_live_detail(payload: dict[str, Any]) -> dict[str, Any] | None:
         detail = item.get("detail_data")
         return detail if isinstance(detail, dict) else None
     return None
+
+
+def _markdown_detail_value(value: Any) -> str:
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, sort_keys=True)
+    return str(value)
 
 
 def _public_item(payload: dict[str, Any], name: str) -> dict[str, Any] | None:

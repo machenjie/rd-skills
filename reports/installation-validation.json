@@ -4,11 +4,11 @@
   "schema_version": 1,
   "status": "pass",
   "summary": {
-    "built_skill_directories": 2040,
+    "built_skill_directories": 2050,
     "dist_exists": true,
     "error_count": 0,
-    "required_hook_runtime_files": 396,
+    "required_hook_runtime_files": 420,
     "runtime_roots": 10,
-    "zip_count": 204
+    "zip_count": 205
   }
 }

@@ -62,6 +62,9 @@ FORBIDDEN_RECORD_KEYS = {
     "prompt",
     "prompt_text",
     "raw_prompt",
+    "stdout",
+    "stderr",
+    "command_output",
     "raw_output",
     "raw_command_output",
     "full_output",
@@ -72,9 +75,35 @@ FORBIDDEN_RECORD_KEYS = {
     "env",
     "secret",
     "secrets",
+    "password",
+    "api_key",
+    "apikey",
+    "access_token",
+    "bearer_token",
     "credential",
     "credentials",
 }
+FORBIDDEN_RECORD_KEY_TOKENS = (
+    "raw_prompt",
+    "prompt_text",
+    "raw_output",
+    "raw_command_output",
+    "command_output",
+    "stdout",
+    "stderr",
+    "full_output",
+    "full_diff",
+    "full_file",
+    "file_contents",
+    "environment",
+    "access_token",
+    "bearer_token",
+    "api_key",
+    "apikey",
+    "password",
+    "secret",
+    "credential",
+)
 
 
 def context_budget_mode(
@@ -348,7 +377,7 @@ def _sanitize_record(value: Any) -> dict:
     cleaned: dict[str, Any] = {}
     for raw_key, raw_value in value.items():
         key = str(raw_key).strip()
-        if not key or key.casefold() in FORBIDDEN_RECORD_KEYS:
+        if not key or _forbidden_record_key(key):
             continue
         if isinstance(raw_value, dict):
             child = _sanitize_record(raw_value)
@@ -361,6 +390,11 @@ def _sanitize_record(value: Any) -> dict:
         else:
             cleaned[key] = str(raw_value).strip()[:300]
     return cleaned
+
+
+def _forbidden_record_key(key: str) -> bool:
+    lowered = key.casefold()
+    return lowered in FORBIDDEN_RECORD_KEYS or any(token in lowered for token in FORBIDDEN_RECORD_KEY_TOKENS)
 
 
 def _sanitize_item(value: Any) -> Any:

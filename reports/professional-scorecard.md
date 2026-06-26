@@ -54,6 +54,23 @@ This scorecard is generated from local registry, build, and report evidence. Mis
 | Hook safety | `pass` | reports/hook-validation.json | `python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md` |
 | Installation validation | `pass` | reports/installation-validation.json | `python3 scripts/validate-installation.py --json-out reports/installation-validation.json --out reports/installation-validation.md` |
 
+## Context Control Overhead
+
+- structural_fixture_status: `pass`
+- overhead_status: `partial`
+- status: `partial`
+- input_token_overhead_pct: `234.06`
+- output_token_overhead_pct: `45.63`
+- turn_overhead: `None`
+- command_delta: `22.61`
+- pass_rate_delta: `0.0`
+- live_pass_rate: `{"pass_rate_delta": 0.0, "status": "collected"}`
+- token_overhead: `{"input_pct": 234.06, "output_pct": 45.63, "status": "collected"}`
+- turn_overhead_detail: `{"status": "not_collected", "turn_overhead": null}`
+- runtime_telemetry: `{"command_delta": 22.61, "live_codex_executed": false, "source": "reports/codex-live-benchmark-summary.json", "status": "existing_report"}`
+- overhead_policy_verdict: `partial: structural fixtures pass, but live input/output overhead is high without pass-rate improvement; do not claim Context Control Plane quality improvement`
+- evidence_boundary: `Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead. High overhead without pass-rate improvement is not success.`
+
 ## Profile Counts
 
 - `recommended`: `pass` - recommended top-level count is 21

@@ -20,6 +20,14 @@ def load_reducer():
     return module
 
 
+def load_module(name: str):
+    spec = importlib.util.spec_from_file_location(name, SCRIPT_DIR / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
 class StateReducerTests(unittest.TestCase):
     def setUp(self) -> None:
         self.reducer = load_reducer()
@@ -177,6 +185,29 @@ class StateReducerTests(unittest.TestCase):
         self.assertNotIn("stdout", record)
         self.assertEqual(record["artifact_path"], "<local-artifact-path-redacted>")
         self.assertEqual(result["artifact_references"], ["<local-artifact-path-redacted>"])
+
+    def test_context_control_policy_strips_raw_field_variants_without_losing_overhead_metrics(self) -> None:
+        policy = load_module("changeforge_context_control_policy")
+        cleaned = policy._sanitize_record(
+            {
+                "context_budget_tokens": 1200,
+                "input_token_overhead_pct": 234.06,
+                "raw_output_excerpt": "must not persist",
+                "stdout_text": "must not persist",
+                "safe_nested": {
+                    "command_output_summary": "must not persist",
+                    "turn_overhead": "not_collected",
+                },
+            }
+        )
+        rendered = str(cleaned)
+
+        self.assertEqual(cleaned["context_budget_tokens"], 1200)
+        self.assertEqual(cleaned["input_token_overhead_pct"], "234.06")
+        self.assertNotIn("raw_output_excerpt", rendered)
+        self.assertNotIn("stdout_text", rendered)
+        self.assertNotIn("command_output_summary", rendered)
+        self.assertEqual(cleaned["safe_nested"], {"turn_overhead": "not_collected"})
 
 
 if __name__ == "__main__":

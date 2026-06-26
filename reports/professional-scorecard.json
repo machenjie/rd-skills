@@ -81,7 +81,7 @@
       "verification_command": "python3 scripts/validate-professional-routing-coverage.py"
     },
     {
-      "detail": "{\"command_delta\": 22.61, \"eval_status\": \"pass\", \"evidence_boundary\": \"Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead. High overhead without pass-rate improvement is not success.\", \"fixture_status\": 0, \"input_token_overhead_pct\": 234.06, \"output_token_overhead_pct\": 45.63, \"overhead_policy_verdict\": \"partial: structural fixtures pass, but live input/output overhead is high without pass-rate improvement; do not claim Context Control Plane quality improvement\", \"pass_rate_delta\": 0.0, \"status\": \"partial\", \"turn_overhead\": null}",
+      "detail": "{\"command_delta\": 22.61, \"eval_status\": \"pass\", \"evidence_boundary\": \"Evidence separates structural fixture pass, live pass-rate, live runtime telemetry, token overhead, and turn overhead. High overhead without pass-rate improvement is not success.\", \"input_token_overhead_pct\": 234.06, \"live_pass_rate\": {\"pass_rate_delta\": 0.0, \"status\": \"collected\"}, \"output_token_overhead_pct\": 45.63, \"overhead_policy_verdict\": \"partial: structural fixtures pass, but live input/output overhead is high without pass-rate improvement; do not claim Context Control Plane quality improvement\", \"overhead_status\": \"partial\", \"pass_rate_delta\": 0.0, \"runtime_telemetry\": {\"command_delta\": 22.61, \"live_codex_executed\": false, \"source\": \"reports/codex-live-benchmark-summary.json\", \"status\": \"existing_report\"}, \"status\": \"partial\", \"structural_fixture_failed_count\": 0, \"structural_fixture_status\": \"pass\", \"token_overhead\": {\"input_pct\": 234.06, \"output_pct\": 45.63, \"status\": \"collected\"}, \"turn_overhead\": null, \"turn_overhead_detail\": {\"status\": \"not_collected\", \"turn_overhead\": null}}",
       "fix_hint": "Repair context-control fixtures or collect lower-overhead live evidence before claiming context-control quality improvement.",
       "name": "context_control_overhead",
       "source": "reports/context-control-plane-eval.json",
@@ -193,7 +193,7 @@
       "verification_command": "python3 scripts/validate-open-source-readiness.py"
     },
     {
-      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/validate-hooks.py\", \"summary\": {\"claude_templates\": 2, \"codex_templates\": 2, \"copilot_templates\": 2, \"error_count\": 0, \"hook_runtime_root\": \"src/hook-runtime\", \"required_hook_scripts\": 29, \"required_hook_scripts_present\": true}}",
+      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/validate-hooks.py\", \"summary\": {\"claude_templates\": 2, \"codex_templates\": 2, \"copilot_templates\": 2, \"error_count\": 0, \"hook_runtime_root\": \"src/hook-runtime\", \"required_hook_scripts\": 34, \"required_hook_scripts_present\": true}}",
       "fix_hint": "Run hook validation and inspect hook runtime changes; hooks must remain advisory and fail-open unless explicitly stricter.",
       "name": "Hook safety",
       "source": "reports/hook-validation.json",
@@ -201,7 +201,7 @@
       "verification_command": "python3 scripts/validate-hooks.py --json-out reports/hook-validation.json --out reports/hook-validation.md"
     },
     {
-      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/validate-installation.py\", \"summary\": {\"built_skill_directories\": 2040, \"dist_exists\": true, \"error_count\": 0, \"required_hook_runtime_files\": 396, \"runtime_roots\": 10, \"zip_count\": 204}}",
+      "detail": "{\"error_count\": 0, \"generated_by\": \"scripts/validate-installation.py\", \"summary\": {\"built_skill_directories\": 2050, \"dist_exists\": true, \"error_count\": 0, \"required_hook_runtime_files\": 420, \"runtime_roots\": 10, \"zip_count\": 205}}",
       "fix_hint": "Run installation validation after rebuilding all profiles.",
       "name": "Installation validation",
       "source": "reports/installation-validation.json",

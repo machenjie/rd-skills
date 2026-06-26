@@ -445,15 +445,29 @@ def context_control_overhead_status(root: Path) -> tuple[str, str]:
     if not isinstance(report, dict):
         return "not_collected", "reports/context-control-plane-eval.json missing or invalid"
     overhead = report.get("context_control_overhead")
+    summary = report.get("summary") if isinstance(report.get("summary"), dict) else {}
+    structural_fixture_status = (
+        "pass"
+        if report.get("status") == "pass" and summary.get("failed") == 0
+        else "fail"
+        if report.get("status") == "fail" or isinstance(summary.get("failed"), int)
+        else "unknown"
+    )
     detail = {
         "eval_status": report.get("status", "unknown"),
-        "fixture_status": (report.get("summary") or {}).get("failed", "unknown"),
+        "structural_fixture_status": structural_fixture_status,
+        "structural_fixture_failed_count": summary.get("failed", "unknown"),
         "status": "fail",
+        "overhead_status": "fail",
         "input_token_overhead_pct": None,
         "output_token_overhead_pct": None,
         "turn_overhead": None,
         "command_delta": None,
         "pass_rate_delta": None,
+        "live_pass_rate": {"status": "not_collected", "pass_rate_delta": None},
+        "token_overhead": {"status": "not_collected", "input_pct": None, "output_pct": None},
+        "turn_overhead_detail": {"status": "not_collected", "turn_overhead": None},
+        "runtime_telemetry": {"status": "not_collected"},
         "overhead_policy_verdict": "context_control_overhead missing",
         "evidence_boundary": "missing",
     }
@@ -461,11 +475,16 @@ def context_control_overhead_status(root: Path) -> tuple[str, str]:
         detail.update(
             {
                 "status": overhead.get("status", "unknown"),
+                "overhead_status": overhead.get("overhead_status", overhead.get("status", "unknown")),
                 "input_token_overhead_pct": overhead.get("input_token_overhead_pct"),
                 "output_token_overhead_pct": overhead.get("output_token_overhead_pct"),
                 "turn_overhead": overhead.get("turn_overhead"),
                 "command_delta": overhead.get("command_delta"),
                 "pass_rate_delta": overhead.get("pass_rate_delta"),
+                "live_pass_rate": overhead.get("live_pass_rate", detail["live_pass_rate"]),
+                "token_overhead": overhead.get("token_overhead", detail["token_overhead"]),
+                "turn_overhead_detail": overhead.get("turn_overhead_detail", detail["turn_overhead_detail"]),
+                "runtime_telemetry": overhead.get("runtime_telemetry", detail["runtime_telemetry"]),
                 "overhead_policy_verdict": overhead.get("overhead_policy_verdict"),
                 "evidence_boundary": overhead.get("evidence_boundary"),
             }
@@ -1201,6 +1220,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
         lines.append(
             f"| {dimension['name']} | `{dimension['status']}` | {dimension['source']} | `{dimension['verification_command']}` |"
         )
+    _append_context_control_overhead_detail(lines, payload)
     lines.extend(["", "## Profile Counts", ""])
     for profile, detail in payload["profile_counts"].items():
         lines.append(f"- `{profile}`: `{detail['status']}` - {detail['detail']}")
@@ -1210,6 +1230,38 @@ def render_markdown(payload: dict[str, Any]) -> str:
             lines.append(f"- {dimension['name']}: {dimension['fix_hint']}")
     lines.append("")
     return "\n".join(lines)
+
+
+def _append_context_control_overhead_detail(lines: list[str], payload: dict[str, Any]) -> None:
+    for dimension in payload.get("dimensions", []):
+        if not isinstance(dimension, dict) or dimension.get("name") != CONTEXT_CONTROL_OVERHEAD_DIMENSION:
+            continue
+        detail = _json_detail(str(dimension.get("detail", "")))
+        lines.extend(["", "## Context Control Overhead", ""])
+        for field in (
+            "structural_fixture_status",
+            "overhead_status",
+            "status",
+            "input_token_overhead_pct",
+            "output_token_overhead_pct",
+            "turn_overhead",
+            "command_delta",
+            "pass_rate_delta",
+            "live_pass_rate",
+            "token_overhead",
+            "turn_overhead_detail",
+            "runtime_telemetry",
+            "overhead_policy_verdict",
+            "evidence_boundary",
+        ):
+            lines.append(f"- {field}: `{_markdown_detail_value(detail.get(field, 'not_collected'))}`")
+        return
+
+
+def _markdown_detail_value(value: Any) -> str:
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, sort_keys=True)
+    return str(value)
 
 
 def generate_scorecard(root: Path, reports_dir: Path) -> dict[str, Any]:
